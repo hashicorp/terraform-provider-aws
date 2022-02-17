@@ -686,6 +686,30 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 			request.Port = aws.Int64(int64(d.Get("port").(int)))
 			request.DatabaseName = aws.String(d.Get("database_name").(string))
 		}
+	case engineNameMariadb:
+		fallthrough
+	case engineNameMySQL:
+		if _, ok := d.GetOk("secrets_manager_arn"); ok {
+			request.MySQLSettings = &dms.MySQLSettings{
+				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
+				SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
+				DatabaseName:                aws.String(d.Get("database_name").(string)),
+			}
+		} else {
+			request.MySQLSettings = &dms.MySQLSettings{
+				Username:     aws.String(d.Get("username").(string)),
+				Password:     aws.String(d.Get("password").(string)),
+				ServerName:   aws.String(d.Get("server_name").(string)),
+				Port:         aws.Int64(int64(d.Get("port").(int))),
+				DatabaseName: aws.String(d.Get("database_name").(string)),
+			}
+
+			request.Username = aws.String(d.Get("username").(string))
+			request.Password = aws.String(d.Get("password").(string))
+			request.ServerName = aws.String(d.Get("server_name").(string))
+			request.Port = aws.Int64(int64(d.Get("port").(int)))
+			request.DatabaseName = aws.String(d.Get("database_name").(string))
+		}
 	case engineNameS3:
 		request.S3Settings = expandS3Settings(d.Get("s3_settings").([]interface{})[0].(map[string]interface{}))
 	default:
@@ -905,6 +929,37 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			hasChanges = true
 		}
+	case engineNameMariadb:
+		fallthrough
+	case engineNameMySQL:
+		if d.HasChanges(
+			"username", "password", "server_name", "port", "database_name", "secrets_manager_access_role_arn",
+			"secrets_manager_arn") {
+			if _, ok := d.GetOk("secrets_manager_arn"); ok {
+				request.MySQLSettings = &dms.MySQLSettings{
+					DatabaseName:                aws.String(d.Get("database_name").(string)),
+					SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
+					SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
+				}
+			} else {
+				request.MySQLSettings = &dms.MySQLSettings{
+					Username:     aws.String(d.Get("username").(string)),
+					Password:     aws.String(d.Get("password").(string)),
+					ServerName:   aws.String(d.Get("server_name").(string)),
+					Port:         aws.Int64(int64(d.Get("port").(int))),
+					DatabaseName: aws.String(d.Get("database_name").(string)),
+				}
+				request.EngineName = aws.String(d.Get("engine_name").(string)) // Must be included (should be 'mysql' or 'mariadb')
+
+				// Update connection info in top-level namespace as well
+				request.Username = aws.String(d.Get("username").(string))
+				request.Password = aws.String(d.Get("password").(string))
+				request.ServerName = aws.String(d.Get("server_name").(string))
+				request.Port = aws.Int64(int64(d.Get("port").(int)))
+				request.DatabaseName = aws.String(d.Get("database_name").(string))
+			}
+			hasChanges = true
+		}
 	case engineNameOracle:
 		if d.HasChanges(
 			"username", "password", "server_name", "port", "database_name", "secrets_manager_access_role_arn",
@@ -1114,6 +1169,22 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		}
 		if err := d.Set("mongodb_settings", flattenMongoDBSettings(endpoint.MongoDbSettings)); err != nil {
 			return fmt.Errorf("Error setting mongodb_settings for DMS: %s", err)
+		}
+	case engineNameMariadb:
+		fallthrough
+	case engineNameMySQL:
+		if endpoint.MySQLSettings != nil {
+			d.Set("username", endpoint.MySQLSettings.Username)
+			d.Set("server_name", endpoint.MySQLSettings.ServerName)
+			d.Set("port", endpoint.MySQLSettings.Port)
+			d.Set("database_name", endpoint.MySQLSettings.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", endpoint.MySQLSettings.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", endpoint.MySQLSettings.SecretsManagerSecretId)
+		} else {
+			d.Set("username", endpoint.Username)
+			d.Set("server_name", endpoint.ServerName)
+			d.Set("port", endpoint.Port)
+			d.Set("database_name", endpoint.DatabaseName)
 		}
 	case engineNameOracle:
 		if endpoint.OracleSettings != nil {
