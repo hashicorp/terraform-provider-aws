@@ -50,14 +50,14 @@ func TestAccEKSAddonVersionDataSource_basic(t *testing.T) {
 func testAccAddonVersionDataSourceConfig_Basic(rName, addonName string, mostRecent bool) string {
 	return acctest.ConfigCompose(testAccAddonConfig_Base(rName), fmt.Sprintf(`
 data "aws_eks_addon_version" "test" {
-  addon_name   = %[2]q
+  addon_name         = %[2]q
   kubernetes_version = aws_eks_cluster.test.version
-  most_recent = %[3]t
+  most_recent        = %[3]t
 }
 
 resource "aws_eks_addon" "test" {
-  addon_name   = %[2]q
-  cluster_name = aws_eks_cluster.test.name
+  addon_name    = %[2]q
+  cluster_name  = aws_eks_cluster.test.name
   addon_version = data.aws_eks_addon_version.test.version
 }
 
@@ -67,7 +67,7 @@ data "aws_eks_addon" "test" {
 
   depends_on = [
     data.aws_eks_addon_version.test,
-	aws_eks_addon.test,
+    aws_eks_addon.test,
     aws_eks_cluster.test,
   ]
 }
