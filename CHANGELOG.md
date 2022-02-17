@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_grafana_workspace` ([#22874](https://github.com/hashicorp/terraform-provider-aws/issues/22874))
+* **New Data Source:** `aws_iam_openid_connect_provider` ([#23240](https://github.com/hashicorp/terraform-provider-aws/issues/23240))
 * **New Data Source:** `aws_ssm_instances` ([#23162](https://github.com/hashicorp/terraform-provider-aws/issues/23162))
 * **New Resource:** `aws_cloudtrail_event_data_store` ([#22490](https://github.com/hashicorp/terraform-provider-aws/issues/22490))
 * **New Resource:** `aws_grafana_workspace` ([#22874](https://github.com/hashicorp/terraform-provider-aws/issues/22874))
@@ -11,6 +12,11 @@ ENHANCEMENTS:
 
 * provider: Add `sts_region` argument ([#23212](https://github.com/hashicorp/terraform-provider-aws/issues/23212))
 * resource/aws_dms_endpoint: Add `s3_settings.add_column_name`, `s3_settings.canned_acl_for_objects`, `s3_settings.cdc_inserts_and_updates`, `s3_settings.cdc_inserts_only`, `s3_settings.cdc_max_batch_interval`, `s3_settings.cdc_min_file_size`, `s3_settings.cdc_path`, `s3_settings.csv_no_sup_value`, `s3_settings.csv_null_value`, `s3_settings.data_page_size`, `s3_settings.date_partition_delimiter`, `s3_settings.date_partition_sequence`, `s3_settings.dict_page_size_limit`, `s3_settings.enable_statistics`, `s3_settings.encoding_type`, `s3_settings.ignore_headers_row`, `s3_settings.include_op_for_full_load`, `s3_settings.max_file_size`, `s3_settings.preserve_transactions`, `s3_settings.rfc_4180`, `s3_settings.row_group_length`, `s3_settings.timestamp_column_name`, `s3_settings.use_csv_no_sup_value` arguments ([#20913](https://github.com/hashicorp/terraform-provider-aws/issues/20913))
+* resource/aws_imagebuilder_image_recipe: Update plan time validation of `block_device_mapping.ebs.kms_key_id`, `block_device_mapping.ebs.snapshot_id`, `block_device_mapping.ebs.volume_type`, `name`, `parent_image`. ([#23235](https://github.com/hashicorp/terraform-provider-aws/issues/23235))
+
+BUG FIXES:
+
+* resource/aws_s3_bucket_lifecycle_configuration: Prevent non-empty plans when `filter` is an empty configuration block ([#23232](https://github.com/hashicorp/terraform-provider-aws/issues/23232))
 
 ## 4.1.0 (February 15, 2022)
 
