@@ -15,6 +15,7 @@ func TestAccFMS_serial(t *testing.T) {
 			"includeMap":             testAccPolicy_includeMap,
 			"update":                 testAccPolicy_update,
 			"resourceTags":           testAccPolicy_resourceTags,
+			"tags":                   testAccPolicy_tags,
 		},
 	}
 

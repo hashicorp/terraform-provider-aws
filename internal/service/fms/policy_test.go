@@ -37,6 +37,7 @@ func testAccPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "delete_unused_fm_managed_resources", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -165,7 +166,6 @@ func testAccPolicy_resourceTags(t *testing.T) {
 				Config: testAccFmsPolicyConfigResourceTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.key1", "value1"),
 				),
@@ -173,10 +173,44 @@ func testAccPolicy_resourceTags(t *testing.T) {
 			{
 				Config: testAccFmsPolicyConfigResourceTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccPolicy_tags(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_fms_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			testAccPreCheckFmsAdmin(t)
+			acctest.PreCheckOrganizationsEnabled(t)
+			acctest.PreCheckOrganizationManagementAccount(t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, fms.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFmsPolicyConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccFmsPolicyConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -442,6 +476,61 @@ resource "aws_fms_policy" "test" {
   }
 
   resource_tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+
+  depends_on = [aws_fms_admin_account.test]
+}
+
+resource "aws_wafregional_rule_group" "test" {
+  metric_name = "MyTest"
+  name        = %[1]q
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccFmsPolicyConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccFmsPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
+resource "aws_fms_policy" "test" {
+  exclude_resource_tags = false
+  name                  = %[1]q
+  remediation_enabled   = false
+  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+
+  security_service_policy_data {
+    type                 = "WAF"
+    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+
+  depends_on = [aws_fms_admin_account.test]
+}
+
+resource "aws_wafregional_rule_group" "test" {
+  metric_name = "MyTest"
+  name        = %[1]q
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccFmsPolicyConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccFmsPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
+resource "aws_fms_policy" "test" {
+  exclude_resource_tags = false
+  name                  = %[1]q
+  remediation_enabled   = false
+  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+
+  security_service_policy_data {
+    type                 = "WAF"
+    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+  }
+
+  tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
   }

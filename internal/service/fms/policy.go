@@ -24,9 +24,12 @@ func ResourcePolicy() *schema.Resource {
 		Read:   resourcePolicyRead,
 		Update: resourcePolicyUpdate,
 		Delete: resourcePolicyDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -143,15 +146,20 @@ func ResourcePolicy() *schema.Resource {
 					},
 				},
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FMSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &fms.PutPolicyInput{
-		Policy: resourcePolicyExpandPolicy(d),
+		Policy:  resourcePolicyExpandPolicy(d),
+		TagList: Tags(tags.IgnoreAWS()),
 	}
 
 	output, err := conn.PutPolicy(input)
@@ -167,6 +175,8 @@ func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FMSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindPolicyByID(conn, d.Id())
 
@@ -180,20 +190,50 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading FMS Policy (%s): %w", d.Id(), err)
 	}
 
-	return resourcePolicyFlattenPolicy(d, output)
+	if err := resourcePolicyFlattenPolicy(d, output); err != nil {
+		return err
+	}
+
+	tags, err := ListTags(conn, d.Get("arn").(string))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for FMS Policy (%s): %w", d.Id(), err)
+	}
+
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
+	return nil
 }
 
 func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FMSConn
 
-	input := &fms.PutPolicyInput{
-		Policy: resourcePolicyExpandPolicy(d),
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &fms.PutPolicyInput{
+			Policy: resourcePolicyExpandPolicy(d),
+		}
+
+		_, err := conn.PutPolicy(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating FMS Policy (%s): %w", d.Id(), err)
+		}
 	}
 
-	_, err := conn.PutPolicy(input)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
-	if err != nil {
-		return fmt.Errorf("error updating FMS Policy (%s): %w", d.Id(), err)
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating FMS Policy (%s) tags: %w", d.Id(), err)
+		}
 	}
 
 	return resourcePolicyRead(d, meta)
