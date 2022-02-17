@@ -190,7 +190,9 @@ The `transition` configuration block supports the following arguments:
 * `days` - (Optional, Conflicts with `date`) The number of days after creation when objects are transitioned to the specified storage class. The value must be a positive integer. If both `days` and `date` are not specified, defaults to `0`. Valid values depend on `storage_class`, see [Transition objects using Amazon S3 Lifecycle](https://docs.aws.amazon.com/AmazonS3/latest/userguide/lifecycle-transition-general-considerations.html) for more details.
 * `storage_class` - The class of storage used to store the object. Valid Values: `GLACIER`, `STANDARD_IA`, `ONEZONE_IA`, `INTELLIGENT_TIERING`, `DEEP_ARCHIVE`, `GLACIER_IR`.
 
-### `and`
+### and
+
+The `and` configuration block supports the following arguments:
 
 * `object_size_greater_than` - (Optional) Minimum object size to which the rule applies. Value must be at least `0` if specified.
 * `object_size_less_than` - (Optional) Maximum object size to which the rule applies. Value must be at least `1` if specified.
