@@ -2,11 +2,11 @@ package iam
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -16,7 +16,8 @@ import (
 
 func DataSourceOpenIDConnectProvider() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceOpenIDConnectProviderRead,
+		ReadWithoutTimeout: dataSourceOpenIDConnectProviderRead,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:         schema.TypeString,
@@ -48,7 +49,7 @@ func DataSourceOpenIDConnectProvider() *schema.Resource {
 	}
 }
 
-func dataSourceOpenIDConnectProviderRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).IAMConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -59,21 +60,21 @@ func dataSourceOpenIDConnectProviderRead(d *schema.ResourceData, meta interface{
 	} else if v, ok := d.GetOk("url"); ok {
 		url := v.(string)
 
-		oidcpEntry, err := dataSourceGetOpenIDConnectProviderByURL(context.Background(), conn, url)
+		oidcpEntry, err := dataSourceGetOpenIDConnectProviderByURL(ctx, conn, url)
 		if err != nil {
-			return fmt.Errorf("error finding IAM OIDC Provider by url (%s): %w", url, err)
+			return diag.Errorf("error finding IAM OIDC Provider by url (%s): %s", url, err)
 		}
 
 		if oidcpEntry == nil {
-			return fmt.Errorf("error finding IAM OIDC Provider by url (%s): not found", url)
+			return diag.Errorf("error finding IAM OIDC Provider by url (%s): not found", url)
 		}
 		input.OpenIDConnectProviderArn = oidcpEntry.Arn
 	}
 
-	resp, err := conn.GetOpenIDConnectProvider(input)
+	resp, err := conn.GetOpenIDConnectProviderWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM OIDC Provider: %w", err)
+		return diag.Errorf("error reading IAM OIDC Provider: %s", err)
 	}
 
 	d.SetId(aws.StringValue(input.OpenIDConnectProviderArn))
@@ -83,7 +84,7 @@ func dataSourceOpenIDConnectProviderRead(d *schema.ResourceData, meta interface{
 	d.Set("thumbprint_list", flex.FlattenStringList(resp.ThumbprintList))
 
 	if err := d.Set("tags", KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return diag.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
