@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fms"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tffms "github.com/hashicorp/terraform-provider-aws/internal/service/fms"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func testAccPolicy_basic(t *testing.T) {
@@ -188,15 +188,9 @@ func testAccCheckPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		policyID := rs.Primary.Attributes["id"]
+		_, err := tffms.FindPolicyByID(conn, rs.Primary.ID)
 
-		input := &fms.GetPolicyInput{
-			PolicyId: aws.String(policyID),
-		}
-
-		resp, err := conn.GetPolicy(input)
-
-		if tfawserr.ErrMessageContains(err, fms.ErrCodeResourceNotFoundException, "") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -204,18 +198,29 @@ func testAccCheckPolicyDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if resp.Policy.PolicyId != nil {
-			return fmt.Errorf("[DESTROY Error] Fms Policy (%s) not deleted", rs.Primary.ID)
-		}
+		return fmt.Errorf("FMS Policy %s still exists", rs.Primary.ID)
 	}
+
 	return nil
 }
 
-func testAccCheckPolicyExists(name string) resource.TestCheckFunc {
+func testAccCheckPolicyExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No FMS Policy ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSConn
+
+		_, err := tffms.FindPolicyByID(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
 		}
 
 		return nil
