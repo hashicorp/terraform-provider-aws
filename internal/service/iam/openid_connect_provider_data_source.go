@@ -22,9 +22,20 @@ func DataSourceOpenIDConnectProvider() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"arn", "url"},
 				ValidateFunc: verify.ValidARN,
+				ExactlyOneOf: []string{"arn", "url"},
 			},
+			"client_id_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"thumbprint_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"tags": tftags.TagsSchemaComputed(),
 			"url": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -33,21 +44,6 @@ func DataSourceOpenIDConnectProvider() *schema.Resource {
 				DiffSuppressFunc: suppressOpenIDURL,
 				ExactlyOneOf:     []string{"arn", "url"},
 			},
-			"client_id_list": {
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				Type:     schema.TypeList,
-				Computed: true,
-			},
-			"thumbprint_list": {
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				Type:     schema.TypeList,
-				Computed: true,
-			},
-			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
