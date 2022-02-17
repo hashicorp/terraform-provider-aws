@@ -239,9 +239,11 @@ func ExpandLifecycleRuleFilter(l []interface{}) *s3.LifecycleRuleFilter {
 	}
 
 	if v, ok := m["tag"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		tags := Tags(tftags.New(v[0]).IgnoreAWS())
-		if len(tags) > 0 {
-			result.Tag = tags[0]
+		if tfMap, mOk := v[0].(map[string]interface{}); mOk {
+			tags := Tags(tftags.New(tfMap).IgnoreAWS())
+			if len(tags) > 0 {
+				result.Tag = tags[0]
+			}
 		}
 	}
 
