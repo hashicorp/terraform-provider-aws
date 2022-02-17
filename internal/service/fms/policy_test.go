@@ -146,7 +146,7 @@ func testAccPolicy_update(t *testing.T) {
 	})
 }
 
-func testAccPolicy_tags(t *testing.T) {
+func testAccPolicy_resourceTags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fms_policy.test"
 
