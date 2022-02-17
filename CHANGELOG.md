@@ -16,6 +16,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_s3_bucket_lifecycle_configuration: Ensure both `key` and `value` arguments of the `filter` `tag` configuration block are correctly populated in the outgoing API request and terraform state. ([#23252](https://github.com/hashicorp/terraform-provider-aws/issues/23252))
 * resource/aws_s3_bucket_lifecycle_configuration: Prevent non-empty plans when `filter` is an empty configuration block ([#23232](https://github.com/hashicorp/terraform-provider-aws/issues/23232))
 
 ## 4.1.0 (February 15, 2022)
