@@ -119,24 +119,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "versioning-bucket-config" {
 }
 ```
 
-## Usage Notes
-
-~> **NOTE:** To avoid conflicts always add the following lifecycle object to the `aws_s3_bucket` resource of the source bucket.
-
-This resource implements the same features that are provided by the `lifecycle_rule` object of the [`aws_s3_bucket` resource](s3_bucket.html). To avoid conflicts or unexpected apply results, a lifecycle configuration is needed on the `aws_s3_bucket` to ignore changes to the internal `lifecycle_rule` object.  Failure to add the `lifecycle` configuration to the `aws_s3_bucket` will result in conflicting state results.
-
-```
-lifecycle {
-  ignore_changes = [
-    lifecycle_rule
-  ]
-}
-```
-
-The `aws_s3_bucket_lifecycle_configuration` resource provides the following features that are not available in the [`aws_s3_bucket` resource](s3_bucket.html):
-
-* `filter` - Added to the `rule` configuration block [documented below](#filter).
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -177,7 +159,7 @@ The `expiration` configuration block supports the following arguments:
 
 The `filter` configuration block supports the following arguments:
 
-* `and`- (Optional) Configuration block used to apply a logical `AND` to two or more predicates. The Lifecycle Rule will apply to any object matching all of the predicates configured inside the `and` block.
+* `and`- (Optional) Configuration block used to apply a logical `AND` to two or more predicates [documented below](#and). The Lifecycle Rule will apply to any object matching all of the predicates configured inside the `and` block.
 * `object_size_greater_than` - (Optional) Minimum object size to which the rule applies.
 * `object_size_less_than` - (Optional) Maximum object size to which the rule applies.
 * `prefix` - (Optional) Prefix identifying one or more objects to which the rule applies.
@@ -207,6 +189,13 @@ The `transition` configuration block supports the following arguments:
 * `date` - (Optional, Conflicts with `days`) The date objects are transitioned to the specified storage class. The date value must be in ISO 8601 format and set to midnight UTC e.g. `2023-01-13T00:00:00Z`.
 * `days` - (Optional, Conflicts with `date`) The number of days after creation when objects are transitioned to the specified storage class. The value must be a positive integer. If both `days` and `date` are not specified, defaults to `0`. Valid values depend on `storage_class`, see [Transition objects using Amazon S3 Lifecycle](https://docs.aws.amazon.com/AmazonS3/latest/userguide/lifecycle-transition-general-considerations.html) for more details.
 * `storage_class` - The class of storage used to store the object. Valid Values: `GLACIER`, `STANDARD_IA`, `ONEZONE_IA`, `INTELLIGENT_TIERING`, `DEEP_ARCHIVE`, `GLACIER_IR`.
+
+### `and`
+
+* `object_size_greater_than` - (Optional) Minimum object size to which the rule applies. Value must be at least `0` if specified.
+* `object_size_less_than` - (Optional) Maximum object size to which the rule applies. Value must be at least `1` if specified.
+* `prefix` - (Optional) Prefix identifying one or more objects to which the rule applies.
+* `tags` - (Optional) Key-value map of resource tags. All of these tags must exist in the object's tag set in order for the rule to apply.
 
 ### tag
 
