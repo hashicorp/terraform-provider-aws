@@ -265,6 +265,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
+
 	if tfresource.TimedOut(err) {
 		cluster, err = FindClusterByNameOrARN(context.Background(), conn, d.Id())
 	}
@@ -307,12 +308,6 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	tags := KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] ECS tagging failed listing tags for Cluster (%s): %s", d.Id(), err)
-		return nil
-	}
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -626,6 +626,14 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 	output, err := conn.DescribeServices(&input)
 
+	// Some partitions (i.e., ISO) may not support tagging, giving error
+	if verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] ECS tagging failed describing Service (%s) with tags: %s; retrying without tags", d.Id(), err)
+
+		input.Include = nil
+		output, err = conn.DescribeServices(&input)
+	}
+
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ecs.ErrCodeServiceNotFoundException) {
 		log.Printf("[WARN] ECS service (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -751,12 +759,6 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	tags := KeyValueTags(service.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] ECS tagging failed listing tags for Service (%s): %s", d.Id(), err)
-		return nil
-	}
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
