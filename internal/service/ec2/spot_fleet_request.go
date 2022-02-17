@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -664,7 +664,7 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 		ni := &ec2.InstanceNetworkInterfaceSpecification{
 			AssociatePublicIpAddress: aws.Bool(true),
 			DeleteOnTermination:      aws.Bool(true),
-			DeviceIndex:              aws.Int64(int64(0)),
+			DeviceIndex:              aws.Int64(0),
 			SubnetId:                 aws.String(subnetId.(string)),
 			Groups:                   securityGroupIds,
 		}
@@ -982,7 +982,6 @@ func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) er
 	if d.Get("fleet_type").(string) != ec2.FleetTypeMaintain {
 		if spotFleetConfig.SpotMaintenanceStrategies != nil {
 			log.Printf("[WARN] Spot Fleet (%s) has an invalid configuration and can not be requested. Capacity Rebalance maintenance strategies can only be specified for spot fleets of type maintain.", spotFleetConfig)
-			d.SetId("")
 			return nil
 		}
 	}
@@ -1048,19 +1047,19 @@ func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	// http://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-RequestSpotFleetInput
-	spotFleetOpts := &ec2.RequestSpotFleetInput{
+	input := &ec2.RequestSpotFleetInput{
 		SpotFleetRequestConfig: spotFleetConfig,
 		DryRun:                 aws.Bool(false),
 	}
 
-	log.Printf("[DEBUG] Requesting spot fleet with these opts: %+v", spotFleetOpts)
+	log.Printf("[DEBUG] Creating Spot Fleet Request: %s", input)
 
 	// Since IAM is eventually consistent, we retry creation as a newly created role may not
 	// take effect immediately, resulting in an InvalidSpotFleetRequestConfig error
-	var resp *ec2.RequestSpotFleetOutput
+	var output *ec2.RequestSpotFleetOutput
 	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
-		resp, err = conn.RequestSpotFleet(spotFleetOpts)
+		output, err = conn.RequestSpotFleet(input)
 
 		if tfawserr.ErrMessageContains(err, "InvalidSpotFleetRequestConfig", "Parameter: SpotFleetRequestConfig.IamFleetRole is invalid") {
 			return resource.RetryableError(err)
@@ -1078,14 +1077,14 @@ func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) er
 	})
 
 	if tfresource.TimedOut(err) {
-		resp, err = conn.RequestSpotFleet(spotFleetOpts)
+		output, err = conn.RequestSpotFleet(input)
 	}
 
 	if err != nil {
 		return fmt.Errorf("Error requesting spot fleet: %w", err)
 	}
 
-	d.SetId(aws.StringValue(resp.SpotFleetRequestId))
+	d.SetId(aws.StringValue(output.SpotFleetRequestId))
 
 	log.Printf("[INFO] Spot Fleet Request ID: %s", d.Id())
 	log.Println("[INFO] Waiting for Spot Fleet Request to be active")

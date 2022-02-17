@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -199,6 +199,7 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 
 		if d.HasChange("event_categories") {
 			input.EventCategories = flex.ExpandStringSet(d.Get("event_categories").(*schema.Set))
+			input.SourceType = aws.String(d.Get("source_type").(string))
 		}
 
 		if d.HasChange("source_type") {

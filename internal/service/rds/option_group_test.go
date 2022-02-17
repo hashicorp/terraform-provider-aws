@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -675,7 +675,7 @@ resource "aws_db_option_group" "bar" {
   name                     = "%s"
   option_group_description = "Test option group for terraform"
   engine_name              = "oracle-ee"
-  major_engine_version     = "11.2"
+  major_engine_version     = "12.2"
 
   option {
     option_name = "Timezone"
@@ -733,7 +733,7 @@ resource "aws_db_option_group" "bar" {
   name                     = "%s"
   option_group_description = "Test option group for terraform"
   engine_name              = "oracle-ee"
-  major_engine_version     = "11.2"
+  major_engine_version     = "12.2"
 
   option {
     option_name = "Timezone"
@@ -783,7 +783,7 @@ resource "aws_db_option_group" "bar" {
   name                     = "%[1]s"
   option_group_description = "Test option group for terraform issue 748"
   engine_name              = "oracle-ee"
-  major_engine_version     = "12.1"
+  major_engine_version     = "12.2"
 
   option {
     option_name = "OEM_AGENT"
@@ -816,15 +816,15 @@ func testAccOptionGroupMultipleOptions(r string) string {
 resource "aws_db_option_group" "bar" {
   name                     = "%s"
   option_group_description = "Test option group for terraform"
-  engine_name              = "oracle-se"
-  major_engine_version     = "11.2"
+  engine_name              = "oracle-ee"
+  major_engine_version     = "12.2"
 
   option {
-    option_name = "STATSPACK"
+    option_name = "SPATIAL"
   }
 
   option {
-    option_name = "XMLDB"
+    option_name = "STATSPACK"
   }
 }
 `, r)

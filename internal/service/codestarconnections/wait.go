@@ -13,7 +13,7 @@ const (
 )
 
 // waitHostPendingOrAvailable waits for a Host to return PENDING or AVAILABLE
-func waitHostPendingOrAvailable(conn *codestarconnections.CodeStarConnections, hostARN string) (*codestarconnections.Host, error) {
+func waitHostPendingOrAvailable(conn *codestarconnections.CodeStarConnections, hostARN string) (*codestarconnections.Host, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"VPC_CONFIG_INITIALIZING"},
 		Target: []string{

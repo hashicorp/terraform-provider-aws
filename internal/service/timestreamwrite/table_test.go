@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/timestreamwrite"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -34,8 +34,134 @@ func TestAccTimestreamWriteTable_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "timestream", fmt.Sprintf("database/%[1]s/table/%[1]s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "database_name", dbResourceName, "database_name"),
 					resource.TestCheckResourceAttr(resourceName, "retention_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", "false"),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "table_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccTimestreamWriteTable_magneticStoreWriteProperties(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_timestreamwrite_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableMagneticStoreWritePropertiesConfig(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTableExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", "true"),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableMagneticStoreWritePropertiesConfig(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTableExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", "false"),
+				),
+			},
+			{
+				Config: testAccTableMagneticStoreWritePropertiesConfig(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTableExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccTimestreamWriteTable_magneticStoreWriteProperties_s3Config(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_timestreamwrite_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableMagneticStoreWritePropertiesS3Config(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTableExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", "true"),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.0.object_key_prefix", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableMagneticStoreWritePropertiesS3Config(rName, rNameUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTableExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", "true"),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.0.object_key_prefix", rNameUpdated),
+				),
+			},
+		},
+	})
+}
+
+func TestAccTimestreamWriteTable_magneticStoreWriteProperties_s3KmsConfig(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_timestreamwrite_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableMagneticStoreWritePropertiesS3KmsConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTableExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", "true"),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "bucket"),
+					resource.TestCheckResourceAttrPair(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.0.kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.0.object_key_prefix", rName),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.0.encryption_option", "SSE_KMS"),
 				),
 			},
 			{
@@ -61,6 +187,7 @@ func TestAccTimestreamWriteTable_disappears(t *testing.T) {
 				Config: testAccTableBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tftimestreamwrite.ResourceTable(), resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tftimestreamwrite.ResourceTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -260,6 +387,82 @@ func testAccTableBasicConfig(rName string) string {
 resource "aws_timestreamwrite_table" "test" {
   database_name = aws_timestreamwrite_database.test.database_name
   table_name    = %q
+}
+`, rName))
+}
+
+func testAccTableMagneticStoreWritePropertiesConfig(rName string, enable bool) string {
+	return acctest.ConfigCompose(
+		testAccTableBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_timestreamwrite_table" "test" {
+  database_name = aws_timestreamwrite_database.test.database_name
+  table_name    = %q
+
+  magnetic_store_write_properties {
+    enable_magnetic_store_writes = %t
+  }
+}
+`, rName, enable))
+}
+
+func testAccTableMagneticStoreWritePropertiesS3Config(rName, prefix string) string {
+	return acctest.ConfigCompose(
+		testAccTableBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_timestreamwrite_table" "test" {
+  database_name = aws_timestreamwrite_database.test.database_name
+  table_name    = %[1]q
+
+  magnetic_store_write_properties {
+    enable_magnetic_store_writes = true
+
+    magnetic_store_rejected_data_location {
+      s3_configuration {
+        bucket_name       = aws_s3_bucket.test.bucket
+        object_key_prefix = %[2]q
+      }
+    }
+  }
+}
+`, rName, prefix))
+}
+
+func testAccTableMagneticStoreWritePropertiesS3KmsConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccTableBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  description             = %[1]q
+}
+
+resource "aws_timestreamwrite_table" "test" {
+  database_name = aws_timestreamwrite_database.test.database_name
+  table_name    = %[1]q
+
+  magnetic_store_write_properties {
+    enable_magnetic_store_writes = true
+
+    magnetic_store_rejected_data_location {
+      s3_configuration {
+        bucket_name       = aws_s3_bucket.test.bucket
+        object_key_prefix = %[1]q
+        kms_key_id        = aws_kms_key.test.arn
+        encryption_option = "SSE_KMS"
+      }
+    }
+  }
 }
 `, rName))
 }

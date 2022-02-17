@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -159,7 +159,7 @@ func resourcePoolRolesAttachmentRead(d *schema.ResourceData, meta interface{}) e
 
 	d.Set("identity_pool_id", ip.IdentityPoolId)
 
-	if err := d.Set("roles", flattenIdentityPoolRoles(ip.Roles)); err != nil {
+	if err := d.Set("roles", aws.StringValueMap(ip.Roles)); err != nil {
 		return fmt.Errorf("Error setting roles error: %#v", err)
 	}
 

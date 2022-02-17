@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -701,18 +701,19 @@ func resourceDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChangesExcept("tags", "tags_all") {
 		// required fields
 		applicationName := d.Get("app_name").(string)
-		deploymentGroupName := d.Get("deployment_group_name").(string)
 		serviceRoleArn := d.Get("service_role_arn").(string)
 
 		input := codedeploy.UpdateDeploymentGroupInput{
-			ApplicationName:            aws.String(applicationName),
-			CurrentDeploymentGroupName: aws.String(deploymentGroupName),
-			ServiceRoleArn:             aws.String(serviceRoleArn),
+			ApplicationName: aws.String(applicationName),
+			ServiceRoleArn:  aws.String(serviceRoleArn),
 		}
 
 		if d.HasChange("deployment_group_name") {
-			_, n := d.GetChange("deployment_group_name")
+			o, n := d.GetChange("deployment_group_name")
+			input.CurrentDeploymentGroupName = aws.String(o.(string))
 			input.NewDeploymentGroupName = aws.String(n.(string))
+		} else {
+			input.CurrentDeploymentGroupName = aws.String(d.Get("deployment_group_name").(string))
 		}
 
 		if d.HasChange("deployment_style") {
@@ -805,7 +806,7 @@ func resourceDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) err
 			_, err = conn.UpdateDeploymentGroup(&input)
 		}
 		if err != nil {
-			return fmt.Errorf("Error updating CodeDeploy deployment group: %w", err)
+			return fmt.Errorf("error updating CodeDeploy deployment group (%s): %w", d.Id(), err)
 		}
 	}
 

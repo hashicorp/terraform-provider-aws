@@ -568,6 +568,7 @@ func TestAccEC2InstanceDataSource_metadataOptions(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "metadata_options.0.http_endpoint", resourceName, "metadata_options.0.http_endpoint"),
 					resource.TestCheckResourceAttrPair(datasourceName, "metadata_options.0.http_tokens", resourceName, "metadata_options.0.http_tokens"),
 					resource.TestCheckResourceAttrPair(datasourceName, "metadata_options.0.http_put_response_hop_limit", resourceName, "metadata_options.0.http_put_response_hop_limit"),
+					resource.TestCheckResourceAttrPair(datasourceName, "metadata_options.0.instance_metadata_tags", resourceName, "metadata_options.0.instance_metadata_tags"),
 				),
 			},
 		},
@@ -990,7 +991,7 @@ data "aws_instance" "test" {
 
 func testAccInstanceDataSourceConfig_getPasswordData(rName, publicKey string, val bool) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestWindowsServer2016CoreAmi(),
+		testAccLatestWindowsServer2016CoreAMIConfig(),
 		fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
@@ -1085,6 +1086,7 @@ resource "aws_instance" "test" {
     http_endpoint               = "enabled"
     http_tokens                 = "required"
     http_put_response_hop_limit = 2
+    instance_metadata_tags      = "enabled"
   }
 }
 

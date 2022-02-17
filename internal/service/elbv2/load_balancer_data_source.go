@@ -2,11 +2,12 @@ package elbv2
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -118,6 +119,11 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Computed: true,
 			},
 
+			"enable_waf_fail_open": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+
 			"idle_timeout": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -149,6 +155,11 @@ func DataSourceLoadBalancer() *schema.Resource {
 			},
 
 			"customer_owned_ipv4_pool": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"desync_mitigation_mode": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -241,16 +252,6 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting subnet_mapping: %w", err)
 	}
 
-	tags, err := ListTags(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
-	}
-
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
 	attributesResp, err := conn.DescribeLoadBalancerAttributes(&elbv2.DescribeLoadBalancerAttributesInput{
 		LoadBalancerArn: aws.String(d.Id()),
 	})
@@ -287,14 +288,35 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 		case "routing.http2.enabled":
 			http2Enabled := aws.StringValue(attr.Value) == "true"
 			d.Set("enable_http2", http2Enabled)
+		case "waf.fail_open.enabled":
+			wafFailOpenEnabled := aws.StringValue(attr.Value) == "true"
+			d.Set("enable_waf_fail_open", wafFailOpenEnabled)
 		case "load_balancing.cross_zone.enabled":
 			crossZoneLbEnabled := aws.StringValue(attr.Value) == "true"
 			d.Set("enable_cross_zone_load_balancing", crossZoneLbEnabled)
+		case "routing.http.desync_mitigation_mode":
+			desyncMitigationMode := aws.StringValue(attr.Value)
+			d.Set("desync_mitigation_mode", desyncMitigationMode)
 		}
 	}
 
 	if err := d.Set("access_logs", []interface{}{accessLogMap}); err != nil {
 		return fmt.Errorf("error setting access_logs: %w", err)
+	}
+
+	tags, err := ListTags(conn, d.Id())
+
+	if verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] Unable to list tags for ELBv2 Load Balancer %s: %s", d.Id(), err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil

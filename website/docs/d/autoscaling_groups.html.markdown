@@ -16,13 +16,13 @@ ASGs within a specific region. This will allow you to pass a list of AutoScaling
 ```terraform
 data "aws_autoscaling_groups" "groups" {
   filter {
-    name   = "key"
-    values = ["Team"]
+    name   = "tag:Team"
+    values = ["Pets"]
   }
 
   filter {
-    name   = "value"
-    values = ["Pets"]
+    name   = "tag-key"
+    values = ["Environment"]
   }
 }
 
@@ -42,8 +42,9 @@ resource "aws_autoscaling_notification" "slack_notifications" {
 
 ## Argument Reference
 
+* `names` - (Optional) A list of autoscaling group names
 * `filter` - (Optional) A filter used to scope the list e.g., by tags. See [related docs](http://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_Filter.html).
-    * `name` - (Required) The name of the filter. The valid values are: `auto-scaling-group`, `key`, `value`, and `propagate-at-launch`.
+    * `name` - (Required) The name of the DescribeAutoScalingGroup filter. The recommended values are: `tag-key`, `tag-value`, and `tag:<tag name>`
     * `values` - (Required) The value of the filter.
 
 ## Attributes Reference

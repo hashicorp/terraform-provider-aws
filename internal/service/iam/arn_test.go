@@ -26,27 +26,27 @@ func TestInstanceProfileARNToName(t *testing.T) {
 		},
 		{
 			TestName:      "invalid ARN service",
-			InputARN:      "arn:aws:ec2:us-east-1:123456789012:instance/i-12345678",
+			InputARN:      "arn:aws:ec2:us-east-1:123456789012:instance/i-12345678", //lintignore:AWSAT003,AWSAT005
 			ExpectedError: regexp.MustCompile(`expected service iam`),
 		},
 		{
 			TestName:      "invalid ARN resource parts",
-			InputARN:      "arn:aws:iam:us-east-1:123456789012:name",
+			InputARN:      "arn:aws:iam:us-east-1:123456789012:name", //lintignore:AWSAT003,AWSAT005
 			ExpectedError: regexp.MustCompile(`expected at least 2 resource parts`),
 		},
 		{
 			TestName:      "invalid ARN resource prefix",
-			InputARN:      "arn:aws:iam:us-east-1:123456789012:role/name",
+			InputARN:      "arn:aws:iam:us-east-1:123456789012:role/name", //lintignore:AWSAT003,AWSAT005
 			ExpectedError: regexp.MustCompile(`expected resource prefix instance-profile`),
 		},
 		{
 			TestName:     "valid ARN",
-			InputARN:     "arn:aws:iam:us-east-1:123456789012:instance-profile/name",
+			InputARN:     "arn:aws:iam:us-east-1:123456789012:instance-profile/name", //lintignore:AWSAT003,AWSAT005
 			ExpectedName: "name",
 		},
 		{
 			TestName:     "valid ARN with multiple parts",
-			InputARN:     "arn:aws:iam:us-east-1:123456789012:instance-profile/path/name",
+			InputARN:     "arn:aws:iam:us-east-1:123456789012:instance-profile/path/name", //lintignore:AWSAT003,AWSAT005
 			ExpectedName: "name",
 		},
 	}

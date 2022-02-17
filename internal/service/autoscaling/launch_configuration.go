@@ -1,6 +1,6 @@
 package autoscaling
 
-import (
+import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"bytes"
 	"crypto/sha1"
 	"encoding/base64"
@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -558,7 +558,7 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 		_, err = autoscalingconn.CreateLaunchConfiguration(&createLaunchConfigurationOpts)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating launch configuration: %s", err)
+		return fmt.Errorf("Error creating launch configuration: %w", err)
 	}
 
 	d.SetId(lcName)
@@ -577,19 +577,17 @@ func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG] launch configuration describe configuration: %s", describeOpts)
 	describConfs, err := autoscalingconn.DescribeLaunchConfigurations(&describeOpts)
 	if err != nil {
-		return fmt.Errorf("Error retrieving launch configuration: %s", err)
+		return fmt.Errorf("Error retrieving launch configuration: %w", err)
 	}
-	if len(describConfs.LaunchConfigurations) == 0 {
+	if len(describConfs.LaunchConfigurations) == 0 && !d.IsNewResource() {
 		log.Printf("[WARN] Launch Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	// Verify AWS returned our launch configuration
-	if *describConfs.LaunchConfigurations[0].LaunchConfigurationName != d.Id() {
-		return fmt.Errorf(
-			"Unable to find launch configuration: %#v",
-			describConfs.LaunchConfigurations)
+	if aws.StringValue(describConfs.LaunchConfigurations[0].LaunchConfigurationName) != d.Id() {
+		return fmt.Errorf("Unable to find launch configuration: %#v", describConfs.LaunchConfigurations)
 	}
 
 	lc := describConfs.LaunchConfigurations[0]
@@ -608,7 +606,7 @@ func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("enable_monitoring", lc.InstanceMonitoring.Enabled)
 	d.Set("associate_public_ip_address", lc.AssociatePublicIpAddress)
 	if err := d.Set("security_groups", flex.FlattenStringList(lc.SecurityGroups)); err != nil {
-		return fmt.Errorf("error setting security_groups: %s", err)
+		return fmt.Errorf("error setting security_groups: %w", err)
 	}
 	if v := aws.StringValue(lc.UserData); v != "" {
 		_, b64 := d.GetOk("user_data_base64")
@@ -621,11 +619,11 @@ func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) e
 
 	d.Set("vpc_classic_link_id", lc.ClassicLinkVPCId)
 	if err := d.Set("vpc_classic_link_security_groups", flex.FlattenStringList(lc.ClassicLinkVPCSecurityGroups)); err != nil {
-		return fmt.Errorf("error setting vpc_classic_link_security_groups: %s", err)
+		return fmt.Errorf("error setting vpc_classic_link_security_groups: %w", err)
 	}
 
 	if err := d.Set("metadata_options", flattenLaunchConfigInstanceMetadataOptions(lc.MetadataOptions)); err != nil {
-		return fmt.Errorf("error setting metadata_options: %s", err)
+		return fmt.Errorf("error setting metadata_options: %w", err)
 	}
 
 	if err := readLCBlockDevices(d, lc, ec2conn); err != nil {
@@ -666,7 +664,7 @@ func resourceLaunchConfigurationDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Autoscaling Launch Configuration (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Autoscaling Launch Configuration (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -744,15 +742,11 @@ func readBlockDevicesFromLaunchConfiguration(d *schema.ResourceData, lc *autosca
 	if len(lc.BlockDeviceMappings) == 0 {
 		return nil, nil
 	}
-	rootDeviceName, err := fetchRootDeviceName(d.Get("image_id").(string), ec2conn)
+	v, err := fetchRootDeviceName(d.Get("image_id").(string), ec2conn)
 	if err != nil {
 		return nil, err
 	}
-	if rootDeviceName == nil {
-		// We do this so the value is empty so we don't have to do nil checks later
-		var blank string
-		rootDeviceName = &blank
-	}
+	rootDeviceName := aws.StringValue(v)
 
 	// Collect existing configured devices, so we can check
 	// existing value of delete_on_termination below
@@ -777,41 +771,41 @@ func readBlockDevicesFromLaunchConfiguration(d *schema.ResourceData, lc *autosca
 			}
 			bd["delete_on_termination"] = deleteOnTermination
 		} else if bdm.Ebs != nil && bdm.Ebs.DeleteOnTermination != nil {
-			bd["delete_on_termination"] = *bdm.Ebs.DeleteOnTermination
+			bd["delete_on_termination"] = aws.BoolValue(bdm.Ebs.DeleteOnTermination)
 		}
 
 		if bdm.Ebs != nil && bdm.Ebs.VolumeSize != nil {
-			bd["volume_size"] = *bdm.Ebs.VolumeSize
+			bd["volume_size"] = aws.Int64Value(bdm.Ebs.VolumeSize)
 		}
 		if bdm.Ebs != nil && bdm.Ebs.VolumeType != nil {
-			bd["volume_type"] = *bdm.Ebs.VolumeType
+			bd["volume_type"] = aws.StringValue(bdm.Ebs.VolumeType)
 		}
 		if bdm.Ebs != nil && bdm.Ebs.Iops != nil {
-			bd["iops"] = *bdm.Ebs.Iops
+			bd["iops"] = aws.Int64Value(bdm.Ebs.Iops)
 		}
 		if bdm.Ebs != nil && bdm.Ebs.Throughput != nil {
-			bd["throughput"] = *bdm.Ebs.Throughput
+			bd["throughput"] = aws.Int64Value(bdm.Ebs.Throughput)
 		}
 		if bdm.Ebs != nil && bdm.Ebs.Encrypted != nil {
-			bd["encrypted"] = *bdm.Ebs.Encrypted
+			bd["encrypted"] = aws.BoolValue(bdm.Ebs.Encrypted)
 		}
 
-		if bdm.DeviceName != nil && *bdm.DeviceName == *rootDeviceName {
+		if bdm.DeviceName != nil && aws.StringValue(bdm.DeviceName) == rootDeviceName {
 			blockDevices["root"] = bd
 		} else {
 			if bdm.DeviceName != nil {
-				bd["device_name"] = *bdm.DeviceName
+				bd["device_name"] = aws.StringValue(bdm.DeviceName)
 			}
 
 			if bdm.VirtualName != nil {
-				bd["virtual_name"] = *bdm.VirtualName
+				bd["virtual_name"] = aws.StringValue(bdm.VirtualName)
 				blockDevices["ephemeral"] = append(blockDevices["ephemeral"].([]map[string]interface{}), bd)
 			} else {
 				if bdm.Ebs != nil && bdm.Ebs.SnapshotId != nil {
-					bd["snapshot_id"] = *bdm.Ebs.SnapshotId
+					bd["snapshot_id"] = aws.StringValue(bdm.Ebs.SnapshotId)
 				}
 				if bdm.NoDevice != nil {
-					bd["no_device"] = *bdm.NoDevice
+					bd["no_device"] = aws.BoolValue(bdm.NoDevice)
 				}
 				blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), bd)
 			}

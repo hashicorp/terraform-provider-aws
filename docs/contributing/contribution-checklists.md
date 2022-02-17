@@ -29,7 +29,7 @@ each type of contribution.
 
 ## Documentation Update
 
-The [Terraform AWS Provider's website source][website] is in this repository
+The [Terraform AWS Provider's website source](../../website) is in this repository
 along with the code and tests. Below are some common items that will get
 flagged during documentation reviews:
 
@@ -60,9 +60,6 @@ guidelines.
 - [ ] __Documentation updates__: If your code makes any changes that need to
    be documented, you should include those doc updates in the same PR. This
    includes things like new resource attributes or changes in default values.
-   The [Terraform website][website] source is in this repo and includes
-   instructions for getting a local copy of the site up and running if you'd
-   like to preview your changes.
 - [ ] __Well-formed Code__: Do your best to follow existing conventions you
    see in the codebase, and ensure your code is formatted with `go fmt`.
    The PR reviewers can help out on this front, and may provide comments with
@@ -151,7 +148,7 @@ func TestAccServiceThing_nameGenerated(t *testing.T) {
         Check: resource.ComposeTestCheckFunc(
           testAccCheckThingExists(resourceName, &thing),
           create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
-          resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+          resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
         ),
       },
       // If the resource supports import:
@@ -269,17 +266,17 @@ More details about this code generation, including fixes for potential error mes
 - Open the AWS Go SDK documentation for the service, e.g., for [`service/eks`](https://docs.aws.amazon.com/sdk-for-go/api/service/eks/). Note: there can be a delay between the AWS announcement and the updated AWS Go SDK documentation.
 - Use the AWS Go SDK to determine which types of tagging code to generate. There are three main types of tagging code you can generate: service tags, list tags, and update tags. These are not mutually exclusive and some services use more than one.
 - Determine if a service already has a `generate.go` file (e.g., `internal/service/eks/generate.go`). If none exists, follow the example of other `generate.go` files in many other services. This is a very simple file, perhaps 3-5 lines long, and must _only_ contain generate directives at the very top of the file and a package declaration (e.g., `package eks`) -- _nothing else_.
-- Check for a tagging code directive: `//go:generate go run -tags generate ../../generate/tags/main.go`. If one does not exist, add it. Note that without flags, the directive itself will not do anything useful. **WARNING:** You must never have more than one `generate/tags/main.go` directive in a `generate.go` file. Even if you want to generate all three types of tag code, you will use multiple flags but only one `generate/tags/main.go` directive! Including more than one directive will cause the generator to overwrite one set of generated code with whatever is specified in the next directive.
+- Check for a tagging code directive: `//go:generate go run ../../generate/tags/main.go`. If one does not exist, add it. Note that without flags, the directive itself will not do anything useful. **WARNING:** You must never have more than one `generate/tags/main.go` directive in a `generate.go` file. Even if you want to generate all three types of tag code, you will use multiple flags but only one `generate/tags/main.go` directive! Including more than one directive will cause the generator to overwrite one set of generated code with whatever is specified in the next directive.
 - If the service supports service tags, determine the service's "type" of tagging implementation. Some services will use a simple map style (`map[string]*string` in Go) while others will have a separate structure (`[]service.Tag` `struct` with `Key` and `Value` fields).
 
-    - If the type is a map, add a new flag to the tagging directive (see above): `-ServiceTagsMap=yes`. If the type is `struct`, add a  `-ServiceTagsSlice=yes` flag.
-    - If you use the `-ServiceTagsSlice=yes` flag and if the `struct` name is not exactly `Tag`, you must include the `-TagType` flag with the name of the `struct` (e.g., `-TagType=S3Tag`). If the key and value elements of the `struct` are not exactly `Key` and `Value` respectively, you must include the `-TagTypeKeyElem` and/or `-TagTypeValElem` flags with the correct names.
+    - If the type is a map, add a new flag to the tagging directive (see above): `-ServiceTagsMap`. If the type is `struct`, add a  `-ServiceTagsSlice` flag.
+    - If you use the `-ServiceTagsSlice` flag and if the `struct` name is not exactly `Tag`, you must include the `-TagType` flag with the name of the `struct` (e.g., `-TagType=S3Tag`). If the key and value elements of the `struct` are not exactly `Key` and `Value` respectively, you must include the `-TagTypeKeyElem` and/or `-TagTypeValElem` flags with the correct names.
     - In summary, you may need to include one or more of the following flags with `-ServiceTagsSlice` in order to properly customize the generated code: `-TagKeyType`, `TagPackage`, `TagResTypeElem`, `TagType`, `TagType2`, `TagTypeAddBoolElem`, `TagTypeAddBoolElemSnake`, `TagTypeIDElem`, `TagTypeKeyElem`, and `TagTypeValElem`.
 
 
 - If the service supports listing tags (usually a `ListTags` or `ListTagsForResource` API call), follow these guidelines.
 
-    - Add a new flag to the tagging directive (see above): `-ListTags=yes`.
+    - Add a new flag to the tagging directive (see above): `-ListTags`.
     - If the API list operation is not exactly `ListTagsForResource`, include the `-ListTagsOp` flag with the name of the operation (e.g., `-ListTagsOp=DescribeTags`).
     - If the API list tags operation identifying element is not exactly `ResourceArn`, include the `-ListTagsInIDElem` flag with the name of the element (e.g., `-ListTagsInIDElem=ResourceARN`).
     - If the API list tags operation identifying element needs a slice, include the `-ListTagsInIDNeedSlice` flag with a `yes` value (e.g., `-ListTagsInIDNeedSlice=yes`).
@@ -288,7 +285,7 @@ More details about this code generation, including fixes for potential error mes
 
 - If the service API supports updating tags (usually `TagResource` and `UntagResource` API calls), follow these guidelines.
 
-    - Add a new flag to the tagging directive (see above): `-UpdateTags=yes`.
+    - Add a new flag to the tagging directive (see above): `-UpdateTags`.
     - If the API tag operation is not exactly `TagResource`, include the `-TagOp` flag with the name of the operation (e.g., `-TagOp=AddTags`).
     - If the API untag operation is not exactly `UntagResource`, include the `-UntagOp` flag with the name of the operation (e.g., `-UntagOp=RemoveTags`).
     - If the API operation identifying element is not exactly `ResourceArn`, include the `-TagInIDElem` flag with the name of the element (e.g., `-TagInIDElem=ResourceARN`).
@@ -355,7 +352,7 @@ More details about this code generation, including fixes for potential error mes
   }
   ```
 
-- Otherwise if the API does not support tagging on creation (the `Input` struct does not accept a `Tags` field), in the resource `Create` function, implement the logic to convert the configuration tags into the service API call to tag a resource, e.g., with ElasticSearch Domain:
+- Otherwise if the API does not support tagging on creation (the `Input` struct does not accept a `Tags` field), in the resource `Create` function, implement the logic to convert the configuration tags into the service API call to tag a resource, e.g., with Elasticsearch Domain:
 
   ```go
   // Typically declared near conn := /* ... */
@@ -464,7 +461,7 @@ More details about this code generation, including fixes for potential error mes
   ```go
   func TestAccEKSCluster_tags(t *testing.T) {
     var cluster1, cluster2, cluster3 eks.Cluster
-    rName := acctest.RandomWithPrefix("tf-acc-test")
+    rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
     resourceName := "aws_eks_cluster.test"
 
     resource.ParallelTest(t, resource.TestCase{
@@ -547,7 +544,7 @@ More details about this code generation, including fixes for potential error mes
   }
   ```
 
-- Verify all acceptance testing passes for the resource (e.g., `make testacc TESTARGS='-run=TestAccEKSCluster_'`)
+- Verify all acceptance testing passes for the resource (e.g., `make testacc TESTS=TestAccEKSCluster_ PKG=eks`)
 
 ### Resource Tagging Documentation Implementation
 
@@ -571,7 +568,7 @@ See the [EC2 Listing and filtering your resources page](https://docs.aws.amazon.
 Implementing server-side filtering support for Terraform AWS Provider resources requires the following, each with its own section below:
 
 - [ ] _Generated Service Filtering Code_: In the internal code generators (e.g., `internal/generate/namevaluesfilters`), implementation and customization of how a service handles filtering, which is standardized for the resources.
-- [ ] _Resource Filtering Code Implementation_: In the resource's equivalent data source code (e.g., `aws/data_source_aws_service_thing.go`), implementation of `filter` schema attribute, along with handling in the `Read` function.
+- [ ] _Resource Filtering Code Implementation_: In the resource's equivalent data source code (e.g., `internal/service/{servicename}/thing_data_source.go`), implementation of `filter` schema attribute, along with handling in the `Read` function.
 - [ ] _Resource Filtering Documentation Implementation_: In the resource's equivalent data source documentation (e.g., `website/docs/d/service_thing.html.markdown`), addition of `filter` argument
 
 ### Adding Service to Filter Generating Code
@@ -586,7 +583,7 @@ More details about this code generation can be found in the [namevaluesfilters d
 
 ### Resource Filter Code Implementation
 
-- In the resource's equivalent data source Go file (e.g., `aws/data_source_aws_internet_gateway.go`), add the following Go import: `"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"`
+- In the resource's equivalent data source Go file (e.g., `internal/service/ec2/internet_gateway_data_source.go`), add the following Go import: `"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"`
 - In the resource schema, add `"filter": namevaluesfilters.Schema(),`
 - Implement the logic to build the list of filters:
 
@@ -647,8 +644,8 @@ guidelines.
    and to prevent future conflicts with new AWS services/resources.
    For reference:
 
-    - `service` is the AWS short service name that matches the entry in
-     `endpointServiceNames` (created via the [New Service](#new-service)
+    - `service` is the AWS short service name that matches the key in
+     the `serviceData` map in the `conns` package (created via the [New Service](#new-service)
      section)
     - `name` represents the conceptual infrastructure represented by the
      create, read, update, and delete methods of the service API. It should
@@ -672,9 +669,9 @@ guidelines.
 
 Adding a tag resource, similar to the `aws_ecs_tag` resource, has its own implementation procedure since the resource code and initial acceptance testing functions are automatically generated. The rest of the resource acceptance testing and resource documentation must still be manually created.
 
-- In `aws/internal/keyvaluetags`: Ensure the service is supported by all generators. Run `make gen` after any modifications.
-- In `aws/tag_resources.go`: Add the new `//go:generate` call with the correct service name. Run `make gen` after any modifications.
-- In `aws/provider.go`: Add the new resource.
+- In `internal/generate`: Ensure the service is supported by all generators. Run `make gen` after any modifications.
+- In `internal/service/{service}/generate.go`: Add the new `//go:generate` call with the correct generator directives. Run `make gen` after any modifications.
+- In `internal/provider/provider.go`: Add the new resource.
 - Run `make test` and ensure there are no failures.
 - Create `internal/service/{service}/tag_gen_test.go` with initial acceptance testing similar to the following (where the parent resource is simple to provision):
 
@@ -690,7 +687,7 @@ import (
 )
 
 func TestAcc{Service}Tag_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -717,7 +714,7 @@ func TestAcc{Service}Tag_basic(t *testing.T) {
 }
 
 func TestAcc{Service}Tag_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -739,7 +736,7 @@ func TestAcc{Service}Tag_disappears(t *testing.T) {
 }
 
 func TestAcc{Service}Tag_Value(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -792,7 +789,7 @@ resource "aws_{service}_tag" "test" {
 }
 ```
 
-- Run `make testacc TEST=./aws TESTARGS='-run=TestAcc{Service}Tags_'` and ensure there are no failures.
+- Run `make testacc TESTS=TestAcc{Service}Tags_ PKG={Service}` and ensure there are no failures.
 - Create `website/docs/r/{service}_tag.html.markdown` with initial documentation similar to the following:
 
 ``````markdown
@@ -860,16 +857,30 @@ into Terraform.
 
   To add the AWS Go SDK service client:
 
-    - In `aws/provider.go` Add a new service entry to `endpointServiceNames`.
-    This service name should match the AWS Go SDK or AWS CLI service name.
-    - In `aws/config.go`: Add a new import for the AWS Go SDK code. E.g.
+    - In `internal/conns/conns.go`: Add a string constant for the service. Follow these rules to name the constant.
+        - The constant name should be the same as the service name used in the AWS Go SDK except:
+            1. Drop "service" or "api" if the service name ends with either or both, and
+            2. Shorten the service name if it is excessively long. Avoid names longer than 17 characters if possible. When shortening a service name, look to the endpoints ID, common usage in documentation and marketing, and discuss the change with the community and maintainers to get buy in. The goals for this alternate name are to be instantly recognizable, not verbose, and more easily managed.
+        - The constant name should be capitalized following Go mixed-case rules. In other words:
+            1. Do not use underscores,
+            2. The first letter of each word is capitalized, and
+            3. Abbreviations and initialisms are all caps.
+        - Proper examples include `CognitoIdentity`, `DevOpsGuru`, `DynamoDB`, `ECS`, `Prometheus` ("Service" is dropped from end), and `ServerlessRepo` (shortened from "Serverless Application Repository").
+        - The constant value is the same as the name but all lowercase (_e.g._, `DynamoDB = "dynamodb"`).
+    - In `internal/conns/conns.go`: Add a new entry to the `serviceData` map:
+        1. The entry key is the string constant created above
+        2. The `AWSClientName` is the exact name of the return type of the `New()` method of the service. For example, see the `New()` method in the [Application Auto Scaling documentation](https://docs.aws.amazon.com/sdk-for-go/api/service/applicationautoscaling/#New).
+        3. For `AWSServiceName`, `AWSEndpointsID`, and `AWSServiceID`, directly reference the AWS Go SDK service package for the values. For example, `accessanalyzer.ServiceName`, `accessanalyzer.EndpointsID`, and `accessanalyzer.ServiceID` respectively.
+        4. `ProviderNameUpper` is the exact same as the constant _name_ (_not_ value) as described above.
+        5. In most cases, the `HCLKeys` slice will have one element, an all-lowercase string that matches the AWS SDK Go service name and provider constant value, described above. However, when these diverge, it may be helpful to add additional elements. Practitioners can use any of these names in the provider configuration when customizing service endpoints.
+    - In `internal/conns/conns.go`: Add a new import for the AWS Go SDK code. E.g.
     `github.com/aws/aws-sdk-go/service/quicksight`
-    - In `aws/config.go`: Add a new `{SERVICE}conn` field to the `AWSClient`
-    struct for the service client. The service name should match the name
-    in `endpointServiceNames`. E.g., `quicksightconn *quicksight.QuickSight`
-    - In `aws/config.go`: Create the new service client in the `{SERVICE}conn`
-    field in the `AWSClient` instantiation within `Client()`. E.g.
-    `quicksightconn: quicksight.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["quicksight"])})),`
+    - In `internal/conns/conns.go`: Add a new `{ServiceName}Conn` field to the `AWSClient`
+    struct for the service client. The service name should match the constant name, capitalized the same, as described above.
+    _E.g._, `DynamoDBConn *dynamodb.DynamoDB`.
+    - In `internal/conns/conns.go`: Create the new service client in the `{ServiceName}Conn`
+    field in the `AWSClient` instantiation within `Client()`, using the constant created above as a key to a value in the `Endpoints` map. _E.g._,
+    `DynamoDBConn: dynamodb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[DynamoDB])})),`.
     - In `website/allowed-subcategories.txt`: Add a name acceptable for the documentation navigation.
     - In `website/docs/guides/custom-service-endpoints.html.md`: Add the service
     name in the list of customizable endpoints.
@@ -888,7 +899,7 @@ into Terraform.
   ```yaml
   # ... other services ...
   service/quicksight:
-    - 'aws/internal/service/quicksight/**/*'
+    - 'internal/service/quicksight/**/*'
     - '**/*_quicksight_*'
     - '**/quicksight_*'
   # ... other services ...
@@ -919,9 +930,10 @@ manually sourced values from documentation. Amazon employees can code search
 previous region values to find new region values in internal packages like
 RIPStaticConfig if they are not documented yet.
 
-- [ ] Check [Elastic Load Balancing endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elb_hosted_zone_id.go`
-- [ ] Check [Amazon Simple Storage Service endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/s3.html#s3_region) and add Route53 Hosted Zone ID if available to `aws/hosted_zones.go`
-- [ ] Check [CloudTrail Supported Regions docs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html#cloudtrail-supported-regions) and add AWS Account ID if available to `aws/data_source_aws_cloudtrail_service_account.go`
-- [ ] Check [Elastic Load Balancing Access Logs docs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) and add Elastic Load Balancing Account ID if available to `aws/data_source_aws_elb_service_account.go`
-- [ ] Check [Redshift Database Audit Logging docs](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) and add AWS Account ID if available to `aws/data_source_aws_redshift_service_account.go`
-- [ ] Check [AWS Elastic Beanstalk endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/elasticbeanstalk.html#elasticbeanstalk_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elastic_beanstalk_hosted_zone.go`
+- [ ] Check [Elastic Load Balancing endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region) and add Route53 Hosted Zone ID if available to [`internal/service/elb/hosted_zone_id_data_source.go`](../../internal/service/elb/hosted_zone_id_data_source.go)
+- [ ] Check [Amazon Simple Storage Service endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/s3.html#s3_region) and add Route53 Hosted Zone ID if available to [`internal/service/s3/hosted_zones.go`](../../internal/service/s3/hosted_zones.go)
+- [ ] Check [CloudTrail Supported Regions docs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html#cloudtrail-supported-regions) and add AWS Account ID if available to [`internal/service/cloudtrail/service_account_data_source.go`](../../internal/service/cloudtrail/service_account_data_source.go)
+- [ ] Check [Elastic Load Balancing Access Logs docs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) and add Elastic Load Balancing Account ID if available to [`internal/service/elb/service_account_data_source.go`](../../internal/service/elb/service_account_data_source.go)
+- [ ] Check [Redshift Database Audit Logging docs](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) and add AWS Account ID if available to [`internal/service/redshift/service_account_data_source.go`](../../internal/service/redshift/service_account_data_source.go)
+- [ ] Check [AWS Elastic Beanstalk endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/elasticbeanstalk.html#elasticbeanstalk_region) and add Route53 Hosted Zone ID if available to [`internal/service/elasticbeanstalk/hosted_zone_data_source.go`](../../internal/service/elasticbeanstalk/hosted_zone_data_source.go)
+- [ ] Check [Sagemaker docs](https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html) and add AWS Account IDs if available to [`internal/service/sagemaker/prebuilt_ecr_image_data_source.go`](../../internal/service/sagemaker/prebuilt_ecr_image_data_source.go)

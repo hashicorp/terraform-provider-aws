@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -511,6 +511,7 @@ func resourceInstanceRetrieve(id string, conn *docdb.DocDB) (*docdb.DBInstance, 
 var resourceClusterInstanceCreateUpdatePendingStates = []string{
 	"backing-up",
 	"configuring-enhanced-monitoring",
+	"configuring-iam-database-auth",
 	"configuring-log-exports",
 	"creating",
 	"maintenance",
@@ -519,6 +520,7 @@ var resourceClusterInstanceCreateUpdatePendingStates = []string{
 	"renaming",
 	"resetting-master-credentials",
 	"starting",
+	"storage-optimization",
 	"upgrading",
 }
 

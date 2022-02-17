@@ -19,7 +19,7 @@ func TestAccFirehoseDeliveryStreamDataSource_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, firehose.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
+		CheckDestroy: testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamBasicDataSourceConfig(rName),
@@ -96,6 +96,10 @@ EOF
 
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
   acl    = "private"
 }
 

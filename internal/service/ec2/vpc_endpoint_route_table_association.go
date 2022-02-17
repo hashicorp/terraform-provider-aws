@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -107,7 +107,7 @@ func resourceVPCEndpointRouteTableAssociationDelete(d *schema.ResourceData, meta
 	log.Printf("[DEBUG] Deleting VPC Endpoint Route Table Association: %s", id)
 	_, err := conn.ModifyVpcEndpoint(input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVPCEndpointIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteTableIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeInvalidParameter) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcEndpointIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteTableIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeInvalidParameter) {
 		return nil
 	}
 

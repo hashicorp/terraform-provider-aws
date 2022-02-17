@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -53,7 +53,7 @@ func ResourceConditionalForwarder() *schema.Resource {
 }
 
 func resourceConditionalForwarderCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectoryServiceConn
+	conn := meta.(*conns.AWSClient).DSConn
 
 	dnsIps := flex.ExpandStringList(d.Get("dns_ips").([]interface{}))
 
@@ -76,7 +76,7 @@ func resourceConditionalForwarderCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceConditionalForwarderRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectoryServiceConn
+	conn := meta.(*conns.AWSClient).DSConn
 
 	directoryId, domainName, err := ParseDSConditionalForwarderID(d.Id())
 	if err != nil {
@@ -113,7 +113,7 @@ func resourceConditionalForwarderRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceConditionalForwarderUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectoryServiceConn
+	conn := meta.(*conns.AWSClient).DSConn
 
 	directoryId, domainName, err := ParseDSConditionalForwarderID(d.Id())
 	if err != nil {
@@ -136,7 +136,7 @@ func resourceConditionalForwarderUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceConditionalForwarderDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectoryServiceConn
+	conn := meta.(*conns.AWSClient).DSConn
 
 	directoryId, domainName, err := ParseDSConditionalForwarderID(d.Id())
 	if err != nil {

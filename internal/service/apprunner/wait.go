@@ -64,7 +64,7 @@ func WaitConnectionDeleted(ctx context.Context, conn *apprunner.AppRunner, name 
 func WaitCustomDomainAssociationCreated(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{CustomDomainAssociationStatusCreating},
-		Target:  []string{CustomDomainAssociationStatusPendingCertificateDNSValidation},
+		Target:  []string{CustomDomainAssociationStatusPendingCertificateDNSValidation, CustomDomainAssociationStatusBindingCertificate},
 		Refresh: StatusCustomDomain(ctx, conn, domainName, serviceArn),
 		Timeout: CustomDomainAssociationCreateTimeout,
 	}

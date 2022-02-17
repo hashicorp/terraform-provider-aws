@@ -8,16 +8,19 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+)
+
+const (
+	securityGroupsCreatedSleepTime = 30 * time.Second
+	securityGroupsDeletedSleepTime = 30 * time.Second
 )
 
 func ResourceStack() *schema.Resource {
@@ -245,7 +248,7 @@ func resourceStackCustomCookbooksSource(d *schema.ResourceData) *opsworks.Source
 
 func resourceSetStackCustomCookbooksSource(d *schema.ResourceData, v *opsworks.Source) error {
 	nv := make([]interface{}, 0, 1)
-	if v != nil && v.Type != nil && *v.Type != "" {
+	if v != nil && aws.StringValue(v.Type) != "" {
 		m := make(map[string]interface{})
 		if v.Type != nil {
 			m["type"] = *v.Type
@@ -414,23 +417,17 @@ func opsworksConnForRegion(region string, meta interface{}) (*opsworks.OpsWorks,
 	originalConn := meta.(*conns.AWSClient).OpsWorksConn
 
 	// Regions are the same, no need to reconfigure
-	if originalConn.Config.Region != nil && *originalConn.Config.Region == region {
+	if aws.StringValue(originalConn.Config.Region) == region {
 		return originalConn, nil
 	}
 
-	// Set up base session
-	sess, err := session.NewSession(&originalConn.Config)
+	sess, err := conns.NewSessionForRegion(&originalConn.Config, region, meta.(*conns.AWSClient).TerraformVersion)
+
 	if err != nil {
-		return nil, fmt.Errorf("Error creating AWS session: %s", err)
+		return nil, fmt.Errorf("error creating AWS session: %w", err)
 	}
 
-	sess.Handlers.Build.PushBack(request.MakeAddToUserAgentHandler("APN/1.0 HashiCorp/1.0 Terraform", meta.(*conns.AWSClient).TerraformVersion))
-
-	newSession := sess.Copy(&aws.Config{Region: aws.String(region)})
-	conn := opsworks.New(newSession)
-
-	log.Printf("[DEBUG] Returning new OpsWorks client")
-	return conn, nil
+	return opsworks.New(sess), nil
 }
 
 func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
@@ -509,7 +506,7 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 		// we can't actually check for them. Instead, we just wait a nominal
 		// amount of time for their creation to complete.
 		log.Print("[INFO] Waiting for OpsWorks built-in security groups to be created")
-		time.Sleep(30 * time.Second)
+		time.Sleep(securityGroupsCreatedSleepTime)
 	}
 
 	return resourceStackUpdate(d, meta)
@@ -632,7 +629,7 @@ func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 
 	if inVpc && useOpsworksDefaultSg {
 		log.Print("[INFO] Waiting for Opsworks built-in security groups to be deleted")
-		time.Sleep(30 * time.Second)
+		time.Sleep(securityGroupsDeletedSleepTime)
 	}
 
 	return nil

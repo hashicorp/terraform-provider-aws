@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -283,7 +283,7 @@ func testAccTransitGatewayPeeringAttachmentConfig_sameAccount_base(rName string)
 }
 
 func testAccTransitGatewayPeeringAttachmentConfig_differentAccount_base(rName string) string {
-	return acctest.ConfigAlternateAccountAlternateRegionProvider() + testAccTransitGatewayPeeringAttachmentConfig_base(rName)
+	return testAccAlternateAccountAlternateRegionProviderConfig() + testAccTransitGatewayPeeringAttachmentConfig_base(rName)
 }
 
 func testAccTransitGatewayPeeringAttachmentBasicConfig_sameAccount(rName string) string {

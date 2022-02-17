@@ -37,6 +37,7 @@ The following arguments are supported:
 ### Resource Spec
 
 * `instance_type` - (Optional) The instance type that the image version runs on. For valid values see [Sagemaker Instance Types](https://docs.aws.amazon.com/sagemaker/latest/dg/notebooks-available-instance-types.html).
+* `lifecycle_config_arn` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configuration attached to the Resource.
 * `sagemaker_image_arn` - (Optional) The ARN of the SageMaker image that the image version belongs to.
 * `sagemaker_image_version_arn` - (Optional) The ARN of the image version created on the instance.
 

@@ -3,12 +3,11 @@ package redshift
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -246,7 +245,7 @@ func resourceSnapshotScheduleDeleteAllAssociatedClusters(conn *redshift.Redshift
 	}
 
 	for _, associatedCluster := range snapshotSchedule.AssociatedClusters {
-		if err := waitForRedshiftSnapshotScheduleAssociationDestroy(conn, 75*time.Minute, aws.StringValue(associatedCluster.ClusterIdentifier), scheduleIdentifier); err != nil {
+		if err := waitForRedshiftSnapshotScheduleAssociationDestroy(conn, snapshotScheduleAssociationDestroyedTimeout, aws.StringValue(associatedCluster.ClusterIdentifier), scheduleIdentifier); err != nil {
 			return err
 		}
 	}

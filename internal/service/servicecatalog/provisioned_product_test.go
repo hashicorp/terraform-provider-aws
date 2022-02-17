@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -55,6 +55,7 @@ func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 					"accept_language",
 					"ignore_errors",
 					"provisioning_artifact_name",
+					"provisioning_parameters",
 					"retain_physical_resources",
 				},
 			},
@@ -164,22 +165,48 @@ func testAccProvisionedProductTemplateURLBaseConfig(rName, domain, email string)
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = "%[1]s.json"
 
   content = jsonencode({
     AWSTemplateFormatVersion = "2010-09-09"
 
+    Parameters = {
+      VPCPrimaryCIDR = {
+        Type = "String"
+      }
+      LeaveMeEmpty = {
+        Type        = "String"
+        Description = "Make sure that empty values come through. Issue #21349"
+      }
+    }
+
+    "Conditions" = {
+      "IsEmptyParameter" = {
+        "Fn::Equals" = [
+          {
+            "Ref" = "LeaveMeEmpty"
+          },
+          "",
+        ]
+      }
+    }
+
     Resources = {
       MyVPC = {
-        Type = "AWS::EC2::VPC"
+        Type      = "AWS::EC2::VPC"
+        Condition = "IsEmptyParameter"
         Properties = {
-          CidrBlock = "10.1.0.0/16"
+          CidrBlock = { Ref = "VPCPrimaryCIDR" }
         }
       }
     }
@@ -209,7 +236,7 @@ resource "aws_servicecatalog_product" "test" {
     description                 = "artefaktbeskrivning"
     disable_template_validation = true
     name                        = %[1]q
-    template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
+    template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
     type                        = "CLOUD_FORMATION_TEMPLATE"
   }
 
@@ -268,6 +295,16 @@ resource "aws_servicecatalog_provisioned_product" "test" {
   product_id                 = aws_servicecatalog_product.test.id
   provisioning_artifact_name = %[1]q
   path_id                    = data.aws_servicecatalog_launch_paths.test.summaries[0].path_id
+
+  provisioning_parameters {
+    key   = "VPCPrimaryCIDR"
+    value = "10.1.0.0/16"
+  }
+
+  provisioning_parameters {
+    key   = "LeaveMeEmpty"
+    value = ""
+  }
 }
 `, rName))
 }
@@ -280,6 +317,16 @@ resource "aws_servicecatalog_provisioned_product" "test" {
   product_id                 = aws_servicecatalog_constraint.test.product_id
   provisioning_artifact_name = %[1]q
   path_id                    = data.aws_servicecatalog_launch_paths.test.summaries[0].path_id
+
+  provisioning_parameters {
+    key   = "VPCPrimaryCIDR"
+    value = "10.2.0.0/16"
+  }
+
+  provisioning_parameters {
+    key   = "LeaveMeEmpty"
+    value = ""
+  }
 
   tags = {
     %[2]q = %[3]q

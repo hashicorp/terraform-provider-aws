@@ -13,7 +13,7 @@ on:
 
 jobs:
   changes:
-    if: github.event_name == 'pull_request_target' && !contains(fromJSON('["anGie44", "breathingdust", "ewbankkit", "gdavison", "justinretzolk", "maryelizbeth", "YakDriver", "zhelding"]'), github.actor)
+    if: github.event_name == 'pull_request_target' && !contains(fromJSON('["anGie44", "breathingdust", "ewbankkit", "gdavison", "justinretzolk", "maryelizbeth", "YakDriver", "zhelding", "johnsonaj"]'), github.actor)
     name: Filter Changes
     runs-on: ubuntu-latest
     outputs:

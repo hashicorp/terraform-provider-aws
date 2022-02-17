@@ -3,8 +3,9 @@ package synthetics
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/synthetics"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func FindCanaryByName(conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) {
@@ -26,10 +27,7 @@ func FindCanaryByName(conn *synthetics.Synthetics, name string) (*synthetics.Can
 	}
 
 	if output == nil || output.Canary == nil || output.Canary.Status == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.Canary, nil

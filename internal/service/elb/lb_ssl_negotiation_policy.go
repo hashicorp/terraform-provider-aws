@@ -198,9 +198,10 @@ func resourceSSLNegotiationPolicyDelete(d *schema.ResourceData, meta interface{}
 // it's constituent parts. You need three axes (LB name, policy name, and LB
 // port) to create or identify an SSL negotiation policy in AWS's API.
 func SSLNegotiationPolicyParseID(id string) (string, int, string, error) {
-	parts := strings.SplitN(id, ":", 3)
-	if n := len(parts); n != 3 {
-		return "", 0, "", fmt.Errorf("incorrect format of SSL negotiation policy resource ID. Expected %d parts, got %d", 3, n)
+	const partCount = 3
+	parts := strings.SplitN(id, ":", partCount)
+	if n := len(parts); n != partCount {
+		return "", 0, "", fmt.Errorf("incorrect format of SSL negotiation policy resource ID. Expected %d parts, got %d", partCount, n)
 	}
 
 	port, err := strconv.Atoi(parts[1])

@@ -497,16 +497,6 @@ func testAccCheckDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckCloudFormationStackNotRecreated(i, j *cloudformation.Stack) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.StringValue(i.StackId) != aws.StringValue(j.StackId) {
-			return fmt.Errorf("CloudFormation stack recreated")
-		}
-
-		return nil
-	}
-}
-
 func testAccCheckCloudFormationStackDisappears(stack *cloudformation.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
@@ -843,8 +833,15 @@ data "aws_region" "current" {}
 
 resource "aws_s3_bucket" "b" {
   bucket = %[1]q
-  acl    = "public-read"
+}
 
+resource "aws_s3_bucket_acl" "b" {
+  bucket = aws_s3_bucket.b.id
+  acl    = "public-read"
+}
+
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.b.id
   policy = <<POLICY
 {
   "Version":"2008-10-17",
@@ -861,15 +858,19 @@ resource "aws_s3_bucket" "b" {
   ]
 }
 POLICY
+}
 
-
-  website {
-    index_document = "index.html"
-    error_document = "error.html"
+resource "aws_s3_bucket_website_configuration" "test" {
+  bucket = aws_s3_bucket.b.id
+  index_document {
+    suffix = "index.html"
+  }
+  error_document {
+    key = "error.html"
   }
 }
 
-resource "aws_s3_bucket_object" "object" {
+resource "aws_s3_object" "object" {
   bucket = aws_s3_bucket.b.id
   key    = %[2]q
   source = "test-fixtures/cloudformation-template.json"
@@ -882,7 +883,7 @@ resource "aws_cloudformation_stack" "test" {
     VpcCIDR = %[3]q
   }
 
-  template_url       = "https://${aws_s3_bucket.b.id}.s3-${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${aws_s3_bucket_object.object.key}"
+  template_url       = "https://${aws_s3_bucket.b.id}.s3-${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${aws_s3_object.object.key}"
   on_failure         = "DELETE"
   timeout_in_minutes = 1
 }
@@ -897,8 +898,15 @@ data "aws_region" "current" {}
 
 resource "aws_s3_bucket" "b" {
   bucket = %[1]q
-  acl    = "public-read"
+}
 
+resource "aws_s3_bucket_acl" "b" {
+  bucket = aws_s3_bucket.b.id
+  acl    = "public-read"
+}
+
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.b.id
   policy = <<POLICY
 {
   "Version":"2008-10-17",
@@ -915,15 +923,19 @@ resource "aws_s3_bucket" "b" {
   ]
 }
 POLICY
+}
 
-
-  website {
-    index_document = "index.html"
-    error_document = "error.html"
+resource "aws_s3_bucket_website_configuration" "test" {
+  bucket = aws_s3_bucket.b.id
+  index_document {
+    suffix = "index.html"
+  }
+  error_document {
+    key = "error.html"
   }
 }
 
-resource "aws_s3_bucket_object" "object" {
+resource "aws_s3_object" "object" {
   bucket = aws_s3_bucket.b.id
   key    = %[2]q
   source = "test-fixtures/cloudformation-template.yaml"
@@ -936,7 +948,7 @@ resource "aws_cloudformation_stack" "test" {
     VpcCIDR = %[3]q
   }
 
-  template_url       = "https://${aws_s3_bucket.b.id}.s3-${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${aws_s3_bucket_object.object.key}"
+  template_url       = "https://${aws_s3_bucket.b.id}.s3-${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${aws_s3_object.object.key}"
   on_failure         = "DELETE"
   timeout_in_minutes = 1
 }

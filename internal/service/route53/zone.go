@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,6 +22,13 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+)
+
+const (
+	zoneChangeSyncMinDelay        = 10
+	zoneChangeSyncMaxDelay        = 30
+	zoneChangeSyncMinPollInterval = 15
+	zoneChangeSyncMaxPollInterval = 30
 )
 
 func ResourceZone() *schema.Resource {
@@ -688,9 +695,9 @@ func route53WaitForChangeSynchronization(conn *route53.Route53, changeID string)
 	conf := resource.StateChangeConf{
 		Pending:      []string{route53.ChangeStatusPending},
 		Target:       []string{route53.ChangeStatusInsync},
-		Delay:        time.Duration(rand.Int63n(20)+10) * time.Second,
+		Delay:        time.Duration(rand.Int63n(zoneChangeSyncMaxDelay-zoneChangeSyncMinDelay)+zoneChangeSyncMinDelay) * time.Second,
 		MinTimeout:   5 * time.Second,
-		PollInterval: time.Duration(rand.Int63n(15)+15) * time.Second,
+		PollInterval: time.Duration(rand.Int63n(zoneChangeSyncMaxPollInterval-zoneChangeSyncMinPollInterval)+zoneChangeSyncMinPollInterval) * time.Second,
 		Timeout:      15 * time.Minute,
 		Refresh: func() (result interface{}, state string, err error) {
 			input := &route53.GetChangeInput{

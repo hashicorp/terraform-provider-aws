@@ -1,5 +1,5 @@
-//go:build ignore
-// +build ignore
+//go:build generate
+// +build generate
 
 package main
 
@@ -16,12 +16,12 @@ import (
 const filename = `create_tags_gen.go`
 
 var (
-	retryCreateOnNotFound = flag.String("RetryCreateOnNotFound", "yes", "retry create if resource not found")
+	retryCreateOnNotFound = flag.Bool("RetryCreateOnNotFound", true, "retry create if resource not found")
 	tagOp                 = flag.String("TagOp", "CreateTags", "tag function")
 	tagOpBatchSize        = flag.String("TagOpBatchSize", "", "tag function batch size")
 	tagInCustomVal        = flag.String("TagInCustomVal", "", "tag input custom value")
 	tagInIDElem           = flag.String("TagInIDElem", "Resources", "tag input identifier field")
-	tagInIDNeedSlice      = flag.String("TagInIDNeedSlice", "yes", "tag input identifier requires slice")
+	tagInIDNeedSlice      = flag.Bool("TagInIDNeedSlice", true, "tag input identifier requires slice")
 	tagInTagsElem         = flag.String("TagInTagsElem", "Tags", "tag input tags field")
 	tagResTypeElem        = flag.String("TagResTypeElem", "", "tag resource type field")
 	tagTypeIDElem         = flag.String("TagTypeIDElem", "", "tag type identifier field")
@@ -40,10 +40,10 @@ type TemplateData struct {
 	ServicePackage string
 
 	ParentNotFoundError   string
-	RetryCreateOnNotFound string
+	RetryCreateOnNotFound bool
 	TagInCustomVal        string
 	TagInIDElem           string
-	TagInIDNeedSlice      string
+	TagInIDNeedSlice      bool
 	TagInTagsElem         string
 	TagOp                 string
 	TagOpBatchSize        string
@@ -127,7 +127,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/{{ .AWSService }}"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"

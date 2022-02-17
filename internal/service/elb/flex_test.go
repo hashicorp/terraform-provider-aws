@@ -31,8 +31,8 @@ func TestExpandListeners(t *testing.T) {
 	}
 
 	expected := &elb.Listener{
-		InstancePort:     aws.Int64(int64(8000)),
-		LoadBalancerPort: aws.Int64(int64(80)),
+		InstancePort:     aws.Int64(8000),
+		LoadBalancerPort: aws.Int64(80),
 		InstanceProtocol: aws.String("http"),
 		Protocol:         aws.String("http"),
 	}
@@ -77,11 +77,11 @@ func TestFlattenHealthCheck(t *testing.T) {
 	}{
 		{
 			Input: &elb.HealthCheck{
-				UnhealthyThreshold: aws.Int64(int64(10)),
-				HealthyThreshold:   aws.Int64(int64(10)),
+				UnhealthyThreshold: aws.Int64(10),
+				HealthyThreshold:   aws.Int64(10),
 				Target:             aws.String("HTTP:80/"),
-				Timeout:            aws.Int64(int64(30)),
-				Interval:           aws.Int64(int64(30)),
+				Timeout:            aws.Int64(30),
+				Interval:           aws.Int64(30),
 			},
 			Output: []map[string]interface{}{
 				{

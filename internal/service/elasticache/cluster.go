@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -27,6 +27,10 @@ import (
 const (
 	elasticacheDefaultRedisPort     = "6379"
 	elasticacheDefaultMemcachedPort = "11211"
+)
+
+const (
+	cacheClusterCreatedTimeout = 40 * time.Minute
 )
 
 func ResourceCluster() *schema.Resource {
@@ -118,6 +122,7 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
+				ExactlyOneOf: []string{"engine", "replication_group_id"},
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
@@ -181,12 +186,13 @@ func ResourceCluster() *schema.Resource {
 			"replication_group_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"replication_group_id", "engine"},
 				ForceNew:     true,
 				ValidateFunc: validateReplicationGroupID,
 				ConflictsWith: []string{
 					"az_mode",
 					"engine_version",
-					"engine",
 					"maintenance_window",
 					"node_type",
 					"notification_topic_arn",
@@ -201,7 +207,6 @@ func ResourceCluster() *schema.Resource {
 					"snapshot_window",
 					"subnet_group_name",
 				},
-				Computed: true,
 			},
 			"security_group_names": {
 				Type:     schema.TypeSet,
@@ -366,7 +371,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(id)
 
-	_, err = WaitCacheClusterAvailable(conn, d.Id(), 40*time.Minute)
+	_, err = waitCacheClusterAvailable(conn, d.Id(), cacheClusterCreatedTimeout)
 	if err != nil {
 		return fmt.Errorf("error waiting for ElastiCache Cache Cluster (%s) to be created: %w", d.Id(), err)
 	}
@@ -597,7 +602,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("Error updating ElastiCache cluster (%s), error: %w", d.Id(), err)
 		}
 
-		_, err = WaitCacheClusterAvailable(conn, d.Id(), CacheClusterUpdatedTimeout)
+		_, err = waitCacheClusterAvailable(conn, d.Id(), CacheClusterUpdatedTimeout)
 		if err != nil {
 			return fmt.Errorf("error waiting for ElastiCache Cache Cluster (%s) to update: %w", d.Id(), err)
 		}

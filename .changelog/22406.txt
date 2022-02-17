@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_codepipeline_webhook: Add plan time validation for `authentication_configuration.secret_token`, `filter.json_path`, `filter.match_equals`, `name`.
+```
+
+```release-note:enhancement
+resource/aws_codepipeline_webhook: Add `arn` attribute.
+```
+
+```release-note:enhancement
+resource/aws_codepipeline_webhook: Allow updating `filter` in place.
+```

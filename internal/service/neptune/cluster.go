@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -140,7 +140,6 @@ func ResourceCluster() *schema.Resource {
 			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Computed: true,
 			},
 
@@ -625,8 +624,14 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		req.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
 		requestUpdate = true
 	}
+
 	if d.HasChange("deletion_protection") {
 		req.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
+		requestUpdate = true
+	}
+
+	if d.HasChange("engine_version") {
+		req.EngineVersion = aws.String(d.Get("engine_version").(string))
 		requestUpdate = true
 	}
 

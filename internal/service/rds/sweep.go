@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -255,7 +255,7 @@ func sweepClusters(region string) error {
 				continue
 			}
 
-			if err := WaitForClusterDeletion(conn, id, 40*time.Minute); err != nil {
+			if err := WaitForClusterDeletion(conn, id, 40*time.Minute); err != nil { //nolint:gomnd
 				log.Printf("[ERROR] Failure while waiting for RDS DB Cluster (%s) to be deleted: %s", id, err)
 			}
 		}

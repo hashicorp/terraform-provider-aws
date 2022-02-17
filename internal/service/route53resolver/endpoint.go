@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -21,6 +21,12 @@ import (
 
 const (
 	EndpointStatusDeleted = "DELETED"
+)
+
+const (
+	endpointCreatedDefaultTimeout = 10 * time.Minute
+	endpointUpdatedDefaultTimeout = 10 * time.Minute
+	endpointDeletedDefaultTimeout = 10 * time.Minute
 )
 
 func ResourceEndpoint() *schema.Resource {
@@ -101,9 +107,9 @@ func ResourceEndpoint() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-			Update: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(endpointCreatedDefaultTimeout),
+			Update: schema.DefaultTimeout(endpointUpdatedDefaultTimeout),
+			Delete: schema.DefaultTimeout(endpointDeletedDefaultTimeout),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,

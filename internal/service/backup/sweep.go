@@ -16,6 +16,11 @@ import (
 )
 
 func init() {
+	resource.AddTestSweepers("aws_backup_vault_lock_configuration", &resource.Sweeper{
+		Name: "aws_backup_vault_lock_configuration",
+		F:    sweepVaultLockConfiguration,
+	})
+
 	resource.AddTestSweepers("aws_backup_vault_notifications", &resource.Sweeper{
 		Name: "aws_backup_vault_notifications",
 		F:    sweepVaultNotifications,
@@ -30,10 +35,60 @@ func init() {
 		Name: "aws_backup_vault",
 		F:    sweepVaults,
 		Dependencies: []string{
+			"aws_backup_vault_lock_configuration",
 			"aws_backup_vault_notifications",
 			"aws_backup_vault_policy",
 		},
 	})
+}
+
+func sweepVaultLockConfiguration(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("Error getting client: %w", err)
+	}
+
+	conn := client.(*conns.AWSClient).BackupConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+
+	input := &backup.ListBackupVaultsInput{}
+
+	err = conn.ListBackupVaultsPages(input, func(page *backup.ListBackupVaultsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, vault := range page.BackupVaultList {
+			if vault == nil {
+				continue
+			}
+
+			r := ResourceVaultLockConfiguration()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(vault.BackupVaultName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing Backup Vaults for %s: %w", region, err))
+	}
+
+	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Backup Vault Lock Configuration for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping Backup Vault Lock Configuration sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func sweepVaultNotifications(region string) error {

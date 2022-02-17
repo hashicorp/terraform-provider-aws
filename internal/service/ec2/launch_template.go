@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -407,6 +407,12 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.IntBetween(1, 64),
 						},
+						"instance_metadata_tags": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      ec2.LaunchTemplateInstanceMetadataTagsStateDisabled,
+							ValidateFunc: validation.StringInSlice(ec2.LaunchTemplateInstanceMetadataTagsState_Values(), false),
+						},
 					},
 				},
 			},
@@ -490,6 +496,10 @@ func ResourceLaunchTemplate() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validation.IsIPv6Address,
 							},
+						},
+						"network_card_index": {
+							Type:     schema.TypeInt,
+							Optional: true,
 						},
 						"network_interface_id": {
 							Type:     schema.TypeString,
@@ -1137,6 +1147,10 @@ func expandLaunchTemplateInstanceMetadataOptions(l []interface{}) *ec2.LaunchTem
 		if v, ok := m["http_put_response_hop_limit"].(int); ok && v != 0 {
 			opts.HttpPutResponseHopLimit = aws.Int64(int64(v))
 		}
+
+		if v, ok := m["instance_metadata_tags"].(string); ok && v != "" {
+			opts.InstanceMetadataTags = aws.String(v)
+		}
 	}
 
 	return opts
@@ -1152,6 +1166,7 @@ func flattenLaunchTemplateInstanceMetadataOptions(opts *ec2.LaunchTemplateInstan
 		"http_protocol_ipv6":          aws.StringValue(opts.HttpProtocolIpv6),
 		"http_put_response_hop_limit": aws.Int64Value(opts.HttpPutResponseHopLimit),
 		"http_tokens":                 aws.StringValue(opts.HttpTokens),
+		"instance_metadata_tags":      aws.StringValue(opts.InstanceMetadataTags),
 	}
 
 	return []interface{}{m}
@@ -1190,6 +1205,7 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 			"interface_type":       aws.StringValue(v.InterfaceType),
 			"ipv4_address_count":   aws.Int64Value(v.SecondaryPrivateIpAddressCount),
 			"ipv6_address_count":   aws.Int64Value(v.Ipv6AddressCount),
+			"network_card_index":   aws.Int64Value(v.NetworkCardIndex),
 			"network_interface_id": aws.StringValue(v.NetworkInterfaceId),
 			"private_ip_address":   aws.StringValue(v.PrivateIpAddress),
 			"subnet_id":            aws.StringValue(v.SubnetId),
@@ -1612,6 +1628,10 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) (*ec2.LaunchTemp
 
 	if v, ok := ni["device_index"].(int); ok {
 		networkInterface.DeviceIndex = aws.Int64(int64(v))
+	}
+
+	if v, ok := ni["network_card_index"].(int); ok {
+		networkInterface.NetworkCardIndex = aws.Int64(int64(v))
 	}
 
 	if v, ok := ni["network_interface_id"].(string); ok && v != "" {

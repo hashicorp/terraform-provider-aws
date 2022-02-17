@@ -1,5 +1,5 @@
-//go:build ignore
-// +build ignore
+//go:build generate
+// +build generate
 
 package main
 
@@ -241,6 +241,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/{{ .AWSService }}"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	tf{{ .ServicePackage }} "github.com/hashicorp/terraform-provider-aws/internal/service/{{ .ServicePackage }}"

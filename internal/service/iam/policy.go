@@ -4,18 +4,22 @@ import (
 	"fmt"
 	"log"
 	"net/url"
-	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+)
+
+const (
+	policyNameMaxLen       = 128
+	policyNamePrefixMaxLen = policyNameMaxLen - resource.UniqueIDSuffixLength
 )
 
 func ResourcePolicy() *schema.Resource {
@@ -52,20 +56,14 @@ func ResourcePolicy() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
-				),
+				ValidateFunc:  validIamResourceName(policyNameMaxLen),
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 96),
-					validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
-				),
+				ValidateFunc:  validIamResourceName(policyNamePrefixMaxLen),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -97,10 +95,16 @@ func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 		name = resource.UniqueId()
 	}
 
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+	}
+
 	request := &iam.CreatePolicyInput{
 		Description:    aws.String(d.Get("description").(string)),
 		Path:           aws.String(d.Get("path").(string)),
-		PolicyDocument: aws.String(d.Get("policy").(string)),
+		PolicyDocument: aws.String(policy),
 		PolicyName:     aws.String(name),
 		Tags:           Tags(tags.IgnoreAWS()),
 	}
@@ -227,7 +231,19 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	d.Set("policy", policyDocument)
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), policyDocument)
+
+	if err != nil {
+		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+	}
+
+	policyToSet, err = structure.NormalizeJsonString(policyToSet)
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policyToSet, err)
+	}
+
+	d.Set("policy", policyToSet)
 
 	return nil
 }
@@ -241,9 +257,15 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
+		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+		if err != nil {
+			return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+		}
+
 		request := &iam.CreatePolicyVersionInput{
 			PolicyArn:      aws.String(d.Id()),
-			PolicyDocument: aws.String(d.Get("policy").(string)),
+			PolicyDocument: aws.String(policy),
 			SetAsDefault:   aws.Bool(true),
 		}
 

@@ -21,11 +21,17 @@ var arnTests = []struct {
 	err      error  // expected error value
 }{
 	{"NOT AN ARN", "", fmt.Errorf("Not an arn")},
+	//lintignore:AWSAT005
 	{"arn:aws:iam::123456789012:user/Alice", "arn:aws:iam::123456789012:user/Alice", nil},
+	//lintignore:AWSAT005
 	{"arn:aws:iam::123456789012:role/Users", "arn:aws:iam::123456789012:role/Users", nil},
+	//lintignore:AWSAT005
 	{"arn:aws:sts::123456789012:assumed-role/Admin/Session", "arn:aws:iam::123456789012:role/Admin", nil},
+	//lintignore:AWSAT005
 	{"arn:aws:sts::123456789012:federated-user/Bob", "arn:aws:sts::123456789012:federated-user/Bob", nil},
+	//lintignore:AWSAT005
 	{"arn:aws:iam::123456789012:root", "arn:aws:iam::123456789012:root", nil},
+	//lintignore:AWSAT005
 	{"arn:aws:sts::123456789012:assumed-role/Org/Team/Admin/Session", "arn:aws:iam::123456789012:role/Org/Team/Admin", nil},
 }
 

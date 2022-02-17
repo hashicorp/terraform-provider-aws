@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -371,6 +371,12 @@ func ResourceInstance() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice([]string{ec2.HttpTokensStateOptional, ec2.HttpTokensStateRequired}, false),
 						},
+						"instance_metadata_tags": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      ec2.InstanceMetadataTagsStateDisabled,
+							ValidateFunc: validation.StringInSlice(ec2.InstanceMetadataTagsState_Values(), false),
+						},
 					},
 				},
 			},
@@ -434,14 +440,11 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"private_ip": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-				ValidateFunc: validation.Any(
-					validation.StringIsEmpty,
-					validation.IsIPv4Address,
-				),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Computed:     true,
+				ValidateFunc: validation.IsIPv4Address,
 			},
 			"public_dns": {
 				Type:     schema.TypeString,
@@ -457,9 +460,7 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
-					// "You can only modify the volume size, volume type, and Delete on
-					// Termination flag on the block device mapping entry for the root
-					// device volume."
+					// "For the root volume, you can only modify the following: volume size, volume type, and the Delete on Termination flag."
 					// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html
 					Schema: map[string]*schema.Schema{
 						"delete_on_termination": {
@@ -744,8 +745,8 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		Ipv6Addresses:                     instanceOpts.Ipv6Addresses,
 		KeyName:                           instanceOpts.KeyName,
 		LaunchTemplate:                    instanceOpts.LaunchTemplate,
-		MaxCount:                          aws.Int64(int64(1)),
-		MinCount:                          aws.Int64(int64(1)),
+		MaxCount:                          aws.Int64(1),
+		MinCount:                          aws.Int64(1),
 		NetworkInterfaces:                 instanceOpts.NetworkInterfaces,
 		Placement:                         instanceOpts.Placement,
 		PrivateIpAddress:                  instanceOpts.PrivateIPAddress,
@@ -1431,7 +1432,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error stopping instance (%s): %s", d.Id(), err)
 		}
 
-		if err := WaitForInstanceStopping(conn, d.Id(), 10*time.Minute); err != nil {
+		if err := WaitForInstanceStopping(conn, d.Id(), InstanceStopTimeout); err != nil {
 			return err
 		}
 
@@ -1561,6 +1562,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 					// These parameters are not allowed unless HttpEndpoint is enabled
 					input.HttpTokens = aws.String(mo["http_tokens"].(string))
 					input.HttpPutResponseHopLimit = aws.Int64(int64(mo["http_put_response_hop_limit"].(int)))
+					input.InstanceMetadataTags = aws.String(mo["instance_metadata_tags"].(string))
 				}
 				_, err := conn.ModifyInstanceMetadataOptions(input)
 				if err != nil {
@@ -1894,17 +1896,28 @@ func readBlockDevices(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.
 		return err
 	}
 
-	// This handles cases where the root device block is of type "EBS"
-	// and #readBlockDevicesFromInstance only returns 1 reference to a block-device
-	// stored in ibds["root"]
-	if _, ok := d.GetOk("ebs_block_device"); ok {
-		if len(ibds["ebs"].([]map[string]interface{})) == 0 {
-			ebs := make(map[string]interface{})
-			for k, v := range ibds["root"].(map[string]interface{}) {
-				ebs[k] = v
+	// Special handling for instances where the only block device is the root device:
+	// The call to readBlockDevicesFromInstance above will return the block device
+	// in ibds["root"] not ibds["ebs"], thus to set the state correctly,
+	// the root block device must be copied over to ibds["ebs"]
+	if ibds != nil {
+		if _, ok := d.GetOk("ebs_block_device"); ok {
+			if v, ok := ibds["ebs"].([]map[string]interface{}); ok && len(v) == 0 {
+				if root, ok := ibds["root"].(map[string]interface{}); ok {
+					// Make deep copy of data
+					m := make(map[string]interface{})
+
+					for k, v := range root {
+						m[k] = v
+					}
+
+					if snapshotID, ok := ibds["snapshot_id"].(string); ok {
+						m["snapshot_id"] = snapshotID
+					}
+
+					ibds["ebs"] = []interface{}{m}
+				}
 			}
-			ebs["snapshot_id"] = ibds["snapshot_id"]
-			ibds["ebs"] = append(ibds["ebs"].([]map[string]interface{}), ebs)
 		}
 	}
 
@@ -2182,7 +2195,7 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterf
 		// to avoid: Network interfaces and an instance-level security groups may not be specified on
 		// the same request
 		ni := &ec2.InstanceNetworkInterfaceSpecification{
-			DeviceIndex: aws.Int64(int64(0)),
+			DeviceIndex: aws.Int64(0),
 			SubnetId:    aws.String(subnet.(string)),
 			Groups:      groups,
 		}
@@ -2434,18 +2447,13 @@ func readSecurityGroups(d *schema.ResourceData, instance *ec2.Instance, conn *ec
 
 	// If the instance is in a VPC, find out if that VPC is Default to determine
 	// whether to store names.
-	if aws.StringValue(instance.VpcId) != "" {
-		out, err := conn.DescribeVpcs(&ec2.DescribeVpcsInput{
-			VpcIds: []*string{instance.VpcId},
-		})
+	if vpcID := aws.StringValue(instance.VpcId); vpcID != "" {
+		vpc, err := FindVPCByID(conn, vpcID)
+
 		if err != nil {
-			log.Printf("[WARN] Unable to describe VPC %q: %s", aws.StringValue(instance.VpcId), err)
-		} else if len(out.Vpcs) == 0 {
-			// This may happen in Eucalyptus Cloud
-			log.Printf("[WARN] Unable to retrieve VPCs")
+			log.Printf("[WARN] error reading EC2 Instance (%s) VPC (%s): %s", d.Id(), vpcID, err)
 		} else {
-			isInDefaultVpc := aws.BoolValue(out.Vpcs[0].IsDefault)
-			useName = isInDefaultVpc
+			useName = aws.BoolValue(vpc.IsDefault)
 		}
 	}
 
@@ -2940,6 +2948,10 @@ func expandEc2InstanceMetadataOptions(l []interface{}) *ec2.InstanceMetadataOpti
 		if v, ok := m["http_put_response_hop_limit"].(int); ok && v != 0 {
 			opts.HttpPutResponseHopLimit = aws.Int64(int64(v))
 		}
+
+		if v, ok := m["instance_metadata_tags"].(string); ok && v != "" {
+			opts.InstanceMetadataTags = aws.String(v)
+		}
 	}
 
 	return opts
@@ -3017,6 +3029,7 @@ func flattenEc2InstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse
 		"http_endpoint":               aws.StringValue(opts.HttpEndpoint),
 		"http_put_response_hop_limit": aws.Int64Value(opts.HttpPutResponseHopLimit),
 		"http_tokens":                 aws.StringValue(opts.HttpTokens),
+		"instance_metadata_tags":      aws.StringValue(opts.InstanceMetadataTags),
 	}
 
 	return []interface{}{m}

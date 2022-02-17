@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -16,6 +16,11 @@ import (
 
 const (
 	RuleAssociationStatusDeleted = "DELETED"
+)
+
+const (
+	ruleAssociationCreatedDefaultTimeout = 10 * time.Minute
+	ruleAssociationDeletedDefaultTimeout = 10 * time.Minute
 )
 
 func ResourceRuleAssociation() *schema.Resource {
@@ -28,8 +33,8 @@ func ResourceRuleAssociation() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(ruleAssociationCreatedDefaultTimeout),
+			Delete: schema.DefaultTimeout(ruleAssociationDeletedDefaultTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{

@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -815,6 +815,35 @@ func TestAccEC2LaunchTemplate_networkInterfaceType(t *testing.T) {
 	})
 }
 
+func TestAccEC2LaunchTemplate_networkInterfaceCardIndex(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_networkInterfaceCardIndex(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_type"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.network_card_index", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEC2LaunchTemplate_associatePublicIPAddress(t *testing.T) {
 	var template ec2.LaunchTemplate
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1123,6 +1152,7 @@ func TestAccEC2LaunchTemplate_metadataOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", "disabled"),
 				),
 			},
 			{
@@ -1139,6 +1169,24 @@ func TestAccEC2LaunchTemplate_metadataOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", "disabled"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLaunchTemplateConfig_metadataOptionsInstanceTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", "enabled"),
 				),
 			},
 		},
@@ -2023,6 +2071,19 @@ resource "aws_launch_template" "test" {
 `, rName)
 }
 
+func testAccLaunchTemplateConfig_networkInterfaceCardIndex(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  instance_type = "p4d.24xlarge"
+
+  network_interfaces {
+    network_card_index = 1
+  }
+}
+`, rName)
+}
+
 const testAccLaunchTemplateConfig_asg_basic = `
 data "aws_ami" "test_ami" {
   most_recent = true
@@ -2220,6 +2281,22 @@ resource "aws_launch_template" "test" {
     http_tokens                 = "required"
     http_put_response_hop_limit = 2
     http_protocol_ipv6          = "enabled"
+  }
+}
+`, rName)
+}
+
+func testAccLaunchTemplateConfig_metadataOptionsInstanceTags(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 2
+    http_protocol_ipv6          = "enabled"
+    instance_metadata_tags      = "enabled"
   }
 }
 `, rName)

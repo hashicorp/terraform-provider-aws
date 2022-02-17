@@ -195,7 +195,7 @@ func resourceAccessKeyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	for _, key := range getResp.AccessKeyMetadata {
-		if key.AccessKeyId != nil && *key.AccessKeyId == d.Id() {
+		if aws.StringValue(key.AccessKeyId) == d.Id() {
 			return resourceAccessKeyReadResult(d, key)
 		}
 	}
@@ -271,7 +271,7 @@ func SessmTPPasswordFromSecretKeySigV4(key *string, region string) (string, erro
 	if key == nil {
 		return "", nil
 	}
-	version := byte(0x04)
+	const version = byte(0x04)
 	date := []byte("11111111")
 	service := []byte("ses")
 	terminal := []byte("aws4_request")

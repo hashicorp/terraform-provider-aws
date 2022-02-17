@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -15,6 +15,12 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+)
+
+const (
+	certificateAuthorityPermanentDeletionTimeInDaysMin     = 7
+	certificateAuthorityPermanentDeletionTimeInDaysMax     = 30
+	certificateAuthorityPermanentDeletionTimeInDaysDefault = certificateAuthorityPermanentDeletionTimeInDaysMax
 )
 
 func ResourceCertificateAuthority() *schema.Resource {
@@ -26,7 +32,10 @@ func ResourceCertificateAuthority() *schema.Resource {
 		Delete: resourceCertificateAuthorityDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("permanent_deletion_time_in_days", 30)
+				d.Set(
+					"permanent_deletion_time_in_days",
+					certificateAuthorityPermanentDeletionTimeInDaysDefault,
+				)
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -253,15 +262,20 @@ func ResourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			// See https://github.com/hashicorp/terraform-provider-aws/issues/17832 for deprecation / removal status
 			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "The reported value of the \"status\" attribute is often inaccurate. Use the resource's \"enabled\" attribute to explicitly set status.",
 			},
 			"permanent_deletion_time_in_days": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      30,
-				ValidateFunc: validation.IntBetween(7, 30),
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  certificateAuthorityPermanentDeletionTimeInDaysDefault,
+				ValidateFunc: validation.IntBetween(
+					certificateAuthorityPermanentDeletionTimeInDaysMin,
+					certificateAuthorityPermanentDeletionTimeInDaysMax,
+				),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),

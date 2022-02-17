@@ -16,6 +16,7 @@ type planConfig struct {
 	parallelism  int
 	reattachInfo ReattachInfo
 	refresh      bool
+	replaceAddrs []string
 	state        string
 	targets      []string
 	vars         []string
@@ -61,6 +62,10 @@ func (opt *ReattachOption) configurePlan(conf *planConfig) {
 
 func (opt *RefreshOption) configurePlan(conf *planConfig) {
 	conf.refresh = opt.refresh
+}
+
+func (opt *ReplaceOption) configurePlan(conf *planConfig) {
+	conf.replaceAddrs = append(conf.replaceAddrs, opt.address)
 }
 
 func (opt *ParallelismOption) configurePlan(conf *planConfig) {
@@ -132,6 +137,15 @@ func (tf *Terraform) planCmd(ctx context.Context, opts ...PlanOption) (*exec.Cmd
 	args = append(args, "-refresh="+strconv.FormatBool(c.refresh))
 
 	// unary flags: pass if true
+	if c.replaceAddrs != nil {
+		err := tf.compatible(ctx, tf0_15_2, nil)
+		if err != nil {
+			return nil, fmt.Errorf("replace option was introduced in Terraform 0.15.2: %w", err)
+		}
+		for _, addr := range c.replaceAddrs {
+			args = append(args, "-replace="+addr)
+		}
+	}
 	if c.destroy {
 		args = append(args, "-destroy")
 	}

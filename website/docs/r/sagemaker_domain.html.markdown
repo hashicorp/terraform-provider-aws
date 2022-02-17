@@ -133,7 +133,9 @@ The following arguments are supported:
 ##### Default Resource Spec
 
 * `instance_type` - (Optional) The instance type that the image version runs on.. For valid values see [Sagemaker Instance Types](https://docs.aws.amazon.com/sagemaker/latest/dg/notebooks-available-instance-types.html).
+* `lifecycle_config_arn` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configuration attached to the Resource.
 * `sagemaker_image_arn` - (Optional) The ARN of the SageMaker image that the image version belongs to.
+* `sagemaker_image_version_arn` - (Optional) The ARN of the image version created on the instance.
 
 ##### Custom Image
 
@@ -143,7 +145,7 @@ The following arguments are supported:
 
 ### Retention Policy
 
-* `home_efs_file_system` - (Optional) The retention policy for data stored on an Amazon Elastic File System (EFS) volume. Default value is `Retain`.
+* `home_efs_file_system` - (Optional) The retention policy for data stored on an Amazon Elastic File System (EFS) volume. Valid values are `Retain` or `Delete`.  Default value is `Retain`.
 
 ## Attributes Reference
 

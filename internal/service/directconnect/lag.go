@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -97,9 +97,9 @@ func resourceLagCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("connection_id"); ok {
 		connectionIDSpecified = true
 		input.ConnectionId = aws.String(v.(string))
-		input.NumberOfConnections = aws.Int64(int64(1))
+		input.NumberOfConnections = aws.Int64(1)
 	} else {
-		input.NumberOfConnections = aws.Int64(int64(1))
+		input.NumberOfConnections = aws.Int64(1)
 	}
 
 	if v, ok := d.GetOk("provider_name"); ok {

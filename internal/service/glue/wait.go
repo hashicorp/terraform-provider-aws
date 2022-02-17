@@ -58,7 +58,7 @@ func waitRegistryDeleted(conn *glue.Glue, registryID string) (*glue.GetRegistryO
 }
 
 // waitSchemaAvailable waits for a Schema to return Available
-func waitSchemaAvailable(conn *glue.Glue, registryID string) (*glue.GetSchemaOutput, error) {
+func waitSchemaAvailable(conn *glue.Glue, registryID string) (*glue.GetSchemaOutput, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{glue.SchemaStatusPending},
 		Target:  []string{glue.SchemaStatusAvailable},
@@ -112,7 +112,7 @@ func waitSchemaVersionAvailable(conn *glue.Glue, registryID string) (*glue.GetSc
 }
 
 // waitTriggerCreated waits for a Trigger to return Created
-func waitTriggerCreated(conn *glue.Glue, triggerName string) (*glue.GetTriggerOutput, error) {
+func waitTriggerCreated(conn *glue.Glue, triggerName string) (*glue.GetTriggerOutput, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			glue.TriggerStateActivating,
@@ -196,12 +196,12 @@ func waitGlueDevEndpointDeleted(conn *glue.Glue, name string) (*glue.DevEndpoint
 	return nil, err
 }
 
-func waitGluePartitionIndexCreated(conn *glue.Glue, id string) (*glue.PartitionIndexDescriptor, error) {
+func waitGluePartitionIndexCreated(conn *glue.Glue, id string, timeout time.Duration) (*glue.PartitionIndexDescriptor, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{glue.PartitionIndexStatusCreating},
 		Target:  []string{glue.PartitionIndexStatusActive},
 		Refresh: statusGluePartitionIndex(conn, id),
-		Timeout: 2 * time.Minute,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -213,12 +213,12 @@ func waitGluePartitionIndexCreated(conn *glue.Glue, id string) (*glue.PartitionI
 	return nil, err
 }
 
-func waitGluePartitionIndexDeleted(conn *glue.Glue, id string) (*glue.PartitionIndexDescriptor, error) {
+func waitGluePartitionIndexDeleted(conn *glue.Glue, id string, timeout time.Duration) (*glue.PartitionIndexDescriptor, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{glue.PartitionIndexStatusDeleting},
 		Target:  []string{},
 		Refresh: statusGluePartitionIndex(conn, id),
-		Timeout: 2 * time.Minute,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

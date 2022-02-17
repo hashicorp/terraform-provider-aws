@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -21,7 +21,7 @@ type Retryable func(error) (bool, error)
 func RetryWhenContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error), retryable Retryable) (interface{}, error) {
 	var output interface{}
 
-	err := resource.Retry(timeout, func() *resource.RetryError {
+	err := resource.Retry(timeout, func() *resource.RetryError { // nosemgrep: helper-schema-resource-Retry-without-TimeoutError-check
 		var err error
 
 		output, err = f()

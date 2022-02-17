@@ -1,0 +1,19 @@
+```release-note:enhancement
+data-source/aws_sagemaker_prebuilt_ecr_image: Add account IDs for the BlazingText image in `af-south-1` and `eu-south-1` AWS Regions
+```
+
+```release-note:enhancement
+data-source/aws_sagemaker_prebuilt_ecr_image: Add account IDs for the DeepAR Forecasting image in `af-south-1` and `eu-south-1` AWS Regions
+```
+
+```release-note:enhancement
+data-source/aws_sagemaker_prebuilt_ecr_image: Add account IDs for the Factorization Machines image in `af-south-1`, `ap-northeast-3` and `eu-south-1` AWS Regions
+```
+
+```release-note:enhancement
+data-source/aws_sagemaker_prebuilt_ecr_image: Add account IDs for the XGBoost image in `af-south-1`, `ap-northeast-3` and `eu-south-1` AWS Regions
+```
+
+```release-note:enhancement
+data-source/aws_sagemaker_prebuilt_ecr_image: Add account IDs for the Spark ML Serving image in `af-south-1`, `ap-east-1`, `cn-north-1`, `cn-northwest-1`, `eu-north-1`, `eu-south-1`, `eu-west-3`, `me-south-1` and `sa-east-1` AWS Regions
+```

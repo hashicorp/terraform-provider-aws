@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,6 +23,12 @@ import (
 
 const (
 	RuleStatusDeleted = "DELETED"
+)
+
+const (
+	ruleCreatedDefaultTimeout = 10 * time.Minute
+	ruleUpdatedDefaultTimeout = 10 * time.Minute
+	ruleDeletedDefaultTimeout = 10 * time.Minute
 )
 
 func ResourceRule() *schema.Resource {
@@ -40,9 +46,9 @@ func ResourceRule() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-			Update: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(ruleCreatedDefaultTimeout),
+			Update: schema.DefaultTimeout(ruleUpdatedDefaultTimeout),
+			Delete: schema.DefaultTimeout(ruleDeletedDefaultTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
