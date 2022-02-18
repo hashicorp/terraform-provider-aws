@@ -15,6 +15,7 @@ ENHANCEMENTS:
 * resource/aws_fms_policy: Add `delete_unused_fm_managed_resources` argument ([#21295](https://github.com/hashicorp/terraform-provider-aws/issues/21295))
 * resource/aws_fms_policy: Add `tags` argument and `tags_all` attribute to support resource tagging ([#21299](https://github.com/hashicorp/terraform-provider-aws/issues/21299))
 * resource/aws_imagebuilder_image_recipe: Update plan time validation of `block_device_mapping.ebs.kms_key_id`, `block_device_mapping.ebs.snapshot_id`, `block_device_mapping.ebs.volume_type`, `name`, `parent_image`. ([#23235](https://github.com/hashicorp/terraform-provider-aws/issues/23235))
+* resource/aws_instance: Allow updates to `user_data` and `user_data_base64` without forcing resource replacement ([#18043](https://github.com/hashicorp/terraform-provider-aws/issues/18043))
 
 BUG FIXES:
 
