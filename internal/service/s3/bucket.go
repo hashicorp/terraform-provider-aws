@@ -909,7 +909,12 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNotImplemented, ErrCodeNoSuchWebsiteConfiguration, ErrCodeXNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err,
+		ErrCodeMethodNotAllowed,
+		ErrCodeNotImplemented,
+		ErrCodeNoSuchWebsiteConfiguration,
+		ErrCodeXNotImplemented,
+	) {
 		return fmt.Errorf("error getting S3 Bucket website configuration: %w", err)
 	}
 
