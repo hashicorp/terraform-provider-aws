@@ -1221,7 +1221,7 @@ func (c *Config) Client() (interface{}, error) {
 	}
 
 	if c.CustomCABundle != "" {
-		//awsbaseConfig.CustomCABundle = c.CustomCABundle // needs new aws-sdk-go-base
+		awsbaseConfig.CustomCABundle = c.CustomCABundle
 	}
 
 	if c.EC2MetadataServiceEndpoint != "" {
