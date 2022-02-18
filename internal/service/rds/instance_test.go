@@ -1704,6 +1704,32 @@ func TestAccRDSInstance_s3Import_nameGenerated(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_backupReplication_basic(t *testing.T) {
+	var dbInstance rds.DBInstance
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_backupReplication_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "backup_replication.*", map[string]string{
+						"destination_region": "us-east-2",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_SnapshotIdentifier_basic(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
@@ -4616,6 +4642,27 @@ resource "aws_db_instance" "test" {
   }
 }
 `, bucketPrefix))
+}
+
+func testAccInstanceConfig_backupReplication_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClass("postgres", "12.2", "postgresql-license"),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage       = 5
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  identifier              = "%[1]s"
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+
+  backup_replication {
+    destination_region      = "us-east-2"
+  }
+}
+`, rName))
 }
 
 func testAccInstanceConfig_FinalSnapshotIdentifier(rInt int) string {

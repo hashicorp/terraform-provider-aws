@@ -20,6 +20,8 @@ func StorageType_Values() []string {
 	}
 }
 
+const DefaultKmsKeyAlias = "alias/aws/rds"
+
 // https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/accessing-monitoring.html#Overview.DBInstance.Status.
 const (
 	InstanceStatusAvailable                     = "available"

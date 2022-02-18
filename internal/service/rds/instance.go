@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/rds"
+	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -18,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -107,6 +110,29 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+			},
+			"backup_replication": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"backup_retention_period": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"destination_region": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"kms_key_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
 			},
 			"backup_retention_period": {
 				Type:     schema.TypeInt,
@@ -1421,6 +1447,57 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if b, ok := d.GetOk("backup_replication"); ok {
+		v, err := FindDBInstanceByID(conn, d.Id())
+
+		if err != nil {
+			return fmt.Errorf("Unable to find database by id: %w", err)
+		}
+
+		backup_replication := b.([]interface{})[0].(map[string]interface{})
+
+		destinationRegion := backup_replication["destination_region"].(string)
+
+		if err := awsbase.ValidateRegion(destinationRegion); err != nil {
+			return fmt.Errorf("Invalid region for backup replication: %w", err)
+		}
+
+		opts := rds.StartDBInstanceAutomatedBackupsReplicationInput{
+			SourceDBInstanceArn: v.DBInstanceArn,
+		}
+
+		// Replication is initiated in the destination region.
+		session, err := conns.NewSessionForRegion(&conn.Config, destinationRegion, meta.(*conns.AWSClient).TerraformVersion)
+
+		if v, ok := backup_replication["kms_key_id"].(string); ok && v != "" {
+			opts.KmsKeyId = aws.String(backup_replication["kms_key_id"].(string))
+		} else {
+			if _, ok := d.GetOk("storage_encrypted"); ok {
+				kmsConn := kms.New(session)
+				keyMetadata, err := tfkms.FindKeyByID(kmsConn, DefaultKmsKeyAlias)
+				if err != nil {
+					return fmt.Errorf("Failed to describe default RDS KMS key (%s): %s", DefaultKmsKeyAlias, err)
+				}
+				opts.KmsKeyId = keyMetadata.Arn
+			}
+		}
+
+		if v, ok := backup_replication["backup_retention_period"].(string); ok && v != "" {
+			opts.BackupRetentionPeriod = aws.Int64(int64(backup_replication["backup_retention_period"].(int)))
+		}
+
+		if err != nil {
+			return fmt.Errorf("error creating AWS session: %w", err)
+		}
+
+		replicateConn := rds.New(session)
+
+		_, err = replicateConn.StartDBInstanceAutomatedBackupsReplication(&opts)
+		if err != nil {
+			return fmt.Errorf("Error enabling database snapshot replication: %w", err)
+		}
+	}
+
 	return resourceInstanceRead(d, meta)
 }
 
@@ -1857,6 +1934,118 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			d.Set("replicate_source_db", "")
 		} else {
 			return fmt.Errorf("cannot elect new source database for replication")
+		}
+	}
+
+	// separate connection required to enable replication of snapshots
+	if d.HasChange("backup_replication") {
+
+		b, ok := d.GetOk("backup_replication")
+
+		enableReplication := ok
+
+		var destinationRegion string
+
+		if enableReplication {
+			destinationRegion = b.([]interface{})[0].(map[string]interface{})["destination_region"].(string)
+			if err := awsbase.ValidateRegion(destinationRegion); err != nil {
+				return fmt.Errorf("Invalid region for backup replication: %w", err)
+			}
+		}
+
+		v, err := FindDBInstanceByID(conn, d.Id())
+
+		if err != nil {
+			return fmt.Errorf("Unable to find database by id: %w", err)
+		}
+
+		// Find existing region that is replicating and stop replication,
+		// to avoid errors starting a new replication
+		for _, r := range v.DBInstanceAutomatedBackupsReplications {
+			if arnParts := strings.Split(*r.DBInstanceAutomatedBackupsArn, ":"); len(arnParts) >= 4 {
+				region := arnParts[3]
+
+				log.Printf("[INFO] Stopping backup replication in region: %s", region)
+
+				session, err := conns.NewSessionForRegion(&conn.Config, region, meta.(*conns.AWSClient).TerraformVersion)
+
+				if err != nil {
+					return fmt.Errorf("error creating AWS session: %w", err)
+				}
+
+				replicateConn := rds.New(session)
+
+				stopOpts := rds.StopDBInstanceAutomatedBackupsReplicationInput{
+					SourceDBInstanceArn: v.DBInstanceArn,
+				}
+
+				_, err = replicateConn.StopDBInstanceAutomatedBackupsReplication(&stopOpts)
+
+				if err != nil && !tfawserr.ErrMessageContains(err, "InvalidDBInstanceState", "is not replicating to the current region") {
+					return fmt.Errorf("Error disabling database snapshot replication: %w", err)
+				}
+			}
+		}
+
+		if enableReplication {
+
+			if err != nil {
+				return fmt.Errorf("error creating AWS session: %w", err)
+			}
+
+			log.Printf("[INFO] Starting backup replication in region: %s", destinationRegion)
+
+			// Replication is initiated in the destination region.
+			session, err := conns.NewSessionForRegion(&conn.Config, destinationRegion, meta.(*conns.AWSClient).TerraformVersion)
+			replicateConn := rds.New(session)
+
+			backup_replication := b.([]interface{})[0].(map[string]interface{})
+
+			startOpts := rds.StartDBInstanceAutomatedBackupsReplicationInput{
+				SourceDBInstanceArn: v.DBInstanceArn,
+			}
+
+			if v, ok := backup_replication["kms_key_id"].(string); ok && v != "" {
+				startOpts.KmsKeyId = aws.String(backup_replication["kms_key_id"].(string))
+			} else {
+				if _, ok := d.GetOk("storage_encrypted"); ok {
+					kmsConn := kms.New(session)
+					keyMetadata, err := tfkms.FindKeyByID(kmsConn, DefaultKmsKeyAlias)
+					if err != nil {
+						return fmt.Errorf("Failed to describe default RDS KMS key (%s): %s", DefaultKmsKeyAlias, err)
+					}
+					startOpts.KmsKeyId = keyMetadata.Arn
+					log.Printf("[INFO] kms_key_id not provided for backup_replication, using: %s", *startOpts.KmsKeyId)
+				}
+			}
+
+			if v, ok := backup_replication["backup_retention_period"].(string); ok && v != "" {
+				startOpts.BackupRetentionPeriod = aws.Int64(int64(backup_replication["backup_retention_period"].(int)))
+			}
+
+			err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+				_, err = replicateConn.StartDBInstanceAutomatedBackupsReplication(&startOpts)
+				if err != nil {
+					log.Printf("[INFO] Error starting backup replication: %s", err)
+					if tfawserr.ErrMessageContains(err, "InvalidDBInstanceAutomatedBackupState", "is already replicating") {
+						return resource.RetryableError(err)
+					}
+					if tfawserr.ErrMessageContains(err, "InvalidDBInstanceState", "DB Instance is in an invalid state") {
+						return resource.RetryableError(err)
+					}
+					if tfawserr.ErrMessageContains(err, "InvalidDBInstanceState", "DB instance is already replicating backups to this region") {
+						return resource.RetryableError(err)
+					}
+					return resource.NonRetryableError(err)
+				}
+				return nil
+			})
+			if tfresource.TimedOut(err) {
+				_, err = replicateConn.StartDBInstanceAutomatedBackupsReplication(&startOpts)
+			}
+			if err != nil {
+				return fmt.Errorf("Error starting backup replication: %w", err)
+			}
 		}
 	}
 

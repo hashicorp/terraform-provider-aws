@@ -88,6 +88,7 @@ Defaults to true.
 * `availability_zone` - (Optional) The AZ for the RDS instance.
 * `backup_retention_period` - (Optional) The days to retain backups for. Must be
 between `0` and `35`. Must be greater than `0` if the database is used as a source for a Read Replica. [See Read Replica][1].
+* `backup_replication` - (Optional) Store automated snapshots in another region. When specifying `backup_replication`, `backup_retention_period` needs to be set to true. See [Replicating automated backups to another AWS Region](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReplicateBackups.html#AutomatedBackups.Replicating.Enable).
 * `backup_window` - (Optional) The daily time range (in UTC) during which
 automated backups are created if they are enabled. Example: "09:46-10:16". Must
 not overlap with `maintenance_window`.
@@ -252,6 +253,16 @@ resource "aws_db_instance" "db" {
 * `source_engine_version` - (Required, as of Feb 2018 only '5.6' supported) Version of the source engine used to make the backup
 
 This will not recreate the resource if the S3 object changes in some way.  It's only used to initialize the database
+
+### Backup Replication Options
+
+You can configure the database to store the automated snapshots in a different region. Full details in the API Docs: [StartDBInstanceAutomatedBackupsReplication](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_StartDBInstanceAutomatedBackupsReplication.html).
+
+The `backup_replication` block supports the following arguments:
+
+* `destination_region` - (Required) The region to replicate the backups to (must be a different region than the database resides in)
+* `backup_retention_period` - (Optional) How many days to to store backups for in the destination region
+* `kms_key_id` - (Optional) If `storage_encrypted` is enabled and this is not provided, the default aws kms key for rds is used
 
 ### Timeouts
 
