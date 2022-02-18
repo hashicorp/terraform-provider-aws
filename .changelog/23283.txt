@@ -5,3 +5,7 @@ resource/aws_iam_instance_profile: Improve tag handling in ISO regions
 ```release-note:bug
 resource/aws_iam_openid_connect_provider: Improve tag handling in ISO regions
 ```
+
+```release-note:bug
+resource/aws_iam_policy: Improve tag handling in ISO regions
+```
