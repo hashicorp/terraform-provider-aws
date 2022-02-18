@@ -18,4 +18,9 @@ const (
 	ErrCodeReplicationConfigurationNotFound          = "ReplicationConfigurationNotFoundError"
 	ErrCodeServerSideEncryptionConfigurationNotFound = "ServerSideEncryptionConfigurationNotFoundError"
 	ErrCodeUnsupportedArgument                       = "UnsupportedArgument"
+
+	// ErrCodeXNotImplemented is returned from Third Party S3 implementations
+	// and so far has been noticed with calls to GetBucketWebsite.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14645
+	ErrCodeXNotImplemented = "XNotImplemented"
 )
