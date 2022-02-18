@@ -134,6 +134,7 @@ func ResourceJob() *schema.Resource {
 			"timeout": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"security_configuration": {
