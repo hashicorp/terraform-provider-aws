@@ -64,15 +64,42 @@ func resourceSamlProviderCreate(d *schema.ResourceData, meta interface{}) error 
 	input := &iam.CreateSAMLProviderInput{
 		Name:                 aws.String(d.Get("name").(string)),
 		SAMLMetadataDocument: aws.String(d.Get("saml_metadata_document").(string)),
-		Tags:                 Tags(tags.IgnoreAWS()),
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateSAMLProvider(input)
+
+	// Some partitions (i.e., ISO) may not support tag-on-create
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] failed creating IAM SAML Provider (%s) with tags: %s. Trying create without tags.", d.Get("name").(string), err)
+		input.Tags = nil
+
+		out, err = conn.CreateSAMLProvider(input)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error creating IAM SAML Provider: %w", err)
 	}
 
 	d.SetId(aws.StringValue(out.SAMLProviderArn))
+
+	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
+	if input.Tags == nil && len(tags) > 0 {
+		err := samlProviderUpdateTags(conn, d.Id(), nil, tags)
+
+		// If default tags only, log and continue. Otherwise, error.
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] failed adding tags after create for IAM SAML Provider (%s): %s", d.Id(), err)
+			return resourceSamlProviderRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error updating tags for IAM SAML Provider (%s): %w", d.Id(), err)
+		}
+	}
 
 	return resourceSamlProviderRead(d, meta)
 }
@@ -135,8 +162,16 @@ func resourceSamlProviderUpdate(d *schema.ResourceData, meta interface{}) error 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := samlProviderUpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags for IAM SAML Provider (%s): %w", d.Id(), err)
+		err := samlProviderUpdateTags(conn, d.Id(), o, n)
+
+		// Some partitions (i.e., ISO) may not support tagging, giving error
+		if verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] failed updating tags for IAM SAML Provider (%s): %s", d.Id(), err)
+			return resourceSamlProviderRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed updating tags for IAM SAML Provider (%s): %w", d.Id(), err)
 		}
 	}
 
