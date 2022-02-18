@@ -858,6 +858,7 @@ type Config struct {
 	AccessKey                      string
 	AllowedAccountIds              []string
 	AssumeRole                     *awsbase.AssumeRole
+	CustomCABundle                 string
 	DefaultTagsConfig              *tftags.DefaultConfig
 	EC2MetadataServiceEndpoint     string
 	EC2MetadataServiceEndpointMode string
@@ -1217,6 +1218,10 @@ func (c *Config) Client() (interface{}, error) {
 
 	if c.AssumeRole != nil && c.AssumeRole.RoleARN != "" {
 		awsbaseConfig.AssumeRole = c.AssumeRole
+	}
+
+	if c.CustomCABundle != "" {
+		awsbaseConfig.CustomCABundle = c.CustomCABundle
 	}
 
 	if c.EC2MetadataServiceEndpoint != "" {
