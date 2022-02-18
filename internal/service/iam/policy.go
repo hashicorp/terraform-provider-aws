@@ -106,15 +106,42 @@ func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 		Path:           aws.String(d.Get("path").(string)),
 		PolicyDocument: aws.String(policy),
 		PolicyName:     aws.String(name),
-		Tags:           Tags(tags.IgnoreAWS()),
+	}
+
+	if len(tags) > 0 {
+		request.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	response, err := conn.CreatePolicy(request)
+
+	// Some partitions (i.e., ISO) may not support tag-on-create
+	if request.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] failed creating IAM Policy (%s) with tags: %s. Trying create without tags.", name, err)
+		request.Tags = nil
+
+		response, err = conn.CreatePolicy(request)
+	}
+
 	if err != nil {
-		return fmt.Errorf("error creating IAM policy %s: %w", name, err)
+		return fmt.Errorf("error creating IAM Policy %s: %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(response.Policy.Arn))
+
+	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
+	if request.Tags == nil && len(tags) > 0 {
+		err := policyUpdateTags(conn, d.Id(), nil, tags)
+
+		// If default tags only, log and continue. Otherwise, error.
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] failed adding tags after create for IAM Policy (%s): %s", d.Id(), err)
+			return resourcePolicyRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed adding tags after create for IAM Policy (%s): %w", d.Id(), err)
+		}
+	}
 
 	return resourcePolicyRead(d, meta)
 }
@@ -277,8 +304,16 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := policyUpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags for IAM Policy (%s): %w", d.Id(), err)
+		err := policyUpdateTags(conn, d.Id(), o, n)
+
+		// Some partitions (i.e., ISO) may not support tagging, giving error
+		if verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] failed updating tags for IAM Policy (%s): %s", d.Id(), err)
+			return resourcePolicyRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed updating tags for IAM Policy (%s): %w", d.Id(), err)
 		}
 	}
 
