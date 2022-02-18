@@ -1,6 +1,8 @@
 package ec2_test
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -362,42 +364,7 @@ func TestAccEC2Instance_RootBlockDevice_kmsKeyARN(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_userDataChange(t *testing.T) {
-	var v ec2.Instance
-	resourceName := "aws_instance.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfigWithUserDataBase64(rName, "hello world"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "aGVsbG8gd29ybGQ="),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data"},
-			},
-			{
-				Config: testAccInstanceConfigWithUserDataBase64(rName, "new world"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "bmV3IHdvcmxk"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccInstance_userDataBase64(t *testing.T) {
+func TestAccEC2Instance_userDataBase64(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -413,6 +380,41 @@ func TestAccInstance_userDataBase64(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "aGVsbG8gd29ybGQ="),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data"},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_userDataBase64_update(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigWithUserDataBase64(rName, "hello world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "aGVsbG8gd29ybGQ="),
+				),
+			},
+			{
+				Config: testAccInstanceConfigWithUserDataBase64(rName, "new world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "bmV3IHdvcmxk"),
 				),
 			},
 			{
@@ -1639,6 +1641,85 @@ func TestAccEC2Instance_changeInstanceType(t *testing.T) {
 					testAccCheckInstanceNotRecreated(&before, &after),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.large"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_changeInstanceTypeAndUserData(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	hash := sha1.Sum([]byte("hello world"))
+	expectedUserData := hex.EncodeToString(hash[:])
+	hash2 := sha1.Sum([]byte("new world"))
+	expectedUserDataUpdated := hex.EncodeToString(hash2[:])
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigInstanceTypeAndUserData(rName, "t2.medium", "hello world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.medium"),
+					resource.TestCheckResourceAttr(resourceName, "user_data", expectedUserData),
+				),
+			},
+			{
+				Config: testAccInstanceConfigInstanceTypeAndUserData(rName, "t2.large", "new world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.large"),
+					resource.TestCheckResourceAttr(resourceName, "user_data", expectedUserDataUpdated),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data"},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_changeInstanceTypeAndUserDataBase64(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigInstanceTypeAndUserDataBase64(rName, "t2.medium", "hello world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.medium"),
+					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "aGVsbG8gd29ybGQ="),
+				),
+			},
+			{
+				Config: testAccInstanceConfigInstanceTypeAndUserDataBase64(rName, "t2.large", "new world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.large"),
+					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "bmV3IHdvcmxk"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data"},
 			},
 		},
 	})
@@ -3442,6 +3523,66 @@ func TestAccEC2Instance_disappears(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_UserData(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigWithUserData(rName, "hello world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data"},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_UserData_update(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigWithUserData(rName, "hello world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+				),
+			},
+			{
+				Config: testAccInstanceConfigWithUserData(rName, "new world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data"},
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_UserData_emptyStringToUnspecified(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -4208,19 +4349,34 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfigWithUserDataBase64(rName string, userData string) string {
-	return composeConfig(
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
-		testAccInstanceVpcConfig(rName, false),
-		`
+func testAccInstanceConfigWithUserData(rName, userData string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami       = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  subnet_id = aws_subnet.test.id
+
+  instance_type = "t2.small"
+  user_data     = %[1]q
+}
+`, userData))
+}
+
+func testAccInstanceConfigWithUserDataBase64(rName, userData string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false),
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami       = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   subnet_id = aws_subnet.test.id
 
   instance_type    = "t2.small"
-  user_data_base64 = base64encode("%s")
+  user_data_base64 = base64encode(%[1]q)
 }
-`, userData)
+`, userData))
 }
 
 func testAccInstanceConfigWithSmallInstanceType(rName string) string {
@@ -4257,6 +4413,37 @@ resource "aws_instance" "test" {
   }
 }
 `)
+}
+
+func testAccInstanceConfigInstanceTypeAndUserData(rName, instanceType, userData string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami       = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  subnet_id = aws_subnet.test.id
+
+  instance_type = %[1]q
+  user_data     = %[2]q
+}
+`, instanceType, userData))
+}
+
+func testAccInstanceConfigInstanceTypeAndUserDataBase64(rName, instanceType, userData string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami       = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  subnet_id = aws_subnet.test.id
+
+  instance_type    = %[1]q
+  user_data_base64 = base64encode(%[2]q)
+
+}
+`, instanceType, userData))
 }
 
 func testAccInstanceGP2IopsDevice() string {
