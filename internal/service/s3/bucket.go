@@ -815,7 +815,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchBucketPolicy) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchBucketPolicy, ErrCodeNotImplemented) {
 		return fmt.Errorf("error getting S3 bucket (%s) policy: %w", d.Id(), err)
 	}
 
@@ -909,7 +909,12 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNotImplemented, ErrCodeNoSuchWebsiteConfiguration) {
+	if err != nil && !tfawserr.ErrCodeEquals(err,
+		ErrCodeMethodNotAllowed,
+		ErrCodeNotImplemented,
+		ErrCodeNoSuchWebsiteConfiguration,
+		ErrCodeXNotImplemented,
+	) {
 		return fmt.Errorf("error getting S3 Bucket website configuration: %w", err)
 	}
 
@@ -970,7 +975,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Amazon S3 Transfer Acceleration might not be supported in the region
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeMethodNotAllowed, ErrCodeUnsupportedArgument) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeMethodNotAllowed, ErrCodeUnsupportedArgument, ErrCodeNotImplemented) {
 		return fmt.Errorf("error getting S3 Bucket acceleration configuration: %w", err)
 	}
 
@@ -995,7 +1000,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	if err != nil {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNotImplemented) {
 		return fmt.Errorf("error getting S3 Bucket request payment: %s", err)
 	}
 
