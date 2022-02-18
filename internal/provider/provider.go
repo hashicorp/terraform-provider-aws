@@ -1421,7 +1421,7 @@ func Provider() *schema.Provider {
 			"aws_iam_role":                        iam.ResourceRole(),
 			"aws_iam_role_policy":                 iam.ResourceRolePolicy(),
 			"aws_iam_role_policy_attachment":      iam.ResourceRolePolicyAttachment(),
-			"aws_iam_saml_provider":               iam.ResourceSamlProvider(),
+			"aws_iam_saml_provider":               iam.ResourceSAMLProvider(),
 			"aws_iam_server_certificate":          iam.ResourceServerCertificate(),
 			"aws_iam_service_linked_role":         iam.ResourceServiceLinkedRole(),
 			"aws_iam_service_specific_credential": iam.ResourceServiceSpecificCredential(),
