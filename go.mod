@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7
-	github.com/aws/aws-sdk-go v1.42.53
+	github.com/aws/aws-sdk-go v1.43.2
 	github.com/beevik/etree v1.1.0
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.15.0
 	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.8
