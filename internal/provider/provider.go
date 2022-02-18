@@ -195,7 +195,8 @@ func Provider() *schema.Provider {
 				Type:     schema.TypeString,
 				Optional: true,
 				Description: "File containing custom root and intermediate certificates. " +
-					"Can also be configured using the `AWS_CA_BUNDLE` environment variable.",
+					"Can also be configured using the `AWS_CA_BUNDLE` environment variable. " +
+					"(Setting `ca_bundle` in the shared config file is not supported.)",
 			},
 			"default_tags": {
 				Type:        schema.TypeList,
