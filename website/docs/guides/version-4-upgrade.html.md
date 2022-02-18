@@ -204,7 +204,7 @@ For example, given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 
   # ... other configuration ...
   acceleration_status = "Enabled"
@@ -228,7 +228,7 @@ resource and remove any reference to `acceleration_status` in the `aws_s3_bucket
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 
   # ... other configuration ...
 }
@@ -242,11 +242,11 @@ resource "aws_s3_bucket_accelerate_configuration" "example" {
 Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_accelerate_configuration.example villaviciosa-2697126908
-aws_s3_bucket_accelerate_configuration.example: Importing from ID "villaviciosa-2697126908"...
+$ terraform import aws_s3_bucket_accelerate_configuration.example yournamehere
+aws_s3_bucket_accelerate_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_accelerate_configuration.example: Import prepared!
   Prepared aws_s3_bucket_accelerate_configuration for import
-aws_s3_bucket_accelerate_configuration.example: Refreshing state... [id=villaviciosa-2697126908]
+aws_s3_bucket_accelerate_configuration.example: Refreshing state... [id=yournamehere]
 
 Import successful!
 
@@ -262,7 +262,7 @@ For example, given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
   acl    = "private"
 
   # ... other configuration ...
@@ -286,7 +286,7 @@ resource and remove the `acl` argument in the `aws_s3_bucket` resource:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 }
 
 resource "aws_s3_bucket_acl" "example" {
@@ -295,16 +295,16 @@ resource "aws_s3_bucket_acl" "example" {
 }
 ```
 
-~> **NOTE:** When importing into `aws_s3_bucket_acl`, make sure you use the S3 bucket name (_e.g._, `villaviciosa-2697126908` in the example above) as part of the ID, and _not_ the Terraform bucket configuration name (_e.g._, `example` in the example above).
+~> **NOTE:** When importing into `aws_s3_bucket_acl`, make sure you use the S3 bucket name (_e.g._, `yournamehere` in the example above) as part of the ID, and _not_ the Terraform bucket configuration name (_e.g._, `example` in the example above).
 
 Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_acl.example villaviciosa-2697126908,private
-aws_s3_bucket_acl.example: Importing from ID "villaviciosa-2697126908,private"...
+$ terraform import aws_s3_bucket_acl.example yournamehere,private
+aws_s3_bucket_acl.example: Importing from ID "yournamehere,private"...
 aws_s3_bucket_acl.example: Import prepared!
   Prepared aws_s3_bucket_acl for import
-aws_s3_bucket_acl.example: Refreshing state... [id=villaviciosa-2697126908,private]
+aws_s3_bucket_acl.example: Refreshing state... [id=yournamehere,private]
 
 Import successful!
 
@@ -320,7 +320,7 @@ For example, given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 
   # ... other configuration ...
   cors_rule {
@@ -350,7 +350,7 @@ resource and remove `cors_rule` and its nested arguments in the `aws_s3_bucket` 
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 
   # ... other configuration ...
 }
@@ -371,11 +371,11 @@ resource "aws_s3_bucket_cors_configuration" "example" {
 Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_cors_configuration.example villaviciosa-2697126908
-aws_s3_bucket_cors_configuration.example: Importing from ID "villaviciosa-2697126908"...
+$ terraform import aws_s3_bucket_cors_configuration.example yournamehere
+aws_s3_bucket_cors_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_cors_configuration.example: Import prepared!
   Prepared aws_s3_bucket_cors_configuration for import
-aws_s3_bucket_cors_configuration.example: Refreshing state... [id=villaviciosa-2697126908]
+aws_s3_bucket_cors_configuration.example: Refreshing state... [id=yournamehere]
 
 Import successful!
 
@@ -391,7 +391,7 @@ For example, given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 
   # ... other configuration ...
   grant {
@@ -425,7 +425,7 @@ resource and remove any reference to `grant` in the `aws_s3_bucket` resource:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 
   # ... other configuration ...
 }
@@ -468,11 +468,11 @@ resource "aws_s3_bucket_acl" "example" {
 Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_acl.example villaviciosa-2697126908
-aws_s3_bucket_acl.example: Importing from ID "villaviciosa-2697126908"...
+$ terraform import aws_s3_bucket_acl.example yournamehere
+aws_s3_bucket_acl.example: Importing from ID "yournamehere"...
 aws_s3_bucket_acl.example: Import prepared!
   Prepared aws_s3_bucket_acl for import
-aws_s3_bucket_acl.example: Refreshing state... [id=villaviciosa-2697126908]
+aws_s3_bucket_acl.example: Refreshing state... [id=yournamehere]
 
 Import successful!
 
@@ -488,7 +488,7 @@ For example, given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 
   # ... other configuration ...
   lifecycle_rule {
@@ -540,7 +540,7 @@ resource and remove `lifecycle_rule` and its nested arguments in the `aws_s3_buc
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 
   # ... other configuration ...
 }
@@ -596,11 +596,11 @@ resource "aws_s3_bucket_lifecycle_configuration" "example" {
 Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_lifecycle_configuration.example villaviciosa-2697126908
-aws_s3_bucket_lifecycle_configuration.example: Importing from ID "villaviciosa-2697126908"...
+$ terraform import aws_s3_bucket_lifecycle_configuration.example yournamehere
+aws_s3_bucket_lifecycle_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_lifecycle_configuration.example: Import prepared!
   Prepared aws_s3_bucket_lifecycle_configuration for import
-aws_s3_bucket_lifecycle_configuration.example: Refreshing state... [id=villaviciosa-2697126908]
+aws_s3_bucket_lifecycle_configuration.example: Refreshing state... [id=yournamehere]
 
 Import successful!
 
@@ -621,7 +621,7 @@ resource "aws_s3_bucket" "log_bucket" {
 }
 
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 
   # ... other configuration ...
   logging {
@@ -654,7 +654,7 @@ resource "aws_s3_bucket" "log_bucket" {
 }
 
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 
   # ... other configuration ...
 }
@@ -669,11 +669,11 @@ resource "aws_s3_bucket_logging" "example" {
 Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_logging.example villaviciosa-2697126908
-aws_s3_bucket_logging.example: Importing from ID "villaviciosa-2697126908"...
+$ terraform import aws_s3_bucket_logging.example yournamehere
+aws_s3_bucket_logging.example: Importing from ID "yournamehere"...
 aws_s3_bucket_logging.example: Import prepared!
   Prepared aws_s3_bucket_logging for import
-aws_s3_bucket_logging.example: Refreshing state... [id=villaviciosa-2697126908]
+aws_s3_bucket_logging.example: Refreshing state... [id=yournamehere]
 
 Import successful!
 
@@ -689,7 +689,7 @@ For example, given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 
   # ... other configuration ...
   object_lock_configuration {
@@ -722,7 +722,7 @@ resource and remove `rule` and its nested arguments in the `aws_s3_bucket` resou
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 
   # ... other configuration ...
   object_lock_configuration {
@@ -745,11 +745,11 @@ resource "aws_s3_bucket_object_lock_configuration" "example" {
 Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_object_lock_configuration.example villaviciosa-2697126908
-aws_s3_bucket_object_lock_configuration.example: Importing from ID "villaviciosa-2697126908"...
+$ terraform import aws_s3_bucket_object_lock_configuration.example yournamehere
+aws_s3_bucket_object_lock_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_object_lock_configuration.example: Import prepared!
   Prepared aws_s3_bucket_object_lock_configuration for import
-aws_s3_bucket_object_lock_configuration.example: Refreshing state... [id=villaviciosa-2697126908]
+aws_s3_bucket_object_lock_configuration.example: Refreshing state... [id=yournamehere]
 
 Import successful!
 
@@ -765,7 +765,7 @@ For example, given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 
   # ... other configuration ...
   policy = <<EOF
@@ -805,7 +805,7 @@ resource and remove any reference to `policy` in the `aws_s3_bucket` resource:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 
   # ... other configuration ...
 }
@@ -835,11 +835,11 @@ EOF
 Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_policy.example villaviciosa-2697126908
-aws_s3_bucket_policy.example: Importing from ID "villaviciosa-2697126908"...
+$ terraform import aws_s3_bucket_policy.example yournamehere
+aws_s3_bucket_policy.example: Importing from ID "yournamehere"...
 aws_s3_bucket_policy.example: Import prepared!
   Prepared aws_s3_bucket_policy for import
-aws_s3_bucket_policy.example: Refreshing state... [id=villaviciosa-2697126908]
+aws_s3_bucket_policy.example: Refreshing state... [id=yournamehere]
 
 Import successful!
 
@@ -856,7 +856,7 @@ For example, given this previous configuration:
 ```terraform
 resource "aws_s3_bucket" "example" {
   provider = aws.central
-  bucket   = "villaviciosa-2697126908"
+  bucket   = "yournamehere"
 
   # ... other configuration ...
 
@@ -903,7 +903,7 @@ resource and remove `replication_configuration` and its nested arguments in the 
 ```terraform
 resource "aws_s3_bucket" "example" {
   provider = aws.central
-  bucket   = "villaviciosa-2697126908"
+  bucket   = "yournamehere"
 
   # ... other configuration ...
 }
@@ -947,11 +947,11 @@ resource "aws_s3_bucket_replication_configuration" "example" {
 Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_replication_configuration.example villaviciosa-2697126908
-aws_s3_bucket_replication_configuration.example: Importing from ID "villaviciosa-2697126908"...
+$ terraform import aws_s3_bucket_replication_configuration.example yournamehere
+aws_s3_bucket_replication_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_replication_configuration.example: Import prepared!
   Prepared aws_s3_bucket_replication_configuration for import
-aws_s3_bucket_replication_configuration.example: Refreshing state... [id=villaviciosa-2697126908]
+aws_s3_bucket_replication_configuration.example: Refreshing state... [id=yournamehere]
 
 Import successful!
 
@@ -967,7 +967,7 @@ For example, given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 
   # ... other configuration ...
   request_payer = "Requester"
@@ -991,7 +991,7 @@ resource and remove any reference to `request_payer` in the `aws_s3_bucket` reso
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 
   # ... other configuration ...
 }
@@ -1005,11 +1005,11 @@ resource "aws_s3_bucket_request_payment_configuration" "example" {
 Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_request_payment_configuration.example villaviciosa-2697126908
-aws_s3_bucket_request_payment_configuration.example: Importing from ID "villaviciosa-2697126908"...
+$ terraform import aws_s3_bucket_request_payment_configuration.example yournamehere
+aws_s3_bucket_request_payment_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_request_payment_configuration.example: Import prepared!
   Prepared aws_s3_bucket_request_payment_configuration for import
-aws_s3_bucket_request_payment_configuration.example: Refreshing state... [id=villaviciosa-2697126908]
+aws_s3_bucket_request_payment_configuration.example: Refreshing state... [id=yournamehere]
 
 Import successful!
 
@@ -1025,7 +1025,7 @@ For example, given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 
   # ... other configuration ...
   server_side_encryption_configuration {
@@ -1056,7 +1056,7 @@ resource and remove `server_side_encryption_configuration` and its nested argume
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 
   # ... other configuration ...
 }
@@ -1076,11 +1076,11 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "example" {
 Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_server_side_encryption_configuration.example villaviciosa-2697126908
-aws_s3_bucket_server_side_encryption_configuration.example: Importing from ID "villaviciosa-2697126908"...
+$ terraform import aws_s3_bucket_server_side_encryption_configuration.example yournamehere
+aws_s3_bucket_server_side_encryption_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_server_side_encryption_configuration.example: Import prepared!
   Prepared aws_s3_bucket_server_side_encryption_configuration for import
-aws_s3_bucket_server_side_encryption_configuration.example: Refreshing state... [id=villaviciosa-2697126908]
+aws_s3_bucket_server_side_encryption_configuration.example: Refreshing state... [id=yournamehere]
 
 Import successful!
 
@@ -1098,7 +1098,7 @@ For example, given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 
   # ... other configuration ...
   versioning {
@@ -1124,7 +1124,7 @@ resource and remove `versioning` and its nested arguments in the `aws_s3_bucket`
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 
   # ... other configuration ...
 }
@@ -1140,11 +1140,11 @@ resource "aws_s3_bucket_versioning" "example" {
 Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_versioning.example villaviciosa-2697126908
-aws_s3_bucket_versioning.example: Importing from ID "villaviciosa-2697126908"...
+$ terraform import aws_s3_bucket_versioning.example yournamehere
+aws_s3_bucket_versioning.example: Importing from ID "yournamehere"...
 aws_s3_bucket_versioning.example: Import prepared!
   Prepared aws_s3_bucket_versioning for import
-aws_s3_bucket_versioning.example: Refreshing state... [id=villaviciosa-2697126908]
+aws_s3_bucket_versioning.example: Refreshing state... [id=yournamehere]
 
 Import successful!
 
@@ -1188,7 +1188,7 @@ For example, given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 
   # ... other configuration ...
   website {
@@ -1215,7 +1215,7 @@ resource and remove `website` and its nested arguments in the `aws_s3_bucket` re
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "villaviciosa-2697126908"
+  bucket = "yournamehere"
 
   # ... other configuration ...
 }
@@ -1236,11 +1236,11 @@ resource "aws_s3_bucket_website_configuration" "example" {
 Run `terraform import` on each new resource, _e.g._,
 
 ```shell
-$ terraform import aws_s3_bucket_website_configuration.example villaviciosa-2697126908
-aws_s3_bucket_website_configuration.example: Importing from ID "villaviciosa-2697126908"...
+$ terraform import aws_s3_bucket_website_configuration.example yournamehere
+aws_s3_bucket_website_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_website_configuration.example: Import prepared!
   Prepared aws_s3_bucket_website_configuration for import
-aws_s3_bucket_website_configuration.example: Refreshing state... [id=villaviciosa-2697126908]
+aws_s3_bucket_website_configuration.example: Refreshing state... [id=yournamehere]
 
 Import successful!
 
