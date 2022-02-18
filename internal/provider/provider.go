@@ -191,6 +191,12 @@ func Provider() *schema.Provider {
 				Set:           schema.HashString,
 			},
 			"assume_role": assumeRoleSchema(),
+			"custom_ca_bundle": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "File containing custom root and intermediate certificates. " +
+					"Can also be configured using the `AWS_CA_BUNDLE` environment variable.",
+			},
 			"default_tags": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -1915,6 +1921,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	config := conns.Config{
 		AccessKey:                      d.Get("access_key").(string),
 		DefaultTagsConfig:              expandProviderDefaultTags(d.Get("default_tags").([]interface{})),
+		CustomCABundle:                 d.Get("custom_ca_bundle").(string),
 		EC2MetadataServiceEndpoint:     d.Get("ec2_metadata_service_endpoint").(string),
 		EC2MetadataServiceEndpointMode: d.Get("ec2_metadata_service_endpoint_mode").(string),
 		Endpoints:                      make(map[string]string),
