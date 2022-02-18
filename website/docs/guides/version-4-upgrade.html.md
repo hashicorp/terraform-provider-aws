@@ -650,7 +650,7 @@ resource and remove `logging` and its nested arguments in the `aws_s3_bucket` re
 resource "aws_s3_bucket" "log_bucket" {
   bucket = "example-log-bucket"
 
-  # ... other configuration ...  
+  # ... other configuration ...
 }
 
 resource "aws_s3_bucket" "example" {
