@@ -490,7 +490,7 @@ For example, given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "my-example-bucket"
+  bucket = "yournamehere"
 
   lifecycle_rule {
     id      = "Keep previous version 30 days, then in Glacier another 60"
@@ -597,7 +597,7 @@ For example, given this configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "my-example-bucket"
+  bucket = "yournamehere"
 
   lifecycle_rule {
     id      = "log-expiration"
