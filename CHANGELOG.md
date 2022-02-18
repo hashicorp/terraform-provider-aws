@@ -39,6 +39,7 @@ ENHANCEMENTS:
 * resource/aws_ssm_association: Add `arn` attribute ([#17732](https://github.com/hashicorp/terraform-provider-aws/issues/17732))
 * resource/aws_ssm_association: Add `wait_for_success_timeout_seconds` argument ([#17732](https://github.com/hashicorp/terraform-provider-aws/issues/17732))
 * resource/aws_ssm_association: Add plan time validation to `association_name`, `document_version`, `schedule_expression`, `output_location.s3_bucket_name`, `output_location.s3_key_prefix`, `targets.key`, `targets.values`, `automation_target_parameter_name` ([#17732](https://github.com/hashicorp/terraform-provider-aws/issues/17732))
+* resource/aws_glue_job: Add support for `gluestreaming` Command Name by removing `Timeout` as a default parameter on Jobs, moving to optional, and adding acc tests ([#16797]https://github.com/hashicorp/terraform-provider-aws/issues/16797)
 
 BUG FIXES:
 
