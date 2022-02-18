@@ -113,7 +113,7 @@ func init() {
 
 	resource.AddTestSweepers("aws_iam_virtual_mfa_device", &resource.Sweeper{
 		Name: "aws_iam_virtual_mfa_device",
-		F:    sweepVirtualMfaDevice,
+		F:    sweepVirtualMFADevice,
 	})
 }
 
@@ -869,7 +869,7 @@ func roleNameFilter(name string) bool {
 	return false
 }
 
-func sweepVirtualMfaDevice(region string) error {
+func sweepVirtualMFADevice(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -891,7 +891,7 @@ func sweepVirtualMfaDevice(region string) error {
 				continue
 			}
 
-			r := ResourceVirtualMfaDevice()
+			r := ResourceVirtualMFADevice()
 			d := r.Data(nil)
 			d.SetId(serialNum)
 			err := r.Delete(d, client)

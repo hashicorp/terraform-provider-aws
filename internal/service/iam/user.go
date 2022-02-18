@@ -187,12 +187,6 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags := KeyValueTags(output.User.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] failed listing tags for IAM User (%s): %s", d.Id(), err)
-		return nil
-	}
-
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
