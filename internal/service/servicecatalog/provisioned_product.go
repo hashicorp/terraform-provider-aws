@@ -87,6 +87,26 @@ func ResourceProvisionedProduct() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"outputs": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"key": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"path_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -403,6 +423,10 @@ func resourceProvisionedProductRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error getting Service Catalog Provisioned Product (%s) Record (%s): empty response", d.Id(), aws.StringValue(detail.LastProvisioningRecordId))
 	}
 
+	if err := d.Set("outputs", flattenServiceCatalogRecordOutputs(recordOutput.RecordOutputs)); err != nil {
+		return fmt.Errorf("error setting outputs: %w", err)
+	}
+
 	d.Set("path_id", recordOutput.RecordDetail.PathId)
 
 	tags := recordKeyValueTags(recordOutput.RecordDetail.RecordTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -709,6 +733,38 @@ func flattenServiceCatalogCloudWatchDashboards(apiObjects []*servicecatalog.Clou
 		}
 
 		tfList = append(tfList, apiObject.Name)
+	}
+
+	return tfList
+}
+
+func flattenServiceCatalogRecordOutputs(apiObjects []*servicecatalog.RecordOutput) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		m := make(map[string]interface{})
+
+		if apiObject.Description != nil {
+			m["description"] = aws.StringValue(apiObject.Description)
+		}
+
+		if apiObject.OutputKey != nil {
+			m["key"] = aws.StringValue(apiObject.OutputKey)
+		}
+
+		if apiObject.OutputValue != nil {
+			m["value"] = aws.StringValue(apiObject.OutputValue)
+		}
+
+		tfList = append(tfList, m)
 	}
 
 	return tfList
