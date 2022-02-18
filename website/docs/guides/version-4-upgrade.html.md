@@ -107,7 +107,7 @@ provider "aws" {
 }
 ```
 
-Update to latest 4.X version:
+Update to the latest 4.X version:
 
 ```terraform
 terraform {
@@ -223,7 +223,7 @@ You will get the following error after upgrading:
 │ Can't configure a value for "acceleration_status": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `acceleration_status` argument changed to read-only, update the configuration to use the `aws_s3_bucket_accelerate_configuration`
+Since `acceleration_status` is now read only, update your configuration to use the `aws_s3_bucket_accelerate_configuration`
 resource and remove any reference to `acceleration_status` in the `aws_s3_bucket` resource:
 
 ```terraform
@@ -281,7 +281,7 @@ You will get the following error after upgrading:
 │ Can't configure a value for "acl": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `acl` argument changed to read-only, update the configuration to use the `aws_s3_bucket_acl`
+Since `acl` is now read only, update your configuration to use the `aws_s3_bucket_acl`
 resource and remove the `acl` argument in the `aws_s3_bucket` resource:
 
 ```terraform
@@ -345,8 +345,8 @@ You will get the following error after upgrading:
 │ Can't configure a value for "cors_rule": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `cors_rule` argument changed to read-only, update the configuration to use the `aws_s3_bucket_cors_configuration`
-resource and remove any references to `cors_rule` and its nested arguments in the `aws_s3_bucket` resource:
+Since `cors_rule` is now read only, update your configuration to use the `aws_s3_bucket_cors_configuration`
+resource and remove `cors_rule` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
@@ -420,7 +420,7 @@ You will get the following error after upgrading:
 │ Can't configure a value for "grant": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `grant` argument changed to read-only, update the configuration to use the `aws_s3_bucket_acl`
+Since `grant` is now read only, update your configuration to use the `aws_s3_bucket_acl`
 resource and remove any reference to `grant` in the `aws_s3_bucket` resource:
 
 ```terraform
@@ -535,8 +535,8 @@ You will get the following error after upgrading:
 │ Can't configure a value for "lifecycle_rule": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `lifecycle_rule` argument changed to read-only, update the configuration to use the `aws_s3_bucket_lifecycle_configuration`
-resource and remove any references to `lifecycle_rule` and its nested arguments in the `aws_s3_bucket` resource:
+Since `lifecycle_rule` is now read only, update your configuration to use the `aws_s3_bucket_lifecycle_configuration`
+resource and remove `lifecycle_rule` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
@@ -643,8 +643,8 @@ You will get the following error after upgrading:
 │ Can't configure a value for "logging": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `logging` argument changed to read-only, update the configuration to use the `aws_s3_bucket_logging`
-resource and remove any references to `logging` and its nested arguments in the `aws_s3_bucket` resource:
+Since `logging` is now read only, update your configuration to use the `aws_s3_bucket_logging`
+resource and remove `logging` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```terraform
 resource "aws_s3_bucket" "log_bucket" {
@@ -717,8 +717,8 @@ You will get the following error after upgrading:
 │ Can't configure a value for "object_lock_configuration.0.rule": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `rule` argument of the `object_lock_configuration` configuration block changed to read-only, update the configuration to use the `aws_s3_bucket_object_lock_configuration`
-resource and remove any references to `rule` and its nested arguments in the `aws_s3_bucket` resource:
+Since the `rule` argument of the `object_lock_configuration` configuration block changed to read-only, update your configuration to use the `aws_s3_bucket_object_lock_configuration`
+resource and remove `rule` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
@@ -800,7 +800,7 @@ You will get the following error after upgrading:
 │ Can't configure a value for "policy": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `policy` argument changed to read-only, update the configuration to use the `aws_s3_bucket_policy`
+Since `policy` is now read only, update your configuration to use the `aws_s3_bucket_policy`
 resource and remove any reference to `policy` in the `aws_s3_bucket` resource:
 
 ```terraform
@@ -897,8 +897,8 @@ You will get the following error after upgrading:
 │ Can't configure a value for "replication_configuration": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `replication_configuration` argument changed to read-only, update the configuration to use the `aws_s3_bucket_replication_configuration`
-resource and remove any references to `replication_configuration` and its nested arguments in the `aws_s3_bucket` resource:
+Since `replication_configuration` is now read only, update your configuration to use the `aws_s3_bucket_replication_configuration`
+resource and remove `replication_configuration` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
@@ -986,7 +986,7 @@ You will get the following error after upgrading:
 │ Can't configure a value for "request_payer": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `request_payer` argument changed to read-only, update the configuration to use the `aws_s3_bucket_request_payment_configuration`
+Since `request_payer` is now read only, update your configuration to use the `aws_s3_bucket_request_payment_configuration`
 resource and remove any reference to `request_payer` in the `aws_s3_bucket` resource:
 
 ```terraform
@@ -1051,8 +1051,8 @@ You will get the following error after upgrading:
 │ Can't configure a value for "server_side_encryption_configuration": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `server_side_encryption_configuration` argument changed to read-only, update the configuration to use the `aws_s3_bucket_server_side_encryption_configuration`
-resource and remove any references to `server_side_encryption_configuration` and its nested arguments in the `aws_s3_bucket` resource:
+Since `server_side_encryption_configuration` is now read only, update your configuration to use the `aws_s3_bucket_server_side_encryption_configuration`
+resource and remove `server_side_encryption_configuration` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
@@ -1119,8 +1119,8 @@ You will get the following error after upgrading:
 │ Can't configure a value for "versioning": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `versioning` argument changed to read-only, update the configuration to use the `aws_s3_bucket_versioning`
-resource and remove any references to `versioning` and its nested arguments in the `aws_s3_bucket` resource:
+Since `versioning` is now read only, update your configuration to use the `aws_s3_bucket_versioning`
+resource and remove `versioning` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
@@ -1210,8 +1210,8 @@ You will get the following error after upgrading:
 │ Can't configure a value for "website": its value will be decided automatically based on the result of applying this configuration.
 ```
 
-Since the `website` argument changed to read-only, update the configuration to use the `aws_s3_bucket_website_configuration`
-resource and remove any references to `website` and its nested arguments in the `aws_s3_bucket` resource:
+Since `website` is now read only, update your configuration to use the `aws_s3_bucket_website_configuration`
+resource and remove `website` and its nested arguments in the `aws_s3_bucket` resource:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
