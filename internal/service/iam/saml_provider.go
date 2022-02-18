@@ -97,7 +97,7 @@ func resourceSAMLProviderCreate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating tags for IAM SAML Provider (%s): %w", d.Id(), err)
+			return fmt.Errorf("failed adding tags after create for IAM SAML Provider (%s): %w", d.Id(), err)
 		}
 	}
 

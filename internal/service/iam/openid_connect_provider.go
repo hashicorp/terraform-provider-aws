@@ -104,7 +104,7 @@ func resourceOpenIDConnectProviderCreate(d *schema.ResourceData, meta interface{
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating tags for IAM OIDC Provider (%s): %w", d.Id(), err)
+			return fmt.Errorf("failed adding tags after create for IAM OIDC Provider (%s): %w", d.Id(), err)
 		}
 	}
 

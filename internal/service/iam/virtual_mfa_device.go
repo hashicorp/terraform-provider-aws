@@ -108,7 +108,7 @@ func resourceVirtualMFADeviceCreate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating tags for IAM Virtual MFA Device (%s): %w", d.Id(), err)
+			return fmt.Errorf("failed adding tags after create for IAM Virtual MFA Device (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -172,7 +172,7 @@ func resourceVirtualMFADeviceUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err != nil {
-		return fmt.Errorf("error updating tags for IAM Virtual MFA Device (%s): %w", d.Id(), err)
+		return fmt.Errorf("failed updating tags for IAM Virtual MFA Device (%s): %w", d.Id(), err)
 	}
 
 	return resourceVirtualMFADeviceRead(d, meta)

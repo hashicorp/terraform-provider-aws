@@ -141,7 +141,7 @@ func resourceInstanceProfileCreate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating tags for IAM Instance Profile (%s): %w", d.Id(), err)
+			return fmt.Errorf("failed adding tags after create for IAM Instance Profile (%s): %w", d.Id(), err)
 		}
 	}
 

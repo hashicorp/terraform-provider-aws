@@ -164,7 +164,7 @@ func resourceServerCertificateCreate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating tags for IAM Server Certificate (%s): %w", d.Id(), err)
+			return fmt.Errorf("failed adding tags after create for IAM Server Certificate (%s): %w", d.Id(), err)
 		}
 	}
 
