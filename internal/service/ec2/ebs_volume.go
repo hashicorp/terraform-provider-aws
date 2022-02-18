@@ -184,11 +184,15 @@ func resourceEBSVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("type") {
-			params.VolumeType = aws.String(d.Get("type").(string))
+			volumeType := d.Get("type").(string)
+			params.VolumeType = aws.String(volumeType)
+
 			// Get Iops value because in the ec2.ModifyVolumeInput
 			// If you change the volume type to io1, io2, or gp3, the default is 3,000.
 			// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifyVolume.html
-			params.Iops = aws.Int64(int64(d.Get("iops").(int)))
+			if volumeType == ec2.VolumeTypeIo1 || volumeType == ec2.VolumeTypeIo2 || volumeType == ec2.VolumeTypeGp3 {
+				params.Iops = aws.Int64(int64(d.Get("iops").(int)))
+			}
 		}
 
 		if d.HasChange("iops") {
