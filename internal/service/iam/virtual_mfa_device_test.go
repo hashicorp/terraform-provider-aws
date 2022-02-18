@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccVirtualMFADevice_basic(t *testing.T) {
+func TestAccIAMVirtualMFADevice_basic(t *testing.T) {
 	var conf iam.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 
@@ -46,7 +46,7 @@ func TestAccVirtualMFADevice_basic(t *testing.T) {
 	})
 }
 
-func TestAccVirtualMFADevice_tags(t *testing.T) {
+func TestAccIAMVirtualMFADevice_tags(t *testing.T) {
 	var conf iam.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 
@@ -93,7 +93,7 @@ func TestAccVirtualMFADevice_tags(t *testing.T) {
 	})
 }
 
-func TestAccVirtualMFADevice_disappears(t *testing.T) {
+func TestAccIAMVirtualMFADevice_disappears(t *testing.T) {
 	var conf iam.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 
