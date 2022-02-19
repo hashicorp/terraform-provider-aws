@@ -1231,12 +1231,12 @@ resource "aws_imagebuilder_image_recipe" "test" {
     component_arn = aws_imagebuilder_component.test.arn
   }
 
-  name             = %[1]q
-  parent_image     = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
-  version          = "1.0.0"
+  name         = %[1]q
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  version      = "1.0.0"
 
   systems_manager_agent {
-	  uninstall_after_build = true
+    uninstall_after_build = true
   }
 }
 `, rName))
