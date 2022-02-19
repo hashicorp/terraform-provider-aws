@@ -6,6 +6,8 @@ description: |-
   Manages a Single Sign-On (SSO) Account Assignment
 ---
 
+~> **Note:** `aws_ssoadmin_account_assignment` **cannot** be used in conjunction with `aws_ssoadmin_account_assignments` or they will fight over what principal ids should be associated with what permission sets.
+
 # Resource: aws_ssoadmin_account_assignment
 
 Provides a Single Sign-On (SSO) Account Assignment resource
