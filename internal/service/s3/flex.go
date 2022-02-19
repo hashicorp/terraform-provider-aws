@@ -239,10 +239,7 @@ func ExpandLifecycleRuleFilter(l []interface{}) *s3.LifecycleRuleFilter {
 	}
 
 	if v, ok := m["tag"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		tags := Tags(tftags.New(v[0]).IgnoreAWS())
-		if len(tags) > 0 {
-			result.Tag = tags[0]
-		}
+		result.Tag = ExpandLifecycleRuleFilterTag(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := m["prefix"].(string); ok && result.And == nil && result.Tag == nil {
@@ -276,6 +273,24 @@ func ExpandLifecycleRuleFilterAndOperator(m map[string]interface{}) *s3.Lifecycl
 		if len(tags) > 0 {
 			result.Tags = tags
 		}
+	}
+
+	return result
+}
+
+func ExpandLifecycleRuleFilterTag(m map[string]interface{}) *s3.Tag {
+	if len(m) == 0 {
+		return nil
+	}
+
+	result := &s3.Tag{}
+
+	if key, ok := m["key"].(string); ok {
+		result.Key = aws.String(key)
+	}
+
+	if value, ok := m["value"].(string); ok {
+		result.Value = aws.String(value)
 	}
 
 	return result
@@ -886,14 +901,6 @@ func FlattenLifecycleRuleFilter(filter *s3.LifecycleRuleFilter) []interface{} {
 		return nil
 	}
 
-	if filter.And == nil &&
-		filter.ObjectSizeGreaterThan == nil &&
-		filter.ObjectSizeLessThan == nil &&
-		(filter.Prefix == nil || aws.StringValue(filter.Prefix) == "") &&
-		filter.Tag == nil {
-		return nil
-	}
-
 	m := make(map[string]interface{})
 
 	if filter.And != nil {
@@ -908,7 +915,7 @@ func FlattenLifecycleRuleFilter(filter *s3.LifecycleRuleFilter) []interface{} {
 		m["object_size_less_than"] = int(aws.Int64Value(filter.ObjectSizeLessThan))
 	}
 
-	if filter.Prefix != nil && aws.StringValue(filter.Prefix) != "" {
+	if filter.Prefix != nil {
 		m["prefix"] = aws.StringValue(filter.Prefix)
 	}
 
@@ -950,9 +957,17 @@ func FlattenLifecycleRuleFilterTag(tag *s3.Tag) []interface{} {
 		return nil
 	}
 
-	t := KeyValueTags([]*s3.Tag{tag}).IgnoreAWS().Map()
+	m := make(map[string]interface{})
 
-	return []interface{}{t}
+	if tag.Key != nil {
+		m["key"] = aws.StringValue(tag.Key)
+	}
+
+	if tag.Value != nil {
+		m["value"] = aws.StringValue(tag.Value)
+	}
+
+	return []interface{}{m}
 }
 
 func FlattenLifecycleRuleNoncurrentVersionExpiration(expiration *s3.NoncurrentVersionExpiration) []interface{} {

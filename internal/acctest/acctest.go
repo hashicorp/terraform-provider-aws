@@ -20,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/outposts"
+	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -708,6 +709,34 @@ func PreCheckOrganizationManagementAccount(t *testing.T) {
 
 	if aws.StringValue(organization.MasterAccountId) != aws.StringValue(callerIdentity.Account) {
 		t.Skip("this AWS account must be the management account of an AWS Organization")
+	}
+}
+
+func PreCheckSSOAdminInstances(t *testing.T) {
+	conn := Provider.Meta().(*conns.AWSClient).SSOAdminConn
+	input := &ssoadmin.ListInstancesInput{}
+	var instances []*ssoadmin.InstanceMetadata
+
+	err := conn.ListInstancesPages(input, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		instances = append(instances, page.Instances...)
+
+		return !lastPage
+	})
+
+	if PreCheckSkipError(err) {
+		t.Skipf("skipping tests: %s", err)
+	}
+
+	if len(instances) == 0 {
+		t.Skip("skipping tests; no SSO Instances found.")
+	}
+
+	if err != nil {
+		t.Fatalf("error listing SSO Instances: %s", err)
 	}
 }
 

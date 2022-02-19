@@ -86,6 +86,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/glacier"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/identitystore"
@@ -190,6 +191,13 @@ func Provider() *schema.Provider {
 				Set:           schema.HashString,
 			},
 			"assume_role": assumeRoleSchema(),
+			"custom_ca_bundle": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "File containing custom root and intermediate certificates. " +
+					"Can also be configured using the `AWS_CA_BUNDLE` environment variable. " +
+					"(Setting `ca_bundle` in the shared config file is not supported.)",
+			},
 			"default_tags": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -370,6 +378,13 @@ func Provider() *schema.Provider {
 				Default:  false,
 				Description: "Skip requesting the account ID. " +
 					"Used for AWS API implementations that do not have IAM/STS API and/or metadata API.",
+			},
+			"sts_region": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				Description: "The region where AWS STS operations will take place. Examples\n" +
+					"are us-east-1 and us-west-2.", // lintignore:AWSAT003,
 			},
 			"token": {
 				Type:     schema.TypeString,
@@ -610,20 +625,23 @@ func Provider() *schema.Provider {
 			"aws_glue_data_catalog_encryption_settings": glue.DataSourceDataCatalogEncryptionSettings(),
 			"aws_glue_script":                           glue.DataSourceScript(),
 
+			"aws_grafana_workspace": grafana.DataSourceWorkspace(),
+
 			"aws_guardduty_detector": guardduty.DataSourceDetector(),
 
-			"aws_iam_account_alias":      iam.DataSourceAccountAlias(),
-			"aws_iam_group":              iam.DataSourceGroup(),
-			"aws_iam_instance_profile":   iam.DataSourceInstanceProfile(),
-			"aws_iam_policy":             iam.DataSourcePolicy(),
-			"aws_iam_policy_document":    iam.DataSourcePolicyDocument(),
-			"aws_iam_role":               iam.DataSourceRole(),
-			"aws_iam_roles":              iam.DataSourceRoles(),
-			"aws_iam_server_certificate": iam.DataSourceServerCertificate(),
-			"aws_iam_session_context":    iam.DataSourceSessionContext(),
-			"aws_iam_user":               iam.DataSourceUser(),
-			"aws_iam_user_ssh_key":       iam.DataSourceUserSSHKey(),
-			"aws_iam_users":              iam.DataSourceUsers(),
+			"aws_iam_account_alias":           iam.DataSourceAccountAlias(),
+			"aws_iam_group":                   iam.DataSourceGroup(),
+			"aws_iam_instance_profile":        iam.DataSourceInstanceProfile(),
+			"aws_iam_openid_connect_provider": iam.DataSourceOpenIDConnectProvider(),
+			"aws_iam_policy":                  iam.DataSourcePolicy(),
+			"aws_iam_policy_document":         iam.DataSourcePolicyDocument(),
+			"aws_iam_role":                    iam.DataSourceRole(),
+			"aws_iam_roles":                   iam.DataSourceRoles(),
+			"aws_iam_server_certificate":      iam.DataSourceServerCertificate(),
+			"aws_iam_session_context":         iam.DataSourceSessionContext(),
+			"aws_iam_user":                    iam.DataSourceUser(),
+			"aws_iam_user_ssh_key":            iam.DataSourceUserSSHKey(),
+			"aws_iam_users":                   iam.DataSourceUsers(),
 
 			"aws_identitystore_group": identitystore.DataSourceGroup(),
 			"aws_identitystore_user":  identitystore.DataSourceUser(),
@@ -776,6 +794,7 @@ func Provider() *schema.Provider {
 			"aws_sqs_queue": sqs.DataSourceQueue(),
 
 			"aws_ssm_document":           ssm.DataSourceDocument(),
+			"aws_ssm_instances":          ssm.DataSourceInstances(),
 			"aws_ssm_parameter":          ssm.DataSourceParameter(),
 			"aws_ssm_parameters_by_path": ssm.DataSourceParametersByPath(),
 			"aws_ssm_patch_baseline":     ssm.DataSourcePatchBaseline(),
@@ -1383,6 +1402,8 @@ func Provider() *schema.Provider {
 			"aws_glue_user_defined_function":            glue.ResourceUserDefinedFunction(),
 			"aws_glue_workflow":                         glue.ResourceWorkflow(),
 
+			"aws_grafana_workspace": grafana.ResourceWorkspace(),
+
 			"aws_guardduty_detector":                   guardduty.ResourceDetector(),
 			"aws_guardduty_filter":                     guardduty.ResourceFilter(),
 			"aws_guardduty_invite_accepter":            guardduty.ResourceInviteAccepter(),
@@ -1407,7 +1428,7 @@ func Provider() *schema.Provider {
 			"aws_iam_role":                        iam.ResourceRole(),
 			"aws_iam_role_policy":                 iam.ResourceRolePolicy(),
 			"aws_iam_role_policy_attachment":      iam.ResourceRolePolicyAttachment(),
-			"aws_iam_saml_provider":               iam.ResourceSamlProvider(),
+			"aws_iam_saml_provider":               iam.ResourceSAMLProvider(),
 			"aws_iam_server_certificate":          iam.ResourceServerCertificate(),
 			"aws_iam_service_linked_role":         iam.ResourceServiceLinkedRole(),
 			"aws_iam_service_specific_credential": iam.ResourceServiceSpecificCredential(),
@@ -1418,7 +1439,7 @@ func Provider() *schema.Provider {
 			"aws_iam_user_policy":                 iam.ResourceUserPolicy(),
 			"aws_iam_user_policy_attachment":      iam.ResourceUserPolicyAttachment(),
 			"aws_iam_user_ssh_key":                iam.ResourceUserSSHKey(),
-			"aws_iam_virtual_mfa_device":          iam.ResourceVirtualMfaDevice(),
+			"aws_iam_virtual_mfa_device":          iam.ResourceVirtualMFADevice(),
 
 			"aws_imagebuilder_component":                    imagebuilder.ResourceComponent(),
 			"aws_imagebuilder_container_recipe":             imagebuilder.ResourceContainerRecipe(),
@@ -1902,6 +1923,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	config := conns.Config{
 		AccessKey:                      d.Get("access_key").(string),
 		DefaultTagsConfig:              expandProviderDefaultTags(d.Get("default_tags").([]interface{})),
+		CustomCABundle:                 d.Get("custom_ca_bundle").(string),
 		EC2MetadataServiceEndpoint:     d.Get("ec2_metadata_service_endpoint").(string),
 		EC2MetadataServiceEndpointMode: d.Get("ec2_metadata_service_endpoint_mode").(string),
 		Endpoints:                      make(map[string]string),
@@ -1918,6 +1940,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		SkipMetadataApiCheck:           d.Get("skip_metadata_api_check").(bool),
 		SkipRegionValidation:           d.Get("skip_region_validation").(bool),
 		SkipRequestingAccountId:        d.Get("skip_requesting_account_id").(bool),
+		STSRegion:                      d.Get("sts_region").(string),
 		TerraformVersion:               terraformVersion,
 		Token:                          d.Get("token").(string),
 		UseDualStackEndpoint:           d.Get("use_dualstack_endpoint").(bool),

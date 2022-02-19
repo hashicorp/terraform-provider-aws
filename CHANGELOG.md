@@ -1,4 +1,43 @@
-## 4.02.0 (Unreleased)
+## 4.03.0 (Unreleased)
+## 4.2.0 (February 18, 2022)
+
+FEATURES:
+
+* **New Data Source:** `aws_grafana_workspace` ([#22874](https://github.com/hashicorp/terraform-provider-aws/issues/22874))
+* **New Data Source:** `aws_iam_openid_connect_provider` ([#23240](https://github.com/hashicorp/terraform-provider-aws/issues/23240))
+* **New Data Source:** `aws_ssm_instances` ([#23162](https://github.com/hashicorp/terraform-provider-aws/issues/23162))
+* **New Resource:** `aws_cloudtrail_event_data_store` ([#22490](https://github.com/hashicorp/terraform-provider-aws/issues/22490))
+* **New Resource:** `aws_grafana_workspace` ([#22874](https://github.com/hashicorp/terraform-provider-aws/issues/22874))
+
+ENHANCEMENTS:
+
+* provider: Add `custom_ca_bundle` argument ([#23279](https://github.com/hashicorp/terraform-provider-aws/issues/23279))
+* provider: Add `sts_region` argument ([#23212](https://github.com/hashicorp/terraform-provider-aws/issues/23212))
+* provider: Expands environment variables in file paths in provider configuration. ([#23282](https://github.com/hashicorp/terraform-provider-aws/issues/23282))
+* provider: Updates list of valid AWS regions ([#23282](https://github.com/hashicorp/terraform-provider-aws/issues/23282))
+* resource/aws_dms_endpoint: Add `s3_settings.add_column_name`, `s3_settings.canned_acl_for_objects`, `s3_settings.cdc_inserts_and_updates`, `s3_settings.cdc_inserts_only`, `s3_settings.cdc_max_batch_interval`, `s3_settings.cdc_min_file_size`, `s3_settings.cdc_path`, `s3_settings.csv_no_sup_value`, `s3_settings.csv_null_value`, `s3_settings.data_page_size`, `s3_settings.date_partition_delimiter`, `s3_settings.date_partition_sequence`, `s3_settings.dict_page_size_limit`, `s3_settings.enable_statistics`, `s3_settings.encoding_type`, `s3_settings.ignore_headers_row`, `s3_settings.include_op_for_full_load`, `s3_settings.max_file_size`, `s3_settings.preserve_transactions`, `s3_settings.rfc_4180`, `s3_settings.row_group_length`, `s3_settings.timestamp_column_name`, `s3_settings.use_csv_no_sup_value` arguments ([#20913](https://github.com/hashicorp/terraform-provider-aws/issues/20913))
+* resource/aws_elasticache_replication_group: Add plan-time validation to `description` and `replication_group_description` to ensure non-empty strings ([#23254](https://github.com/hashicorp/terraform-provider-aws/issues/23254))
+* resource/aws_fms_policy: Add `delete_unused_fm_managed_resources` argument ([#21295](https://github.com/hashicorp/terraform-provider-aws/issues/21295))
+* resource/aws_fms_policy: Add `tags` argument and `tags_all` attribute to support resource tagging ([#21299](https://github.com/hashicorp/terraform-provider-aws/issues/21299))
+* resource/aws_imagebuilder_image_recipe: Update plan time validation of `block_device_mapping.ebs.kms_key_id`, `block_device_mapping.ebs.snapshot_id`, `block_device_mapping.ebs.volume_type`, `name`, `parent_image`. ([#23235](https://github.com/hashicorp/terraform-provider-aws/issues/23235))
+* resource/aws_instance: Allow updates to `user_data` and `user_data_base64` without forcing resource replacement ([#18043](https://github.com/hashicorp/terraform-provider-aws/issues/18043))
+* resource/aws_s3_bucket: Add error handling for `MethodNotAllowed` and `XNotImplemented` errors when reading `website` into terraform state. ([#23278](https://github.com/hashicorp/terraform-provider-aws/issues/23278))
+* resource/aws_s3_bucket: Add error handling for `NotImplemented` errors when reading `acceleration_status`, `policy`, or `request_payer` into terraform state. ([#23278](https://github.com/hashicorp/terraform-provider-aws/issues/23278))
+
+BUG FIXES:
+
+* provider: Credentials with expiry, such as assuming a role, would not renew. ([#23282](https://github.com/hashicorp/terraform-provider-aws/issues/23282))
+* provider: Setting a custom CA bundle caused the provider to fail. ([#23282](https://github.com/hashicorp/terraform-provider-aws/issues/23282))
+* resource/aws_iam_instance_profile: Improve tag handling in ISO regions ([#23283](https://github.com/hashicorp/terraform-provider-aws/issues/23283))
+* resource/aws_iam_openid_connect_provider: Improve tag handling in ISO regions ([#23283](https://github.com/hashicorp/terraform-provider-aws/issues/23283))
+* resource/aws_iam_policy: Improve tag handling in ISO regions ([#23283](https://github.com/hashicorp/terraform-provider-aws/issues/23283))
+* resource/aws_iam_saml_provider: Improve tag handling in ISO regions ([#23283](https://github.com/hashicorp/terraform-provider-aws/issues/23283))
+* resource/aws_iam_server_certificate: Improve tag handling in ISO regions ([#23283](https://github.com/hashicorp/terraform-provider-aws/issues/23283))
+* resource/aws_iam_service_linked_role: Improve tag handling in ISO regions ([#23283](https://github.com/hashicorp/terraform-provider-aws/issues/23283))
+* resource/aws_iam_virtual_mfa_device: Improve tag handling in ISO regions ([#23283](https://github.com/hashicorp/terraform-provider-aws/issues/23283))
+* resource/aws_s3_bucket_lifecycle_configuration: Ensure both `key` and `value` arguments of the `filter` `tag` configuration block are correctly populated in the outgoing API request and terraform state. ([#23252](https://github.com/hashicorp/terraform-provider-aws/issues/23252))
+* resource/aws_s3_bucket_lifecycle_configuration: Prevent non-empty plans when `filter` is an empty configuration block ([#23232](https://github.com/hashicorp/terraform-provider-aws/issues/23232))
+
 ## 4.1.0 (February 15, 2022)
 
 FEATURES:

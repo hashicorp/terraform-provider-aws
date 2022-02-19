@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccSigningCertificate_basic(t *testing.T) {
+func TestAccIAMSigningCertificate_basic(t *testing.T) {
 	var cred iam.SigningCertificate
 
 	resourceName := "aws_iam_signing_certificate.test"
@@ -47,7 +47,7 @@ func TestAccSigningCertificate_basic(t *testing.T) {
 	})
 }
 
-func TestAccSigningCertificate_status(t *testing.T) {
+func TestAccIAMSigningCertificate_status(t *testing.T) {
 	var cred iam.SigningCertificate
 
 	resourceName := "aws_iam_signing_certificate.test"
@@ -91,7 +91,7 @@ func TestAccSigningCertificate_status(t *testing.T) {
 	})
 }
 
-func TestAccSigningCertificate_disappears(t *testing.T) {
+func TestAccIAMSigningCertificate_disappears(t *testing.T) {
 	var cred iam.SigningCertificate
 	resourceName := "aws_iam_signing_certificate.test"
 
