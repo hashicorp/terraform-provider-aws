@@ -115,9 +115,9 @@ func resourceAwsRDSClusterActivityStreamRead(ctx context.Context, d *schema.Reso
 	}
 
 	d.Set("resource_arn", resp.DBClusterArn)
-	d.Set("kms_key_id", aws.StringValue(resp.ActivityStreamKmsKeyId))
-	d.Set("kinesis_stream_name", aws.StringValue(resp.ActivityStreamKinesisStreamName))
-	d.Set("mode", aws.StringValue(resp.ActivityStreamMode))
+	d.Set("kms_key_id", resp.ActivityStreamKmsKeyId)
+	d.Set("kinesis_stream_name", resp.ActivityStreamKinesisStreamName)
+	d.Set("mode", resp.ActivityStreamMode)
 
 	return nil
 }
