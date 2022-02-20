@@ -2147,6 +2147,83 @@ func FindVPNConnectionRouteByVPNConnectionIDAndCIDR(conn *ec2.EC2, vpnConnection
 	}
 }
 
+func FindTransitGateway(conn *ec2.EC2, input *ec2.DescribeTransitGatewaysInput) (*ec2.TransitGateway, error) {
+	output, err := FindTransitGateways(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindTransitGateways(conn *ec2.EC2, input *ec2.DescribeTransitGatewaysInput) ([]*ec2.TransitGateway, error) {
+	var output []*ec2.TransitGateway
+
+	err := conn.DescribeTransitGatewaysPages(input, func(page *ec2.DescribeTransitGatewaysOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TransitGateways {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidTransitGatewayIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindTransitGatewayByID(conn *ec2.EC2, id string) (*ec2.TransitGateway, error) {
+	input := &ec2.DescribeTransitGatewaysInput{
+		TransitGatewayIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindTransitGateway(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.TransitGatewayStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.TransitGatewayId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func FindTransitGatewayAttachment(conn *ec2.EC2, input *ec2.DescribeTransitGatewayAttachmentsInput) (*ec2.TransitGatewayAttachment, error) {
 	output, err := FindTransitGatewayAttachments(conn, input)
 
