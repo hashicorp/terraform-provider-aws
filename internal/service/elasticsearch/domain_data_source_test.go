@@ -11,6 +11,10 @@ import (
 )
 
 func TestAccElasticsearchDomainDataSource_Data_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rInt := sdkacctest.RandInt()
 	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	datasourceName := "data.aws_elasticsearch_domain.test"
@@ -49,6 +53,10 @@ func TestAccElasticsearchDomainDataSource_Data_basic(t *testing.T) {
 }
 
 func TestAccElasticsearchDomainDataSource_Data_advanced(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rInt := sdkacctest.RandInt()
 	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	datasourceName := "data.aws_elasticsearch_domain.test"

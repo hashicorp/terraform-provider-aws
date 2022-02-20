@@ -55,6 +55,8 @@ func TestAccFSxLustreFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeSsd),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "false"),
 					resource.TestCheckResourceAttr(resourceName, "data_compression_type", fsx.DataCompressionTypeNone),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.level", "DISABLED"),
 				),
 			},
 			{
@@ -615,6 +617,45 @@ func TestAccFSxLustreFileSystem_deploymentTypePersistent2(t *testing.T) {
 	})
 }
 
+func TestAccFSxLustreFileSystem_logConfig(t *testing.T) {
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLustreFileSystemLogConfig(rName, "WARN_ONLY"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.level", "WARN_ONLY"),
+					resource.TestCheckResourceAttrSet(resourceName, "log_configuration.0.destination"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config: testAccLustreFileSystemLogConfig(rName, "ERROR_ONLY"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.level", "ERROR_ONLY"),
+					resource.TestCheckResourceAttrSet(resourceName, "log_configuration.0.destination"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFSxLustreFileSystem_fromBackup(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
@@ -913,8 +954,12 @@ resource "aws_subnet" "test1" {
 func testAccLustreFileSystemExportPathConfig(rName, exportPrefix string) string {
 	return acctest.ConfigCompose(testAccLustreFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  acl    = "private"
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_fsx_lustre_file_system" "test" {
@@ -930,8 +975,12 @@ resource "aws_fsx_lustre_file_system" "test" {
 func testAccLustreFileSystemImportPathConfig(rName, importPrefix string) string {
 	return acctest.ConfigCompose(testAccLustreFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  acl    = "private"
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_fsx_lustre_file_system" "test" {
@@ -946,8 +995,12 @@ resource "aws_fsx_lustre_file_system" "test" {
 func testAccLustreFileSystemImportedFileChunkSizeConfig(rName string, importedFileChunkSize int) string {
 	return acctest.ConfigCompose(testAccLustreFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  acl    = "private"
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_fsx_lustre_file_system" "test" {
@@ -1250,8 +1303,12 @@ resource "aws_fsx_lustre_file_system" "test" {
 func testAccLustreFileSystemAutoImportPolicyConfig(rName, exportPrefix, policy string) string {
 	return acctest.ConfigCompose(testAccLustreFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  acl    = "private"
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_fsx_lustre_file_system" "test" {
@@ -1286,4 +1343,23 @@ resource "aws_fsx_lustre_file_system" "test" {
   data_compression_type = "LZ4"
 }
 `)
+}
+
+func testAccLustreFileSystemLogConfig(rName, status string) string {
+	return acctest.ConfigCompose(testAccLustreFileSystemBaseConfig(), fmt.Sprintf(`
+resource aws_cloudwatch_log_group "test" {
+  name = "/aws/fsx/%[1]s"
+}
+
+resource "aws_fsx_lustre_file_system" "test" {
+  storage_capacity = 1200
+  subnet_ids       = [aws_subnet.test1.id]
+  deployment_type  = data.aws_partition.current.partition == "aws-us-gov" ? "SCRATCH_2" : null # GovCloud does not support SCRATCH_1
+
+  log_configuration {
+    destination = aws_cloudwatch_log_group.test.arn
+    level       = %[2]q
+  }
+}
+`, rName, status))
 }

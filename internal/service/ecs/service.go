@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -565,15 +565,15 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	output, err := retryServiceCreate(conn, input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && (tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException)) {
-		log.Printf("[WARN] ECS Service (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] ECS tagging failed creating Service (%s) with tags: %s. Trying create without tags.", d.Get("name").(string), err)
 		input.Tags = nil
 
 		output, err = retryServiceCreate(conn, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating ECS service (%s): %w", d.Get("name").(string), err)
+		return fmt.Errorf("failed creating ECS service (%s): %w", d.Get("name").(string), err)
 	}
 
 	if output == nil || output.Service == nil {
@@ -599,13 +599,13 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException)) {
-			log.Printf("[WARN] error adding tags after create for ECS Service (%s): %s", d.Id(), err)
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] ECS tagging failed adding tags after create for Service (%s): %s", d.Id(), err)
 			return resourceServiceRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error creating ECS Service (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("ECS tagging failed adding tags after create for Service (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -625,6 +625,14 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	output, err := conn.DescribeServices(&input)
+
+	// Some partitions (i.e., ISO) may not support tagging, giving error
+	if verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] ECS tagging failed describing Service (%s) with tags: %s; retrying without tags", d.Id(), err)
+
+		input.Include = nil
+		output, err = conn.DescribeServices(&input)
+	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ecs.ErrCodeServiceNotFoundException) {
 		log.Printf("[WARN] ECS service (%s) not found, removing from state", d.Id())
@@ -752,12 +760,6 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags := KeyValueTags(service.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException) {
-		log.Printf("[WARN] Unable to list tags for ECS Service %s: %s", d.Id(), err)
-		return nil
-	}
-
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
@@ -858,46 +860,6 @@ func expandNetworkConfiguration(nc []interface{}) *ecs.NetworkConfiguration {
 	}
 
 	return &ecs.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
-}
-
-func expandCapacityProviderStrategy(cps *schema.Set) []*ecs.CapacityProviderStrategyItem {
-	list := cps.List()
-	results := make([]*ecs.CapacityProviderStrategyItem, 0)
-	for _, raw := range list {
-		cp := raw.(map[string]interface{})
-		ps := &ecs.CapacityProviderStrategyItem{}
-		if val, ok := cp["base"]; ok {
-			ps.Base = aws.Int64(int64(val.(int)))
-		}
-		if val, ok := cp["weight"]; ok {
-			ps.Weight = aws.Int64(int64(val.(int)))
-		}
-		if val, ok := cp["capacity_provider"]; ok {
-			ps.CapacityProvider = aws.String(val.(string))
-		}
-
-		results = append(results, ps)
-	}
-	return results
-}
-
-func flattenCapacityProviderStrategy(cps []*ecs.CapacityProviderStrategyItem) []map[string]interface{} {
-	if cps == nil {
-		return nil
-	}
-	results := make([]map[string]interface{}, 0)
-	for _, cp := range cps {
-		s := make(map[string]interface{})
-		s["capacity_provider"] = aws.StringValue(cp.CapacityProvider)
-		if cp.Weight != nil {
-			s["weight"] = aws.Int64Value(cp.Weight)
-		}
-		if cp.Base != nil {
-			s["base"] = aws.Int64Value(cp.Base)
-		}
-		results = append(results, s)
-	}
-	return results
 }
 
 func expandPlacementConstraints(tfList []interface{}) ([]*ecs.PlacementConstraint, error) {
@@ -1195,13 +1157,13 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, d.Id(), o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException) {
-			log.Printf("[WARN] Unable to update tags for ECS Service %s: %s", d.Id(), err)
+		if verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] ECS tagging failed updating tags for Service (%s): %s", d.Id(), err)
 			return resourceServiceRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating ECS Service (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("ECS tagging failed updating tags for Service (%s): %w", d.Id(), err)
 		}
 	}
 

@@ -68,5 +68,5 @@ which take the following arguments:
 ## Attributes Reference
 
 * `id` - AWS Region.
-* `ids` - A list of all the network interface ids found. This data source will fail if none are found.
+* `ids` - A list of all the network interface ids found.
 

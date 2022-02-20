@@ -29,7 +29,7 @@ Typically, choosing the AWS Provider identifier for a service is simple. AWS con
 
 1. Determine the service package name for [AWS Go SDK v2](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2).
 2. Determine the [AWS CLI v2](https://awscli.amazonaws.com/v2/documentation/api/latest/index.html) _command_ corresponding to the service (i.e., the word following `aws` in CLI commands; e.g., for `aws sts get-caller-identity`, `sts` is the _command_, `get-caller-identity` is the _subcommand_).
-3. If the SDK and CLI agree, use that.
+3. If the SDK and CLI agree, use that. If the service only exists in one, use that.
 4. If they differ, use the shorter of the two.
 5. Use lowercase letters and do not include any underscores (`_`).
 

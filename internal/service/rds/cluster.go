@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -1541,8 +1541,15 @@ func rdsClusterSetResourceDataEngineVersionFromCluster(d *schema.ResourceData, c
 }
 
 func compareActualEngineVersion(d *schema.ResourceData, oldVersion string, newVersion string) {
-	if oldVersion != newVersion && string(append([]byte(oldVersion), []byte(".")...)) != string([]byte(newVersion)[0:len(oldVersion)+1]) {
+	newVersionSubstr := newVersion
+
+	if len(newVersion) > len(oldVersion) {
+		newVersionSubstr = string([]byte(newVersion)[0 : len(oldVersion)+1])
+	}
+
+	if oldVersion != newVersion && string(append([]byte(oldVersion), []byte(".")...)) != newVersionSubstr {
 		d.Set("engine_version", newVersion)
 	}
+
 	d.Set("engine_version_actual", newVersion)
 }

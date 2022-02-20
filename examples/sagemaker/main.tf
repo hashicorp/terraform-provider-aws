@@ -82,11 +82,15 @@ resource "random_integer" "bucket_suffix" {
 
 resource "aws_s3_bucket" "foo" {
   bucket        = "terraform-sagemaker-example-${random_integer.bucket_suffix.result}"
-  acl           = "private"
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "object" {
+resource "aws_s3_bucket_acl" "foo_bucket_acl" {
+  bucket = aws_s3_bucket.foo.id
+  acl    = "private"
+}
+
+resource "aws_s3_object" "object" {
   bucket = aws_s3_bucket.foo.bucket
   key    = "model.tar.gz"
   source = "model.tar.gz"

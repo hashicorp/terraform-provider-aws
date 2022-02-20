@@ -248,12 +248,8 @@ func resourceComputeEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 		Type:                   aws.String(computeEnvironmentType),
 	}
 
-	// TODO Check in CustomizeDiff that UNMANAGED compute environment has no compute_resources.
-	// TODO This would be a breaking change.
-	if computeEnvironmentType := strings.ToUpper(computeEnvironmentType); computeEnvironmentType == batch.CETypeManaged {
-		if v, ok := d.GetOk("compute_resources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.ComputeResources = expandBatchComputeResource(v.([]interface{})[0].(map[string]interface{}))
-		}
+	if v, ok := d.GetOk("compute_resources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ComputeResources = expandBatchComputeResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("state"); ok {
@@ -309,15 +305,12 @@ func resourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("status_reason", computeEnvironment.StatusReason)
 	d.Set("type", computeEnvironmentType)
 
-	// TODO See above on how to remove check on type.
-	if computeEnvironmentType == batch.CETypeManaged {
-		if computeEnvironment.ComputeResources != nil {
-			if err := d.Set("compute_resources", []interface{}{flattenBatchComputeResource(computeEnvironment.ComputeResources)}); err != nil {
-				return fmt.Errorf("error setting compute_resources: %w", err)
-			}
-		} else {
-			d.Set("compute_resources", nil)
+	if computeEnvironment.ComputeResources != nil {
+		if err := d.Set("compute_resources", []interface{}{flattenBatchComputeResource(computeEnvironment.ComputeResources)}); err != nil {
+			return fmt.Errorf("error setting compute_resources: %w", err)
 		}
+	} else {
+		d.Set("compute_resources", nil)
 	}
 
 	tags := KeyValueTags(computeEnvironment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -350,7 +343,6 @@ func resourceComputeEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 			input.State = aws.String(d.Get("state").(string))
 		}
 
-		// TODO See above on how to remove check on type.
 		if computeEnvironmentType := strings.ToUpper(d.Get("type").(string)); computeEnvironmentType == batch.CETypeManaged {
 			// "At least one compute-resources attribute must be specified"
 			computeResourceUpdate := &batch.ComputeResourceUpdate{
@@ -435,6 +427,13 @@ func resourceComputeEnvironmentDelete(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceComputeEnvironmentCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	if computeEnvironmentType := strings.ToUpper(diff.Get("type").(string)); computeEnvironmentType == batch.CETypeUnmanaged {
+		// UNMANAGED compute environments can have no compute_resources configured.
+		if v, ok := diff.GetOk("compute_resources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			return fmt.Errorf("no `compute_resources` can be specified when `type` is %q", computeEnvironmentType)
+		}
+	}
+
 	if diff.Id() != "" {
 		// Update.
 

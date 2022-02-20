@@ -14,6 +14,7 @@ The HashiCorp Terraform AWS provider team is :
 * Kerim Satirli, Developer Advocate - GitHub [@ksatirli](https://github.com/ksatirli)
 * Kit Ewbank, Engineer - GitHub [@ewbankkit](https://github.com/ewbankkit)
 * Zoe Helding, Engineer - GitHub [@zhelding](https://github.com/zhelding)
+* Adrian Johnson, Engineer - GitHub [@johnsonaj](https://github.com/johnsonaj)
 
 ### Why isn’t my PR merged yet?
 
