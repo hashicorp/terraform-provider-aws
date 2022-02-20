@@ -2420,6 +2420,31 @@ func FindTransitGatewayMulticastDomainAssociations(conn *ec2.EC2, input *ec2.Get
 	return output, nil
 }
 
+func FindTransitGatewayMulticastDomainAssociationByThreePartKey(conn *ec2.EC2, multicastDomainID, attachmentID, subnetID string) (*ec2.TransitGatewayMulticastDomainAssociation, error) {
+	input := &ec2.GetTransitGatewayMulticastDomainAssociationsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"subnet-id":                     subnetID,
+			"transit-gateway-attachment-id": attachmentID,
+		}),
+		TransitGatewayMulticastDomainId: aws.String(multicastDomainID),
+	}
+
+	output, err := FindTransitGatewayMulticastDomainAssociation(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.Subnet.State); state == ec2.TransitGatewayMulitcastDomainAssociationStateDisassociated {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func FindTransitGatewayRouteTables(conn *ec2.EC2, input *ec2.DescribeTransitGatewayRouteTablesInput) ([]*ec2.TransitGatewayRouteTable, error) {
 	var output []*ec2.TransitGatewayRouteTable
 
