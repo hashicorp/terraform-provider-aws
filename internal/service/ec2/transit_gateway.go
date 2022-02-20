@@ -193,8 +193,8 @@ func resourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("default_route_table_propagation", transitGateway.Options.DefaultRouteTablePropagation)
 	d.Set("description", transitGateway.Description)
 	d.Set("dns_support", transitGateway.Options.DnsSupport)
-	d.Set("owner_id", transitGateway.OwnerId)
 	d.Set("multicast_support", transitGateway.Options.MulticastSupport)
+	d.Set("owner_id", transitGateway.OwnerId)
 	d.Set("propagation_default_route_table_id", transitGateway.Options.PropagationDefaultRouteTableId)
 
 	tags := KeyValueTags(transitGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
