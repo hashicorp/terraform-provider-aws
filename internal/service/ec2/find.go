@@ -978,6 +978,34 @@ func FindNetworkInterfaceSecurityGroup(conn *ec2.EC2, networkInterfaceID string,
 	}
 }
 
+func FindNetworkInsightsPaths(conn *ec2.EC2, input *ec2.DescribeNetworkInsightsPathsInput) ([]*ec2.NetworkInsightsPath, error) {
+	var results []*ec2.NetworkInsightsPath
+	err := conn.DescribeNetworkInsightsPathsPages(input, func(page *ec2.DescribeNetworkInsightsPathsOutput, lastPage bool) bool {
+		results = append(results, page.NetworkInsightsPaths...)
+		return !lastPage
+	})
+	if err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+func FindNetworkInsightsPathByID(conn *ec2.EC2, nipID string) (*ec2.NetworkInsightsPath, error) {
+	input := ec2.DescribeNetworkInsightsPathsInput{
+		NetworkInsightsPathIds: aws.StringSlice([]string{nipID}),
+	}
+	result, err := FindNetworkInsightsPaths(conn, &input)
+	if err != nil {
+		return nil, err
+	}
+	if len(result) != 1 {
+		return nil, &resource.NotFoundError{
+			Message: fmt.Sprintf("Network Insights Path (%s) could not be found", nipID),
+		}
+	}
+	return result[0], nil
+}
+
 // FindMainRouteTableAssociationByID returns the main route table association corresponding to the specified identifier.
 // Returns NotFoundError if no route table association is found.
 func FindMainRouteTableAssociationByID(conn *ec2.EC2, associationID string) (*ec2.RouteTableAssociation, error) {

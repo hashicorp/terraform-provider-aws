@@ -147,6 +147,11 @@ func init() {
 		},
 	})
 
+	resource.AddTestSweepers("aws_ec2_network_insights_path", &resource.Sweeper{
+		Name: "aws_ec2_network_insights_path",
+		F:    sweepNetworkInsightsPaths,
+	})
+
 	resource.AddTestSweepers("aws_placement_group", &resource.Sweeper{
 		Name: "aws_placement_group",
 		F:    sweepPlacementGroups,
@@ -1176,6 +1181,45 @@ func sweepNetworkInterfaces(region string) error {
 	}
 
 	return nil
+}
+
+func sweepNetworkInsightsPaths(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).EC2Conn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+
+	err = conn.DescribeNetworkInsightsPathsPages(&ec2.DescribeNetworkInsightsPathsInput{}, func(page *ec2.DescribeNetworkInsightsPathsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, nip := range page.NetworkInsightsPaths {
+			id := aws.StringValue(nip.NetworkInsightsPathId)
+
+			r := ResourceNetworkInsightsPath()
+			d := r.Data(nil)
+
+			d.SetId(id)
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing Network Insights Paths for %s: %w", region, err))
+	}
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Network Insights Paths for %s: %w", region, err))
+	}
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Network Insights Path sweep for %s: %s", region, errs)
+		return nil
+	}
+	return errs.ErrorOrNil()
 }
 
 func sweepPlacementGroups(region string) error {

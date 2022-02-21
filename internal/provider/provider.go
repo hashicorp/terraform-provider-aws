@@ -295,7 +295,7 @@ func Provider() *schema.Provider {
 				}, nil),
 				Description: "The region where AWS operations will take place. Examples\n" +
 					"are us-east-1, us-west-2, etc.", // lintignore:AWSAT003,
-				InputDefault: "us-east-1", // lintignore:AWSAT003
+				InputDefault: "us-east-1",            // lintignore:AWSAT003
 			},
 			"s3_force_path_style": {
 				Type:       schema.TypeBool,
@@ -1199,6 +1199,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_local_gateway_route_table_vpc_association":    ec2.ResourceLocalGatewayRouteTableVPCAssociation(),
 			"aws_ec2_managed_prefix_list":                          ec2.ResourceManagedPrefixList(),
 			"aws_ec2_managed_prefix_list_entry":                    ec2.ResourceManagedPrefixListEntry(),
+			"aws_ec2_network_insights_path":                        ec2.ResourceNetworkInsightsPath(),
 			"aws_ec2_subnet_cidr_reservation":                      ec2.ResourceSubnetCIDRReservation(),
 			"aws_ec2_tag":                                          ec2.ResourceTag(),
 			"aws_ec2_traffic_mirror_filter":                        ec2.ResourceTrafficMirrorFilter(),
