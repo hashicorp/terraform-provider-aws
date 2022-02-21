@@ -2494,6 +2494,32 @@ func FindTransitGatewayMulticastGroups(conn *ec2.EC2, input *ec2.SearchTransitGa
 	return output, nil
 }
 
+func FindTransitGatewayMulticastGroupMemberByThreePartKey(conn *ec2.EC2, multicastDomainID, groupIPAddress, eniID string) (*ec2.TransitGatewayMulticastGroup, error) {
+	input := &ec2.SearchTransitGatewayMulticastGroupsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"group-ip-address": groupIPAddress,
+			"is-group-member":  "true",
+			"is-group-source":  "false",
+		}),
+		TransitGatewayMulticastDomainId: aws.String(multicastDomainID),
+	}
+
+	return FindTransitGatewayMulticastGroup(conn, input)
+}
+
+func FindTransitGatewayMulticastGroupSourceByThreePartKey(conn *ec2.EC2, multicastDomainID, groupIPAddress, eniID string) (*ec2.TransitGatewayMulticastGroup, error) {
+	input := &ec2.SearchTransitGatewayMulticastGroupsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"group-ip-address": groupIPAddress,
+			"is-group-member":  "false",
+			"is-group-source":  "true",
+		}),
+		TransitGatewayMulticastDomainId: aws.String(multicastDomainID),
+	}
+
+	return FindTransitGatewayMulticastGroup(conn, input)
+}
+
 func FindTransitGatewayRouteTables(conn *ec2.EC2, input *ec2.DescribeTransitGatewayRouteTablesInput) ([]*ec2.TransitGatewayRouteTable, error) {
 	var output []*ec2.TransitGatewayRouteTable
 
