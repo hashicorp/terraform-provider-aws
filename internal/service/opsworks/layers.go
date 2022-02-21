@@ -33,9 +33,10 @@ type opsworksLayerTypeAttribute struct {
 	AttrName     string
 	Type         schema.ValueType
 	Default      interface{}
+	ForceNew     bool
 	Required     bool
-	WriteOnly    bool
 	ValidateFunc schema.SchemaValidateFunc
+	WriteOnly    bool
 }
 
 type opsworksLayerType struct {
@@ -325,6 +326,7 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 		resourceSchema[key] = &schema.Schema{
 			Type:         def.Type,
 			Default:      def.Default,
+			ForceNew:     def.ForceNew,
 			Required:     def.Required,
 			Optional:     !def.Required,
 			ValidateFunc: def.ValidateFunc,
@@ -590,35 +592,6 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 		_, err = conn.UpdateLayer(req)
 		if err != nil {
 			return fmt.Errorf("error updating Opsworks Layer (%s): %w", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("ecs_cluster_arn") {
-		stackID := aws.String(d.Get("stack_id").(string))
-		ecso, ecsn := d.GetChange("ecs_cluster_arn")
-		ecsClusterOld := ecso.(string)
-		ecsClusterNew := ecsn.(string)
-
-		if ecso != nil && ecsClusterOld != "" {
-			log.Printf("[DEBUG] Deregistering ecs cluster: %s", ecsClusterOld)
-			_, err := conn.DeregisterEcsCluster(&opsworks.DeregisterEcsClusterInput{
-				EcsClusterArn: aws.String(ecsClusterOld),
-			})
-
-			if err != nil {
-				return fmt.Errorf("error Deregistering Opsworks Layer ECS Cluster (%s): %w", d.Id(), err)
-			}
-		}
-
-		if ecsn != nil && ecsClusterNew != "" {
-			log.Printf("[DEBUG] Registering ECS Cluster: %s", ecsClusterNew)
-			_, err := conn.RegisterEcsCluster(&opsworks.RegisterEcsClusterInput{
-				EcsClusterArn: aws.String(ecsClusterNew),
-				StackId:       stackID,
-			})
-			if err != nil {
-				return fmt.Errorf("error Registering Opsworks Layer ECS Cluster (%s): %w", d.Id(), err)
-			}
 		}
 	}
 

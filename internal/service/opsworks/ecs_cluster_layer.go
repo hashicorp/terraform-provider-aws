@@ -16,6 +16,7 @@ func ResourceEcsClusterLayer() *schema.Resource {
 				AttrName:     opsworks.LayerAttributesKeysEcsClusterArn,
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 		},

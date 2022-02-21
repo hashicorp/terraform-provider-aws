@@ -25,7 +25,7 @@ func TestAccOpsWorksEcsClusterLayer_basic(t *testing.T) {
 		CheckDestroy: testAccCheckEcsClusterLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEcsClusterLayerVPCCreateConfig(stackName),
+				Config: testAccEcsClusterLayerBasic(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", stackName),
@@ -79,7 +79,7 @@ func testAccCheckEcsClusterLayerDestroy(s *terraform.State) error {
 	return testAccCheckLayerDestroy("aws_opsworks_ecs_cluster_layer", s)
 }
 
-func testAccEcsClusterLayerVPCCreateConfig(name string) string {
+func testAccEcsClusterLayerBasic(name string) string {
 	return testAccStackVPCCreateConfig(name) +
 		testAccCustomLayerSecurityGroups(name) +
 		fmt.Sprintf(`
