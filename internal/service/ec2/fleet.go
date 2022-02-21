@@ -35,6 +35,10 @@ func ResourceFleet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"context": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"excess_capacity_termination_policy": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -335,6 +339,7 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateFleetInput{
+		Context:                          aws.String(d.Get("context").(string)),
 		ExcessCapacityTerminationPolicy:  aws.String(d.Get("excess_capacity_termination_policy").(string)),
 		LaunchTemplateConfigs:            expandEc2FleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]interface{})),
 		OnDemandOptions:                  expandEc2OnDemandOptionsRequest(d.Get("on_demand_options").([]interface{})),
