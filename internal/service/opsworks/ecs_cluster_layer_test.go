@@ -28,7 +28,9 @@ func TestAccOpsWorksEcsClusterLayer_basic(t *testing.T) {
 				Config: testAccEcsClusterLayerVPCCreateConfig(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
-					resource.TestCheckResourceAttr(resourceName, "name", stackName)),
+					resource.TestCheckResourceAttr(resourceName, "name", stackName),
+					resource.TestCheckResourceAttrPair(resourceName, "ecs_cluster_arn", "aws_ecs_cluster.test", "arn"),
+				),
 			},
 		},
 	})
