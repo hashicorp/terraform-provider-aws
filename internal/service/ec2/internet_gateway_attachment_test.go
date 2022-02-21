@@ -191,7 +191,7 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_internet_gateway_attachment" "test" {
-  internet_gateway_id = aws_internet_gateway.test.id	
+  internet_gateway_id = aws_internet_gateway.test.id
   vpc_id              = aws_vpc.test2.id
 }
 `, rName)
