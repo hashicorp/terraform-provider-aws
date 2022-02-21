@@ -107,7 +107,7 @@ func testAccEcsClusterLayerTags1Config(name, tagKey1, tagValue1 string) string {
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
-		
+	
 resource "aws_opsworks_ecs_cluster_layer" "test" {
   stack_id        = aws_opsworks_stack.tf-acc.id
   name            = %[1]q
