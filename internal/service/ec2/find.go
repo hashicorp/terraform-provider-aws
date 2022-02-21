@@ -1438,93 +1438,6 @@ func FindSubnetIPv6CIDRBlockAssociationByID(conn *ec2.EC2, associationID string)
 	return nil, &resource.NotFoundError{}
 }
 
-func FindTransitGatewayPrefixListReference(conn *ec2.EC2, transitGatewayRouteTableID string, prefixListID string) (*ec2.TransitGatewayPrefixListReference, error) {
-	filters := map[string]string{
-		"prefix-list-id": prefixListID,
-	}
-
-	input := &ec2.GetTransitGatewayPrefixListReferencesInput{
-		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
-		Filters:                    BuildAttributeFilterList(filters),
-	}
-
-	var result *ec2.TransitGatewayPrefixListReference
-
-	err := conn.GetTransitGatewayPrefixListReferencesPages(input, func(page *ec2.GetTransitGatewayPrefixListReferencesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, transitGatewayPrefixListReference := range page.TransitGatewayPrefixListReferences {
-			if transitGatewayPrefixListReference == nil {
-				continue
-			}
-
-			if aws.StringValue(transitGatewayPrefixListReference.PrefixListId) == prefixListID {
-				result = transitGatewayPrefixListReference
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	return result, err
-}
-
-func FindTransitGatewayPrefixListReferenceByID(conn *ec2.EC2, resourceID string) (*ec2.TransitGatewayPrefixListReference, error) {
-	transitGatewayRouteTableID, prefixListID, err := TransitGatewayPrefixListReferenceParseID(resourceID)
-
-	if err != nil {
-		return nil, fmt.Errorf("error parsing EC2 Transit Gateway Prefix List Reference (%s) identifier: %w", resourceID, err)
-	}
-
-	return FindTransitGatewayPrefixListReference(conn, transitGatewayRouteTableID, prefixListID)
-}
-
-func FindTransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
-	if transitGatewayRouteTableID == "" {
-		return nil, nil
-	}
-
-	input := &ec2.GetTransitGatewayRouteTablePropagationsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("transit-gateway-attachment-id"),
-				Values: aws.StringSlice([]string{transitGatewayAttachmentID}),
-			},
-		},
-		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
-	}
-
-	var result *ec2.TransitGatewayRouteTablePropagation
-
-	err := conn.GetTransitGatewayRouteTablePropagationsPages(input, func(page *ec2.GetTransitGatewayRouteTablePropagationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, transitGatewayRouteTablePropagation := range page.TransitGatewayRouteTablePropagations {
-			if transitGatewayRouteTablePropagation == nil {
-				continue
-			}
-
-			if aws.StringValue(transitGatewayRouteTablePropagation.TransitGatewayAttachmentId) == transitGatewayAttachmentID {
-				result = transitGatewayRouteTablePropagation
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
-}
-
 func FindVPCAttribute(conn *ec2.EC2, vpcID string, attribute string) (bool, error) {
 	input := &ec2.DescribeVpcAttributeInput{
 		Attribute: aws.String(attribute),
@@ -2442,6 +2355,13 @@ func FindTransitGatewayMulticastDomainAssociationByThreePartKey(conn *ec2.EC2, m
 		}
 	}
 
+	// Eventual consistency check.
+	if aws.StringValue(output.TransitGatewayAttachmentId) != attachmentID || aws.StringValue(output.Subnet.SubnetId) != subnetID {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
 	return output, nil
 }
 
@@ -2504,7 +2424,20 @@ func FindTransitGatewayMulticastGroupMemberByThreePartKey(conn *ec2.EC2, multica
 		TransitGatewayMulticastDomainId: aws.String(multicastDomainID),
 	}
 
-	return FindTransitGatewayMulticastGroup(conn, input)
+	output, err := FindTransitGatewayMulticastGroup(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.GroupIpAddress) != groupIPAddress || aws.StringValue(output.NetworkInterfaceId) != eniID || !aws.BoolValue(output.GroupMember) {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
 func FindTransitGatewayMulticastGroupSourceByThreePartKey(conn *ec2.EC2, multicastDomainID, groupIPAddress, eniID string) (*ec2.TransitGatewayMulticastGroup, error) {
@@ -2517,7 +2450,93 @@ func FindTransitGatewayMulticastGroupSourceByThreePartKey(conn *ec2.EC2, multica
 		TransitGatewayMulticastDomainId: aws.String(multicastDomainID),
 	}
 
-	return FindTransitGatewayMulticastGroup(conn, input)
+	output, err := FindTransitGatewayMulticastGroup(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.GroupIpAddress) != groupIPAddress || aws.StringValue(output.NetworkInterfaceId) != eniID || !aws.BoolValue(output.GroupSource) {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindTransitGatewayPrefixListReference(conn *ec2.EC2, input *ec2.GetTransitGatewayPrefixListReferencesInput) (*ec2.TransitGatewayPrefixListReference, error) {
+	output, err := FindTransitGatewayPrefixListReferences(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindTransitGatewayPrefixListReferences(conn *ec2.EC2, input *ec2.GetTransitGatewayPrefixListReferencesInput) ([]*ec2.TransitGatewayPrefixListReference, error) {
+	var output []*ec2.TransitGatewayPrefixListReference
+
+	err := conn.GetTransitGatewayPrefixListReferencesPages(input, func(page *ec2.GetTransitGatewayPrefixListReferencesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TransitGatewayPrefixListReferences {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteTableIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindTransitGatewayPrefixListReferenceByTwoPartKey(conn *ec2.EC2, transitGatewayRouteTableID, prefixListID string) (*ec2.TransitGatewayPrefixListReference, error) {
+	input := &ec2.GetTransitGatewayPrefixListReferencesInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"prefix-list-id": prefixListID,
+		}),
+		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
+	}
+
+	output, err := FindTransitGatewayPrefixListReference(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.PrefixListId) != prefixListID || aws.StringValue(output.TransitGatewayRouteTableId) != transitGatewayRouteTableID {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
 func FindTransitGatewayRouteTables(conn *ec2.EC2, input *ec2.DescribeTransitGatewayRouteTablesInput) ([]*ec2.TransitGatewayRouteTable, error) {
@@ -2549,6 +2568,49 @@ func FindTransitGatewayRouteTables(conn *ec2.EC2, input *ec2.DescribeTransitGate
 	}
 
 	return output, nil
+}
+
+func FindTransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
+	if transitGatewayRouteTableID == "" {
+		return nil, nil
+	}
+
+	input := &ec2.GetTransitGatewayRouteTablePropagationsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("transit-gateway-attachment-id"),
+				Values: aws.StringSlice([]string{transitGatewayAttachmentID}),
+			},
+		},
+		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
+	}
+
+	var result *ec2.TransitGatewayRouteTablePropagation
+
+	err := conn.GetTransitGatewayRouteTablePropagationsPages(input, func(page *ec2.GetTransitGatewayRouteTablePropagationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, transitGatewayRouteTablePropagation := range page.TransitGatewayRouteTablePropagations {
+			if transitGatewayRouteTablePropagation == nil {
+				continue
+			}
+
+			if aws.StringValue(transitGatewayRouteTablePropagation.TransitGatewayAttachmentId) == transitGatewayAttachmentID {
+				result = transitGatewayRouteTablePropagation
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func FindDHCPOptions(conn *ec2.EC2, input *ec2.DescribeDhcpOptionsInput) (*ec2.DhcpOptions, error) {
