@@ -187,6 +187,13 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - EC2 Transit Gateway Multicast Domain identifier
 
+## Timeouts
+
+`aws_ec2_transit_gateway_multicast_domain` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for multicast domain creation
+- `delete` - (Default `10 minutes`) Used for multicast domain deletion
+
 ## Import
 
 `aws_ec2_transit_gateway_multicast_domain` can be imported by using the EC2 Transit Gateway Multicast Domain identifier, e.g.,

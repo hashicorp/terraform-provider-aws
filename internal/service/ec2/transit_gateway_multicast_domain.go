@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -23,8 +24,14 @@ func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 		Read:   resourceTransitGatewayMulticastDomainRead,
 		Update: resourceTransitGatewayMulticastDomainUpdate,
 		Delete: resourceTransitGatewayMulticastDomainDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
