@@ -596,13 +596,13 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 	if d.HasChange("ecs_cluster_arn") {
 		stackID := aws.String(d.Get("stack_id").(string))
 		ecso, ecsn := d.GetChange("ecs_cluster_arn")
-		ecsClusterOld := aws.String(ecso.(string))
-		ecsClusterNew := aws.String(ecsn.(string))
+		ecsClusterOld := ecso.(string)
+		ecsClusterNew := ecsn.(string)
 
-		if ecsClusterOld != nil && *ecsClusterOld != "" {
-			log.Printf("[DEBUG] Deregistering ecs cluster: %s", *ecsClusterOld)
+		if ecso != nil && ecsClusterOld != "" {
+			log.Printf("[DEBUG] Deregistering ecs cluster: %s", ecsClusterOld)
 			_, err := conn.DeregisterEcsCluster(&opsworks.DeregisterEcsClusterInput{
-				EcsClusterArn: ecsClusterOld,
+				EcsClusterArn: aws.String(ecsClusterOld),
 			})
 
 			if err != nil {
@@ -610,10 +610,10 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 			}
 		}
 
-		if ecsClusterNew != nil && *ecsClusterNew != "" {
-			log.Printf("[DEBUG] Registering ECS Cluster: %s", *ecsClusterNew)
+		if ecsn != nil && ecsClusterNew != "" {
+			log.Printf("[DEBUG] Registering ECS Cluster: %s", ecsClusterNew)
 			_, err := conn.RegisterEcsCluster(&opsworks.RegisterEcsClusterInput{
-				EcsClusterArn: ecsClusterNew,
+				EcsClusterArn: aws.String(ecsClusterNew),
 				StackId:       stackID,
 			})
 			if err != nil {
