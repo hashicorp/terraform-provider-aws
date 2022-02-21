@@ -2445,6 +2445,55 @@ func FindTransitGatewayMulticastDomainAssociationByThreePartKey(conn *ec2.EC2, m
 	return output, nil
 }
 
+func FindTransitGatewayMulticastGroup(conn *ec2.EC2, input *ec2.SearchTransitGatewayMulticastGroupsInput) (*ec2.TransitGatewayMulticastGroup, error) {
+	output, err := FindTransitGatewayMulticastGroups(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindTransitGatewayMulticastGroups(conn *ec2.EC2, input *ec2.SearchTransitGatewayMulticastGroupsInput) ([]*ec2.TransitGatewayMulticastGroup, error) {
+	var output []*ec2.TransitGatewayMulticastGroup
+
+	err := conn.SearchTransitGatewayMulticastGroupsPages(input, func(page *ec2.SearchTransitGatewayMulticastGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.MulticastGroups {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func FindTransitGatewayRouteTables(conn *ec2.EC2, input *ec2.DescribeTransitGatewayRouteTablesInput) ([]*ec2.TransitGatewayRouteTable, error) {
 	var output []*ec2.TransitGatewayRouteTable
 
