@@ -4335,7 +4335,7 @@ func testAccInstanceConfig_WithOptionGroup(rName string) string {
 	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
 resource "aws_db_option_group" "test" {
   engine_name              = data.aws_rds_orderable_db_instance.test.engine
-  major_engine_version     = "5.6"
+  major_engine_version     = "8.0"
   name                     = %[1]q
   option_group_description = "Test option group for terraform"
 }
@@ -4492,7 +4492,7 @@ resource "aws_db_subnet_group" "foo" {
 
 data "aws_rds_orderable_db_instance" "test" {
   engine         = "mysql"
-  engine_version = "5.6.41"
+  engine_version = "8.0.25"
   license_model  = "general-public-license"
   storage_type   = "standard"
 
@@ -4511,7 +4511,7 @@ resource "aws_db_instance" "test" {
 
   allocated_storage          = 5
   engine                     = data.aws_rds_orderable_db_instance.test.engine
-  engine_version             = "5.6"
+  engine_version             = "8.0"
   auto_minor_version_upgrade = true
   instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
   db_name                    = "baz"
@@ -4520,14 +4520,14 @@ resource "aws_db_instance" "test" {
   username                   = "foo"
   backup_retention_period    = 0
 
-  parameter_group_name = "default.mysql5.6"
+  parameter_group_name = "default.mysql8.0"
   skip_final_snapshot  = true
   multi_az             = false
   db_subnet_group_name = aws_db_subnet_group.foo.id
 
   s3_import {
     source_engine         = data.aws_rds_orderable_db_instance.test.engine
-    source_engine_version = "5.6"
+    source_engine_version = "8.0"
 
     bucket_name    = aws_s3_bucket.xtrabackup.bucket
     bucket_prefix  = %[2]q
@@ -4546,7 +4546,7 @@ resource "aws_db_instance" "test" {
 
   allocated_storage          = 5
   engine                     = data.aws_rds_orderable_db_instance.test.engine
-  engine_version             = "5.6"
+  engine_version             = "8.0"
   auto_minor_version_upgrade = true
   instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
   name                       = "baz" # deprecated
@@ -4555,14 +4555,14 @@ resource "aws_db_instance" "test" {
   username                   = "foo"
   backup_retention_period    = 0
 
-  parameter_group_name = "default.mysql5.6"
+  parameter_group_name = "default.mysql8.0"
   skip_final_snapshot  = true
   multi_az             = false
   db_subnet_group_name = aws_db_subnet_group.foo.id
 
   s3_import {
     source_engine         = data.aws_rds_orderable_db_instance.test.engine
-    source_engine_version = "5.6"
+    source_engine_version = "8.0"
 
     bucket_name    = aws_s3_bucket.xtrabackup.bucket
     bucket_prefix  = %[2]q
@@ -4581,7 +4581,7 @@ resource "aws_db_instance" "test" {
 
   allocated_storage          = 5
   engine                     = data.aws_rds_orderable_db_instance.test.engine
-  engine_version             = "5.6"
+  engine_version             = "8.0"
   auto_minor_version_upgrade = true
   instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
   name                       = "baz"
@@ -4590,14 +4590,14 @@ resource "aws_db_instance" "test" {
   username                   = "foo"
   backup_retention_period    = 0
 
-  parameter_group_name = "default.mysql5.6"
+  parameter_group_name = "default.mysql8.0"
   skip_final_snapshot  = true
   multi_az             = false
   db_subnet_group_name = aws_db_subnet_group.foo.id
 
   s3_import {
     source_engine         = data.aws_rds_orderable_db_instance.test.engine
-    source_engine_version = "5.6"
+    source_engine_version = "8.0"
 
     bucket_name    = aws_s3_bucket.xtrabackup.bucket
     bucket_prefix  = %[2]q
@@ -4614,7 +4614,7 @@ func testAccInstanceConfig_S3Import_nameGenerated(rName, bucketPrefix string) st
 resource "aws_db_instance" "test" {
   allocated_storage          = 5
   engine                     = data.aws_rds_orderable_db_instance.test.engine
-  engine_version             = "5.6"
+  engine_version             = "8.0"
   auto_minor_version_upgrade = true
   instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
   name                       = "baz"
@@ -4623,14 +4623,14 @@ resource "aws_db_instance" "test" {
   username                   = "foo"
   backup_retention_period    = 0
 
-  parameter_group_name = "default.mysql5.6"
+  parameter_group_name = "default.mysql8.0"
   skip_final_snapshot  = true
   multi_az             = false
   db_subnet_group_name = aws_db_subnet_group.foo.id
 
   s3_import {
     source_engine         = data.aws_rds_orderable_db_instance.test.engine
-    source_engine_version = "5.6"
+    source_engine_version = "8.0"
 
     bucket_name    = aws_s3_bucket.xtrabackup.bucket
     bucket_prefix  = %[1]q
@@ -5583,7 +5583,7 @@ resource "aws_db_instance" "bar" {
   identifier          = "foobarbaz-test-terraform-%d"
   allocated_storage   = 10
   engine              = data.aws_rds_orderable_db_instance.test.engine
-  engine_version      = "5.6"
+  engine_version      = "8.0"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   name                = "baz"
   password            = "barbarbarbar"
@@ -5851,7 +5851,7 @@ func testAccInstanceConfig_EC2Classic(rInt int) string {
 # EC2-Classic specific
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = "mysql"
-  engine_version             = "5.6.41"
+  engine_version             = "8.0.25"
   preferred_instance_classes = ["db.m3.medium", "db.m3.large", "db.r3.large"]
 }
 
@@ -5867,7 +5867,7 @@ resource "aws_db_instance" "bar" {
   username             = "foo"
   publicly_accessible  = true
   security_group_names = ["default"]
-  parameter_group_name = "default.mysql5.6"
+  parameter_group_name = "default.mysql8.0"
   skip_final_snapshot  = true
 }
 `, rInt))
@@ -6590,7 +6590,7 @@ data "aws_rds_orderable_db_instance" "test" {
   provider = "awsalternate"
 
   engine         = "mysql"
-  engine_version = "5.6.35"
+  engine_version = "8.0.23"
   license_model  = "general-public-license"
   storage_type   = "standard"
 
@@ -6763,7 +6763,7 @@ data "aws_rds_orderable_db_instance" "test" {
   provider = "awssameaccountalternateregion"
 
   engine         = "mysql"
-  engine_version = "5.6.35"
+  engine_version = "8.0.23"
   license_model  = "general-public-license"
   storage_type   = "standard"
 
@@ -6875,7 +6875,7 @@ data "aws_rds_orderable_db_instance" "test" {
   provider = "awsalternate"
 
   engine         = "mysql"
-  engine_version = "5.6.35"
+  engine_version = "8.0.23"
   license_model  = "general-public-license"
   storage_type   = "standard"
 
