@@ -20,11 +20,8 @@ func testAccTransitGatewayMulticastDomain_basic(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckTransitGateway(t)
-		},
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckTransitGatewayMulticastDomainDestroy,
@@ -56,11 +53,8 @@ func testAccTransitGatewayMulticastDomain_disappears(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckTransitGateway(t)
-		},
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckTransitGatewayMulticastDomainDestroy,
@@ -82,11 +76,8 @@ func testAccTransitGatewayMulticastDomain_tags(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
 	rName := fmt.Sprintf("tf-testacc-tgwmulticast-%s", sdkacctest.RandString(8))
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckTransitGateway(t)
-		},
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckTransitGatewayMulticastDomainDestroy,
@@ -128,11 +119,8 @@ func testAccTransitGatewayMulticastDomain_igmpv2Support(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckTransitGateway(t)
-		},
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckTransitGatewayMulticastDomainDestroy,

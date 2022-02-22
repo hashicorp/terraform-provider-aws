@@ -37,6 +37,11 @@ func TestAccEC2TransitGateway_serial(t *testing.T) {
 			"tags":          testAccTransitGatewayMulticastDomain_tags,
 			"IGMPv2Support": testAccTransitGatewayMulticastDomain_igmpv2Support,
 		},
+		"MulticastDomainAssociation": {
+			"basic":            testAccTransitGatewayMulticastDomainAssociation_basic,
+			"disappears":       testAccTransitGatewayMulticastDomainAssociation_disappears,
+			"DomainDisappears": testAccTransitGatewayMulticastDomainAssociation_Disappears_domain,
+		},
 		"PeeringAttachment": {
 			"basic":            testAccTransitGatewayPeeringAttachment_basic,
 			"disappears":       testAccTransitGatewayPeeringAttachment_disappears,

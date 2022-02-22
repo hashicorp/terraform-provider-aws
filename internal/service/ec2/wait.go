@@ -706,6 +706,40 @@ func WaitTransitGatewayMulticastDomainDeleted(conn *ec2.EC2, id string, timeout 
 	return nil, err
 }
 
+func WaitTransitGatewayMulticastDomainAssociationCreated(conn *ec2.EC2, multicastDomainID, attachmentID, subnetID string, timeout time.Duration) (*ec2.TransitGatewayMulticastDomainAssociation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AssociationStatusCodeAssociating},
+		Target:  []string{ec2.AssociationStatusCodeAssociated},
+		Refresh: StatusTransitGatewayMulticastDomainAssociationState(conn, multicastDomainID, attachmentID, subnetID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayMulticastDomainAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitTransitGatewayMulticastDomainAssociationDeleted(conn *ec2.EC2, multicastDomainID, attachmentID, subnetID string, timeout time.Duration) (*ec2.TransitGatewayMulticastDomainAssociation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AssociationStatusCodeAssociated, ec2.AssociationStatusCodeDisassociating},
+		Target:  []string{},
+		Refresh: StatusTransitGatewayMulticastDomainAssociationState(conn, multicastDomainID, attachmentID, subnetID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayMulticastDomainAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 const (
 	TransitGatewayPrefixListReferenceTimeout = 5 * time.Minute
 )
