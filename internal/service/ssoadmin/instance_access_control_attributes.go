@@ -69,18 +69,14 @@ func ResourceAccessControlAttributes() *schema.Resource {
 func resourceAccessControlAttributesCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 	instanceArn := d.Get("instance_arn").(string)
-	attributes, err := expandAccessControlAttributes(d)
-	if err != nil {
-		return err
-	}
 	input := ssoadmin.CreateInstanceAccessControlAttributeConfigurationInput{
 		InstanceArn: aws.String(instanceArn),
 		InstanceAccessControlAttributeConfiguration: &ssoadmin.InstanceAccessControlAttributeConfiguration{
-			AccessControlAttributes: attributes,
+			AccessControlAttributes: expandAccessControlAttributes(d),
 		},
 	}
 
-	_, err = conn.CreateInstanceAccessControlAttributeConfiguration(&input)
+	_, err := conn.CreateInstanceAccessControlAttributeConfiguration(&input)
 	if err != nil {
 		return fmt.Errorf("error putting access control attributes for SSO Instance Arn (%s): %w", instanceArn, err)
 	}
@@ -110,17 +106,13 @@ func resourceAccessControlAttributesUpdate(d *schema.ResourceData, meta interfac
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 	instanceArn := d.Id()
 	if d.HasChanges("attribute") {
-		attributes, err := expandAccessControlAttributes(d)
-		if err != nil {
-			return fmt.Errorf("error updating access control attributes for SSO Instance Arn (%s): %w", instanceArn, err)
-		}
 		input := ssoadmin.UpdateInstanceAccessControlAttributeConfigurationInput{
 			InstanceArn: aws.String(instanceArn),
 			InstanceAccessControlAttributeConfiguration: &ssoadmin.InstanceAccessControlAttributeConfiguration{
-				AccessControlAttributes: attributes,
+				AccessControlAttributes: expandAccessControlAttributes(d),
 			},
 		}
-		_, err = conn.UpdateInstanceAccessControlAttributeConfiguration(&input)
+		_, err := conn.UpdateInstanceAccessControlAttributeConfiguration(&input)
 		if err != nil {
 			return fmt.Errorf("error updating access control attributes for SSO Instance Arn (%s): %w", instanceArn, err)
 		}
@@ -140,7 +132,7 @@ func resourceAccessControlAttributesDelete(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func expandAccessControlAttributes(d *schema.ResourceData) (attributes []*ssoadmin.AccessControlAttribute, err error) {
+func expandAccessControlAttributes(d *schema.ResourceData) (attributes []*ssoadmin.AccessControlAttribute) {
 	attInterface := d.Get("attribute").(*schema.Set).List()
 	for _, attrMap := range attInterface {
 		attr := attrMap.(map[string]interface{})
@@ -151,12 +143,12 @@ func expandAccessControlAttributes(d *schema.ResourceData) (attributes []*ssoadm
 		val := attr["value"].(*schema.Set).List()[0].(map[string]interface{})
 		if v, ok := val["source"].(*schema.Set); ok && len(v.List()) > 0 {
 			attribute.Value = &ssoadmin.AccessControlAttributeValue{
-				Source: flex.ExpandStringList(v.List()),
+				Source: flex.ExpandStringSet(v),
 			}
 		}
 		attributes = append(attributes, &attribute)
 	}
-	return attributes, nil
+	return
 }
 
 func flattenAccessControlAttributes(attributes []*ssoadmin.AccessControlAttribute) []interface{} {
