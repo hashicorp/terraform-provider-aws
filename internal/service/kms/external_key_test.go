@@ -19,7 +19,6 @@ import (
 )
 
 func TestAccKMSExternalKey_basic(t *testing.T) {
-	var key kms.KeyMetadata
 	resourceName := "aws_kms_external_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -31,12 +30,12 @@ func TestAccKMSExternalKey_basic(t *testing.T) {
 			{
 				Config: testAccExternalKeyConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExternalKeyExists(resourceName, &key),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexp.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", "30"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "expiration_model", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckNoResourceAttr(resourceName, "key_material_base64"),
 					resource.TestCheckResourceAttr(resourceName, "key_state", "PendingImport"),
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "ENCRYPT_DECRYPT"),

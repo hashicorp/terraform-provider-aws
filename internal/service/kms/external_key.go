@@ -64,6 +64,10 @@ func ResourceExternalKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"key_material_base64": {
 				Type:      schema.TypeString,
 				Optional:  true,
