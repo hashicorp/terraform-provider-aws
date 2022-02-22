@@ -165,27 +165,20 @@ resource "aws_ec2_transit_gateway_multicast_domain" "multicast_domain" {
 
 The following arguments are supported:
 
-* `transit_gateway_id` - (Required, Forces new resource) EC2 Transit Gateway Identifier. The target resource must have `multicast_support = "enable"`.
-* `association` - (Optional) Can be specified multiple times for different EC2 Transit Gateway Attachments. Each association block supports the fields documented below. This argument is processed in [attribute-as-blocks mode](/docs/configuration/attr-as-blocks.html).
-* `members` - (Optional) Can be specified multiple times for different Group IP Addresses. Each members block supports the fields documented below. This argument is processed in [attribute-as-blocks mode](/docs/configuration/attr-as-blocks.html).
-* `sources` - (Optional) Can be specified multiple times for different Group IP Addresses. Each members block supports the fields documented below. This argument is processed in [attribute-as-blocks mode](/docs/configuration/attr-as-blocks.html).
-* `tags` - (Optional) A mapping of tags to assign to the resource.
-
-The `association` block supports:
-
-* `transit_gateway_attachment_id` - (Required) EC2 Transit Gateway Attachment Identifier.
-* `subnet_ids` - (Required, Minimum items: 1) List of subnets identifiers to associate. The listed subnets must reside within the specified EC2 Transit Gateway Attachment.
-
-The `members` and `sources` blocks support:
-
-* `group_ip_address` - (Required) Multicast Group IP address. Must be valid IPv4 or IPv6 IP Address in the 224.0.0.0/4 or ff00::/8 CIDR range.
-* `network_interface_ids` - (Required, Minimum items: 1) List of Network Interface Identifiers to create Multicast Group for.
+* `transit_gateway_id` - (Required) EC2 Transit Gateway identifier. The EC2 Transit Gateway must have `multicast_support` enabled.
+* `auto_accept_shared_associations` - (Optional) Whether to automatically accept cross-account subnet associations that are associated with the EC2 Transit Gateway Multicast Domain. Valid values: `disable`, `enable`. Default value: `disable`.
+* `igmpv2_support` - (Optional) Whether to enable Internet Group Management Protocol (IGMP) version 2 for the EC2 Transit Gateway Multicast Domain. Valid values: `disable`, `enable`. Default value: `disable`.
+* `static_sources_support` - (Optional) Whether to enable support for statically configuring multicast group sources for the EC2 Transit Gateway Multicast. Valid values: `disable`, `enable`. Default value: `disable`.
+* `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Multicast Domain. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - EC2 Transit Gateway Multicast Domain identifier
+* `id` - EC2 Transit Gateway Multicast Domain identifier.
+* `arn` - EC2 Transit Gateway Multicast Domain Amazon Resource Name (ARN).
+* `owner_id` - Identifier of the AWS account that owns the EC2 Transit Gateway Multicast Domain.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 

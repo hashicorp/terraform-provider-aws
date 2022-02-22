@@ -31,6 +31,12 @@ func TestAccEC2TransitGateway_serial(t *testing.T) {
 			"Tags":                                               testAccTransitGateway_Tags,
 			"VpnEcmpSupport":                                     testAccTransitGateway_VPNECMPSupport,
 		},
+		"MulticastDomain": {
+			"basic":         testAccTransitGatewayMulticastDomain_basic,
+			"disappears":    testAccTransitGatewayMulticastDomain_disappears,
+			"tags":          testAccTransitGatewayMulticastDomain_tags,
+			"IGMPv2Support": testAccTransitGatewayMulticastDomain_igmpv2Support,
+		},
 		"PeeringAttachment": {
 			"basic":            testAccTransitGatewayPeeringAttachment_basic,
 			"disappears":       testAccTransitGatewayPeeringAttachment_disappears,
@@ -84,13 +90,6 @@ func TestAccEC2TransitGateway_serial(t *testing.T) {
 			"basic": testAccTransitGatewayVPCAttachmentAccepter_basic,
 			"Tags":  testAccTransitGatewayVPCAttachmentAccepter_Tags,
 			"TransitGatewayDefaultRouteTableAssociationAndPropagation": testAccTransitGatewayVPCAttachmentAccepter_TransitGatewayDefaultRouteTableAssociationAndPropagation,
-		},
-		"MulticastDomain": {
-			"basic":      testAccTransitGatewayMulticastDomain_basic,
-			"disappears": testAccAWSTransitGatewayMulticastDomain_disappears,
-			"Tags":       testAccAWSTransitGatewayMulticastDomain_Tags,
-			"TransitGatewayMulticastDomainAssociation": testAccAWSTransitGatewayMulticastDomain_Associations,
-			"TransitGatewayMulticastDomainGroups":      testAccTransitGatewayMulticastDomain_Groups,
 		},
 	}
 

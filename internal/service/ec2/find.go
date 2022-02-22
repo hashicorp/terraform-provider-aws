@@ -2214,7 +2214,7 @@ func FindTransitGatewayMulticastDomain(conn *ec2.EC2, input *ec2.DescribeTransit
 		return nil, err
 	}
 
-	if len(output) == 0 || output[0] == nil {
+	if len(output) == 0 || output[0] == nil || output[0].Options == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
