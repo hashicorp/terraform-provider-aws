@@ -82,6 +82,29 @@ func testAccTransitGatewayMulticastDomainAssociation_Disappears_domain(t *testin
 	})
 }
 
+func testAccTransitGatewayMulticastDomainAssociation_twoAssociations(t *testing.T) {
+	var v1, v2 ec2.TransitGatewayMulticastDomainAssociation
+	resource1Name := "aws_ec2_transit_gateway_multicast_domain_association.test1"
+	resource2Name := "aws_ec2_transit_gateway_multicast_domain_association.test2"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTransitGatewayMulticastDomainAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayMulticastDomainAssociationTwoAssociationsConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayMulticastDomainAssociationExists(resource1Name, &v1),
+					testAccCheckTransitGatewayMulticastDomainAssociationExists(resource2Name, &v2),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTransitGatewayMulticastDomainAssociationExists(n string, v *ec2.TransitGatewayMulticastDomainAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -191,6 +214,76 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
 
 resource "aws_ec2_transit_gateway_multicast_domain_association" "test" {
   subnet_id                           = aws_subnet.test.id
+  transit_gateway_attachment_id       = aws_ec2_transit_gateway_vpc_attachment.test.id
+  transit_gateway_multicast_domain_id = aws_ec2_transit_gateway_multicast_domain.test.id
+}
+`, rName))
+}
+
+func testAccTransitGatewayMulticastDomainAssociationTwoAssociationsConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test1" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test2" {
+  availability_zone = data.aws_availability_zones.available.names[1]
+  cidr_block        = "10.0.1.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway" "test" {
+  multicast_support = "enable"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
+  subnet_ids         = [aws_subnet.test1.id, aws_subnet.test2.id]
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway_multicast_domain" "test" {
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway_multicast_domain_association" "test1" {
+  subnet_id                           = aws_subnet.test1.id
+  transit_gateway_attachment_id       = aws_ec2_transit_gateway_vpc_attachment.test.id
+  transit_gateway_multicast_domain_id = aws_ec2_transit_gateway_multicast_domain.test.id
+}
+
+resource "aws_ec2_transit_gateway_multicast_domain_association" "test2" {
+  subnet_id                           = aws_subnet.test2.id
   transit_gateway_attachment_id       = aws_ec2_transit_gateway_vpc_attachment.test.id
   transit_gateway_multicast_domain_id = aws_ec2_transit_gateway_multicast_domain.test.id
 }

@@ -41,6 +41,7 @@ func TestAccEC2TransitGateway_serial(t *testing.T) {
 			"basic":            testAccTransitGatewayMulticastDomainAssociation_basic,
 			"disappears":       testAccTransitGatewayMulticastDomainAssociation_disappears,
 			"DomainDisappears": testAccTransitGatewayMulticastDomainAssociation_Disappears_domain,
+			"TwoAssociations":  testAccTransitGatewayMulticastDomainAssociation_twoAssociations,
 		},
 		"PeeringAttachment": {
 			"basic":            testAccTransitGatewayPeeringAttachment_basic,
