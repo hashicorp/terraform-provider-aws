@@ -47,7 +47,18 @@ func ResourceSecretRotation() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"automatically_after_days": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
+							Default:  nil,
+						},
+						"duration": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  nil,
+						},
+						"schedule_expression": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  nil,
 						},
 					},
 				},
@@ -60,13 +71,13 @@ func ResourceSecretRotation() *schema.Resource {
 func resourceSecretRotationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 	secretID := d.Get("secret_id").(string)
-
 	if v, ok := d.GetOk("rotation_lambda_arn"); ok && v.(string) != "" {
 		input := &secretsmanager.RotateSecretInput{
 			RotationLambdaARN: aws.String(v.(string)),
 			RotationRules:     expandSecretsManagerRotationRules(d.Get("rotation_rules").([]interface{})),
 			SecretId:          aws.String(secretID),
 		}
+		fmt.Printf("resourceSecretRotationCreate Input: %v\n", input)
 
 		log.Printf("[DEBUG] Enabling Secrets Manager Secret rotation: %s", input)
 		var output *secretsmanager.RotateSecretOutput
@@ -140,7 +151,7 @@ func resourceSecretRotationRead(d *schema.ResourceData, meta interface{}) error 
 	if output == nil {
 		return fmt.Errorf("error reading Secrets Manager Secret Rotation (%s): empty response", d.Id())
 	}
-
+	fmt.Printf("resourceSecretRotationRead Output: %v\n", output)
 	d.Set("secret_id", d.Id())
 	d.Set("rotation_enabled", output.RotationEnabled)
 
@@ -169,7 +180,7 @@ func resourceSecretRotationUpdate(d *schema.ResourceData, meta interface{}) erro
 				SecretId:          aws.String(secretID),
 			}
 
-			log.Printf("[DEBUG] Enabling Secrets Manager Secret Rotation: %s", input)
+			log.Printf("[DEBUG] Updating Secrets Manager Secret Rotation: %s", input)
 			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 				_, err := conn.RotateSecret(input)
 				if err != nil {
@@ -227,11 +238,22 @@ func expandSecretsManagerRotationRules(l []interface{}) *secretsmanager.Rotation
 		return nil
 	}
 
+	rules := &secretsmanager.RotationRulesType{}
 	m := l[0].(map[string]interface{})
 
-	rules := &secretsmanager.RotationRulesType{
-		AutomaticallyAfterDays: aws.Int64(int64(m["automatically_after_days"].(int))),
+	afterDays, ok := m["automatically_after_days"].(int)
+	if ok && afterDays > 0 {
+		rules.SetAutomaticallyAfterDays(int64(afterDays))
 	}
+	duration, ok := m["duration"].(string)
+	if ok && duration != "" {
+		rules.SetDuration(duration)
+	}
+	scheduleExpression, ok := m["schedule_expression"].(string)
+	if ok && scheduleExpression != "" {
+		rules.SetScheduleExpression(scheduleExpression)
+	}
+	fmt.Printf("expandSecretsManagerRotationRules %v\n", rules)
 
 	return rules
 }
@@ -240,9 +262,16 @@ func flattenSecretsManagerRotationRules(rules *secretsmanager.RotationRulesType)
 	if rules == nil {
 		return []interface{}{}
 	}
-
-	m := map[string]interface{}{
-		"automatically_after_days": int(aws.Int64Value(rules.AutomaticallyAfterDays)),
+	fmt.Printf("flattenSecretsManagerRotationRules Rules: %v\n", rules)
+	m := map[string]interface{}{}
+	if rules.AutomaticallyAfterDays != nil {
+		m["automatically_after_days"] = int(aws.Int64Value(rules.AutomaticallyAfterDays))
+	}
+	if rules.Duration != nil {
+		m["duration"] = aws.StringValue(rules.Duration)
+	}
+	if rules.ScheduleExpression != nil {
+		m["schedule_expression"] = aws.StringValue(rules.ScheduleExpression)
 	}
 
 	return []interface{}{m}
