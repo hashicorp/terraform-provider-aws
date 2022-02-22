@@ -237,13 +237,15 @@ func init() {
 			"aws_ec2_transit_gateway_vpc_attachment",
 			"aws_ec2_transit_gateway_peering_attachment",
 			"aws_vpn_connection",
-			"aws_ec2_transit_gateway_multicast_domain",
 		},
 	})
 
 	resource.AddTestSweepers("aws_ec2_transit_gateway_vpc_attachment", &resource.Sweeper{
 		Name: "aws_ec2_transit_gateway_vpc_attachment",
 		F:    sweepTransitGatewayVPCAttachments,
+		Dependencies: []string{
+			"aws_ec2_transit_gateway_multicast_domain",
+		},
 	})
 
 	resource.AddTestSweepers("aws_vpc_dhcp_options", &resource.Sweeper{
