@@ -339,7 +339,6 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateFleetInput{
-		Context:                          aws.String(d.Get("context").(string)),
 		ExcessCapacityTerminationPolicy:  aws.String(d.Get("excess_capacity_termination_policy").(string)),
 		LaunchTemplateConfigs:            expandEc2FleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]interface{})),
 		OnDemandOptions:                  expandEc2OnDemandOptionsRequest(d.Get("on_demand_options").([]interface{})),
@@ -356,6 +355,10 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[WARN] EC2 Fleet (%s) has an invalid configuration and can not be created. Capacity Rebalance maintenance strategies can only be specified for fleets of type maintain.", input)
 			return nil
 		}
+	}
+
+	if v, ok := d.GetOk("context"); ok {
+		input.Context = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Fleet: %s", input)
@@ -457,6 +460,7 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	d.Set("context", fleet.Context)
 	d.Set("excess_capacity_termination_policy", fleet.ExcessCapacityTerminationPolicy)
 
 	if err := d.Set("launch_template_config", flattenEc2FleetLaunchTemplateConfigs(fleet.LaunchTemplateConfigs)); err != nil {
