@@ -16,7 +16,7 @@ import (
 )
 
 func testAccTransitGatewayMulticastDomain_basic(t *testing.T) {
-	var domain ec2.TransitGatewayMulticastDomain
+	var v ec2.TransitGatewayMulticastDomain
 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -29,7 +29,7 @@ func testAccTransitGatewayMulticastDomain_basic(t *testing.T) {
 			{
 				Config: testAccTransitGatewayMulticastDomainConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayMulticastDomainExists(resourceName, &domain),
+					testAccCheckTransitGatewayMulticastDomainExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`transit-gateway-multicast-domain/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_accept_shared_associations", "disable"),
 					resource.TestCheckResourceAttr(resourceName, "igmpv2_support", "disable"),
@@ -49,7 +49,7 @@ func testAccTransitGatewayMulticastDomain_basic(t *testing.T) {
 }
 
 func testAccTransitGatewayMulticastDomain_disappears(t *testing.T) {
-	var domain ec2.TransitGatewayMulticastDomain
+	var v ec2.TransitGatewayMulticastDomain
 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -62,7 +62,7 @@ func testAccTransitGatewayMulticastDomain_disappears(t *testing.T) {
 			{
 				Config: testAccTransitGatewayMulticastDomainConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayMulticastDomainExists(resourceName, &domain),
+					testAccCheckTransitGatewayMulticastDomainExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayMulticastDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -72,7 +72,7 @@ func testAccTransitGatewayMulticastDomain_disappears(t *testing.T) {
 }
 
 func testAccTransitGatewayMulticastDomain_tags(t *testing.T) {
-	var domain ec2.TransitGatewayMulticastDomain
+	var v ec2.TransitGatewayMulticastDomain
 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
 	rName := fmt.Sprintf("tf-testacc-tgwmulticast-%s", sdkacctest.RandString(8))
 
@@ -85,7 +85,7 @@ func testAccTransitGatewayMulticastDomain_tags(t *testing.T) {
 			{
 				Config: testAccTransitGatewayMulticastDomainConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayMulticastDomainExists(resourceName, &domain),
+					testAccCheckTransitGatewayMulticastDomainExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -115,7 +115,7 @@ func testAccTransitGatewayMulticastDomain_tags(t *testing.T) {
 }
 
 func testAccTransitGatewayMulticastDomain_igmpv2Support(t *testing.T) {
-	var domain ec2.TransitGatewayMulticastDomain
+	var v ec2.TransitGatewayMulticastDomain
 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -128,7 +128,7 @@ func testAccTransitGatewayMulticastDomain_igmpv2Support(t *testing.T) {
 			{
 				Config: testAccTransitGatewayMulticastDomainIGMPv2SupportConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayMulticastDomainExists(resourceName, &domain),
+					testAccCheckTransitGatewayMulticastDomainExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_accept_shared_associations", "enable"),
 					resource.TestCheckResourceAttr(resourceName, "igmpv2_support", "enable"),
 					resource.TestCheckResourceAttr(resourceName, "static_sources_support", "disable"),
