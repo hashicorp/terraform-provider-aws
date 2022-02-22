@@ -1,4 +1,9 @@
 ## 4.03.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_imagebuilder_image_recipe: Add `systems_manager_agent.uninstall_after_build` argument ([#23293](https://github.com/hashicorp/terraform-provider-aws/issues/23293))
+
 ## 4.2.0 (February 18, 2022)
 
 FEATURES:
