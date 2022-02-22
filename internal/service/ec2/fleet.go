@@ -502,6 +502,7 @@ func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.ModifyFleetInput{
+		Context:                         aws.String(d.Get("context").(string)),
 		ExcessCapacityTerminationPolicy: aws.String(d.Get("excess_capacity_termination_policy").(string)),
 		LaunchTemplateConfigs:           expandEc2FleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]interface{})),
 		FleetId:                         aws.String(d.Id()),
