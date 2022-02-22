@@ -5,3 +5,7 @@ aws_ec2_transit_gateway_multicast_domain
 ```release-note:new-resource
 aws_ec2_transit_gateway_multicast_domain_association
 ```
+
+```release-note:new-resource
+aws_ec2_transit_gateway_multicast_group_member
+```
