@@ -1830,10 +1830,11 @@ func Provider() *schema.Provider {
 			"aws_ssm_patch_group":               ssm.ResourcePatchGroup(),
 			"aws_ssm_resource_data_sync":        ssm.ResourceResourceDataSync(),
 
-			"aws_ssoadmin_account_assignment":           ssoadmin.ResourceAccountAssignment(),
-			"aws_ssoadmin_managed_policy_attachment":    ssoadmin.ResourceManagedPolicyAttachment(),
-			"aws_ssoadmin_permission_set":               ssoadmin.ResourcePermissionSet(),
-			"aws_ssoadmin_permission_set_inline_policy": ssoadmin.ResourcePermissionSetInlinePolicy(),
+			"aws_ssoadmin_account_assignment":                 ssoadmin.ResourceAccountAssignment(),
+			"aws_ssoadmin_instance_access_control_attributes": ssoadmin.ResourceAccessControlAttributes(),
+			"aws_ssoadmin_managed_policy_attachment":          ssoadmin.ResourceManagedPolicyAttachment(),
+			"aws_ssoadmin_permission_set":                     ssoadmin.ResourcePermissionSet(),
+			"aws_ssoadmin_permission_set_inline_policy":       ssoadmin.ResourcePermissionSetInlinePolicy(),
 
 			"aws_storagegateway_cache":                   storagegateway.ResourceCache(),
 			"aws_storagegateway_cached_iscsi_volume":     storagegateway.ResourceCachediSCSIVolume(),
