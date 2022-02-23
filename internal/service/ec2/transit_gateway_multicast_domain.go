@@ -167,7 +167,29 @@ func resourceTransitGatewayMulticastDomainUpdate(ctx context.Context, d *schema.
 func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	// TODO: Deregister groups and disassociate.
+	groups, err := FindTransitGatewayMulticastGroups(conn, &ec2.SearchTransitGatewayMulticastGroupsInput{
+		TransitGatewayMulticastDomainId: aws.String(d.Id()),
+	})
+
+	if tfresource.NotFound(err) {
+		err = nil
+	}
+
+	if err != nil {
+		return diag.Errorf("error listing EC2 Transit Gateway Multicast Groups (%s): %s", d.Id(), err)
+	}
+
+	for _, v := range groups {
+		if aws.BoolValue(v.GroupMember) {
+			diags := deregisterTransitGatewayMulticastGroupMember(ctx, conn, d.Id(), aws.StringValue(v.GroupIpAddress), aws.StringValue(v.NetworkInterfaceId))
+
+			if diags.HasError() {
+				return diags
+			}
+		} else if aws.BoolValue(v.GroupSource) {
+			// TODO: Deregister sources.
+		}
+	}
 
 	associations, err := FindTransitGatewayMulticastDomainAssociations(conn, &ec2.GetTransitGatewayMulticastDomainAssociationsInput{
 		TransitGatewayMulticastDomainId: aws.String(d.Id()),

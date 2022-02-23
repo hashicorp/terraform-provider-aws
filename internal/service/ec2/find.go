@@ -2365,24 +2365,6 @@ func FindTransitGatewayMulticastDomainAssociationByThreePartKey(conn *ec2.EC2, m
 	return output, nil
 }
 
-func FindTransitGatewayMulticastGroup(conn *ec2.EC2, input *ec2.SearchTransitGatewayMulticastGroupsInput) (*ec2.TransitGatewayMulticastGroup, error) {
-	output, err := FindTransitGatewayMulticastGroups(conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(output) == 0 || output[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output[0], nil
-}
-
 func FindTransitGatewayMulticastGroups(conn *ec2.EC2, input *ec2.SearchTransitGatewayMulticastGroupsInput) ([]*ec2.TransitGatewayMulticastGroup, error) {
 	var output []*ec2.TransitGatewayMulticastGroup
 
@@ -2424,20 +2406,30 @@ func FindTransitGatewayMulticastGroupMemberByThreePartKey(conn *ec2.EC2, multica
 		TransitGatewayMulticastDomainId: aws.String(multicastDomainID),
 	}
 
-	output, err := FindTransitGatewayMulticastGroup(conn, input)
+	output, err := FindTransitGatewayMulticastGroups(conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	// Eventual consistency check.
-	if aws.StringValue(output.GroupIpAddress) != groupIPAddress || aws.StringValue(output.NetworkInterfaceId) != eniID || !aws.BoolValue(output.GroupMember) {
-		return nil, &resource.NotFoundError{
-			LastRequest: input,
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	for _, v := range output {
+		if aws.StringValue(v.NetworkInterfaceId) == eniID {
+			// Eventual consistency check.
+			if aws.StringValue(v.GroupIpAddress) != groupIPAddress || !aws.BoolValue(v.GroupMember) {
+				return nil, &resource.NotFoundError{
+					LastRequest: input,
+				}
+			}
+
+			return v, nil
 		}
 	}
 
-	return output, nil
+	return nil, tfresource.NewEmptyResultError(input)
 }
 
 func FindTransitGatewayMulticastGroupSourceByThreePartKey(conn *ec2.EC2, multicastDomainID, groupIPAddress, eniID string) (*ec2.TransitGatewayMulticastGroup, error) {
@@ -2450,20 +2442,30 @@ func FindTransitGatewayMulticastGroupSourceByThreePartKey(conn *ec2.EC2, multica
 		TransitGatewayMulticastDomainId: aws.String(multicastDomainID),
 	}
 
-	output, err := FindTransitGatewayMulticastGroup(conn, input)
+	output, err := FindTransitGatewayMulticastGroups(conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	// Eventual consistency check.
-	if aws.StringValue(output.GroupIpAddress) != groupIPAddress || aws.StringValue(output.NetworkInterfaceId) != eniID || !aws.BoolValue(output.GroupSource) {
-		return nil, &resource.NotFoundError{
-			LastRequest: input,
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	for _, v := range output {
+		if aws.StringValue(v.NetworkInterfaceId) == eniID {
+			// Eventual consistency check.
+			if aws.StringValue(v.GroupIpAddress) != groupIPAddress || !aws.BoolValue(v.GroupSource) {
+				return nil, &resource.NotFoundError{
+					LastRequest: input,
+				}
+			}
+
+			return v, nil
 		}
 	}
 
-	return output, nil
+	return nil, tfresource.NewEmptyResultError(input)
 }
 
 func FindTransitGatewayPrefixListReference(conn *ec2.EC2, input *ec2.GetTransitGatewayPrefixListReferencesInput) (*ec2.TransitGatewayPrefixListReference, error) {
