@@ -38,15 +38,14 @@ func ResourceInternetGatewayAttachment() *schema.Resource {
 func resourceInternetGatewayAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	igwId := d.Get("internet_gateway_id").(string)
-	vpcId := d.Get("vpc_id").(string)
-	id := fmt.Sprintf("%s:%s", igwId, vpcId)
+	igwID := d.Get("internet_gateway_id").(string)
+	vpcID := d.Get("vpc_id").(string)
 
-	if err := attachInternetGateway(conn, igwId, vpcId); err != nil {
-		return fmt.Errorf("error Creating EC2 Internet Gateway Attachment (%s): %w", id, err)
+	if err := attachInternetGateway(conn, igwID, vpcID); err != nil {
+		return err
 	}
 
-	d.SetId(id)
+	d.SetId(InternetGatewayAttachmentCreateResourceID(igwID, vpcID))
 
 	return resourceInternetGatewayAttachmentRead(d, meta)
 }
@@ -54,13 +53,14 @@ func resourceInternetGatewayAttachmentCreate(d *schema.ResourceData, meta interf
 func resourceInternetGatewayAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	igwId, vpcId, err := InternetGatewayAttachmentResourceID(d.Id())
+	igwID, vpcID, err := InternetGatewayAttachmentParseResourceID(d.Id())
+
 	if err != nil {
 		return err
 	}
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
-		return FindInternetGatewayAttachment(conn, igwId, vpcId)
+		return FindInternetGatewayAttachment(conn, igwID, vpcID)
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -73,10 +73,10 @@ func resourceInternetGatewayAttachmentRead(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error reading EC2 Internet Gateway Attachment (%s): %w", d.Id(), err)
 	}
 
-	ig := outputRaw.(*ec2.InternetGatewayAttachment)
+	igw := outputRaw.(*ec2.InternetGatewayAttachment)
 
-	d.Set("internet_gateway_id", igwId)
-	d.Set("vpc_id", ig.VpcId)
+	d.Set("internet_gateway_id", igwID)
+	d.Set("vpc_id", igw.VpcId)
 
 	return nil
 }
@@ -84,21 +84,27 @@ func resourceInternetGatewayAttachmentRead(d *schema.ResourceData, meta interfac
 func resourceInternetGatewayAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	igwId := d.Get("internet_gateway_id").(string)
+	igwID, _, err := InternetGatewayAttachmentParseResourceID(d.Id())
+
+	if err != nil {
+		return err
+	}
+
 	if d.HasChange("vpc_id") {
 		o, n := d.GetChange("vpc_id")
 
 		if v := o.(string); v != "" {
-			if err := detachInternetGateway(conn, igwId, v); err != nil {
-				return fmt.Errorf("error detaching EC2 Internet Gateway Attachment (%s): %w", d.Id(), err)
+			if err := detachInternetGateway(conn, igwID, v); err != nil {
+				return err
 			}
 		}
 
 		if v := n.(string); v != "" {
-			if err := attachInternetGateway(conn, igwId, v); err != nil {
-				return fmt.Errorf("error attaching EC2 Internet Gateway Attachment (%s): %w", d.Id(), err)
+			if err := attachInternetGateway(conn, igwID, v); err != nil {
+				return err
 			}
-			d.SetId(fmt.Sprintf("%s:%s", igwId, v))
+
+			d.SetId(InternetGatewayAttachmentCreateResourceID(igwID, v))
 		}
 	}
 
@@ -108,19 +114,34 @@ func resourceInternetGatewayAttachmentUpdate(d *schema.ResourceData, meta interf
 func resourceInternetGatewayAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	if err := detachInternetGateway(conn, d.Get("internet_gateway_id").(string), d.Get("vpc_id").(string)); err != nil {
-		return fmt.Errorf("error detaching EC2 Internet Gateway Attachment (%s): %w", d.Id(), err)
+	igwID, vpcID, err := InternetGatewayAttachmentParseResourceID(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	if err := detachInternetGateway(conn, igwID, vpcID); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func InternetGatewayAttachmentResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, ":")
+const internetGatewayAttachmentIDSeparator = ":"
+
+func InternetGatewayAttachmentCreateResourceID(igwID, vpcID string) string {
+	parts := []string{igwID, vpcID}
+	id := strings.Join(parts, internetGatewayAttachmentIDSeparator)
+
+	return id
+}
+
+func InternetGatewayAttachmentParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, internetGatewayAttachmentIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[0], parts[1], nil
 	}
 
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected InternetGatewayId:VpcId", id)
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected INTERNET-GATEWAY-ID%[2]sVPC-ID", id, internetGatewayAttachmentIDSeparator)
 }

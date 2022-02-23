@@ -84,12 +84,13 @@ func testAccCheckInternetGatewayAttachmentDestroy(s *terraform.State) error {
 			continue
 		}
 
-		igwId, vpcId, err := tfec2.InternetGatewayAttachmentResourceID(rs.Primary.ID)
+		igwID, vpcID, err := tfec2.InternetGatewayAttachmentParseResourceID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		_, err = tfec2.FindInternetGatewayAttachment(conn, igwId, vpcId)
+		_, err = tfec2.FindInternetGatewayAttachment(conn, igwID, vpcID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -113,17 +114,18 @@ func testAccCheckInternetGatewayAttachmentExists(n string, v *ec2.InternetGatewa
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Internet Gateway Attachement ID is set")
+			return fmt.Errorf("No EC2 Internet Gateway Attachment ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		igwId, vpcId, err := tfec2.InternetGatewayAttachmentResourceID(rs.Primary.ID)
+		igwID, vpcID, err := tfec2.InternetGatewayAttachmentParseResourceID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		output, err := tfec2.FindInternetGatewayAttachment(conn, igwId, vpcId)
+		output, err := tfec2.FindInternetGatewayAttachment(conn, igwID, vpcID)
 
 		if err != nil {
 			return err
