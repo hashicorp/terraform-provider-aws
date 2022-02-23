@@ -1,5 +1,5 @@
 # Terraform AWS Provider AMP Package
-<!-- markdownlint-disable MD026 -->
+
 This area is primarily for AWS provider contributors and maintainers. For information on _using_ Terraform and the AWS provider, see the links below.
 
 AMP (**A**mazon **M**anaged Service for **P**rometheus) is also called just _Prometheus_ or _Prometheus Service_.

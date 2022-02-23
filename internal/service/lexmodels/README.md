@@ -1,5 +1,5 @@
 # Terraform AWS Provider Lex Model Building Service Package
-<!-- markdownlint-disable MD026 -->
+
 This area is primarily for AWS provider contributors and maintainers. For information on _using_ Terraform and the AWS provider, see the links below.
 
 The AWS CLI refers to the Amazon Lex Model Building Service as _Lex Models_.

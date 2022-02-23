@@ -1,5 +1,5 @@
 # Terraform AWS Provider Serverless Application Repository Package
-<!-- markdownlint-disable MD026 -->
+
 This area is primarily for AWS provider contributors and maintainers. For information on _using_ Terraform and the AWS provider, see the links below.
 
 The AWS Serverless Application Repository is also referred to as `serverlessrepo` in the AWS CLI.
