@@ -13,3 +13,7 @@ aws_ec2_transit_gateway_multicast_group_member
 ```release-note:new-resource
 aws_ec2_transit_gateway_multicast_group_source
 ```
+
+```release-note:new-data-source
+aws_ec2_transit_gateway_multicast_domain
+```

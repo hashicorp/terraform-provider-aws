@@ -18,6 +18,10 @@ func TestAccEC2TransitGatewayDataSource_serial(t *testing.T) {
 			"Filter": testAccTransitGatewayDataSource_Filter,
 			"ID":     testAccTransitGatewayDataSource_ID,
 		},
+		"MulticastDomain": {
+			"Filter": testAccTransitGatewayMulticastDomainDataSource_Filter,
+			"ID":     testAccTransitGatewayMulticastDomainDataSource_ID,
+		},
 		"PeeringAttachment": {
 			"FilterSameAccount":      testAccTransitGatewayPeeringAttachmentDataSource_Filter_sameAccount,
 			"FilterDifferentAccount": testAccTransitGatewayPeeringAttachmentDataSource_Filter_differentAccount,
