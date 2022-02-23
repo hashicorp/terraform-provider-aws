@@ -1272,6 +1272,7 @@ func Provider() *schema.Provider {
 			"aws_vpc_peering_connection_accepter":                  ec2.ResourceVPCPeeringConnectionAccepter(),
 			"aws_vpc_peering_connection_options":                   ec2.ResourceVPCPeeringConnectionOptions(),
 			"aws_vpn_connection":                                   ec2.ResourceVPNConnection(),
+			"aws_vpn_connection_route":                             ec2.ResourceVPNConnectionRoute(),
 			"aws_vpn_gateway":                                      ec2.ResourceVPNGateway(),
 			"aws_vpn_gateway_attachment":                           ec2.ResourceVPNGatewayAttachment(),
 			"aws_vpn_gateway_route_propagation":                    ec2.ResourceVPNGatewayRoutePropagation(),
