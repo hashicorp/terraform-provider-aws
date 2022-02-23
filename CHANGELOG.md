@@ -16,6 +16,7 @@ ENHANCEMENTS:
 * resource/aws_ec2_fleet: Add `context` argument ([#23304](https://github.com/hashicorp/terraform-provider-aws/issues/23304))
 * resource/aws_imagebuilder_image_pipeline: Add `schedule.timezone` argument ([#23322](https://github.com/hashicorp/terraform-provider-aws/issues/23322))
 * resource/aws_imagebuilder_image_recipe: Add `systems_manager_agent.uninstall_after_build` argument ([#23293](https://github.com/hashicorp/terraform-provider-aws/issues/23293))
+* resource/aws_servicecatalog_provisioned_product: Add `outputs` attribute ([#23270](https://github.com/hashicorp/terraform-provider-aws/issues/23270))
 
 BUG FIXES:
 
