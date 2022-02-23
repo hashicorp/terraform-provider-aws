@@ -224,6 +224,11 @@ func init() {
 		F:    sweepTransitGatewayPeeringAttachments,
 	})
 
+	resource.AddTestSweepers("aws_ec2_transit_gateway_multicast_domain", &resource.Sweeper{
+		Name: "aws_ec2_transit_gateway_multicast_domain",
+		F:    sweepTransitGatewayMulticastDomains,
+	})
+
 	resource.AddTestSweepers("aws_ec2_transit_gateway", &resource.Sweeper{
 		Name: "aws_ec2_transit_gateway",
 		F:    sweepTransitGateways,
@@ -238,6 +243,9 @@ func init() {
 	resource.AddTestSweepers("aws_ec2_transit_gateway_vpc_attachment", &resource.Sweeper{
 		Name: "aws_ec2_transit_gateway_vpc_attachment",
 		F:    sweepTransitGatewayVPCAttachments,
+		Dependencies: []string{
+			"aws_ec2_transit_gateway_multicast_domain",
+		},
 	})
 
 	resource.AddTestSweepers("aws_vpc_dhcp_options", &resource.Sweeper{
@@ -1572,6 +1580,49 @@ func sweepTransitGatewayPeeringAttachments(region string) error {
 	}
 
 	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepTransitGatewayMulticastDomains(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).EC2Conn
+	input := &ec2.DescribeTransitGatewayMulticastDomainsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = conn.DescribeTransitGatewayMulticastDomainsPages(input, func(page *ec2.DescribeTransitGatewayMulticastDomainsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TransitGatewayMulticastDomains {
+			r := ResourceTransitGatewayMulticastDomain()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.TransitGatewayMulticastDomainId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Transit Gateway Multicast Domain sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing EC2 Transit Gateway Multicast Domains (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Transit Gateway Multicast Domains (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepTransitGateways(region string) error {
