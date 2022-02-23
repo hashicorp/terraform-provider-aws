@@ -1220,6 +1220,7 @@ func Provider() *schema.Provider {
 			"aws_flow_log":                                        ec2.ResourceFlowLog(),
 			"aws_instance":                                        ec2.ResourceInstance(),
 			"aws_internet_gateway":                                ec2.ResourceInternetGateway(),
+			"aws_internet_gateway_attachment":                     ec2.ResourceInternetGatewayAttachment(),
 			"aws_key_pair":                                        ec2.ResourceKeyPair(),
 			"aws_launch_template":                                 ec2.ResourceLaunchTemplate(),
 			"aws_main_route_table_association":                    ec2.ResourceMainRouteTableAssociation(),
