@@ -565,6 +565,8 @@ ENHANCEMENTS:
 * resource/aws_kinesis_firehose_delivery_stream: Add `error_output_prefix` argument to `redshift_configuration` `s3_backup_configuration` configuration block ([#11229](https://github.com/hashicorp/terraform-provider-aws/issues/11229))
 * resource/aws_kinesis_firehose_delivery_stream: Add `error_output_prefix` argument to `s3_configuration` configuration block ([#11229](https://github.com/hashicorp/terraform-provider-aws/issues/11229))
 * resource/aws_networkfirewall_resource_policy: Handle delete-after-create eventual consistency ([#22402](https://github.com/hashicorp/terraform-provider-aws/issues/22402))
+* resource/aws_kinesis_stream: Improve reading kinesis stream state. ([#15489](https://github.com/hashicorp/terraform-provider-aws/issues/15489))
+* resource/aws_kinesis_stream_consumer: Improve reading kinesis stream state ([#15489](https://github.com/hashicorp/terraform-provider-aws/issues/15489))
 * resource/aws_s3_bucket: Add hosted zone ID for `ap-southeast-3` AWS Region ([#22295](https://github.com/hashicorp/terraform-provider-aws/issues/22295))
 * resource/aws_s3_bucket_object: Support objects greater than 5GB in size by using the [Amazon S3 upload manager](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/sdk-utilities.html#upload-manager) ([#21727](https://github.com/hashicorp/terraform-provider-aws/issues/21727))
 * resource/aws_sagemaker_app: Add `lifecycle_config_arn` and `sagemaker_image_version_arn` arguments to `resource_spec` configuration block ([#21508](https://github.com/hashicorp/terraform-provider-aws/issues/21508))
