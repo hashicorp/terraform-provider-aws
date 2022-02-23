@@ -7,6 +7,7 @@ _The Terraform AWS Provider does not yet have support for Grafana._
 
 
 ## Handy Links
+
 * [Find out about contributing](../../../docs/contributing) to the AWS provider!
 * AWS Provider Docs: [Home](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 * AWS Docs: [AWS SDK for Go v1 Managed Grafana](https://docs.aws.amazon.com/sdk-for-go/api/service/managedgrafana/)

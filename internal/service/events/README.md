@@ -5,6 +5,7 @@ This area is primarily for AWS provider contributors and maintainers. For inform
 _EventBridge_ was formerly called _CloudWatch Events_. In the AWS CLI, you use `events` to identify EventBridge commands. The functionality is identical.
 
 ## Handy Links
+
 * [Find out about contributing](../../../docs/contributing) to the AWS provider!
 * AWS Provider Docs: [Home](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 * AWS Provider Docs: [One of the EventBridge resources](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_rule)

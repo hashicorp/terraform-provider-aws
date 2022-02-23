@@ -6,6 +6,7 @@ AMP (**A**mazon **M**anaged Service for **P**rometheus) is also called just _Pro
 
 
 ## Handy Links
+
 * [Find out about contributing](../../../docs/contributing) to the AWS provider!
 * AWS Provider Docs: [Home](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 * AWS Provider Docs: [One of the Prometheus resources](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/prometheus_workspace)

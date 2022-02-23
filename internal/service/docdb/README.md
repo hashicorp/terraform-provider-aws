@@ -4,6 +4,7 @@ This area is primarily for AWS provider contributors and maintainers. For inform
 
 
 ## Handy Links
+
 * [Find out about contributing](../../../docs/contributing) to the AWS provider!
 * AWS Provider Docs: [Home](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 * AWS Provider Docs: [One of the DocDB resources](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/docdb_cluster)
