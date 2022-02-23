@@ -24,9 +24,9 @@ resource "aws_detective_member" "primary" {
 
 resource "aws_detective_invitation_accepter" "member" {
   provider  = "awsalternate"
-  graph_arn = aws_detective_member.primary.graph_arn
+  graph_arn = aws_detective_graph.primary.graph_arn
 
-  depends_on = [aws_detective_member.test]
+  depends_on = [aws_detective_member.primary]
 }
 ```
 
