@@ -16,10 +16,10 @@ Provides a resource to manage an [Amazon Detective Invitation Accepter](https://
 resource "aws_detective_graph" "primary" {}
 
 resource "aws_detective_member" "primary" {
-  account_id = "ACCOUNT ID"
-  email      = "EMAIL"
-  graph_arn  = aws_detective_graph.primary.id
-  message    = "Message of the invite"
+  account_id    = "ACCOUNT ID"
+  email_address = "EMAIL"
+  graph_arn     = aws_detective_graph.primary.id
+  message       = "Message of the invite"
 }
 
 resource "aws_detective_invitation_accepter" "member" {
