@@ -10,7 +10,219 @@ description: |-
 
 Provides an independent configuration resource for S3 bucket [lifecycle configuration](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lifecycle-mgmt.html).
 
+An S3 Lifecycle configuration consists of one or more Lifecycle rules. Each rule consists of the following:
+
+* Rule metadata (`id` and `status`)
+* [Filter](#filter) identifying objects to which the rule applies
+* One or more transition or expiration actions
+
+For more information see the Amazon S3 User Guide on [`Lifecycle Configuration Elements`](https://docs.aws.amazon.com/AmazonS3/latest/userguide/intro-lifecycle-rules.html).
+
 ## Example Usage
+
+### Specifying an empty filter
+
+The Lifecycle rule applies to all objects in the bucket.
+
+```terraform
+resource "aws_s3_bucket_lifecycle_configuration" "example" {
+  bucket = aws_s3_bucket.bucket.id
+
+  rule {
+    id = "rule-1"
+
+    filter {}
+
+    # ... other transition/expiration actions ...
+
+    status = "Enabled"
+  }
+}
+```
+
+### Specifying a filter using key prefixes
+
+The Lifecycle rule applies to a subset of objects based on the key name prefix (`logs/`).
+
+```terraform
+resource "aws_s3_bucket_lifecycle_configuration" "example" {
+  bucket = aws_s3_bucket.bucket.id
+
+  rule {
+    id = "rule-1"
+
+    filter {
+      prefix = "logs/"
+    }
+
+    # ... other transition/expiration actions ...
+
+    status = "Enabled"
+  }
+}
+```
+
+If you want to apply a Lifecycle action to a subset of objects based on different key name prefixes, specify separate rules.
+
+```terraform
+resource "aws_s3_bucket_lifecycle_configuration" "example" {
+  bucket = aws_s3_bucket.bucket.id
+
+  rule {
+    id = "rule-1"
+
+    filter {
+      prefix = "logs/"
+    }
+
+    # ... other transition/expiration actions ...
+
+    status = "Enabled"
+  }
+
+  rule {
+    id = "rule-2"
+
+    filter {
+      prefix = "tmp/"
+    }
+
+    # ... other transition/expiration actions ...
+
+    status = "Enabled"
+  }
+}
+```
+
+### Specifying a filter based on an object tag
+
+The Lifecycle rule specifies a filter based on a tag key and value. The rule then applies only to a subset of objects with the specific tag.
+
+```terraform
+resource "aws_s3_bucket_lifecycle_configuration" "example" {
+  bucket = aws_s3_bucket.bucket.id
+
+  rule {
+    id = "rule-1"
+
+    filter {
+      tag {
+        key   = "Name"
+        value = "Staging"
+      }
+    }
+
+    # ... other transition/expiration actions ...
+
+    status = "Enabled"
+  }
+}
+```
+
+### Specifying a filter based on multiple tags
+
+The Lifecycle rule directs Amazon S3 to perform lifecycle actions on objects with two tags (with the specific tag keys and values). Notice `tags` is wrapped in the `and` configuration block.
+
+```terraform
+resource "aws_s3_bucket_lifecycle_configuration" "example" {
+  bucket = aws_s3_bucket.bucket.id
+
+  rule {
+    id = "rule-1"
+
+    filter {
+      and {
+        tags = {
+          Key1 = "Value1"
+          Key2 = "Value2"
+        }
+      }
+    }
+
+    # ... other transition/expiration actions ...
+
+    status = "Enabled"
+  }
+}
+```
+
+### Specifying a filter based on both prefix and one or more tags
+
+The Lifecycle rule directs Amazon S3 to perform lifecycle actions on objects with the specified prefix and two tags (with the specific tag keys and values). Notice both `prefix` and `tags` are wrapped in the `and` configuration block.
+
+```terraform
+resource "aws_s3_bucket_lifecycle_configuration" "example" {
+  bucket = aws_s3_bucket.bucket.id
+
+  rule {
+    id = "rule-1"
+
+    filter {
+      and {
+        prefix = "logs/"
+        tags = {
+          Key1 = "Value1"
+          Key2 = "Value2"
+        }
+      }
+    }
+
+    # ... other transition/expiration actions ...
+
+    status = "Enabled"
+  }
+}
+```
+
+### Specifying a filter based on object size
+
+Object size values are in bytes. Maximum filter size is 5TB. Some storage classes have minimum object size limitations, for more information, see [Comparing the Amazon S3 storage classes](https://docs.aws.amazon.com/AmazonS3/latest/userguide/storage-class-intro.html#sc-compare).
+
+```terraform
+resource "aws_s3_bucket_lifecycle_configuration" "example" {
+  bucket = aws_s3_bucket.bucket.id
+
+  rule {
+    id = "rule-1"
+
+    filter {
+      object_size_greater_than = 500
+    }
+
+    # ... other transition/expiration actions ...
+
+    status = "Enabled"
+  }
+}
+```
+
+### Specifying a filter based on object size range and prefix
+
+The `object_size_greater_than` must be less than the `object_size_less_than`. Notice both the object size range and prefix are wrapped in the `and` configuration block.
+
+```terraform
+resource "aws_s3_bucket_lifecycle_configuration" "example" {
+  bucket = aws_s3_bucket.bucket.id
+
+  rule {
+    id = "rule-1"
+
+    filter {
+      and {
+        prefix                   = "logs/"
+        object_size_greater_than = 500
+        object_size_less_than    = 64000
+      }
+    }
+
+    # ... other transition/expiration actions ...
+
+    status = "Enabled"
+  }
+}
+```
+
+### Creating a Lifecycle Configuration for a bucket with versioning
 
 ```terraform
 resource "aws_s3_bucket" "bucket" {
@@ -129,6 +341,8 @@ The following arguments are supported:
 
 ### rule
 
+~> **NOTE:** The `filter` argument, while Optional, is required if the `rule` configuration block does not contain a `prefix`. Since `prefix` is deprecated by Amazon S3 and will be removed in the next major version of the Terraform AWS Provider, we recommend users specify `filter`.
+
 The `rule` configuration block supports the following arguments:
 
 * `abort_incomplete_multipart_upload` - (Optional) Configuration block that specifies the days since the initiation of an incomplete multipart upload that Amazon S3 will wait before permanently removing all parts of the upload [documented below](#abort_incomplete_multipart_upload).
@@ -157,12 +371,14 @@ The `expiration` configuration block supports the following arguments:
 
 ### filter
 
+~> **NOTE:** The `filter` configuration block must have exactly one of `prefix`, `tag`, or `and` specified.
+
 The `filter` configuration block supports the following arguments:
 
-* `and`- (Optional) Configuration block used to apply a logical `AND` to two or more predicates [documented below](#and). The Lifecycle Rule will apply to any object matching all of the predicates configured inside the `and` block.
-* `object_size_greater_than` - (Optional) Minimum object size to which the rule applies.
-* `object_size_less_than` - (Optional) Maximum object size to which the rule applies.
-* `prefix` - (Optional) Prefix identifying one or more objects to which the rule applies.
+* `and`- (Optional) Configuration block used to apply a logical `AND` to two or more predicates [documented below](#and). The Lifecycle Rule will apply to any object matching all the predicates configured inside the `and` block.
+* `object_size_greater_than` - (Optional) Minimum object size (in bytes) to which the rule applies.
+* `object_size_less_than` - (Optional) Maximum object size (in bytes) to which the rule applies.
+* `prefix` - (Optional) Prefix identifying one or more objects to which the rule applies. Defaults to an empty string (`""`) if not specified.
 * `tag` - (Optional) A configuration block for specifying a tag key and value [documented below](#tag).
 
 ### noncurrent_version_expiration
