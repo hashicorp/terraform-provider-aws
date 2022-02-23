@@ -181,10 +181,10 @@ func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.
 
 	for _, v := range groups {
 		if aws.BoolValue(v.GroupMember) {
-			diags := deregisterTransitGatewayMulticastGroupMember(ctx, conn, d.Id(), aws.StringValue(v.GroupIpAddress), aws.StringValue(v.NetworkInterfaceId))
+			err := deregisterTransitGatewayMulticastGroupMember(ctx, conn, d.Id(), aws.StringValue(v.GroupIpAddress), aws.StringValue(v.NetworkInterfaceId))
 
-			if diags.HasError() {
-				return diags
+			if err != nil {
+				return diag.FromErr(err)
 			}
 		} else if aws.BoolValue(v.GroupSource) {
 			// TODO: Deregister sources.

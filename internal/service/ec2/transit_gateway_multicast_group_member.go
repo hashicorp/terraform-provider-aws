@@ -115,10 +115,16 @@ func resourceTransitGatewayMulticastGroupMemberDelete(ctx context.Context, d *sc
 		return diag.FromErr(err)
 	}
 
-	return deregisterTransitGatewayMulticastGroupMember(ctx, conn, multicastDomainID, groupIPAddress, eniID)
+	err = deregisterTransitGatewayMulticastGroupMember(ctx, conn, multicastDomainID, groupIPAddress, eniID)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
 }
 
-func deregisterTransitGatewayMulticastGroupMember(ctx context.Context, conn *ec2.EC2, multicastDomainID, groupIPAddress, eniID string) diag.Diagnostics {
+func deregisterTransitGatewayMulticastGroupMember(ctx context.Context, conn *ec2.EC2, multicastDomainID, groupIPAddress, eniID string) error {
 	id := TransitGatewayMulticastGroupMemberCreateResourceID(multicastDomainID, groupIPAddress, eniID)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Multicast Group Member: %s", id)
@@ -133,7 +139,7 @@ func deregisterTransitGatewayMulticastGroupMember(ctx context.Context, conn *ec2
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting EC2 Transit Gateway Multicast Group Member (%s): %s", id, err)
+		return fmt.Errorf("error deleting EC2 Transit Gateway Multicast Group Member (%s): %w", id, err)
 	}
 
 	_, err = tfresource.RetryUntilNotFoundContext(ctx, PropagationTimeout, func() (interface{}, error) {
@@ -141,7 +147,7 @@ func deregisterTransitGatewayMulticastGroupMember(ctx context.Context, conn *ec2
 	})
 
 	if err != nil {
-		return diag.Errorf("error waiting for EC2 Transit Gateway Multicast Group Member (%s) delete: %s", id, err)
+		return fmt.Errorf("error waiting for EC2 Transit Gateway Multicast Group Member (%s) delete: %w", id, err)
 	}
 
 	return nil
