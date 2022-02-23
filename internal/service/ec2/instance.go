@@ -564,7 +564,6 @@ func ResourceInstance() *schema.Resource {
 			"user_data": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ForceNew:      true,
 				Computed:      true,
 				ConflictsWith: []string{"user_data_base64"},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -589,7 +588,6 @@ func ResourceInstance() *schema.Resource {
 			"user_data_base64": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ForceNew:      true,
 				Computed:      true,
 				ConflictsWith: []string{"user_data"},
 				ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
@@ -1423,73 +1421,57 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("instance_type") && !d.IsNewResource() {
-		log.Printf("[INFO] Stopping Instance %q for instance_type change", d.Id())
-		_, err := conn.StopInstances(&ec2.StopInstancesInput{
-			InstanceIds: []*string{aws.String(d.Id())},
-		})
-		if err != nil {
-			return fmt.Errorf("error stopping instance (%s): %s", d.Id(), err)
-		}
+	if d.HasChanges("instance_type", "user_data", "user_data_base64") && !d.IsNewResource() {
+		// For each argument change, we start and stop the instance
+		// to account for behaviors occurring outside terraform.
+		// Only one attribute can be modified at a time, else we get
+		// "InvalidParameterCombination: Fields for multiple attribute types specified"
+		if d.HasChange("instance_type") {
+			log.Printf("[INFO] Modifying instance type %s", d.Id())
 
-		if err := WaitForInstanceStopping(conn, d.Id(), InstanceStopTimeout); err != nil {
-			return err
-		}
-
-		log.Printf("[INFO] Modifying instance type %s", d.Id())
-		_, err = conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
-			InstanceId: aws.String(d.Id()),
-			InstanceType: &ec2.AttributeValue{
-				Value: aws.String(d.Get("instance_type").(string)),
-			},
-		})
-		if err != nil {
-			return err
-		}
-
-		log.Printf("[INFO] Starting Instance %q after instance_type change", d.Id())
-
-		input := &ec2.StartInstancesInput{
-			InstanceIds: []*string{aws.String(d.Id())},
-		}
-
-		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433
-		err = resource.Retry(InstanceAttributePropagationTimeout, func() *resource.RetryError {
-			_, err := conn.StartInstances(input)
-
-			if tfawserr.ErrMessageContains(err, ErrCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value") {
-				return resource.RetryableError(err)
+			input := &ec2.ModifyInstanceAttributeInput{
+				InstanceId: aws.String(d.Id()),
+				InstanceType: &ec2.AttributeValue{
+					Value: aws.String(d.Get("instance_type").(string)),
+				},
 			}
 
+			if err := modifyAttributeWithInstanceStopStart(d, conn, input); err != nil {
+				return fmt.Errorf("error updating instance (%s) instance type: %w", d.Id(), err)
+			}
+		}
+
+		if d.HasChange("user_data") {
+			log.Printf("[INFO] Modifying user data %s", d.Id())
+			input := &ec2.ModifyInstanceAttributeInput{
+				InstanceId: aws.String(d.Id()),
+				UserData: &ec2.BlobAttributeValue{
+					Value: []byte(d.Get("user_data").(string)),
+				},
+			}
+
+			if err := modifyAttributeWithInstanceStopStart(d, conn, input); err != nil {
+				return fmt.Errorf("error updating instance (%s) user data: %w", d.Id(), err)
+			}
+		}
+
+		if d.HasChange("user_data_base64") {
+			log.Printf("[INFO] Modifying user data base64 %s", d.Id())
+			userData, err := base64.URLEncoding.DecodeString(d.Get("user_data_base64").(string))
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return fmt.Errorf("error updating instance (%s) user data base64: %w", d.Id(), err)
 			}
 
-			return nil
-		})
+			input := &ec2.ModifyInstanceAttributeInput{
+				InstanceId: aws.String(d.Id()),
+				UserData: &ec2.BlobAttributeValue{
+					Value: userData,
+				},
+			}
 
-		if tfresource.TimedOut(err) {
-			_, err = conn.StartInstances(input)
-		}
-
-		if err != nil {
-			return fmt.Errorf("error starting EC2 Instance (%s): %w", d.Id(), err)
-		}
-
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameStopped},
-			Target:     []string{ec2.InstanceStateNameRunning},
-			Refresh:    InstanceStateRefreshFunc(conn, d.Id(), []string{ec2.InstanceStateNameTerminated}),
-			Timeout:    d.Timeout(schema.TimeoutUpdate),
-			Delay:      10 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
-
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return fmt.Errorf(
-				"Error waiting for instance (%s) to become ready: %s",
-				d.Id(), err)
+			if err := modifyAttributeWithInstanceStopStart(d, conn, input); err != nil {
+				return fmt.Errorf("error updating instance (%s) user data base64: %w", d.Id(), err)
+			}
 		}
 	}
 
@@ -1761,6 +1743,62 @@ func resourceInstanceDisableAPITermination(conn *ec2.EC2, id string, disableAPIT
 
 	if err != nil {
 		return fmt.Errorf("error modify instance (%s) attribute (%s) to value %t: %w", id, ec2.InstanceAttributeNameDisableApiTermination, disableAPITermination, err)
+	}
+
+	return nil
+}
+
+// modifyAttributeWithInstanceStopStart modifies a specific attribute provided
+// as input by first stopping the EC2 instance before the modification
+// and then starting up the EC2 instance after modification.
+// Reference: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html
+func modifyAttributeWithInstanceStopStart(d *schema.ResourceData, conn *ec2.EC2, input *ec2.ModifyInstanceAttributeInput) error {
+	log.Printf("[INFO] Stopping Instance %q for attribute change", d.Id())
+	_, err := conn.StopInstances(&ec2.StopInstancesInput{
+		InstanceIds: []*string{aws.String(d.Id())},
+	})
+
+	if err != nil {
+		return fmt.Errorf("error stopping EC2 Instance (%s): %w", d.Id(), err)
+	}
+
+	if err := WaitForInstanceStopping(conn, d.Id(), InstanceStopTimeout); err != nil {
+		return err
+	}
+
+	if _, err := conn.ModifyInstanceAttribute(input); err != nil {
+		return err
+	}
+
+	startInput := &ec2.StartInstancesInput{
+		InstanceIds: []*string{aws.String(d.Id())},
+	}
+
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433
+	err = resource.Retry(InstanceAttributePropagationTimeout, func() *resource.RetryError {
+		_, err := conn.StartInstances(startInput)
+
+		if tfawserr.ErrMessageContains(err, ErrCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.StartInstances(startInput)
+	}
+
+	if err != nil {
+		return fmt.Errorf("error starting EC2 Instance (%s): %w", d.Id(), err)
+	}
+
+	if err := WaitForInstanceRunning(conn, d.Id(), InstanceStartTimeout); err != nil {
+		return err
 	}
 
 	return nil
@@ -2779,6 +2817,27 @@ func terminateInstance(conn *ec2.EC2, id string, timeout time.Duration) error {
 	}
 
 	return waitForInstanceDeletion(conn, id, timeout)
+}
+
+func WaitForInstanceRunning(conn *ec2.EC2, id string, timeout time.Duration) error {
+	log.Printf("[DEBUG] Waiting for instance (%s) to be running", id)
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameStopped},
+		Target:     []string{ec2.InstanceStateNameRunning},
+		Refresh:    InstanceStateRefreshFunc(conn, id, []string{ec2.InstanceStateNameTerminated}),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	if err != nil {
+		return fmt.Errorf(
+			"error waiting for instance (%s) to be running: %s", id, err)
+	}
+
+	return nil
 }
 
 func WaitForInstanceStopping(conn *ec2.EC2, id string, timeout time.Duration) error {

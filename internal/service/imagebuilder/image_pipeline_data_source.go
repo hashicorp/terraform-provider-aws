@@ -21,6 +21,10 @@ func DataSourceImagePipeline() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"container_recipe_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"date_created": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -129,6 +133,7 @@ func dataSourceImagePipelineRead(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(aws.StringValue(imagePipeline.Arn))
 	d.Set("arn", imagePipeline.Arn)
+	d.Set("container_recipe_arn", imagePipeline.ContainerRecipeArn)
 	d.Set("date_created", imagePipeline.DateCreated)
 	d.Set("date_last_run", imagePipeline.DateLastRun)
 	d.Set("date_next_run", imagePipeline.DateNextRun)

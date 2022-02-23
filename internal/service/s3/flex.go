@@ -239,12 +239,11 @@ func ExpandLifecycleRuleFilter(l []interface{}) *s3.LifecycleRuleFilter {
 	}
 
 	if v, ok := m["tag"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		tags := Tags(tftags.New(v[0]).IgnoreAWS())
-		if len(tags) > 0 {
-			result.Tag = tags[0]
-		}
+		result.Tag = ExpandLifecycleRuleFilterTag(v[0].(map[string]interface{}))
 	}
 
+	// Per AWS S3 API, "A Filter must have exactly one of Prefix, Tag, or And specified";
+	// Specifying more than one of the listed parameters results in a MalformedXML error.
 	if v, ok := m["prefix"].(string); ok && result.And == nil && result.Tag == nil {
 		result.Prefix = aws.String(v)
 	}
@@ -276,6 +275,24 @@ func ExpandLifecycleRuleFilterAndOperator(m map[string]interface{}) *s3.Lifecycl
 		if len(tags) > 0 {
 			result.Tags = tags
 		}
+	}
+
+	return result
+}
+
+func ExpandLifecycleRuleFilterTag(m map[string]interface{}) *s3.Tag {
+	if len(m) == 0 {
+		return nil
+	}
+
+	result := &s3.Tag{}
+
+	if key, ok := m["key"].(string); ok {
+		result.Key = aws.String(key)
+	}
+
+	if value, ok := m["value"].(string); ok {
+		result.Value = aws.String(value)
 	}
 
 	return result
@@ -357,7 +374,10 @@ func ExpandLifecycleRuleTransitions(l []interface{}) ([]*s3.Transition, error) {
 			transition.Date = aws.Time(t)
 		}
 
-		if v, ok := tfMap["days"].(int); ok && v > 0 {
+		// Only one of "date" and "days" can be configured
+		// so only set the transition.Days value when transition.Date is nil
+		// By default, tfMap["days"] = 0 if not explicitly configured in terraform.
+		if v, ok := tfMap["days"].(int); ok && v >= 0 && transition.Date == nil {
 			transition.Days = aws.Int64(int64(v))
 		}
 
@@ -880,7 +900,7 @@ func FlattenLifecycleRuleExpiration(expiration *s3.LifecycleExpiration) []interf
 
 func FlattenLifecycleRuleFilter(filter *s3.LifecycleRuleFilter) []interface{} {
 	if filter == nil {
-		return []interface{}{}
+		return nil
 	}
 
 	m := make(map[string]interface{})
@@ -936,12 +956,20 @@ func FlattenLifecycleRuleFilterAndOperator(andOp *s3.LifecycleRuleAndOperator) [
 
 func FlattenLifecycleRuleFilterTag(tag *s3.Tag) []interface{} {
 	if tag == nil {
-		return []interface{}{}
+		return nil
 	}
 
-	t := KeyValueTags([]*s3.Tag{tag}).IgnoreAWS().Map()
+	m := make(map[string]interface{})
 
-	return []interface{}{t}
+	if tag.Key != nil {
+		m["key"] = aws.StringValue(tag.Key)
+	}
+
+	if tag.Value != nil {
+		m["value"] = aws.StringValue(tag.Value)
+	}
+
+	return []interface{}{m}
 }
 
 func FlattenLifecycleRuleNoncurrentVersionExpiration(expiration *s3.NoncurrentVersionExpiration) []interface{} {

@@ -1,0 +1,15 @@
+```release-note:enhancement
+provider: Expands environment variables in file paths in provider configuration.
+```
+
+```release-note:bug
+provider: Setting a custom CA bundle caused the provider to fail.
+```
+
+```release-note:enhancement
+provider: Updates list of valid AWS regions
+```
+
+```release-note:bug
+provider: Credentials with expiry, such as assuming a role, would not renew.
+```

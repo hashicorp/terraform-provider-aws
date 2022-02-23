@@ -218,7 +218,7 @@ jobs:
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
     - name: Get all changed files
       id: changed-files
-      uses: tj-actions/changed-files@v14.1
+      uses: tj-actions/changed-files@v16
     - name: Get changed packages
       run: |
         touch /tmp/dirs_changed_all
@@ -259,6 +259,9 @@ jobs:
             continue
           fi
           if [[ "${pkg}" == */test-fixtures ]]; then
+            continue
+          fi
+          if [[ "${pkg}" == internal/generate/* ]]; then
             continue
           fi
           go test -run ^Test[^A][^c][^c] "github.com/hashicorp/terraform-provider-aws/${pkg}"
