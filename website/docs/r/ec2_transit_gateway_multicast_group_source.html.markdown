@@ -1,20 +1,20 @@
 ---
 subcategory: "EC2"
 layout: "aws"
-page_title: "AWS: aws_ec2_transit_gateway_multicast_group_member"
+page_title: "AWS: aws_ec2_transit_gateway_multicast_group_source"
 description: |-
-  Manages an EC2 Transit Gateway Multicast Group Member
+  Manages an EC2 Transit Gateway Multicast Group Source
 ---
 
-# Resource: aws_ec2_transit_gateway_multicast_group_member
+# Resource: aws_ec2_transit_gateway_multicast_group_source
 
-Registers members (network interfaces) with the transit gateway multicast group.
-A member is a network interface associated with a supported EC2 instance that receives multicast traffic.
+Registers sources (network interfaces) with the transit gateway multicast group.
+A multicast source is a network interface attached to a supported instance that sends multicast traffic.
 
 ## Example Usage
 
 ```terraform
-resource "aws_ec2_transit_gateway_multicast_group_member" "example" {
+resource "aws_ec2_transit_gateway_multicast_group_source" "example" {
   group_ip_address                    = "224.0.0.1"
   network_interface_id                = aws_network_interface.example.id
   transit_gateway_multicast_domain_id = aws_ec2_transit_gateway_multicast_domain.example.id

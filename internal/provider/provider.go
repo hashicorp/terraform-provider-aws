@@ -1209,6 +1209,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_transit_gateway_multicast_domain":             ec2.ResourceTransitGatewayMulticastDomain(),
 			"aws_ec2_transit_gateway_multicast_domain_association": ec2.ResourceTransitGatewayMulticastDomainAssociation(),
 			"aws_ec2_transit_gateway_multicast_group_member":       ec2.ResourceTransitGatewayMulticastGroupMember(),
+			"aws_ec2_transit_gateway_multicast_group_source":       ec2.ResourceTransitGatewayMulticastGroupSource(),
 			"aws_ec2_transit_gateway_peering_attachment":           ec2.ResourceTransitGatewayPeeringAttachment(),
 			"aws_ec2_transit_gateway_peering_attachment_accepter":  ec2.ResourceTransitGatewayPeeringAttachmentAccepter(),
 			"aws_ec2_transit_gateway_prefix_list_reference":        ec2.ResourceTransitGatewayPrefixListReference(),

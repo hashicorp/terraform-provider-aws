@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -22,11 +21,6 @@ func ResourceTransitGatewayMulticastGroupMember() *schema.Resource {
 		CreateWithoutTimeout: resourceTransitGatewayMulticastGroupMemberCreate,
 		ReadWithoutTimeout:   resourceTransitGatewayMulticastGroupMemberRead,
 		DeleteWithoutTimeout: resourceTransitGatewayMulticastGroupMemberDelete,
-
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(10 * time.Minute),
-		},
 
 		Schema: map[string]*schema.Schema{
 			"group_ip_address": {

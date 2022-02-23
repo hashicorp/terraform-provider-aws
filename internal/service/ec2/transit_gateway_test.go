@@ -49,6 +49,11 @@ func TestAccEC2TransitGateway_serial(t *testing.T) {
 			"DomainDisappears": testAccTransitGatewayMulticastGroupMember_Disappears_domain,
 			"TwoMembers":       testAccTransitGatewayMulticastGroupMember_twoMembers,
 		},
+		"MulticastGroupSource": {
+			"basic":            testAccTransitGatewayMulticastGroupSource_basic,
+			"disappears":       testAccTransitGatewayMulticastGroupSource_disappears,
+			"DomainDisappears": testAccTransitGatewayMulticastGroupSource_Disappears_domain,
+		},
 		"PeeringAttachment": {
 			"basic":            testAccTransitGatewayPeeringAttachment_basic,
 			"disappears":       testAccTransitGatewayPeeringAttachment_disappears,

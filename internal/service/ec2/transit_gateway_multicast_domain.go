@@ -189,7 +189,11 @@ func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.
 				diags = append(diags, diag.FromErr(err)...)
 			}
 		} else if aws.BoolValue(v.GroupSource) {
-			// TODO: Deregister sources.
+			err := deregisterTransitGatewayMulticastGroupSource(ctx, conn, d.Id(), aws.StringValue(v.GroupIpAddress), aws.StringValue(v.NetworkInterfaceId))
+
+			if err != nil {
+				diags = append(diags, diag.FromErr(err)...)
+			}
 		}
 	}
 
