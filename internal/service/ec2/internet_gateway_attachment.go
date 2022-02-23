@@ -15,7 +15,6 @@ func ResourceInternetGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceInternetGatewayAttachmentCreate,
 		Read:   resourceInternetGatewayAttachmentRead,
-		Update: resourceInternetGatewayAttachmentUpdate,
 		Delete: resourceInternetGatewayAttachmentDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -30,6 +29,7 @@ func ResourceInternetGatewayAttachment() *schema.Resource {
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -79,36 +79,6 @@ func resourceInternetGatewayAttachmentRead(d *schema.ResourceData, meta interfac
 	d.Set("vpc_id", igw.VpcId)
 
 	return nil
-}
-
-func resourceInternetGatewayAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-
-	igwID, _, err := InternetGatewayAttachmentParseResourceID(d.Id())
-
-	if err != nil {
-		return err
-	}
-
-	if d.HasChange("vpc_id") {
-		o, n := d.GetChange("vpc_id")
-
-		if v := o.(string); v != "" {
-			if err := detachInternetGateway(conn, igwID, v); err != nil {
-				return err
-			}
-		}
-
-		if v := n.(string); v != "" {
-			if err := attachInternetGateway(conn, igwID, v); err != nil {
-				return err
-			}
-
-			d.SetId(InternetGatewayAttachmentCreateResourceID(igwID, v))
-		}
-	}
-
-	return resourceInternetGatewayAttachmentRead(d, meta)
 }
 
 func resourceInternetGatewayAttachmentDelete(d *schema.ResourceData, meta interface{}) error {

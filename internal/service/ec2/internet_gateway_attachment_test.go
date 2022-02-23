@@ -18,8 +18,7 @@ func TestAccEC2InternetGatewayAttachment_basic(t *testing.T) {
 	var v ec2.InternetGatewayAttachment
 	resourceName := "aws_internet_gateway_attachment.test"
 	igwResourceName := "aws_internet_gateway.test"
-	vpc1ResourceName := "aws_vpc.test1"
-	vpc2ResourceName := "aws_vpc.test2"
+	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -29,25 +28,17 @@ func TestAccEC2InternetGatewayAttachment_basic(t *testing.T) {
 		CheckDestroy: testAccCheckInternetGatewayAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInternetGatewayAttachmentAttachmentBasicConfig(rName),
+				Config: testAccInternetGatewayAttachmentAttachmentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayAttachmentExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "internet_gateway_id", igwResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpc1ResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-			{
-				Config: testAccInternetGatewayAttachmentAttachmentUpdatedConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInternetGatewayAttachmentExists(resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "internet_gateway_id", igwResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpc2ResourceName, "id"),
-				),
 			},
 		},
 	})
@@ -65,7 +56,7 @@ func TestAccEC2InternetGatewayAttachment_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckInternetGatewayAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInternetGatewayAttachmentAttachmentBasicConfig(rName),
+				Config: testAccInternetGatewayAttachmentAttachmentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayAttachmentExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceInternetGatewayAttachment(), resourceName),
@@ -137,21 +128,13 @@ func testAccCheckInternetGatewayAttachmentExists(n string, v *ec2.InternetGatewa
 	}
 }
 
-func testAccInternetGatewayAttachmentAttachmentBasicConfig(rName string) string {
+func testAccInternetGatewayAttachmentAttachmentConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "test1" {
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "%[1]s-1"
-  }
-}
-
-resource "aws_vpc" "test2" {
-  cidr_block = "10.2.0.0/16"
-
-  tags = {
-    Name = "%[1]s-2"
+    Name = %[1]q
   }
 }
 
@@ -163,38 +146,7 @@ resource "aws_internet_gateway" "test" {
 
 resource "aws_internet_gateway_attachment" "test" {
   internet_gateway_id = aws_internet_gateway.test.id
-  vpc_id              = aws_vpc.test1.id
-}
-`, rName)
-}
-
-func testAccInternetGatewayAttachmentAttachmentUpdatedConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test1" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "%[1]s-1"
-  }
-}
-
-resource "aws_vpc" "test2" {
-  cidr_block = "10.2.0.0/16"
-
-  tags = {
-    Name = "%[1]s-2"
-  }
-}
-
-resource "aws_internet_gateway" "test" {
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_internet_gateway_attachment" "test" {
-  internet_gateway_id = aws_internet_gateway.test.id
-  vpc_id              = aws_vpc.test2.id
+  vpc_id              = aws_vpc.test.id
 }
 `, rName)
 }
