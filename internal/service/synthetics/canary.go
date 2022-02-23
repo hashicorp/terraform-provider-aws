@@ -114,6 +114,11 @@ func ResourceCanary() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+						"environment_variables": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"memory_in_mb": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -385,7 +390,13 @@ func resourceCanaryRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting vpc config: %w", err)
 	}
 
-	if err := d.Set("run_config", flattenCanaryRunConfig(canary.RunConfig)); err != nil {
+	// get environment variables since they are not available on describe
+	runConfig := &synthetics.CanaryRunConfigInput{}
+	if v, ok := d.GetOk("run_config"); ok {
+		runConfig = expandCanaryRunConfig(v.([]interface{}))
+	}
+
+	if err := d.Set("run_config", flattenCanaryRunConfig(canary.RunConfig, runConfig.EnvironmentVariables)); err != nil {
 		return fmt.Errorf("error setting run config: %w", err)
 	}
 
@@ -703,18 +714,23 @@ func expandCanaryRunConfig(l []interface{}) *synthetics.CanaryRunConfigInput {
 		codeConfig.ActiveTracing = aws.Bool(v)
 	}
 
+	if v, ok := m["enviroment_variables"].(map[string]string); ok {
+		codeConfig.EnvironmentVariables = aws.StringMap(v)
+	}
+
 	return codeConfig
 }
 
-func flattenCanaryRunConfig(canaryCodeOut *synthetics.CanaryRunConfigOutput) []interface{} {
+func flattenCanaryRunConfig(canaryCodeOut *synthetics.CanaryRunConfigOutput, envVars map[string]*string) []interface{} {
 	if canaryCodeOut == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"timeout_in_seconds": aws.Int64Value(canaryCodeOut.TimeoutInSeconds),
-		"memory_in_mb":       aws.Int64Value(canaryCodeOut.MemoryInMB),
-		"active_tracing":     aws.BoolValue(canaryCodeOut.ActiveTracing),
+		"timeout_in_seconds":    aws.Int64Value(canaryCodeOut.TimeoutInSeconds),
+		"memory_in_mb":          aws.Int64Value(canaryCodeOut.MemoryInMB),
+		"active_tracing":        aws.BoolValue(canaryCodeOut.ActiveTracing),
+		"environment_variables": aws.StringValueMap(envVars),
 	}
 
 	return []interface{}{m}
