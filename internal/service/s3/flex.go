@@ -242,6 +242,8 @@ func ExpandLifecycleRuleFilter(l []interface{}) *s3.LifecycleRuleFilter {
 		result.Tag = ExpandLifecycleRuleFilterTag(v[0].(map[string]interface{}))
 	}
 
+	// Per AWS S3 API, "A Filter must have exactly one of Prefix, Tag, or And specified";
+	// Specifying more than one of the listed parameters results in a MalformedXML error.
 	if v, ok := m["prefix"].(string); ok && result.And == nil && result.Tag == nil {
 		result.Prefix = aws.String(v)
 	}
