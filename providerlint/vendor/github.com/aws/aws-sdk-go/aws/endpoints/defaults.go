@@ -24697,6 +24697,14 @@ var awsusgovPartition = partition{
 			},
 		},
 		"ec2": service{
+			Defaults: endpointDefaults{
+				defaultKey{}: endpoint{},
+				defaultKey{
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "ec2.{region}.{dnsSuffix}",
+				},
+			},
 			Endpoints: serviceEndpoints{
 				endpointKey{
 					Region: "us-gov-east-1",
