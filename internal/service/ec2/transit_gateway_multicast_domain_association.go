@@ -113,10 +113,16 @@ func resourceTransitGatewayMulticastDomainAssociationDelete(ctx context.Context,
 		return diag.FromErr(err)
 	}
 
-	return disassociateTransitGatewayMulticastDomain(ctx, conn, multicastDomainID, attachmentID, subnetID, d.Timeout(schema.TimeoutDelete))
+	err = disassociateTransitGatewayMulticastDomain(ctx, conn, multicastDomainID, attachmentID, subnetID, d.Timeout(schema.TimeoutDelete))
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
 }
 
-func disassociateTransitGatewayMulticastDomain(ctx context.Context, conn *ec2.EC2, multicastDomainID, attachmentID, subnetID string, timeout time.Duration) diag.Diagnostics {
+func disassociateTransitGatewayMulticastDomain(ctx context.Context, conn *ec2.EC2, multicastDomainID, attachmentID, subnetID string, timeout time.Duration) error {
 	id := TransitGatewayMulticastDomainAssociationCreateResourceID(multicastDomainID, attachmentID, subnetID)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Multicast Domain Association: %s", id)
@@ -131,11 +137,11 @@ func disassociateTransitGatewayMulticastDomain(ctx context.Context, conn *ec2.EC
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting EC2 Transit Gateway Multicast Domain Association (%s): %s", id, err)
+		return fmt.Errorf("error deleting EC2 Transit Gateway Multicast Domain Association (%s): %w", id, err)
 	}
 
 	if _, err := WaitTransitGatewayMulticastDomainAssociationDeleted(conn, multicastDomainID, attachmentID, subnetID, timeout); err != nil {
-		return diag.Errorf("error waiting for EC2 Transit Gateway Multicast Domain Association (%s) delete: %s", id, err)
+		return fmt.Errorf("error waiting for EC2 Transit Gateway Multicast Domain Association (%s) delete: %w", id, err)
 	}
 
 	return nil

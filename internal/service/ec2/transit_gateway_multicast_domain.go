@@ -204,10 +204,10 @@ func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.
 	}
 
 	for _, v := range associations {
-		diags := disassociateTransitGatewayMulticastDomain(ctx, conn, d.Id(), aws.StringValue(v.TransitGatewayAttachmentId), aws.StringValue(v.Subnet.SubnetId), d.Timeout(schema.TimeoutDelete))
+		err := disassociateTransitGatewayMulticastDomain(ctx, conn, d.Id(), aws.StringValue(v.TransitGatewayAttachmentId), aws.StringValue(v.Subnet.SubnetId), d.Timeout(schema.TimeoutDelete))
 
-		if diags.HasError() {
-			return diags
+		if err != nil {
+			return diag.FromErr(err)
 		}
 	}
 
