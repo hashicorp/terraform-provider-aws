@@ -14,7 +14,7 @@ Manages an AppStream Fleet Stack association.
 
 ```terraform
 resource "aws_appstream_fleet" "example" {
-  name          = "FLEET NAME"
+  name          = "NAME"
   image_name    = "Amazon-AppStream2-Sample-Image-02-04-2019"
   instance_type = "stream.standard.small"
 
