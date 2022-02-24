@@ -295,7 +295,7 @@ func Provider() *schema.Provider {
 				}, nil),
 				Description: "The region where AWS operations will take place. Examples\n" +
 					"are us-east-1, us-west-2, etc.", // lintignore:AWSAT003,
-				InputDefault: "us-east-1",            // lintignore:AWSAT003
+				InputDefault: "us-east-1", // lintignore:AWSAT003
 			},
 			"s3_force_path_style": {
 				Type:       schema.TypeBool,
