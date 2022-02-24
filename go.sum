@@ -190,8 +190,9 @@ github.com/googleapis/gax-go/v2 v2.0.5 h1:sjZBwGj9Jlw33ImPtvFviGYvseOtDM7hkSKB7+
 github.com/googleapis/gax-go/v2 v2.0.5/go.mod h1:DWXyrwAJ9X0FpwwEdw+IPEYBICEFu5mhpdKc/us6bOk=
 github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.16.0 h1:r2RUzeK2gAitl0HY9SLH1axAEu+6aPBY20g1jOoBepM=
 github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.16.0/go.mod h1:C6GVuO9RWOrt6QCGTmLCOYuSHpkfQSBDuRqTteOlo0g=
-github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.8 h1:BlV2HAJxG5/UHMgBQ9rKrGLg6ThIkqTs6Hnr3OHOjps=
 github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.8/go.mod h1:O0d2KtdvgHuWVQ9go3oK6BFPLht6254JIHjLfEzo+lM=
+github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.9 h1:XXkp2Bc0tl6Oy/d0KplsmPKPJg/fQLXRHFtc9MGvhno=
+github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.9/go.mod h1:O0d2KtdvgHuWVQ9go3oK6BFPLht6254JIHjLfEzo+lM=
 github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.9 h1:sFb+svRVSNWtVd4JDHen7R+rd0TB3yKt8+OgbYcpamU=
 github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.9/go.mod h1:bUMECpdj5Vo+mLFC8gYUb+epVTg1ocf6xx9T7QVeK18=
 github.com/hashicorp/awspolicyequivalence v1.5.0 h1:tGw6h9qN1AWNBaUf4OUcdCyE/kqNBItTiyTPQeV/KUg=
