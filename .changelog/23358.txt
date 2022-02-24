@@ -1,0 +1,3 @@
+```release-note:feature
+resource/dms: Added support for microsoft sql server settings in create endpoint for dms
+```
