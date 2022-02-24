@@ -2678,6 +2678,88 @@ func FindTransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewayRouteT
 	return result, nil
 }
 
+func FindTransitGatewayVPCAttachment(conn *ec2.EC2, input *ec2.DescribeTransitGatewayVpcAttachmentsInput) (*ec2.TransitGatewayVpcAttachment, error) {
+	output, err := FindTransitGatewayVPCAttachments(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindTransitGatewayVPCAttachments(conn *ec2.EC2, input *ec2.DescribeTransitGatewayVpcAttachmentsInput) ([]*ec2.TransitGatewayVpcAttachment, error) {
+	var output []*ec2.TransitGatewayVpcAttachment
+
+	err := conn.DescribeTransitGatewayVpcAttachmentsPages(input, func(page *ec2.DescribeTransitGatewayVpcAttachmentsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TransitGatewayVpcAttachments {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidTransitGatewayAttachmentIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindTransitGatewayVPCAttachmentByID(conn *ec2.EC2, id string) (*ec2.TransitGatewayVpcAttachment, error) {
+	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{
+		TransitGatewayAttachmentIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindTransitGatewayVPCAttachment(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// See https://docs.aws.amazon.com/vpc/latest/tgw/tgw-vpc-attachments.html#vpc-attachment-lifecycle.
+	switch state := aws.StringValue(output.State); state {
+	case ec2.TransitGatewayAttachmentStateDeleted,
+		ec2.TransitGatewayAttachmentStateFailed,
+		ec2.TransitGatewayAttachmentStateRejected:
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.TransitGatewayAttachmentId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func FindDHCPOptions(conn *ec2.EC2, input *ec2.DescribeDhcpOptionsInput) (*ec2.DhcpOptions, error) {
 	output, err := FindDHCPOptionses(conn, input)
 

@@ -1,23 +1,21 @@
-package aws
+package ec2
 
 import (
-	"errors"
-	"fmt"
-	"log"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEc2TransitGatewayVpcAttachments() *schema.Resource {
+func DataSourceTransitGatewayVPCAttachments() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2TransitGatewayVpcAttachmentsRead,
+		ReadWithoutTimeout: dataSourceTransitGatewayVPCAttachmentsRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": dataSourceFiltersSchema(),
+			"filter": DataSourceFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -27,37 +25,33 @@ func dataSourceAwsEc2TransitGatewayVpcAttachments() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEc2TransitGatewayVpcAttachmentsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+func dataSourceTransitGatewayVPCAttachmentsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{}
-	var items []string
 
-	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
+	input.Filters = append(input.Filters, BuildFiltersDataSource(
+		d.Get("filter").(*schema.Set),
+	)...)
+
+	if len(input.Filters) == 0 {
+		input.Filters = nil
 	}
 
-	log.Printf("[DEBUG] Reading EC2 Transit Gateways: %s", input)
-	output, err := conn.DescribeTransitGatewayVpcAttachments(input)
+	output, err := FindTransitGatewayVPCAttachments(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway VPC Attachments: %s", err)
+		return diag.Errorf("error reading EC2 Transit Gateway VPC Attachments: %s", err)
 	}
 
-	if output == nil || len(output.TransitGatewayVpcAttachments) == 0 {
-		return errors.New("error reading EC2 Transit Gateway VPC Attachments: no results found")
+	var attachmentIDs []string
+
+	for _, v := range output {
+		attachmentIDs = append(attachmentIDs, aws.StringValue(v.TransitGatewayAttachmentId))
 	}
 
-	for _, transitGatewayVpcAttachment := range output.TransitGatewayVpcAttachments {
-		if transitGatewayVpcAttachment != nil {
-			if transitGatewayVpcAttachment.Options == nil {
-				return fmt.Errorf("error reading EC2 Transit Gateway VPC Attachment (%s): missing options", aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId))
-			}
+	d.SetId(meta.(*conns.AWSClient).Region)
+	d.Set("ids", attachmentIDs)
 
-			items = append(items, *transitGatewayVpcAttachment.TransitGatewayAttachmentId)
-		}
-	}
-	d.SetId(resource.UniqueId())
-	d.Set("ids", items)
 	return nil
 }
