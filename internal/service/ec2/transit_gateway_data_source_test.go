@@ -43,6 +43,9 @@ func TestAccEC2TransitGatewayDataSource_serial(t *testing.T) {
 			"Filter": testAccTransitGatewayVPCAttachmentDataSource_Filter,
 			"ID":     testAccTransitGatewayVPCAttachmentDataSource_ID,
 		},
+		"VpcAttachments": {
+			"Filter": testAccTransitGatewayVPCAttachmentsDataSource_Filter,
+		},
 		"VpnAttachment": {
 			"Filter":                             testAccTransitGatewayVPNAttachmentDataSource_filter,
 			"TransitGatewayIdAndVpnConnectionId": testAccTransitGatewayVPNAttachmentDataSource_TransitGatewayIdAndVpnConnectionID,

@@ -2,7 +2,6 @@ package ec2
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -575,40 +574,38 @@ func StatusVPCIPv6CIDRBlockAssociationState(conn *ec2.EC2, id string) resource.S
 	}
 }
 
-const (
-	vpcPeeringConnectionStatusNotFound = "NotFound"
-	vpcPeeringConnectionStatusUnknown  = "Unknown"
-)
-
-// StatusVPCPeeringConnection fetches the VPC peering connection and its status
-func StatusVPCPeeringConnection(conn *ec2.EC2, vpcPeeringConnectionID string) resource.StateRefreshFunc {
+func StatusVPCPeeringConnectionActive(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		vpcPeeringConnection, err := FindVPCPeeringConnectionByID(conn, vpcPeeringConnectionID)
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcPeeringConnectionIDNotFound) {
-			return nil, vpcPeeringConnectionStatusNotFound, nil
+		// Don't call FindVPCPeeringConnectionByID as it maps useful status codes to NotFoundError.
+		output, err := FindVPCPeeringConnection(conn, &ec2.DescribeVpcPeeringConnectionsInput{
+			VpcPeeringConnectionIds: aws.StringSlice([]string{id}),
+		})
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
+
 		if err != nil {
-			return nil, vpcPeeringConnectionStatusUnknown, err
+			return nil, "", err
 		}
 
-		// Sometimes AWS just has consistency issues and doesn't see
-		// our peering connection yet. Return an empty state.
-		if vpcPeeringConnection == nil || vpcPeeringConnection.Status == nil {
-			return nil, vpcPeeringConnectionStatusNotFound, nil
+		return output, aws.StringValue(output.Status.Code), nil
+	}
+}
+
+func StatusVPCPeeringConnectionDeleted(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindVPCPeeringConnectionByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
-		statusCode := aws.StringValue(vpcPeeringConnection.Status.Code)
-
-		// https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-lifecycle
-		switch statusCode {
-		case ec2.VpcPeeringConnectionStateReasonCodeFailed:
-			log.Printf("[WARN] VPC Peering Connection (%s): %s: %s", vpcPeeringConnectionID, statusCode, aws.StringValue(vpcPeeringConnection.Status.Message))
-			fallthrough
-		case ec2.VpcPeeringConnectionStateReasonCodeDeleted, ec2.VpcPeeringConnectionStateReasonCodeExpired, ec2.VpcPeeringConnectionStateReasonCodeRejected:
-			return nil, vpcPeeringConnectionStatusNotFound, nil
+		if err != nil {
+			return nil, "", err
 		}
 
-		return vpcPeeringConnection, statusCode, nil
+		return output, aws.StringValue(output.Status.Code), nil
 	}
 }
 

@@ -313,10 +313,6 @@ func WaitInstanceIAMInstanceProfileUpdated(conn *ec2.EC2, instanceID string, exp
 
 const ManagedPrefixListEntryCreateTimeout = 5 * time.Minute
 
-const (
-	NetworkACLEntryPropagationTimeout = 5 * time.Minute
-)
-
 func WaitRouteDeleted(conn *ec2.EC2, routeFinder RouteFinder, routeTableID, destination string, timeout time.Duration) (*ec2.Route, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{RouteStatusReady},
@@ -968,6 +964,52 @@ func WaitVPCIPv6CIDRBlockAssociationDeleted(conn *ec2.EC2, id string, timeout ti
 		if state := aws.StringValue(output.State); state == ec2.VpcCidrBlockStateCodeFailed {
 			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
 		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	VPCPeeringConnectionOptionsPropagationTimeout = 3 * time.Minute
+)
+
+func WaitVPCPeeringConnectionActive(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.VpcPeeringConnection, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.VpcPeeringConnectionStateReasonCodeInitiatingRequest, ec2.VpcPeeringConnectionStateReasonCodeProvisioning},
+		Target:  []string{ec2.VpcPeeringConnectionStateReasonCodeActive, ec2.VpcPeeringConnectionStateReasonCodePendingAcceptance},
+		Refresh: StatusVPCPeeringConnectionActive(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpcPeeringConnection); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.Message)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVPCPeeringConnectionDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.VpcPeeringConnection, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			ec2.VpcPeeringConnectionStateReasonCodeActive,
+			ec2.VpcPeeringConnectionStateReasonCodeDeleting,
+			ec2.VpcPeeringConnectionStateReasonCodePendingAcceptance,
+		},
+		Target:  []string{},
+		Refresh: StatusVPCPeeringConnectionDeleted(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpcPeeringConnection); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.Message)))
 
 		return output, err
 	}
