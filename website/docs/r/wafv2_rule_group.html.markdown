@@ -14,7 +14,7 @@ Creates a WAFv2 Rule Group resource.
 
 ### Simple
 
-```hcl
+```terraform
 resource "aws_wafv2_rule_group" "example" {
   name     = "example-rule"
   scope    = "REGIONAL"
@@ -52,7 +52,7 @@ resource "aws_wafv2_rule_group" "example" {
 
 ### Complex
 
-```hcl
+```terraform
 resource "aws_wafv2_ip_set" "test" {
   name               = "test"
   scope              = "REGIONAL"
@@ -64,7 +64,7 @@ resource "aws_wafv2_regex_pattern_set" "test" {
   name  = "test"
   scope = "REGIONAL"
 
-  regular_expression_list {
+  regular_expression {
     regex_string = "one"
   }
 }
@@ -275,8 +275,8 @@ resource "aws_wafv2_rule_group" "example" {
   }
 
   tags = {
-    "Name" = "example-and-statement"
-    "Code" = "123456"
+    Name = "example-and-statement"
+    Code = "123456"
   }
 }
 ```
@@ -286,12 +286,21 @@ resource "aws_wafv2_rule_group" "example" {
 The following arguments are supported:
 
 * `capacity` - (Required, Forces new resource) The web ACL capacity units (WCUs) required for this rule group. See [here](https://docs.aws.amazon.com/waf/latest/APIReference/API_CreateRuleGroup.html#API_CreateRuleGroup_RequestSyntax) for general information and [here](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statements-list.html) for capacity specific information.
+* `custom_response_body` - (Optional) Defines custom response bodies that can be referenced by `custom_response` actions. See [Custom Response Body](#custom-response-body) below for details.
 * `description` - (Optional) A friendly description of the rule group.
 * `name` - (Required, Forces new resource) A friendly name of the rule group.
 * `rule` - (Optional) The rule blocks used to identify the web requests that you want to `allow`, `block`, or `count`. See [Rules](#rules) below for details.
 * `scope` - (Required, Forces new resource) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
-* `tags` - (Optional) An array of key:value pairs to associate with the resource.
+* `tags` - (Optional) An array of key:value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `visibility_config` - (Required) Defines and enables Amazon CloudWatch metrics and web request sample collection. See [Visibility Configuration](#visibility-configuration) below for details.
+
+### Custom Response Body
+
+Each `custom_response_body` block supports the following arguments:
+
+* `key` - (Required) A unique key identifying the custom response body. This is referenced by the `custom_response_body_key` argument in the [Custom Response](#custom-response) block.
+* `content` - (Required) The payload of the custom response.
+* `content_type` - (Required) The type of content in the payload that you are defining in the `content` argument. Valid values are `TEXT_PLAIN`, `TEXT_HTML`, or `APPLICATION_JSON`.
 
 ### Rules
 
@@ -300,6 +309,7 @@ Each `rule` supports the following arguments:
 * `action` - (Required) The action that AWS WAF should take on a web request when it matches the rule's statement. Settings at the `aws_wafv2_web_acl` level can override the rule action setting. See [Action](#action) below for details.
 * `name` - (Required, Forces new resource) A friendly name of the rule.
 * `priority` - (Required) If you define more than one Rule in a WebACL, AWS WAF evaluates each request against the `rules` in order based on the value of `priority`. AWS WAF processes rules with lower priority first.
+* `rule_label` - (Optional) Labels to apply to web requests that match the rule match statement. See [Rule Label](#rule-label) below for details.
 * `statement` - (Required) The AWS WAF processing statement for the rule, for example `byte_match_statement` or `geo_match_statement`. See [Statement](#statement) below for details.
 * `visibility_config` - (Required) Defines and enables Amazon CloudWatch metrics and web request sample collection. See [Visibility Configuration](#visibility-configuration) below for details.
 
@@ -307,11 +317,56 @@ Each `rule` supports the following arguments:
 
 The `action` block supports the following arguments:
 
-~> **NOTE**: One of `allow`, `block`, or `count`, expressed as an empty configuration block `{}`, is required when specifying an `action`
+~> **NOTE:** One of `allow`, `block`, or `count`, is required when specifying an `action`.
 
-* `allow` - (Optional) Instructs AWS WAF to allow the web request.
-* `block` - (Optional) Instructs AWS WAF to block the web request.
-* `count` - (Optional) Instructs AWS WAF to count the web request and allow it.
+* `allow` - (Optional) Instructs AWS WAF to allow the web request. See [Allow](#action) below for details.
+* `block` - (Optional) Instructs AWS WAF to block the web request. See [Block](#block) below for details.
+* `count` - (Optional) Instructs AWS WAF to count the web request and allow it. See [Count](#count) below for details.
+
+### Allow
+
+The `allow` block supports the following arguments:
+
+* `custom_request_handling` - (Optional) Defines custom handling for the web request. See [Custom Request Handling](#custom-request-handling) below for details.
+
+### Block
+
+The `block` block supports the following arguments:
+
+* `custom_response` - (Optional) Defines a custom response for the web request. See [Custom Response](#custom-response) below for details.
+
+### Count
+
+The `count` block supports the following arguments:
+
+* `custom_request_handling` - (Optional) Defines custom handling for the web request. See [Custom Request Handling](#custom-request-handling) below for details.
+
+### Custom Request Handling
+
+The `custom_request_handling` block supports the following arguments:
+
+* `insert_header` - (Required) The `insert_header` blocks used to define HTTP headers added to the request. See [Custom HTTP Header](#custom-http-header) below for details.
+
+### Custom Response
+
+The `custom_response` block supports the following arguments:
+
+* `custom_response_body_key` - (Optional) References the response body that you want AWS WAF to return to the web request client. This must reference a `key` defined in a `custom_response_body` block of this resource.
+* `response_code` - (Required) The HTTP status code to return to the client.
+* `response_header` - (Optional) The `response_header` blocks used to define the HTTP response headers added to the response. See [Custom HTTP Header](#custom-http-header) below for details.
+
+### Custom HTTP Header
+
+Each block supports the following arguments. Duplicate header names are not allowed:
+
+* `name` - The name of the custom header. For custom request header insertion, when AWS WAF inserts the header into the request, it prefixes this name `x-amzn-waf-`, to avoid confusion with the headers that are already in the request. For example, for the header name `sample`, AWS WAF inserts the header `x-amzn-waf-sample`.
+* `value` - The value of the custom header.
+
+### Rule Label
+
+Each block supports the following arguments:
+
+* `name` - The label string.
 
 ### Statement
 
@@ -324,6 +379,7 @@ The `statement` block supports the following arguments:
 * `and_statement` - (Optional) A logical rule statement used to combine other rule statements with AND logic. See [AND Statement](#and-statement) below for details.
 * `byte_match_statement` - (Optional) A rule statement that defines a string match search for AWS WAF to apply to web requests. See [Byte Match Statement](#byte-match-statement) below for details.
 * `geo_match_statement` - (Optional) A rule statement used to identify web requests based on country of origin. See [GEO Match Statement](#geo-match-statement) below for details.
+* `label_match_statement` - (Optional) A rule statement that defines a string match search against labels that have been added to the web request by rules that have already run in the web ACL. See [Label Match Statement](#label-match-statement) below for details.
 * `ip_set_reference_statement` - (Optional) A rule statement used to detect web requests coming from particular IP addresses or address ranges. See [IP Set Reference Statement](#ip-set-reference-statement) below for details.
 * `not_statement` - (Optional) A logical rule statement used to negate the results of another rule statement. See [NOT Statement](#not-statement) below for details.
 * `or_statement` - (Optional) A logical rule statement used to combine other rule statements with OR logic. See [OR Statement](#or-statement) below for details.
@@ -356,6 +412,14 @@ The `byte_match_statement` block supports the following arguments:
 The `geo_match_statement` block supports the following arguments:
 
 * `country_codes` - (Required) An array of two-character country codes, for example, [ "US", "CN" ], from the alpha-2 country ISO codes of the `ISO 3166` international standard. See the [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_GeoMatchStatement.html) for valid values.
+* `forwarded_ip_config` - (Optional) The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. See [Forwarded IP Config](#forwarded-ip-config) below for details.
+
+### Label Match Statement
+
+The `label_match_statement` block supports the following arguments:
+
+* `scope` - (Required) Specify whether you want to match using the label name or just the namespace. Valid values are `LABEL` or `NAMESPACE`.
+* `key` - (Required) The string to match against.
 
 ### IP Set Reference Statement
 
@@ -364,6 +428,7 @@ A rule statement used to detect web requests coming from particular IP addresses
 The `ip_set_reference_statement` block supports the following arguments:
 
 * `arn` - (Required) The Amazon Resource Name (ARN) of the IP Set that this statement references.
+* `ip_set_forwarded_ip_config` - (Optional) The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. See [IPSet Forwarded IP Config](#ipset-forwarded-ip-config) below for more details.
 
 ### NOT Statement
 
@@ -393,7 +458,7 @@ The `regex_pattern_set_reference_statement` block supports the following argumen
 
 ### Size Constraint Statement
 
-A rule statement that uses a comparison operator to compare a number of bytes against the size of a request component. AWS WAFv2 inspects up to the first 8192 bytes (8 KB) of a request body, and when inspecting the request URI Path, the slash `/` in 
+A rule statement that uses a comparison operator to compare a number of bytes against the size of a request component. AWS WAFv2 inspects up to the first 8192 bytes (8 KB) of a request body, and when inspecting the request URI Path, the slash `/` in
 the URI counts as one character.
 
 The `size_constraint_statement` block supports the following arguments:
@@ -427,7 +492,8 @@ The part of a web request that you want AWS WAF to inspect. Include the single `
 
 The `field_to_match` block supports the following arguments:
 
-~> **NOTE**: An empty configuration block `{}` should be used when specifying `all_query_arguments`, `body`, `method`, or `query_string` attributes
+~> **NOTE:** Only one of `all_query_arguments`, `body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified.
+An empty configuration block `{}` should be used when specifying `all_query_arguments`, `body`, `method`, or `query_string` attributes.
 
 * `all_query_arguments` - (Optional) Inspect all query arguments.
 * `body` - (Optional) Inspect the request body, which immediately follows the request headers.
@@ -436,6 +502,27 @@ The `field_to_match` block supports the following arguments:
 * `single_header` - (Optional) Inspect a single header. See [Single Header](#single-header) below for details.
 * `single_query_argument` - (Optional) Inspect a single query argument. See [Single Query Argument](#single-query-argument) below for details.
 * `uri_path` - (Optional) Inspect the request URI path. This is the part of a web request that identifies a resource, for example, `/images/daily-ad.jpg`.
+
+### Forwarded IP Config
+
+The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. Commonly, this is the X-Forwarded-For (XFF) header, but you can specify
+any header name. If the specified header isn't present in the request, AWS WAFv2 doesn't apply the rule to the web request at all.
+AWS WAFv2 only evaluates the first IP address found in the specified HTTP header.
+
+The `forwarded_ip_config` block supports the following arguments:
+
+* `fallback_behavior` - (Required) - The match status to assign to the web request if the request doesn't have a valid IP address in the specified position. Valid values include: `MATCH` or `NO_MATCH`.
+* `header_name` - (Required) - The name of the HTTP header to use for the IP address.
+
+### IPSet Forwarded IP Config
+
+The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. Commonly, this is the X-Forwarded-For (XFF) header, but you can specify any header name.
+
+The `ip_set_forwarded_ip_config` block supports the following arguments:
+
+* `fallback_behavior` - (Required) - The match status to assign to the web request if the request doesn't have a valid IP address in the specified position. Valid values include: `MATCH` or `NO_MATCH`.
+* `header_name` - (Required) - The name of the HTTP header to use for the IP address.
+* `position` - (Required) - The position in the header to search for the IP address. Valid values include: `FIRST`, `LAST`, or `ANY`. If `ANY` is specified and the header contains more than 10 IP addresses, AWS WAFv2 inspects the last 10.
 
 ### Single Header
 
@@ -458,7 +545,7 @@ The `single_query_argument` block supports the following arguments:
 The `text_transformation` block supports the following arguments:
 
 * `priority` - (Required) The relative processing order for multiple transformations that are defined for a rule statement. AWS WAF processes all transformations, from lowest priority to highest, before inspecting the transformed content.
-* `type` - (Required) The transformation to apply, you can specify the following types: `NONE`, `COMPRESS_WHITE_SPACE`, `HTML_ENTITY_DECODE`, `LOWERCASE`, `CMD_LINE`, `URL_DECODE`. See the [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_TextTransformation.html) for more details.
+* `type` - (Required) The transformation to apply, please refer to the Text Transformation [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_TextTransformation.html) for more details.
 
 ### Visibility Configuration
 
@@ -474,10 +561,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF rule group.
 * `arn` - The ARN of the WAF rule group.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-WAFv2 Rule Group can be imported using `ID/name/scope` e.g.
+WAFv2 Rule Group can be imported using `ID/name/scope` e.g.,
 
 ```
 $ terraform import aws_wafv2_rule_group.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL

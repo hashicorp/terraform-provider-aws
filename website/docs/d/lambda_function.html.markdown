@@ -12,13 +12,13 @@ Provides information about a Lambda Function.
 
 ## Example Usage
 
-```hcl
+```terraform
 variable "function_name" {
-  type = "string"
+  type = string
 }
 
 data "aws_lambda_function" "existing" {
-  function_name = "${var.function_name}"
+  function_name = var.function_name
 }
 ```
 
@@ -27,18 +27,21 @@ data "aws_lambda_function" "existing" {
 The following arguments are supported:
 
 * `function_name` - (Required) Name of the lambda function.
-* `qualifier` - (Optional) Alias name or version number of the lambda function. e.g. `$LATEST`, `my-alias`, or `1`
+* `qualifier` - (Optional) Alias name or version number of the lambda functionE.g., `$LATEST`, `my-alias`, or `1`
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
+* `architectures` - The instruction set architecture for the Lambda function.
 * `arn` - Unqualified (no `:QUALIFIER` or `:VERSION` suffix) Amazon Resource Name (ARN) identifying your Lambda Function. See also `qualified_arn`.
+* `code_signing_config_arn` - Amazon Resource Name (ARN) for a Code Signing Configuration.
 * `dead_letter_config` - Configure the function's *dead letter queue*.
 * `description` - Description of what your Lambda Function does.
 * `environment` - The Lambda environment's configuration settings.
 * `file_system_config` - The connection settings for an Amazon EFS file system.
 * `handler` - The function entrypoint in your code.
+* `image_uri` - The URI of the container image.
 * `invoke_arn` - The ARN to be used for invoking Lambda Function from API Gateway.
 * `kms_key_arn` - The ARN for the KMS encryption key.
 * `last_modified` - The date this resource was last modified.
@@ -47,7 +50,9 @@ In addition to all arguments above, the following attributes are exported:
 * `qualified_arn` - Qualified (`:QUALIFIER` or `:VERSION` suffix) Amazon Resource Name (ARN) identifying your Lambda Function. See also `arn`.
 * `reserved_concurrent_executions` - The amount of reserved concurrent executions for this lambda function or `-1` if unreserved.
 * `role` - IAM role attached to the Lambda Function.
-* `runtime` - The runtime environment for the Lambda function..
+* `runtime` - The runtime environment for the Lambda function.
+* `signing_job_arn` - The Amazon Resource Name (ARN) of a signing job.
+* `signing_profile_version_arn` - The Amazon Resource Name (ARN) for a signing profile version.
 * `source_code_hash` - Base64-encoded representation of raw SHA-256 sum of the zip file.
 * `source_code_size` - The size in bytes of the function .zip file.
 * `timeout` - The function execution time at which Lambda should terminate the function.

@@ -17,14 +17,14 @@ This data source allows to find a Hosted Zone ID given Hosted Zone name and cert
 The following example shows how to get a Hosted Zone from its name and from this data how to create a Record Set.
 
 
-```hcl
+```terraform
 data "aws_route53_zone" "selected" {
   name         = "test.com."
   private_zone = true
 }
 
 resource "aws_route53_record" "www" {
-  zone_id = "${data.aws_route53_zone.selected.zone_id}"
+  zone_id = data.aws_route53_zone.selected.zone_id
   name    = "www.${data.aws_route53_zone.selected.name}"
   type    = "A"
   ttl     = "300"
@@ -54,9 +54,10 @@ the selected Hosted Zone.
 
 The following attribute is additionally exported:
 
+* `arn` - The Amazon Resource Name (ARN) of the Hosted Zone.
 * `caller_reference` - Caller Reference of the Hosted Zone.
 * `comment` - The comment field of the Hosted Zone.
 * `name_servers` - The list of DNS name servers for the Hosted Zone.
 * `resource_record_set_count` - The number of Record Set in the Hosted Zone.
-* `linked_service_principal` - The service that created the Hosted Zone (e.g. `servicediscovery.amazonaws.com`).
-* `linked_service_description` - The description provided by the service that created the Hosted Zone (e.g. `arn:aws:servicediscovery:us-east-1:1234567890:namespace/ns-xxxxxxxxxxxxxxxx`).
+* `linked_service_principal` - The service that created the Hosted Zone (e.g., `servicediscovery.amazonaws.com`).
+* `linked_service_description` - The description provided by the service that created the Hosted Zone (e.g., `arn:aws:servicediscovery:us-east-1:1234567890:namespace/ns-xxxxxxxxxxxxxxxx`).

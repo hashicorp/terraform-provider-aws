@@ -16,31 +16,31 @@ Manages a CloudFormation StackSet Instance. Instances are managed in the account
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_cloudformation_stack_set_instance" "example" {
   account_id     = "123456789012"
   region         = "us-east-1"
-  stack_set_name = "${aws_cloudformation_stack_set.example.name}"
+  stack_set_name = aws_cloudformation_stack_set.example.name
 }
 ```
 
 ### Example IAM Setup in Target Account
 
-```hcl
+```terraform
 data "aws_iam_policy_document" "AWSCloudFormationStackSetExecutionRole_assume_role_policy" {
   statement {
     actions = ["sts:AssumeRole"]
     effect  = "Allow"
 
     principals {
-      identifiers = ["${aws_iam_role.AWSCloudFormationStackSetAdministrationRole.arn}"]
+      identifiers = [aws_iam_role.AWSCloudFormationStackSetAdministrationRole.arn]
       type        = "AWS"
     }
   }
 }
 
 resource "aws_iam_role" "AWSCloudFormationStackSetExecutionRole" {
-  assume_role_policy = "${data.aws_iam_policy_document.AWSCloudFormationStackSetExecutionRole_assume_role_policy.json}"
+  assume_role_policy = data.aws_iam_policy_document.AWSCloudFormationStackSetExecutionRole_assume_role_policy.json
   name               = "AWSCloudFormationStackSetExecutionRole"
 }
 
@@ -61,8 +61,21 @@ data "aws_iam_policy_document" "AWSCloudFormationStackSetExecutionRole_MinimumEx
 
 resource "aws_iam_role_policy" "AWSCloudFormationStackSetExecutionRole_MinimumExecutionPolicy" {
   name   = "MinimumExecutionPolicy"
-  policy = "${data.aws_iam_policy_document.AWSCloudFormationStackSetExecutionRole_MinimumExecutionPolicy.json}"
-  role   = "${aws_iam_role.AWSCloudFormationStackSetExecutionRole.name}"
+  policy = data.aws_iam_policy_document.AWSCloudFormationStackSetExecutionRole_MinimumExecutionPolicy.json
+  role   = aws_iam_role.AWSCloudFormationStackSetExecutionRole.name
+}
+```
+
+### Example Deployment across Organizations account
+
+```terraform
+resource "aws_cloudformation_stack_set_instance" "example" {
+  deployment_targets {
+    organizational_unit_ids = [aws_organizations_organization.example.roots[0].id]
+  }
+
+  region         = "us-east-1"
+  stack_set_name = aws_cloudformation_stack_set.example.name
 }
 ```
 
@@ -72,20 +85,28 @@ The following arguments are supported:
 
 * `stack_set_name` - (Required) Name of the StackSet.
 * `account_id` - (Optional) Target AWS Account ID to create a Stack based on the StackSet. Defaults to current account.
+* `deployment_targets` - (Optional) The AWS Organizations accounts to which StackSets deploys. StackSets doesn't deploy stack instances to the organization management account, even if the organization management account is in your organization or in an OU in your organization. Drift detection is not possible for this argument. See [deployment_targets](#deployment_targets-argument-reference) below.
 * `parameter_overrides` - (Optional) Key-value map of input parameters to override from the StackSet for this Instance.
 * `region` - (Optional) Target AWS Region to create a Stack based on the StackSet. Defaults to current region.
 * `retain_stack` - (Optional) During Terraform resource destroy, remove Instance from StackSet while keeping the Stack and its associated resources. Must be enabled in Terraform state _before_ destroy operation to take effect. You cannot reassociate a retained Stack or add an existing, saved Stack to a new StackSet. Defaults to `false`.
+
+### `deployment_targets` Argument Reference
+
+The `deployment_targets` configuration block supports the following arguments:
+
+*`organizational_unit_ids` - (Optional) The organization root ID or organizational unit (OU) IDs to which StackSets deploys.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - StackSet name, target AWS account ID, and target AWS region separated by commas (`,`)
+* `organizational_unit_id` - The organization root ID or organizational unit (OU) IDs specified for `deployment_targets`.
 * `stack_id` - Stack identifier
 
 ## Timeouts
 
-`aws_cloudformation_stack_set_instance` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+`aws_cloudformation_stack_set_instance` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 * `create` - (Default `30m`) How long to wait for a Stack to be created.
 * `update` - (Default `30m`) How long to wait for a Stack to be updated.
@@ -93,7 +114,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudFormation StackSet Instances can be imported using the StackSet name, target AWS account ID, and target AWS region separated by commas (`,`) e.g.
+CloudFormation StackSet Instances can be imported using the StackSet name, target AWS account ID, and target AWS region separated by commas (`,`) e.g.,
 
 ```
 $ terraform import aws_cloudformation_stack_set_instance.example example,123456789012,us-east-1

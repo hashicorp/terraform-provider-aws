@@ -12,7 +12,7 @@ Provides an EC2 launch template resource. Can be used to create instances or aut
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_launch_template" "foo" {
   name = "foo"
 
@@ -75,6 +75,7 @@ resource "aws_launch_template" "foo" {
     http_endpoint               = "enabled"
     http_tokens                 = "required"
     http_put_response_hop_limit = 1
+    instance_metadata_tags      = "enabled"
   }
 
   monitoring {
@@ -113,7 +114,7 @@ The following arguments are supported:
 * `name_prefix` - Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - Description of the launch template.
 * `default_version` - Default Version of the launch template.
-* `update_default_version` - Whether to update Default Version each update. Conflicts with `default_version`. 
+* `update_default_version` - Whether to update Default Version each update. Conflicts with `default_version`.
 * `block_device_mappings` - Specify volumes to attach to the instance besides the volumes specified by the AMI.
   See [Block Devices](#block-devices) below for details.
 * `capacity_reservation_specification` - Targeting for EC2 capacity reservations. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
@@ -145,11 +146,12 @@ The following arguments are supported:
 * `ram_disk_id` - The ID of the RAM disk.
 * `security_group_names` - A list of security group names to associate with. If you are creating Instances in a VPC, use
   `vpc_security_group_ids` instead.
-* `vpc_security_group_ids` - A list of security group IDs to associate with.
+* `vpc_security_group_ids` - A list of security group IDs to associate with. Conflicts with `network_interfaces.security_groups`
 * `tag_specifications` - The tags to apply to the resources during launch. See [Tag Specifications](#tag-specifications) below for more details.
-* `tags` - (Optional) A map of tags to assign to the launch template.
+* `tags` - (Optional) A map of tags to assign to the launch template. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `user_data` - The Base64-encoded user data to provide when launching the instance.
 * `hibernation_options` - The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
+* `enclave_options` - (Optional) Enable Nitro Enclaves on launched instances. See [Enclave Options](#enclave-options) below for more details.
 
 ### Block devices
 
@@ -166,7 +168,7 @@ Each `block_device_mappings` supports the following:
 * `no_device` - Suppresses the specified device included in the AMI's block device mapping.
 * `virtual_name` - The [Instance Store Device
   Name](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#InstanceStoreDeviceNames)
-  (e.g. `"ephemeral0"`).
+  (e.g., `"ephemeral0"`).
 
 The `ebs` block supports the following:
 
@@ -175,12 +177,13 @@ The `ebs` block supports the following:
   on the volume (Default: `false`). Cannot be used with `snapshot_id`.
 * `iops` - The amount of provisioned
   [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
-  This must be set with a `volume_type` of `"io1"`.
+  This must be set with a `volume_type` of `"io1/io2"`.
 * `kms_key_id` - The ARN of the AWS Key Management Service (AWS KMS) customer master key (CMK) to use when creating the encrypted volume.
  `encrypted` must be set to `true` when this is set.
 * `snapshot_id` - The Snapshot ID to mount.
+* `throughput` - The throughput to provision for a `gp3` volume in MiB/s (specified as an integer, e.g., 500), with a maximum of 1,000 MiB/s.
 * `volume_size` - The size of the volume in gigabytes.
-* `volume_type` - The type of volume. Can be `"standard"`, `"gp2"`, or `"io1"`. (Default: `"standard"`).
+* `volume_type` - The volume type. Can be `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1` or `st1` (Default: `gp2`).
 
 ### Capacity Reservation Specification
 
@@ -270,8 +273,10 @@ The metadata options for the instances.
 The `metadata_options` block supports the following:
 
 * `http_endpoint` - (Optional) Whether the metadata service is available. Can be `"enabled"` or `"disabled"`. (Default: `"enabled"`).
-* `http_tokens` - (Optional) Whether or not the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2_. Can be `"optional"` or `"required"`. (Default: `"optional"`).
+* `http_tokens` - (Optional) Whether or not the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2 (IMDSv2)_. Can be `"optional"` or `"required"`. (Default: `"optional"`).
 * `http_put_response_hop_limit` - (Optional) The desired HTTP PUT response hop limit for instance metadata requests. The larger the number, the further instance metadata requests can travel. Can be an integer from `1` to `64`. (Default: `1`).
+* `http_protocol_ipv6` - (Optional) Enables or disables the IPv6 endpoint for the instance metadata service. (Default: `disabled`).
+* `instance_metadata_tags` - (optional) Enables or disables access to instance tags from the instance metadata service. (Default: `disabled`).
 
 For more information, see the documentation on the [Instance Metadata Service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html).
 
@@ -289,13 +294,16 @@ Check limitations for autoscaling group in [Creating an Auto Scaling Group Using
 
 Each `network_interfaces` block supports the following:
 
+* `associate_carrier_ip_address` - Associate a Carrier IP address with `eth0` for a new network interface. Use this option when you launch an instance in a Wavelength Zone and want to associate a Carrier IP address with the network interface. Boolean value.
 * `associate_public_ip_address` - Associate a public ip address with the network interface.  Boolean value.
 * `delete_on_termination` - Whether the network interface should be destroyed on instance termination. Defaults to `false` if not set.
 * `description` - Description of the network interface.
 * `device_index` - The integer index of the network interface attachment.
+* `interface_type` - The type of network interface. To create an Elastic Fabric Adapter (EFA), specify `efa`.
 * `ipv6_addresses` - One or more specific IPv6 addresses from the IPv6 CIDR block range of your subnet. Conflicts with `ipv6_address_count`
 * `ipv6_address_count` - The number of IPv6 addresses to assign to a network interface. Conflicts with `ipv6_addresses`
 * `network_interface_id` - The ID of the network interface to attach.
+* `network_card_index` - The index of the network card. Some instance types support multiple network cards. The primary network interface must be assigned to network card index 0. The default is network card index 0.
 * `private_ip_address` - The primary private IPv4 address.
 * `ipv4_address_count` - The number of secondary private IPv4 addresses to assign to a network interface. Conflicts with `ipv4_addresses`
 * `ipv4_addresses` - One or more private IPv4 addresses to associate. Conflicts with `ipv4_address_count`
@@ -312,6 +320,7 @@ The `placement` block supports the following:
 * `availability_zone` - The Availability Zone for the instance.
 * `group_name` - The name of the placement group for the instance.
 * `host_id` - The ID of the Dedicated Host for the instance.
+* `host_resource_group_arn` - The ARN of the Host Resource Group in which to launch instances.
 * `spread_domain` - Reserved for future use.
 * `tenancy` - The tenancy of the instance (if the instance is running in a VPC). Can be `default`, `dedicated`, or `host`.
 * `partition_number` - The number of the partition the instance should launch in. Valid only if the placement group strategy is set to partition.
@@ -322,27 +331,36 @@ The `hibernation_options` block supports the following:
 
 * `configured` - If set to `true`, the launched EC2 instance will hibernation enabled.
 
+### Enclave Options
+
+The `enclave_options` block supports the following:
+
+* `enabled` - If set to `true`, Nitro Enclaves will be enabled on the instance.
+
+For more information, see the documentation on [Nitro Enclaves](https://docs.aws.amazon.com/enclaves/latest/user/nitro-enclave.html).
+
 ### Tag Specifications
 
-The tags to apply to the resources during launch. You can tag instances and volumes. More information can be found in the [EC2 API documentation](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_LaunchTemplateTagSpecificationRequest.html).
+The tags to apply to the resources during launch. You can tag instances, volumes, elastic GPUs and spot instance requests. More information can be found in the [EC2 API documentation](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_LaunchTemplateTagSpecificationRequest.html).
 
 Each `tag_specifications` block supports the following:
 
-* `resource_type` - The type of resource to tag. Valid values are `instance` and `volume`.
+* `resource_type` - The type of resource to tag.
 * `tags` - A map of tags to assign to the resource.
 
 
 ## Attributes Reference
 
-The following attributes are exported along with all argument references:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the launch template.
 * `id` - The ID of the launch template.
 * `latest_version` - The latest version of the launch template.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-Launch Templates can be imported using the `id`, e.g.
+Launch Templates can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_launch_template.web lt-12345678

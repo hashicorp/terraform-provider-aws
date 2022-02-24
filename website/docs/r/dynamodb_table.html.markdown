@@ -10,14 +10,14 @@ description: |-
 
 Provides a DynamoDB table resource
 
-~> **Note:** It is recommended to use `lifecycle` [`ignore_changes`](/docs/configuration/resources.html#ignore_changes) for `read_capacity` and/or `write_capacity` if there's [autoscaling policy](/docs/providers/aws/r/appautoscaling_policy.html) attached to the table.
+~> **Note:** It is recommended to use `lifecycle` [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) for `read_capacity` and/or `write_capacity` if there's [autoscaling policy](/docs/providers/aws/r/appautoscaling_policy.html) attached to the table.
 
 ## Example Usage
 
 The following dynamodb table description models the table and GSI shown
 in the [AWS SDK example documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.html)
 
-```hcl
+```terraform
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
   name           = "GameScores"
   billing_mode   = "PROVISIONED"
@@ -67,7 +67,7 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 
 This resource implements support for [DynamoDB Global Tables V2 (version 2019.11.21)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V2.html) via `replica` configuration blocks. For working with [DynamoDB Global Tables V1 (version 2017.11.29)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V1.html), see the [`aws_dynamodb_global_table` resource](/docs/providers/aws/r/dynamodb_global_table.html).
 
-```hcl
+```terraform
 resource "aws_dynamodb_table" "example" {
   name             = "example"
   hash_key         = "TestTableHashKey"
@@ -113,16 +113,20 @@ definition after you have created the resource.
 * `global_secondary_index` - (Optional) Describe a GSI for the table;
   subject to the normal limits on the number of GSIs, projected
 attributes, etc.
+* `point_in_time_recovery` - (Optional) Enable point-in-time recovery options.
 * `replica` - (Optional) Configuration block(s) with [DynamoDB Global Tables V2 (version 2019.11.21)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V2.html) replication configurations. Detailed below.
+* `restore_source_name` - (Optional) The name of the table to restore. Must match the name of an existing table.
+* `restore_to_latest_time` - (Optional) If set, restores table to the most recent point-in-time recovery point.
+* `restore_date_time` - (Optional) The time of the point-in-time recovery point to restore.
 * `stream_enabled` - (Optional) Indicates whether Streams are to be enabled (true) or disabled (false).
 * `stream_view_type` - (Optional) When an item in the table is modified, StreamViewType determines what information is written to the table's stream. Valid values are `KEYS_ONLY`, `NEW_IMAGE`, `OLD_IMAGE`, `NEW_AND_OLD_IMAGES`.
 * `server_side_encryption` - (Optional) Encryption at rest options. AWS DynamoDB tables are automatically encrypted at rest with an AWS owned Customer Master Key if this argument isn't specified.
-* `tags` - (Optional) A map of tags to populate on the created table.
-* `point_in_time_recovery` - (Optional) Point-in-time recovery options.
+* `table_class` - (Optional) The storage class of the table. Valid values are `STANDARD` and `STANDARD_INFREQUENT_ACCESS`.
+* `tags` - (Optional) A map of tags to populate on the created table. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 10 mins) Used when creating the table
 * `update` - (Defaults to 60 mins) Used when updating the table configuration and reset for each individual Global Secondary Index and Replica update
@@ -165,6 +169,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 The `replica` configuration block supports the following arguments:
 
 * `region_name` - (Required) Region name of the replica.
+* `kms_key_arn` - (Optional) The ARN of the CMK that should be used for the AWS KMS encryption.
 
 #### `server_side_encryption`
 
@@ -208,10 +213,11 @@ In addition to all arguments above, the following attributes are exported:
   a unique identifier for the stream on its own. However, the combination of AWS customer ID,
   table name and this field is guaranteed to be unique.
   It can be used for creating CloudWatch Alarms. Only available when `stream_enabled = true`
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-DynamoDB tables can be imported using the `name`, e.g.
+DynamoDB tables can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_dynamodb_table.basic-dynamodb-table GameScores

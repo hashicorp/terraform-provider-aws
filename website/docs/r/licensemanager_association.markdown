@@ -14,7 +14,7 @@ Provides a License Manager association.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ami" "example" {
   most_recent = true
   owners      = ["amazon"]
@@ -26,7 +26,7 @@ data "aws_ami" "example" {
 }
 
 resource "aws_instance" "example" {
-  ami           = "${data.aws_ami.example.id}"
+  ami           = data.aws_ami.example.id
   instance_type = "t2.micro"
 }
 
@@ -36,8 +36,8 @@ resource "aws_licensemanager_license_configuration" "example" {
 }
 
 resource "aws_licensemanager_association" "example" {
-  license_configuration_arn = "${aws_licensemanager_license_configuration.example.arn}"
-  resource_arn              = "${aws_instance.example.arn}"
+  license_configuration_arn = aws_licensemanager_license_configuration.example.arn
+  resource_arn              = aws_instance.example.arn
 }
 ```
 
@@ -56,7 +56,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-License configurations can be imported in the form `resource_arn,license_configuration_arn`, e.g.
+License configurations can be imported in the form `resource_arn,license_configuration_arn`, e.g.,
 
 ```
 $ terraform import aws_licensemanager_association.example arn:aws:ec2:eu-west-1:123456789012:image/ami-123456789abcdef01,arn:aws:license-manager:eu-west-1:123456789012:license-configuration:lic-0123456789abcdef0123456789abcdef

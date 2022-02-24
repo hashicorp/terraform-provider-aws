@@ -12,11 +12,11 @@ Provides a CloudWatch Log Metric Filter resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_cloudwatch_log_metric_filter" "yada" {
   name           = "MyAppAccessCount"
   pattern        = ""
-  log_group_name = "${aws_cloudwatch_log_group.dada.name}"
+  log_group_name = aws_cloudwatch_log_group.dada.name
 
   metric_transformation {
     name      = "EventCount"
@@ -38,15 +38,16 @@ The following arguments are supported:
 * `pattern` - (Required) A valid [CloudWatch Logs filter pattern](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/FilterAndPatternSyntax.html)
   for extracting metric data out of ingested log events.
 * `log_group_name` - (Required) The name of the log group to associate the metric filter with.
-* `metric_transformation` - (Required) A block defining collection of information
-	needed to define how metric data gets emitted. See below.
+* `metric_transformation` - (Required) A block defining collection of information needed to define how metric data gets emitted. See below.
 
 The `metric_transformation` block supports the following arguments:
 
-* `name` - (Required) The name of the CloudWatch metric to which the monitored log information should be published (e.g. `ErrorCount`)
+* `name` - (Required) The name of the CloudWatch metric to which the monitored log information should be published (e.g., `ErrorCount`)
 * `namespace` - (Required) The destination namespace of the CloudWatch metric.
 * `value` - (Required) What to publish to the metric. For example, if you're counting the occurrences of a particular term like "Error", the value will be "1" for each occurrence. If you're counting the bytes transferred the published value will be the value in the log event.
-* `default_value` - (Optional) The value to emit when a filter pattern does not match a log event.
+* `default_value` - (Optional) The value to emit when a filter pattern does not match a log event. Conflicts with `dimensions`.
+* `dimensions` - (Optional) Map of fields to use as dimensions for the metric. Up to 3 dimensions are allowed. Conflicts with `default_value`.
+* `unit` - (Optional) The unit to assign to the metric. If you omit this, the unit is set as `None`.
 
 ## Attributes Reference
 
@@ -56,7 +57,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudWatch Log Metric Filter can be imported using the `log_group_name:name`, e.g.
+CloudWatch Log Metric Filter can be imported using the `log_group_name:name`, e.g.,
 
 ```
 $ terraform import aws_cloudwatch_log_metric_filter.test /aws/lambda/function:test

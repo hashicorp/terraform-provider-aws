@@ -24,10 +24,10 @@ The Terraform state associated with existing resources will automatically be mig
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_appmesh_virtual_router" "serviceb" {
   name      = "serviceB"
-  mesh_name = "${aws_appmesh_mesh.simple.id}"
+  mesh_name = aws_appmesh_mesh.simple.id
 
   spec {
     listener {
@@ -44,10 +44,11 @@ resource "aws_appmesh_virtual_router" "serviceb" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name to use for the virtual router.
-* `mesh_name` - (Required) The name of the service mesh in which to create the virtual router.
+* `name` - (Required) The name to use for the virtual router. Must be between 1 and 255 characters in length.
+* `mesh_name` - (Required) The name of the service mesh in which to create the virtual router. Must be between 1 and 255 characters in length.
+* `mesh_owner` - (Optional) The AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `spec` - (Required) The virtual router specification to apply.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `spec` object supports the following:
 
@@ -61,7 +62,7 @@ The `listener` object supports the following:
 The `port_mapping` object supports the following:
 
 * `port` - (Required) The port used for the port mapping.
-* `protocol` - (Required) The protocol used for the port mapping. Valid values are `http` and `tcp`.
+* `protocol` - (Required) The protocol used for the port mapping. Valid values are `http`,`http2`, `tcp` and `grpc`.
 
 ## Attributes Reference
 
@@ -71,12 +72,16 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the virtual router.
 * `created_date` - The creation date of the virtual router.
 * `last_updated_date` - The last update date of the virtual router.
+* `resource_owner` - The resource owner's AWS account ID.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
 App Mesh virtual routers can be imported using `mesh_name` together with the virtual router's `name`,
-e.g.
+e.g.,
 
 ```
 $ terraform import aws_appmesh_virtual_router.serviceb simpleapp/serviceB
 ```
+
+[1]: /docs/providers/aws/index.html

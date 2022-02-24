@@ -11,12 +11,13 @@ description: |-
 Provides an SSM Document resource
 
 ~> **NOTE on updating SSM documents:** Only documents with a schema version of 2.0
-or greater can update their content once created, see [SSM Schema Features][1]. To update a document with an older
-schema version you must recreate the resource.
+or greater can update their content once created, see [SSM Schema Features][1]. To update a document with an older schema version you must recreate the resource. Not all document types support a schema version of 2.0 or greater. Refer to [SSM document schema features and examples][2] for information about which schema versions are supported for the respective `document_type`.
 
 ## Example Usage
 
-```hcl
+### Create an ssm document in JSON format
+
+```terraform
 resource "aws_ssm_document" "foo" {
   name          = "test_document"
   document_type = "Command"
@@ -43,6 +44,28 @@ DOC
 }
 ```
 
+### Create an ssm document in YAML format
+
+```terraform
+resource "aws_ssm_document" "foo" {
+  name            = "test_document"
+  document_format = "YAML"
+  document_type   = "Command"
+
+  content = <<DOC
+schemaVersion: '1.2'
+description: Check ip configuration of a Linux instance.
+parameters: {}
+runtimeConfig:
+  'aws:runShellScript':
+    properties:
+      - id: '0.aws:runShellScript'
+        runCommand:
+          - ifconfig
+DOC
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -54,7 +77,8 @@ The following arguments are supported:
 * `document_type` - (Required) The type of the document. Valid document types include: `Automation`, `Command`, `Package`, `Policy`, and `Session`
 * `permissions` - (Optional) Additional Permissions to attach to the document. See [Permissions](#permissions) below for details.
 * `target_type` - (Optional) The target type which defines the kinds of resources the document can run on. For example, /AWS::EC2::Instance. For a list of valid resource types, see AWS Resource Types Reference (http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
-* `tags` - (Optional) A map of tags to assign to the object.
+* `tags` - (Optional) A map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `version_name` - (Optional) A field specifying the version of the artifact you are creating with the document. For example, "Release 12, Update 6". This value is unique across all versions of a document and cannot be changed for an existing document version.
 
 ## attachments_source
 
@@ -80,8 +104,10 @@ In addition to all arguments above, the following attributes are exported:
 * `status` - "Creating", "Active" or "Deleting". The current status of the document.
 * `parameter` - The parameters that are available to this document.
 * `platform_types` - A list of OS platforms compatible with this SSM document, either "Windows" or "Linux".
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 [1]: http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-ssm-docs.html#document-schemas-features
+[2]: https://docs.aws.amazon.com/systems-manager/latest/userguide/document-schemas-features.html
 
 ## Permissions
 
@@ -96,15 +122,15 @@ The permissions mapping supports the following:
 
 ## Import
 
-SSM Documents can be imported using the name, e.g.
+SSM Documents can be imported using the name, e.g.,
 
 ```
 $ terraform import aws_ssm_document.example example
 ```
 
-The `attachments_source` argument does not have an SSM API method for reading the attachment information detail after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](/docs/configuration/resources.html#ignore_changes) to hide the difference, e.g.
+The `attachments_source` argument does not have an SSM API method for reading the attachment information detail after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.,
 
-```hcl
+```terraform
 resource "aws_ssm_document" "test" {
   name          = "test_document"
   document_type = "Package"
@@ -116,7 +142,7 @@ resource "aws_ssm_document" "test" {
 
   # There is no AWS SSM API for reading attachments_source info directly
   lifecycle {
-    ignore_changes = ["attachments_source"]
+    ignore_changes = [attachments_source]
   }
 }
 ```

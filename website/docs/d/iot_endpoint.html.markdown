@@ -12,7 +12,7 @@ Returns a unique endpoint specific to the AWS account making the call.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_iot_endpoint" "example" {}
 
 resource "kubernetes_pod" "agent" {
@@ -25,12 +25,10 @@ resource "kubernetes_pod" "agent" {
       image = "gcr.io/my-project/image-name"
       name  = "image-name"
 
-      env = [
-        {
-          name  = "IOT_ENDPOINT"
-          value = "${data.aws_iot_endpoint.example.endpoint_address}"
-        },
-      ]
+      env {
+        name  = "IOT_ENDPOINT"
+        value = data.aws_iot_endpoint.example.endpoint_address
+      }
     }
   }
 }
@@ -38,7 +36,7 @@ resource "kubernetes_pod" "agent" {
 
 ## Argument Reference
 
-* `endpoint_type` - (Optional) Endpoint type. Valid values: `iot:CredentialProvider`, `iot:Data`, `iot:Data-ATS`, `iot:Job`.
+* `endpoint_type` - (Optional) Endpoint type. Valid values: `iot:CredentialProvider`, `iot:Data`, `iot:Data-ATS`, `iot:Jobs`.
 
 ## Attributes Reference
 
@@ -47,4 +45,4 @@ resource "kubernetes_pod" "agent" {
     * `iot:CredentialsProvider`: `IDENTIFIER.credentials.iot.REGION.amazonaws.com`
     * `iot:Data`: `IDENTIFIER.iot.REGION.amazonaws.com`
     * `iot:Data-ATS`: `IDENTIFIER-ats.iot.REGION.amazonaws.com`
-    * `iot:Job`: `IDENTIFIER.jobs.iot.REGION.amazonaws.com`
+    * `iot:Jobs`: `IDENTIFIER.jobs.iot.REGION.amazonaws.com`
