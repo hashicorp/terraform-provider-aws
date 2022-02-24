@@ -1510,6 +1510,9 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		Route53DomainsConn: route53domains.NewFromConfig(cfg, func(o *route53domains.Options) {
 			// TODO How to override endpoint?
 			// route53domains.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Route53Domains])})),
+			if endpoint := c.Endpoints[Route53Domains]; endpoint != "" {
+				o.EndpointResolver = route53domains.EndpointResolverFromURL(endpoint)
+			}
 		}),
 		Route53RecoveryControlConfigConn: route53recoverycontrolconfig.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Route53RecoveryControlConfig])})),
 		Route53RecoveryReadinessConn:     route53recoveryreadiness.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Route53RecoveryReadiness])})),
