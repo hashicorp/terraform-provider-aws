@@ -3651,6 +3651,39 @@ func TestAccEC2Instance_UserData_update(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_UserData_stringToEncodedString(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigWithUserData(rName, "hello world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+				),
+			},
+			{
+				Config: testAccInstanceConfigWithUserDataBase64Encoded(rName, "new world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data"},
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_UserData_emptyStringToUnspecified(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -4428,6 +4461,21 @@ resource "aws_instance" "test" {
 
   instance_type = "t2.small"
   user_data     = %[1]q
+}
+`, userData))
+}
+
+func testAccInstanceConfigWithUserDataBase64Encoded(rName, userData string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami       = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  subnet_id = aws_subnet.test.id
+
+  instance_type = "t2.small"
+  user_data     = base64encode(%[1]q)
 }
 `, userData))
 }

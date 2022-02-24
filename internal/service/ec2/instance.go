@@ -1452,7 +1452,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			// Decode so the AWS SDK doesn't double encode
 			userData, err := base64.StdEncoding.DecodeString(d.Get("user_data").(string))
 			if err != nil {
-				log.Printf("[DEBUG] Instance (%s) user_data not decoded", d.Id())
+				log.Printf("[DEBUG] Instance (%s) user_data not base64 decoded", d.Id())
 				userData = []byte(d.Get("user_data").(string))
 			}
 
@@ -1475,7 +1475,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			// Decode so the AWS SDK doesn't double encode
 			userData, err := base64.StdEncoding.DecodeString(d.Get("user_data_base64").(string))
 			if err != nil {
-				log.Printf("[DEBUG] Instance (%s) user_data_base64 not decoded", d.Id())
+				log.Printf("[DEBUG] Instance (%s) user_data_base64 not base64 decoded", d.Id())
 				userData = []byte(d.Get("user_data_base64").(string))
 			}
 
