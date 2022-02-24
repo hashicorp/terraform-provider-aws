@@ -4,9 +4,10 @@ go 1.17
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7
-	github.com/aws/aws-sdk-go v1.42.53
+	github.com/aws/aws-sdk-go v1.43.3
 	github.com/beevik/etree v1.1.0
-	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.15.0
+	github.com/google/go-cmp v0.5.7
+	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.16.0
 	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.8
 	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.9
 	github.com/hashicorp/awspolicyequivalence v1.5.0
@@ -48,7 +49,6 @@ require (
 	github.com/evanphx/json-patch v0.5.2 // indirect
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/golang/protobuf v1.4.2 // indirect
-	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-checkpoint v0.5.0 // indirect
 	github.com/hashicorp/go-hclog v0.16.1 // indirect

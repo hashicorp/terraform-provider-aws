@@ -427,6 +427,43 @@ func TestAccImageBuilderImagePipeline_Schedule_scheduleExpression(t *testing.T) 
 	})
 }
 
+func TestAccImageBuilderImagePipeline_Schedule_timezone(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckImagePipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImagePipelineScheduleTimezoneConfig(rName, "cron(1 0 * * ? *)", "Etc/UTC"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImagePipelineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(1 0 * * ? *)"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.timezone", "Etc/UTC"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccImagePipelineScheduleTimezoneConfig(rName, "cron(1 0 * * ? *)", "America/Los_Angeles"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImagePipelineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(1 0 * * ? *)"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.timezone", "America/Los_Angeles"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccImageBuilderImagePipeline_status(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_pipeline.test"
@@ -896,6 +933,22 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 `, rName, scheduleExpression))
 }
 
+func testAccImagePipelineScheduleTimezoneConfig(rName string, scheduleExpression string, timezone string) string {
+	return acctest.ConfigCompose(
+		testAccImagePipelineBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_image_pipeline" "test" {
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+  name                             = %[1]q
+
+  schedule {
+    schedule_expression = %[2]q
+    timezone            = %[3]q
+  }
+}
+`, rName, scheduleExpression, timezone))
+}
 func testAccImagePipelineStatusConfig(rName string, status string) string {
 	return acctest.ConfigCompose(
 		testAccImagePipelineBaseConfig(rName),

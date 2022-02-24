@@ -224,12 +224,16 @@ func init() {
 		F:    sweepTransitGatewayPeeringAttachments,
 	})
 
+	resource.AddTestSweepers("aws_ec2_transit_gateway_multicast_domain", &resource.Sweeper{
+		Name: "aws_ec2_transit_gateway_multicast_domain",
+		F:    sweepTransitGatewayMulticastDomains,
+	})
+
 	resource.AddTestSweepers("aws_ec2_transit_gateway", &resource.Sweeper{
 		Name: "aws_ec2_transit_gateway",
 		F:    sweepTransitGateways,
 		Dependencies: []string{
 			"aws_dx_gateway_association",
-			"aws_ec2_transit_gateway_connect",
 			"aws_ec2_transit_gateway_vpc_attachment",
 			"aws_ec2_transit_gateway_peering_attachment",
 			"aws_vpn_connection",
@@ -254,6 +258,7 @@ func init() {
 		F:    sweepTransitGatewayVPCAttachments,
 		Dependencies: []string{
 			"aws_ec2_transit_gateway_connect",
+			"aws_ec2_transit_gateway_multicast_domain",
 		},
 	})
 
@@ -1591,6 +1596,49 @@ func sweepTransitGatewayPeeringAttachments(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
+func sweepTransitGatewayMulticastDomains(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).EC2Conn
+	input := &ec2.DescribeTransitGatewayMulticastDomainsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = conn.DescribeTransitGatewayMulticastDomainsPages(input, func(page *ec2.DescribeTransitGatewayMulticastDomainsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TransitGatewayMulticastDomains {
+			r := ResourceTransitGatewayMulticastDomain()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.TransitGatewayMulticastDomainId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Transit Gateway Multicast Domain sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing EC2 Transit Gateway Multicast Domains (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Transit Gateway Multicast Domains (%s): %w", region, err)
+	}
+
+	return nil
+}
+
 func sweepTransitGateways(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
@@ -2078,48 +2126,21 @@ func sweepVPCPeeringConnections(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	conn := client.(*conns.AWSClient).EC2Conn
 	input := &ec2.DescribeVpcPeeringConnectionsInput{}
+	conn := client.(*conns.AWSClient).EC2Conn
+	sweepResources := make([]*sweep.SweepResource, 0)
 
 	err = conn.DescribeVpcPeeringConnectionsPages(input, func(page *ec2.DescribeVpcPeeringConnectionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, vpcPeeringConnection := range page.VpcPeeringConnections {
-			deletedStatuses := map[string]bool{
-				ec2.VpcPeeringConnectionStateReasonCodeDeleted:  true,
-				ec2.VpcPeeringConnectionStateReasonCodeExpired:  true,
-				ec2.VpcPeeringConnectionStateReasonCodeFailed:   true,
-				ec2.VpcPeeringConnectionStateReasonCodeRejected: true,
-			}
+		for _, v := range page.VpcPeeringConnections {
+			r := ResourceVPCPeeringConnection()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.VpcPeeringConnectionId))
 
-			if _, ok := deletedStatuses[aws.StringValue(vpcPeeringConnection.Status.Code)]; ok {
-				continue
-			}
-
-			id := aws.StringValue(vpcPeeringConnection.VpcPeeringConnectionId)
-			input := &ec2.DeleteVpcPeeringConnectionInput{
-				VpcPeeringConnectionId: vpcPeeringConnection.VpcPeeringConnectionId,
-			}
-
-			log.Printf("[INFO] Deleting EC2 VPC Peering Connection: %s", id)
-
-			_, err := conn.DeleteVpcPeeringConnection(input)
-
-			if tfawserr.ErrMessageContains(err, "InvalidVpcPeeringConnectionID.NotFound", "") {
-				continue
-			}
-
-			if err != nil {
-				log.Printf("[ERROR] Error deleting EC2 VPC Peering Connection (%s): %s", id, err)
-				continue
-			}
-
-			if err := WaitForVPCPeeringConnectionDeletion(conn, id, 5*time.Minute); err != nil { //nolint:gomnd
-				log.Printf("[ERROR] Error waiting for EC2 VPC Peering Connection (%s) to be deleted: %s", id, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -2131,7 +2152,13 @@ func sweepVPCPeeringConnections(region string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error describing EC2 VPC Peering Connections: %s", err)
+		return fmt.Errorf("error listing EC2 VPC Peering Connections (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 VPC Peering Connections (%s): %w", region, err)
 	}
 
 	return nil

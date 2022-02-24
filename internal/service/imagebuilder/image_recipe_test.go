@@ -569,6 +569,33 @@ func TestAccImageBuilderImageRecipe_pipelineUpdateDependency(t *testing.T) {
 	})
 }
 
+func TestAccImageBuilderImageRecipe_systemsManagerAgent(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image_recipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckImageRecipeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageRecipeSystemsManagerAgentConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageRecipeExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "systems_manager_agent.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "systems_manager_agent.0.uninstall_after_build", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccImageBuilderImageRecipe_userDataBase64(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
@@ -1191,6 +1218,26 @@ resource "aws_imagebuilder_image_recipe" "test" {
   name         = %[1]q
   parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
   version      = "1.0.0"
+}
+`, rName))
+}
+
+func testAccImageRecipeSystemsManagerAgentConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccImageRecipeBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_image_recipe" "test" {
+  component {
+    component_arn = aws_imagebuilder_component.test.arn
+  }
+
+  name         = %[1]q
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  version      = "1.0.0"
+
+  systems_manager_agent {
+    uninstall_after_build = true
+  }
 }
 `, rName))
 }

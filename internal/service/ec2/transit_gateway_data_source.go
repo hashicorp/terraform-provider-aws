@@ -60,6 +60,10 @@ func DataSourceTransitGateway() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"multicast_support": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -125,6 +129,7 @@ func dataSourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("default_route_table_propagation", transitGateway.Options.DefaultRouteTablePropagation)
 	d.Set("description", transitGateway.Description)
 	d.Set("dns_support", transitGateway.Options.DnsSupport)
+	d.Set("multicast_support", transitGateway.Options.MulticastSupport)
 	d.Set("owner_id", transitGateway.OwnerId)
 	d.Set("propagation_default_route_table_id", transitGateway.Options.PropagationDefaultRouteTableId)
 

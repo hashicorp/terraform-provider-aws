@@ -27,3 +27,51 @@ func waitEndpointDeleted(conn *dms.DatabaseMigrationService, id string) (*dms.En
 
 	return nil, err
 }
+
+func waitReplicationTaskDeleted(conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{replicationTaskStatusDeleting},
+		Target:     []string{},
+		Refresh:    statusReplicationTask(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second, // Wait 30 secs before starting
+	}
+
+	// Wait, catching any errors
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func waitReplicationTaskModified(conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{replicationTaskStatusModifying},
+		Target:     []string{replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusFailed},
+		Refresh:    statusReplicationTask(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second, // Wait 30 secs before starting
+	}
+
+	// Wait, catching any errors
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func waitReplicationTaskReady(conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{replicationTaskStatusCreating},
+		Target:     []string{replicationTaskStatusReady},
+		Refresh:    statusReplicationTask(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second, // Wait 30 secs before starting
+	}
+
+	// Wait, catching any errors
+	_, err := stateConf.WaitForState()
+
+	return err
+}

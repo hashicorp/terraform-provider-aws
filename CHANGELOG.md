@@ -1,4 +1,36 @@
-## 4.03.0 (Unreleased)
+## 4.3.0 (Unreleased)
+
+NOTES:
+
+* resource/aws_internet_gateway: Set `vpc_id` as Computed to prevent drift when the `aws_internet_gateway_attachment` resource is used ([#16386](https://github.com/hashicorp/terraform-provider-aws/issues/16386))
+* resource/aws_s3_bucket_lifecycle_configuration: The `prefix` argument of the `rule` configuration block has been deprecated. Use the `filter` configuration block instead. ([#23325](https://github.com/hashicorp/terraform-provider-aws/issues/23325))
+
+FEATURES:
+
+* **New Data Source:** `aws_ec2_transit_gateway_multicast_domain` ([#22756](https://github.com/hashicorp/terraform-provider-aws/issues/22756))
+* **New Data Source:** `aws_ec2_transit_gateway_vpc_attachments` ([#12409](https://github.com/hashicorp/terraform-provider-aws/issues/12409))
+* **New Resource:** `aws_ec2_transit_gateway_multicast_domain` ([#22756](https://github.com/hashicorp/terraform-provider-aws/issues/22756))
+* **New Resource:** `aws_ec2_transit_gateway_multicast_domain_association` ([#22756](https://github.com/hashicorp/terraform-provider-aws/issues/22756))
+* **New Resource:** `aws_ec2_transit_gateway_multicast_group_member` ([#22756](https://github.com/hashicorp/terraform-provider-aws/issues/22756))
+* **New Resource:** `aws_ec2_transit_gateway_multicast_group_source` ([#22756](https://github.com/hashicorp/terraform-provider-aws/issues/22756))
+* **New Resource:** `aws_internet_gateway_attachment` ([#16386](https://github.com/hashicorp/terraform-provider-aws/issues/16386))
+* **New Resource:** `aws_opsworks_ecs_cluster_layer` ([#12495](https://github.com/hashicorp/terraform-provider-aws/issues/12495))
+* **New Resource:** `aws_vpc_endpoint_policy` ([#17039](https://github.com/hashicorp/terraform-provider-aws/issues/17039))
+
+ENHANCEMENTS:
+
+* data-source/aws_ec2_transit_gateway: Add `multicast_support` attribute ([#22756](https://github.com/hashicorp/terraform-provider-aws/issues/22756))
+* resource/aws_ec2_fleet: Add `context` argument ([#23304](https://github.com/hashicorp/terraform-provider-aws/issues/23304))
+* resource/aws_ec2_transit_gateway: Add `multicast_support` argument ([#22756](https://github.com/hashicorp/terraform-provider-aws/issues/22756))
+* resource/aws_imagebuilder_image_pipeline: Add `schedule.timezone` argument ([#23322](https://github.com/hashicorp/terraform-provider-aws/issues/23322))
+* resource/aws_imagebuilder_image_recipe: Add `systems_manager_agent.uninstall_after_build` argument ([#23293](https://github.com/hashicorp/terraform-provider-aws/issues/23293))
+* resource/aws_servicecatalog_provisioned_product: Add `outputs` attribute ([#23270](https://github.com/hashicorp/terraform-provider-aws/issues/23270))
+
+BUG FIXES:
+
+* resource/aws_dms_replication_task: Allow `cdc_start_position` to be computed ([#23328](https://github.com/hashicorp/terraform-provider-aws/issues/23328))
+* resource/aws_ecs_cluster: Fix bug preventing describing clusters in ISO regions ([#23341](https://github.com/hashicorp/terraform-provider-aws/issues/23341))
+
 ## 4.2.0 (February 18, 2022)
 
 FEATURES:
@@ -541,6 +573,8 @@ ENHANCEMENTS:
 * resource/aws_kinesis_firehose_delivery_stream: Add `error_output_prefix` argument to `redshift_configuration` `s3_backup_configuration` configuration block ([#11229](https://github.com/hashicorp/terraform-provider-aws/issues/11229))
 * resource/aws_kinesis_firehose_delivery_stream: Add `error_output_prefix` argument to `s3_configuration` configuration block ([#11229](https://github.com/hashicorp/terraform-provider-aws/issues/11229))
 * resource/aws_networkfirewall_resource_policy: Handle delete-after-create eventual consistency ([#22402](https://github.com/hashicorp/terraform-provider-aws/issues/22402))
+* resource/aws_kinesis_stream: Improve reading kinesis stream state. ([#15489](https://github.com/hashicorp/terraform-provider-aws/issues/15489))
+* resource/aws_kinesis_stream_consumer: Improve reading kinesis stream state ([#15489](https://github.com/hashicorp/terraform-provider-aws/issues/15489))
 * resource/aws_s3_bucket: Add hosted zone ID for `ap-southeast-3` AWS Region ([#22295](https://github.com/hashicorp/terraform-provider-aws/issues/22295))
 * resource/aws_s3_bucket_object: Support objects greater than 5GB in size by using the [Amazon S3 upload manager](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/sdk-utilities.html#upload-manager) ([#21727](https://github.com/hashicorp/terraform-provider-aws/issues/21727))
 * resource/aws_sagemaker_app: Add `lifecycle_config_arn` and `sagemaker_image_version_arn` arguments to `resource_spec` configuration block ([#21508](https://github.com/hashicorp/terraform-provider-aws/issues/21508))

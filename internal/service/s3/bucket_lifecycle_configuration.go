@@ -201,8 +201,9 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 						},
 
 						"prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:       schema.TypeString,
+							Optional:   true,
+							Deprecated: "Use filter instead",
 						},
 
 						"status": {

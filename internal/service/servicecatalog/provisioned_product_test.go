@@ -40,6 +40,17 @@ func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "last_record_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_successful_provisioning_record_id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					// One output will default to the launched CloudFormation Stack (provisioned outside terraform).
+					// While another output will describe the output parameter configured in the S3 object resource,
+					// which we can check as follows.
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+						"description": "VPC ID",
+						"key":         "VpcID",
+					}),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]*regexp.Regexp{
+						"value": regexp.MustCompile(`vpc-.+`),
+					}),
 					resource.TestCheckResourceAttrPair(resourceName, "path_id", "data.aws_servicecatalog_launch_paths.test", "summaries.0.path_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_name", "aws_servicecatalog_product.test", "provisioning_artifact_parameters.0.name"),

@@ -90,13 +90,10 @@ func ResourceTransitGateway() *schema.Resource {
 				Computed: true,
 			},
 			"auto_accept_shared_attachments": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ec2.AutoAcceptSharedAttachmentsValueDisable,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.AutoAcceptSharedAttachmentsValueDisable,
-					ec2.AutoAcceptSharedAttachmentsValueEnable,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.AutoAcceptSharedAttachmentsValueDisable,
+				ValidateFunc: validation.StringInSlice(ec2.AutoAcceptSharedAttachmentsValue_Values(), false),
 			},
 			"cidr_blocks": {
 				Type:     schema.TypeList,
@@ -114,35 +111,33 @@ func ResourceTransitGateway() *schema.Resource {
 				},
 			},
 			"default_route_table_association": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ec2.DefaultRouteTableAssociationValueEnable,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.DefaultRouteTableAssociationValueDisable,
-					ec2.DefaultRouteTableAssociationValueEnable,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.DefaultRouteTableAssociationValueEnable,
+				ValidateFunc: validation.StringInSlice(ec2.DefaultRouteTableAssociationValue_Values(), false),
 			},
 			"default_route_table_propagation": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ec2.DefaultRouteTablePropagationValueEnable,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.DefaultRouteTablePropagationValueDisable,
-					ec2.DefaultRouteTablePropagationValueEnable,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.DefaultRouteTablePropagationValueEnable,
+				ValidateFunc: validation.StringInSlice(ec2.DefaultRouteTablePropagationValue_Values(), false),
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"dns_support": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ec2.DnsSupportValueEnable,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.DnsSupportValueDisable,
-					ec2.DnsSupportValueEnable,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.DnsSupportValueEnable,
+				ValidateFunc: validation.StringInSlice(ec2.DnsSupportValue_Values(), false),
+			},
+			"multicast_support": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      ec2.MulticastSupportValueDisable,
+				ValidateFunc: validation.StringInSlice(ec2.MulticastSupportValue_Values(), false),
 			},
 			"owner_id": {
 				Type:     schema.TypeString,
@@ -155,13 +150,10 @@ func ResourceTransitGateway() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"vpn_ecmp_support": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ec2.VpnEcmpSupportValueEnable,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.VpnEcmpSupportValueDisable,
-					ec2.VpnEcmpSupportValueEnable,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.VpnEcmpSupportValueEnable,
+				ValidateFunc: validation.StringInSlice(ec2.VpnEcmpSupportValue_Values(), false),
 			},
 		},
 	}
@@ -178,6 +170,7 @@ func resourceTransitGatewayCreate(d *schema.ResourceData, meta interface{}) erro
 			DefaultRouteTableAssociation: aws.String(d.Get("default_route_table_association").(string)),
 			DefaultRouteTablePropagation: aws.String(d.Get("default_route_table_propagation").(string)),
 			DnsSupport:                   aws.String(d.Get("dns_support").(string)),
+			MulticastSupport:             aws.String(d.Get("multicast_support").(string)),
 			VpnEcmpSupport:               aws.String(d.Get("vpn_ecmp_support").(string)),
 		},
 		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGateway),
@@ -252,6 +245,7 @@ func resourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("default_route_table_propagation", transitGateway.Options.DefaultRouteTablePropagation)
 	d.Set("description", transitGateway.Description)
 	d.Set("dns_support", transitGateway.Options.DnsSupport)
+	d.Set("multicast_support", transitGateway.Options.MulticastSupport)
 	d.Set("owner_id", transitGateway.OwnerId)
 	d.Set("propagation_default_route_table_id", transitGateway.Options.PropagationDefaultRouteTableId)
 
