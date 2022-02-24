@@ -392,6 +392,74 @@ func TestAccEC2Instance_userDataBase64(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_userDataBase64_updateWithBashFile(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigWithUserDataBase64(rName, "hello world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "aGVsbG8gd29ybGQ="),
+				),
+			},
+			{
+				Config: testAccInstanceConfigWithUserDataBase64_Base64EncodedFile(rName, "test-fixtures/userdata-test.sh"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data"},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_userDataBase64_updateWithZipFile(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigWithUserDataBase64(rName, "hello world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "aGVsbG8gd29ybGQ="),
+				),
+			},
+			{
+				Config: testAccInstanceConfigWithUserDataBase64_Base64EncodedFile(rName, "test-fixtures/userdata-test.zip"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data"},
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_userDataBase64_update(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -4377,6 +4445,21 @@ resource "aws_instance" "test" {
   user_data_base64 = base64encode(%[1]q)
 }
 `, userData))
+}
+
+func testAccInstanceConfigWithUserDataBase64_Base64EncodedFile(rName, filename string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami       = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  subnet_id = aws_subnet.test.id
+
+  instance_type    = "t2.small"
+  user_data_base64 = filebase64(%[1]q)
+}
+`, filename))
 }
 
 func testAccInstanceConfigWithSmallInstanceType(rName string) string {
