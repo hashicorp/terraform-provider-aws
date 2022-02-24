@@ -1441,12 +1441,25 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
+		// From the API reference:
+		// "If you are using an AWS SDK or command line tool,
+		// base64-encoding is performed for you, and you can load the text from a file.
+		// Otherwise, you must provide base64-encoded text".
+
 		if d.HasChange("user_data") {
 			log.Printf("[INFO] Modifying user data %s", d.Id())
+
+			// Decode so the AWS SDK doesn't double encode
+			userData, err := base64.StdEncoding.DecodeString(d.Get("user_data").(string))
+			if err != nil {
+				log.Printf("[DEBUG] Instance (%s) user_data not base64 decoded", d.Id())
+				userData = []byte(d.Get("user_data").(string))
+			}
+
 			input := &ec2.ModifyInstanceAttributeInput{
 				InstanceId: aws.String(d.Id()),
 				UserData: &ec2.BlobAttributeValue{
-					Value: []byte(d.Get("user_data").(string)),
+					Value: userData,
 				},
 			}
 
@@ -1457,9 +1470,13 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChange("user_data_base64") {
 			log.Printf("[INFO] Modifying user data base64 %s", d.Id())
-			userData, err := base64.URLEncoding.DecodeString(d.Get("user_data_base64").(string))
+
+			// Schema validation technically ensures the data is Base64 encoded.
+			// Decode so the AWS SDK doesn't double encode
+			userData, err := base64.StdEncoding.DecodeString(d.Get("user_data_base64").(string))
 			if err != nil {
-				return fmt.Errorf("error updating instance (%s) user data base64: %w", d.Id(), err)
+				log.Printf("[DEBUG] Instance (%s) user_data_base64 not base64 decoded", d.Id())
+				userData = []byte(d.Get("user_data_base64").(string))
 			}
 
 			input := &ec2.ModifyInstanceAttributeInput{
