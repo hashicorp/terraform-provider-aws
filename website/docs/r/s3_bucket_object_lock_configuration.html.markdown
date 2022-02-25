@@ -10,9 +10,13 @@ description: |-
 
 Provides an S3 bucket Object Lock configuration resource. For more information about Object Locking, go to [Using S3 Object Lock](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html) in the Amazon S3 User Guide.
 
-~> **NOTE:** You can only enable Object Lock for new buckets. If you want to turn on Object Lock for an existing bucket, contact AWS Support.
+~> **NOTE:** This resource **does not enable** Object Lock for _new_ buckets. It configures a default retention period for objects placed in the specified bucket.
+Thus, to **enable** Object Lock for a _new_ bucket, see the the [`aws_s3_bucket` resource](s3_bucket.html.markdown) or the [following example](#Example-Usage).
+If you want to turn on Object Lock for an _existing_ bucket, contact AWS Support.
 
 ## Example Usage
+
+### Object Lock configuration for a new bucket
 
 ```terraform
 resource "aws_s3_bucket" "example" {
