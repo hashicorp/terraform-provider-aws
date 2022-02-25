@@ -281,7 +281,10 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
   and the shared configuration parameter `max_attempts`.
 * `profile` - (Optional) AWS profile name as set in the shared configuration and credentials files.
   Can also be set using either the environment variables `AWS_PROFILE` or `AWS_DEFAULT_PROFILE`.
-* `region` - (Optional) AWS region. Can also be set using either the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables, or via the shared configuration and credentials files if `profile` is used.
+* `region` - (Optional) The AWS region where the provider will operate. The region must be set.
+  Can also be set with either the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables,
+  or via a shared config file parameter `region` if `profile` is used.
+  If credentials are retrieved from the EC2 Instance Metadata Service, the region can also be retrieved from the metadata.
 * `s3_force_path_style` - (Optional, **Deprecated**) Whether to enable the request to use path-style addressing, i.e., `https://s3.amazonaws.com/BUCKET/KEY`. By default, the S3 client will use virtual hosted bucket addressing, `https://BUCKET.s3.amazonaws.com/KEY`, when possible. Specific to the Amazon S3 service.
 * `s3_use_path_style` - (Optional) Whether to enable the request to use path-style addressing, i.e., `https://s3.amazonaws.com/BUCKET/KEY`. By default, the S3 client will use virtual hosted bucket addressing, `https://BUCKET.s3.amazonaws.com/KEY`, when possible. Specific to the Amazon S3 service.
 * `secret_key` - (Optional) AWS secret key. Can also be set with the `AWS_SECRET_ACCESS_KEY` environment variable, or via a shared configuration and credentials files if `profile` is used. See also `access_key`.
