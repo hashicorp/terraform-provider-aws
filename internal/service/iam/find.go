@@ -1,7 +1,9 @@
 package iam
 
 import (
+	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -172,7 +174,7 @@ func FindRoleByName(conn *iam.IAM, name string) (*iam.Role, error) {
 	return output.Role, nil
 }
 
-func FindVirtualMfaDevice(conn *iam.IAM, serialNum string) (*iam.VirtualMFADevice, error) {
+func FindVirtualMFADevice(conn *iam.IAM, serialNum string) (*iam.VirtualMFADevice, error) {
 	input := &iam.ListVirtualMFADevicesInput{}
 
 	output, err := conn.ListVirtualMFADevices(input)
@@ -279,4 +281,12 @@ func FindSigningCertificate(conn *iam.IAM, userName, certId string) (*iam.Signin
 	}
 
 	return cert, nil
+}
+
+func urlFromOpenIDConnectProviderArn(arn string) (string, error) {
+	parts := strings.SplitN(arn, "/", 2)
+	if len(parts) != 2 {
+		return "", fmt.Errorf("error reading OpenID Connect Provider expected the arn to be like: arn:PARTITION:iam::ACCOUNT:oidc-provider/URL but got: %s", arn)
+	}
+	return parts[1], nil
 }

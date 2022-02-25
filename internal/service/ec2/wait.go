@@ -17,7 +17,8 @@ const (
 	// Maximum amount of time to wait for EC2 Instance attribute modifications to propagate
 	InstanceAttributePropagationTimeout = 2 * time.Minute
 
-	InstanceStopTimeout = 10 * time.Minute
+	InstanceStartTimeout = 10 * time.Minute
+	InstanceStopTimeout  = 10 * time.Minute
 
 	// General timeout for EC2 resource creations to propagate
 	PropagationTimeout = 2 * time.Minute
@@ -311,10 +312,6 @@ func WaitInstanceIAMInstanceProfileUpdated(conn *ec2.EC2, instanceID string, exp
 }
 
 const ManagedPrefixListEntryCreateTimeout = 5 * time.Minute
-
-const (
-	NetworkACLEntryPropagationTimeout = 5 * time.Minute
-)
 
 func WaitRouteDeleted(conn *ec2.EC2, routeFinder RouteFinder, routeTableID, destination string, timeout time.Duration) (*ec2.Route, error) {
 	stateConf := &resource.StateChangeConf{
@@ -671,6 +668,74 @@ func WaitSubnetPrivateDNSHostnameTypeOnLaunchUpdated(conn *ec2.EC2, subnetID str
 	return nil, err
 }
 
+func WaitTransitGatewayMulticastDomainCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.TransitGatewayMulticastDomain, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayMulticastDomainStatePending},
+		Target:  []string{ec2.TransitGatewayMulticastDomainStateAvailable},
+		Refresh: StatusTransitGatewayMulticastDomainState(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayMulticastDomain); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitTransitGatewayMulticastDomainDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.TransitGatewayMulticastDomain, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayMulticastDomainStateAvailable, ec2.TransitGatewayMulticastDomainStateDeleting},
+		Target:  []string{},
+		Refresh: StatusTransitGatewayMulticastDomainState(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayMulticastDomain); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitTransitGatewayMulticastDomainAssociationCreated(conn *ec2.EC2, multicastDomainID, attachmentID, subnetID string, timeout time.Duration) (*ec2.TransitGatewayMulticastDomainAssociation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AssociationStatusCodeAssociating},
+		Target:  []string{ec2.AssociationStatusCodeAssociated},
+		Refresh: StatusTransitGatewayMulticastDomainAssociationState(conn, multicastDomainID, attachmentID, subnetID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayMulticastDomainAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitTransitGatewayMulticastDomainAssociationDeleted(conn *ec2.EC2, multicastDomainID, attachmentID, subnetID string, timeout time.Duration) (*ec2.TransitGatewayMulticastDomainAssociation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AssociationStatusCodeAssociated, ec2.AssociationStatusCodeDisassociating},
+		Target:  []string{},
+		Refresh: StatusTransitGatewayMulticastDomainAssociationState(conn, multicastDomainID, attachmentID, subnetID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayMulticastDomainAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 const (
 	TransitGatewayPrefixListReferenceTimeout = 5 * time.Minute
 )
@@ -701,10 +766,6 @@ func WaitTransitGatewayPrefixListReferenceStateDeleted(conn *ec2.EC2, transitGat
 	}
 
 	outputRaw, err := stateConf.WaitForState()
-
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteTableIDNotFound) {
-		return nil, nil
-	}
 
 	if output, ok := outputRaw.(*ec2.TransitGatewayPrefixListReference); ok {
 		return output, err
@@ -903,6 +964,52 @@ func WaitVPCIPv6CIDRBlockAssociationDeleted(conn *ec2.EC2, id string, timeout ti
 		if state := aws.StringValue(output.State); state == ec2.VpcCidrBlockStateCodeFailed {
 			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
 		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	VPCPeeringConnectionOptionsPropagationTimeout = 3 * time.Minute
+)
+
+func WaitVPCPeeringConnectionActive(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.VpcPeeringConnection, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.VpcPeeringConnectionStateReasonCodeInitiatingRequest, ec2.VpcPeeringConnectionStateReasonCodeProvisioning},
+		Target:  []string{ec2.VpcPeeringConnectionStateReasonCodeActive, ec2.VpcPeeringConnectionStateReasonCodePendingAcceptance},
+		Refresh: StatusVPCPeeringConnectionActive(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpcPeeringConnection); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.Message)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVPCPeeringConnectionDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.VpcPeeringConnection, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			ec2.VpcPeeringConnectionStateReasonCodeActive,
+			ec2.VpcPeeringConnectionStateReasonCodeDeleting,
+			ec2.VpcPeeringConnectionStateReasonCodePendingAcceptance,
+		},
+		Target:  []string{},
+		Refresh: StatusVPCPeeringConnectionDeleted(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpcPeeringConnection); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.Message)))
 
 		return output, err
 	}

@@ -78,7 +78,7 @@ func init() {
 
 	resource.AddTestSweepers("aws_iam_saml_provider", &resource.Sweeper{
 		Name: "aws_iam_saml_provider",
-		F:    sweepSamlProvider,
+		F:    sweepSAMLProvider,
 	})
 
 	resource.AddTestSweepers("aws_iam_service_specific_credential", &resource.Sweeper{
@@ -113,7 +113,7 @@ func init() {
 
 	resource.AddTestSweepers("aws_iam_virtual_mfa_device", &resource.Sweeper{
 		Name: "aws_iam_virtual_mfa_device",
-		F:    sweepVirtualMfaDevice,
+		F:    sweepVirtualMFADevice,
 	})
 }
 
@@ -525,7 +525,7 @@ func sweepRoles(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func sweepSamlProvider(region string) error {
+func sweepSAMLProvider(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -539,7 +539,7 @@ func sweepSamlProvider(region string) error {
 	for _, sampProvider := range out.SAMLProviderList {
 		arn := aws.StringValue(sampProvider.Arn)
 
-		r := ResourceSamlProvider()
+		r := ResourceSAMLProvider()
 		d := r.Data(nil)
 		d.SetId(arn)
 		err := r.Delete(d, client)
@@ -869,7 +869,7 @@ func roleNameFilter(name string) bool {
 	return false
 }
 
-func sweepVirtualMfaDevice(region string) error {
+func sweepVirtualMFADevice(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -891,7 +891,7 @@ func sweepVirtualMfaDevice(region string) error {
 				continue
 			}
 
-			r := ResourceVirtualMfaDevice()
+			r := ResourceVirtualMFADevice()
 			d := r.Data(nil)
 			d.SetId(serialNum)
 			err := r.Delete(d, client)

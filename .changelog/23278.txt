@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_s3_bucket: Add error handling for `NotImplemented` errors when reading `acceleration_status`, `policy`, or `request_payer` into terraform state.
+```
+
+```release-note:enhancement
+resource/aws_s3_bucket: Add error handling for `MethodNotAllowed` and `XNotImplemented` errors when reading `website` into terraform state.
+```

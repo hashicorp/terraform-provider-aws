@@ -104,7 +104,6 @@ provider "aws" {
   <li><code>clouddirectory</code></li>
   <li><code>cloudformation</code></li>
   <li><code>cloudfront</code></li>
-  <li><code>cloudhsmv1</code></li>
   <li><code>cloudhsm</code> (or <code>cloudhsmv2</code>)</li>
   <li><code>cloudsearch</code></li>
   <li><code>cloudsearchdomain</code></li>

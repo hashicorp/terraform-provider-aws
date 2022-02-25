@@ -682,7 +682,7 @@ func init() {
 	serviceData[ELBV2] = &ServiceDatum{AWSClientName: "ELBV2", AWSServiceName: elbv2.ServiceName, AWSEndpointsID: elbv2.EndpointsID, AWSServiceID: elbv2.ServiceID, ProviderNameUpper: "ELBV2", HCLKeys: []string{"elbv2"}}
 	serviceData[EMR] = &ServiceDatum{AWSClientName: "EMR", AWSServiceName: emr.ServiceName, AWSEndpointsID: emr.EndpointsID, AWSServiceID: emr.ServiceID, ProviderNameUpper: "EMR", HCLKeys: []string{"emr"}}
 	serviceData[EMRContainers] = &ServiceDatum{AWSClientName: "EMRContainers", AWSServiceName: emrcontainers.ServiceName, AWSEndpointsID: emrcontainers.EndpointsID, AWSServiceID: emrcontainers.ServiceID, ProviderNameUpper: "EMRContainers", HCLKeys: []string{"emrcontainers"}}
-	serviceData[Events] = &ServiceDatum{AWSClientName: "EventBridge", AWSServiceName: eventbridge.ServiceName, AWSEndpointsID: eventbridge.EndpointsID, AWSServiceID: eventbridge.ServiceID, ProviderNameUpper: "Events", HCLKeys: []string{"cloudwatchevents", "eventbridge", "events"}}
+	serviceData[Events] = &ServiceDatum{AWSClientName: "EventBridge", AWSServiceName: eventbridge.ServiceName, AWSEndpointsID: eventbridge.EndpointsID, AWSServiceID: eventbridge.ServiceID, ProviderNameUpper: "Events", HCLKeys: []string{"eventbridge", "cloudwatchevents", "events"}}
 	serviceData[FinSpace] = &ServiceDatum{AWSClientName: "Finspace", AWSServiceName: finspace.ServiceName, AWSEndpointsID: finspace.EndpointsID, AWSServiceID: finspace.ServiceID, ProviderNameUpper: "FinSpace", HCLKeys: []string{"finspace"}}
 	serviceData[FinSpaceData] = &ServiceDatum{AWSClientName: "FinSpaceData", AWSServiceName: finspacedata.ServiceName, AWSEndpointsID: finspacedata.EndpointsID, AWSServiceID: finspacedata.ServiceID, ProviderNameUpper: "FinSpaceData", HCLKeys: []string{"finspacedata"}}
 	serviceData[Firehose] = &ServiceDatum{AWSClientName: "Firehose", AWSServiceName: firehose.ServiceName, AWSEndpointsID: firehose.EndpointsID, AWSServiceID: firehose.ServiceID, ProviderNameUpper: "Firehose", HCLKeys: []string{"firehose"}}
@@ -865,6 +865,7 @@ type Config struct {
 	AccessKey                      string
 	AllowedAccountIds              []string
 	AssumeRole                     *awsbase.AssumeRole
+	CustomCABundle                 string
 	DefaultTagsConfig              *tftags.DefaultConfig
 	EC2MetadataServiceEndpoint     string
 	EC2MetadataServiceEndpointMode string
@@ -1224,6 +1225,10 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 
 	if c.AssumeRole != nil && c.AssumeRole.RoleARN != "" {
 		awsbaseConfig.AssumeRole = c.AssumeRole
+	}
+
+	if c.CustomCABundle != "" {
+		awsbaseConfig.CustomCABundle = c.CustomCABundle
 	}
 
 	if c.EC2MetadataServiceEndpoint != "" {
