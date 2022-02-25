@@ -48,15 +48,13 @@ func ResourceRegisteredDomain() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(0, 255),
 				},
 				"contact_type": {
-					Type:     schema.TypeString,
-					Optional: true,
-					// TODO: Yuck!
+					Type:         schema.TypeString,
+					Optional:     true,
 					ValidateFunc: validation.StringInSlice(contactTypeValues(types.ContactType("").Values()...), false),
 				},
 				"country_code": {
-					Type:     schema.TypeString,
-					Optional: true,
-					// TODO: Yuck!
+					Type:         schema.TypeString,
+					Optional:     true,
 					ValidateFunc: validation.StringInSlice(countryCodeValues(types.CountryCode("").Values()...), false),
 				},
 				"email": {
@@ -951,7 +949,7 @@ func flattenNameservers(apiObjects []types.Nameserver) []interface{} {
 	return tfList
 }
 
-// TODO Helpers added. Could be generated?
+// Helpers added. Could be generated or somehow use go 1.18 generics?
 func contactTypeValues(input ...types.ContactType) []string {
 	var output []string
 

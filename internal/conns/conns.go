@@ -566,7 +566,7 @@ const (
 	XRay                          = "xray"
 )
 
-// TODO: These "should" be defined by the AWS Go SDK v2.
+// These "should" be defined by the AWS Go SDK v2, but currently aren't.
 const (
 	Route53DomainsEndpointID  = "route53domains"
 	Route53DomainsServiceName = "route53domains"
@@ -1508,8 +1508,6 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		ReverseDNSPrefix:                  ReverseDNS(DNSSuffix),
 		RoboMakerConn:                     robomaker.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[RoboMaker])})),
 		Route53DomainsConn: route53domains.NewFromConfig(cfg, func(o *route53domains.Options) {
-			// TODO How to override endpoint?
-			// route53domains.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Route53Domains])})),
 			if endpoint := c.Endpoints[Route53Domains]; endpoint != "" {
 				o.EndpointResolver = route53domains.EndpointResolverFromURL(endpoint)
 			}
