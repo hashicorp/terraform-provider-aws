@@ -11,6 +11,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+const (
+	canaryCreateFail = "CREATE_FAILED"
+)
+
 func retryCreateCanary(conn *synthetics.Synthetics, d *schema.ResourceData, input *synthetics.CreateCanaryInput) (*synthetics.Canary, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{synthetics.CanaryStateCreating, synthetics.CanaryStateUpdating},

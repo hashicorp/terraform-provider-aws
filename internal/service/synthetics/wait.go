@@ -15,8 +15,6 @@ const (
 	canaryRunningTimeout = 5 * time.Minute
 	canaryStoppedTimeout = 5 * time.Minute
 	canaryDeletedTimeout = 5 * time.Minute
-
-	canaryCreateFail = "CREATE_FAILED"
 )
 
 func waitCanaryReady(conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) {
