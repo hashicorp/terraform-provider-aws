@@ -13,6 +13,7 @@ body:
     attributes:
       label: New or Affected Resource(s)
       description: Please list the new or affected resource(s) and/or data source(s).
+      placeholder: "* aws_xxx"
     validations:
       required: true
   - type: textarea
