@@ -2,8 +2,6 @@ package ec2
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"net"
 	"regexp"
 	"strconv"
 	"strings"
@@ -106,37 +104,4 @@ func valid4ByteASN(v interface{}, k string) (ws []string, errors []error) {
 		errors = append(errors, fmt.Errorf("%q (%q) must be in the range 0 to 4294967295", k, v))
 	}
 	return
-}
-
-// generic validation for mixed types of IPv4 and IPv6
-func validateIPv4OrIPv6(ipv4_validator, ipv6_validator schema.SchemaValidateFunc) schema.SchemaValidateFunc {
-	return func(i interface{}, k string) (warnings []string, errors []error) {
-		v, ok := i.(string)
-		if !ok {
-			errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
-			return warnings, errors
-		}
-
-		ip, _, err := net.ParseCIDR(v)
-		if err != nil {
-			errors = append(errors, fmt.Errorf("expected %s to contain a valid Value, got: %s with err: %s", k, v, err))
-			return warnings, errors
-		}
-
-		ipv4 := ip.To4()
-		ipv6 := ip.To16()
-		if ipv4 == nil && ipv6 == nil {
-			errors = append(errors, fmt.Errorf("%q is not valid IPv4 nor IPv6 CIDR block", v))
-		} else if ipv4 != nil {
-			validatorWarnings, validatorErrors := ipv4_validator(i, k)
-			warnings = append(warnings, validatorWarnings...)
-			errors = append(errors, validatorErrors...)
-		} else if ipv6 != nil {
-			validatorWarnings, validatorErrors := ipv6_validator(i, k)
-			warnings = append(warnings, validatorWarnings...)
-			errors = append(errors, validatorErrors...)
-		}
-
-		return warnings, errors
-	}
 }

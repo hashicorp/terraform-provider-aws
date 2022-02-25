@@ -96,12 +96,14 @@ func ResourceTransitGateway() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(ec2.AutoAcceptSharedAttachmentsValue_Values(), false),
 			},
 			"cidr_blocks": {
+				// TODO: Change to TypeSet.
+				// TODO: Rename to transit_gateway_cidr_blocks.
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 2,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
-					ValidateFunc: validateIPv4OrIPv6(
+					ValidateFunc: verify.IsIPv4CIDRBlockOrIPv6CIDRBlock(
 						validation.All(
 							validation.IsCIDRNetwork(16, 24),
 							validation.StringDoesNotMatch(regexp.MustCompile(`^169\.254\.`), "must not be from range 169.254.0.0/16"),

@@ -37,6 +37,7 @@ func ResourceTransitGatewayConnectPeer() *schema.Resource {
 				ValidateFunc: valid4ByteASN,
 			},
 			"inside_cidr_blocks": {
+				// TODO: TypeSet
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -44,7 +45,7 @@ func ResourceTransitGatewayConnectPeer() *schema.Resource {
 				MaxItems: 2,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
-					ValidateFunc: validateIPv4OrIPv6(
+					ValidateFunc: verify.IsIPv4CIDRBlockOrIPv6CIDRBlock(
 						validation.All(
 							validation.IsCIDRNetwork(29, 29),
 							validation.StringMatch(regexp.MustCompile(`^169\.254\.`), "IPv4 range must be from range 169.254.0.0/16"),

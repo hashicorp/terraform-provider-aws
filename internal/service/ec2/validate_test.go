@@ -1,7 +1,6 @@
 package ec2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"testing"
 )
 
@@ -103,49 +102,6 @@ func TestValid4ByteASN(t *testing.T) {
 		_, errors := valid4ByteASN(v, "bgp_asn")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid ASN", v)
-		}
-	}
-}
-
-func TestValidateIPv4OrIPv6(t *testing.T) {
-	validator := validateIPv4OrIPv6(
-		validation.IsCIDRNetwork(16, 24),
-		validation.IsCIDRNetwork(40, 64),
-	)
-	validCIDRs := []string{
-		"10.0.0.0/16", // IPv4 CIDR /16 >= /16 and <= /24
-		"10.0.0.0/23", // IPv4 CIDR /23 >= /16 and <= /24
-		"10.0.0.0/24", // IPv4 CIDR /24 >= /16 and <= /24
-		"2001::/40",   // IPv6 CIDR /40 >= /40 and <= /64
-		"2001::/63",   // IPv6 CIDR /63 >= /40 and <= /64
-		"2001::/64",   // IPv6 CIDR /64 >= /40 and <= /64
-	}
-
-	for _, v := range validCIDRs {
-		_, errors := validator(v, "cidr_block")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid CIDR block: %q", v, errors)
-		}
-	}
-
-	invalidCIDRs := []string{
-		"ASDQWE",      // not IPv4 nor IPv6 CIDR
-		"0.0.0.0/0",   // IPv4 CIDR /0 < /16
-		"10.0.0.0/8",  // IPv4 CIDR /8 < /16
-		"10.0.0.1/24", // IPv4 CIDR with invalid network part
-		"10.0.0.0/25", // IPv4 CIDR /25 > /24
-		"10.0.0.0/32", // IPv4 CIDR /32 > /24
-		"::/0",        // IPv6 CIDR /0 < /40
-		"2001::/30",   // IPv6 CIDR /30 < /40
-		"2001::1/64",  // IPv6 CIDR with invalid network part
-		"2001::/65",   // IPv6 CIDR /65 > /64
-		"2001::/128",  // IPv6 CIDR /128 > /64
-	}
-
-	for _, v := range invalidCIDRs {
-		_, errors := validator(v, "cidr_block")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid CIDR block", v)
 		}
 	}
 }
