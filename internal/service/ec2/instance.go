@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -440,14 +440,11 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"private_ip": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-				ValidateFunc: validation.Any(
-					validation.StringIsEmpty,
-					validation.IsIPv4Address,
-				),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Computed:     true,
+				ValidateFunc: validation.IsIPv4Address,
 			},
 			"public_dns": {
 				Type:     schema.TypeString,
@@ -567,7 +564,6 @@ func ResourceInstance() *schema.Resource {
 			"user_data": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ForceNew:      true,
 				Computed:      true,
 				ConflictsWith: []string{"user_data_base64"},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -592,7 +588,6 @@ func ResourceInstance() *schema.Resource {
 			"user_data_base64": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ForceNew:      true,
 				Computed:      true,
 				ConflictsWith: []string{"user_data"},
 				ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
@@ -1426,73 +1421,74 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("instance_type") && !d.IsNewResource() {
-		log.Printf("[INFO] Stopping Instance %q for instance_type change", d.Id())
-		_, err := conn.StopInstances(&ec2.StopInstancesInput{
-			InstanceIds: []*string{aws.String(d.Id())},
-		})
-		if err != nil {
-			return fmt.Errorf("error stopping instance (%s): %s", d.Id(), err)
-		}
+	if d.HasChanges("instance_type", "user_data", "user_data_base64") && !d.IsNewResource() {
+		// For each argument change, we start and stop the instance
+		// to account for behaviors occurring outside terraform.
+		// Only one attribute can be modified at a time, else we get
+		// "InvalidParameterCombination: Fields for multiple attribute types specified"
+		if d.HasChange("instance_type") {
+			log.Printf("[INFO] Modifying instance type %s", d.Id())
 
-		if err := WaitForInstanceStopping(conn, d.Id(), InstanceStopTimeout); err != nil {
-			return err
-		}
-
-		log.Printf("[INFO] Modifying instance type %s", d.Id())
-		_, err = conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
-			InstanceId: aws.String(d.Id()),
-			InstanceType: &ec2.AttributeValue{
-				Value: aws.String(d.Get("instance_type").(string)),
-			},
-		})
-		if err != nil {
-			return err
-		}
-
-		log.Printf("[INFO] Starting Instance %q after instance_type change", d.Id())
-
-		input := &ec2.StartInstancesInput{
-			InstanceIds: []*string{aws.String(d.Id())},
-		}
-
-		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433
-		err = resource.Retry(InstanceAttributePropagationTimeout, func() *resource.RetryError {
-			_, err := conn.StartInstances(input)
-
-			if tfawserr.ErrMessageContains(err, ErrCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value") {
-				return resource.RetryableError(err)
+			input := &ec2.ModifyInstanceAttributeInput{
+				InstanceId: aws.String(d.Id()),
+				InstanceType: &ec2.AttributeValue{
+					Value: aws.String(d.Get("instance_type").(string)),
+				},
 			}
 
+			if err := modifyAttributeWithInstanceStopStart(d, conn, input); err != nil {
+				return fmt.Errorf("error updating instance (%s) instance type: %w", d.Id(), err)
+			}
+		}
+
+		// From the API reference:
+		// "If you are using an AWS SDK or command line tool,
+		// base64-encoding is performed for you, and you can load the text from a file.
+		// Otherwise, you must provide base64-encoded text".
+
+		if d.HasChange("user_data") {
+			log.Printf("[INFO] Modifying user data %s", d.Id())
+
+			// Decode so the AWS SDK doesn't double encode
+			userData, err := base64.StdEncoding.DecodeString(d.Get("user_data").(string))
 			if err != nil {
-				return resource.NonRetryableError(err)
+				log.Printf("[DEBUG] Instance (%s) user_data not base64 decoded", d.Id())
+				userData = []byte(d.Get("user_data").(string))
 			}
 
-			return nil
-		})
+			input := &ec2.ModifyInstanceAttributeInput{
+				InstanceId: aws.String(d.Id()),
+				UserData: &ec2.BlobAttributeValue{
+					Value: userData,
+				},
+			}
 
-		if tfresource.TimedOut(err) {
-			_, err = conn.StartInstances(input)
+			if err := modifyAttributeWithInstanceStopStart(d, conn, input); err != nil {
+				return fmt.Errorf("error updating instance (%s) user data: %w", d.Id(), err)
+			}
 		}
 
-		if err != nil {
-			return fmt.Errorf("error starting EC2 Instance (%s): %w", d.Id(), err)
-		}
+		if d.HasChange("user_data_base64") {
+			log.Printf("[INFO] Modifying user data base64 %s", d.Id())
 
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameStopped},
-			Target:     []string{ec2.InstanceStateNameRunning},
-			Refresh:    InstanceStateRefreshFunc(conn, d.Id(), []string{ec2.InstanceStateNameTerminated}),
-			Timeout:    d.Timeout(schema.TimeoutUpdate),
-			Delay:      10 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
+			// Schema validation technically ensures the data is Base64 encoded.
+			// Decode so the AWS SDK doesn't double encode
+			userData, err := base64.StdEncoding.DecodeString(d.Get("user_data_base64").(string))
+			if err != nil {
+				log.Printf("[DEBUG] Instance (%s) user_data_base64 not base64 decoded", d.Id())
+				userData = []byte(d.Get("user_data_base64").(string))
+			}
 
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return fmt.Errorf(
-				"Error waiting for instance (%s) to become ready: %s",
-				d.Id(), err)
+			input := &ec2.ModifyInstanceAttributeInput{
+				InstanceId: aws.String(d.Id()),
+				UserData: &ec2.BlobAttributeValue{
+					Value: userData,
+				},
+			}
+
+			if err := modifyAttributeWithInstanceStopStart(d, conn, input); err != nil {
+				return fmt.Errorf("error updating instance (%s) user data base64: %w", d.Id(), err)
+			}
 		}
 	}
 
@@ -1769,6 +1765,62 @@ func resourceInstanceDisableAPITermination(conn *ec2.EC2, id string, disableAPIT
 	return nil
 }
 
+// modifyAttributeWithInstanceStopStart modifies a specific attribute provided
+// as input by first stopping the EC2 instance before the modification
+// and then starting up the EC2 instance after modification.
+// Reference: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html
+func modifyAttributeWithInstanceStopStart(d *schema.ResourceData, conn *ec2.EC2, input *ec2.ModifyInstanceAttributeInput) error {
+	log.Printf("[INFO] Stopping Instance %q for attribute change", d.Id())
+	_, err := conn.StopInstances(&ec2.StopInstancesInput{
+		InstanceIds: []*string{aws.String(d.Id())},
+	})
+
+	if err != nil {
+		return fmt.Errorf("error stopping EC2 Instance (%s): %w", d.Id(), err)
+	}
+
+	if err := WaitForInstanceStopping(conn, d.Id(), InstanceStopTimeout); err != nil {
+		return err
+	}
+
+	if _, err := conn.ModifyInstanceAttribute(input); err != nil {
+		return err
+	}
+
+	startInput := &ec2.StartInstancesInput{
+		InstanceIds: []*string{aws.String(d.Id())},
+	}
+
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433
+	err = resource.Retry(InstanceAttributePropagationTimeout, func() *resource.RetryError {
+		_, err := conn.StartInstances(startInput)
+
+		if tfawserr.ErrMessageContains(err, ErrCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.StartInstances(startInput)
+	}
+
+	if err != nil {
+		return fmt.Errorf("error starting EC2 Instance (%s): %w", d.Id(), err)
+	}
+
+	if err := WaitForInstanceRunning(conn, d.Id(), InstanceStartTimeout); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // InstanceStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
 // an EC2 instance.
 func InstanceStateRefreshFunc(conn *ec2.EC2, instanceID string, failStates []string) resource.StateRefreshFunc {
@@ -1899,17 +1951,28 @@ func readBlockDevices(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.
 		return err
 	}
 
-	// This handles cases where the root device block is of type "EBS"
-	// and #readBlockDevicesFromInstance only returns 1 reference to a block-device
-	// stored in ibds["root"]
-	if _, ok := d.GetOk("ebs_block_device"); ok {
-		if len(ibds["ebs"].([]map[string]interface{})) == 0 {
-			ebs := make(map[string]interface{})
-			for k, v := range ibds["root"].(map[string]interface{}) {
-				ebs[k] = v
+	// Special handling for instances where the only block device is the root device:
+	// The call to readBlockDevicesFromInstance above will return the block device
+	// in ibds["root"] not ibds["ebs"], thus to set the state correctly,
+	// the root block device must be copied over to ibds["ebs"]
+	if ibds != nil {
+		if _, ok := d.GetOk("ebs_block_device"); ok {
+			if v, ok := ibds["ebs"].([]map[string]interface{}); ok && len(v) == 0 {
+				if root, ok := ibds["root"].(map[string]interface{}); ok {
+					// Make deep copy of data
+					m := make(map[string]interface{})
+
+					for k, v := range root {
+						m[k] = v
+					}
+
+					if snapshotID, ok := ibds["snapshot_id"].(string); ok {
+						m["snapshot_id"] = snapshotID
+					}
+
+					ibds["ebs"] = []interface{}{m}
+				}
 			}
-			ebs["snapshot_id"] = ibds["snapshot_id"]
-			ibds["ebs"] = append(ibds["ebs"].([]map[string]interface{}), ebs)
 		}
 	}
 
@@ -2439,18 +2502,13 @@ func readSecurityGroups(d *schema.ResourceData, instance *ec2.Instance, conn *ec
 
 	// If the instance is in a VPC, find out if that VPC is Default to determine
 	// whether to store names.
-	if aws.StringValue(instance.VpcId) != "" {
-		out, err := conn.DescribeVpcs(&ec2.DescribeVpcsInput{
-			VpcIds: []*string{instance.VpcId},
-		})
+	if vpcID := aws.StringValue(instance.VpcId); vpcID != "" {
+		vpc, err := FindVPCByID(conn, vpcID)
+
 		if err != nil {
-			log.Printf("[WARN] Unable to describe VPC %q: %s", aws.StringValue(instance.VpcId), err)
-		} else if len(out.Vpcs) == 0 {
-			// This may happen in Eucalyptus Cloud
-			log.Printf("[WARN] Unable to retrieve VPCs")
+			log.Printf("[WARN] error reading EC2 Instance (%s) VPC (%s): %s", d.Id(), vpcID, err)
 		} else {
-			isInDefaultVpc := aws.BoolValue(out.Vpcs[0].IsDefault)
-			useName = isInDefaultVpc
+			useName = aws.BoolValue(vpc.IsDefault)
 		}
 	}
 
@@ -2776,6 +2834,27 @@ func terminateInstance(conn *ec2.EC2, id string, timeout time.Duration) error {
 	}
 
 	return waitForInstanceDeletion(conn, id, timeout)
+}
+
+func WaitForInstanceRunning(conn *ec2.EC2, id string, timeout time.Duration) error {
+	log.Printf("[DEBUG] Waiting for instance (%s) to be running", id)
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameStopped},
+		Target:     []string{ec2.InstanceStateNameRunning},
+		Refresh:    InstanceStateRefreshFunc(conn, id, []string{ec2.InstanceStateNameTerminated}),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	if err != nil {
+		return fmt.Errorf(
+			"error waiting for instance (%s) to be running: %s", id, err)
+	}
+
+	return nil
 }
 
 func WaitForInstanceStopping(conn *ec2.EC2, id string, timeout time.Duration) error {

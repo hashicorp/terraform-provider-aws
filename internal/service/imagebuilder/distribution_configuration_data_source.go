@@ -88,6 +88,57 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"container_distribution_configuration": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"container_tags": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"description": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"target_repository": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"repository_name": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"service": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"launch_template_configuration": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"default": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+									"launch_template_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 						"license_configuration_arns": {
 							Type:     schema.TypeSet,
 							Computed: true,

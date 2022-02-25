@@ -363,18 +363,23 @@ resource "aws_kms_key" "hoge" {
 resource "aws_s3_bucket" "hoge" {
   bucket        = "tf-test-athena-db-%[1]d"
   force_destroy = true
+}
 
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        kms_master_key_id = aws_kms_key.hoge.arn
-        sse_algorithm     = "aws:kms"
-      }
+resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
+  bucket = aws_s3_bucket.hoge.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.hoge.arn
+      sse_algorithm     = "aws:kms"
     }
   }
 }
 
 resource "aws_athena_database" "hoge" {
+  # Must have bucket SSE enabled first
+  depends_on = [aws_s3_bucket_server_side_encryption_configuration.test]
+
   name          = "%[2]s"
   bucket        = aws_s3_bucket.hoge.bucket
   force_destroy = %[3]t

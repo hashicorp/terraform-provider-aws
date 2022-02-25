@@ -337,6 +337,9 @@ service/globalaccelerator:
 service/glue:
   - 'internal/service/glue/**/*'
   - 'website/**/glue_*'
+service/grafana:
+  - 'internal/service/grafana/**/*'
+  - 'website/**/grafana_*'
 service/greengrass:
   - 'internal/service/greengrass/**/*'
   - 'website/**/greengrass_*'

@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -252,16 +252,6 @@ func ResourceTargetGroup() *schema.Resource {
 								"app_cookie", // Only for ALBs
 								"source_ip",  // Only for NLBs
 							}, false),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								switch d.Get("protocol").(string) {
-								case elbv2.ProtocolEnumTcp, elbv2.ProtocolEnumUdp, elbv2.ProtocolEnumTcpUdp, elbv2.ProtocolEnumTls:
-									if new == "lb_cookie" && !d.Get("stickiness.0.enabled").(bool) {
-										log.Printf("[WARN] invalid configuration, this will fail in a future version: stickiness enabled %v, protocol %s, type %s", d.Get("stickiness.0.enabled").(bool), d.Get("protocol").(string), new)
-										return true
-									}
-								}
-								return false
-							},
 						},
 					},
 				},
@@ -378,7 +368,7 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	resp, err := conn.CreateTargetGroup(params)
 
 	// Some partitions may not support tag-on-create
-	if params.Tags != nil && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeInvalidConfigurationRequestException) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeOperationNotPermittedException)) {
+	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
 		log.Printf("[WARN] ELBv2 Target Group (%s) create failed (%s) with tags. Trying create without tags.", groupName, err)
 		params.Tags = nil
 		resp, err = conn.CreateTargetGroup(params)
@@ -469,41 +459,37 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 				stickinessBlocks := v.([]interface{})
 				stickiness := stickinessBlocks[0].(map[string]interface{})
 
-				if !stickiness["enabled"].(bool) && (stickiness["type"].(string) == "lb_cookie" || stickiness["type"].(string) == "app_cookie") && d.Get("protocol").(string) != elbv2.ProtocolEnumHttp && d.Get("protocol").(string) != elbv2.ProtocolEnumHttps {
-					log.Printf("[WARN] invalid configuration, this will fail in a future version: stickiness enabled %v, protocol %s, type %s", stickiness["enabled"].(bool), d.Get("protocol").(string), stickiness["type"].(string))
-				} else {
-					attrs = append(attrs,
-						&elbv2.TargetGroupAttribute{
-							Key:   aws.String("stickiness.enabled"),
-							Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
-						},
-						&elbv2.TargetGroupAttribute{
-							Key:   aws.String("stickiness.type"),
-							Value: aws.String(stickiness["type"].(string)),
-						})
+				attrs = append(attrs,
+					&elbv2.TargetGroupAttribute{
+						Key:   aws.String("stickiness.enabled"),
+						Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
+					},
+					&elbv2.TargetGroupAttribute{
+						Key:   aws.String("stickiness.type"),
+						Value: aws.String(stickiness["type"].(string)),
+					})
 
-					switch d.Get("protocol").(string) {
-					case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
-						switch stickiness["type"].(string) {
-						case "lb_cookie":
-							attrs = append(attrs,
-								&elbv2.TargetGroupAttribute{
-									Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
-									Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-								})
-						case "app_cookie":
-							attrs = append(attrs,
-								&elbv2.TargetGroupAttribute{
-									Key:   aws.String("stickiness.app_cookie.duration_seconds"),
-									Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-								},
-								&elbv2.TargetGroupAttribute{
-									Key:   aws.String("stickiness.app_cookie.cookie_name"),
-									Value: aws.String(stickiness["cookie_name"].(string)),
-								})
-						default:
-							log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
-						}
+				switch d.Get("protocol").(string) {
+				case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+					switch stickiness["type"].(string) {
+					case "lb_cookie":
+						attrs = append(attrs,
+							&elbv2.TargetGroupAttribute{
+								Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
+								Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+							})
+					case "app_cookie":
+						attrs = append(attrs,
+							&elbv2.TargetGroupAttribute{
+								Key:   aws.String("stickiness.app_cookie.duration_seconds"),
+								Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+							},
+							&elbv2.TargetGroupAttribute{
+								Key:   aws.String("stickiness.app_cookie.cookie_name"),
+								Value: aws.String(stickiness["cookie_name"].(string)),
+							})
+					default:
+						log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
 					}
 				}
 			}
@@ -535,7 +521,7 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
 		// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeInvalidConfigurationRequestException) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeOperationNotPermittedException)) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
 			log.Printf("[WARN] error adding tags after create for ELBv2 Target Group (%s): %s", d.Id(), err)
 			return resourceTargetGroupRead(d, meta)
 		}
@@ -700,41 +686,37 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 				if len(stickinessBlocks) == 1 {
 					stickiness := stickinessBlocks[0].(map[string]interface{})
 
-					if !stickiness["enabled"].(bool) && (stickiness["type"].(string) == "lb_cookie" || stickiness["type"].(string) == "app_cookie") && d.Get("protocol").(string) != elbv2.ProtocolEnumHttp && d.Get("protocol").(string) != elbv2.ProtocolEnumHttps {
-						log.Printf("[WARN] invalid configuration, this will fail in a future version: stickiness enabled %v, protocol %s, type %s", stickiness["enabled"].(bool), d.Get("protocol").(string), stickiness["type"].(string))
-					} else {
-						attrs = append(attrs,
-							&elbv2.TargetGroupAttribute{
-								Key:   aws.String("stickiness.enabled"),
-								Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
-							},
-							&elbv2.TargetGroupAttribute{
-								Key:   aws.String("stickiness.type"),
-								Value: aws.String(stickiness["type"].(string)),
-							})
+					attrs = append(attrs,
+						&elbv2.TargetGroupAttribute{
+							Key:   aws.String("stickiness.enabled"),
+							Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
+						},
+						&elbv2.TargetGroupAttribute{
+							Key:   aws.String("stickiness.type"),
+							Value: aws.String(stickiness["type"].(string)),
+						})
 
-						switch d.Get("protocol").(string) {
-						case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
-							switch stickiness["type"].(string) {
-							case "lb_cookie":
-								attrs = append(attrs,
-									&elbv2.TargetGroupAttribute{
-										Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
-										Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-									})
-							case "app_cookie":
-								attrs = append(attrs,
-									&elbv2.TargetGroupAttribute{
-										Key:   aws.String("stickiness.app_cookie.duration_seconds"),
-										Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-									},
-									&elbv2.TargetGroupAttribute{
-										Key:   aws.String("stickiness.app_cookie.cookie_name"),
-										Value: aws.String(stickiness["cookie_name"].(string)),
-									})
-							default:
-								log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
-							}
+					switch d.Get("protocol").(string) {
+					case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+						switch stickiness["type"].(string) {
+						case "lb_cookie":
+							attrs = append(attrs,
+								&elbv2.TargetGroupAttribute{
+									Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
+									Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+								})
+						case "app_cookie":
+							attrs = append(attrs,
+								&elbv2.TargetGroupAttribute{
+									Key:   aws.String("stickiness.app_cookie.duration_seconds"),
+									Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+								},
+								&elbv2.TargetGroupAttribute{
+									Key:   aws.String("stickiness.app_cookie.cookie_name"),
+									Value: aws.String(stickiness["cookie_name"].(string)),
+								})
+						default:
+							log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
 						}
 					}
 				} else if len(stickinessBlocks) == 0 {
@@ -796,7 +778,7 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// ISO partitions may not support tagging, giving error
-		if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeInvalidConfigurationRequestException) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeOperationNotPermittedException) {
+		if verify.CheckISOErrorTagsUnsupported(err) {
 			log.Printf("[WARN] Unable to update tags for ELBv2 Target Group %s: %s", d.Id(), err)
 			return resourceTargetGroupRead(d, meta)
 		}
@@ -985,7 +967,7 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 
 	tags, err := ListTags(conn, d.Id())
 
-	if tfawserr.ErrCodeContains(err, ErrCodeAccessDenied) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeInvalidConfigurationRequestException) || tfawserr.ErrCodeContains(err, elbv2.ErrCodeOperationNotPermittedException) {
+	if verify.CheckISOErrorTagsUnsupported(err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Target Group %s: %s", d.Id(), err)
 		return nil
 	}

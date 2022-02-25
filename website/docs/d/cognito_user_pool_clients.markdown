@@ -26,3 +26,4 @@ data "aws_cognito_user_pool_clients" "main" {
 ## Attributes Reference
 
 * `client_ids` - List of Cognito user pool client IDs.
+* `client_names` - List of Cognito user pool client names.

@@ -20,7 +20,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/outposts"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/aws/aws-sdk-go/service/ssoadmin"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -29,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 )
@@ -651,6 +653,15 @@ func PreCheckRegion(t *testing.T, region string) {
 	}
 }
 
+// PreCheckRegionNot checks that the test region is not one of the specified regions.
+func PreCheckRegionNot(t *testing.T, regions ...string) {
+	for _, region := range regions {
+		if Region() == region {
+			t.Skipf("skipping tests; %s (%s) not supported", conns.EnvVarDefaultRegion, region)
+		}
+	}
+}
+
 // PreCheckPartition checks that the test partition is the specified partition.
 func PreCheckPartition(partition string, t *testing.T) {
 	if Partition() != partition {
@@ -698,6 +709,34 @@ func PreCheckOrganizationManagementAccount(t *testing.T) {
 
 	if aws.StringValue(organization.MasterAccountId) != aws.StringValue(callerIdentity.Account) {
 		t.Skip("this AWS account must be the management account of an AWS Organization")
+	}
+}
+
+func PreCheckSSOAdminInstances(t *testing.T) {
+	conn := Provider.Meta().(*conns.AWSClient).SSOAdminConn
+	input := &ssoadmin.ListInstancesInput{}
+	var instances []*ssoadmin.InstanceMetadata
+
+	err := conn.ListInstancesPages(input, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		instances = append(instances, page.Instances...)
+
+		return !lastPage
+	})
+
+	if PreCheckSkipError(err) {
+		t.Skipf("skipping tests: %s", err)
+	}
+
+	if len(instances) == 0 {
+		t.Skip("skipping tests; no SSO Instances found.")
+	}
+
+	if err != nil {
+		t.Fatalf("error listing SSO Instances: %s", err)
 	}
 }
 
@@ -1791,7 +1830,7 @@ resource "aws_subnet" "test" {
 	)
 }
 
-func CheckVPCExists(n string, vpc *ec2.Vpc) resource.TestCheckFunc {
+func CheckVPCExists(n string, v *ec2.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1803,18 +1842,14 @@ func CheckVPCExists(n string, vpc *ec2.Vpc) resource.TestCheckFunc {
 		}
 
 		conn := Provider.Meta().(*conns.AWSClient).EC2Conn
-		DescribeVpcOpts := &ec2.DescribeVpcsInput{
-			VpcIds: []*string{aws.String(rs.Primary.ID)},
-		}
-		resp, err := conn.DescribeVpcs(DescribeVpcOpts)
+
+		output, err := tfec2.FindVPCByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if len(resp.Vpcs) == 0 || resp.Vpcs[0] == nil {
-			return fmt.Errorf("VPC not found")
-		}
 
-		*vpc = *resp.Vpcs[0]
+		*v = *output
 
 		return nil
 	}
@@ -1845,5 +1880,25 @@ func CheckCallerIdentityAccountID(n string) resource.TestCheckFunc {
 		}
 
 		return nil
+	}
+}
+
+func CheckResourceAttrGreaterThanValue(n, key, value string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if v, ok := rs.Primary.Attributes[key]; !ok || !(v > value) {
+			if !ok {
+				return fmt.Errorf("%s: Attribute %q not found", n, key)
+			}
+
+			return fmt.Errorf("%s: Attribute %q is not greater than %q, got %q", n, key, value, v)
+		}
+
+		return nil
+
 	}
 }

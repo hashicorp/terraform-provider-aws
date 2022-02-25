@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -410,6 +410,11 @@ func wafv2ManagedRuleGroupStatementSchema(level int) *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
 				},
+				"version": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
 			},
 		},
 	}
@@ -666,6 +671,10 @@ func expandManagedRuleGroupStatement(l []interface{}) *wafv2.ManagedRuleGroupSta
 		r.ScopeDownStatement = expandStatement(s[0].(map[string]interface{}))
 	}
 
+	if v, ok := m["version"]; ok && v != "" {
+		r.Version = aws.String(v.(string))
+	}
+
 	return r
 }
 
@@ -880,6 +889,10 @@ func flattenManagedRuleGroupStatement(apiObject *wafv2.ManagedRuleGroupStatement
 
 	if apiObject.VendorName != nil {
 		tfMap["vendor_name"] = aws.StringValue(apiObject.VendorName)
+	}
+
+	if apiObject.Version != nil {
+		tfMap["version"] = aws.StringValue(apiObject.Version)
 	}
 
 	return []interface{}{tfMap}

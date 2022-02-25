@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -39,10 +39,13 @@ func ResourceDocument() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validName,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]+$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+					validation.StringLenBetween(3, 128),
+				),
 			},
 			"attachments_source": {
 				Type:     schema.TypeList,
@@ -59,7 +62,7 @@ func ResourceDocument() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]+$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
 								validation.StringLenBetween(3, 128),
 							),
 						},

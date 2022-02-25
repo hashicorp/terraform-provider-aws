@@ -278,7 +278,7 @@ resource "aws_api_gateway_stage" "example" {
 ## Example Cross-Account Event Bus target
 
 ```terraform
-data "aws_iam_role" "event_bus_invoke_remote_event_bus" {
+resource "aws_iam_role" "event_bus_invoke_remote_event_bus" {
   name               = "event-bus-invoke-remote-event-bus"
   assume_role_policy = <<EOF
 {
@@ -299,7 +299,7 @@ EOF
 data "aws_iam_policy_document" "event_bus_invoke_remote_event_bus" {
   statement {
     effect    = "Allow"
-    actions   = ["events.PutEvents"]
+    actions   = ["events:PutEvents"]
     resources = ["arn:aws:events:eu-west-1:1234567890:event-bus/My-Event-Bus"]
   }
 }

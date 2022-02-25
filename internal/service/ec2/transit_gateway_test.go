@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -30,6 +30,29 @@ func TestAccEC2TransitGateway_serial(t *testing.T) {
 			"DnsSupport":                                         testAccTransitGateway_DNSSupport,
 			"Tags":                                               testAccTransitGateway_Tags,
 			"VpnEcmpSupport":                                     testAccTransitGateway_VPNECMPSupport,
+		},
+		"MulticastDomain": {
+			"basic":         testAccTransitGatewayMulticastDomain_basic,
+			"disappears":    testAccTransitGatewayMulticastDomain_disappears,
+			"tags":          testAccTransitGatewayMulticastDomain_tags,
+			"IGMPv2Support": testAccTransitGatewayMulticastDomain_igmpv2Support,
+		},
+		"MulticastDomainAssociation": {
+			"basic":            testAccTransitGatewayMulticastDomainAssociation_basic,
+			"disappears":       testAccTransitGatewayMulticastDomainAssociation_disappears,
+			"DomainDisappears": testAccTransitGatewayMulticastDomainAssociation_Disappears_domain,
+			"TwoAssociations":  testAccTransitGatewayMulticastDomainAssociation_twoAssociations,
+		},
+		"MulticastGroupMember": {
+			"basic":            testAccTransitGatewayMulticastGroupMember_basic,
+			"disappears":       testAccTransitGatewayMulticastGroupMember_disappears,
+			"DomainDisappears": testAccTransitGatewayMulticastGroupMember_Disappears_domain,
+			"TwoMembers":       testAccTransitGatewayMulticastGroupMember_twoMembers,
+		},
+		"MulticastGroupSource": {
+			"basic":            testAccTransitGatewayMulticastGroupSource_basic,
+			"disappears":       testAccTransitGatewayMulticastGroupSource_disappears,
+			"DomainDisappears": testAccTransitGatewayMulticastGroupSource_Disappears_domain,
 		},
 		"PeeringAttachment": {
 			"basic":            testAccTransitGatewayPeeringAttachment_basic,
@@ -122,6 +145,7 @@ func testAccTransitGateway_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_table_propagation", ec2.DefaultRouteTablePropagationValueEnable),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "dns_support", ec2.DnsSupportValueEnable),
+					resource.TestCheckResourceAttr(resourceName, "multicast_support", ec2.MulticastSupportValueDisable),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "propagation_default_route_table_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),

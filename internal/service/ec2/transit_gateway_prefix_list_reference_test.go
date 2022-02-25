@@ -5,13 +5,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func testAccTransitGatewayPrefixListReference_basic(t *testing.T) {
@@ -152,46 +152,51 @@ func testAccCheckTransitGatewayPrefixListReferenceDestroy(s *terraform.State) er
 			continue
 		}
 
-		transitGatewayPrefixListReference, err := tfec2.FindTransitGatewayPrefixListReferenceByID(conn, rs.Primary.ID)
+		transitGatewayRouteTableID, prefixListID, err := tfec2.TransitGatewayPrefixListReferenceParseID(rs.Primary.ID)
 
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteTableIDNotFound) {
+		if err != nil {
+			return err
+		}
+
+		_, err = tfec2.FindTransitGatewayPrefixListReferenceByTwoPartKey(conn, transitGatewayRouteTableID, prefixListID)
+
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading EC2 Transit Gateway Prefix List Reference (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if transitGatewayPrefixListReference != nil {
-			return fmt.Errorf("EC2 Transit Gateway Prefix List Reference (%s) still exists", rs.Primary.ID)
-		}
+		return fmt.Errorf("EC2 Transit Gateway Prefix List Reference %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccTransitGatewayPrefixListReferenceExists(resourceName string) resource.TestCheckFunc {
+func testAccTransitGatewayPrefixListReferenceExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("resource %s not found", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("resource %s has not set its id", resourceName)
+			return fmt.Errorf("No EC2 Transit Gateway Prefix List Reference is set")
+		}
+
+		transitGatewayRouteTableID, prefixListID, err := tfec2.TransitGatewayPrefixListReferenceParseID(rs.Primary.ID)
+
+		if err != nil {
+			return err
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		transitGatewayPrefixListReference, err := tfec2.FindTransitGatewayPrefixListReferenceByID(conn, rs.Primary.ID)
+		_, err = tfec2.FindTransitGatewayPrefixListReferenceByTwoPartKey(conn, transitGatewayRouteTableID, prefixListID)
 
 		if err != nil {
-			return fmt.Errorf("error reading EC2 Transit Gateway Prefix List Reference (%s): %w", rs.Primary.ID, err)
-		}
-
-		if transitGatewayPrefixListReference == nil {
-			return fmt.Errorf("EC2 Transit Gateway Prefix List Reference (%s) not found", rs.Primary.ID)
+			return err
 		}
 
 		return nil
