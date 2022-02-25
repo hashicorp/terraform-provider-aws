@@ -24,12 +24,12 @@ The following arguments are supported:
 
 * `amazon_side_asn` - (Optional) Private Autonomous System Number (ASN) for the Amazon side of a BGP session. The range is `64512` to `65534` for 16-bit ASNs and `4200000000` to `4294967294` for 32-bit ASNs. Default value: `64512`.
 * `auto_accept_shared_attachments` - (Optional) Whether resource attachment requests are automatically accepted. Valid values: `disable`, `enable`. Default value: `disable`.
-* `cidr_blocks` - (Optional) The list of associated CIDR blocks. It can contain up to 1 IPv4 CIDR block of size up to /24 and up to one IPv6 CIDR block of size up to /64. The IPv4 block must not be from range 169.254.0.0/16
 * `default_route_table_association` - (Optional) Whether resource attachments are automatically associated with the default association route table. Valid values: `disable`, `enable`. Default value: `enable`.
 * `default_route_table_propagation` - (Optional) Whether resource attachments automatically propagate routes to the default propagation route table. Valid values: `disable`, `enable`. Default value: `enable`.
 * `description` - (Optional) Description of the EC2 Transit Gateway.
 * `dns_support` - (Optional) Whether DNS support is enabled. Valid values: `disable`, `enable`. Default value: `enable`.
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `transit_gateway_cidr_blocks` - (Optional) The list of associated CIDR blocks. It can contain up to 1 IPv4 CIDR block of size up to /24 and up to one IPv6 CIDR block of size up to /64. The IPv4 block must not be from range 169.254.0.0/16.
 * `vpn_ecmp_support` - (Optional) Whether VPN Equal Cost Multipath Protocol support is enabled. Valid values: `disable`, `enable`. Default value: `enable`.
 
 ## Attributes Reference

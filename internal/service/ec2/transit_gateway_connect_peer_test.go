@@ -309,7 +309,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_ec2_transit_gateway" "test" {
-  cidr_blocks = ["10.20.30.0/24"]
+  transit_gateway_cidr_blocks = ["10.20.30.0/24"]
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
@@ -352,7 +352,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_ec2_transit_gateway" "test" {
-  cidr_blocks = ["10.20.30.0/24"]
+  transit_gateway_cidr_blocks = ["10.20.30.0/24"]
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
@@ -396,7 +396,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_ec2_transit_gateway" "test" {
-  cidr_blocks = ["10.20.30.0/24"]
+  transit_gateway_cidr_blocks = ["10.20.30.0/24"]
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
@@ -443,7 +443,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_ec2_transit_gateway" "test" {
-  cidr_blocks = ["10.20.30.0/24"]
+  transit_gateway_cidr_blocks = ["10.20.30.0/24"]
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
@@ -491,7 +491,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_ec2_transit_gateway" "test" {
-  cidr_blocks = ["10.20.30.0/24"]
+  transit_gateway_cidr_blocks = ["10.20.30.0/24"]
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
@@ -534,7 +534,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_ec2_transit_gateway" "test" {
-  cidr_blocks = ["10.20.30.0/24"]
+  transit_gateway_cidr_blocks = ["10.20.30.0/24"]
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {

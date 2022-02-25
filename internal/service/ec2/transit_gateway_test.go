@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -269,8 +270,9 @@ func testAccTransitGateway_AutoAcceptSharedAttachments(t *testing.T) {
 }
 
 func testAccTransitGateway_CidrBlocks(t *testing.T) {
-	var transitGateway1, transitGateway2, transitGateway3 ec2.TransitGateway
+	var v1, v2, v3 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
@@ -279,10 +281,10 @@ func testAccTransitGateway_CidrBlocks(t *testing.T) {
 		CheckDestroy: testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayCidrBlocks2Config(),
+				Config: testAccTransitGatewayCidrBlocks2Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayExists(resourceName, &transitGateway1),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "2"),
+					testAccCheckTransitGatewayExists(resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_cidr_blocks.#", "2"),
 				),
 			},
 			{
@@ -291,19 +293,19 @@ func testAccTransitGateway_CidrBlocks(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayCidrBlocks1Config(),
+				Config: testAccTransitGatewayCidrBlocks1Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayExists(resourceName, &transitGateway2),
-					testAccCheckTransitGatewayNotRecreated(&transitGateway1, &transitGateway2),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
+					testAccCheckTransitGatewayExists(resourceName, &v2),
+					testAccCheckTransitGatewayNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_cidr_blocks.#", "1"),
 				),
 			},
 			{
-				Config: testAccTransitGatewayCidrBlocks2Config(),
+				Config: testAccTransitGatewayCidrBlocks2Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayExists(resourceName, &transitGateway3),
-					testAccCheckTransitGatewayNotRecreated(&transitGateway2, &transitGateway3),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "2"),
+					testAccCheckTransitGatewayExists(resourceName, &v3),
+					testAccCheckTransitGatewayNotRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_cidr_blocks.#", "2"),
 				),
 			},
 		},
@@ -862,18 +864,26 @@ resource "aws_ec2_transit_gateway" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccTransitGatewayCidrBlocks1Config() string {
+func testAccTransitGatewayCidrBlocks1Config(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
-  cidr_blocks = ["10.120.0.0/24"]
+  transit_gateway_cidr_blocks = ["10.120.0.0/24"]
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`)
+`, rName)
 }
 
-func testAccTransitGatewayCidrBlocks2Config() string {
+func testAccTransitGatewayCidrBlocks2Config(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
-  cidr_blocks = ["10.120.0.0/24", "2001:1234:1234::/64"]
+  transit_gateway_cidr_blocks = ["10.120.0.0/24", "2001:1234:1234::/64"]
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`)
+`, rName)
 }

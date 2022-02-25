@@ -95,23 +95,6 @@ func ResourceTransitGateway() *schema.Resource {
 				Default:      ec2.AutoAcceptSharedAttachmentsValueDisable,
 				ValidateFunc: validation.StringInSlice(ec2.AutoAcceptSharedAttachmentsValue_Values(), false),
 			},
-			"cidr_blocks": {
-				// TODO: Change to TypeSet.
-				// TODO: Rename to transit_gateway_cidr_blocks.
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 2,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: verify.IsIPv4CIDRBlockOrIPv6CIDRBlock(
-						validation.All(
-							validation.IsCIDRNetwork(16, 24),
-							validation.StringDoesNotMatch(regexp.MustCompile(`^169\.254\.`), "must not be from range 169.254.0.0/16"),
-						),
-						validation.IsCIDRNetwork(40, 64),
-					),
-				},
-			},
 			"default_route_table_association": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -151,6 +134,22 @@ func ResourceTransitGateway() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"transit_gateway_cidr_blocks": {
+				// TODO: Change to TypeSet.
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 2,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: verify.IsIPv4CIDRBlockOrIPv6CIDRBlock(
+						validation.All(
+							validation.IsCIDRNetwork(16, 24),
+							validation.StringDoesNotMatch(regexp.MustCompile(`^169\.254\.`), "must not be from range 169.254.0.0/16"),
+						),
+						validation.IsCIDRNetwork(40, 64),
+					),
+				},
+			},
 			"vpn_ecmp_support": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -178,16 +177,16 @@ func resourceTransitGatewayCreate(d *schema.ResourceData, meta interface{}) erro
 		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGateway),
 	}
 
-	if v, ok := d.GetOk("cidr_blocks"); ok {
-		input.Options.TransitGatewayCidrBlocks = flex.ExpandStringList(v.([]interface{}))
-	}
-
 	if v, ok := d.GetOk("amazon_side_asn"); ok {
 		input.Options.AmazonSideAsn = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("transit_gateway_cidr_blocks"); ok {
+		input.Options.TransitGatewayCidrBlocks = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway: %s", input)
@@ -242,7 +241,6 @@ func resourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("arn", transitGateway.TransitGatewayArn)
 	d.Set("association_default_route_table_id", transitGateway.Options.AssociationDefaultRouteTableId)
 	d.Set("auto_accept_shared_attachments", transitGateway.Options.AutoAcceptSharedAttachments)
-	d.Set("cidr_blocks", transitGateway.Options.TransitGatewayCidrBlocks)
 	d.Set("default_route_table_association", transitGateway.Options.DefaultRouteTableAssociation)
 	d.Set("default_route_table_propagation", transitGateway.Options.DefaultRouteTablePropagation)
 	d.Set("description", transitGateway.Description)
@@ -250,6 +248,8 @@ func resourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("multicast_support", transitGateway.Options.MulticastSupport)
 	d.Set("owner_id", transitGateway.OwnerId)
 	d.Set("propagation_default_route_table_id", transitGateway.Options.PropagationDefaultRouteTableId)
+	d.Set("transit_gateway_cidr_blocks", aws.StringValueSlice(transitGateway.Options.TransitGatewayCidrBlocks))
+	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
 
 	tags := KeyValueTags(transitGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -261,8 +261,6 @@ func resourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) error 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
-
-	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
 
 	return nil
 }
@@ -300,9 +298,9 @@ func resourceTransitGatewayUpdate(d *schema.ResourceData, meta interface{}) erro
 		options.DnsSupport = aws.String(d.Get("dns_support").(string))
 	}
 
-	if d.HasChange("cidr_blocks") {
+	if d.HasChange("transit_gateway_cidr_blocks") {
 		transitGatewayModified = true
-		o, n := d.GetChange("cidr_blocks")
+		o, n := d.GetChange("transit_gateway_cidr_blocks")
 		oldCidrBlocks := CidrBlocks(o.([]interface{}))
 		newCidrBlocks := CidrBlocks(n.([]interface{}))
 		if removedCidrBlocks := oldCidrBlocks.Removed(newCidrBlocks); len(removedCidrBlocks) > 0 {
