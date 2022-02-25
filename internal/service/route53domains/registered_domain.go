@@ -470,9 +470,12 @@ func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceRegisteredDomainDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[WARN] Route 53 Domains Registered Domain (%s) not deleted, removing from state", d.Id())
-
-	return nil
+	return diag.Diagnostics{
+		diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  fmt.Sprintf("Route 53 Domains Registered Domain (%s) not deleted, removing from state", d.Id()),
+		},
+	}
 }
 
 const (
