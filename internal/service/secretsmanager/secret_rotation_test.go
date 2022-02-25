@@ -74,13 +74,13 @@ func TestAccSecretsManagerSecretRotation_rate(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Test creating secret rotation resource with daily rate schedule expression
 			{
-				Config: testAccSecretRotationConfigRate(rName, 14),
+				Config: testAccSecretRotationConfigRate(rName, 90),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretRotationExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", "rate(14 days)"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", "rate(90 days)"),
 				),
 			},
 			// Test importing secret rotation
@@ -282,7 +282,6 @@ resource "aws_secretsmanager_secret_rotation" "test" {
 
   rotation_rules {
     schedule_expression 	 = "rate(%[2]d days)"
-	automatically_after_days = 0
   }
 
   depends_on = [aws_lambda_permission.test1]
@@ -334,7 +333,6 @@ resource "aws_secretsmanager_secret_rotation" "test" {
 
   rotation_rules {
     schedule_expression 	 = "%[2]s"
-	duration				 = "2h"
   }
 
   depends_on = [aws_lambda_permission.test1]
