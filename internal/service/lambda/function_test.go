@@ -2083,8 +2083,6 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 	for _, runtime := range lambda.Runtime_Values() {
 		// EOL runtimes.
 		switch runtime {
-		case lambda.RuntimeDotnet6:
-			fallthrough
 		case lambda.RuntimeNodejs43Edge:
 			fallthrough
 		case lambda.RuntimeDotnetcore20:
