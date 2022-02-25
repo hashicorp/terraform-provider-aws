@@ -37,6 +37,7 @@ project {
         password("env.AWS_ACCESS_KEY_ID", awsAccessKeyID, display = ParameterDisplay.HIDDEN)
         password("env.AWS_SECRET_ACCESS_KEY", awsSecretAccessKey, display = ParameterDisplay.HIDDEN)
         text("env.AWS_DEFAULT_REGION", defaultRegion, allowEmpty = false)
+        text("env.TF_LOG", "DEBUG", display = ParameterDisplay.HIDDEN)
 
         if (awsAlternateAccountID != "" || awsAlternateAccessKeyID != "" || awsAlternateSecretAccessKey != "") {
             text("env.AWS_ALTERNATE_ACCOUNT_ID", awsAlternateAccountID, display = ParameterDisplay.HIDDEN)
