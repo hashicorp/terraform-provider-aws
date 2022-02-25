@@ -60,8 +60,9 @@ See the [`aws_s3_bucket_lifecycle_configuration` resource](s3_bucket_lifecycle_c
 ### Using object lock configuration
 
 The `object_lock_configuration.rule` argument is read-only as of version 4.0 of the Terraform AWS Provider.
-To **enable** Object Lock on your bucket, use must still use the `object_lock_configuration.object_lock_enabled` argument in **this** resource.
+To **enable** Object Lock on a **new** bucket, use the `object_lock_configuration.object_lock_enabled` argument in **this** resource. See [Object Lock Configuration](#object-lock-configuration) below for details.
 To configure the default retention rule of the Object Lock configuration, see the [`aws_s3_bucket_object_lock_configuration` resource](s3_bucket_object_lock_configuration.html.markdown) for configuration details.
+To **enable** Object Lock on an **existing** bucket, please contact AWS Support and refer to the [Object lock configuration for an existing bucket](s3_bucket_object_lock_configuration.html.markdown#object-lock-configuration-for-an-existing-bucket) example for more details.
 
 ### Using replication configuration
 
@@ -90,7 +91,7 @@ The following arguments are supported:
 
 ### Object Lock Configuration
 
-~> **NOTE:** You can only enable S3 Object Lock for _new_ buckets. If you need to turn on S3 Object Lock for an _existing_ bucket, please contact AWS Support.
+~> **NOTE:** You can only **enable** S3 Object Lock for **new** buckets. If you need to **enable** S3 Object Lock for an **existing** bucket, please contact AWS Support.
 When you create a bucket with S3 Object Lock enabled, Amazon S3 automatically enables versioning for the bucket.
 Once you create a bucket with S3 Object Lock enabled, you can't disable Object Lock or suspend versioning for the bucket.
 To configure the default retention rule of the Object Lock configuration, see the [`aws_s3_bucket_object_lock_configuration` resource](s3_bucket_object_lock_configuration.html.markdown) for configuration details.
