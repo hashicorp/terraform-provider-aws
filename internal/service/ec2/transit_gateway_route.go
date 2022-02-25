@@ -3,12 +3,10 @@ package ec2
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -76,6 +74,10 @@ func resourceTransitGatewayRouteCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(fmt.Sprintf("%s_%s", transitGatewayRouteTableID, destination))
 
+	if _, err := WaitTransitGatewayRouteCreated(conn, transitGatewayRouteTableID, destination); err != nil {
+		return fmt.Errorf("error waitin for EC2 Transit Gateway Route (%s) create: %w", d.Id(), err)
+	}
+
 	return resourceTransitGatewayRouteRead(d, meta)
 }
 
@@ -87,58 +89,23 @@ func resourceTransitGatewayRouteRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	// Handle EC2 eventual consistency
-	var transitGatewayRoute *ec2.TransitGatewayRoute
-	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
-		transitGatewayRoute, err = DescribeTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+		return FindTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
+	}, d.IsNewResource())
 
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		if d.IsNewResource() && transitGatewayRoute == nil {
-			return resource.RetryableError(&resource.NotFoundError{})
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		transitGatewayRoute, err = DescribeTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
-	}
-
-	if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
-		log.Printf("[WARN] EC2 Transit Gateway Route Table (%s) not found, removing from state", transitGatewayRouteTableID)
-		d.SetId("")
-		return nil
-	}
-
-	if tfresource.NotFound(err) {
-		log.Printf("[WARN] EC2 Transit Gateway Route (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Transit Gateway Route %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway Route: %s", err)
+		return fmt.Errorf("error reading EC2 Transit Gateway Route (%s): %w", d.Id(), err)
 	}
 
-	if transitGatewayRoute == nil {
-		log.Printf("[WARN] EC2 Transit Gateway Route (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	state := aws.StringValue(transitGatewayRoute.State)
-	if state == ec2.TransitGatewayRouteStateDeleted || state == ec2.TransitGatewayRouteStateDeleting {
-		log.Printf("[WARN] EC2 Transit Gateway Route (%s) deleted, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
+	transitGatewayRoute := outputRaw.(*ec2.TransitGatewayRoute)
 
 	d.Set("destination_cidr_block", transitGatewayRoute.DestinationCidrBlock)
-
 	d.Set("transit_gateway_attachment_id", "")
 	if len(transitGatewayRoute.TransitGatewayAttachments) > 0 && transitGatewayRoute.TransitGatewayAttachments[0] != nil {
 		d.Set("transit_gateway_attachment_id", transitGatewayRoute.TransitGatewayAttachments[0].TransitGatewayAttachmentId)
@@ -173,6 +140,10 @@ func resourceTransitGatewayRouteDelete(d *schema.ResourceData, meta interface{})
 
 	if err != nil {
 		return fmt.Errorf("error deleting EC2 Transit Gateway Route: %s", err)
+	}
+
+	if _, err := WaitTransitGatewayRouteDeleted(conn, transitGatewayRouteTableID, destination); err != nil {
+		return fmt.Errorf("error waitin for EC2 Transit Gateway Route (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil

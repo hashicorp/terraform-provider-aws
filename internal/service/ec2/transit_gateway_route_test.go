@@ -5,12 +5,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func testAccTransitGatewayRoute_basic(t *testing.T) {
@@ -158,11 +158,11 @@ func testAccTransitGatewayRoute_disappears_TransitGatewayAttachment(t *testing.T
 	})
 }
 
-func testAccCheckTransitGatewayRouteExists(resourceName string, transitGatewayRoute *ec2.TransitGatewayRoute) resource.TestCheckFunc {
+func testAccCheckTransitGatewayRouteExists(n string, v *ec2.TransitGatewayRoute) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
@@ -177,17 +177,13 @@ func testAccCheckTransitGatewayRouteExists(resourceName string, transitGatewayRo
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		route, err := tfec2.DescribeTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
+		output, err := tfec2.FindTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
 
 		if err != nil {
 			return err
 		}
 
-		if route == nil {
-			return fmt.Errorf("EC2 Transit Gateway Route not found")
-		}
-
-		*transitGatewayRoute = *route
+		*v = *output
 
 		return nil
 	}
@@ -207,9 +203,9 @@ func testAccCheckTransitGatewayRouteDestroy(s *terraform.State) error {
 			return err
 		}
 
-		route, err := tfec2.DescribeTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
+		_, err = tfec2.FindTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
 
-		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -217,11 +213,7 @@ func testAccCheckTransitGatewayRouteDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if route == nil {
-			continue
-		}
-
-		return fmt.Errorf("EC2 Transit Gateway Route (%s) still exists", rs.Primary.ID)
+		return fmt.Errorf(" EC2 Transit Gateway Route %s still exists", rs.Primary.ID)
 	}
 
 	return nil
