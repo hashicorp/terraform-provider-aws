@@ -2319,7 +2319,7 @@ func FindTransitGatewayConnects(conn *ec2.EC2, input *ec2.DescribeTransitGateway
 	return output, nil
 }
 
-func FindTransitGatewayConnectByAttachmentID(conn *ec2.EC2, id string) (*ec2.TransitGatewayConnect, error) {
+func FindTransitGatewayConnectByID(conn *ec2.EC2, id string) (*ec2.TransitGatewayConnect, error) {
 	input := &ec2.DescribeTransitGatewayConnectsInput{
 		TransitGatewayAttachmentIds: aws.StringSlice([]string{id}),
 	}
