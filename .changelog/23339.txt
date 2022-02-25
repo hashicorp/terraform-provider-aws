@@ -1,0 +1,8 @@
+```release-note:bug
+resource/aws_cloudformation_stack_set: Fix `call_as` argument
+```
+
+```release-note:enhancement
+resource/aws_cloudformation_stack_set:_instance: Add `call_as` argument
+```
+
