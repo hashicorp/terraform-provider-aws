@@ -26,18 +26,18 @@ func ResourceTransitGatewayRoute() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"blackhole": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  false,
+			},
 			"destination_cidr_block": {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
 				ValidateFunc:     verify.ValidCIDRNetworkAddress,
 				DiffSuppressFunc: suppressEqualCIDRBlockDiffs,
-			},
-			"blackhole": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
 			},
 			"transit_gateway_attachment_id": {
 				Type:         schema.TypeString,
