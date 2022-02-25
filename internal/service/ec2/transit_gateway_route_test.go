@@ -122,7 +122,7 @@ func testAccTransitGatewayRoute_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway1),
 					testAccCheckTransitGatewayRouteExists(resourceName, &transitGatewayRoute1),
-					testAccCheckTransitGatewayRouteDisappears(&transitGateway1, &transitGatewayRoute1),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -225,21 +225,6 @@ func testAccCheckTransitGatewayRouteDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccCheckTransitGatewayRouteDisappears(transitGateway *ec2.TransitGateway, transitGatewayRoute *ec2.TransitGatewayRoute) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-		input := &ec2.DeleteTransitGatewayRouteInput{
-			DestinationCidrBlock:       transitGatewayRoute.DestinationCidrBlock,
-			TransitGatewayRouteTableId: transitGateway.Options.AssociationDefaultRouteTableId,
-		}
-
-		_, err := conn.DeleteTransitGatewayRoute(input)
-
-		return err
-	}
 }
 
 func testAccTransitGatewayRouteDestinationCIDRBlockConfig() string {
