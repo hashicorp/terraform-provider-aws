@@ -33,11 +33,6 @@ func DataSourceTransitGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cidr_blocks": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"default_route_table_association": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -73,6 +68,11 @@ func DataSourceTransitGateway() *schema.Resource {
 				Computed: true,
 			},
 			"tags": tftags.TagsSchemaComputed(),
+			"transit_gateway_cidr_blocks": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"vpn_ecmp_support": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -120,11 +120,11 @@ func dataSourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) erro
 		return errors.New("error reading EC2 Transit Gateway: missing options")
 	}
 
+	d.SetId(aws.StringValue(transitGateway.TransitGatewayId))
 	d.Set("amazon_side_asn", transitGateway.Options.AmazonSideAsn)
 	d.Set("arn", transitGateway.TransitGatewayArn)
 	d.Set("association_default_route_table_id", transitGateway.Options.AssociationDefaultRouteTableId)
 	d.Set("auto_accept_shared_attachments", transitGateway.Options.AutoAcceptSharedAttachments)
-	d.Set("cidr_blocks", transitGateway.Options.TransitGatewayCidrBlocks)
 	d.Set("default_route_table_association", transitGateway.Options.DefaultRouteTableAssociation)
 	d.Set("default_route_table_propagation", transitGateway.Options.DefaultRouteTablePropagation)
 	d.Set("description", transitGateway.Description)
@@ -132,14 +132,12 @@ func dataSourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("multicast_support", transitGateway.Options.MulticastSupport)
 	d.Set("owner_id", transitGateway.OwnerId)
 	d.Set("propagation_default_route_table_id", transitGateway.Options.PropagationDefaultRouteTableId)
+	d.Set("transit_gateway_cidr_blocks", aws.StringValueSlice(transitGateway.Options.TransitGatewayCidrBlocks))
+	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
 
 	if err := d.Set("tags", KeyValueTags(transitGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
-
-	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
-
-	d.SetId(aws.StringValue(transitGateway.TransitGatewayId))
 
 	return nil
 }
