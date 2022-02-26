@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_opsworks_rds_db_instance: Fix bug preventing correct removal from state
+```
+
+```release-note:bug
+resource/aws_opsworks_stack: Fix bugs where error reported on successful deletion, lack of eventual consistency wait
+```
