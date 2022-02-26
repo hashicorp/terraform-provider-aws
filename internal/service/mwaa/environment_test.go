@@ -386,7 +386,7 @@ func testAccCheckEnvironmentDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, mwaa.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, mwaa.ErrCodeResourceNotFoundException) {
 				continue
 			}
 			return err

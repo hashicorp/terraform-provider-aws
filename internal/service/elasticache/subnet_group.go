@@ -158,7 +158,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
-	if err != nil && !tfawserr.ErrMessageContains(err, "UnknownOperationException", "") {
+	if err != nil && !tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
 		return fmt.Errorf("error listing tags for ElastiCache SubnetGroup (%s): %w", d.Id(), err)
 	}
 
@@ -239,7 +239,7 @@ func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 		})
 	}
 
-	if tfawserr.ErrMessageContains(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault) {
 		return nil
 	}
 

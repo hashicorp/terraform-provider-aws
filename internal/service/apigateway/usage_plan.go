@@ -520,7 +520,7 @@ func resourceUsagePlanDelete(d *schema.ResourceData, meta interface{}) error {
 		UsagePlanId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		return nil
 	}
 

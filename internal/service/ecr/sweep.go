@@ -47,7 +47,7 @@ func sweepRepositories(region string) error {
 				RepositoryName: repository.RepositoryName,
 			})
 			if err != nil {
-				if !tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+				if !tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
 					sweeperErr := fmt.Errorf("Error deleting ECR repository (%s): %w", repositoryName, err)
 					log.Printf("[ERROR] %s", sweeperErr)
 					errors = multierror.Append(errors, sweeperErr)

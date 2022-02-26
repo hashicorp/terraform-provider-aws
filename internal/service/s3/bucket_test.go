@@ -814,7 +814,7 @@ func testAccCheckBucketDestroyWithProvider(s *terraform.State, provider *schema.
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.HeadBucket(input)
 
-			if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") || tfawserr.ErrMessageContains(err, "NotFound", "") {
+			if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrCodeEquals(err, "NotFound") {
 				return nil
 			}
 
@@ -859,7 +859,7 @@ func testAccCheckBucketExistsWithProvider(n string, providerF func() *schema.Pro
 		})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
+			if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 				return fmt.Errorf("S3 bucket not found")
 			}
 			return err

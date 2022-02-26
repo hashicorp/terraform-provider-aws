@@ -176,7 +176,7 @@ func resourceTableItemRead(d *schema.ResourceData, meta interface{}) error {
 		ExpressionAttributeNames: BuildExpressionAttributeNames(attributes),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] Dynamodb Table Item (%s) not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil

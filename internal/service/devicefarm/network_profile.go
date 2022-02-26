@@ -306,7 +306,7 @@ func resourceNetworkProfileDelete(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] Deleting DeviceFarm Network Profile: %s", d.Id())
 	_, err := conn.DeleteNetworkProfile(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, devicefarm.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting DeviceFarm Network Profile: %w", err)

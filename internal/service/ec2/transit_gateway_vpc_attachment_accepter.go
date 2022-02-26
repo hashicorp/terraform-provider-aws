@@ -131,7 +131,7 @@ func resourceTransitGatewayVPCAttachmentAccepterRead(d *schema.ResourceData, met
 
 	transitGatewayVpcAttachment, err := DescribeTransitGatewayVPCAttachment(conn, d.Id())
 
-	if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
 		log.Printf("[WARN] EC2 Transit Gateway VPC Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -257,7 +257,7 @@ func resourceTransitGatewayVPCAttachmentAccepterDelete(d *schema.ResourceData, m
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway VPC Attachment (%s): %s", d.Id(), input)
 	_, err := conn.DeleteTransitGatewayVpcAttachment(input)
 
-	if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
 		return nil
 	}
 

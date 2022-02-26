@@ -1225,7 +1225,7 @@ func resourceSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		// If the spot request was not found, return nil so that we can show
 		// that it is gone.
-		if tfawserr.ErrMessageContains(err, "InvalidSpotFleetRequestId.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidSpotFleetRequestId.NotFound") {
 			d.SetId("")
 			return nil
 		}

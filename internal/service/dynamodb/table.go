@@ -977,7 +977,7 @@ func createDynamoDbReplicas(tableName string, tfList []interface{}, conn *dynamo
 				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
 					return resource.RetryableError(err)
 				}
-				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceInUseException, "") {
+				if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
 					return resource.RetryableError(err)
 				}
 
@@ -1212,7 +1212,7 @@ func deleteDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
 			//    ResourceInUseException: Attempt to change a resource which is still in use: Table is being updated:
 			// 2. Removing a table from a DynamoDB global table may return:
 			//    ResourceInUseException: Attempt to change a resource which is still in use: Table is being deleted:
-			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceInUseException, "") {
+			if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
 				return resource.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceNotFoundException, "Requested resource not found: Table: ") {
@@ -1271,7 +1271,7 @@ func deleteDynamoDbReplicas(tableName string, tfList []interface{}, conn *dynamo
 					if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
 						return resource.RetryableError(err)
 					}
-					if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceInUseException, "") {
+					if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
 						return resource.RetryableError(err)
 					}
 

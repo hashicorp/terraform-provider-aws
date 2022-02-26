@@ -746,7 +746,7 @@ func resourceRestAPIDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deleting API Gateway: %s", input)
 	_, err := conn.DeleteRestApi(input)
 
-	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		return nil
 	}
 

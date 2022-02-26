@@ -82,7 +82,7 @@ func resourceRDSDBInstanceDeregister(d *schema.ResourceData, meta interface{}) e
 
 	_, err := client.DeregisterRdsDbInstance(req)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "") {
+		if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
 			log.Printf("[INFO] The db instance could not be found. Remove it from state.")
 			d.SetId("")
 			return nil

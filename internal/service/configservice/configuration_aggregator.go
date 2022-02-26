@@ -165,7 +165,7 @@ func resourceConfigurationAggregatorRead(d *schema.ResourceData, meta interface{
 
 	res, err := conn.DescribeConfigurationAggregators(req)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchConfigurationAggregatorException, "") {
+		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationAggregatorException) {
 			log.Printf("[WARN] No such configuration aggregator (%s), removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -220,7 +220,7 @@ func resourceConfigurationAggregatorDelete(d *schema.ResourceData, meta interfac
 	}
 	_, err := conn.DeleteConfigurationAggregator(req)
 
-	if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchConfigurationAggregatorException, "") {
+	if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationAggregatorException) {
 		return nil
 	}
 

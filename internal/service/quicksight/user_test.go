@@ -155,7 +155,7 @@ func testAccCheckQuickSightUserDestroy(s *terraform.State) error {
 			Namespace:    aws.String(namespace),
 			UserName:     aws.String(userName),
 		})
-		if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 			continue
 		}
 

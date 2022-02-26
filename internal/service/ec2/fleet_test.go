@@ -1179,7 +1179,7 @@ func testAccCheckFleetDestroy(s *terraform.State) error {
 
 		output, err := conn.DescribeFleets(input)
 
-		if tfawserr.ErrMessageContains(err, "InvalidFleetId.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidFleetId.NotFound") {
 			continue
 		}
 

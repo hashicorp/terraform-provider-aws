@@ -122,7 +122,7 @@ func resourceResourceDataSyncDelete(d *schema.ResourceData, meta interface{}) er
 
 	_, err := conn.DeleteResourceDataSync(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ssm.ErrCodeResourceDataSyncNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, ssm.ErrCodeResourceDataSyncNotFoundException) {
 			return nil
 		}
 		return err

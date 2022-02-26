@@ -1427,7 +1427,7 @@ func testAccCheckLaunchTemplateDestroy(s *terraform.State) error {
 			}
 		}
 
-		if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateId.NotFound") {
 			log.Printf("[WARN] launch template (%s) not found.", rs.Primary.ID)
 			continue
 		}

@@ -233,7 +233,7 @@ func resourceAuthorizerDelete(d *schema.ResourceData, meta interface{}) error {
 		ApiId:        aws.String(d.Get("api_id").(string)),
 		AuthorizerId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {

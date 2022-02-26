@@ -134,7 +134,7 @@ func testAccCheckVPCLinkDestroy(s *terraform.State) error {
 		_, err := conn.GetVpcLink(&apigatewayv2.GetVpcLinkInput{
 			VpcLinkId: aws.String(rs.Primary.ID),
 		})
-		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 			continue
 		}
 		if err != nil {
@@ -158,7 +158,7 @@ func testAccCheckVPCLinkDisappears(v *apigatewayv2.GetVpcLinkOutput) resource.Te
 		}
 
 		_, err := tfapigatewayv2.WaitVPCLinkDeleted(conn, aws.StringValue(v.VpcLinkId))
-		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 			return nil
 		}
 		if err != nil {

@@ -482,7 +482,7 @@ func testAccCheckTransitGatewayVPCAttachmentDestroy(s *terraform.State) error {
 
 		vpcAttachment, err := tfec2.DescribeTransitGatewayVPCAttachment(conn, rs.Primary.ID)
 
-		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
 			continue
 		}
 

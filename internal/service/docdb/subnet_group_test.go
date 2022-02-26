@@ -183,7 +183,7 @@ func testAccCheckDocDBSubnetGroupDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) {
 				return nil
 			}
 			return err

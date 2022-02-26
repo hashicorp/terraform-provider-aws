@@ -139,7 +139,7 @@ func dataSourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 		DirectoryIds: []*string{aws.String(directoryID)},
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
+		if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
 			return fmt.Errorf("DirectoryService Directory (%s) not found", directoryID)
 		}
 		return fmt.Errorf("error reading DirectoryService Directory: %w", err)
