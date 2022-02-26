@@ -160,7 +160,7 @@ func testAccCheckClusterEndpointDestroyWithProvider(s *terraform.State, provider
 		_, err := tfneptune.FindEndpointByID(conn, rs.Primary.ID)
 		// Return nil if the cluster is already destroyed
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBClusterNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
 				return nil
 			}
 		}

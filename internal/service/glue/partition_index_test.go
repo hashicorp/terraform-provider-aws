@@ -226,7 +226,7 @@ func testAccCheckGluePartitionIndexDestroy(s *terraform.State) error {
 
 		if _, err := tfglue.FindPartitionIndexByName(conn, rs.Primary.ID); err != nil {
 			//Verify the error is what we want
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				continue
 			}
 

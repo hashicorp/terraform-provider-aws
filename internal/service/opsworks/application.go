@@ -266,7 +266,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := client.DescribeApps(req)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
 			log.Printf("[INFO] App not found: %s", d.Id())
 			d.SetId("")
 			return nil

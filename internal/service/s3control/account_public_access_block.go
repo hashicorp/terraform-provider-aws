@@ -191,7 +191,7 @@ func resourceAccountPublicAccessBlockDelete(d *schema.ResourceData, meta interfa
 
 	_, err := conn.DeletePublicAccessBlock(input)
 
-	if tfawserr.ErrMessageContains(err, s3control.ErrCodeNoSuchPublicAccessBlockConfiguration, "") {
+	if tfawserr.ErrCodeEquals(err, s3control.ErrCodeNoSuchPublicAccessBlockConfiguration) {
 		return nil
 	}
 

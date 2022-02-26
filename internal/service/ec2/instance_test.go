@@ -4096,7 +4096,7 @@ func testAccCheckInstanceDestroyWithProvider(s *terraform.State, provider *schem
 		}
 
 		// Verify the error is what we want
-		if tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
 			continue
 		}
 

@@ -260,7 +260,7 @@ func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetWebACL(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			log.Printf("[WARN] WAF Regional ACL (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -321,7 +321,7 @@ func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Getting WAF Regional Web ACL (%s) Logging Configuration: %s", d.Id(), getLoggingConfigurationInput)
 	getLoggingConfigurationOutput, err := conn.GetLoggingConfiguration(getLoggingConfigurationInput)
 
-	if err != nil && !tfawserr.ErrMessageContains(err, waf.ErrCodeNonexistentItemException, "") {
+	if err != nil && !tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
 		return fmt.Errorf("error getting WAF Regional Web ACL (%s) Logging Configuration: %s", d.Id(), err)
 	}
 

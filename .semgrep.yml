@@ -693,3 +693,13 @@ rules:
     patterns:
       - pattern: validation.Any(..., validation.StringIsEmpty, ...)
     severity: ERROR
+
+  - id: use-error-code-equals-if-not-checking-message
+    languages: [go]
+    message: Use tfawserr.ErrCodeEquals() when message parameter is empty string
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern: tfawserr.ErrMessageContains(err, ..., "")
+    severity: ERROR

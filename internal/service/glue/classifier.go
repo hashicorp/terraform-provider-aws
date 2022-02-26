@@ -207,7 +207,7 @@ func resourceClassifierRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading Glue Classifier: %s", input)
 	output, err := conn.GetClassifier(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue Classifier (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -296,7 +296,7 @@ func DeleteClassifier(conn *glue.Glue, name string) error {
 
 	_, err := conn.DeleteClassifier(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 		return err

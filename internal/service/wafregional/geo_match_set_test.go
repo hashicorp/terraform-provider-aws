@@ -304,7 +304,7 @@ func testAccCheckGeoMatchSetDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the WAF Regional Geo Match Set is already destroyed
-		if tfawserr.ErrMessageContains(err, "WAFNonexistentItemException", "") {
+		if tfawserr.ErrCodeEquals(err, "WAFNonexistentItemException") {
 			return nil
 		}
 

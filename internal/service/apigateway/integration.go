@@ -505,7 +505,7 @@ func resourceIntegrationDelete(d *schema.ResourceData, meta interface{}) error {
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
 	})
 
-	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		return nil
 	}
 

@@ -1327,10 +1327,10 @@ func testAccCheckServiceExists(name string, service *ecs.Service) resource.TestC
 			output, err = conn.DescribeServices(input)
 
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, ecs.ErrCodeClusterNotFoundException, "") {
+				if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
 					return resource.RetryableError(err)
 				}
-				if tfawserr.ErrMessageContains(err, ecs.ErrCodeServiceNotFoundException, "") {
+				if tfawserr.ErrCodeEquals(err, ecs.ErrCodeServiceNotFoundException) {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)

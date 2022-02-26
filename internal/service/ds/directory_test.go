@@ -269,7 +269,7 @@ func testAccCheckDirectoryServiceDirectoryDestroy(s *terraform.State) error {
 		}
 		out, err := conn.DescribeDirectories(&input)
 
-		if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
+		if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
 			continue
 		}
 

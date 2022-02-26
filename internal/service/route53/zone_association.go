@@ -209,7 +209,7 @@ func resourceZoneAssociationRefreshFunc(conn *route53.Route53, changeId, id stri
 			Id: aws.String(changeId),
 		}
 		result, state, err := resourceGoWait(conn, changeRequest)
-		if tfawserr.ErrMessageContains(err, "AccessDenied", "") {
+		if tfawserr.ErrCodeEquals(err, "AccessDenied") {
 			log.Printf("[WARN] AccessDenied when trying to get Route 53 change progress for %s - ignoring due to likely cross account issue", id)
 			return true, route53.ChangeStatusInsync, nil
 		}

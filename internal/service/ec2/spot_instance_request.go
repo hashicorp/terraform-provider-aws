@@ -364,7 +364,7 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		// If the instance was not found, return nil so that we can show
 		// that the instance is gone.
-		if tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
 			return fmt.Errorf("no instance found")
 		}
 
@@ -487,7 +487,7 @@ func SpotInstanceStateRefreshFunc(
 		})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidSpotInstanceRequestID.NotFound", "") {
+			if tfawserr.ErrCodeEquals(err, "InvalidSpotInstanceRequestID.NotFound") {
 				// Set this to nil as if we didn't find anything.
 				resp = nil
 			} else {

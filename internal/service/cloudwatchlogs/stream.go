@@ -88,7 +88,7 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		if !tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeResourceNotFoundException, "") {
+		if !tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeResourceNotFoundException) {
 			return err
 		}
 

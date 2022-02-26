@@ -495,7 +495,7 @@ func resourceInstanceRetrieve(id string, conn *docdb.DocDB) (*docdb.DBInstance, 
 
 	resp, err := conn.DescribeDBInstances(&opts)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBInstanceNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBInstanceNotFoundFault) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("Error retrieving DB Instances: %s", err)
