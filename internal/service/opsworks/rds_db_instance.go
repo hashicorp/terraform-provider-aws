@@ -81,6 +81,7 @@ func resourceRDSDBInstanceDeregister(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG] Unregistering rds db instance '%s' from stack: %s", d.Get("rds_db_instance_arn"), d.Get("stack_id"))
 
 	_, err := client.DeregisterRdsDbInstance(req)
+
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
 			log.Printf("[INFO] The db instance could not be found. Remove it from state.")
@@ -103,8 +104,15 @@ func resourceRDSDBInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading OpsWorks registered rds db instances for stack: %s", d.Get("stack_id"))
 
 	resp, err := client.DescribeRdsDbInstances(req)
+
+	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] OpsWorks RDS DB Instance (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		return err
+		return fmt.Errorf("while describing OpsWorks RDS DB Instance (%s): %w", d.Get("stack_id"), err)
 	}
 
 	found := false
@@ -124,7 +132,7 @@ func resourceRDSDBInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	if !found {
 		d.SetId("")
-		log.Printf("[INFO] The rds instance '%s' could not be found for stack: '%s'", d.Get("rds_db_instance_arn"), d.Get("stack_id"))
+		log.Printf("[INFO] The RDS instance '%s' could not be found for stack: '%s'", d.Get("rds_db_instance_arn"), d.Get("stack_id"))
 	}
 
 	return nil
@@ -141,6 +149,7 @@ func resourceRDSDBInstanceRegister(d *schema.ResourceData, meta interface{}) err
 	}
 
 	_, err := client.RegisterRdsDbInstance(req)
+
 	if err != nil {
 		return fmt.Errorf("Error registering Opsworks RDS DB instance: %s", err)
 	}
