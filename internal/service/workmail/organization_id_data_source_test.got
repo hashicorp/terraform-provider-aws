@@ -1,82 +1,82 @@
-package secretsmanager_test
+package workmail_test
 
 import (
 	"fmt"
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/aws/aws-sdk-go/service/workmail"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccSecretsManagerSecretVersionDataSource_basic(t *testing.T) {
+func TestAccSecretsManagerOrganizationDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_secretsmanager_secret_version.test"
-	datasourceName := "data.aws_secretsmanager_secret_version.test"
+	resourceName := "aws_workmail_organization_version.test"
+	datasourceName := "data.aws_workmail_organization_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ErrorCheck: acctest.ErrorCheck(t, workmail.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSecretVersionDataSourceConfig_NonExistent,
+				Config:      testAccOrganizationDataSourceConfig_NonExistent,
 				ExpectError: regexp.MustCompile(`not found`),
 			},
 			{
-				Config: testAccSecretVersionDataSourceConfig_VersionStage_Default(rName),
+				Config: testAccOrganizationDataSourceConfig_VersionStage_Default(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccSecretVersionCheckDataSource(datasourceName, resourceName),
+					testAccOrganizationCheckDataSource(datasourceName, resourceName),
 				),
 			},
 		},
 	})
 }
 
-func TestAccSecretsManagerSecretVersionDataSource_versionID(t *testing.T) {
+func TestAccSecretsManagerOrganizationDataSource_versionID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_secretsmanager_secret_version.test"
-	datasourceName := "data.aws_secretsmanager_secret_version.test"
+	resourceName := "aws_workmail_organization_version.test"
+	datasourceName := "data.aws_workmail_organization_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ErrorCheck: acctest.ErrorCheck(t, workmail.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretVersionDataSourceConfig_VersionID(rName),
+				Config: testAccOrganizationDataSourceConfig_VersionID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccSecretVersionCheckDataSource(datasourceName, resourceName),
+					testAccOrganizationCheckDataSource(datasourceName, resourceName),
 				),
 			},
 		},
 	})
 }
 
-func TestAccSecretsManagerSecretVersionDataSource_versionStage(t *testing.T) {
+func TestAccSecretsManagerOrganizationDataSource_versionStage(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_secretsmanager_secret_version.test"
-	datasourceName := "data.aws_secretsmanager_secret_version.test"
+	resourceName := "aws_workmail_organization_version.test"
+	datasourceName := "data.aws_workmail_organization_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ErrorCheck: acctest.ErrorCheck(t, workmail.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretVersionDataSourceConfig_VersionStage_Custom(rName),
+				Config: testAccOrganizationDataSourceConfig_VersionStage_Custom(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccSecretVersionCheckDataSource(datasourceName, resourceName),
+					testAccOrganizationCheckDataSource(datasourceName, resourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccSecretVersionCheckDataSource(datasourceName, resourceName string) resource.TestCheckFunc {
+func testAccOrganizationCheckDataSource(datasourceName, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		resource, ok := s.RootModule().Resources[datasourceName]
 		if !ok {
@@ -108,62 +108,62 @@ func testAccSecretVersionCheckDataSource(datasourceName, resourceName string) re
 	}
 }
 
-const testAccSecretVersionDataSourceConfig_NonExistent = `
-data "aws_secretsmanager_secret_version" "test" {
-  secret_id = "tf-acc-test-does-not-exist"
+const testAccOrganizationDataSourceConfig_NonExistent = `
+data "aws_workmail_organization" "test" {
+  organization_id = "blah-test-does-not-exist"
 }
 `
 
-func testAccSecretVersionDataSourceConfig_VersionID(rName string) string {
+func testAccOrganizationDataSourceConfig_VersionID(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_secretsmanager_secret" "test" {
+resource "aws_workmail_organization" "test" {
   name = "%[1]s"
 }
 
-resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = aws_secretsmanager_secret.test.id
+resource "aws_workmail_organization_version" "test" {
+  secret_id     = aws_workmail_organization.test.id
   secret_string = "test-string"
 }
 
-data "aws_secretsmanager_secret_version" "test" {
-  secret_id  = aws_secretsmanager_secret.test.id
-  version_id = aws_secretsmanager_secret_version.test.version_id
+data "aws_workmail_organization_version" "test" {
+  secret_id  = aws_workmail_organization.test.id
+  version_id = aws_workmail_organization_version.test.version_id
 }
 `, rName)
 }
 
-func testAccSecretVersionDataSourceConfig_VersionStage_Custom(rName string) string {
+func testAccOrganizationDataSourceConfig_VersionStage_Custom(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_secretsmanager_secret" "test" {
+resource "aws_workmail_organization" "test" {
   name = "%[1]s"
 }
 
-resource "aws_secretsmanager_secret_version" "test" {
-  secret_id      = aws_secretsmanager_secret.test.id
+resource "aws_workmail_organization_version" "test" {
+  secret_id      = aws_workmail_organization.test.id
   secret_string  = "test-string"
   version_stages = ["test-stage", "AWSCURRENT"]
 }
 
-data "aws_secretsmanager_secret_version" "test" {
-  secret_id     = aws_secretsmanager_secret_version.test.secret_id
+data "aws_workmail_organization_version" "test" {
+  secret_id     = aws_workmail_organization_version.test.secret_id
   version_stage = "test-stage"
 }
 `, rName)
 }
 
-func testAccSecretVersionDataSourceConfig_VersionStage_Default(rName string) string {
+func testAccOrganizationDataSourceConfig_VersionStage_Default(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_secretsmanager_secret" "test" {
+resource "aws_workmail_organization" "test" {
   name = "%[1]s"
 }
 
-resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = aws_secretsmanager_secret.test.id
+resource "aws_workmail_organization_version" "test" {
+  secret_id     = aws_workmail_organization.test.id
   secret_string = "test-string"
 }
 
-data "aws_secretsmanager_secret_version" "test" {
-  secret_id = aws_secretsmanager_secret_version.test.secret_id
+data "aws_workmail_organization_version" "test" {
+  secret_id = aws_workmail_organization_version.test.secret_id
 }
 `, rName)
 }
