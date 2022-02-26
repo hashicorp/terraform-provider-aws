@@ -162,6 +162,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/worklink"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/workmail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/xray"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -1898,7 +1899,8 @@ func Provider() *schema.Provider {
 
 			"aws_worklink_fleet": worklink.ResourceFleet(),
 			"aws_worklink_website_certificate_authority_association": worklink.ResourceWebsiteCertificateAuthorityAssociation(),
-			"aws_workmail_organization":                              workmail.ResourceOrganization(),
+
+			"aws_workmail_organization": workmail.ResourceOrganization(),
 
 			"aws_workspaces_directory": workspaces.ResourceDirectory(),
 			"aws_workspaces_ip_group":  workspaces.ResourceIPGroup(),

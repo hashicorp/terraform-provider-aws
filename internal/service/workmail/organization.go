@@ -1,10 +1,9 @@
 package workmail
 
 import (
-	"context"
 	"fmt"
 	"log"
-	"time"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workmail"
@@ -67,7 +66,6 @@ func ResourceOrganization() *schema.Resource {
 						},
 					},
 				},
-				Set: workmailDomainValidationOptionsHash,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -93,18 +91,11 @@ func resourceOrganizationCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(aws.StringValue(resp.Organization.OrganizationArn))
 
-	// Creating a listener triggers the accelerator to change status to InPending.
-	if _, err := waitAcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Global Accelerator Accelerator (%s) deployment: %w", acceleratorARN, err)
-	}
-
 	return resourceOrganizationRead(d, meta)
 }
 
 func resourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkMailConn
-
-	listener, err := FindOrganizationByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WorkMail Organization (%s) not found, removing from state", d.Id())
@@ -116,17 +107,29 @@ func resourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading WorkMail Organization (%s): %w", d.Id(), err)
 	}
 
-	acceleratorARN, err := OrganizationOrEndpointGroupARNToAcceleratorARN(d.Id())
-
 	if err != nil {
 		return err
 	}
 
-	d.Set("accelerator_arn", acceleratorARN)
+	d.Set("alias", alias)
 	d.Set("client_affinity", listener.ClientAffinity)
 	d.Set("protocol", listener.Protocol)
-	if err := d.Set("port_range", resourceOrganizationFlattenPortRanges(listener.PortRanges)); err != nil {
-		return fmt.Errorf("error setting port_range: %w", err)
+
+	return nil
+}
+
+func resourceOrganizationDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).WorkMailConn
+
+	organizationId := d.Get("organization_id").(string)
+
+	deleteOpts := &workmail.DeleteIdentityInput{
+		OrganizationId: aws.String(organizationId),
+	}
+
+	_, err := conn.DeleteIdentity(deleteOpts)
+	if err != nil {
+		return fmt.Errorf("Error deleting WorkMail organization: %s", err)
 	}
 
 	return nil
