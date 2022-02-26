@@ -611,8 +611,13 @@ func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deleting OpsWorks stack: %s", d.Id())
 
 	_, err := client.DeleteStack(req)
+
+	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
-		return err
+		return fmt.Errorf("while deleting OpsWork Stack (%s, %s): %w", d.Id(), d.Get("name").(string), err)
 	}
 
 	// For a stack in a VPC, OpsWorks has created some default security groups
@@ -625,7 +630,7 @@ func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 	// There is no robust way to check for this, so we'll just wait a
 	// nominal amount of time.
 	_, inVpc := d.GetOk("vpc_id")
-	_, useOpsworksDefaultSg := d.GetOk("use_opsworks_security_group")
+	_, useOpsworksDefaultSg := d.GetOk("use_opsworks_security_groups")
 
 	if inVpc && useOpsworksDefaultSg {
 		log.Print("[INFO] Waiting for Opsworks built-in security groups to be deleted")
