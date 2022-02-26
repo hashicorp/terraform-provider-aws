@@ -1898,6 +1898,7 @@ func Provider() *schema.Provider {
 
 			"aws_worklink_fleet": worklink.ResourceFleet(),
 			"aws_worklink_website_certificate_authority_association": worklink.ResourceWebsiteCertificateAuthorityAssociation(),
+			"aws_workmail_organization":                              workmail.ResourceOrganization(),
 
 			"aws_workspaces_directory": workspaces.ResourceDirectory(),
 			"aws_workspaces_ip_group":  workspaces.ResourceIPGroup(),

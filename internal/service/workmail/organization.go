@@ -57,8 +57,9 @@ func ResourceOrganization() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"domain_name": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:         schema.TypeString,
+							Computed:     true,
+							ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
 						},
 						"hosted_zone_id": {
 							Type:     schema.TypeString,
@@ -76,11 +77,11 @@ func ResourceOrganization() *schema.Resource {
 
 func resourceOrganizationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkMailConn
-	acceleratorARN := d.Get("accelerator_arn").(string)
+	alias := d.Get("alias").(string)
 
-	opts := &globalaccelerator.CreateOrganizationInput{
-		AcceleratorArn: aws.String(acceleratorARN),
-		ClientToken:    aws.String(resource.UniqueId()),
+	opts := &workmail.CreateOrganizationInput{
+		Alias:       aws.String(alias),
+		ClientToken: aws.String(resource.UniqueId()),
 	}
 
 	log.Printf("[DEBUG] Create WorkMail Organization: %s", opts)
