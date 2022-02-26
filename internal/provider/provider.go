@@ -622,7 +622,7 @@ func Provider() *schema.Provider {
 			"aws_glue_data_catalog_encryption_settings": glue.DataSourceDataCatalogEncryptionSettings(),
 			"aws_glue_script":                           glue.DataSourceScript(),
 
-			"aws_grafana_workspace": grafana.DataSourceWorkspace()
+			"aws_grafana_workspace": grafana.DataSourceWorkspace(),
 
 			"aws_guardduty_detector": guardduty.DataSourceDetector(),
 
