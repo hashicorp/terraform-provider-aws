@@ -622,7 +622,7 @@ func Provider() *schema.Provider {
 			"aws_glue_data_catalog_encryption_settings": glue.DataSourceDataCatalogEncryptionSettings(),
 			"aws_glue_script":                           glue.DataSourceScript(),
 
-			"aws_grafana_workspace": grafana.DataSourceWorkspace(),
+			"aws_grafana_workspace": grafana.DataSourceWorkspace()
 
 			"aws_guardduty_detector": guardduty.DataSourceDetector(),
 
@@ -1405,7 +1405,8 @@ func Provider() *schema.Provider {
 			"aws_glue_user_defined_function":            glue.ResourceUserDefinedFunction(),
 			"aws_glue_workflow":                         glue.ResourceWorkflow(),
 
-			"aws_grafana_workspace": grafana.ResourceWorkspace(),
+			"aws_grafana_workspace":           grafana.ResourceWorkspace(),
+			"aws_grafana_license_association": grafana.ResourceLicenseAssociation(),
 
 			"aws_guardduty_detector":                   guardduty.ResourceDetector(),
 			"aws_guardduty_filter":                     guardduty.ResourceFilter(),
