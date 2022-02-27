@@ -3,7 +3,9 @@ package workmail
 import (
 	"fmt"
 	"log"
+	"reflect"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workmail"
@@ -11,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -107,13 +110,18 @@ func resourceOrganizationCreate(d *schema.ResourceData, meta interface{}) error 
 func resourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkMailConn
 
-	organizationID := d.Get("organization_id").(string)
-
 	readOpts := &workmail.DescribeOrganizationInput{
-		OrganizationId: aws.String(organizationID),
+		OrganizationId: aws.String(d.Id()),
 	}
 
 	response, err := conn.DescribeOrganization(readOpts)
+	log.Printf("[WARN] Response type is %s", reflect.TypeOf(response))
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] WorkMail Organization (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("error reading WorkMail Organization (%s): %w", d.Id(), err)
@@ -126,7 +134,11 @@ func resourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", response.ARN)
 	d.Set("alias", response.Alias)
 	d.Set("state", response.State)
-	d.Set("completed_date", response.CompletedDate)
+	if response.CompletedDate != nil {
+		d.Set("completed_date", aws.TimeValue(response.CompletedDate).Format(time.RFC3339))
+	} else {
+		d.Set("completed_date", nil)
+	}
 	d.Set("default_mail_domain", response.DefaultMailDomain)
 	d.Set("directory_id", response.DirectoryId)
 	d.Set("directory_type", response.DirectoryType)
@@ -136,15 +148,11 @@ func resourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceOrganizationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkMailConn
-
-	organizationId := d.Get("organization_id").(string)
-	clientToken := d.Get("client_token").(string)
-	deleteDirectory := d.Get("delete_directory").(bool)
+	deleteDirectory := true
 
 	deleteOpts := &workmail.DeleteOrganizationInput{
-		OrganizationId:  aws.String(organizationId),
-		ClientToken:     aws.String(clientToken),
-		DeleteDirectory: aws.Bool(deleteDirectory),
+		OrganizationId:  aws.String(d.Id()),
+		DeleteDirectory: &deleteDirectory,
 	}
 
 	_, err := conn.DeleteOrganization(deleteOpts)
