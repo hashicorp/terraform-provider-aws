@@ -16,7 +16,7 @@ Provides a resource for copying an S3 object.
 resource "aws_s3_object_copy" "test" {
   bucket = "destination_bucket"
   key    = "destination_key"
-  source = "source_bucket/source_key"
+  source = "source-bucket/source_key"
 
   grant {
     uri         = "http://acs.amazonaws.com/groups/global/AllUsers"
