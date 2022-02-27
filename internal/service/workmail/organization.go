@@ -32,10 +32,6 @@ func ResourceOrganization() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"client_token": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"enable_interoperability": {
 				Type:     schema.TypeBool,
 				Optional: true,
