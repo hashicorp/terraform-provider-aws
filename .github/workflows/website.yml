@@ -140,6 +140,7 @@ jobs:
               "--disable-rule=aws_appsync_function_invalid_response_mapping_template"
               "--disable-rule=aws_appsync_resolver_invalid_request_template"
               "--disable-rule=aws_appsync_resolver_invalid_response_template"
+              "--disable-rule=aws_servicecatalog_portfolio_share_invalid_type"
           )
           while read -r filename; do
             rules=("${shared_rules[@]}")
