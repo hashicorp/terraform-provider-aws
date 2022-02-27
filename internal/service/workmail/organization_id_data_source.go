@@ -75,7 +75,7 @@ func dataSourceOrganizationRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error reading Organization ID: %w", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s", organizationID))
+	d.SetId(organizationID)
 	d.Set("arn", output.ARN)
 	d.Set("alias", output.Alias)
 	d.Set("state", output.State)
