@@ -130,7 +130,7 @@ func resourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", response.ARN)
 	d.Set("alias", response.Alias)
 	d.Set("state", response.State)
-	d.Set("completed_data", response.CompletedDate)
+	d.Set("completed_date", response.CompletedDate)
 	d.Set("default_mail_domain", response.DefaultMailDomain)
 	d.Set("directory_id", response.DirectoryId)
 	d.Set("directory_type", response.DirectoryType)
