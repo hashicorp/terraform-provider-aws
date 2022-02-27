@@ -136,6 +136,10 @@ jobs:
               "--disable-rule=aws_worklink_website_certificate_authority_association_invalid_certificate"
               "--disable-rule=aws_iot_certificate_invalid_csr"
               "--disable-rule=aws_networkfirewall_rule_group_invalid_rules"
+              "--disable-rule=aws_appsync_function_invalid_request_mapping_template"
+              "--disable-rule=aws_appsync_function_invalid_response_mapping_template"
+              "--disable-rule=aws_appsync_resolver_invalid_request_template"
+              "--disable-rule=aws_appsync_resolver_invalid_response_template"
           )
           while read -r filename; do
             rules=("${shared_rules[@]}")
