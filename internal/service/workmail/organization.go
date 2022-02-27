@@ -7,14 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workmail"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -22,7 +18,6 @@ func ResourceOrganization() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceOrganizationCreate,
 		Read:   resourceOrganizationRead,
-		Update: resourceOrganizationUpdate,
 		Delete: resourceOrganizationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -78,6 +73,7 @@ func resourceOrganizationCreate(d *schema.ResourceData, meta interface{}) error 
 	opts := &workmail.CreateOrganizationInput{
 		Alias:       aws.String(alias),
 		ClientToken: aws.String(resource.UniqueId()),
+		KmsKeyArn:   aws.String(d.Get("kms_key_arn").(string)),
 	}
 
 	log.Printf("[DEBUG] Create WorkMail Organization: %s", opts)
@@ -87,7 +83,7 @@ func resourceOrganizationCreate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error creating WorkMail Organization: %w", err)
 	}
 
-	d.SetId(aws.StringValue(resp.Organization.OrganizationArn))
+	d.SetId(aws.StringValue(resp.OrganizationId))
 
 	return resourceOrganizationRead(d, meta)
 }
@@ -95,11 +91,13 @@ func resourceOrganizationCreate(d *schema.ResourceData, meta interface{}) error 
 func resourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkMailConn
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] WorkMail Organization (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	organizationID := d.Get("organization_id").(string)
+
+	readOpts := &workmail.DescribeOrganizationInput{
+		OrganizationId: aws.String(organizationID),
 	}
+
+	response, err := conn.DescribeOrganization(readOpts)
 
 	if err != nil {
 		return fmt.Errorf("error reading WorkMail Organization (%s): %w", d.Id(), err)
@@ -109,9 +107,13 @@ func resourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.Set("alias", alias)
-	d.Set("client_affinity", listener.ClientAffinity)
-	d.Set("protocol", listener.Protocol)
+	d.Set("arn", response.ARN)
+	d.Set("alias", response.Alias)
+	d.Set("state", response.State)
+	d.Set("completed_data", response.CompletedDate)
+	d.Set("default_mail_domain", response.DefaultMailDomain)
+	d.Set("directory_id", response.DirectoryId)
+	d.Set("directory_type", response.DirectoryType)
 
 	return nil
 }
@@ -120,15 +122,31 @@ func resourceOrganizationDelete(d *schema.ResourceData, meta interface{}) error 
 	conn := meta.(*conns.AWSClient).WorkMailConn
 
 	organizationId := d.Get("organization_id").(string)
+	clientToken := d.Get("client_token").(string)
+	deleteDirectory := d.Get("delete_directory").(bool)
 
-	deleteOpts := &workmail.DeleteIdentityInput{
-		OrganizationId: aws.String(organizationId),
+	deleteOpts := &workmail.DeleteOrganizationInput{
+		OrganizationId:  aws.String(organizationId),
+		ClientToken:     aws.String(clientToken),
+		DeleteDirectory: aws.Bool(deleteDirectory),
 	}
 
-	_, err := conn.DeleteIdentity(deleteOpts)
+	_, err := conn.DeleteOrganization(deleteOpts)
 	if err != nil {
 		return fmt.Errorf("Error deleting WorkMail organization: %s", err)
 	}
 
 	return nil
 }
+
+// func flattenDomains(domains *workmail.Domains) []map[string]interface{} {
+// 	result := make([]map[string]interface{}, 0, 1)
+
+// 	if domains != nil {
+// 		result = append(result, map[string]interface{}{
+// 			"domain_name":    aws.StringValue(domains.DomainName),
+// 			"hosted_zone_id": aws.StringValue(domains.HostedZoneId),
+// 		})
+// 	}
+// 	return result
+// }
