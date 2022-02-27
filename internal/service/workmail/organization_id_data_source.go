@@ -14,7 +14,6 @@ import (
 func DataSourceOrganization() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceOrganizationRead,
-
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

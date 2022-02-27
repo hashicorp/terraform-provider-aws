@@ -23,6 +23,10 @@ func ResourceOrganization() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"alias": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -47,6 +51,7 @@ func ResourceOrganization() *schema.Resource {
 			},
 			"domains": {
 				Type:     schema.TypeList,
+				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -71,9 +76,11 @@ func resourceOrganizationCreate(d *schema.ResourceData, meta interface{}) error 
 	alias := d.Get("alias").(string)
 
 	opts := &workmail.CreateOrganizationInput{
-		Alias:       aws.String(alias),
-		ClientToken: aws.String(resource.UniqueId()),
-		KmsKeyArn:   aws.String(d.Get("kms_key_arn").(string)),
+		Alias:                  aws.String(alias),
+		ClientToken:            aws.String(resource.UniqueId()),
+		KmsKeyArn:              aws.String(d.Get("kms_key_arn").(string)),
+		EnableInteroperability: aws.Bool(d.Get("enable_interoperability").(bool)),
+		DirectoryId:            aws.String(d.Get("directory_id").(string)),
 	}
 
 	log.Printf("[DEBUG] Create WorkMail Organization: %s", opts)
