@@ -134,6 +134,8 @@ jobs:
               "--disable-rule=aws_lb_target_group_invalid_protocol"
               "--disable-rule=aws_transfer_ssh_key_invalid_body"
               "--disable-rule=aws_worklink_website_certificate_authority_association_invalid_certificate"
+              "--disable-rule=aws_iot_certificate_invalid_csr"
+              "--disable-rule=aws_networkfirewall_rule_group_invalid_rules"
           )
           while read -r filename; do
             rules=("${shared_rules[@]}")
