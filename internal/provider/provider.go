@@ -821,6 +821,8 @@ func Provider() *schema.Provider {
 			"aws_wafv2_rule_group":        wafv2.DataSourceRuleGroup(),
 			"aws_wafv2_web_acl":           wafv2.DataSourceWebACL(),
 
+			"aws_workmail_organization": workmail.DataSourceOrganization(),
+
 			"aws_workspaces_bundle":    workspaces.DataSourceBundle(),
 			"aws_workspaces_directory": workspaces.DataSourceDirectory(),
 			"aws_workspaces_image":     workspaces.DataSourceImage(),

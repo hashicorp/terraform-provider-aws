@@ -30,6 +30,7 @@ func ResourceOrganization() *schema.Resource {
 			"alias": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"client_token": {
 				Type:     schema.TypeString,
@@ -38,16 +39,19 @@ func ResourceOrganization() *schema.Resource {
 			"enable_interoperability": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				ForceNew: true,
 			},
 			"directory_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(12, 12),
+				ForceNew:     true,
 			},
 			"kms_key_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
+				ForceNew:     true,
 			},
 			"domains": {
 				Type:     schema.TypeList,
@@ -57,11 +61,13 @@ func ResourceOrganization() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"domain_name": {
 							Type:         schema.TypeString,
+							Optional:     true,
 							Computed:     true,
 							ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
 						},
 						"hosted_zone_id": {
 							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 					},
@@ -76,11 +82,18 @@ func resourceOrganizationCreate(d *schema.ResourceData, meta interface{}) error 
 	alias := d.Get("alias").(string)
 
 	opts := &workmail.CreateOrganizationInput{
-		Alias:                  aws.String(alias),
-		ClientToken:            aws.String(resource.UniqueId()),
-		KmsKeyArn:              aws.String(d.Get("kms_key_arn").(string)),
-		EnableInteroperability: aws.Bool(d.Get("enable_interoperability").(bool)),
-		DirectoryId:            aws.String(d.Get("directory_id").(string)),
+		Alias:       aws.String(alias),
+		ClientToken: aws.String(resource.UniqueId()),
+	}
+
+	if v, ok := d.GetOk("kms_key_arn"); ok {
+		opts.KmsKeyArn = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("enable_interoperability"); ok {
+		opts.EnableInteroperability = aws.Bool(v.(bool))
+	}
+	if v, ok := d.GetOk("directory_id"); ok {
+		opts.DirectoryId = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Create WorkMail Organization: %s", opts)
