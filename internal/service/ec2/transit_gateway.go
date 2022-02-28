@@ -568,43 +568,6 @@ func DescribeTransitGatewayRouteTableAssociation(conn *ec2.EC2, transitGatewayRo
 	return output.Associations[0], nil
 }
 
-func DescribeTransitGatewayConnect(conn *ec2.EC2, transitGatewayAttachmentID string) (*ec2.TransitGatewayConnect, error) {
-	input := &ec2.DescribeTransitGatewayConnectsInput{
-		TransitGatewayAttachmentIds: []*string{aws.String(transitGatewayAttachmentID)},
-	}
-
-	log.Printf("[DEBUG] Reading EC2 Transit Gateway Connect Attachment (%s): %s", transitGatewayAttachmentID, input)
-	for {
-		output, err := conn.DescribeTransitGatewayConnects(input)
-
-		if err != nil {
-			return nil, err
-		}
-
-		if output == nil || len(output.TransitGatewayConnects) == 0 {
-			return nil, nil
-		}
-
-		for _, transitGatewayConnect := range output.TransitGatewayConnects {
-			if transitGatewayConnect == nil {
-				continue
-			}
-
-			if aws.StringValue(transitGatewayConnect.TransitGatewayAttachmentId) == transitGatewayAttachmentID {
-				return transitGatewayConnect, nil
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil, nil
-}
-
 func DescribeTransitGatewayVPCAttachment(conn *ec2.EC2, transitGatewayAttachmentID string) (*ec2.TransitGatewayVpcAttachment, error) {
 	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{
 		TransitGatewayAttachmentIds: []*string{aws.String(transitGatewayAttachmentID)},
