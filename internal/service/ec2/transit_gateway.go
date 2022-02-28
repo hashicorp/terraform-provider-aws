@@ -342,7 +342,7 @@ func resourceTransitGatewayDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error deleting EC2 Transit Gateway: %s", err)
 	}
 
-	if err := WaitForTransitGatewayDeletion(conn, d.Id()); err != nil {
+	if err := waitForTransitGatewayDeletion(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway (%s) deletion: %s", d.Id(), err)
 	}
 
@@ -858,7 +858,7 @@ func waitForTransitGatewayCreation(conn *ec2.EC2, transitGatewayID string) error
 	return err
 }
 
-func WaitForTransitGatewayDeletion(conn *ec2.EC2, transitGatewayID string) error {
+func waitForTransitGatewayDeletion(conn *ec2.EC2, transitGatewayID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			ec2.TransitGatewayStateAvailable,
