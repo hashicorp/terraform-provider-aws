@@ -27,3 +27,6 @@ resource/aws_ec2_transit_gateway: Add `cidr_blocks` argument
 ```release-note:enhancement
 data-source/aws_ec2_transit_gateway: Add `cidr_blocks` attribute
 ```
+```release-note:enhancement
+resource/aws_ec2_transit_gateway: Add [custom `timeouts`](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts) block
+```

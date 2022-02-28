@@ -43,6 +43,14 @@ In addition to all arguments above, the following attributes are exported:
 * `owner_id` - Identifier of the AWS account that owns the EC2 Transit Gateway
 * `propagation_default_route_table_id` - Identifier of the default propagation route table
 
+## Timeouts
+
+`aws_ec2_transit_gateway` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for EC2 Transit Gateway creation
+- `update` - (Default `10 minutes`) Used for EC2 Transit Gateway updates
+- `delete` - (Default `10 minutes`) Used for EC2 Transit Gateway deletion
+
 ## Import
 
 `aws_ec2_transit_gateway` can be imported by using the EC2 Transit Gateway identifier, e.g.,
