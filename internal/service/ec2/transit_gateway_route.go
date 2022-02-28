@@ -3,6 +3,7 @@ package ec2
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -58,24 +59,25 @@ func resourceTransitGatewayRouteCreate(d *schema.ResourceData, meta interface{})
 
 	destination := d.Get("destination_cidr_block").(string)
 	transitGatewayRouteTableID := d.Get("transit_gateway_route_table_id").(string)
-
+	id := TransitGatewayRouteCreateResourceID(transitGatewayRouteTableID, destination)
 	input := &ec2.CreateTransitGatewayRouteInput{
-		DestinationCidrBlock:       aws.String(destination),
 		Blackhole:                  aws.Bool(d.Get("blackhole").(bool)),
+		DestinationCidrBlock:       aws.String(destination),
 		TransitGatewayAttachmentId: aws.String(d.Get("transit_gateway_attachment_id").(string)),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Route: %s", input)
 	_, err := conn.CreateTransitGatewayRoute(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Transit Gateway Route: %s", err)
+		return fmt.Errorf("error creating EC2 Transit Gateway Route (%s): %w", id, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s_%s", transitGatewayRouteTableID, destination))
+	d.SetId(id)
 
 	if _, err := WaitTransitGatewayRouteCreated(conn, transitGatewayRouteTableID, destination); err != nil {
-		return fmt.Errorf("error waitin for EC2 Transit Gateway Route (%s) create: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for EC2 Transit Gateway Route (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceTransitGatewayRouteRead(d, meta)
@@ -84,7 +86,8 @@ func resourceTransitGatewayRouteCreate(d *schema.ResourceData, meta interface{})
 func resourceTransitGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	transitGatewayRouteTableID, destination, err := DecodeTransitGatewayRouteID(d.Id())
+	transitGatewayRouteTableID, destination, err := TransitGatewayRouteParseResourceID(d.Id())
+
 	if err != nil {
 		return err
 	}
@@ -121,30 +124,48 @@ func resourceTransitGatewayRouteRead(d *schema.ResourceData, meta interface{}) e
 func resourceTransitGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	transitGatewayRouteTableID, destination, err := DecodeTransitGatewayRouteID(d.Id())
+	transitGatewayRouteTableID, destination, err := TransitGatewayRouteParseResourceID(d.Id())
+
 	if err != nil {
 		return err
 	}
 
-	input := &ec2.DeleteTransitGatewayRouteInput{
+	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Route: %s", d.Id())
+	_, err = conn.DeleteTransitGatewayRoute(&ec2.DeleteTransitGatewayRouteInput{
 		DestinationCidrBlock:       aws.String(destination),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
-	}
-
-	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Route (%s): %s", d.Id(), input)
-	_, err = conn.DeleteTransitGatewayRoute(input)
+	})
 
 	if tfawserr.ErrMessageContains(err, "InvalidRoute.NotFound", "") || tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Transit Gateway Route: %s", err)
+		return fmt.Errorf("error deleting EC2 Transit Gateway Route (%s): %w", d.Id(), err)
 	}
 
 	if _, err := WaitTransitGatewayRouteDeleted(conn, transitGatewayRouteTableID, destination); err != nil {
-		return fmt.Errorf("error waitin for EC2 Transit Gateway Route (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for EC2 Transit Gateway Route (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
+}
+
+const transitGatewayRouteIDSeparator = "_"
+
+func TransitGatewayRouteCreateResourceID(transitGatewayRouteTableID, destination string) string {
+	parts := []string{transitGatewayRouteTableID, destination}
+	id := strings.Join(parts, clientVPNAuthorizationRuleIDSeparator)
+
+	return id
+}
+
+func TransitGatewayRouteParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, transitGatewayRouteIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected TRANSIT-GATEWAY-ROUTE-TABLE-ID%[2]sDESTINATION", id, transitGatewayRouteIDSeparator)
 }

@@ -321,15 +321,6 @@ func resourceTransitGatewayDelete(d *schema.ResourceData, meta interface{}) erro
 
 	return nil
 }
-func DecodeTransitGatewayRouteID(id string) (string, string, error) {
-	parts := strings.Split(id, "_")
-
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected tgw-rtb-ID_DESTINATION", id)
-	}
-
-	return parts[0], parts[1], nil
-}
 
 func DecodeTransitGatewayRouteTableAssociationID(id string) (string, string, error) {
 	parts := strings.Split(id, "_")
