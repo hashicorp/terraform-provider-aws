@@ -231,7 +231,7 @@ func ResourceCluster() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      300,
-							ValidateFunc: validation.IntBetween(10, 600),
+							ValidateFunc: validation.IntBetween(60, 600),
 						},
 					},
 				},
