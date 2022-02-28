@@ -2130,7 +2130,7 @@ func FindTransitGateway(conn *ec2.EC2, input *ec2.DescribeTransitGatewaysInput) 
 		return nil, err
 	}
 
-	if len(output) == 0 || output[0] == nil {
+	if len(output) == 0 || output[0] == nil || output[0].Options == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -2277,7 +2277,7 @@ func FindTransitGatewayConnect(conn *ec2.EC2, input *ec2.DescribeTransitGatewayC
 		return nil, err
 	}
 
-	if len(output) == 0 || output[0] == nil {
+	if len(output) == 0 || output[0] == nil || output[0].Options == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -2762,7 +2762,7 @@ func FindTransitGatewayVPCAttachment(conn *ec2.EC2, input *ec2.DescribeTransitGa
 		return nil, err
 	}
 
-	if len(output) == 0 || output[0] == nil {
+	if len(output) == 0 || output[0] == nil || output[0].Options == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 

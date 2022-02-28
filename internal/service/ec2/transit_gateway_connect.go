@@ -101,18 +101,17 @@ func resourceTransitGatewayConnectCreate(ctx context.Context, d *schema.Resource
 		return diag.Errorf("error waiting for EC2 Transit Gateway Connect (%s) create: %s", d.Id(), err)
 	}
 
-	transportAttachment, err := DescribeTransitGatewayAttachment(conn, transportAttachmentID)
+	transportAttachment, err := FindTransitGatewayAttachmentByID(conn, transportAttachmentID)
+
 	if err != nil {
-		return diag.Errorf("error describing EC2 Transit Gateway Attachment (%s): %s", transportAttachmentID, err)
+		return diag.Errorf("error reading EC2 Transit Gateway Attachment (%s): %s", transportAttachmentID, err)
 	}
 
-	transitGateway, err := DescribeTransitGateway(conn, *transportAttachment.TransitGatewayId)
-	if err != nil {
-		return diag.Errorf("error describing EC2 Transit Gateway (%s): %s", *transportAttachment.TransitGatewayId, err)
-	}
+	transitGatewayID := aws.StringValue(transportAttachment.TransitGatewayId)
+	transitGateway, err := FindTransitGatewayByID(conn, transitGatewayID)
 
-	if transitGateway.Options == nil {
-		return diag.Errorf("error describing EC2 Transit Gateway (%s): missing options", *transportAttachment.TransitGatewayId)
+	if err != nil {
+		return diag.Errorf("error reading EC2 Transit Gateway (%s): %s", *transportAttachment.TransitGatewayId, err)
 	}
 
 	// We cannot modify Transit Gateway Route Tables for Resource Access Manager shared Transit Gateways
