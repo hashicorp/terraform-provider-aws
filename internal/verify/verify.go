@@ -1,7 +1,7 @@
 package verify
 
 import (
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"gopkg.in/yaml.v2"
 )
 
@@ -35,13 +35,20 @@ func checkYAMLString(yamlString interface{}) (string, error) {
 }
 
 const (
-	ErrCodeAccessDenied                   = "AccessDenied"
-	ErrCodeUnknownOperation               = "UnknownOperationException"
-	ErrCodeValidationError                = "ValidationError"
-	ErrCodeOperationDisabledException     = "OperationDisabledException"
-	ErrCodeInternalException              = "InternalException"
-	ErrCodeInternalServiceFault           = "InternalServiceError"
-	ErrCodeOperationNotPermittedException = "OperationNotPermitted"
+	ErrCodeAccessDenied                = "AccessDenied"
+	ErrCodeAuthorizationError          = "AuthorizationError"
+	ErrCodeInternalException           = "InternalException"
+	ErrCodeInternalServiceError        = "InternalServiceError"
+	ErrCodeInvalidAction               = "InvalidAction"
+	ErrCodeInvalidParameterException   = "InvalidParameterException"
+	ErrCodeInvalidRequest              = "InvalidRequest"
+	ErrCodeOperationDisabledException  = "OperationDisabledException"
+	ErrCodeOperationNotPermitted       = "OperationNotPermitted"
+	ErrCodeUnknownOperationException   = "UnknownOperationException"
+	ErrCodeUnsupportedFeatureException = "UnsupportedFeatureException"
+	ErrCodeUnsupportedOperation        = "UnsupportedOperation"
+	ErrCodeValidationError             = "ValidationError"
+	ErrCodeValidationException         = "ValidationException"
 )
 
 func CheckISOErrorTagsUnsupported(err error) bool {
@@ -49,15 +56,7 @@ func CheckISOErrorTagsUnsupported(err error) bool {
 		return true
 	}
 
-	if tfawserr.ErrCodeContains(err, ErrCodeUnknownOperation) {
-		return true
-	}
-
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not support tagging") {
-		return true
-	}
-
-	if tfawserr.ErrCodeContains(err, ErrCodeOperationDisabledException) {
+	if tfawserr.ErrCodeContains(err, ErrCodeAuthorizationError) {
 		return true
 	}
 
@@ -65,11 +64,47 @@ func CheckISOErrorTagsUnsupported(err error) bool {
 		return true
 	}
 
-	if tfawserr.ErrCodeContains(err, ErrCodeInternalServiceFault) {
+	if tfawserr.ErrCodeContains(err, ErrCodeInternalServiceError) {
 		return true
 	}
 
-	if tfawserr.ErrCodeContains(err, ErrCodeOperationNotPermittedException) {
+	if tfawserr.ErrCodeContains(err, ErrCodeInvalidAction) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeInvalidParameterException) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeInvalidRequest) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeOperationDisabledException) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeOperationNotPermitted) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeUnknownOperationException) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeUnsupportedFeatureException) {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeUnsupportedOperation) {
+		return true
+	}
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not support tagging") {
+		return true
+	}
+
+	if tfawserr.ErrCodeContains(err, ErrCodeValidationException) {
 		return true
 	}
 

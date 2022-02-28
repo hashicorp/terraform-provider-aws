@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -795,7 +795,7 @@ func IsErrGatewayNotFound(err error) bool {
 	if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway was not found.") {
 		return true
 	}
-	if tfawserr.ErrMessageContains(err, storagegateway.ErrorCodeGatewayNotFound, "") {
+	if tfawserr.ErrCodeEquals(err, storagegateway.ErrorCodeGatewayNotFound) {
 		return true
 	}
 	return false

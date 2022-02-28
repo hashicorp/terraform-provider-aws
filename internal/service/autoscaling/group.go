@@ -15,7 +15,7 @@ import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -428,8 +428,9 @@ func ResourceGroup() *schema.Resource {
 			},
 
 			"tag": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ConflictsWith: []string{"tags"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"key": {
@@ -468,6 +469,7 @@ func ResourceGroup() *schema.Resource {
 					Elem: &schema.Schema{Type: schema.TypeString},
 				},
 				ConflictsWith: []string{"tag"},
+				Deprecated:    "Use tag instead",
 				// Terraform 0.11 and earlier can provide incorrect type
 				// information during difference handling, in which boolean
 				// values are represented as "0" and "1". This Set function
@@ -1411,7 +1413,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteAutoScalingGroup(&deleteopts)
-		if tfawserr.ErrMessageContains(err, "InvalidGroup.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidGroup.NotFound") {
 			return nil
 		}
 	}
@@ -1650,6 +1652,18 @@ func resourceGroupDrain(d *schema.ResourceData, meta interface{}) error {
 	}
 	if _, err := conn.UpdateAutoScalingGroup(&opts); err != nil {
 		return fmt.Errorf("Error setting capacity to zero to drain: %s", err)
+	}
+
+	// Next, ensure that instances are not prevented from scaling in.
+	//
+	// The ASG's own scale-in protection setting doesn't make a difference here,
+	// as it only affects new instances, which won't be launched now that the
+	// desired capacity is set to 0. There is also the possibility that this ASG
+	// no longer applies scale-in protection to new instances, but there's still
+	// old ones that have it.
+	log.Printf("[DEBUG] Disabling scale-in protection for all instances in the group")
+	if err := disableASGScaleInProtections(d, conn); err != nil {
+		return fmt.Errorf("Error disabling scale-in protection for all instances: %s", err)
 	}
 
 	// Next, wait for the Auto Scaling Group to drain
@@ -2362,4 +2376,41 @@ func flattenLaunchTemplateSpecification(lt *autoscaling.LaunchTemplateSpecificat
 	result = append(result, attrs)
 
 	return result
+}
+
+// disableASGScaleInProtections disables scale-in protection for all instances
+// in the given Auto-Scaling Group.
+func disableASGScaleInProtections(d *schema.ResourceData, conn *autoscaling.AutoScaling) error {
+	g, err := getGroup(d.Id(), conn)
+	if err != nil {
+		return fmt.Errorf("Error getting group %s: %s", d.Id(), err)
+	}
+
+	var instanceIds []string
+	for _, instance := range g.Instances {
+		if aws.BoolValue(instance.ProtectedFromScaleIn) {
+			instanceIds = append(instanceIds, aws.StringValue(instance.InstanceId))
+		}
+	}
+
+	const chunkSize = 50 // API limit
+
+	for i := 0; i < len(instanceIds); i += chunkSize {
+		j := i + chunkSize
+		if j > len(instanceIds) {
+			j = len(instanceIds)
+		}
+
+		input := autoscaling.SetInstanceProtectionInput{
+			AutoScalingGroupName: aws.String(d.Id()),
+			InstanceIds:          aws.StringSlice(instanceIds[i:j]),
+			ProtectedFromScaleIn: aws.Bool(false),
+		}
+
+		if _, err := conn.SetInstanceProtection(&input); err != nil {
+			return fmt.Errorf("Error disabling scale-in protections: %s", err)
+		}
+	}
+
+	return nil
 }

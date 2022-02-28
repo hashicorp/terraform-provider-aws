@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -297,7 +297,7 @@ func resourceEBSSnapshotWaitForAvailable(d *schema.ResourceData, conn *ec2.EC2) 
 		if err == nil {
 			return nil
 		}
-		if tfawserr.ErrMessageContains(err, "ResourceNotReady", "") {
+		if tfawserr.ErrCodeEquals(err, "ResourceNotReady") {
 			return resource.RetryableError(fmt.Errorf("EBS Snapshot - waiting for snapshot to become available"))
 		}
 		return resource.NonRetryableError(err)

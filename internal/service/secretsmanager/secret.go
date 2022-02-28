@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -252,7 +252,7 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 			_, err := conn.RotateSecret(input)
 			if err != nil {
 				// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-				if tfawserr.ErrMessageContains(err, "AccessDeniedException", "") {
+				if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -449,7 +449,7 @@ func resourceSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 				_, err := conn.RotateSecret(input)
 				if err != nil {
 					// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-					if tfawserr.ErrMessageContains(err, "AccessDeniedException", "") {
+					if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
 						return resource.RetryableError(err)
 					}
 					return resource.NonRetryableError(err)
@@ -510,7 +510,7 @@ func resourceSecretDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deleting Secrets Manager Secret: %s", input)
 	_, err := conn.DeleteSecret(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error deleting Secrets Manager Secret: %w", err)
@@ -547,7 +547,7 @@ func removeSecretsManagerSecretReplicas(conn *secretsmanager.SecretsManager, id 
 	_, err := conn.RemoveRegionsFromReplication(input)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 

@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -717,14 +717,14 @@ func resourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error 
 		LaunchTemplateIds: []*string{aws.String(d.Id())},
 	})
 
-	if tfawserr.ErrMessageContains(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
+	if tfawserr.ErrCodeEquals(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist) {
 		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	// AWS SDK constant above is currently incorrect
-	if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateId.NotFound") {
 		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -941,11 +941,11 @@ func resourceLaunchTemplateDelete(d *schema.ResourceData, meta interface{}) erro
 		LaunchTemplateId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
+	if tfawserr.ErrCodeEquals(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist) {
 		return nil
 	}
 	// AWS SDK constant above is currently incorrect
-	if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateId.NotFound") {
 		return nil
 	}
 	if err != nil {

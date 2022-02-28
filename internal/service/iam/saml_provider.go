@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceSamlProvider() *schema.Resource {
+func ResourceSAMLProvider() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSamlProviderCreate,
-		Read:   resourceSamlProviderRead,
-		Update: resourceSamlProviderUpdate,
-		Delete: resourceSamlProviderDelete,
+		Create: resourceSAMLProviderCreate,
+		Read:   resourceSAMLProviderRead,
+		Update: resourceSAMLProviderUpdate,
+		Delete: resourceSAMLProviderDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -56,7 +56,7 @@ func ResourceSamlProvider() *schema.Resource {
 	}
 }
 
-func resourceSamlProviderCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSAMLProviderCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -64,20 +64,47 @@ func resourceSamlProviderCreate(d *schema.ResourceData, meta interface{}) error 
 	input := &iam.CreateSAMLProviderInput{
 		Name:                 aws.String(d.Get("name").(string)),
 		SAMLMetadataDocument: aws.String(d.Get("saml_metadata_document").(string)),
-		Tags:                 Tags(tags.IgnoreAWS()),
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateSAMLProvider(input)
+
+	// Some partitions (i.e., ISO) may not support tag-on-create
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] failed creating IAM SAML Provider (%s) with tags: %s. Trying create without tags.", d.Get("name").(string), err)
+		input.Tags = nil
+
+		out, err = conn.CreateSAMLProvider(input)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error creating IAM SAML Provider: %w", err)
 	}
 
 	d.SetId(aws.StringValue(out.SAMLProviderArn))
 
-	return resourceSamlProviderRead(d, meta)
+	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
+	if input.Tags == nil && len(tags) > 0 {
+		err := samlProviderUpdateTags(conn, d.Id(), nil, tags)
+
+		// If default tags only, log and continue. Otherwise, error.
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] failed adding tags after create for IAM SAML Provider (%s): %s", d.Id(), err)
+			return resourceSAMLProviderRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed adding tags after create for IAM SAML Provider (%s): %w", d.Id(), err)
+		}
+	}
+
+	return resourceSAMLProviderRead(d, meta)
 }
 
-func resourceSamlProviderRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSAMLProviderRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -87,7 +114,7 @@ func resourceSamlProviderRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	out, err := conn.GetSAMLProvider(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			log.Printf("[WARN] IAM SAML Provider %q not found, removing from state.", d.Id())
 			d.SetId("")
 			return nil
@@ -96,7 +123,7 @@ func resourceSamlProviderRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("arn", d.Id())
-	name, err := extractNameFromIAMSamlProviderArn(d.Id())
+	name, err := extractNameFromIAMSAMLProviderArn(d.Id())
 	if err != nil {
 		return err
 	}
@@ -118,7 +145,7 @@ func resourceSamlProviderRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceSamlProviderUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSAMLProviderUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -135,15 +162,23 @@ func resourceSamlProviderUpdate(d *schema.ResourceData, meta interface{}) error 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := samlProviderUpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags for IAM SAML Provider (%s): %w", d.Id(), err)
+		err := samlProviderUpdateTags(conn, d.Id(), o, n)
+
+		// Some partitions (i.e., ISO) may not support tagging, giving error
+		if verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] failed updating tags for IAM SAML Provider (%s): %s", d.Id(), err)
+			return resourceSAMLProviderRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed updating tags for IAM SAML Provider (%s): %w", d.Id(), err)
 		}
 	}
 
-	return resourceSamlProviderRead(d, meta)
+	return resourceSAMLProviderRead(d, meta)
 }
 
-func resourceSamlProviderDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSAMLProviderDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	input := &iam.DeleteSAMLProviderInput{
@@ -151,7 +186,7 @@ func resourceSamlProviderDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 	_, err := conn.DeleteSAMLProvider(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return nil
 		}
 		return fmt.Errorf("error deleting IAM SAML Provider (%q): %w", d.Id(), err)
@@ -160,7 +195,7 @@ func resourceSamlProviderDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func extractNameFromIAMSamlProviderArn(samlArn string) (string, error) {
+func extractNameFromIAMSAMLProviderArn(samlArn string) (string, error) {
 	parsedArn, err := arn.Parse(samlArn)
 	if err != nil {
 		return "", fmt.Errorf("Unable to extract name from a given ARN: %q", samlArn)

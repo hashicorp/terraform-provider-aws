@@ -5,8 +5,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/prometheusservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -74,6 +75,63 @@ func TestAccAMPWorkspace_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAMPWorkspace_tags(t *testing.T) {
+	rInt := sdkacctest.RandInt()
+	resourceName := "aws_prometheus_workspace.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckAMPWorkspaceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAMPWorkspaceWithTagsConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAMPWorkspaceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "production"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Owner", "mh9"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAMPWorkspaceWithTagsAddedConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAMPWorkspaceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "production"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Owner", "mh9"),
+					resource.TestCheckResourceAttr(resourceName, "tags.App", "foo42"),
+				),
+			},
+			{
+				Config: testAccAMPWorkspaceWithTagsUpdatedConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAMPWorkspaceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "production"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Owner", "abhi"),
+					resource.TestCheckResourceAttr(resourceName, "tags.App", "foo42"),
+				),
+			},
+			{
+				Config: testAccAMPWorkspaceWithTagsConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAMPWorkspaceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "production"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Owner", "mh9"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAMPWorkspaceExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -113,7 +171,7 @@ func testAccCheckAMPWorkspaceDestroy(s *terraform.State) error {
 		_, err := conn.DescribeWorkspace(&prometheusservice.DescribeWorkspaceInput{
 			WorkspaceId: aws.String(rs.Primary.ID),
 		})
-		if tfawserr.ErrMessageContains(err, prometheusservice.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, prometheusservice.ErrCodeResourceNotFoundException) {
 			continue
 		}
 
@@ -138,4 +196,45 @@ func testAccAMPWorkspaceWithoutAliasConfig() string {
 resource "aws_prometheus_workspace" "test" {
 }
 `
+}
+
+func testAccAMPWorkspaceWithTagsConfig(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_prometheus_workspace" "test" {
+  alias = "test-%d"
+
+  tags = {
+    Environment = "production"
+    Owner       = "mh9"
+  }
+}
+`, randInt)
+}
+
+func testAccAMPWorkspaceWithTagsAddedConfig(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_prometheus_workspace" "test" {
+  alias = "test-%d"
+
+  tags = {
+    Environment = "production"
+    Owner       = "mh9"
+    App         = "foo42"
+  }
+}
+`, randInt)
+}
+
+func testAccAMPWorkspaceWithTagsUpdatedConfig(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_prometheus_workspace" "test" {
+  alias = "test-%d"
+
+  tags = {
+    Environment = "production"
+    Owner       = "abhi"
+    App         = "foo42"
+  }
+}
+`, randInt)
 }

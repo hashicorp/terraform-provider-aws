@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -177,7 +177,7 @@ func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		resp, err = conn.CreateWebACL(params)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFUnavailableEntityException) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -215,7 +215,7 @@ func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetWebACL(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
 			log.Printf("[WARN] WAFv2 WebACL (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -294,7 +294,7 @@ func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := resource.Retry(webACLUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateWebACL(u)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
+				if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFUnavailableEntityException) {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -307,7 +307,7 @@ func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFOptimisticLockException, "") {
+			if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFOptimisticLockException) {
 				return fmt.Errorf("Error updating WAFv2 WebACL, resource has changed since last refresh please run a new plan before applying again: %w", err)
 			}
 			return fmt.Errorf("Error updating WAFv2 WebACL: %w", err)
@@ -408,6 +408,11 @@ func wafv2ManagedRuleGroupStatementSchema(level int) *schema.Schema {
 				"vendor_name": {
 					Type:         schema.TypeString,
 					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				"version": {
+					Type:         schema.TypeString,
+					Optional:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
 				},
 			},
@@ -666,6 +671,10 @@ func expandManagedRuleGroupStatement(l []interface{}) *wafv2.ManagedRuleGroupSta
 		r.ScopeDownStatement = expandStatement(s[0].(map[string]interface{}))
 	}
 
+	if v, ok := m["version"]; ok && v != "" {
+		r.Version = aws.String(v.(string))
+	}
+
 	return r
 }
 
@@ -880,6 +889,10 @@ func flattenManagedRuleGroupStatement(apiObject *wafv2.ManagedRuleGroupStatement
 
 	if apiObject.VendorName != nil {
 		tfMap["vendor_name"] = aws.StringValue(apiObject.VendorName)
+	}
+
+	if apiObject.Version != nil {
+		tfMap["version"] = aws.StringValue(apiObject.Version)
 	}
 
 	return []interface{}{tfMap}

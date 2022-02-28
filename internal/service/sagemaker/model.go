@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -289,7 +289,7 @@ func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
 
 	model, err := conn.DescribeModel(request)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "ValidationException", "") {
+		if tfawserr.ErrCodeEquals(err, "ValidationException") {
 			log.Printf("[INFO] unable to find the sagemaker model resource and therefore it is removed from the state: %s", d.Id())
 			d.SetId("")
 			return nil
@@ -379,7 +379,7 @@ func resourceModelDelete(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		if tfawserr.ErrMessageContains(err, "ResourceNotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "ResourceNotFound") {
 			return resource.RetryableError(err)
 		}
 		return resource.NonRetryableError(err)

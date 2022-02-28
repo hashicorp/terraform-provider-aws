@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -35,19 +35,19 @@ func ResourcePermission() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validPermissionAction,
+				ValidateFunc: validPermissionAction(),
 			},
 			"event_source_token": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validPermissionEventSourceToken,
+				ValidateFunc: validPermissionEventSourceToken(),
 			},
 			"function_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validFunctionName,
+				ValidateFunc: validFunctionName(),
 			},
 			"principal": {
 				Type:     schema.TypeString,
@@ -58,7 +58,7 @@ func ResourcePermission() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validQualifier,
+				ValidateFunc: validQualifier(),
 			},
 			"source_account": {
 				Type:         schema.TypeString,
@@ -78,14 +78,14 @@ func ResourcePermission() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"statement_id_prefix"},
-				ValidateFunc:  validPolicyStatementID,
+				ValidateFunc:  validPolicyStatementID(),
 			},
 			"statement_id_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"statement_id"},
-				ValidateFunc:  validPolicyStatementID,
+				ValidateFunc:  validPolicyStatementID(),
 			},
 		},
 	}
@@ -138,7 +138,7 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		out, err = conn.AddPermission(&input)
 
-		if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceConflictException, "") || tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceConflictException) || tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -352,7 +352,7 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetPolicy(params)
 
-	if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "") {
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
 		return nil
 	}
 

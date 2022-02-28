@@ -39,7 +39,7 @@ resource "aws_s3_bucket" "analytics" {
 }
 ```
 
-### Add analytics configuration with S3 bucket object filter
+### Add analytics configuration with S3 object filter
 
 ```terraform
 resource "aws_s3_bucket_analytics_configuration" "example-filtered" {

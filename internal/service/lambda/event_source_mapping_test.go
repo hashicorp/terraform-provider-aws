@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -980,7 +980,7 @@ func testAccCheckEventSourceMappingIsBeingDisabled(conf *lambda.EventSourceMappi
 			_, err := conn.UpdateEventSourceMapping(params)
 
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceInUseException, "") {
+				if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceInUseException) {
 					return resource.RetryableError(fmt.Errorf(
 						"Waiting for Lambda Event Source Mapping to be ready to be updated: %v", conf.UUID))
 				}

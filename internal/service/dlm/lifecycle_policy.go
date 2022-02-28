@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dlm"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -257,7 +257,7 @@ func resourceLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error
 		PolicyId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, dlm.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, dlm.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] DLM Lifecycle Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

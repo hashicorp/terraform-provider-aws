@@ -55,6 +55,7 @@ In addition to all arguments above, the following attributes are exported:
 * `default_route_table_propagation` - Whether resource attachments automatically propagate routes to the default propagation route table.
 * `description` - Description of the EC2 Transit Gateway
 * `dns_support` - Whether DNS support is enabled.
+* `multicast_support` - (Optional) Whether Multicast support is enabled. Required to use `ec2_transit_gateway_multicast_domain`. Valid values: `disable`, `enable`. Default value: `disable`.
 * `id` - EC2 Transit Gateway identifier
 * `owner_id` - Identifier of the AWS account that owns the EC2 Transit Gateway
 * `propagation_default_route_table_id` - Identifier of the default propagation route table.

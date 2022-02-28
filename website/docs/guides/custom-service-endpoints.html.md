@@ -58,7 +58,7 @@ provider "aws" {
 }
 ```
 
-<!-- markdownlint-disable MD033 -->
+<!-- markdownlint-disable no-inline-html -->
 <!--
     The division splits this long list into multiple columns without manually
     maintaining a table. The terraform.io Markdown parser previously allowed
@@ -104,7 +104,6 @@ provider "aws" {
   <li><code>clouddirectory</code></li>
   <li><code>cloudformation</code></li>
   <li><code>cloudfront</code></li>
-  <li><code>cloudhsmv1</code></li>
   <li><code>cloudhsm</code> (or <code>cloudhsmv2</code>)</li>
   <li><code>cloudsearch</code></li>
   <li><code>cloudsearchdomain</code></li>
@@ -177,6 +176,7 @@ provider "aws" {
   <li><code>globalaccelerator</code></li>
   <li><code>glue</code></li>
   <li><code>gluedatabrew</code></li>
+  <li><code>grafana</code> (or <code>managedgrafana</code>, <code>amg</code>)</li>
   <li><code>greengrass</code></li>
   <li><code>greengrassv2</code></li>
   <li><code>groundstation</code></li>
@@ -340,7 +340,15 @@ provider "aws" {
   <li><code>xray</code></li>
 </ul>
 </div>
-<!-- markdownlint-enable MD033 -->
+<!-- markdownlint-enable no-inline-html -->
+
+As a convenience, for compatibility with the [Terraform S3 Backend](https://www.terraform.io/language/settings/backends/s3),
+the following service endpoints can be configured using environment variables:
+
+* DynamoDB: `TF_AWS_DYNAMODB_ENDPOINT` (or **Deprecated** `AWS_DYNAMODB_ENDPOINT`)
+* IAM: `TF_AWS_IAM_ENDPOINT` (or **Deprecated** `AWS_IAM_ENDPOINT`)
+* S3: `TF_AWS_S3_ENDPOINT` (or **Deprecated** `AWS_S3_ENDPOINT`)
+* STS: `TF_AWS_STS_ENDPOINT` (or **Deprecated** `AWS_STS_ENDPOINT`)
 
 ## Connecting to Local AWS Compatible Solutions
 

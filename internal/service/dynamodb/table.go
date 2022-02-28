@@ -12,7 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -977,7 +977,7 @@ func createDynamoDbReplicas(tableName string, tfList []interface{}, conn *dynamo
 				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
 					return resource.RetryableError(err)
 				}
-				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceInUseException, "") {
+				if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
 					return resource.RetryableError(err)
 				}
 
@@ -1212,7 +1212,7 @@ func deleteDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
 			//    ResourceInUseException: Attempt to change a resource which is still in use: Table is being updated:
 			// 2. Removing a table from a DynamoDB global table may return:
 			//    ResourceInUseException: Attempt to change a resource which is still in use: Table is being deleted:
-			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceInUseException, "") {
+			if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
 				return resource.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceNotFoundException, "Requested resource not found: Table: ") {
@@ -1271,7 +1271,7 @@ func deleteDynamoDbReplicas(tableName string, tfList []interface{}, conn *dynamo
 					if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
 						return resource.RetryableError(err)
 					}
-					if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeResourceInUseException, "") {
+					if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
 						return resource.RetryableError(err)
 					}
 
