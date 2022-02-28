@@ -21,6 +21,7 @@ func testAccTransitGatewayConnectDataSource_Filter(t *testing.T) {
 			{
 				Config: testAccTransitGatewayConnectFilterDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "protocol", dataSourceName, "protocol"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "transit_gateway_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "transport_attachment_id", dataSourceName, "transport_attachment_id"),

@@ -23,6 +23,10 @@ func DataSourceTransitGatewayConnect() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"protocol": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags": tftags.TagsSchemaComputed(),
 			"transit_gateway_id": {
 				Type:     schema.TypeString,
@@ -75,14 +79,14 @@ func dataSourceTransitGatewayConnectRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error reading EC2 Transit Gateway Connect Attachment (%s): missing options", d.Id())
 	}
 
-	if err := d.Set("tags", KeyValueTags(transitGatewayConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
+	d.SetId(aws.StringValue(transitGatewayConnect.TransitGatewayAttachmentId))
+	d.Set("protocol", transitGatewayConnect.Options.Protocol)
 	d.Set("transit_gateway_id", transitGatewayConnect.TransitGatewayId)
 	d.Set("transport_attachment_id", transitGatewayConnect.TransportTransitGatewayAttachmentId)
 
-	d.SetId(aws.StringValue(transitGatewayConnect.TransitGatewayAttachmentId))
+	if err := d.Set("tags", KeyValueTags(transitGatewayConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
 
 	return nil
 }
