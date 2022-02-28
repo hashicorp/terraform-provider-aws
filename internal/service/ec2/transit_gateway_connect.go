@@ -90,7 +90,7 @@ func resourceTransitGatewayConnectCreate(ctx context.Context, d *schema.Resource
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Connect Attachment: %s", input)
-	output, err := conn.CreateTransitGatewayConnect(input)
+	output, err := conn.CreateTransitGatewayConnectWithContext(ctx, input)
 	if err != nil {
 		return diag.Errorf("error creating EC2 Transit Gateway Connect Attachment: %s", err)
 	}
@@ -244,7 +244,7 @@ func resourceTransitGatewayConnectDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Connect: %s", d.Id())
-	_, err := conn.DeleteTransitGatewayConnect(&ec2.DeleteTransitGatewayConnectInput{
+	_, err := conn.DeleteTransitGatewayConnectWithContext(ctx, &ec2.DeleteTransitGatewayConnectInput{
 		TransitGatewayAttachmentId: aws.String(d.Id()),
 	})
 
