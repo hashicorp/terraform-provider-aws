@@ -1244,6 +1244,7 @@ func (c *Config) Client() (interface{}, error) {
 			return nil, err
 		}
 	}
+	c.Region = cfg.Region
 
 	sess, err := awsbasev1.GetSession(&cfg, &awsbaseConfig)
 	if err != nil {
