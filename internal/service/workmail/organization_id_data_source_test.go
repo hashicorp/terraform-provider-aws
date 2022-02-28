@@ -27,7 +27,7 @@ func TestAccWorkMailOrganizationDataSource_basic(t *testing.T) {
 				ExpectError: regexp.MustCompile(`not found`),
 			},
 			{
-				Config: testAccOrganizationDataSourceConfig_VersionStage_Default(rName),
+				Config: testAccOrganizationDataSourceConfig_Custom(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccOrganizationCheckDataSource(datasourceName, resourceName),
 				),
@@ -49,8 +49,8 @@ func testAccOrganizationCheckDataSource(datasourceName, resourceName string) res
 		}
 
 		attrNames := []string{
-			"secret_value",
-			"version_stages.#",
+			"alias",
+			"arn",
 		}
 
 		for _, attrName := range attrNames {
