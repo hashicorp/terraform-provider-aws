@@ -68,7 +68,7 @@ func sweepPlatformApplications(region string) error {
 			_, err := conn.DeletePlatformApplication(&sns.DeletePlatformApplicationInput{
 				PlatformApplicationArn: aws.String(arn),
 			})
-			if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
 				continue
 			}
 			if err != nil {
@@ -113,7 +113,7 @@ func sweepTopics(region string) error {
 			_, err := conn.DeleteTopic(&sns.DeleteTopicInput{
 				TopicArn: aws.String(arn),
 			})
-			if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
 				continue
 			}
 			if err != nil {

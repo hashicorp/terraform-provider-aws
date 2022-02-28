@@ -541,7 +541,7 @@ func testAccCheckSpotInstanceRequest_InstanceAttributes(sir *ec2.SpotInstanceReq
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		instance, err := tfec2.InstanceFindByID(conn, aws.StringValue(sir.InstanceId))
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
+			if tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
 				return fmt.Errorf("Spot Instance %q not found", aws.StringValue(sir.InstanceId))
 			}
 			return err

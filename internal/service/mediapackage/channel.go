@@ -170,7 +170,7 @@ func resourceChannelDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 	_, err := conn.DeleteChannel(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, mediapackage.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, mediapackage.ErrCodeNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error deleting MediaPackage Channel: %s", err)
@@ -182,7 +182,7 @@ func resourceChannelDelete(d *schema.ResourceData, meta interface{}) error {
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeChannel(dcinput)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, mediapackage.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, mediapackage.ErrCodeNotFoundException) {
 				return nil
 			}
 			return resource.NonRetryableError(err)

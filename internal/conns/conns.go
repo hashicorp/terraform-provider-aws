@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -573,6 +572,8 @@ type ServiceDatum struct {
 	AWSServiceID      string
 	ProviderNameUpper string
 	HCLKeys           []string
+	EnvVar            string
+	DeprecatedEnvVar  string
 }
 
 var serviceData map[string]*ServiceDatum
@@ -656,7 +657,7 @@ func init() {
 	serviceData[DMS] = &ServiceDatum{AWSClientName: "DatabaseMigrationService", AWSServiceName: databasemigrationservice.ServiceName, AWSEndpointsID: databasemigrationservice.EndpointsID, AWSServiceID: databasemigrationservice.ServiceID, ProviderNameUpper: "DMS", HCLKeys: []string{"dms", "databasemigration", "databasemigrationservice"}}
 	serviceData[DocDB] = &ServiceDatum{AWSClientName: "DocDB", AWSServiceName: docdb.ServiceName, AWSEndpointsID: docdb.EndpointsID, AWSServiceID: docdb.ServiceID, ProviderNameUpper: "DocDB", HCLKeys: []string{"docdb"}}
 	serviceData[DS] = &ServiceDatum{AWSClientName: "DirectoryService", AWSServiceName: directoryservice.ServiceName, AWSEndpointsID: directoryservice.EndpointsID, AWSServiceID: directoryservice.ServiceID, ProviderNameUpper: "DS", HCLKeys: []string{"ds"}}
-	serviceData[DynamoDB] = &ServiceDatum{AWSClientName: "DynamoDB", AWSServiceName: dynamodb.ServiceName, AWSEndpointsID: dynamodb.EndpointsID, AWSServiceID: dynamodb.ServiceID, ProviderNameUpper: "DynamoDB", HCLKeys: []string{"dynamodb"}}
+	serviceData[DynamoDB] = &ServiceDatum{AWSClientName: "DynamoDB", AWSServiceName: dynamodb.ServiceName, AWSEndpointsID: dynamodb.EndpointsID, AWSServiceID: dynamodb.ServiceID, ProviderNameUpper: "DynamoDB", HCLKeys: []string{"dynamodb"}, EnvVar: "TF_AWS_DYNAMODB_ENDPOINT", DeprecatedEnvVar: "AWS_DYNAMODB_ENDPOINT"}
 	serviceData[DynamoDBStreams] = &ServiceDatum{AWSClientName: "DynamoDBStreams", AWSServiceName: dynamodbstreams.ServiceName, AWSEndpointsID: dynamodbstreams.EndpointsID, AWSServiceID: dynamodbstreams.ServiceID, ProviderNameUpper: "DynamoDBStreams", HCLKeys: []string{"dynamodbstreams"}}
 	serviceData[EC2] = &ServiceDatum{AWSClientName: "EC2", AWSServiceName: ec2.ServiceName, AWSEndpointsID: ec2.EndpointsID, AWSServiceID: ec2.ServiceID, ProviderNameUpper: "EC2", HCLKeys: []string{"ec2"}}
 	serviceData[EC2InstanceConnect] = &ServiceDatum{AWSClientName: "EC2InstanceConnect", AWSServiceName: ec2instanceconnect.ServiceName, AWSEndpointsID: ec2instanceconnect.EndpointsID, AWSServiceID: ec2instanceconnect.ServiceID, ProviderNameUpper: "EC2InstanceConnect", HCLKeys: []string{"ec2instanceconnect"}}
@@ -674,7 +675,7 @@ func init() {
 	serviceData[ELBV2] = &ServiceDatum{AWSClientName: "ELBV2", AWSServiceName: elbv2.ServiceName, AWSEndpointsID: elbv2.EndpointsID, AWSServiceID: elbv2.ServiceID, ProviderNameUpper: "ELBV2", HCLKeys: []string{"elbv2"}}
 	serviceData[EMR] = &ServiceDatum{AWSClientName: "EMR", AWSServiceName: emr.ServiceName, AWSEndpointsID: emr.EndpointsID, AWSServiceID: emr.ServiceID, ProviderNameUpper: "EMR", HCLKeys: []string{"emr"}}
 	serviceData[EMRContainers] = &ServiceDatum{AWSClientName: "EMRContainers", AWSServiceName: emrcontainers.ServiceName, AWSEndpointsID: emrcontainers.EndpointsID, AWSServiceID: emrcontainers.ServiceID, ProviderNameUpper: "EMRContainers", HCLKeys: []string{"emrcontainers"}}
-	serviceData[Events] = &ServiceDatum{AWSClientName: "EventBridge", AWSServiceName: eventbridge.ServiceName, AWSEndpointsID: eventbridge.EndpointsID, AWSServiceID: eventbridge.ServiceID, ProviderNameUpper: "Events", HCLKeys: []string{"cloudwatchevents", "eventbridge", "events"}}
+	serviceData[Events] = &ServiceDatum{AWSClientName: "EventBridge", AWSServiceName: eventbridge.ServiceName, AWSEndpointsID: eventbridge.EndpointsID, AWSServiceID: eventbridge.ServiceID, ProviderNameUpper: "Events", HCLKeys: []string{"eventbridge", "cloudwatchevents", "events"}}
 	serviceData[FinSpace] = &ServiceDatum{AWSClientName: "Finspace", AWSServiceName: finspace.ServiceName, AWSEndpointsID: finspace.EndpointsID, AWSServiceID: finspace.ServiceID, ProviderNameUpper: "FinSpace", HCLKeys: []string{"finspace"}}
 	serviceData[FinSpaceData] = &ServiceDatum{AWSClientName: "FinSpaceData", AWSServiceName: finspacedata.ServiceName, AWSEndpointsID: finspacedata.EndpointsID, AWSServiceID: finspacedata.ServiceID, ProviderNameUpper: "FinSpaceData", HCLKeys: []string{"finspacedata"}}
 	serviceData[Firehose] = &ServiceDatum{AWSClientName: "Firehose", AWSServiceName: firehose.ServiceName, AWSEndpointsID: firehose.EndpointsID, AWSServiceID: firehose.ServiceID, ProviderNameUpper: "Firehose", HCLKeys: []string{"firehose"}}
@@ -697,7 +698,7 @@ func init() {
 	serviceData[Health] = &ServiceDatum{AWSClientName: "Health", AWSServiceName: health.ServiceName, AWSEndpointsID: health.EndpointsID, AWSServiceID: health.ServiceID, ProviderNameUpper: "Health", HCLKeys: []string{"health"}}
 	serviceData[HealthLake] = &ServiceDatum{AWSClientName: "HealthLake", AWSServiceName: healthlake.ServiceName, AWSEndpointsID: healthlake.EndpointsID, AWSServiceID: healthlake.ServiceID, ProviderNameUpper: "HealthLake", HCLKeys: []string{"healthlake"}}
 	serviceData[Honeycode] = &ServiceDatum{AWSClientName: "Honeycode", AWSServiceName: honeycode.ServiceName, AWSEndpointsID: honeycode.EndpointsID, AWSServiceID: honeycode.ServiceID, ProviderNameUpper: "Honeycode", HCLKeys: []string{"honeycode"}}
-	serviceData[IAM] = &ServiceDatum{AWSClientName: "IAM", AWSServiceName: iam.ServiceName, AWSEndpointsID: iam.EndpointsID, AWSServiceID: iam.ServiceID, ProviderNameUpper: "IAM", HCLKeys: []string{"iam"}}
+	serviceData[IAM] = &ServiceDatum{AWSClientName: "IAM", AWSServiceName: iam.ServiceName, AWSEndpointsID: iam.EndpointsID, AWSServiceID: iam.ServiceID, ProviderNameUpper: "IAM", HCLKeys: []string{"iam"}, EnvVar: "TF_AWS_IAM_ENDPOINT", DeprecatedEnvVar: "AWS_IAM_ENDPOINT"}
 	serviceData[IdentityStore] = &ServiceDatum{AWSClientName: "IdentityStore", AWSServiceName: identitystore.ServiceName, AWSEndpointsID: identitystore.EndpointsID, AWSServiceID: identitystore.ServiceID, ProviderNameUpper: "IdentityStore", HCLKeys: []string{"identitystore"}}
 	serviceData[ImageBuilder] = &ServiceDatum{AWSClientName: "ImageBuilder", AWSServiceName: imagebuilder.ServiceName, AWSEndpointsID: imagebuilder.EndpointsID, AWSServiceID: imagebuilder.ServiceID, ProviderNameUpper: "ImageBuilder", HCLKeys: []string{"imagebuilder"}}
 	serviceData[Inspector] = &ServiceDatum{AWSClientName: "Inspector", AWSServiceName: inspector.ServiceName, AWSEndpointsID: inspector.EndpointsID, AWSServiceID: inspector.ServiceID, ProviderNameUpper: "Inspector", HCLKeys: []string{"inspector"}}
@@ -798,7 +799,7 @@ func init() {
 	serviceData[Route53RecoveryControlConfig] = &ServiceDatum{AWSClientName: "Route53RecoveryControlConfig", AWSServiceName: route53recoverycontrolconfig.ServiceName, AWSEndpointsID: route53recoverycontrolconfig.EndpointsID, AWSServiceID: route53recoverycontrolconfig.ServiceID, ProviderNameUpper: "Route53RecoveryControlConfig", HCLKeys: []string{"route53recoverycontrolconfig"}}
 	serviceData[Route53RecoveryReadiness] = &ServiceDatum{AWSClientName: "Route53RecoveryReadiness", AWSServiceName: route53recoveryreadiness.ServiceName, AWSEndpointsID: route53recoveryreadiness.EndpointsID, AWSServiceID: route53recoveryreadiness.ServiceID, ProviderNameUpper: "Route53RecoveryReadiness", HCLKeys: []string{"route53recoveryreadiness"}}
 	serviceData[Route53Resolver] = &ServiceDatum{AWSClientName: "Route53Resolver", AWSServiceName: route53resolver.ServiceName, AWSEndpointsID: route53resolver.EndpointsID, AWSServiceID: route53resolver.ServiceID, ProviderNameUpper: "Route53Resolver", HCLKeys: []string{"route53resolver"}}
-	serviceData[S3] = &ServiceDatum{AWSClientName: "S3", AWSServiceName: s3.ServiceName, AWSEndpointsID: s3.EndpointsID, AWSServiceID: s3.ServiceID, ProviderNameUpper: "S3", HCLKeys: []string{"s3"}}
+	serviceData[S3] = &ServiceDatum{AWSClientName: "S3", AWSServiceName: s3.ServiceName, AWSEndpointsID: s3.EndpointsID, AWSServiceID: s3.ServiceID, ProviderNameUpper: "S3", HCLKeys: []string{"s3"}, EnvVar: "TF_AWS_S3_ENDPOINT", DeprecatedEnvVar: "AWS_S3_ENDPOINT"}
 	serviceData[S3Control] = &ServiceDatum{AWSClientName: "S3Control", AWSServiceName: s3control.ServiceName, AWSEndpointsID: s3control.EndpointsID, AWSServiceID: s3control.ServiceID, ProviderNameUpper: "S3Control", HCLKeys: []string{"s3control"}}
 	serviceData[S3Outposts] = &ServiceDatum{AWSClientName: "S3Outposts", AWSServiceName: s3outposts.ServiceName, AWSEndpointsID: s3outposts.EndpointsID, AWSServiceID: s3outposts.ServiceID, ProviderNameUpper: "S3Outposts", HCLKeys: []string{"s3outposts"}}
 	serviceData[SageMaker] = &ServiceDatum{AWSClientName: "SageMaker", AWSServiceName: sagemaker.ServiceName, AWSEndpointsID: sagemaker.EndpointsID, AWSServiceID: sagemaker.ServiceID, ProviderNameUpper: "SageMaker", HCLKeys: []string{"sagemaker"}}
@@ -830,7 +831,7 @@ func init() {
 	serviceData[SSOAdmin] = &ServiceDatum{AWSClientName: "SSOAdmin", AWSServiceName: ssoadmin.ServiceName, AWSEndpointsID: ssoadmin.EndpointsID, AWSServiceID: ssoadmin.ServiceID, ProviderNameUpper: "SSOAdmin", HCLKeys: []string{"ssoadmin"}}
 	serviceData[SSOOIDC] = &ServiceDatum{AWSClientName: "SSOOIDC", AWSServiceName: ssooidc.ServiceName, AWSEndpointsID: ssooidc.EndpointsID, AWSServiceID: ssooidc.ServiceID, ProviderNameUpper: "SSOOIDC", HCLKeys: []string{"ssooidc"}}
 	serviceData[StorageGateway] = &ServiceDatum{AWSClientName: "StorageGateway", AWSServiceName: storagegateway.ServiceName, AWSEndpointsID: storagegateway.EndpointsID, AWSServiceID: storagegateway.ServiceID, ProviderNameUpper: "StorageGateway", HCLKeys: []string{"storagegateway"}}
-	serviceData[STS] = &ServiceDatum{AWSClientName: "STS", AWSServiceName: sts.ServiceName, AWSEndpointsID: sts.EndpointsID, AWSServiceID: sts.ServiceID, ProviderNameUpper: "STS", HCLKeys: []string{"sts"}}
+	serviceData[STS] = &ServiceDatum{AWSClientName: "STS", AWSServiceName: sts.ServiceName, AWSEndpointsID: sts.EndpointsID, AWSServiceID: sts.ServiceID, ProviderNameUpper: "STS", HCLKeys: []string{"sts"}, EnvVar: "TF_AWS_STS_ENDPOINT", DeprecatedEnvVar: "AWS_STS_ENDPOINT"}
 	serviceData[Support] = &ServiceDatum{AWSClientName: "Support", AWSServiceName: support.ServiceName, AWSEndpointsID: support.EndpointsID, AWSServiceID: support.ServiceID, ProviderNameUpper: "Support", HCLKeys: []string{"support"}}
 	serviceData[SWF] = &ServiceDatum{AWSClientName: "SWF", AWSServiceName: swf.ServiceName, AWSEndpointsID: swf.EndpointsID, AWSServiceID: swf.ServiceID, ProviderNameUpper: "SWF", HCLKeys: []string{"swf"}}
 	serviceData[Synthetics] = &ServiceDatum{AWSClientName: "Synthetics", AWSServiceName: synthetics.ServiceName, AWSEndpointsID: synthetics.EndpointsID, AWSServiceID: synthetics.ServiceID, ProviderNameUpper: "Synthetics", HCLKeys: []string{"synthetics"}}
@@ -854,41 +855,35 @@ func init() {
 }
 
 type Config struct {
-	AccessKey             string
-	SecretKey             string
-	SharedConfigFile      string
-	SharedCredentialsFile string
-	Profile               string
-	Token                 string
-	Region                string
-	MaxRetries            int
-
-	AssumeRoleARN               string
-	AssumeRoleDurationSeconds   int
-	AssumeRoleExternalID        string
-	AssumeRolePolicy            string
-	AssumeRolePolicyARNs        []string
-	AssumeRoleSessionName       string
-	AssumeRoleTags              map[string]string
-	AssumeRoleTransitiveTagKeys []string
-
-	AllowedAccountIds   []string
-	ForbiddenAccountIds []string
-
-	DefaultTagsConfig *tftags.DefaultConfig
-	Endpoints         map[string]string
-	IgnoreTagsConfig  *tftags.IgnoreConfig
-	Insecure          bool
-	HTTPProxy         string
-
-	SkipCredsValidation     bool
-	SkipGetEC2Platforms     bool
-	SkipRegionValidation    bool
-	SkipRequestingAccountId bool
-	SkipMetadataApiCheck    bool
-	S3ForcePathStyle        bool
-
-	TerraformVersion string
+	AccessKey                      string
+	AllowedAccountIds              []string
+	AssumeRole                     *awsbase.AssumeRole
+	CustomCABundle                 string
+	DefaultTagsConfig              *tftags.DefaultConfig
+	EC2MetadataServiceEndpoint     string
+	EC2MetadataServiceEndpointMode string
+	Endpoints                      map[string]string
+	ForbiddenAccountIds            []string
+	HTTPProxy                      string
+	IgnoreTagsConfig               *tftags.IgnoreConfig
+	Insecure                       bool
+	MaxRetries                     int
+	Profile                        string
+	Region                         string
+	S3UsePathStyle                 bool
+	SecretKey                      string
+	SharedConfigFiles              []string
+	SharedCredentialsFiles         []string
+	SkipCredsValidation            bool
+	SkipGetEC2Platforms            bool
+	SkipMetadataApiCheck           bool
+	SkipRegionValidation           bool
+	SkipRequestingAccountId        bool
+	STSRegion                      string
+	TerraformVersion               string
+	Token                          string
+	UseDualStackEndpoint           bool
+	UseFIPSEndpoint                bool
 }
 
 type AWSClient struct {
@@ -1190,42 +1185,13 @@ func (client *AWSClient) RegionalHostname(prefix string) string {
 	return fmt.Sprintf("%s.%s.%s", prefix, client.Region, client.DNSSuffix)
 }
 
-func (c *Config) assumeRole() *awsbase.AssumeRole {
-	if c.AssumeRoleARN == "" {
-		return nil
-	}
-
-	assumeRole := &awsbase.AssumeRole{
-		RoleARN:           c.AssumeRoleARN,
-		ExternalID:        c.AssumeRoleExternalID,
-		Policy:            c.AssumeRolePolicy,
-		PolicyARNs:        c.AssumeRolePolicyARNs,
-		SessionName:       c.AssumeRoleSessionName,
-		Tags:              c.AssumeRoleTags,
-		TransitiveTagKeys: c.AssumeRoleTransitiveTagKeys,
-	}
-
-	if c.AssumeRoleDurationSeconds != 0 {
-		assumeRole.Duration = time.Duration(c.AssumeRoleDurationSeconds) * time.Second
-	}
-	return assumeRole
-}
-
 // Client configures and returns a fully initialized AWSClient
 func (c *Config) Client() (interface{}, error) {
-	// Get the auth and region. This can fail if keys/regions were not
-	// specified and we're attempting to use the environment.
-	if !c.SkipRegionValidation {
-		if err := awsbase.ValidateRegion(c.Region); err != nil {
-			return nil, err
-		}
-	}
-
 	awsbaseConfig := awsbase.Config{
 		AccessKey:               c.AccessKey,
+		APNInfo:                 StdUserAgentProducts(c.TerraformVersion),
 		CallerDocumentationURL:  "https://registry.terraform.io/providers/hashicorp/aws",
 		CallerName:              "Terraform AWS Provider",
-		DebugLogging:            true, // Until https://github.com/hashicorp/aws-sdk-go-base/issues/96 is implemented
 		IamEndpoint:             c.Endpoints[IAM],
 		Insecure:                c.Insecure,
 		HTTPProxy:               c.HTTPProxy,
@@ -1238,25 +1204,45 @@ func (c *Config) Client() (interface{}, error) {
 		SkipRequestingAccountId: c.SkipRequestingAccountId,
 		StsEndpoint:             c.Endpoints[STS],
 		Token:                   c.Token,
-		APNInfo:                 StdUserAgentProducts(c.TerraformVersion),
+		UseDualStackEndpoint:    c.UseDualStackEndpoint,
+		UseFIPSEndpoint:         c.UseFIPSEndpoint,
 	}
 
-	if c.AssumeRoleARN != "" {
-		awsbaseConfig.AssumeRole = c.assumeRole()
+	if c.AssumeRole != nil && c.AssumeRole.RoleARN != "" {
+		awsbaseConfig.AssumeRole = c.AssumeRole
 	}
 
-	if c.SharedConfigFile != "" {
-		awsbaseConfig.SharedConfigFiles = []string{c.SharedConfigFile}
+	if c.CustomCABundle != "" {
+		awsbaseConfig.CustomCABundle = c.CustomCABundle
 	}
 
-	if c.SharedCredentialsFile != "" {
-		awsbaseConfig.SharedCredentialsFiles = []string{c.SharedCredentialsFile}
+	if c.EC2MetadataServiceEndpoint != "" {
+		awsbaseConfig.EC2MetadataServiceEndpoint = c.EC2MetadataServiceEndpoint
+		awsbaseConfig.EC2MetadataServiceEndpointMode = c.EC2MetadataServiceEndpointMode
+	}
+
+	if len(c.SharedConfigFiles) != 0 {
+		awsbaseConfig.SharedConfigFiles = c.SharedConfigFiles
+	}
+
+	if len(c.SharedCredentialsFiles) != 0 {
+		awsbaseConfig.SharedCredentialsFiles = c.SharedCredentialsFiles
+	}
+
+	if c.STSRegion != "" {
+		awsbaseConfig.StsRegion = c.STSRegion
 	}
 
 	ctx := context.Background()
 	cfg, err := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error configuring Terraform AWS Provider: %w", err)
+	}
+
+	if !c.SkipRegionValidation {
+		if err := awsbase.ValidateRegion(cfg.Region); err != nil {
+			return nil, err
+		}
 	}
 
 	sess, err := awsbasev1.GetSession(&cfg, &awsbaseConfig)
@@ -1552,7 +1538,6 @@ func (c *Config) Client() (interface{}, error) {
 		SSOConn:                           sso.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SSO])})),
 		SSOOIDCConn:                       ssooidc.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SSOOIDC])})),
 		StorageGatewayConn:                storagegateway.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[StorageGateway])})),
-		STSConn:                           sts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[STS])})),
 		SupportConn:                       support.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Support])})),
 		SWFConn:                           swf.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SWF])})),
 		SyntheticsConn:                    synthetics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Synthetics])})),
@@ -1576,6 +1561,17 @@ func (c *Config) Client() (interface{}, error) {
 		XRayConn:                          xray.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[XRay])})),
 	}
 
+	// sts
+	stsConfig := &aws.Config{
+		Endpoint: aws.String(c.Endpoints[STS]),
+	}
+
+	if c.STSRegion != "" {
+		stsConfig.Region = aws.String(c.STSRegion)
+	}
+
+	client.STSConn = sts.New(sess.Copy(stsConfig))
+
 	// "Global" services that require customizations
 	globalAcceleratorConfig := &aws.Config{
 		Endpoint: aws.String(c.Endpoints[GlobalAccelerator]),
@@ -1596,7 +1592,7 @@ func (c *Config) Client() (interface{}, error) {
 	// Services that require multiple client configurations
 	s3Config := &aws.Config{
 		Endpoint:         aws.String(c.Endpoints[S3]),
-		S3ForcePathStyle: aws.Bool(c.S3ForcePathStyle),
+		S3ForcePathStyle: aws.Bool(c.S3UsePathStyle),
 	}
 
 	client.S3Conn = s3.New(sess.Copy(s3Config))
@@ -1740,26 +1736,29 @@ func (c *Config) Client() (interface{}, error) {
 	})
 
 	client.EC2Conn.Handlers.Retry.PushBack(func(r *request.Request) {
-		if r.Operation.Name == "CreateClientVpnEndpoint" {
-			if tfawserr.ErrMessageContains(r.Error, "OperationNotPermitted", "Endpoint cannot be created while another endpoint is being created") {
+		switch err := r.Error; r.Operation.Name {
+		case "AttachVpnGateway", "DetachVpnGateway":
+			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "This call cannot be completed because there are pending VPNs or Virtual Interfaces") {
 				r.Retryable = aws.Bool(true)
 			}
-		}
 
-		if r.Operation.Name == "CreateVpnConnection" {
-			if tfawserr.ErrMessageContains(r.Error, "VpnConnectionLimitExceeded", "maximum number of mutating objects has been reached") {
+		case "CreateClientVpnEndpoint":
+			if tfawserr.ErrMessageContains(err, "OperationNotPermitted", "Endpoint cannot be created while another endpoint is being created") {
 				r.Retryable = aws.Bool(true)
 			}
-		}
 
-		if r.Operation.Name == "CreateVpnGateway" {
-			if tfawserr.ErrMessageContains(r.Error, "VpnGatewayLimitExceeded", "maximum number of mutating objects has been reached") {
+		case "CreateClientVpnRoute", "DeleteClientVpnRoute":
+			if tfawserr.ErrMessageContains(err, "ConcurrentMutationLimitExceeded", "Cannot initiate another change for this endpoint at this time") {
 				r.Retryable = aws.Bool(true)
 			}
-		}
 
-		if r.Operation.Name == "AttachVpnGateway" || r.Operation.Name == "DetachVpnGateway" {
-			if tfawserr.ErrMessageContains(r.Error, "InvalidParameterValue", "This call cannot be completed because there are pending VPNs or Virtual Interfaces") {
+		case "CreateVpnConnection":
+			if tfawserr.ErrMessageContains(err, "VpnConnectionLimitExceeded", "maximum number of mutating objects has been reached") {
+				r.Retryable = aws.Bool(true)
+			}
+
+		case "CreateVpnGateway":
+			if tfawserr.ErrMessageContains(err, "VpnGatewayLimitExceeded", "maximum number of mutating objects has been reached") {
 				r.Retryable = aws.Bool(true)
 			}
 		}
@@ -1991,4 +1990,20 @@ func ServiceProviderNameUpper(key string) (string, error) {
 	}
 
 	return "", fmt.Errorf("no service data found for %s", key)
+}
+
+func ServiceDeprecatedEnvVar(key string) string {
+	if v, ok := serviceData[key]; ok {
+		return v.DeprecatedEnvVar
+	}
+
+	return ""
+}
+
+func ServiceEnvVar(key string) string {
+	if v, ok := serviceData[key]; ok {
+		return v.EnvVar
+	}
+
+	return ""
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -51,6 +52,7 @@ func ResourceBucketVersioning() *schema.Resource {
 						"mfa_delete": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(s3.MFADelete_Values(), false),
 						},
 						"status": {
@@ -101,37 +103,25 @@ func resourceBucketVersioningRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	input := &s3.GetBucketVersioningInput{
-		Bucket: aws.String(bucket),
+	var output *s3.GetBucketVersioningOutput
+
+	if output, err = waitForBucketVersioningStatus(ctx, conn, bucket, expectedBucketOwner); err != nil {
+		return diag.Errorf("error waiting for S3 Bucket Versioning status for bucket (%s): %s", d.Id(), err)
 	}
 
-	if expectedBucketOwner != "" {
-		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-	}
-
-	output, err := conn.GetBucketVersioningWithContext(ctx, input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Versioning (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting S3 bucket versioning (%s): %w", d.Id(), err))
-	}
-
-	if output == nil {
-		if d.IsNewResource() {
-			return diag.FromErr(fmt.Errorf("error getting S3 bucket versioning (%s): empty output", d.Id()))
-		}
-		log.Printf("[WARN] S3 Bucket Versioning (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return diag.Errorf("error getting S3 bucket versioning (%s): %s", d.Id(), err)
 	}
 
 	d.Set("bucket", bucket)
@@ -197,6 +187,11 @@ func resourceBucketVersioningDelete(ctx context.Context, d *schema.ResourceData,
 	_, err = conn.PutBucketVersioningWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+		return nil
+	}
+
+	if tfawserr.ErrMessageContains(err, ErrCodeInvalidBucketState, "An Object Lock configuration is present on this bucket, so the versioning state cannot be changed") {
+		log.Printf("[WARN] S3 bucket versioning cannot be suspended with Object Lock Configuration present on bucket (%s), removing from state", bucket)
 		return nil
 	}
 

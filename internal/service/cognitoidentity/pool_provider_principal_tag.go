@@ -100,7 +100,7 @@ func resourcePoolProviderPrincipalTagRead(d *schema.ResourceData, meta interface
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cognitoidentity.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] Cognito Identity Provider %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -165,7 +165,7 @@ func resourcePoolProviderPrincipalTagDelete(d *schema.ResourceData, meta interfa
 	_, err = conn.SetPrincipalTagAttributeMap(params)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cognitoidentity.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return err

@@ -644,11 +644,11 @@ func resourceLaunchConfigurationDelete(d *schema.ResourceData, meta interface{})
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := autoscalingconn.DeleteLaunchConfiguration(input)
 
-		if tfawserr.ErrMessageContains(err, autoscaling.ErrCodeResourceInUseFault, "") {
+		if tfawserr.ErrCodeEquals(err, autoscaling.ErrCodeResourceInUseFault) {
 			return resource.RetryableError(err)
 		}
 
-		if tfawserr.ErrMessageContains(err, "InvalidConfiguration.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidConfiguration.NotFound") {
 			return nil
 		}
 

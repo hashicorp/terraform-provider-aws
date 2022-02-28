@@ -226,7 +226,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(out.Cluster.ClusterArn))
 
 	if _, err := waitClusterAvailable(context.Background(), conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available while creating: %w", d.Id(), err)
 	}
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
@@ -267,6 +267,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
+
 	if tfresource.TimedOut(err) {
 		cluster, err = FindClusterByNameOrARN(context.Background(), conn, d.Id())
 	}
@@ -310,12 +311,6 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags := KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] ECS tagging failed listing tags for Cluster (%s): %s", d.Id(), err)
-		return nil
-	}
-
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
@@ -350,7 +345,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if _, err := waitClusterAvailable(context.Background(), conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available while updating setting and configuration: %w", d.Id(), err)
 		}
 	}
 
@@ -368,7 +363,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if _, err := waitClusterAvailable(context.Background(), conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available while updating capacity_providers, default_capacity_provider_strategy: %w", d.Id(), err)
 		}
 	}
 
@@ -406,19 +401,19 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		if tfawserr.ErrMessageContains(err, "ClusterContainsContainerInstancesException", "") {
+		if tfawserr.ErrCodeEquals(err, "ClusterContainsContainerInstancesException") {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}
-		if tfawserr.ErrMessageContains(err, "ClusterContainsServicesException", "") {
+		if tfawserr.ErrCodeEquals(err, "ClusterContainsServicesException") {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}
-		if tfawserr.ErrMessageContains(err, "ClusterContainsTasksException", "") {
+		if tfawserr.ErrCodeEquals(err, "ClusterContainsTasksException") {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}
-		if tfawserr.ErrMessageContains(err, ecs.ErrCodeUpdateInProgressException, "") {
+		if tfawserr.ErrCodeEquals(err, ecs.ErrCodeUpdateInProgressException) {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}

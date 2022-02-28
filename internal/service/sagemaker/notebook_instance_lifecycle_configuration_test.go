@@ -125,7 +125,7 @@ func testAccCheckNotebookInstanceLifecycleConfigurationDestroy(s *terraform.Stat
 		})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "ValidationException", "") {
+			if tfawserr.ErrCodeEquals(err, "ValidationException") {
 				continue
 			}
 			return err

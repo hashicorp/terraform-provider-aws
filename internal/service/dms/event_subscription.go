@@ -190,7 +190,7 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 
 	response, err := conn.DescribeEventSubscriptions(request)
 
-	if tfawserr.ErrMessageContains(err, dms.ErrCodeResourceNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 		log.Printf("[WARN] DMS event subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -253,7 +253,7 @@ func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) e
 
 	_, err := conn.DeleteEventSubscription(request)
 
-	if tfawserr.ErrMessageContains(err, dms.ErrCodeResourceNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 		return nil
 	}
 
@@ -284,7 +284,7 @@ func resourceEventSubscriptionStateRefreshFunc(conn *dms.DatabaseMigrationServic
 			SubscriptionName: aws.String(name),
 		})
 
-		if tfawserr.ErrMessageContains(err, dms.ErrCodeResourceNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 			return nil, "", nil
 		}
 

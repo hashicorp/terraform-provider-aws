@@ -103,13 +103,13 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	getResp, err := conn.DescribeLoadBalancerPolicies(request)
 
-	if tfawserr.ErrMessageContains(err, "LoadBalancerNotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "LoadBalancerNotFound") {
 		log.Printf("[WARN] Load Balancer Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	if tfawserr.ErrMessageContains(err, elb.ErrCodePolicyNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, elb.ErrCodePolicyNotFoundException) {
 		log.Printf("[WARN] Load Balancer Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

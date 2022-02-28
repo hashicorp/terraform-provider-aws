@@ -40,7 +40,7 @@ jobs:
             NEW_RELEASE_LINE=$(echo $PREVIOUS_RELEASE_TAG | awk -F. '{
                 $1 = substr($1,2)
                 $2 += 1
-                printf("%s.%02d.%s\n\n", $1, $2, $3);
+                printf("%s.%01d.%s\n\n", $1, $2, $3);
             }')
 
             echo New minor version is: v$NEW_RELEASE_LINE

@@ -1766,10 +1766,17 @@ resource "aws_route53_zone" "main" {
 
 resource "aws_s3_bucket" "website" {
   bucket = %[1]q
-  acl    = "public-read"
+}
 
-  website {
-    index_document = "index.html"
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.website.id
+  acl    = "public-read"
+}
+
+resource "aws_s3_bucket_website_configuration" "test" {
+  bucket = aws_s3_bucket.website.id
+  index_document {
+    suffix = "index.html"
   }
 }
 
@@ -1780,7 +1787,7 @@ resource "aws_route53_record" "alias" {
 
   alias {
     zone_id                = aws_s3_bucket.website.hosted_zone_id
-    name                   = aws_s3_bucket.website.website_domain
+    name                   = aws_s3_bucket_website_configuration.test.website_domain
     evaluate_target_health = true
   }
 }

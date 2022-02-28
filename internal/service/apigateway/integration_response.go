@@ -184,7 +184,7 @@ func resourceIntegrationResponseDelete(d *schema.ResourceData, meta interface{})
 		StatusCode: aws.String(d.Get("status_code").(string)),
 	})
 
-	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		return nil
 	}
 

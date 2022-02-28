@@ -726,7 +726,7 @@ func testAccCheckVolumeDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeVolumes(request)
 
-		if tfawserr.ErrMessageContains(err, "InvalidVolume.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidVolume.NotFound") {
 			continue
 		}
 

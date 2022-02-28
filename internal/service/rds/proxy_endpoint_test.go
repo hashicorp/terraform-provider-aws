@@ -212,7 +212,7 @@ func testAccDBProxyEndpointPreCheck(t *testing.T) {
 
 	_, err := conn.DescribeDBProxyEndpoints(&rds.DescribeDBProxyEndpointsInput{})
 
-	if tfawserr.ErrMessageContains(err, "InvalidAction", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidAction") {
 		t.Skipf("skipping acceptance test, RDS Proxy not supported: %s", err)
 	}
 

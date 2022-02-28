@@ -166,9 +166,13 @@ func testAccGuardDutyIpsetConfig_basic(bucketName, keyName, ipsetName string, ac
 resource "aws_guardduty_detector" "test" {}
 
 resource "aws_s3_bucket" "test" {
-  acl           = "private"
   bucket        = "%s"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_s3_object" "test" {
@@ -193,9 +197,13 @@ func testAccGuardDutyIpsetConfigTags1(rName, tagKey1, tagValue1 string) string {
 resource "aws_guardduty_detector" "test" {}
 
 resource "aws_s3_bucket" "test" {
-  acl           = "private"
   bucket        = %[1]q
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_s3_object" "test" {
@@ -224,9 +232,13 @@ func testAccGuardDutyIpsetConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagVal
 resource "aws_guardduty_detector" "test" {}
 
 resource "aws_s3_bucket" "test" {
-  acl           = "private"
   bucket        = %[1]q
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_s3_object" "test" {

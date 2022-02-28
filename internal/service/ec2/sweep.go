@@ -224,6 +224,11 @@ func init() {
 		F:    sweepTransitGatewayPeeringAttachments,
 	})
 
+	resource.AddTestSweepers("aws_ec2_transit_gateway_multicast_domain", &resource.Sweeper{
+		Name: "aws_ec2_transit_gateway_multicast_domain",
+		F:    sweepTransitGatewayMulticastDomains,
+	})
+
 	resource.AddTestSweepers("aws_ec2_transit_gateway", &resource.Sweeper{
 		Name: "aws_ec2_transit_gateway",
 		F:    sweepTransitGateways,
@@ -238,6 +243,9 @@ func init() {
 	resource.AddTestSweepers("aws_ec2_transit_gateway_vpc_attachment", &resource.Sweeper{
 		Name: "aws_ec2_transit_gateway_vpc_attachment",
 		F:    sweepTransitGatewayVPCAttachments,
+		Dependencies: []string{
+			"aws_ec2_transit_gateway_multicast_domain",
+		},
 	})
 
 	resource.AddTestSweepers("aws_vpc_dhcp_options", &resource.Sweeper{
@@ -1000,7 +1008,7 @@ func sweepLaunchTemplates(region string) error {
 			log.Printf("[INFO] Deleting EC2 Launch Template: %s", id)
 			_, err := conn.DeleteLaunchTemplate(input)
 
-			if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") {
+			if tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateId.NotFound") {
 				continue
 			}
 
@@ -1075,78 +1083,51 @@ func sweepNetworkACLs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
+	input := &ec2.DescribeNetworkAclsInput{}
 	conn := client.(*conns.AWSClient).EC2Conn
+	sweepResources := make([]*sweep.SweepResource, 0)
 
-	req := &ec2.DescribeNetworkAclsInput{}
-	resp, err := conn.DescribeNetworkAcls(req)
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 Network ACL sweep for %s: %s", region, err)
-			return nil
+	err = conn.DescribeNetworkAclsPages(input, func(page *ec2.DescribeNetworkAclsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		return fmt.Errorf("Error describing Network ACLs: %s", err)
-	}
 
-	if len(resp.NetworkAcls) == 0 {
-		log.Print("[DEBUG] No Network ACLs to sweep")
-		return nil
-	}
-
-	for _, nacl := range resp.NetworkAcls {
-		// Delete rules first
-		for _, entry := range nacl.Entries {
-			// These are the rule numbers for IPv4 and IPv6 "ALL traffic" rules which cannot be deleted
-			if aws.Int64Value(entry.RuleNumber) == 32767 || aws.Int64Value(entry.RuleNumber) == 32768 {
-				log.Printf("[DEBUG] Skipping Network ACL rule: %q / %d", *nacl.NetworkAclId, *entry.RuleNumber)
+		for _, v := range page.NetworkAcls {
+			if aws.BoolValue(v.IsDefault) {
 				continue
 			}
 
-			log.Printf("[INFO] Deleting Network ACL rule: %q / %d", *nacl.NetworkAclId, *entry.RuleNumber)
-			_, err := conn.DeleteNetworkAclEntry(&ec2.DeleteNetworkAclEntryInput{
-				NetworkAclId: nacl.NetworkAclId,
-				Egress:       entry.Egress,
-				RuleNumber:   entry.RuleNumber,
-			})
-			if err != nil {
-				return fmt.Errorf(
-					"Error deleting Network ACL rule (%s / %d): %s",
-					*nacl.NetworkAclId, *entry.RuleNumber, err)
+			r := ResourceNetworkACL()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.NetworkAclId))
+
+			var subnetIDs []string
+			for _, v := range v.Associations {
+				subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetId))
 			}
+			d.Set("subnet_ids", subnetIDs)
+
+			d.Set("vpc_id", v.VpcId)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		// Disassociate subnets
-		log.Printf("[DEBUG] Found %d Network ACL associations for %q", len(nacl.Associations), *nacl.NetworkAclId)
-		for _, a := range nacl.Associations {
-			log.Printf("[DEBUG] Replacing subnet associations for Network ACL %q", *nacl.NetworkAclId)
-			defaultAcl, err := GetDefaultNetworkACL(*nacl.VpcId, conn)
-			if err != nil {
-				return fmt.Errorf("Failed to find default Network ACL for VPC %q", *nacl.VpcId)
-			}
-			_, err = conn.ReplaceNetworkAclAssociation(&ec2.ReplaceNetworkAclAssociationInput{
-				NetworkAclId:  defaultAcl.NetworkAclId,
-				AssociationId: a.NetworkAclAssociationId,
-			})
-			if err != nil {
-				return fmt.Errorf("Failed to replace subnet association for Network ACL %q: %s",
-					*nacl.NetworkAclId, err)
-			}
-		}
+		return !lastPage
+	})
 
-		// Default Network ACLs will be deleted along with VPC
-		if *nacl.IsDefault {
-			log.Printf("[DEBUG] Skipping default Network ACL: %q", *nacl.NetworkAclId)
-			continue
-		}
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Network ACL sweep for %s: %s", region, err)
+		return nil
+	}
 
-		log.Printf("[INFO] Deleting Network ACL: %q", *nacl.NetworkAclId)
-		_, err := conn.DeleteNetworkAcl(&ec2.DeleteNetworkAclInput{
-			NetworkAclId: nacl.NetworkAclId,
-		})
-		if err != nil {
-			return fmt.Errorf(
-				"Error deleting Network ACL (%s): %s",
-				*nacl.NetworkAclId, err)
-		}
+	if err != nil {
+		return fmt.Errorf("error listing EC2 Network ACLs (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Network ACLs (%s): %w", region, err)
 	}
 
 	return nil
@@ -1420,7 +1401,7 @@ func sweepSecurityGroups(region string) error {
 			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 				_, err := conn.DeleteSecurityGroup(input)
 
-				if tfawserr.ErrMessageContains(err, "DependencyViolation", "") {
+				if tfawserr.ErrCodeEquals(err, "DependencyViolation") {
 					return resource.RetryableError(err)
 				}
 				if err != nil {
@@ -1568,7 +1549,7 @@ func sweepTransitGatewayPeeringAttachments(region string) error {
 				log.Printf("[INFO] Deleting EC2 Transit Gateway Peering Attachment: %s", id)
 				_, err := conn.DeleteTransitGatewayPeeringAttachment(input)
 
-				if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+				if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
 					continue
 				}
 
@@ -1599,6 +1580,49 @@ func sweepTransitGatewayPeeringAttachments(region string) error {
 	}
 
 	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepTransitGatewayMulticastDomains(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).EC2Conn
+	input := &ec2.DescribeTransitGatewayMulticastDomainsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = conn.DescribeTransitGatewayMulticastDomainsPages(input, func(page *ec2.DescribeTransitGatewayMulticastDomainsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TransitGatewayMulticastDomains {
+			r := ResourceTransitGatewayMulticastDomain()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.TransitGatewayMulticastDomainId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Transit Gateway Multicast Domain sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing EC2 Transit Gateway Multicast Domains (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Transit Gateway Multicast Domains (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepTransitGateways(region string) error {
@@ -1648,7 +1672,7 @@ func sweepTransitGateways(region string) error {
 					return resource.RetryableError(err)
 				}
 
-				if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayID.NotFound", "") {
+				if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayID.NotFound") {
 					return nil
 				}
 
@@ -1720,7 +1744,7 @@ func sweepTransitGatewayVPCAttachments(region string) error {
 			log.Printf("[INFO] Deleting EC2 Transit Gateway VPC Attachment: %s", id)
 			_, err := conn.DeleteTransitGatewayVpcAttachment(input)
 
-			if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+			if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
 				continue
 			}
 
@@ -1938,48 +1962,21 @@ func sweepVPCPeeringConnections(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	conn := client.(*conns.AWSClient).EC2Conn
 	input := &ec2.DescribeVpcPeeringConnectionsInput{}
+	conn := client.(*conns.AWSClient).EC2Conn
+	sweepResources := make([]*sweep.SweepResource, 0)
 
 	err = conn.DescribeVpcPeeringConnectionsPages(input, func(page *ec2.DescribeVpcPeeringConnectionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, vpcPeeringConnection := range page.VpcPeeringConnections {
-			deletedStatuses := map[string]bool{
-				ec2.VpcPeeringConnectionStateReasonCodeDeleted:  true,
-				ec2.VpcPeeringConnectionStateReasonCodeExpired:  true,
-				ec2.VpcPeeringConnectionStateReasonCodeFailed:   true,
-				ec2.VpcPeeringConnectionStateReasonCodeRejected: true,
-			}
+		for _, v := range page.VpcPeeringConnections {
+			r := ResourceVPCPeeringConnection()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.VpcPeeringConnectionId))
 
-			if _, ok := deletedStatuses[aws.StringValue(vpcPeeringConnection.Status.Code)]; ok {
-				continue
-			}
-
-			id := aws.StringValue(vpcPeeringConnection.VpcPeeringConnectionId)
-			input := &ec2.DeleteVpcPeeringConnectionInput{
-				VpcPeeringConnectionId: vpcPeeringConnection.VpcPeeringConnectionId,
-			}
-
-			log.Printf("[INFO] Deleting EC2 VPC Peering Connection: %s", id)
-
-			_, err := conn.DeleteVpcPeeringConnection(input)
-
-			if tfawserr.ErrMessageContains(err, "InvalidVpcPeeringConnectionID.NotFound", "") {
-				continue
-			}
-
-			if err != nil {
-				log.Printf("[ERROR] Error deleting EC2 VPC Peering Connection (%s): %s", id, err)
-				continue
-			}
-
-			if err := WaitForVPCPeeringConnectionDeletion(conn, id, 5*time.Minute); err != nil { //nolint:gomnd
-				log.Printf("[ERROR] Error waiting for EC2 VPC Peering Connection (%s) to be deleted: %s", id, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -1991,7 +1988,13 @@ func sweepVPCPeeringConnections(region string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error describing EC2 VPC Peering Connections: %s", err)
+		return fmt.Errorf("error listing EC2 VPC Peering Connections (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 VPC Peering Connections (%s): %w", region, err)
 	}
 
 	return nil

@@ -89,7 +89,7 @@ func dataSourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading ECR repository: %#v", params)
 	out, err := conn.DescribeRepositories(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
 			return fmt.Errorf("ECR Repository (%s) not found", name)
 		}
 		return fmt.Errorf("error reading ECR repository: %w", err)

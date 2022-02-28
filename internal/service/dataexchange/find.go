@@ -27,3 +27,25 @@ func FindDataSetById(conn *dataexchange.DataExchange, id string) (*dataexchange.
 
 	return output, nil
 }
+
+func FindRevisionById(conn *dataexchange.DataExchange, dataSetId, revisionId string) (*dataexchange.GetRevisionOutput, error) {
+
+	input := &dataexchange.GetRevisionInput{
+		DataSetId:  aws.String(dataSetId),
+		RevisionId: aws.String(revisionId),
+	}
+	output, err := conn.GetRevision(input)
+
+	if tfawserr.ErrCodeEquals(err, dataexchange.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}

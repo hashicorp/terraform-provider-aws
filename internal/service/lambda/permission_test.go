@@ -1030,6 +1030,10 @@ resource "aws_lambda_permission" "with_s3" {
 
 resource "aws_s3_bucket" "default" {
   bucket = "%s"
+}
+
+resource "aws_s3_bucket_acl" "default" {
+  bucket = aws_s3_bucket.default.id
   acl    = "private"
 }
 

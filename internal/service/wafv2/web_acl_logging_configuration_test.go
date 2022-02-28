@@ -616,7 +616,7 @@ func testAccCheckWebACLLoggingConfigurationDestroy(s *terraform.State) error {
 
 		if err != nil {
 			// Continue checking resources in state if a WebACL Logging Configuration is already destroyed
-			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+			if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
 				continue
 			}
 			return err
@@ -700,6 +700,10 @@ EOF
 
 resource "aws_s3_bucket" "test" {
   bucket = "%[1]s"
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 

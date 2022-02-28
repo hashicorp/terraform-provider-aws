@@ -7,30 +7,19 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-var defaultEgressAcl = &ec2.NetworkAclEntry{
-	CidrBlock:  aws.String("0.0.0.0/0"),
-	Egress:     aws.Bool(true),
-	Protocol:   aws.String("-1"),
-	RuleAction: aws.String("allow"),
-	RuleNumber: aws.Int64(100),
-}
-var ipv6IngressAcl = &ec2.NetworkAclEntry{
-	Ipv6CidrBlock: aws.String("::/0"),
-	Egress:        aws.Bool(false),
-	Protocol:      aws.String("-1"),
-	RuleAction:    aws.String("allow"),
-	RuleNumber:    aws.Int64(101),
-}
-
 func TestAccEC2DefaultNetworkACL_basic(t *testing.T) {
-	var networkAcl ec2.NetworkAcl
-	resourceName := "aws_default_network_acl.default"
+	var v ec2.NetworkAcl
+	resourceName := "aws_default_network_acl.test"
+	vpcResourceName := "aws_vpc.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -39,12 +28,16 @@ func TestAccEC2DefaultNetworkACL_basic(t *testing.T) {
 		CheckDestroy: testAccCheckDefaultNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultNetworkConfig_basic,
+				Config: testAccDefaultNetworkACLConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetDefaultNetworkACL(resourceName, &networkAcl),
+					testAccCheckDefaultNetworkACLExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`network-acl/acl-.+`)),
-					testAccCheckDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{}, 0, 2),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
 				),
 			},
 			{
@@ -57,8 +50,9 @@ func TestAccEC2DefaultNetworkACL_basic(t *testing.T) {
 }
 
 func TestAccEC2DefaultNetworkACL_basicIPv6VPC(t *testing.T) {
-	var networkAcl ec2.NetworkAcl
-	resourceName := "aws_default_network_acl.default"
+	var v ec2.NetworkAcl
+	resourceName := "aws_default_network_acl.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -67,10 +61,11 @@ func TestAccEC2DefaultNetworkACL_basicIPv6VPC(t *testing.T) {
 		CheckDestroy: testAccCheckDefaultNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultNetworkConfig_basicIPv6VPC,
+				Config: testAccDefaultNetworkACLIPv6Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetDefaultNetworkACL(resourceName, &networkAcl),
-					testAccCheckDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{}, 0, 4),
+					testAccCheckDefaultNetworkACLExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
 				),
 			},
 			{
@@ -82,12 +77,10 @@ func TestAccEC2DefaultNetworkACL_basicIPv6VPC(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultNetworkACL_Deny_ingress(t *testing.T) {
-	// TestAccEC2DefaultNetworkACL_Deny_ingress will deny all Ingress rules, but
-	// not Egress. We then expect there to be 3 rules, 2 AWS defaults and 1
-	// additional Egress.
-	var networkAcl ec2.NetworkAcl
-	resourceName := "aws_default_network_acl.default"
+func TestAccEC2DefaultNetworkACL_tags(t *testing.T) {
+	var v ec2.NetworkAcl
+	resourceName := "aws_default_network_acl.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -96,10 +89,64 @@ func TestAccEC2DefaultNetworkACL_Deny_ingress(t *testing.T) {
 		CheckDestroy: testAccCheckDefaultNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultNetworkConfig_deny_ingress,
+				Config: testAccDefaultNetworkACLTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetDefaultNetworkACL(resourceName, &networkAcl),
-					testAccCheckDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{defaultEgressAcl}, 0, 2),
+					testAccCheckDefaultNetworkACLExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDefaultNetworkACLTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDefaultNetworkACLExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccDefaultNetworkACLTags1Config(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDefaultNetworkACLExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2DefaultNetworkACL_Deny_ingress(t *testing.T) {
+	var v ec2.NetworkAcl
+	resourceName := "aws_default_network_acl.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDefaultNetworkACLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDefaultNetworkACLDenyIngressConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDefaultNetworkACLExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+						"protocol":   "-1",
+						"rule_no":    "100",
+						"from_port":  "0",
+						"to_port":    "0",
+						"action":     "allow",
+						"cidr_block": "0.0.0.0/0",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
 				),
 			},
 			{
@@ -112,8 +159,9 @@ func TestAccEC2DefaultNetworkACL_Deny_ingress(t *testing.T) {
 }
 
 func TestAccEC2DefaultNetworkACL_withIPv6Ingress(t *testing.T) {
-	var networkAcl ec2.NetworkAcl
-	resourceName := "aws_default_network_acl.default"
+	var v ec2.NetworkAcl
+	resourceName := "aws_default_network_acl.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -122,10 +170,19 @@ func TestAccEC2DefaultNetworkACL_withIPv6Ingress(t *testing.T) {
 		CheckDestroy: testAccCheckDefaultNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultNetworkConfig_includingIPv6Rule,
+				Config: testAccDefaultNetworkACLIncludingIPv6RuleConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetDefaultNetworkACL(resourceName, &networkAcl),
-					testAccCheckDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{ipv6IngressAcl}, 0, 2),
+					testAccCheckDefaultNetworkACLExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"protocol":        "-1",
+						"rule_no":         "101",
+						"from_port":       "0",
+						"to_port":         "0",
+						"action":          "allow",
+						"ipv6_cidr_block": "::/0",
+					}),
 				),
 			},
 			{
@@ -138,8 +195,9 @@ func TestAccEC2DefaultNetworkACL_withIPv6Ingress(t *testing.T) {
 }
 
 func TestAccEC2DefaultNetworkACL_subnetRemoval(t *testing.T) {
-	var networkAcl ec2.NetworkAcl
-	resourceName := "aws_default_network_acl.default"
+	var v ec2.NetworkAcl
+	resourceName := "aws_default_network_acl.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -148,10 +206,12 @@ func TestAccEC2DefaultNetworkACL_subnetRemoval(t *testing.T) {
 		CheckDestroy: testAccCheckDefaultNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultNetworkConfig_Subnets,
+				Config: testAccDefaultNetworkACLSubnetsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetDefaultNetworkACL(resourceName, &networkAcl),
-					testAccCheckDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{}, 2, 2),
+					testAccCheckDefaultNetworkACLExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test1", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test2", "id"),
 				),
 			},
 			{
@@ -159,15 +219,13 @@ func TestAccEC2DefaultNetworkACL_subnetRemoval(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-
 			// Here the Subnets have been removed from the Default Network ACL Config,
 			// but have not been reassigned. The result is that the Subnets are still
 			// there, and we have a non-empty plan
 			{
-				Config: testAccDefaultNetworkConfig_Subnets_remove,
+				Config: testAccDefaultNetworkACLSubnetsRemoveConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetDefaultNetworkACL(resourceName, &networkAcl),
-					testAccCheckDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{}, 2, 2),
+					testAccCheckDefaultNetworkACLExists(resourceName, &v),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -181,8 +239,9 @@ func TestAccEC2DefaultNetworkACL_subnetRemoval(t *testing.T) {
 }
 
 func TestAccEC2DefaultNetworkACL_subnetReassign(t *testing.T) {
-	var networkAcl ec2.NetworkAcl
-	resourceName := "aws_default_network_acl.default"
+	var v ec2.NetworkAcl
+	resourceName := "aws_default_network_acl.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -191,10 +250,12 @@ func TestAccEC2DefaultNetworkACL_subnetReassign(t *testing.T) {
 		CheckDestroy: testAccCheckDefaultNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultNetworkConfig_Subnets,
+				Config: testAccDefaultNetworkACLSubnetsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetDefaultNetworkACL(resourceName, &networkAcl),
-					testAccCheckDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{}, 2, 2),
+					testAccCheckDefaultNetworkACLExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test1", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test2", "id"),
 				),
 			},
 			{
@@ -202,7 +263,6 @@ func TestAccEC2DefaultNetworkACL_subnetReassign(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-
 			// Here we've reassigned the subnets to a different ACL.
 			// Without any otherwise association between the `aws_network_acl` and
 			// `aws_default_network_acl` resources, we cannot guarantee that the
@@ -216,10 +276,10 @@ func TestAccEC2DefaultNetworkACL_subnetReassign(t *testing.T) {
 			// update occurs first, and the former's READ will correctly read zero
 			// subnets
 			{
-				Config: testAccDefaultNetworkConfig_Subnets_move,
+				Config: testAccDefaultNetworkACLSubnetsMoveConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetDefaultNetworkACL(resourceName, &networkAcl),
-					testAccCheckDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{}, 0, 2),
+					testAccCheckDefaultNetworkACLExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
 				),
 			},
 			{
@@ -232,32 +292,11 @@ func TestAccEC2DefaultNetworkACL_subnetReassign(t *testing.T) {
 }
 
 func testAccCheckDefaultNetworkACLDestroy(s *terraform.State) error {
-	// We can't destroy this resource; it comes and goes with the VPC itself.
+	// The default NACL is not deleted.
 	return nil
 }
 
-func testAccCheckDefaultACLAttributes(acl *ec2.NetworkAcl, rules []*ec2.NetworkAclEntry, subnetCount int, hiddenRuleCount int) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
-		aclEntriesCount := len(acl.Entries)
-		ruleCount := len(rules)
-
-		// Default ACL has hidden rules we can't do anything about
-		ruleCount = ruleCount + hiddenRuleCount
-
-		if ruleCount != aclEntriesCount {
-			return fmt.Errorf("Expected (%d) Rules, got (%d)", ruleCount, aclEntriesCount)
-		}
-
-		if len(acl.Associations) != subnetCount {
-			return fmt.Errorf("Expected (%d) Subnets, got (%d)", subnetCount, len(acl.Associations))
-		}
-
-		return nil
-	}
-}
-
-func testAccGetDefaultNetworkACL(n string, networkAcl *ec2.NetworkAcl) resource.TestCheckFunc {
+func testAccCheckDefaultNetworkACLExists(n string, v *ec2.NetworkAcl) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -265,56 +304,96 @@ func testAccGetDefaultNetworkACL(n string, networkAcl *ec2.NetworkAcl) resource.
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Network ACL is set")
+			return fmt.Errorf("No EC2 Default Network ACL ID is set: %s", n)
 		}
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		resp, err := conn.DescribeNetworkAcls(&ec2.DescribeNetworkAclsInput{
-			NetworkAclIds: []*string{aws.String(rs.Primary.ID)},
-		})
+		output, err := tfec2.FindNetworkACLByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if len(resp.NetworkAcls) > 0 &&
-			aws.StringValue(resp.NetworkAcls[0].NetworkAclId) == rs.Primary.ID {
-			*networkAcl = *resp.NetworkAcls[0]
-			return nil
+		if !aws.BoolValue(output.IsDefault) {
+			return fmt.Errorf("EC2 Network ACL %s is not a default NACL", rs.Primary.ID)
 		}
 
-		return fmt.Errorf("Network Acls not found")
+		*v = *output
+
+		return nil
 	}
 }
 
-const testAccDefaultNetworkConfig_basic = `
-resource "aws_vpc" "tftestvpc" {
+func testAccDefaultNetworkACLConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-default-network-acl-basic"
+    Name = %[1]q
   }
 }
 
-resource "aws_default_network_acl" "default" {
-  default_network_acl_id = aws_vpc.tftestvpc.default_network_acl_id
-
-  tags = {
-    Name = "tf-acc-default-acl-basic"
-  }
+resource "aws_default_network_acl" "test" {
+  default_network_acl_id = aws_vpc.test.default_network_acl_id
 }
-`
+`, rName)
+}
 
-const testAccDefaultNetworkConfig_includingIPv6Rule = `
-resource "aws_vpc" "tftestvpc" {
+func testAccDefaultNetworkACLTags1Config(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-default-network-acl-including-ipv6-rule"
+    Name = %[1]q
   }
 }
 
-resource "aws_default_network_acl" "default" {
-  default_network_acl_id = aws_vpc.tftestvpc.default_network_acl_id
+resource "aws_default_network_acl" "test" {
+  default_network_acl_id = aws_vpc.test.default_network_acl_id
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccDefaultNetworkACLTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_default_network_acl" "test" {
+  default_network_acl_id = aws_vpc.test.default_network_acl_id
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccDefaultNetworkACLIncludingIPv6RuleConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_default_network_acl" "test" {
+  default_network_acl_id = aws_vpc.test.default_network_acl_id
 
   ingress {
     protocol        = -1
@@ -324,24 +403,22 @@ resource "aws_default_network_acl" "default" {
     from_port       = 0
     to_port         = 0
   }
-
-  tags = {
-    Name = "tf-acc-default-acl-basic-including-ipv6-rule"
-  }
 }
-`
+`, rName)
+}
 
-const testAccDefaultNetworkConfig_deny_ingress = `
-resource "aws_vpc" "tftestvpc" {
+func testAccDefaultNetworkACLDenyIngressConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-default-network-acl-deny-ingress"
+    Name = %[1]q
   }
 }
 
-resource "aws_default_network_acl" "default" {
-  default_network_acl_id = aws_vpc.tftestvpc.default_network_acl_id
+resource "aws_default_network_acl" "test" {
+  default_network_acl_id = aws_vpc.test.default_network_acl_id
 
   egress {
     protocol   = -1
@@ -351,166 +428,109 @@ resource "aws_default_network_acl" "default" {
     from_port  = 0
     to_port    = 0
   }
-
-  tags = {
-    Name = "tf-acc-default-acl-deny-ingress"
-  }
 }
-`
+`, rName)
+}
 
-const testAccDefaultNetworkConfig_Subnets = `
-resource "aws_vpc" "foo" {
+func testAccDefaultNetworkACLSubnetsBaseConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-default-network-acl-subnets"
+    Name = %[1]q
   }
 }
 
-resource "aws_subnet" "one" {
+resource "aws_subnet" "test1" {
   cidr_block = "10.1.111.0/24"
-  vpc_id     = aws_vpc.foo.id
+  vpc_id     = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-default-network-acl-one"
+    Name = %[1]q
   }
 }
 
-resource "aws_subnet" "two" {
+resource "aws_subnet" "test2" {
   cidr_block = "10.1.1.0/24"
-  vpc_id     = aws_vpc.foo.id
+  vpc_id     = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-default-network-acl-two"
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccDefaultNetworkACLSubnetsConfig(rName string) string {
+	return acctest.ConfigCompose(testAccDefaultNetworkACLSubnetsBaseConfig(rName), fmt.Sprintf(`
+resource "aws_network_acl" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
   }
 }
 
-resource "aws_network_acl" "bar" {
-  vpc_id = aws_vpc.foo.id
+resource "aws_default_network_acl" "test" {
+  default_network_acl_id = aws_vpc.test.default_network_acl_id
+
+  subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
+}
+`, rName))
+}
+
+func testAccDefaultNetworkACLSubnetsRemoveConfig(rName string) string {
+	return acctest.ConfigCompose(testAccDefaultNetworkACLSubnetsBaseConfig(rName), fmt.Sprintf(`
+resource "aws_network_acl" "test" {
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-default-acl-subnets"
+    Name = %[1]q
   }
 }
 
-resource "aws_default_network_acl" "default" {
-  default_network_acl_id = aws_vpc.foo.default_network_acl_id
+resource "aws_default_network_acl" "test" {
+  default_network_acl_id = aws_vpc.test.default_network_acl_id
 
-  subnet_ids = [aws_subnet.one.id, aws_subnet.two.id]
-
-  tags = {
-    Name = "tf-acc-default-acl-subnets"
-  }
+  depends_on = [aws_network_acl.test]
 }
-`
-
-const testAccDefaultNetworkConfig_Subnets_remove = `
-resource "aws_vpc" "foo" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-default-network-acl-subnets-remove"
-  }
+`, rName))
 }
 
-resource "aws_subnet" "one" {
-  cidr_block = "10.1.111.0/24"
-  vpc_id     = aws_vpc.foo.id
+func testAccDefaultNetworkACLSubnetsMoveConfig(rName string) string {
+	return acctest.ConfigCompose(testAccDefaultNetworkACLSubnetsBaseConfig(rName), fmt.Sprintf(`
+resource "aws_network_acl" "test" {
+  vpc_id = aws_vpc.test.id
+
+  subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
 
   tags = {
-    Name = "tf-acc-default-network-acl-subnets-remove-one"
+    Name = %[1]q
   }
 }
 
-resource "aws_subnet" "two" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id     = aws_vpc.foo.id
+resource "aws_default_network_acl" "test" {
+  default_network_acl_id = aws_vpc.test.default_network_acl_id
 
-  tags = {
-    Name = "tf-acc-default-network-acl-subnets-remove-two"
-  }
+  depends_on = [aws_network_acl.test]
+}
+`, rName))
 }
 
-resource "aws_network_acl" "bar" {
-  vpc_id = aws_vpc.foo.id
-
-  tags = {
-    Name = "tf-acc-default-acl-subnets-remove"
-  }
-}
-
-resource "aws_default_network_acl" "default" {
-  default_network_acl_id = aws_vpc.foo.default_network_acl_id
-
-  tags = {
-    Name = "tf-acc-default-acl-subnets-remove"
-  }
-}
-`
-
-const testAccDefaultNetworkConfig_Subnets_move = `
-resource "aws_vpc" "foo" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-default-network-acl-subnets-move"
-  }
-}
-
-resource "aws_subnet" "one" {
-  cidr_block = "10.1.111.0/24"
-  vpc_id     = aws_vpc.foo.id
-
-  tags = {
-    Name = "tf-acc-default-network-acl-subnets-move-one"
-  }
-}
-
-resource "aws_subnet" "two" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id     = aws_vpc.foo.id
-
-  tags = {
-    Name = "tf-acc-default-network-acl-subnets-move-two"
-  }
-}
-
-resource "aws_network_acl" "bar" {
-  vpc_id = aws_vpc.foo.id
-
-  subnet_ids = [aws_subnet.one.id, aws_subnet.two.id]
-
-  tags = {
-    Name = "tf-acc-default-acl-subnets-move"
-  }
-}
-
-resource "aws_default_network_acl" "default" {
-  default_network_acl_id = aws_vpc.foo.default_network_acl_id
-
-  depends_on = [aws_network_acl.bar]
-
-  tags = {
-    Name = "tf-acc-default-acl-subnets-move"
-  }
-}
-`
-
-const testAccDefaultNetworkConfig_basicIPv6VPC = `
-resource "aws_vpc" "tftestvpc" {
+func testAccDefaultNetworkACLIPv6Config(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
   tags = {
-    Name = "terraform-testacc-default-network-acl-basic-ipv6-vpc"
+    Name = %[1]q
   }
 }
 
-resource "aws_default_network_acl" "default" {
-  default_network_acl_id = aws_vpc.tftestvpc.default_network_acl_id
-
-  tags = {
-    Name = "tf-acc-default-acl-subnets-basic-ipv6-vpc"
-  }
+resource "aws_default_network_acl" "test" {
+  default_network_acl_id = aws_vpc.test.default_network_acl_id
 }
-`
+`, rName)
+}

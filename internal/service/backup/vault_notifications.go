@@ -81,7 +81,7 @@ func resourceVaultNotificationsRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	resp, err := conn.GetBackupVaultNotifications(input)
-	if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Backup Vault Notifcations %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -109,7 +109,7 @@ func resourceVaultNotificationsDelete(d *schema.ResourceData, meta interface{}) 
 
 	_, err := conn.DeleteBackupVaultNotifications(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error deleting Backup Vault Notifications (%s): %w", d.Id(), err)

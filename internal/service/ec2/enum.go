@@ -161,12 +161,14 @@ func VpnTunnelOptionsStartupAction_Values() []string {
 }
 
 const (
-	VpnConnectionTypeIpsec1 = "ipsec.1"
+	VpnConnectionTypeIpsec1        = "ipsec.1"
+	VpnConnectionTypeIpsec1_AES256 = "ipsec.1-aes256" // https://github.com/hashicorp/terraform-provider-aws/issues/23105.
 )
 
 func VpnConnectionType_Values() []string {
 	return []string{
 		VpnConnectionTypeIpsec1,
+		VpnConnectionTypeIpsec1_AES256,
 	}
 }
 

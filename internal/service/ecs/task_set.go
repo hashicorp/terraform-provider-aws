@@ -401,6 +401,14 @@ func resourceTaskSetRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	// Some partitions (i.e., ISO) may not support tagging, giving error
+	if verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] ECS tagging failed describing Task Set (%s) with tags: %s; retrying without tags", d.Id(), err)
+
+		input.Include = nil
+		out, err = conn.DescribeTaskSets(input)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error reading ECS TaskSet (%s): %w", d.Id(), err)
 	}
@@ -448,12 +456,6 @@ func resourceTaskSetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	tags := KeyValueTags(taskSet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] ECS tagging failed listing tags for Task Set (%s): %s", d.Id(), err)
-		return nil
-	}
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

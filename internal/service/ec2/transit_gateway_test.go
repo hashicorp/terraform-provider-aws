@@ -31,6 +31,29 @@ func TestAccEC2TransitGateway_serial(t *testing.T) {
 			"Tags":                                               testAccTransitGateway_Tags,
 			"VpnEcmpSupport":                                     testAccTransitGateway_VPNECMPSupport,
 		},
+		"MulticastDomain": {
+			"basic":         testAccTransitGatewayMulticastDomain_basic,
+			"disappears":    testAccTransitGatewayMulticastDomain_disappears,
+			"tags":          testAccTransitGatewayMulticastDomain_tags,
+			"IGMPv2Support": testAccTransitGatewayMulticastDomain_igmpv2Support,
+		},
+		"MulticastDomainAssociation": {
+			"basic":            testAccTransitGatewayMulticastDomainAssociation_basic,
+			"disappears":       testAccTransitGatewayMulticastDomainAssociation_disappears,
+			"DomainDisappears": testAccTransitGatewayMulticastDomainAssociation_Disappears_domain,
+			"TwoAssociations":  testAccTransitGatewayMulticastDomainAssociation_twoAssociations,
+		},
+		"MulticastGroupMember": {
+			"basic":            testAccTransitGatewayMulticastGroupMember_basic,
+			"disappears":       testAccTransitGatewayMulticastGroupMember_disappears,
+			"DomainDisappears": testAccTransitGatewayMulticastGroupMember_Disappears_domain,
+			"TwoMembers":       testAccTransitGatewayMulticastGroupMember_twoMembers,
+		},
+		"MulticastGroupSource": {
+			"basic":            testAccTransitGatewayMulticastGroupSource_basic,
+			"disappears":       testAccTransitGatewayMulticastGroupSource_disappears,
+			"DomainDisappears": testAccTransitGatewayMulticastGroupSource_Disappears_domain,
+		},
 		"PeeringAttachment": {
 			"basic":            testAccTransitGatewayPeeringAttachment_basic,
 			"disappears":       testAccTransitGatewayPeeringAttachment_disappears,
@@ -122,6 +145,7 @@ func testAccTransitGateway_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_table_propagation", ec2.DefaultRouteTablePropagationValueEnable),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "dns_support", ec2.DnsSupportValueEnable),
+					resource.TestCheckResourceAttr(resourceName, "multicast_support", ec2.MulticastSupportValueDisable),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "propagation_default_route_table_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -529,7 +553,7 @@ func testAccCheckTransitGatewayDestroy(s *terraform.State) error {
 
 		transitGateway, err := tfec2.DescribeTransitGateway(conn, rs.Primary.ID)
 
-		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayID.NotFound") {
 			continue
 		}
 
@@ -658,7 +682,7 @@ func testAccPreCheckTransitGateway(t *testing.T) {
 
 	_, err := conn.DescribeTransitGateways(input)
 
-	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InvalidAction", "") {
+	if acctest.PreCheckSkipError(err) || tfawserr.ErrCodeEquals(err, "InvalidAction") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 

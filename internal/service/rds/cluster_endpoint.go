@@ -290,7 +290,7 @@ func DBClusterEndpointStateRefreshFunc(conn *rds.RDS, id string) resource.StateR
 				DBClusterEndpointIdentifier: aws.String(id),
 			})
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
 				return emptyResp, "destroyed", nil
 			} else if resp != nil && len(resp.DBClusterEndpoints) == 0 {
 				return emptyResp, "destroyed", nil

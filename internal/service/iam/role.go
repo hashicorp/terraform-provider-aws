@@ -24,6 +24,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	roleNameMaxLen       = 64
+	roleNamePrefixMaxLen = roleNameMaxLen - resource.UniqueIDSuffixLength
+)
+
 func ResourceRole() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceRoleCreate,
@@ -50,10 +55,7 @@ func ResourceRole() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
-				),
+				ValidateFunc:  validIamResourceName(roleNameMaxLen),
 			},
 
 			"name_prefix": {
@@ -62,10 +64,7 @@ func ResourceRole() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64-resource.UniqueIDSuffixLength),
-					validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
-				),
+				ValidateFunc:  validIamResourceName(roleNamePrefixMaxLen),
 			},
 
 			"path": {
@@ -321,12 +320,6 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("managed_policy_arns", managedPolicies)
 
 	tags := KeyValueTags(role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] failed listing tags for IAM Role (%s): %s", d.Id(), err)
-		return nil
-	}
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

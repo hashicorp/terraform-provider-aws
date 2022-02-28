@@ -121,7 +121,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 		subnetGroups = append(subnetGroups, resp.DBSubnetGroups...)
 		return !lastPage
 	}); err != nil {
-		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBSubnetGroupNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBSubnetGroupNotFoundFault) {
 			log.Printf("[WARN] Neptune Subnet Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -222,7 +222,7 @@ func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deleting Neptune Subnet Group: %s", d.Id())
 	_, err := conn.DeleteDBSubnetGroup(&input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBSubnetGroupNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBSubnetGroupNotFoundFault) {
 			return nil
 		}
 		return fmt.Errorf("error deleting Neptune Subnet Group (%s): %s", d.Id(), err)

@@ -87,7 +87,7 @@ func TestAccACMPCACertificateAuthority_disappears(t *testing.T) {
 	})
 }
 
-func TestAccACMPCACertificateAuthority_enabled(t *testing.T) {
+func TestAccACMPCACertificateAuthority_enabledDeprecated(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
@@ -514,7 +514,7 @@ func testAccCheckCertificateAuthorityDestroy(s *terraform.State) error {
 		output, err := conn.DescribeCertificateAuthority(input)
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, acmpca.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 			return err
