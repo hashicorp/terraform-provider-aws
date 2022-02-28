@@ -237,59 +237,51 @@ func resourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) error 
 func resourceTransitGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	modifyTransitGatewayInput := &ec2.ModifyTransitGatewayInput{}
-	transitGatewayModified := false
-
-	if d.HasChange("description") {
-		transitGatewayModified = true
-		modifyTransitGatewayInput.Description = aws.String(d.Get("description").(string))
-	}
-
-	options := &ec2.ModifyTransitGatewayOptions{}
-
-	if d.HasChange("auto_accept_shared_attachments") {
-		transitGatewayModified = true
-		options.AutoAcceptSharedAttachments = aws.String(d.Get("auto_accept_shared_attachments").(string))
-	}
-
-	if d.HasChange("default_route_table_association") {
-		transitGatewayModified = true
-		options.DefaultRouteTableAssociation = aws.String(d.Get("default_route_table_association").(string))
-	}
-
-	if d.HasChange("default_route_table_propagation") {
-		transitGatewayModified = true
-		options.DefaultRouteTablePropagation = aws.String(d.Get("default_route_table_propagation").(string))
-	}
-
-	if d.HasChange("dns_support") {
-		transitGatewayModified = true
-		options.DnsSupport = aws.String(d.Get("dns_support").(string))
-	}
-
-	if d.HasChange("transit_gateway_cidr_blocks") {
-		transitGatewayModified = true
-		oRaw, nRaw := d.GetChange("transit_gateway_cidr_blocks")
-		o, n := oRaw.(*schema.Set), nRaw.(*schema.Set)
-
-		if add := n.Difference(o); add.Len() > 0 {
-			options.AddTransitGatewayCidrBlocks = flex.ExpandStringSet(add)
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &ec2.ModifyTransitGatewayInput{
+			Options:          &ec2.ModifyTransitGatewayOptions{},
+			TransitGatewayId: aws.String(d.Id()),
 		}
 
-		if del := o.Difference(n); del.Len() > 0 {
-			options.RemoveTransitGatewayCidrBlocks = flex.ExpandStringSet(del)
+		if d.HasChange("auto_accept_shared_attachments") {
+			input.Options.AutoAcceptSharedAttachments = aws.String(d.Get("auto_accept_shared_attachments").(string))
 		}
-	}
 
-	if d.HasChange("vpn_ecmp_support") {
-		transitGatewayModified = true
-		options.VpnEcmpSupport = aws.String(d.Get("vpn_ecmp_support").(string))
-	}
-	if transitGatewayModified {
-		modifyTransitGatewayInput.TransitGatewayId = aws.String(d.Id())
-		modifyTransitGatewayInput.Options = options
-		if _, err := conn.ModifyTransitGateway(modifyTransitGatewayInput); err != nil {
-			return fmt.Errorf("error updating EC2 Transit Gateway (%s) options: %s", d.Id(), err)
+		if d.HasChange("default_route_table_association") {
+			input.Options.DefaultRouteTableAssociation = aws.String(d.Get("default_route_table_association").(string))
+		}
+
+		if d.HasChange("default_route_table_propagation") {
+			input.Options.DefaultRouteTablePropagation = aws.String(d.Get("default_route_table_propagation").(string))
+		}
+
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
+		}
+
+		if d.HasChange("dns_support") {
+			input.Options.DnsSupport = aws.String(d.Get("dns_support").(string))
+		}
+
+		if d.HasChange("transit_gateway_cidr_blocks") {
+			oRaw, nRaw := d.GetChange("transit_gateway_cidr_blocks")
+			o, n := oRaw.(*schema.Set), nRaw.(*schema.Set)
+
+			if add := n.Difference(o); add.Len() > 0 {
+				input.Options.AddTransitGatewayCidrBlocks = flex.ExpandStringSet(add)
+			}
+
+			if del := o.Difference(n); del.Len() > 0 {
+				input.Options.RemoveTransitGatewayCidrBlocks = flex.ExpandStringSet(del)
+			}
+		}
+
+		if d.HasChange("vpn_ecmp_support") {
+			input.Options.VpnEcmpSupport = aws.String(d.Get("vpn_ecmp_support").(string))
+		}
+
+		if _, err := conn.ModifyTransitGateway(input); err != nil {
+			return fmt.Errorf("error updating EC2 Transit Gateway (%s): %w", d.Id(), err)
 		}
 	}
 
