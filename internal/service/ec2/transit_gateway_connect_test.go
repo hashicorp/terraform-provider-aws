@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func testAccTransitGatewayConnect_basic(t *testing.T) {
@@ -62,7 +63,7 @@ func testAccTransitGatewayConnect_disappears(t *testing.T) {
 				Config: testAccTransitGatewayConnectConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectExists(resourceName, &transitGatewayConnect1),
-					testAccCheckTransitGatewayConnectDisappears(&transitGatewayConnect1),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayConnect(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -248,11 +249,11 @@ func testAccTransitGatewayConnect_TransitGatewayDefaultRouteTablePropagation(t *
 	})
 }
 
-func testAccCheckTransitGatewayConnectExists(resourceName string, transitGatewayConnect *ec2.TransitGatewayConnect) resource.TestCheckFunc {
+func testAccCheckTransitGatewayConnectExists(n string, v *ec2.TransitGatewayConnect) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
@@ -261,21 +262,13 @@ func testAccCheckTransitGatewayConnectExists(resourceName string, transitGateway
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		attachment, err := tfec2.DescribeTransitGatewayConnect(conn, rs.Primary.ID)
+		output, err := tfec2.FindTransitGatewayConnectByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if attachment == nil {
-			return fmt.Errorf("EC2 Transit Gateway Connect not found")
-		}
-
-		if aws.StringValue(attachment.State) != ec2.TransitGatewayAttachmentStateAvailable && aws.StringValue(attachment.State) != ec2.TransitGatewayAttachmentStatePendingAcceptance {
-			return fmt.Errorf("EC2 Transit Gateway Connect (%s) exists in non-available/pending acceptance (%s) state", rs.Primary.ID, aws.StringValue(attachment.State))
-		}
-
-		*transitGatewayConnect = *attachment
+		*v = *output
 
 		return nil
 	}
@@ -285,13 +278,13 @@ func testAccCheckTransitGatewayConnectDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ec2_transit_gateway_route_table" {
+		if rs.Type != "aws_ec2_transit_gateway_connect" {
 			continue
 		}
 
-		vpcAttachment, err := tfec2.DescribeTransitGatewayConnect(conn, rs.Primary.ID)
+		_, err := tfec2.FindTransitGatewayConnectByID(conn, rs.Primary.ID)
 
-		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -299,32 +292,10 @@ func testAccCheckTransitGatewayConnectDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if vpcAttachment == nil {
-			continue
-		}
-
-		if aws.StringValue(vpcAttachment.State) != ec2.TransitGatewayAttachmentStateDeleted {
-			return fmt.Errorf("EC2 Transit Gateway Connect (%s) still exists in non-deleted (%s) state", rs.Primary.ID, aws.StringValue(vpcAttachment.State))
-		}
+		return fmt.Errorf("EC2 Transit Gateway Connect %s still exists", rs.Primary.ID)
 	}
 
 	return nil
-}
-
-func testAccCheckTransitGatewayConnectDisappears(transitGatewayConnect *ec2.TransitGatewayConnect) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-		input := &ec2.DeleteTransitGatewayConnectInput{
-			TransitGatewayAttachmentId: transitGatewayConnect.TransitGatewayAttachmentId,
-		}
-
-		if _, err := conn.DeleteTransitGatewayConnect(input); err != nil {
-			return err
-		}
-
-		return tfec2.WaitForTransitGatewayAttachmentDeletion(conn, aws.StringValue(transitGatewayConnect.TransitGatewayAttachmentId))
-	}
 }
 
 func testAccCheckTransitGatewayConnectNotRecreated(i, j *ec2.TransitGatewayConnect) resource.TestCheckFunc {
@@ -346,7 +317,7 @@ func testAccPreCheckTransitGatewayConnect(t *testing.T) {
 
 	_, err := conn.DescribeTransitGatewayConnects(input)
 
-	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InvalidAction", "") {
+	if acctest.PreCheckSkipError(err) || tfawserr.ErrCodeEquals(err, "InvalidAction") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
