@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
@@ -1611,6 +1610,10 @@ func sweepTransitGatewayMulticastDomains(region string) error {
 		}
 
 		for _, v := range page.TransitGatewayMulticastDomains {
+			if aws.StringValue(v.State) == ec2.TransitGatewayMulticastDomainStateDeleted {
+				continue
+			}
+
 			r := ResourceTransitGatewayMulticastDomain()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.TransitGatewayMulticastDomainId))
@@ -1646,75 +1649,41 @@ func sweepTransitGateways(region string) error {
 	}
 	conn := client.(*conns.AWSClient).EC2Conn
 	input := &ec2.DescribeTransitGatewaysInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
 
-	for {
-		output, err := conn.DescribeTransitGateways(input)
-
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 Transit Gateway sweep for %s: %s", region, err)
-			return nil
+	err = conn.DescribeTransitGatewaysPages(input, func(page *ec2.DescribeTransitGatewaysOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			return fmt.Errorf("error retrieving EC2 Transit Gateways: %s", err)
-		}
-
-		for _, transitGateway := range output.TransitGateways {
-			if aws.StringValue(transitGateway.State) == ec2.TransitGatewayStateDeleted {
+		for _, v := range page.TransitGateways {
+			if aws.StringValue(v.State) == ec2.TransitGatewayStateDeleted {
 				continue
 			}
 
-			id := aws.StringValue(transitGateway.TransitGatewayId)
+			r := ResourceTransitGateway()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.TransitGatewayId))
 
-			input := &ec2.DeleteTransitGatewayInput{
-				TransitGatewayId: aws.String(id),
-			}
-
-			log.Printf("[INFO] Deleting EC2 Transit Gateway: %s", id)
-			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-				_, err := conn.DeleteTransitGateway(input)
-
-				if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Transit Gateway Attachments") {
-					return resource.RetryableError(err)
-				}
-
-				if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted DirectConnect Gateway Attachments") {
-					return resource.RetryableError(err)
-				}
-
-				if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted VPN Attachments") {
-					return resource.RetryableError(err)
-				}
-
-				if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayID.NotFound", "") {
-					return nil
-				}
-
-				if err != nil {
-					return resource.NonRetryableError(err)
-				}
-
-				return nil
-			})
-
-			if tfresource.TimedOut(err) {
-				_, err = conn.DeleteTransitGateway(input)
-			}
-
-			if err != nil {
-				return fmt.Errorf("error deleting EC2 Transit Gateway (%s): %s", id, err)
-			}
-
-			if err := WaitForTransitGatewayDeletion(conn, id); err != nil {
-				return fmt.Errorf("error waiting for EC2 Transit Gateway (%s) deletion: %s", id, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextToken = output.NextToken
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Transit Gateway sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing EC2 Transit Gateways (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Transit Gateways (%s): %w", region, err)
 	}
 
 	return nil
@@ -1727,51 +1696,41 @@ func sweepTransitGatewayConnectPeers(region string) error {
 	}
 	conn := client.(*conns.AWSClient).EC2Conn
 	input := &ec2.DescribeTransitGatewayConnectPeersInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
 
-	for {
-		output, err := conn.DescribeTransitGatewayConnectPeers(input)
-
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 Transit Gateway Connect Peer sweep for %s: %s", region, err)
-			return nil
+	err = conn.DescribeTransitGatewayConnectPeersPages(input, func(page *ec2.DescribeTransitGatewayConnectPeersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			return fmt.Errorf("error retrieving EC2 Transit Gateway Connect Peers: %s", err)
-		}
-
-		for _, peer := range output.TransitGatewayConnectPeers {
-			if aws.StringValue(attachment.State) == ec2.TransitGatewayConnectPeerStateDeleted {
+		for _, v := range page.TransitGatewayConnectPeers {
+			if aws.StringValue(v.State) == ec2.TransitGatewayConnectPeerStateDeleted {
 				continue
 			}
 
-			id := aws.StringValue(attachment.TransitGatewayConnectPeerId)
+			r := ResourceTransitGatewayConnectPeer()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.TransitGatewayConnectPeerId))
 
-			input := &ec2.DeleteTransitGatewayConnectPeerInput{
-				TransitGatewayConnectPeerId: aws.String(id),
-			}
-
-			log.Printf("[INFO] Deleting EC2 Transit Gateway Connect Peer: %s", id)
-			_, err := conn.DeleteTransitGatewayConnectPeer(input)
-
-			if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayConnectPeerID.NotFound", "") {
-				continue
-			}
-
-			if err != nil {
-				return fmt.Errorf("error deleting EC2 Transit Gateway Connect Peer (%s): %s", id, err)
-			}
-
-			if err := WaitForTransitGatewayConnectPeerDeletion(conn, id); err != nil {
-				return fmt.Errorf("error waiting for EC2 Transit Gateway Connect Peer (%s) deletion: %s", id, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextToken = output.NextToken
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Transit Gateway Connect Peer sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing EC2 Transit Gateway Connect Peers (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Transit Gateway Connect Peers (%s): %w", region, err)
 	}
 
 	return nil
@@ -1783,72 +1742,42 @@ func sweepTransitGatewayConnects(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).EC2Conn
-	input := &ec2.DescribeTransitGatewayAttachmentsInput{}
+	input := &ec2.DescribeTransitGatewayConnectsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
 
-	for {
-		output, err := conn.DescribeTransitGatewayAttachments(input)
-
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 Transit Gateway Connect sweep for %s: %s", region, err)
-			return nil
+	err = conn.DescribeTransitGatewayConnectsPages(input, func(page *ec2.DescribeTransitGatewayConnectsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			return fmt.Errorf("error retrieving EC2 Transit Gateway Connects: %s", err)
-		}
-
-		for _, attachment := range output.TransitGatewayAttachments {
-			if aws.StringValue(attachment.ResourceType) != ec2.TransitGatewayAttachmentResourceTypeConnect {
+		for _, v := range page.TransitGatewayConnects {
+			if aws.StringValue(v.State) == ec2.TransitGatewayAttachmentStateDeleted {
 				continue
 			}
 
-			if aws.StringValue(attachment.State) == ec2.TransitGatewayAttachmentStateDeleted {
-				continue
-			}
+			r := ResourceTransitGatewayConnect()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.TransitGatewayAttachmentId))
 
-			id := aws.StringValue(attachment.TransitGatewayAttachmentId)
-
-			input := &ec2.DeleteTransitGatewayConnectInput{
-				TransitGatewayAttachmentId: aws.String(id),
-			}
-
-			log.Printf("[INFO] Deleting EC2 Transit Gateway Connect: %s", id)
-			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-				_, err := conn.DeleteTransitGatewayConnect(input)
-
-				if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Connect Peers") {
-					return resource.RetryableError(err)
-				}
-
-				if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
-					return nil
-				}
-
-				if err != nil {
-					return resource.NonRetryableError(err)
-				}
-
-				return nil
-			})
-
-			if tfresource.TimedOut(err) {
-				_, err = conn.DeleteTransitGatewayConnect(input)
-			}
-
-			if err != nil {
-				return fmt.Errorf("error deleting EC2 Transit Gateway Connect (%s): %s", id, err)
-			}
-
-			if err := WaitForTransitGatewayAttachmentDeletion(conn, id); err != nil {
-				return fmt.Errorf("error waiting for EC2 Transit Gateway Connect (%s) deletion: %s", id, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextToken = output.NextToken
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Transit Gateway Connect sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing EC2 Transit Gateway Connects (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Transit Gateway Connects (%s): %w", region, err)
 	}
 
 	return nil
@@ -1860,72 +1789,42 @@ func sweepTransitGatewayVPCAttachments(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).EC2Conn
-	input := &ec2.DescribeTransitGatewayAttachmentsInput{}
+	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
 
-	for {
-		output, err := conn.DescribeTransitGatewayAttachments(input)
-
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 Transit Gateway VPC Attachment sweep for %s: %s", region, err)
-			return nil
+	err = conn.DescribeTransitGatewayVpcAttachmentsPages(input, func(page *ec2.DescribeTransitGatewayVpcAttachmentsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			return fmt.Errorf("error retrieving EC2 Transit Gateway VPC Attachments: %s", err)
-		}
-
-		for _, attachment := range output.TransitGatewayAttachments {
-			if aws.StringValue(attachment.ResourceType) != ec2.TransitGatewayAttachmentResourceTypeVpc {
+		for _, v := range page.TransitGatewayVpcAttachments {
+			if aws.StringValue(v.State) == ec2.TransitGatewayAttachmentStateDeleted {
 				continue
 			}
 
-			if aws.StringValue(attachment.State) == ec2.TransitGatewayAttachmentStateDeleted {
-				continue
-			}
+			r := ResourceTransitGatewayVPCAttachment()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.TransitGatewayAttachmentId))
 
-			id := aws.StringValue(attachment.TransitGatewayAttachmentId)
-
-			input := &ec2.DeleteTransitGatewayVpcAttachmentInput{
-				TransitGatewayAttachmentId: aws.String(id),
-			}
-
-			log.Printf("[INFO] Deleting EC2 Transit Gateway VPC Attachment: %s", id)
-			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-				_, err := conn.DeleteTransitGateway(input)
-
-				if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Connect attachments") {
-					return resource.RetryableError(err)
-				}
-
-				if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
-					return nil
-				}
-
-				if err != nil {
-					return resource.NonRetryableError(err)
-				}
-
-				return nil
-			})
-
-			if tfresource.TimedOut(err) {
-				_, err = conn.DeleteTransitGatewayVpcAttachment(input)
-			}
-
-			if err != nil {
-				return fmt.Errorf("error deleting EC2 Transit Gateway VPC Attachment (%s): %s", id, err)
-			}
-
-			if err := WaitForTransitGatewayAttachmentDeletion(conn, id); err != nil {
-				return fmt.Errorf("error waiting for EC2 Transit Gateway VPC Attachment (%s) deletion: %s", id, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextToken = output.NextToken
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Transit Gateway VPC Attachment sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing EC2 Transit Gateway VPC Attachments (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Transit Gateway VPC Attachments (%s): %w", region, err)
 	}
 
 	return nil
