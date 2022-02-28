@@ -30,6 +30,13 @@ func ResourceTransitGatewayConnect() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
+			"protocol": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      ec2.ProtocolValueGre,
+				ValidateFunc: validation.StringInSlice(ec2.ProtocolValue_Values(), false),
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"transit_gateway_default_route_table_association": {
@@ -67,10 +74,10 @@ func resourceTransitGatewayConnectCreate(d *schema.ResourceData, meta interface{
 
 	input := &ec2.CreateTransitGatewayConnectInput{
 		Options: &ec2.CreateTransitGatewayConnectRequestOptions{
-			Protocol: aws.String("gre"),
+			Protocol: aws.String(d.Get("protocol").(string)),
 		},
-		TransportTransitGatewayAttachmentId: aws.String(transportAttachmentID),
 		TagSpecifications:                   ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayAttachment),
+		TransportTransitGatewayAttachmentId: aws.String(transportAttachmentID),
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Connect Attachment: %s", input)
@@ -177,6 +184,12 @@ func resourceTransitGatewayConnectRead(d *schema.ResourceData, meta interface{})
 		}
 	}
 
+	d.Set("protocol", transitGatewayConnect.Options.Protocol)
+	d.Set("transit_gateway_default_route_table_association", (transitGatewayDefaultRouteTableAssociation != nil))
+	d.Set("transit_gateway_default_route_table_propagation", (transitGatewayDefaultRouteTablePropagation != nil))
+	d.Set("transit_gateway_id", transitGatewayConnect.TransitGatewayId)
+	d.Set("transport_attachment_id", transitGatewayConnect.TransportTransitGatewayAttachmentId)
+
 	tags := KeyValueTags(transitGatewayConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
@@ -187,11 +200,6 @@ func resourceTransitGatewayConnectRead(d *schema.ResourceData, meta interface{})
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
-
-	d.Set("transit_gateway_default_route_table_association", (transitGatewayDefaultRouteTableAssociation != nil))
-	d.Set("transit_gateway_default_route_table_propagation", (transitGatewayDefaultRouteTablePropagation != nil))
-	d.Set("transit_gateway_id", transitGatewayConnect.TransitGatewayId)
-	d.Set("transport_attachment_id", transitGatewayConnect.TransportTransitGatewayAttachmentId)
 
 	return nil
 }

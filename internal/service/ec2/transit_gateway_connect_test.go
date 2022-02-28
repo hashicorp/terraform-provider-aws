@@ -31,6 +31,7 @@ func testAccTransitGatewayConnect_basic(t *testing.T) {
 				Config: testAccTransitGatewayConnectConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectExists(resourceName, &transitGatewayConnect1),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "gre"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", "true"),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", "true"),
