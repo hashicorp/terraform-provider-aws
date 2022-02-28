@@ -22,7 +22,7 @@ func TestAccEC2TransitGateway_serial(t *testing.T) {
 		"Connect": {
 			"basic":      testAccTransitGatewayConnect_basic,
 			"disappears": testAccTransitGatewayConnect_disappears,
-			"Tags":       testAccTransitGatewayConnect_Tags,
+			"Tags":       testAccTransitGatewayConnect_tags,
 			"TransitGatewayDefaultRouteTableAssociation":                       testAccTransitGatewayConnect_TransitGatewayDefaultRouteTableAssociation,
 			"TransitGatewayDefaultRouteTableAssociationAndPropagationDisabled": testAccTransitGatewayConnect_TransitGatewayDefaultRouteTableAssociationAndPropagationDisabled,
 			"TransitGatewayDefaultRouteTablePropagation":                       testAccTransitGatewayConnect_TransitGatewayDefaultRouteTablePropagation,

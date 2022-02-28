@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -17,10 +18,11 @@ import (
 )
 
 func testAccTransitGatewayConnect_basic(t *testing.T) {
-	var transitGatewayConnect1 ec2.TransitGatewayConnect
+	var v ec2.TransitGatewayConnect
 	resourceName := "aws_ec2_transit_gateway_connect.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	transitGatewayVpcAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayVpcAttachment(t) },
@@ -29,9 +31,9 @@ func testAccTransitGatewayConnect_basic(t *testing.T) {
 		CheckDestroy: testAccCheckTransitGatewayConnectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectConfig(),
+				Config: testAccTransitGatewayConnectConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectExists(resourceName, &transitGatewayConnect1),
+					testAccCheckTransitGatewayConnectExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "gre"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", "true"),
@@ -50,8 +52,9 @@ func testAccTransitGatewayConnect_basic(t *testing.T) {
 }
 
 func testAccTransitGatewayConnect_disappears(t *testing.T) {
-	var transitGatewayConnect1 ec2.TransitGatewayConnect
+	var v ec2.TransitGatewayConnect
 	resourceName := "aws_ec2_transit_gateway_connect.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayVpcAttachment(t) },
@@ -60,9 +63,9 @@ func testAccTransitGatewayConnect_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckTransitGatewayConnectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectConfig(),
+				Config: testAccTransitGatewayConnectConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectExists(resourceName, &transitGatewayConnect1),
+					testAccCheckTransitGatewayConnectExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayConnect(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -71,9 +74,10 @@ func testAccTransitGatewayConnect_disappears(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayConnect_Tags(t *testing.T) {
-	var transitGatewayConnect1, transitGatewayConnect2, transitGatewayConnect3 ec2.TransitGatewayConnect
+func testAccTransitGatewayConnect_tags(t *testing.T) {
+	var v ec2.TransitGatewayConnect
 	resourceName := "aws_ec2_transit_gateway_connect.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayVpcAttachment(t) },
@@ -82,9 +86,9 @@ func testAccTransitGatewayConnect_Tags(t *testing.T) {
 		CheckDestroy: testAccCheckTransitGatewayConnectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectTags1Config("key1", "value1"),
+				Config: testAccTransitGatewayConnectConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectExists(resourceName, &transitGatewayConnect1),
+					testAccCheckTransitGatewayConnectExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -95,20 +99,18 @@ func testAccTransitGatewayConnect_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayConnectTags2Config("key1", "value1updated", "key2", "value2"),
+				Config: testAccTransitGatewayConnectConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectExists(resourceName, &transitGatewayConnect2),
-					testAccCheckTransitGatewayConnectNotRecreated(&transitGatewayConnect1, &transitGatewayConnect2),
+					testAccCheckTransitGatewayConnectExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccTransitGatewayConnectTags1Config("key2", "value2"),
+				Config: testAccTransitGatewayConnectConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectExists(resourceName, &transitGatewayConnect3),
-					testAccCheckTransitGatewayConnectNotRecreated(&transitGatewayConnect2, &transitGatewayConnect3),
+					testAccCheckTransitGatewayConnectExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -122,6 +124,7 @@ func testAccTransitGatewayConnect_TransitGatewayDefaultRouteTableAssociationAndP
 	var transitGatewayConnect1 ec2.TransitGatewayConnect
 	resourceName := "aws_ec2_transit_gateway_connect.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayVpcAttachment(t) },
@@ -130,7 +133,7 @@ func testAccTransitGatewayConnect_TransitGatewayDefaultRouteTableAssociationAndP
 		CheckDestroy: testAccCheckTransitGatewayConnectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectTransitGatewayDefaultRouteTableAssociationAndPropagationDisabledConfig(),
+				Config: testAccTransitGatewayConnectTransitGatewayDefaultRouteTableAssociationAndPropagationDisabledConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway1),
 					testAccCheckTransitGatewayConnectExists(resourceName, &transitGatewayConnect1),
@@ -154,6 +157,7 @@ func testAccTransitGatewayConnect_TransitGatewayDefaultRouteTableAssociation(t *
 	var transitGatewayConnect1, transitGatewayConnect2, transitGatewayConnect3 ec2.TransitGatewayConnect
 	resourceName := "aws_ec2_transit_gateway_connect.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayVpcAttachment(t) },
@@ -162,7 +166,7 @@ func testAccTransitGatewayConnect_TransitGatewayDefaultRouteTableAssociation(t *
 		CheckDestroy: testAccCheckTransitGatewayConnectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectTransitGatewayDefaultRouteTableAssociationConfig(false),
+				Config: testAccTransitGatewayConnectTransitGatewayDefaultRouteTableAssociationConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway1),
 					testAccCheckTransitGatewayConnectExists(resourceName, &transitGatewayConnect1),
@@ -176,7 +180,7 @@ func testAccTransitGatewayConnect_TransitGatewayDefaultRouteTableAssociation(t *
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayConnectTransitGatewayDefaultRouteTableAssociationConfig(true),
+				Config: testAccTransitGatewayConnectTransitGatewayDefaultRouteTableAssociationConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway2),
 					testAccCheckTransitGatewayConnectExists(resourceName, &transitGatewayConnect2),
@@ -186,7 +190,7 @@ func testAccTransitGatewayConnect_TransitGatewayDefaultRouteTableAssociation(t *
 				),
 			},
 			{
-				Config: testAccTransitGatewayConnectTransitGatewayDefaultRouteTableAssociationConfig(false),
+				Config: testAccTransitGatewayConnectTransitGatewayDefaultRouteTableAssociationConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway3),
 					testAccCheckTransitGatewayConnectExists(resourceName, &transitGatewayConnect3),
@@ -204,6 +208,7 @@ func testAccTransitGatewayConnect_TransitGatewayDefaultRouteTablePropagation(t *
 	var transitGatewayConnect1, transitGatewayConnect2, transitGatewayConnect3 ec2.TransitGatewayConnect
 	resourceName := "aws_ec2_transit_gateway_connect.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGatewayVpcAttachment(t) },
@@ -212,7 +217,7 @@ func testAccTransitGatewayConnect_TransitGatewayDefaultRouteTablePropagation(t *
 		CheckDestroy: testAccCheckTransitGatewayConnectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectTransitGatewayDefaultRouteTablePropagationConfig(false),
+				Config: testAccTransitGatewayConnectTransitGatewayDefaultRouteTablePropagationConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway1),
 					testAccCheckTransitGatewayConnectExists(resourceName, &transitGatewayConnect1),
@@ -226,7 +231,7 @@ func testAccTransitGatewayConnect_TransitGatewayDefaultRouteTablePropagation(t *
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayConnectTransitGatewayDefaultRouteTablePropagationConfig(true),
+				Config: testAccTransitGatewayConnectTransitGatewayDefaultRouteTablePropagationConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway2),
 					testAccCheckTransitGatewayConnectExists(resourceName, &transitGatewayConnect2),
@@ -236,7 +241,7 @@ func testAccTransitGatewayConnect_TransitGatewayDefaultRouteTablePropagation(t *
 				),
 			},
 			{
-				Config: testAccTransitGatewayConnectTransitGatewayDefaultRouteTablePropagationConfig(false),
+				Config: testAccTransitGatewayConnectTransitGatewayDefaultRouteTablePropagationConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway3),
 					testAccCheckTransitGatewayConnectExists(resourceName, &transitGatewayConnect3),
@@ -326,48 +331,13 @@ func testAccPreCheckTransitGatewayConnect(t *testing.T) {
 	}
 }
 
-func testAccTransitGatewayConnectConfig() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), `
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-connect"
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.0.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-connect"
-  }
-}
-
-resource "aws_ec2_transit_gateway" "test" {}
-
-resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids         = [aws_subnet.test.id]
-  transit_gateway_id = aws_ec2_transit_gateway.test.id
-  vpc_id             = aws_vpc.test.id
-}
-
-resource "aws_ec2_transit_gateway_connect" "test" {
-  transit_gateway_id      = aws_ec2_transit_gateway.test.id
-  transport_attachment_id = aws_ec2_transit_gateway_vpc_attachment.test.id
-}
-`)
-}
-
-func testAccTransitGatewayConnectTags1Config(tagKey1, tagValue1 string) string {
+func testAccTransitGatewayConnectConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-connect"
+    Name = %[1]q
   }
 }
 
@@ -377,36 +347,40 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-connect"
+    Name = %[1]q
   }
 }
 
-resource "aws_ec2_transit_gateway" "test" {}
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   subnet_ids         = [aws_subnet.test.id]
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpc_id             = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_ec2_transit_gateway_connect" "test" {
   transit_gateway_id      = aws_ec2_transit_gateway.test.id
   transport_attachment_id = aws_ec2_transit_gateway_vpc_attachment.test.id
-
-  tags = {
-    %[1]q = %[2]q
-  }
 }
-`, tagKey1, tagValue1))
+`, rName))
 }
 
-func testAccTransitGatewayConnectTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccTransitGatewayConnectConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-connect"
+    Name = %[1]q
   }
 }
 
@@ -416,16 +390,24 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-connect"
+    Name = %[1]q
   }
 }
 
-resource "aws_ec2_transit_gateway" "test" {}
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   subnet_ids         = [aws_subnet.test.id]
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpc_id             = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_ec2_transit_gateway_connect" "test" {
@@ -433,20 +415,19 @@ resource "aws_ec2_transit_gateway_connect" "test" {
   transport_attachment_id = aws_ec2_transit_gateway_vpc_attachment.test.id
 
   tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
+    %[2]q = %[3]q
   }
 }
-`, tagKey1, tagValue1, tagKey2, tagValue2))
+`, rName, tagKey1, tagValue1))
 }
 
-func testAccTransitGatewayConnectTransitGatewayDefaultRouteTableAssociationAndPropagationDisabledConfig() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), `
+func testAccTransitGatewayConnectConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-connect"
+    Name = %[1]q
   }
 }
 
@@ -456,13 +437,65 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-connect"
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
+  subnet_ids         = [aws_subnet.test.id]
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway_connect" "test" {
+  transit_gateway_id      = aws_ec2_transit_gateway.test.id
+  transport_attachment_id = aws_ec2_transit_gateway_vpc_attachment.test.id
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccTransitGatewayConnectTransitGatewayDefaultRouteTableAssociationAndPropagationDisabledConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
   }
 }
 
 resource "aws_ec2_transit_gateway" "test" {
   default_route_table_association = "disable"
   default_route_table_propagation = "disable"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
@@ -471,6 +504,10 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   vpc_id                                          = aws_vpc.test.id
   transit_gateway_default_route_table_association = false
   transit_gateway_default_route_table_propagation = false
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_ec2_transit_gateway_connect" "test" {
@@ -478,17 +515,21 @@ resource "aws_ec2_transit_gateway_connect" "test" {
   transport_attachment_id                         = aws_ec2_transit_gateway_vpc_attachment.test.id
   transit_gateway_default_route_table_association = false
   transit_gateway_default_route_table_propagation = false
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`)
+`, rName))
 }
 
-func testAccTransitGatewayConnectTransitGatewayDefaultRouteTableAssociationConfig(transitGatewayDefaultRouteTableAssociation bool) string {
+func testAccTransitGatewayConnectTransitGatewayDefaultRouteTableAssociationConfig(rName string, transitGatewayDefaultRouteTableAssociation bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-connect"
+    Name = %[1]q
   }
 }
 
@@ -498,35 +539,46 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-connect"
+    Name = %[1]q
   }
 }
 
 resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   subnet_ids                                      = [aws_subnet.test.id]
   transit_gateway_id                              = aws_ec2_transit_gateway.test.id
   vpc_id                                          = aws_vpc.test.id
-  transit_gateway_default_route_table_association = %[1]t
+  transit_gateway_default_route_table_association = %[2]t
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_ec2_transit_gateway_connect" "test" {
   transit_gateway_id                              = aws_ec2_transit_gateway.test.id
   transport_attachment_id                         = aws_ec2_transit_gateway_vpc_attachment.test.id
   transit_gateway_default_route_table_association = %[2]t
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, transitGatewayDefaultRouteTableAssociation, transitGatewayDefaultRouteTableAssociation))
+`, rName, transitGatewayDefaultRouteTableAssociation))
 }
 
-func testAccTransitGatewayConnectTransitGatewayDefaultRouteTablePropagationConfig(transitGatewayDefaultRouteTablePropagation bool) string {
+func testAccTransitGatewayConnectTransitGatewayDefaultRouteTablePropagationConfig(rName string, transitGatewayDefaultRouteTablePropagation bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-connect"
+    Name = %[1]q
   }
 }
 
@@ -536,24 +588,35 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-connect"
+    Name = %[1]q
   }
 }
 
 resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   subnet_ids                                      = [aws_subnet.test.id]
   transit_gateway_id                              = aws_ec2_transit_gateway.test.id
   vpc_id                                          = aws_vpc.test.id
-  transit_gateway_default_route_table_propagation = %[1]t
+  transit_gateway_default_route_table_propagation = %[2]t
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_ec2_transit_gateway_connect" "test" {
   transit_gateway_id                              = aws_ec2_transit_gateway.test.id
   transport_attachment_id                         = aws_ec2_transit_gateway_vpc_attachment.test.id
   transit_gateway_default_route_table_propagation = %[2]t
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, transitGatewayDefaultRouteTablePropagation, transitGatewayDefaultRouteTablePropagation))
+`, rName, transitGatewayDefaultRouteTablePropagation))
 }
