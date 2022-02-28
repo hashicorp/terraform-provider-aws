@@ -134,31 +134,19 @@ func resourceTransitGatewayConnectRead(ctx context.Context, d *schema.ResourceDa
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	transitGatewayConnect, err := DescribeTransitGatewayConnect(conn, d.Id())
+	transitGatewayConnect, err := FindTransitGatewayConnectByID(conn, d.Id())
 
-	if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
-		log.Printf("[WARN] EC2 Transit Gateway Connect Attachment (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Transit Gateway Connect %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading EC2 Transit Gateway Connect Attachment: %s", err)
+		return diag.Errorf("error reading EC2 Transit Gateway Connect (%s): %s", d.Id(), err)
 	}
 
-	if transitGatewayConnect == nil {
-		log.Printf("[WARN] EC2 Transit Gateway Connect Attachment (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if aws.StringValue(transitGatewayConnect.State) == ec2.TransitGatewayAttachmentStateDeleting || aws.StringValue(transitGatewayConnect.State) == ec2.TransitGatewayAttachmentStateDeleted {
-		log.Printf("[WARN] EC2 Transit Gateway Connect Attachment (%s) in deleted state (%s), removing from state", d.Id(), aws.StringValue(transitGatewayConnect.State))
-		d.SetId("")
-		return nil
-	}
-
-	transitGatewayID := *transitGatewayConnect.TransitGatewayId
+	transitGatewayID := aws.StringValue(transitGatewayConnect.TransitGatewayId)
 	transitGateway, err := DescribeTransitGateway(conn, transitGatewayID)
 	if err != nil {
 		return diag.Errorf("error describing EC2 Transit Gateway (%s): %s", transitGatewayID, err)
