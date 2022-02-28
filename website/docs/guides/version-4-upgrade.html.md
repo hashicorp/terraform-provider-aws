@@ -193,9 +193,9 @@ Note that the provider can only resolve FIPS endpoints where AWS provides FIPS s
 
 ## S3 Bucket Refactor
 
-To help distribute the management of S3 bucket settings via independent resources, various arguments and attributes in the `aws_s3_bucket` resource have become **read-only**. 
+To help distribute the management of S3 bucket settings via independent resources, various arguments and attributes in the `aws_s3_bucket` resource have become **read-only**.
 
-Configurations dependent on these arguments should be updated to use the corresponding `aws_s3_bucket_*` resource in order to prevent Terraform from reporting “unconfigurable attribute” errors for read-only arguments. Once updated, it is recommended to import new `aws_s3_bucket_*` resources into Terraform state. 
+Configurations dependent on these arguments should be updated to use the corresponding `aws_s3_bucket_*` resource in order to prevent Terraform from reporting “unconfigurable attribute” errors for read-only arguments. Once updated, it is recommended to import new `aws_s3_bucket_*` resources into Terraform state.
 
 In the event practitioners do not anticipate future modifications to the S3 bucket settings associated with these read-only arguments or drift detection is not needed, these read-only arguments should be removed from `aws_s3_bucket` resource configurations in order to prevent Terraform from reporting “unconfigurable attribute” errors; the states of these arguments will be preserved but are subject to change with modifications made outside Terraform.
 
