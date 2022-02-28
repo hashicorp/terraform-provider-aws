@@ -165,7 +165,7 @@ func resourceOrganizationDelete(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("Error deleting WorkMail organization: %s", err)
 	}
 
-	_, err = waitOrganizationActive(conn, d.Id())
+	_, err = waitOrganizationDeleted(conn, d.Id())
 
 	return nil
 }
