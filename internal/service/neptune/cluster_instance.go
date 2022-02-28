@@ -476,7 +476,7 @@ func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[DEBUG] Neptune Cluster Instance destroy configuration: %s", opts)
 	if _, err := conn.DeleteDBInstance(&opts); err != nil {
-		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBInstanceNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBInstanceNotFoundFault) {
 			return nil
 		}
 		return fmt.Errorf("error deleting Neptune cluster instance %q: %s", d.Id(), err)
@@ -548,7 +548,7 @@ func resourceInstanceRetrieve(id string, conn *neptune.Neptune) (*neptune.DBInst
 
 	resp, err := conn.DescribeDBInstances(&opts)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBInstanceNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBInstanceNotFoundFault) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("Error retrieving Neptune Instances: %s", err)

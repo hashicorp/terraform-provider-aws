@@ -437,7 +437,7 @@ func testAccDBProxyPreCheck(t *testing.T) {
 	input := &rds.DescribeDBProxiesInput{}
 	_, err := conn.DescribeDBProxies(input)
 
-	if tfawserr.ErrMessageContains(err, "InvalidAction", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidAction") {
 		t.Skipf("skipping acceptance test, RDS Proxy not supported: %s", err)
 	}
 
@@ -467,7 +467,7 @@ func testAccCheckProxyDestroy(s *terraform.State) error {
 			}
 		}
 
-		if !tfawserr.ErrMessageContains(err, rds.ErrCodeDBProxyNotFoundFault, "") {
+		if !tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 			return err
 		}
 	}

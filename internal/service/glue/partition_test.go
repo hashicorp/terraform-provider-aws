@@ -176,7 +176,7 @@ func testAccCheckGluePartitionDestroy(s *terraform.State) error {
 		}
 
 		if _, err := tfglue.FindPartitionByValues(conn, rs.Primary.ID); err != nil {
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				continue
 			}
 

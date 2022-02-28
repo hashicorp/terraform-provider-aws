@@ -138,7 +138,7 @@ func resourceSchemaRead(d *schema.ResourceData, meta interface{}) error {
 
 	output, err := FindSchemaByID(conn, d.Id())
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue Schema (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -262,7 +262,7 @@ func resourceSchemaDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.DeleteSchema(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error deleting Glue Schema (%s): %w", d.Id(), err)
@@ -270,7 +270,7 @@ func resourceSchemaDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = waitSchemaDeleted(conn, d.Id())
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error waiting for Glue Schema (%s) to be deleted: %w", d.Id(), err)

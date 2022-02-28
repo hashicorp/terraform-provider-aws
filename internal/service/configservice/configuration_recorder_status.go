@@ -79,7 +79,7 @@ func resourceConfigurationRecorderStatusRead(d *schema.ResourceData, meta interf
 	}
 	statusOut, err := conn.DescribeConfigurationRecorderStatus(&statusInput)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchConfigurationRecorderException, "") {
+		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationRecorderException) {
 			log.Printf("[WARN] Configuration Recorder (status) %q is gone (NoSuchConfigurationRecorderException)", name)
 			d.SetId("")
 			return nil

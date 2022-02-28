@@ -1194,14 +1194,6 @@ func (client *AWSClient) RegionalHostname(prefix string) string {
 
 // Client configures and returns a fully initialized AWSClient
 func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
-	// Get the auth and region. This can fail if keys/regions were not
-	// specified and we're attempting to use the environment.
-	if !c.SkipRegionValidation {
-		if err := awsbase.ValidateRegion(c.Region); err != nil {
-			return nil, diag.FromErr(err)
-		}
-	}
-
 	awsbaseConfig := awsbase.Config{
 		AccessKey:               c.AccessKey,
 		APNInfo:                 StdUserAgentProducts(c.TerraformVersion),
@@ -1251,6 +1243,12 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	cfg, err := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
 	if err != nil {
 		return nil, diag.Errorf("error configuring Terraform AWS Provider: %s", err)
+	}
+
+	if !c.SkipRegionValidation {
+		if err := awsbase.ValidateRegion(cfg.Region); err != nil {
+			return nil, diag.FromErr(err)
+		}
 	}
 
 	sess, err := awsbasev1.GetSession(&cfg, &awsbaseConfig)

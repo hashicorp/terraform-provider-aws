@@ -1198,7 +1198,7 @@ func testAccCheckCloudFrontDistributionDestroy(s *terraform.State) error {
 
 		output, err := conn.GetDistribution(input)
 
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchDistribution, "") {
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
 			continue
 		}
 
@@ -1334,15 +1334,15 @@ func testAccCheckCloudFrontDistributionDisappears(distribution *cloudfront.Distr
 		err = resource.Retry(2*time.Minute, func() *resource.RetryError {
 			_, err = conn.DeleteDistribution(deleteDistributionInput)
 
-			if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeDistributionNotDisabled, "") {
+			if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeDistributionNotDisabled) {
 				return resource.RetryableError(err)
 			}
 
-			if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchDistribution, "") {
+			if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
 				return nil
 			}
 
-			if tfawserr.ErrMessageContains(err, cloudfront.ErrCodePreconditionFailed, "") {
+			if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodePreconditionFailed) {
 				return resource.RetryableError(err)
 			}
 

@@ -163,7 +163,7 @@ func resourceReportPlanRead(d *schema.ResourceData, meta interface{}) error {
 		ReportPlanName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Backup Report Plan (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

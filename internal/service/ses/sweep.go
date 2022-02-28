@@ -65,7 +65,7 @@ func sweepConfigurationSets(region string) error {
 			_, err := conn.DeleteConfigurationSet(&ses.DeleteConfigurationSetInput{
 				ConfigurationSetName: aws.String(name),
 			})
-			if tfawserr.ErrMessageContains(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
+			if tfawserr.ErrCodeEquals(err, ses.ErrCodeConfigurationSetDoesNotExistException) {
 				continue
 			}
 			if err != nil {
@@ -169,7 +169,7 @@ func sweepReceiptRuleSets(region string) error {
 			_, err := conn.DeleteReceiptRuleSet(&ses.DeleteReceiptRuleSetInput{
 				RuleSetName: aws.String(name),
 			})
-			if tfawserr.ErrMessageContains(err, ses.ErrCodeRuleSetDoesNotExistException, "") {
+			if tfawserr.ErrCodeEquals(err, ses.ErrCodeRuleSetDoesNotExistException) {
 				continue
 			}
 			if err != nil {

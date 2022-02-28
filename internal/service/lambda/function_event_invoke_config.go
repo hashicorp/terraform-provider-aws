@@ -171,7 +171,7 @@ func resourceFunctionEventInvokeConfigRead(d *schema.ResourceData, meta interfac
 
 	output, err := conn.GetFunctionEventInvokeConfig(input)
 
-	if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Lambda Function Event Invoke Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -267,7 +267,7 @@ func resourceFunctionEventInvokeConfigDelete(d *schema.ResourceData, meta interf
 
 	_, err = conn.DeleteFunctionEventInvokeConfig(input)
 
-	if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 

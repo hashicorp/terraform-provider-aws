@@ -182,7 +182,7 @@ func sweepClusterSnapshots(region string) error {
 			_, err := conn.DeleteDBClusterSnapshot(&rds.DeleteDBClusterSnapshotInput{
 				DBClusterSnapshotIdentifier: aws.String(id),
 			})
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
 				continue
 			}
 			if err != nil {
@@ -424,7 +424,7 @@ func sweepOptionGroups(region string) error {
 		ret := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.DeleteOptionGroup(deleteOpts)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidOptionGroupStateFault, "") {
+				if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidOptionGroupStateFault) {
 					log.Printf("[DEBUG] AWS believes the RDS Option Group is still in use, retrying")
 					return resource.RetryableError(err)
 				}
@@ -565,7 +565,7 @@ func sweepSnapshots(region string) error {
 			log.Printf("[INFO] Deleting RDS DB Snapshot: %s", id)
 			_, err := conn.DeleteDBSnapshot(input)
 
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
 				continue
 			}
 

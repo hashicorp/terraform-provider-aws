@@ -76,7 +76,7 @@ func resourceBucketPublicAccessBlockCreate(d *schema.ResourceData, meta interfac
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.PutPublicAccessBlock(input)
 
-		if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
+		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 			return resource.RetryableError(err)
 		}
 

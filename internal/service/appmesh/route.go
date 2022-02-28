@@ -865,7 +865,7 @@ func resourceRouteDelete(d *schema.ResourceData, meta interface{}) error {
 		RouteName:         aws.String(d.Get("name").(string)),
 		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 	})
-	if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {

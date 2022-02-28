@@ -248,7 +248,7 @@ func resourceJobRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading Glue Job: %s", input)
 	output, err := conn.GetJob(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue Job (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -428,7 +428,7 @@ func DeleteJob(conn *glue.Glue, jobName string) error {
 
 	_, err := conn.DeleteJob(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 		return err

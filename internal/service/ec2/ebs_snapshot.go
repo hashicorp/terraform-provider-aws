@@ -297,7 +297,7 @@ func resourceEBSSnapshotWaitForAvailable(d *schema.ResourceData, conn *ec2.EC2) 
 		if err == nil {
 			return nil
 		}
-		if tfawserr.ErrMessageContains(err, "ResourceNotReady", "") {
+		if tfawserr.ErrCodeEquals(err, "ResourceNotReady") {
 			return resource.RetryableError(fmt.Errorf("EBS Snapshot - waiting for snapshot to become available"))
 		}
 		return resource.NonRetryableError(err)

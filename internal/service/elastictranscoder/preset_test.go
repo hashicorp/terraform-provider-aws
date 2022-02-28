@@ -296,7 +296,7 @@ func testAccCheckElasticTranscoderPresetDestroy(s *terraform.State) error {
 			}
 		}
 
-		if !tfawserr.ErrMessageContains(err, elastictranscoder.ErrCodeResourceNotFoundException, "") {
+		if !tfawserr.ErrCodeEquals(err, elastictranscoder.ErrCodeResourceNotFoundException) {
 			return fmt.Errorf("unexpected error: %s", err)
 		}
 

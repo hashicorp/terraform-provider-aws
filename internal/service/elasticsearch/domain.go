@@ -975,7 +975,7 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 		DomainName: aws.String(domainName),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, elasticsearch.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, elasticsearch.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return err

@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccBackupFrameworkDataSource_basic(t *testing.T) {
+func testAccBackupFrameworkDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_backup_framework.test"
 	resourceName := "aws_backup_framework.test"
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:  acctest.Providers,
@@ -67,12 +67,12 @@ func TestAccBackupFrameworkDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccBackupFrameworkDataSource_controlScopeTag(t *testing.T) {
+func testAccBackupFrameworkDataSource_controlScopeTag(t *testing.T) {
 	datasourceName := "data.aws_backup_framework.test"
 	resourceName := "aws_backup_framework.test"
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, backup.EndpointsID),
 		Providers:  acctest.Providers,

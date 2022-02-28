@@ -111,7 +111,7 @@ func testAccCheckLedgerDestroyWithProvider(s *terraform.State, provider *schema.
 		}
 
 		// Return nil if the cluster is already destroyed
-		if tfawserr.ErrMessageContains(err, qldb.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, qldb.ErrCodeResourceNotFoundException) {
 			continue
 		}
 

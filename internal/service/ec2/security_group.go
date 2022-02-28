@@ -475,7 +475,7 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteSecurityGroup(input)
-		if tfawserr.ErrMessageContains(err, "InvalidGroup.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidGroup.NotFound") {
 			return nil
 		}
 	}

@@ -116,7 +116,7 @@ func testAccCheckWebsiteCertificateAuthorityAssociationDestroy(s *terraform.Stat
 		})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, worklink.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, worklink.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 
