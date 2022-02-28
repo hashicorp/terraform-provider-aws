@@ -499,22 +499,16 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Deleting EKS Cluster: %s", d.Id())
 
+	input := &eks.DeleteClusterInput{
+		Name: aws.String(d.Id()),
+	}
+
 	// If a cluster is scaling up due to load a delete request will fail
 	// This is a temporary workaround until EKS supports multiple parallel mutating operations
-	return tfresource.RetryConfigContext(context.TODO(), 0*time.Second, 1*time.Minute, 0*time.Second, 30*time.Second, clusterDeleteRetryTimeout, func() *resource.RetryError {
-		_, err := conn.DeleteCluster(&eks.DeleteClusterInput{
-			Name: aws.String(d.Id()),
-		})
+	err := tfresource.RetryConfigContext(context.Background(), 0*time.Second, 1*time.Minute, 0*time.Second, 30*time.Second, clusterDeleteRetryTimeout, func() *resource.RetryError {
+		var err error
 
-		if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-
-		// Sometimes the EKS API returns the ResourceNotFound error in this form:
-		// ClientException: No cluster found for name: tf-acc-test-0o1f8
-		if tfawserr.ErrMessageContains(err, eks.ErrCodeClientException, "No cluster found for name:") {
-			return nil
-		}
+		_, err = conn.DeleteCluster(input)
 
 		if tfawserr.ErrMessageContains(err, eks.ErrCodeResourceInUseException, "in progress") {
 			log.Printf("[DEBUG] eks cluster update in progress: %v", err)
@@ -522,17 +516,35 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("error deleting EKS Cluster (%s): %w", d.Id(), err))
-		}
-
-		_, err = waitClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("error waiting for EKS Cluster (%s) to delete: %w", d.Id(), err))
+			return resource.NonRetryableError(err)
 		}
 
 		return nil
 	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.DeleteCluster(input)
+	}
+
+	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	// Sometimes the EKS API returns the ResourceNotFound error in this form:
+	// ClientException: No cluster found for name: tf-acc-test-0o1f8
+	if tfawserr.ErrMessageContains(err, eks.ErrCodeClientException, "No cluster found for name:") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting EKS Cluster (%s): %w", d.Id(), err)
+	}
+
+	if _, err = waitClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for EKS Cluster (%s) to delete: %w", d.Id(), err)
+	}
+
+	return nil
 }
 
 func expandEksEncryptionConfig(tfList []interface{}) []*eks.EncryptionConfig {
