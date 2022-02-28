@@ -1,4 +1,4 @@
-## 4.3.0 (Unreleased)
+## 4.3.0 (February 28, 2022)
 
 NOTES:
 
