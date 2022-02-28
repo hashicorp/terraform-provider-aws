@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -201,7 +201,7 @@ func resourceTrafficMirrorSessionRead(d *schema.ResourceData, meta interface{}) 
 
 	out, err := conn.DescribeTrafficMirrorSessions(input)
 
-	if tfawserr.ErrMessageContains(err, "InvalidTrafficMirrorSessionId.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidTrafficMirrorSessionId.NotFound") {
 		log.Printf("[WARN] EC2 Traffic Mirror Session (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

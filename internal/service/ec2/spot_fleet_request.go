@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -1225,7 +1225,7 @@ func resourceSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		// If the spot request was not found, return nil so that we can show
 		// that it is gone.
-		if tfawserr.ErrMessageContains(err, "InvalidSpotFleetRequestId.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidSpotFleetRequestId.NotFound") {
 			d.SetId("")
 			return nil
 		}

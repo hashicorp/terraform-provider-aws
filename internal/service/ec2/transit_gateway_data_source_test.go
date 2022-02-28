@@ -18,6 +18,10 @@ func TestAccEC2TransitGatewayDataSource_serial(t *testing.T) {
 			"Filter": testAccTransitGatewayDataSource_Filter,
 			"ID":     testAccTransitGatewayDataSource_ID,
 		},
+		"MulticastDomain": {
+			"Filter": testAccTransitGatewayMulticastDomainDataSource_Filter,
+			"ID":     testAccTransitGatewayMulticastDomainDataSource_ID,
+		},
 		"PeeringAttachment": {
 			"FilterSameAccount":      testAccTransitGatewayPeeringAttachmentDataSource_Filter_sameAccount,
 			"FilterDifferentAccount": testAccTransitGatewayPeeringAttachmentDataSource_Filter_differentAccount,
@@ -31,11 +35,16 @@ func TestAccEC2TransitGatewayDataSource_serial(t *testing.T) {
 		},
 		"RouteTables": {
 			"basic":  testAccTransitGatewayRouteTablesDataSource_basic,
-			"Filter": testAccTransitGatewayRouteTablesDataSource_Filter,
+			"Filter": testAccTransitGatewayRouteTablesDataSource_filter,
+			"Tags":   testAccTransitGatewayRouteTablesDataSource_tags,
+			"Empty":  testAccTransitGatewayRouteTablesDataSource_empty,
 		},
 		"VpcAttachment": {
 			"Filter": testAccTransitGatewayVPCAttachmentDataSource_Filter,
 			"ID":     testAccTransitGatewayVPCAttachmentDataSource_ID,
+		},
+		"VpcAttachments": {
+			"Filter": testAccTransitGatewayVPCAttachmentsDataSource_Filter,
 		},
 		"VpnAttachment": {
 			"Filter":                             testAccTransitGatewayVPNAttachmentDataSource_filter,
@@ -77,6 +86,7 @@ func testAccTransitGatewayDataSource_Filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "default_route_table_propagation", dataSourceName, "default_route_table_propagation"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_support", dataSourceName, "dns_support"),
+					resource.TestCheckResourceAttrPair(resourceName, "multicast_support", dataSourceName, "multicast_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "owner_id", dataSourceName, "owner_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "propagation_default_route_table_id", dataSourceName, "propagation_default_route_table_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),

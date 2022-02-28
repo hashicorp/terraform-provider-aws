@@ -1324,10 +1324,7 @@ func TestAccBatchComputeEnvironment_tags(t *testing.T) {
 }
 
 func TestAccBatchComputeEnvironment_createUnmanagedWithComputeResources(t *testing.T) {
-	var ce batch.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_batch_compute_environment.test"
-	serviceRoleResourceName := "aws_iam_role.batch_service"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -1336,23 +1333,9 @@ func TestAccBatchComputeEnvironment_createUnmanagedWithComputeResources(t *testi
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComputeEnvironmentUnmanagedWithComputeResourcesConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckComputeEnvironmentExists(resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "ecs_cluster_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role", serviceRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
-					resource.TestCheckResourceAttrSet(resourceName, "status"),
-					resource.TestCheckResourceAttrSet(resourceName, "status_reason"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "UNMANAGED"),
-				),
+				Config:      testAccComputeEnvironmentUnmanagedWithComputeResourcesConfig(rName),
+				ExpectError: regexp.MustCompile("no `compute_resources` can be specified when `type` is \"UNMANAGED\""),
 			},
-			// Can't import in this scenario.
 		},
 	})
 }

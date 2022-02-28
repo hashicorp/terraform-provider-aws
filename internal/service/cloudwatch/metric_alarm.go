@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -297,14 +297,14 @@ func resourceMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
 	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] CloudWatch Metric Alarm (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
+		log.Printf("[WARN] failed creating CloudWatch Metric Alarm (%s) with tags: %s. Trying create without tags.", d.Get("alarm_name").(string), err)
 		params.Tags = nil
 
 		_, err = conn.PutMetricAlarm(&params)
 	}
 
 	if err != nil {
-		return fmt.Errorf("Creating metric alarm failed: %w", err)
+		return fmt.Errorf("failed creating CloudWatch Metric Alarm (%s): %w", d.Get("alarm_name").(string), err)
 	}
 
 	d.SetId(d.Get("alarm_name").(string))
@@ -325,12 +325,12 @@ func resourceMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
 
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
-			log.Printf("[WARN] could not add tags after create for CloudWatch Metric Alarm (%s): %s", d.Id(), err)
+			log.Printf("[WARN] failed adding tags after create for CloudWatch Metric Alarm (%s): %s", d.Id(), err)
 			return resourceMetricAlarmRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("creating CloudWatch Metric Alarm (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("failed adding tags after create for CloudWatch Metric Alarm (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -408,7 +408,7 @@ func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
 	if verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] Unable to list tags for CloudWatch Metric Alarm %s: %s", d.Id(), err)
+		log.Printf("[WARN] failed listing tags for CloudWatch Metric Alarm (%s): %s", d.Id(), err)
 		return nil
 	}
 
@@ -443,12 +443,12 @@ func resourceMetricAlarmUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
 		if verify.CheckISOErrorTagsUnsupported(err) {
-			log.Printf("[WARN] Unable to update tags for CloudWatch Metric Alarm %s: %s", arn, err)
+			log.Printf("[WARN] failed updating tags for CloudWatch Metric Alarm (%s): %s", d.Id(), err)
 			return resourceMetricAlarmRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating CloudWatch Metric Alarm (%s) tags: %w", arn, err)
+			return fmt.Errorf("failed updating tags for CloudWatch Metric Alarm (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -464,7 +464,7 @@ func resourceMetricAlarmDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Deleting CloudWatch Metric Alarm: %s", d.Id())
 
 	if _, err := conn.DeleteAlarms(&params); err != nil {
-		if tfawserr.ErrMessageContains(err, cloudwatch.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting CloudWatch Metric Alarm: %w", err)

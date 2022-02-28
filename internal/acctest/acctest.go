@@ -20,7 +20,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/outposts"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/aws/aws-sdk-go/service/ssoadmin"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -652,6 +653,15 @@ func PreCheckRegion(t *testing.T, region string) {
 	}
 }
 
+// PreCheckRegionNot checks that the test region is not one of the specified regions.
+func PreCheckRegionNot(t *testing.T, regions ...string) {
+	for _, region := range regions {
+		if Region() == region {
+			t.Skipf("skipping tests; %s (%s) not supported", conns.EnvVarDefaultRegion, region)
+		}
+	}
+}
+
 // PreCheckPartition checks that the test partition is the specified partition.
 func PreCheckPartition(partition string, t *testing.T) {
 	if Partition() != partition {
@@ -663,7 +673,7 @@ func PreCheckOrganizationsAccount(t *testing.T) {
 	conn := Provider.Meta().(*conns.AWSClient).OrganizationsConn
 	input := &organizations.DescribeOrganizationInput{}
 	_, err := conn.DescribeOrganization(input)
-	if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
 		return
 	}
 	if err != nil {
@@ -676,7 +686,7 @@ func PreCheckOrganizationsEnabled(t *testing.T) {
 	conn := Provider.Meta().(*conns.AWSClient).OrganizationsConn
 	input := &organizations.DescribeOrganizationInput{}
 	_, err := conn.DescribeOrganization(input)
-	if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
 		t.Skip("this AWS account must be an existing member of an AWS Organization")
 	}
 	if err != nil {
@@ -702,6 +712,34 @@ func PreCheckOrganizationManagementAccount(t *testing.T) {
 	}
 }
 
+func PreCheckSSOAdminInstances(t *testing.T) {
+	conn := Provider.Meta().(*conns.AWSClient).SSOAdminConn
+	input := &ssoadmin.ListInstancesInput{}
+	var instances []*ssoadmin.InstanceMetadata
+
+	err := conn.ListInstancesPages(input, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		instances = append(instances, page.Instances...)
+
+		return !lastPage
+	})
+
+	if PreCheckSkipError(err) {
+		t.Skipf("skipping tests: %s", err)
+	}
+
+	if len(instances) == 0 {
+		t.Skip("skipping tests; no SSO Instances found.")
+	}
+
+	if err != nil {
+		t.Fatalf("error listing SSO Instances: %s", err)
+	}
+}
+
 func PreCheckHasIAMRole(t *testing.T, roleName string) {
 	conn := Provider.Meta().(*conns.AWSClient).IAMConn
 
@@ -710,7 +748,7 @@ func PreCheckHasIAMRole(t *testing.T, roleName string) {
 	}
 	_, err := conn.GetRole(input)
 
-	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		t.Skipf("skipping acceptance test: required IAM role \"%s\" is not present", roleName)
 	}
 	if PreCheckSkipError(err) {
@@ -1049,7 +1087,7 @@ func PreCheckSkipError(err error) bool {
 	// GovCloud has endpoints that respond with (no message provided after the error code):
 	// AccessDeniedException:
 	// Ignore these API endpoints that exist but are not officially enabled
-	if tfawserr.ErrMessageContains(err, "AccessDeniedException", "") {
+	if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
 		return true
 	}
 	// Ignore missing API endpoints
@@ -1057,10 +1095,10 @@ func PreCheckSkipError(err error) bool {
 		return true
 	}
 	// Ignore unsupported API calls
-	if tfawserr.ErrMessageContains(err, "UnknownOperationException", "") {
+	if tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
 		return true
 	}
-	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "") {
+	if tfawserr.ErrCodeEquals(err, "UnsupportedOperation") {
 		return true
 	}
 	if tfawserr.ErrMessageContains(err, "InvalidInputException", "Unknown operation") {
@@ -1842,5 +1880,25 @@ func CheckCallerIdentityAccountID(n string) resource.TestCheckFunc {
 		}
 
 		return nil
+	}
+}
+
+func CheckResourceAttrGreaterThanValue(n, key, value string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if v, ok := rs.Primary.Attributes[key]; !ok || !(v > value) {
+			if !ok {
+				return fmt.Errorf("%s: Attribute %q not found", n, key)
+			}
+
+			return fmt.Errorf("%s: Attribute %q is not greater than %q, got %q", n, key, value, v)
+		}
+
+		return nil
+
 	}
 }

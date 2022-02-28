@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -100,7 +100,7 @@ func resourcePoolProviderPrincipalTagRead(d *schema.ResourceData, meta interface
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cognitoidentity.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] Cognito Identity Provider %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -165,7 +165,7 @@ func resourcePoolProviderPrincipalTagDelete(d *schema.ResourceData, meta interfa
 	_, err = conn.SetPrincipalTagAttributeMap(params)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cognitoidentity.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return err

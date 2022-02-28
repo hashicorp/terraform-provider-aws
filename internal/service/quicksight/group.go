@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -106,7 +106,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	resp, err := conn.DescribeGroup(descOpts)
-	if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] QuickSight Group %s is already gone", d.Id())
 		d.SetId("")
 		return nil
@@ -143,7 +143,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	_, err = conn.UpdateGroup(updateOpts)
-	if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] QuickSight Group %s is already gone", d.Id())
 		d.SetId("")
 		return nil
@@ -170,7 +170,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := conn.DeleteGroup(deleteOpts); err != nil {
-		if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting QuickSight Group %s: %s", d.Id(), err)

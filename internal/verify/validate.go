@@ -203,6 +203,29 @@ func ValidLaunchTemplateName(v interface{}, k string) (ws []string, errors []err
 	return
 }
 
+// validateMulticastIPAddress validates that the specified string is a multicast IP address.
+func validateMulticastIPAddress(s string) error {
+	ip := net.ParseIP(s)
+	if ip == nil {
+		return fmt.Errorf("%q is not a valid IP address", s)
+	}
+
+	if !ip.IsMulticast() {
+		return fmt.Errorf("%q is not a valid multicast address", s)
+	}
+
+	return nil
+}
+
+func ValidMulticastIPAddress(v interface{}, k string) (ws []string, errors []error) {
+	if err := validateMulticastIPAddress(v.(string)); err != nil {
+		errors = append(errors, err)
+		return
+	}
+
+	return
+}
+
 func ValidOnceADayWindowFormat(v interface{}, k string) (ws []string, errors []error) {
 	// valid time format is "hh24:mi"
 	validTimeFormat := "([0-1][0-9]|2[0-3]):([0-5][0-9])"

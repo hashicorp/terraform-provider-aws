@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -103,10 +103,10 @@ func testAccCheckLifecyclePolicyDestroy(s *terraform.State) error {
 
 		_, err := conn.GetLifecyclePolicy(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
 				return nil
 			}
-			if tfawserr.ErrMessageContains(err, ecr.ErrCodeLifecyclePolicyNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, ecr.ErrCodeLifecyclePolicyNotFoundException) {
 				return nil
 			}
 			return err

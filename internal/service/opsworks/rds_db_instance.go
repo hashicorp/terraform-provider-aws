@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -82,7 +82,7 @@ func resourceRDSDBInstanceDeregister(d *schema.ResourceData, meta interface{}) e
 
 	_, err := client.DeregisterRdsDbInstance(req)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "") {
+		if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
 			log.Printf("[INFO] The db instance could not be found. Remove it from state.")
 			d.SetId("")
 			return nil

@@ -2306,6 +2306,33 @@ func TestAccAutoScalingGroup_launchTempPartitionNum(t *testing.T) {
 	})
 }
 
+func TestAccAutoScalingGroup_Destroy_whenProtectedFromScaleIn(t *testing.T) {
+	var group autoscaling.Group
+	rName := fmt.Sprintf("terraform-test-%s", sdkacctest.RandString(10))
+	resourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_DestroyWhenProtectedFromScaleIn_beforeDestroy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					testAccCheckGroupHealthyCapacity(&group, 2),
+					resource.TestCheckResourceAttr(resourceName, "protect_from_scale_in", "true"),
+				),
+			},
+			{
+				Config: testAccGroupConfig_DestroyWhenProtectedFromScaleIn_afterDestroy(),
+				// Reaching this step is good enough, as it indicates the ASG was destroyed successfully.
+			},
+		},
+	})
+}
+
 func testAccGroupNameGeneratedConfig() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
@@ -4772,6 +4799,56 @@ resource "aws_autoscaling_group" "test" {
   min_size             = 1
   desired_capacity     = 1
   launch_configuration = aws_launch_configuration.test.name
+}
+`
+}
+
+func testAccGroupConfig_DestroyWhenProtectedFromScaleIn_beforeDestroy(name string) string {
+	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
+		fmt.Sprintf(`
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_configuration" "test" {
+  image_id      = data.aws_ami.test.id
+  instance_type = "t3.micro"
+}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones    = [data.aws_availability_zones.available.names[0]]
+  name                  = %[1]q
+  max_size              = 2
+  min_size              = 2
+  desired_capacity      = 2
+  protect_from_scale_in = true
+  launch_configuration  = aws_launch_configuration.test.name
+}
+`, name)
+}
+
+func testAccGroupConfig_DestroyWhenProtectedFromScaleIn_afterDestroy() string {
+	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
+		`
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_configuration" "test" {
+  image_id      = data.aws_ami.test.id
+  instance_type = "t3.micro"
 }
 `
 }

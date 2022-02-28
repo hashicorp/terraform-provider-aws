@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -103,13 +103,13 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	getResp, err := conn.DescribeLoadBalancerPolicies(request)
 
-	if tfawserr.ErrMessageContains(err, "LoadBalancerNotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "LoadBalancerNotFound") {
 		log.Printf("[WARN] Load Balancer Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	if tfawserr.ErrMessageContains(err, elb.ErrCodePolicyNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, elb.ErrCodePolicyNotFoundException) {
 		log.Printf("[WARN] Load Balancer Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

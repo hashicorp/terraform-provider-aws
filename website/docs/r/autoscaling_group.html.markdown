@@ -21,6 +21,8 @@ mutually-exclusive. If `aws_autoscaling_attachment` resources are used, either a
 to ignore changes to the `load_balancers` and `target_group_arns` arguments within a
 [`lifecycle` configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html).
 
+> **Hands-on:** Try the [Manage AWS Auto Scaling Groups](https://learn.hashicorp.com/tutorials/terraform/aws-asg?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) tutorial on HashiCorp Learn.
+
 ## Example Usage
 
 ```terraform
@@ -371,7 +373,7 @@ The following arguments are supported:
 * `suspended_processes` - (Optional) A list of processes to suspend for the Auto Scaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`.
 Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your Auto Scaling Group from functioning properly.
 * `tag` (Optional) Configuration block(s) containing resource tags. Conflicts with `tags`. See [Tag](#tag-and-tags) below for more details.
-* `tags` (Optional) Set of maps containing resource tags. Conflicts with `tag`. See [Tags](#tag-and-tags) below for more details.
+* `tags` (Optional, **Deprecated** use `tag` instead) Set of maps containing resource tags. Conflicts with `tag`. See [Tags](#tag-and-tags) below for more details.
 * `placement_group` (Optional) The name of the placement group into which you'll launch your instances, if any.
 * `metrics_granularity` - (Optional) The granularity to associate with the metrics to collect. The only valid value is `1Minute`. Default is `1Minute`.
 * `enabled_metrics` - (Optional) A list of metrics to collect. The allowed values are defined by the [underlying AWS API](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_EnableMetricsCollection.html).

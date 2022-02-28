@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -738,7 +738,7 @@ func resourceCrawlerRead(d *schema.ResourceData, meta interface{}) error {
 
 	crawlerOutput, err := glueConn.GetCrawler(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue Crawler (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -935,7 +935,7 @@ func resourceCrawlerDelete(d *schema.ResourceData, meta interface{}) error {
 		Name: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error deleting Glue crawler: %w", err)
