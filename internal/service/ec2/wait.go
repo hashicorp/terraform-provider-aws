@@ -668,6 +668,23 @@ func WaitSubnetPrivateDNSHostnameTypeOnLaunchUpdated(conn *ec2.EC2, subnetID str
 	return nil, err
 }
 
+func WaitTransitGatewayUpdated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.TransitGateway, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayStateModifying},
+		Target:  []string{ec2.TransitGatewayStateAvailable},
+		Refresh: StatusTransitGatewayState(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGateway); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func WaitTransitGatewayMulticastDomainCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.TransitGatewayMulticastDomain, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.TransitGatewayMulticastDomainStatePending},

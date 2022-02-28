@@ -289,6 +289,10 @@ func resourceTransitGatewayUpdate(d *schema.ResourceData, meta interface{}) erro
 		if _, err := conn.ModifyTransitGateway(input); err != nil {
 			return fmt.Errorf("error updating EC2 Transit Gateway (%s): %w", d.Id(), err)
 		}
+
+		if _, err := WaitTransitGatewayUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for EC2 Transit Gateway (%s) update: %w", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags_all") {
