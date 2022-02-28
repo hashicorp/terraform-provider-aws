@@ -1,7 +1,6 @@
 package workmail
 
 import (
-	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/workmail"
@@ -9,48 +8,50 @@ import (
 )
 
 const (
-	OrganizationDeleteTimeout = 2 * time.Minute
-	OrganizationReadyTimeout  = 1 * time.Minute
+	OrganizationDeletedTimeout = 1 * time.Minute
+	OrganizationActiveTimeout  = 1 * time.Minute
 
-	organizationStateActive  = "Active"
-	organizationStateDeleted = "Deleted"
+	organizationStateCreating = "Creating"
+	organizationStateActive   = "Active"
+	organizationStateDeleted  = "Deleted"
 )
 
-func WaitOrganizationDeleted(ctx context.Context, conn *workmail.WorkMail, name string) (*workmail.GetOrganizationOutput, error) {
+func waitOrganizationActive(conn *workmail.WorkMail, id string) (*workmail.DescribeOrganizationOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
-			StateActive,
-			StateDeleted,
+			organizationStateCreating,
 		},
-		Target:  []string{},
-		Refresh: StatusOrganizationState(ctx, conn, name),
-		Timeout: OrganizationDeleteTimeout,
+		Target: []string{
+			organizationStateActive,
+		},
+		Refresh: statusOrganizationState(conn, id),
+		Timeout: OrganizationActiveTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForState()
 
-	if v, ok := outputRaw.(*workmail.GetOrganizationOutput); ok {
+	if v, ok := outputRaw.(*workmail.DescribeOrganizationOutput); ok {
 		return v, err
 	}
 
 	return nil, err
 }
 
-func WaitOrganizationActive(ctx context.Context, conn *workmail.WorkMail, name string) (*workmail.GetOrganizationOutput, error) {
+func waitOrganizationDeleted(conn *workmail.WorkMail, id string) (*workmail.DescribeOrganizationOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
-			StateDeleted,
+			organizationStateActive,
 		},
 		Target: []string{
-			StateActive,
+			organizationStateDeleted,
 		},
-		Refresh: StatusOrganizationState(ctx, conn, name),
-		Timeout: OrganizationReadyTimeout,
+		Refresh: statusOrganizationState(conn, id),
+		Timeout: OrganizationDeletedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForState()
 
-	if v, ok := outputRaw.(*workmail.GetOrganizationOutput); ok {
+	if v, ok := outputRaw.(*workmail.DescribeOrganizationOutput); ok {
 		return v, err
 	}
 

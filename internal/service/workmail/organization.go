@@ -103,6 +103,8 @@ func resourceOrganizationCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(aws.StringValue(resp.OrganizationId))
 
+	_, err = waitOrganizationActive(conn, d.Id())
+
 	return resourceOrganizationRead(d, meta)
 }
 
