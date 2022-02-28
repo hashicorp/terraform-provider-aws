@@ -22,36 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-type CidrBlocks []interface{}
-
-func diff(newBlocks, oldBlocks CidrBlocks) CidrBlocks {
-	result := make(CidrBlocks, 0)
-
-	for _, newV := range newBlocks {
-		found := false
-		for _, oldV := range oldBlocks {
-			if oldV.(string) == newV.(string) {
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			result = append(result, newV)
-		}
-	}
-
-	return result
-}
-
-func (oldBlocks CidrBlocks) Updated(newBlocks CidrBlocks) CidrBlocks {
-	return diff(newBlocks, oldBlocks)
-}
-
-func (oldBlocks CidrBlocks) Removed(newBlocks CidrBlocks) CidrBlocks {
-	return diff(oldBlocks, newBlocks)
-}
-
 func ResourceTransitGateway() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceTransitGatewayCreate,
@@ -135,8 +105,7 @@ func ResourceTransitGateway() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"transit_gateway_cidr_blocks": {
-				// TODO: Change to TypeSet.
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 2,
 				Elem: &schema.Schema{
@@ -185,8 +154,8 @@ func resourceTransitGatewayCreate(d *schema.ResourceData, meta interface{}) erro
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("transit_gateway_cidr_blocks"); ok {
-		input.Options.TransitGatewayCidrBlocks = flex.ExpandStringList(v.([]interface{}))
+	if v, ok := d.GetOk("transit_gateway_cidr_blocks"); ok && v.(*schema.Set).Len() > 0 {
+		input.Options.TransitGatewayCidrBlocks = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway: %s", input)
@@ -300,15 +269,15 @@ func resourceTransitGatewayUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	if d.HasChange("transit_gateway_cidr_blocks") {
 		transitGatewayModified = true
-		o, n := d.GetChange("transit_gateway_cidr_blocks")
-		oldCidrBlocks := CidrBlocks(o.([]interface{}))
-		newCidrBlocks := CidrBlocks(n.([]interface{}))
-		if removedCidrBlocks := oldCidrBlocks.Removed(newCidrBlocks); len(removedCidrBlocks) > 0 {
-			options.RemoveTransitGatewayCidrBlocks = flex.ExpandStringList(removedCidrBlocks)
+		oRaw, nRaw := d.GetChange("transit_gateway_cidr_blocks")
+		o, n := oRaw.(*schema.Set), nRaw.(*schema.Set)
+
+		if add := n.Difference(o); add.Len() > 0 {
+			options.AddTransitGatewayCidrBlocks = flex.ExpandStringSet(add)
 		}
 
-		if updatedCidrBlocks := oldCidrBlocks.Updated(newCidrBlocks); len(updatedCidrBlocks) > 0 {
-			options.AddTransitGatewayCidrBlocks = flex.ExpandStringList(updatedCidrBlocks)
+		if del := o.Difference(n); del.Len() > 0 {
+			options.RemoveTransitGatewayCidrBlocks = flex.ExpandStringSet(del)
 		}
 	}
 
