@@ -14,6 +14,8 @@ Provides an SES domain MAIL FROM resource.
 
 ## Example Usage
 
+### Domain Identity MAIL FROM
+
 ```terraform
 resource "aws_ses_domain_mail_from" "example" {
   domain           = aws_ses_domain_identity.example.domain
@@ -44,11 +46,25 @@ resource "aws_route53_record" "example_ses_domain_mail_from_txt" {
 }
 ```
 
+### Email Identity MAIL FROM
+
+```terraform
+# Example SES Email Identity
+resource "aws_ses_email_identity" "example" {
+  email = "user@example.com"
+}
+
+resource "aws_ses_domain_mail_from" "example" {
+  domain           = aws_ses_email_identity.example.email
+  mail_from_domain = "mail.example.com"
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
 
-* `domain` - (Required) Verified domain name to generate DKIM tokens for.
+* `domain` - (Required) Verified domain name or email identity to generate DKIM tokens for.
 * `mail_from_domain` - (Required) Subdomain (of above domain) which is to be used as MAIL FROM address (Required for DMARC validation)
 
 The following arguments are optional:
