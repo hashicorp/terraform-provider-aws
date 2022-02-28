@@ -27,6 +27,12 @@ func ResourceTransitGatewayConnect() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
@@ -88,8 +94,8 @@ func resourceTransitGatewayConnectCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(aws.StringValue(output.TransitGatewayConnect.TransitGatewayAttachmentId))
 
-	if err := waitForTransitGatewayAttachmentCreation(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for EC2 Transit Gateway Connect Attachment (%s) availability: %s", d.Id(), err)
+	if _, err := WaitTransitGatewayConnectCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for EC2 Transit Gateway Connect (%s) create: %w", d.Id(), err)
 	}
 
 	transportAttachment, err := DescribeTransitGatewayAttachment(conn, transportAttachmentID)
@@ -246,23 +252,21 @@ func resourceTransitGatewayConnectUpdate(d *schema.ResourceData, meta interface{
 func resourceTransitGatewayConnectDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	input := &ec2.DeleteTransitGatewayConnectInput{
+	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Connect: %s", d.Id())
+	_, err := conn.DeleteTransitGatewayConnect(&ec2.DeleteTransitGatewayConnectInput{
 		TransitGatewayAttachmentId: aws.String(d.Id()),
-	}
+	})
 
-	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Connect Attachment (%s): %s", d.Id(), input)
-	_, err := conn.DeleteTransitGatewayConnect(input)
-
-	if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidTransitGatewayAttachmentIDNotFound) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Transit Gateway Connect Attachment: %s", err)
+		return fmt.Errorf("error deleting EC2 Transit Gateway Connect (%s): %w", d.Id(), err)
 	}
 
-	if err := WaitForTransitGatewayAttachmentDeletion(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for EC2 Transit Gateway Connect Attachment (%s) deletion: %s", d.Id(), err)
+	if _, err := WaitTransitGatewayConnectDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for EC2 Transit Gateway Connect (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil

@@ -43,6 +43,14 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - EC2 Transit Gateway Attachment identifier
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
+## Timeouts
+
+`aws_ec2_transit_gateway_connect` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for EC2 Transit Gateway Connect creation
+- `update` - (Default `10 minutes`) Used for EC2 Transit Gateway Connect update
+- `delete` - (Default `10 minutes`) Used for EC2 Transit Gateway Connect deletion
+
 ## Import
 
 `aws_ec2_transit_gateway_connect` can be imported by using the EC2 Transit Gateway Connect identifier, e.g.,
