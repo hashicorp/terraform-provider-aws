@@ -341,7 +341,7 @@ EOT
 }
 
 resource "aws_iam_role" "opsworks_instance" {
-  name = "%[1]s_instance"
+  name = "%[1]s-instance"
 
   assume_role_policy = <<EOT
 {
@@ -428,7 +428,7 @@ EOT
 }
 
 resource "aws_iam_role" "opsworks_instance" {
-  name = "%[1]s_instance"
+  name = "%[1]s-instance"
 
   assume_role_policy = <<EOT
 {
@@ -616,7 +616,7 @@ EOT
 }
 
 resource "aws_iam_role" "opsworks_instance" {
-  name = "%[1]s_instance"
+  name = "%[1]s-instance"
 
   assume_role_policy = <<EOT
 {
@@ -719,7 +719,7 @@ EOT
 }
 
 resource "aws_iam_role" "opsworks_instance" {
-  name = "%[1]s_instance"
+  name = "%[1]s-instance"
 
   assume_role_policy = <<EOT
 {
@@ -822,7 +822,7 @@ EOT
 }
 
 resource "aws_iam_role" "opsworks_instance" {
-  name = "%[1]s_instance"
+  name = "%[1]s-instance"
 
   assume_role_policy = <<EOT
 {
@@ -896,7 +896,7 @@ EOT
 }
 
 resource "aws_iam_role" "opsworks_service_new" {
-  name = "%[1]s_new"
+  name = "%[1]s-new"
 
   assume_role_policy = <<EOT
 {
@@ -916,7 +916,7 @@ EOT
 }
 
 resource "aws_iam_role_policy" "opsworks_service_new" {
-  name = "%[1]s_new"
+  name = "%[1]s-new"
   role = aws_iam_role.opsworks_service_new.id
 
   policy = <<EOT
@@ -966,7 +966,7 @@ EOT
 }
 
 resource "aws_iam_role" "opsworks_instance" {
-  name = "%[1]s_instance"
+  name = "%[1]s-instance"
 
   assume_role_policy = <<EOT
 {
@@ -1089,7 +1089,7 @@ EOT
 }
 
 resource "aws_iam_role" "opsworks_instance" {
-  name = "%[1]s_instance"
+  name = "%[1]s-instance"
 
   assume_role_policy = <<EOT
 {
@@ -1215,7 +1215,7 @@ EOT
 }
 
 resource "aws_iam_role" "opsworks_instance" {
-  name = "%[1]s_instance"
+  name = "%[1]s-instance"
 
   assume_role_policy = <<EOT
 {
@@ -1348,7 +1348,7 @@ EOT
 }
 
 resource "aws_iam_role" "opsworks_instance" {
-  name = "%[1]s_instance"
+  name = "%[1]s-instance"
 
   assume_role_policy = <<EOT
 {

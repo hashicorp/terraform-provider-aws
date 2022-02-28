@@ -298,7 +298,7 @@ func sweepLayers(region string) error {
 
 			if layer.Attributes != nil {
 				if v, ok := layer.Attributes[opsworks.LayerAttributesKeysEcsClusterArn].(string); v != "" {
-					r = ResourceEcsClusterLayer()
+					r = ResourceECSClusterLayer()
 					d = r.Data(nil)
 					d.SetId(aws.StringValue(layer.LayerId))
 					d.Set("ecs_cluster_arn", v)

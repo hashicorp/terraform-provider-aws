@@ -15,6 +15,10 @@ import (
 )
 
 func TestAccOpsWorksRDSDBInstance_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resourceName := "aws_opsworks_rds_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var opsdb opsworks.RdsDbInstance
@@ -143,9 +147,9 @@ func testAccRDSDBInstance(rName, userName, password string) string {
 		testAccDBInstanceBasicConfig(),
 		fmt.Sprintf(`
 resource "aws_opsworks_rds_db_instance" "test" {
-  stack_id = aws_opsworks_stack.tf-acc.id
+  stack_id = aws_opsworks_stack.test.id
 
-  rds_db_instance_arn = aws_db_instance.bar.arn
+  rds_db_instance_arn = aws_db_instance.test.arn
   db_user             = %[1]q
   db_password         = %[2]q
 }
@@ -155,26 +159,28 @@ resource "aws_opsworks_rds_db_instance" "test" {
 func testAccRDSDBInstanceForceNew(rName string) string {
 	return acctest.ConfigCompose(
 		testAccStackVPCCreateConfig(rName),
+		testAccDBInstanceConfig_orderableClassMySQL(),
 		`
 resource "aws_opsworks_rds_db_instance" "test" {
-  stack_id = aws_opsworks_stack.tf-acc.id
+  stack_id = aws_opsworks_stack.test.id
 
-  rds_db_instance_arn = aws_db_instance.foo.arn
+  rds_db_instance_arn = aws_db_instance.test2.arn
   db_user             = "foo"
   db_password         = "foofoofoofoo"
 }
 
-resource "aws_db_instance" "foo" {
-  allocated_storage    = 10
-  engine               = "mysql"
-  engine_version       = "8.0.25"
-  instance_class       = "db.t2.micro"
-  name                 = "baz"
-  password             = "foofoofoofoo"
-  username             = "foo"
-  parameter_group_name = "default.mysql8.0"
-
-  skip_final_snapshot = true
+resource "aws_db_instance" "test2" {
+  allocated_storage       = 10
+  backup_retention_period = 0
+  db_name                 = "baz"
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  maintenance_window      = "Fri:09:00-Fri:09:30"
+  parameter_group_name    = "default.mysql8.0"
+  password                = "foofoofoofoo"
+  skip_final_snapshot     = true
+  username                = "foo"
 }
 `)
 }
@@ -183,22 +189,18 @@ func testAccDBInstanceBasicConfig() string {
 	return acctest.ConfigCompose(
 		testAccDBInstanceConfig_orderableClassMySQL(),
 		`
-resource "aws_db_instance" "bar" {
+resource "aws_db_instance" "test" {
   allocated_storage       = 10
   backup_retention_period = 0
+  db_name                 = "baz"
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  name                    = "baz"
+  maintenance_window      = "Fri:09:00-Fri:09:30"
   parameter_group_name    = "default.mysql8.0"
   password                = "barbarbarbar"
   skip_final_snapshot     = true
   username                = "foo"
-
-  # Maintenance Window is stored in lower case in the API, though not strictly
-  # documented. Terraform will downcase this to match (as opposed to throw a
-  # validation error).
-  maintenance_window = "Fri:09:00-Fri:09:30"
 }
 `)
 }

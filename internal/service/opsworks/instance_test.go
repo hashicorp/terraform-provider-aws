@@ -17,7 +17,7 @@ import (
 func TestAccOpsWorksInstance_basic(t *testing.T) {
 	stackName := fmt.Sprintf("tf-%d", sdkacctest.RandInt())
 	var opsinst opsworks.Instance
-	resourceName := "aws_opsworks_instance.tf-acc"
+	resourceName := "aws_opsworks_instance.test"
 	dataSourceName := "data.aws_availability_zones.available"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -67,7 +67,7 @@ func TestAccOpsWorksInstance_basic(t *testing.T) {
 
 func TestAccOpsWorksInstance_updateHostNameForceNew(t *testing.T) {
 	stackName := fmt.Sprintf("tf-%d", sdkacctest.RandInt())
-	resourceName := "aws_opsworks_instance.tf-acc"
+	resourceName := "aws_opsworks_instance.test"
 	var before, after opsworks.Instance
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -221,27 +221,27 @@ resource "aws_security_group" "tf-ops-acc-php" {
   }
 }
 
-resource "aws_opsworks_static_web_layer" "tf-acc" {
-  stack_id = aws_opsworks_stack.tf-acc.id
+resource "aws_opsworks_static_web_layer" "test" {
+  stack_id = aws_opsworks_stack.test.id
 
   custom_security_group_ids = [
     aws_security_group.tf-ops-acc-web.id,
   ]
 }
 
-resource "aws_opsworks_php_app_layer" "tf-acc" {
-  stack_id = aws_opsworks_stack.tf-acc.id
+resource "aws_opsworks_php_app_layer" "test" {
+  stack_id = aws_opsworks_stack.test.id
 
   custom_security_group_ids = [
     aws_security_group.tf-ops-acc-php.id,
   ]
 }
 
-resource "aws_opsworks_instance" "tf-acc" {
-  stack_id = aws_opsworks_stack.tf-acc.id
+resource "aws_opsworks_instance" "test" {
+  stack_id = aws_opsworks_stack.test.id
 
   layer_ids = [
-    aws_opsworks_static_web_layer.tf-acc.id,
+    aws_opsworks_static_web_layer.test.id,
   ]
 
   instance_type = "t2.micro"
@@ -277,27 +277,27 @@ resource "aws_security_group" "tf-ops-acc-php" {
   }
 }
 
-resource "aws_opsworks_static_web_layer" "tf-acc" {
-  stack_id = aws_opsworks_stack.tf-acc.id
+resource "aws_opsworks_static_web_layer" "test" {
+  stack_id = aws_opsworks_stack.test.id
 
   custom_security_group_ids = [
     aws_security_group.tf-ops-acc-web.id,
   ]
 }
 
-resource "aws_opsworks_php_app_layer" "tf-acc" {
-  stack_id = aws_opsworks_stack.tf-acc.id
+resource "aws_opsworks_php_app_layer" "test" {
+  stack_id = aws_opsworks_stack.test.id
 
   custom_security_group_ids = [
     aws_security_group.tf-ops-acc-php.id,
   ]
 }
 
-resource "aws_opsworks_instance" "tf-acc" {
-  stack_id = aws_opsworks_stack.tf-acc.id
+resource "aws_opsworks_instance" "test" {
+  stack_id = aws_opsworks_stack.test.id
 
   layer_ids = [
-    aws_opsworks_static_web_layer.tf-acc.id,
+    aws_opsworks_static_web_layer.test.id,
   ]
 
   instance_type = "t2.micro"
@@ -333,28 +333,28 @@ resource "aws_security_group" "tf-ops-acc-php" {
   }
 }
 
-resource "aws_opsworks_static_web_layer" "tf-acc" {
-  stack_id = aws_opsworks_stack.tf-acc.id
+resource "aws_opsworks_static_web_layer" "test" {
+  stack_id = aws_opsworks_stack.test.id
 
   custom_security_group_ids = [
     aws_security_group.tf-ops-acc-web.id,
   ]
 }
 
-resource "aws_opsworks_php_app_layer" "tf-acc" {
-  stack_id = aws_opsworks_stack.tf-acc.id
+resource "aws_opsworks_php_app_layer" "test" {
+  stack_id = aws_opsworks_stack.test.id
 
   custom_security_group_ids = [
     aws_security_group.tf-ops-acc-php.id,
   ]
 }
 
-resource "aws_opsworks_instance" "tf-acc" {
-  stack_id = aws_opsworks_stack.tf-acc.id
+resource "aws_opsworks_instance" "test" {
+  stack_id = aws_opsworks_stack.test.id
 
   layer_ids = [
-    aws_opsworks_static_web_layer.tf-acc.id,
-    aws_opsworks_php_app_layer.tf-acc.id,
+    aws_opsworks_static_web_layer.test.id,
+    aws_opsworks_php_app_layer.test.id,
   ]
 
   instance_type = "t2.small"
