@@ -8,7 +8,7 @@ jobs:
   RemoveNeedsTriageFromMembers:
     if: github.event.action == 'opened'
     env:
-      ALLOW_LISTED: ${{ contains(fromJSON('["anGie44", "bflad", "breathingdust", "ewbankkit", "gdavison", "johnsonaj", "justinretzolk", "maryelizbeth", "YakDriver", "zhelding"]'), github.actor) }}
+      ALLOW_LISTED: ${{ contains(fromJSON('["anGie44", "breathingdust", "ewbankkit", "gdavison", "johnsonaj", "justinretzolk", "maryelizbeth", "YakDriver", "zhelding"]'), github.actor) }}
       HAS_NEEDS_TRIAGE: ${{ contains(github.event.*.labels.*.name, 'needs-triage') }}
     runs-on: ubuntu-latest
     steps:
