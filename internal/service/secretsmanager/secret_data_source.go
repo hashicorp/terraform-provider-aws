@@ -100,7 +100,7 @@ func dataSourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading Secrets Manager Secret: %s", input)
 	output, err := conn.DescribeSecret(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 			return fmt.Errorf("Secrets Manager Secret %q not found", secretID)
 		}
 		return fmt.Errorf("error reading Secrets Manager Secret: %w", err)

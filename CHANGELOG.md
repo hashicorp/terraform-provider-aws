@@ -20,6 +20,9 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_ec2_transit_gateway: Add `multicast_support` attribute ([#22756](https://github.com/hashicorp/terraform-provider-aws/issues/22756))
+* provider: Improves error message when `Profile` and static credential environment variables are set. ([#23388](https://github.com/hashicorp/terraform-provider-aws/issues/23388))
+* provider: Makes `region` an optional parameter to allow sourcing from shared config files and IMDS ([#23384](https://github.com/hashicorp/terraform-provider-aws/issues/23384))
+* provider: Retrieves region from IMDS when credentials retrieved from IMDS. ([#23388](https://github.com/hashicorp/terraform-provider-aws/issues/23388))
 * resource/aws_ec2_fleet: Add `context` argument ([#23304](https://github.com/hashicorp/terraform-provider-aws/issues/23304))
 * resource/aws_ec2_transit_gateway: Add `multicast_support` argument ([#22756](https://github.com/hashicorp/terraform-provider-aws/issues/22756))
 * resource/aws_imagebuilder_image_pipeline: Add `schedule.timezone` argument ([#23322](https://github.com/hashicorp/terraform-provider-aws/issues/23322))
@@ -29,6 +32,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* provider: Validates names of named profiles before use. ([#23388](https://github.com/hashicorp/terraform-provider-aws/issues/23388))
 * resource/aws_dms_replication_task: Allow `cdc_start_position` to be computed ([#23328](https://github.com/hashicorp/terraform-provider-aws/issues/23328))
 * resource/aws_ecs_cluster: Fix bug preventing describing clusters in ISO regions ([#23341](https://github.com/hashicorp/terraform-provider-aws/issues/23341))
 

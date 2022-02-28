@@ -90,7 +90,7 @@ func testAccCheckAWSShieldProtectionHealthCheckAssociationDestroy(s *terraform.S
 
 		resp, err := conn.DescribeProtection(input)
 
-		if tfawserr.ErrMessageContains(err, shield.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, shield.ErrCodeResourceNotFoundException) {
 			continue
 		}
 

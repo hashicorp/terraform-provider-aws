@@ -123,7 +123,7 @@ func resourceTrafficMirrorTargetRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	out, err := conn.DescribeTrafficMirrorTargets(input)
-	if tfawserr.ErrMessageContains(err, "InvalidTrafficMirrorTargetId.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidTrafficMirrorTargetId.NotFound") {
 		log.Printf("[WARN] EC2 Traffic Mirror Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

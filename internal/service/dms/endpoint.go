@@ -721,7 +721,7 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.CreateEndpoint(request)
-		if tfawserr.ErrMessageContains(err, "AccessDeniedFault", "") {
+		if tfawserr.ErrCodeEquals(err, "AccessDeniedFault") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {

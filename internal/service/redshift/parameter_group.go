@@ -231,7 +231,7 @@ func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) erro
 	_, err := conn.DeleteClusterParameterGroup(&redshift.DeleteClusterParameterGroupInput{
 		ParameterGroupName: aws.String(d.Id()),
 	})
-	if err != nil && tfawserr.ErrMessageContains(err, "RedshiftParameterGroupNotFoundFault", "") {
+	if err != nil && tfawserr.ErrCodeEquals(err, "RedshiftParameterGroupNotFoundFault") {
 		return nil
 	}
 	return err

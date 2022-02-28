@@ -393,7 +393,7 @@ func vpcEndpointServiceStateRefresh(conn *ec2.EC2, svcId string) resource.StateR
 			ServiceIds: aws.StringSlice([]string{svcId}),
 		})
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidVpcEndpointServiceId.NotFound", "") {
+			if tfawserr.ErrCodeEquals(err, "InvalidVpcEndpointServiceId.NotFound") {
 				return false, ec2.ServiceStateDeleted, nil
 			}
 

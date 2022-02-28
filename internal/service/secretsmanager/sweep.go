@@ -50,7 +50,7 @@ func sweepSecretPolicies(region string) error {
 
 			_, err := conn.DeleteResourcePolicy(input)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+				if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 					continue
 				}
 				log.Printf("[ERROR] Failed to delete Secrets Manager Secret Policy (%s): %s", name, err)
@@ -93,7 +93,7 @@ func sweepSecrets(region string) error {
 
 			_, err := conn.DeleteSecret(input)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+				if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 					continue
 				}
 				log.Printf("[ERROR] Failed to delete Secrets Manager Secret (%s): %s", name, err)

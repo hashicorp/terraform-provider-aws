@@ -106,7 +106,7 @@ func resourceDomainPermissionsPolicyRead(d *schema.ResourceData, meta interface{
 		DomainOwner: aws.String(domainOwner),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] CodeArtifact Domain Permissions Policy %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -152,7 +152,7 @@ func resourceDomainPermissionsPolicyDelete(d *schema.ResourceData, meta interfac
 
 	_, err = conn.DeleteDomainPermissionsPolicy(input)
 
-	if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 

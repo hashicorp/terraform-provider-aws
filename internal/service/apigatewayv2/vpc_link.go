@@ -163,7 +163,7 @@ func resourceVPCLinkDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.DeleteVpcLink(&apigatewayv2.DeleteVpcLinkInput{
 		VpcLinkId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {
@@ -171,7 +171,7 @@ func resourceVPCLinkDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	_, err = WaitVPCLinkDeleted(conn, d.Id())
-	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {

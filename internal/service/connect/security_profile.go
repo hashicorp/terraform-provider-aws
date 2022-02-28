@@ -126,7 +126,7 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 		SecurityProfileId: aws.String(securityProfileID),
 	})
 
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, connect.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Connect Security Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

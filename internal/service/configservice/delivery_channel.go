@@ -111,7 +111,7 @@ func resourceDeliveryChannelPut(d *schema.ResourceData, meta interface{}) error 
 			return nil
 		}
 
-		if tfawserr.ErrMessageContains(err, "InsufficientDeliveryPolicyException", "") {
+		if tfawserr.ErrCodeEquals(err, "InsufficientDeliveryPolicyException") {
 			return resource.RetryableError(err)
 		}
 

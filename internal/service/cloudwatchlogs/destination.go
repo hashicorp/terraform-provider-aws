@@ -78,7 +78,7 @@ func resourceDestinationPut(d *schema.ResourceData, meta interface{}) error {
 	err = resource.Retry(3*time.Minute, func() *resource.RetryError {
 		_, err = conn.PutDestination(params)
 
-		if tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeInvalidParameterException, "") {
+		if tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeInvalidParameterException) {
 			return resource.RetryableError(err)
 		}
 		if err != nil {

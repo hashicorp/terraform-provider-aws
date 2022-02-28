@@ -360,7 +360,7 @@ func testAccCheckTrafficMirrorTargetDestroy(s *terraform.State) error {
 			},
 		})
 
-		if tfawserr.ErrMessageContains(err, "InvalidTrafficMirrorTargetId.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidTrafficMirrorTargetId.NotFound") {
 			continue
 		}
 

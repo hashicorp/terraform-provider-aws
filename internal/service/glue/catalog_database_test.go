@@ -193,7 +193,7 @@ func testAccCheckGlueDatabaseDestroy(s *terraform.State) error {
 		}
 		if _, err := conn.GetDatabase(input); err != nil {
 			//Verify the error is what we want
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				continue
 			}
 

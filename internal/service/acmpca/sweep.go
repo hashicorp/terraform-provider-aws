@@ -54,7 +54,7 @@ func sweepCertificateAuthorities(region string) error {
 				CertificateAuthorityArn: aws.String(arn),
 				Status:                  aws.String(acmpca.CertificateAuthorityStatusDisabled),
 			})
-			if tfawserr.ErrMessageContains(err, acmpca.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
 				continue
 			}
 			if err != nil {
@@ -70,7 +70,7 @@ func sweepCertificateAuthorities(region string) error {
 			CertificateAuthorityArn:     aws.String(arn),
 			PermanentDeletionTimeInDays: aws.Int64(7),
 		})
-		if tfawserr.ErrMessageContains(err, acmpca.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
 			continue
 		}
 		if err != nil {

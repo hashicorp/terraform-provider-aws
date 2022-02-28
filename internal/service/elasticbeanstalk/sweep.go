@@ -59,7 +59,7 @@ func sweepApplications(region string) error {
 				ApplicationName: bsa.ApplicationName,
 			})
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidConfiguration.NotFound", "") || tfawserr.ErrMessageContains(err, "ValidationError", "") {
+			if tfawserr.ErrCodeEquals(err, "InvalidConfiguration.NotFound") || tfawserr.ErrCodeEquals(err, "ValidationError") {
 				log.Printf("[DEBUG] beanstalk application %q not found", applicationName)
 				continue
 			}

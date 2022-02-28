@@ -3359,7 +3359,7 @@ func testAccCheckInstanceSnapshot(s *terraform.State) error {
 			})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
 				continue
 			}
 			return err
@@ -3387,7 +3387,7 @@ func testAccCheckInstanceNoSnapshot(s *terraform.State) error {
 				DBInstanceIdentifier: aws.String(rs.Primary.ID),
 			})
 
-		if err != nil && !tfawserr.ErrMessageContains(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
+		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
 			return err
 		}
 
@@ -3400,7 +3400,7 @@ func testAccCheckInstanceNoSnapshot(s *terraform.State) error {
 				DBSnapshotIdentifier: aws.String(rs.Primary.Attributes["final_snapshot_identifier"]),
 			})
 
-		if err != nil && !tfawserr.ErrMessageContains(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
+		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
 			return err
 		}
 	}

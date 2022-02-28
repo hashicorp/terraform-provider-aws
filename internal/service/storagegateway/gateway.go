@@ -795,7 +795,7 @@ func IsErrGatewayNotFound(err error) bool {
 	if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway was not found.") {
 		return true
 	}
-	if tfawserr.ErrMessageContains(err, storagegateway.ErrorCodeGatewayNotFound, "") {
+	if tfawserr.ErrCodeEquals(err, storagegateway.ErrorCodeGatewayNotFound) {
 		return true
 	}
 	return false

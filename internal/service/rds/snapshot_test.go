@@ -125,7 +125,7 @@ func testAccCheckDbSnapshotDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeDBSnapshots(request)
 
-		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
 			continue
 		}
 

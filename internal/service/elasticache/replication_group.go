@@ -921,12 +921,12 @@ func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elastica
 	// 10 minutes should give any creating/deleting cache clusters or snapshots time to complete
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteReplicationGroup(input)
-		if tfawserr.ErrMessageContains(err, elasticache.ErrCodeReplicationGroupNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeReplicationGroupNotFoundFault) {
 			return nil
 		}
 		// Cache Cluster is creating/deleting or Replication Group is snapshotting
 		// InvalidReplicationGroupState: Cache cluster tf-acc-test-uqhe-003 is not in a valid state to be deleted
-		if tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidReplicationGroupStateFault, "") {
+		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeInvalidReplicationGroupStateFault) {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -938,7 +938,7 @@ func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elastica
 		_, err = conn.DeleteReplicationGroup(input)
 	}
 
-	if tfawserr.ErrMessageContains(err, elasticache.ErrCodeReplicationGroupNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeReplicationGroupNotFoundFault) {
 		return nil
 	}
 	if err != nil {

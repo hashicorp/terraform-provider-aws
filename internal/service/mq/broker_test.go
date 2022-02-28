@@ -1262,7 +1262,7 @@ func testAccCheckBrokerDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeBroker(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, mq.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, mq.ErrCodeNotFoundException) {
 				return nil
 			}
 			return err

@@ -112,7 +112,7 @@ func sweepLaunchConfigurations(region string) error {
 				LaunchConfigurationName: aws.String(name),
 			})
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidConfiguration.NotFound", "") || tfawserr.ErrMessageContains(err, "ValidationError", "") {
+			if tfawserr.ErrCodeEquals(err, "InvalidConfiguration.NotFound") || tfawserr.ErrCodeEquals(err, "ValidationError") {
 				return nil
 			}
 			return err

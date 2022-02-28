@@ -329,7 +329,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	environment, err := findEnvironmentByName(conn, d.Id())
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, mwaa.ErrCodeResourceNotFoundException, "") && !d.IsNewResource() {
+		if tfawserr.ErrCodeEquals(err, mwaa.ErrCodeResourceNotFoundException) && !d.IsNewResource() {
 			log.Printf("[WARN] MWAA Environment %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -495,7 +495,7 @@ func resourceEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
 		Name: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, mwaa.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, mwaa.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 

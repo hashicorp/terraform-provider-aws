@@ -673,7 +673,7 @@ func PreCheckOrganizationsAccount(t *testing.T) {
 	conn := Provider.Meta().(*conns.AWSClient).OrganizationsConn
 	input := &organizations.DescribeOrganizationInput{}
 	_, err := conn.DescribeOrganization(input)
-	if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
 		return
 	}
 	if err != nil {
@@ -686,7 +686,7 @@ func PreCheckOrganizationsEnabled(t *testing.T) {
 	conn := Provider.Meta().(*conns.AWSClient).OrganizationsConn
 	input := &organizations.DescribeOrganizationInput{}
 	_, err := conn.DescribeOrganization(input)
-	if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
 		t.Skip("this AWS account must be an existing member of an AWS Organization")
 	}
 	if err != nil {
@@ -748,7 +748,7 @@ func PreCheckHasIAMRole(t *testing.T, roleName string) {
 	}
 	_, err := conn.GetRole(input)
 
-	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		t.Skipf("skipping acceptance test: required IAM role \"%s\" is not present", roleName)
 	}
 	if PreCheckSkipError(err) {
@@ -1087,7 +1087,7 @@ func PreCheckSkipError(err error) bool {
 	// GovCloud has endpoints that respond with (no message provided after the error code):
 	// AccessDeniedException:
 	// Ignore these API endpoints that exist but are not officially enabled
-	if tfawserr.ErrMessageContains(err, "AccessDeniedException", "") {
+	if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
 		return true
 	}
 	// Ignore missing API endpoints
@@ -1095,10 +1095,10 @@ func PreCheckSkipError(err error) bool {
 		return true
 	}
 	// Ignore unsupported API calls
-	if tfawserr.ErrMessageContains(err, "UnknownOperationException", "") {
+	if tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
 		return true
 	}
-	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "") {
+	if tfawserr.ErrCodeEquals(err, "UnsupportedOperation") {
 		return true
 	}
 	if tfawserr.ErrMessageContains(err, "InvalidInputException", "Unknown operation") {

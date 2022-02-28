@@ -244,7 +244,7 @@ func testAccCheckRegexPatternSetDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the Regex Pattern Set is already destroyed
-		if tfawserr.ErrMessageContains(err, waf.ErrCodeNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
 			return nil
 		}
 

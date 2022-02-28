@@ -125,7 +125,7 @@ func resourceTransitGatewayRouteTablePropagationDelete(d *schema.ResourceData, m
 	log.Printf("[DEBUG] Disabling EC2 Transit Gateway Route Table (%s) Propagation (%s): %s", transitGatewayRouteTableID, transitGatewayAttachmentID, input)
 	_, err = conn.DisableTransitGatewayRouteTablePropagation(input)
 
-	if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidRouteTableID.NotFound") {
 		return nil
 	}
 

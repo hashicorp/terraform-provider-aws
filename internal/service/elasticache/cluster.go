@@ -658,7 +658,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
 	err := DeleteCacheCluster(conn, d.Id(), finalSnapshotID)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, elasticache.ErrCodeCacheClusterNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheClusterNotFoundFault) {
 			return nil
 		}
 		return fmt.Errorf("error deleting ElastiCache Cache Cluster (%s): %w", d.Id(), err)

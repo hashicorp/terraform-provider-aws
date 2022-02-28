@@ -57,7 +57,7 @@ func testAccCheckLogSubscriptionDestroy(s *terraform.State) error {
 			DirectoryId: aws.String(rs.Primary.ID),
 		})
 
-		if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
+		if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
 			continue
 		}
 

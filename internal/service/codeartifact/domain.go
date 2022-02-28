@@ -109,7 +109,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		DomainOwner: aws.String(domainOwner),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] CodeArtifact Domain %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -175,7 +175,7 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = conn.DeleteDomain(input)
 
-	if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 

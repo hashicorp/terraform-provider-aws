@@ -336,7 +336,7 @@ func testAccCheckDocDBGlobalClusterDestroy(s *terraform.State) error {
 
 		globalCluster, err := tfdocdb.FindGlobalClusterById(context.TODO(), conn, rs.Primary.ID)
 
-		if tfawserr.ErrMessageContains(err, docdb.ErrCodeGlobalClusterNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeGlobalClusterNotFoundFault) {
 			continue
 		}
 

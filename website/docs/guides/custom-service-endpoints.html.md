@@ -58,7 +58,7 @@ provider "aws" {
 }
 ```
 
-<!-- markdownlint-disable MD033 -->
+<!-- markdownlint-disable no-inline-html -->
 <!--
     The division splits this long list into multiple columns without manually
     maintaining a table. The terraform.io Markdown parser previously allowed
@@ -340,7 +340,7 @@ provider "aws" {
   <li><code>xray</code></li>
 </ul>
 </div>
-<!-- markdownlint-enable MD033 -->
+<!-- markdownlint-enable no-inline-html -->
 
 As a convenience, for compatibility with the [Terraform S3 Backend](https://www.terraform.io/language/settings/backends/s3),
 the following service endpoints can be configured using environment variables:

@@ -83,7 +83,7 @@ func resourceGeoMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetGeoMatchSet(params)
 
-	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 		log.Printf("[WARN] WAF WAF Regional Geo Match Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -107,7 +107,7 @@ func resourceGeoMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
 		oldConstraints, newConstraints := o.(*schema.Set).List(), n.(*schema.Set).List()
 
 		err := updateGeoMatchSetResourceWR(d.Id(), oldConstraints, newConstraints, conn, region)
-		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			log.Printf("[WARN] WAF WAF Regional Geo Match Set (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -142,7 +142,7 @@ func resourceGeoMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
 
 		return conn.DeleteGeoMatchSet(req)
 	})
-	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 		return nil
 	}
 	if err != nil {
