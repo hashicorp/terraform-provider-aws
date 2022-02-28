@@ -105,6 +105,10 @@ func resourceOrganizationCreate(d *schema.ResourceData, meta interface{}) error 
 
 	_, err = waitOrganizationActive(conn, d.Id())
 
+	if err != nil {
+		return fmt.Errorf("error waiting for WorkMail Organization (%s) to create: %w", d.Id(), err)
+	}
+
 	return resourceOrganizationRead(d, meta)
 }
 
@@ -160,6 +164,8 @@ func resourceOrganizationDelete(d *schema.ResourceData, meta interface{}) error 
 	if err != nil {
 		return fmt.Errorf("Error deleting WorkMail organization: %s", err)
 	}
+
+	_, err = waitOrganizationActive(conn, d.Id())
 
 	return nil
 }
