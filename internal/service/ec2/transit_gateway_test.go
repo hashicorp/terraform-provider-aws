@@ -285,6 +285,8 @@ func testAccTransitGateway_CidrBlocks(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_cidr_blocks.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "transit_gateway_cidr_blocks.*", "10.120.0.0/24"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "transit_gateway_cidr_blocks.*", "2001:1234:1234::/64"),
 				),
 			},
 			{
@@ -298,6 +300,7 @@ func testAccTransitGateway_CidrBlocks(t *testing.T) {
 					testAccCheckTransitGatewayExists(resourceName, &v2),
 					testAccCheckTransitGatewayNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_cidr_blocks.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "transit_gateway_cidr_blocks.*", "10.120.0.0/24"),
 				),
 			},
 			{
@@ -306,6 +309,8 @@ func testAccTransitGateway_CidrBlocks(t *testing.T) {
 					testAccCheckTransitGatewayExists(resourceName, &v3),
 					testAccCheckTransitGatewayNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_cidr_blocks.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "transit_gateway_cidr_blocks.*", "10.120.0.0/24"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "transit_gateway_cidr_blocks.*", "2001:1234:1234::/64"),
 				),
 			},
 		},
