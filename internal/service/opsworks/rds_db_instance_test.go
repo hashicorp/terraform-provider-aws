@@ -101,10 +101,10 @@ func testAccCheckRDSDBExists(
 func testAccCheckCreateRDSDBAttributes(
 	opsdb *opsworks.RdsDbInstance, user string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if *opsdb.DbUser != user {
+		if aws.StringValue(opsdb.DbUser) != user {
 			return fmt.Errorf("Unnexpected user: %s", *opsdb.DbUser)
 		}
-		if *opsdb.Engine != "mysql" {
+		if aws.StringValue(opsdb.Engine) != "mysql" {
 			return fmt.Errorf("Unnexpected engine: %s", *opsdb.Engine)
 		}
 		return nil
@@ -133,13 +133,6 @@ func testAccCheckRDSDBDestroy(s *terraform.State) error {
 		if !tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
 			return err
 		}
-		/*
-			if awserr, ok := err.(awserr.Error); ok {
-				if awserr.Code() != "ResourceNotFoundException" {
-					return fmt.Errorf("checking RDS DB destroy: %w", err)
-				}
-			}
-		*/
 	}
 	return nil
 }
