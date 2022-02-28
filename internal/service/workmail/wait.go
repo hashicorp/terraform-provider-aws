@@ -11,15 +11,17 @@ const (
 	OrganizationDeletedTimeout = 1 * time.Minute
 	OrganizationActiveTimeout  = 1 * time.Minute
 
-	organizationStateCreating = "Creating"
-	organizationStateActive   = "Active"
-	organizationStateDeleted  = "Deleted"
+	organizationStateCreating  = "Creating"
+	organizationStateRequested = "Requested"
+	organizationStateActive    = "Active"
+	organizationStateDeleted   = "Deleted"
 )
 
 func waitOrganizationActive(conn *workmail.WorkMail, id string) (*workmail.DescribeOrganizationOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			organizationStateCreating,
+			organizationStateRequested,
 		},
 		Target: []string{
 			organizationStateActive,
