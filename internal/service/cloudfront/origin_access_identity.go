@@ -75,7 +75,7 @@ func resourceOriginAccessIdentityRead(d *schema.ResourceData, meta interface{}) 
 
 	resp, err := conn.GetCloudFrontOriginAccessIdentity(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchCloudFrontOriginAccessIdentity, "") {
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchCloudFrontOriginAccessIdentity) {
 			log.Printf("[WARN] CloudFront Origin Access Identity (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

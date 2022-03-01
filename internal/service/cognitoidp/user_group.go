@@ -102,7 +102,7 @@ func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetGroup(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "") {
+		if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
 			log.Printf("[WARN] Cognito User Group %s is already gone", d.Id())
 			d.SetId("")
 			return nil

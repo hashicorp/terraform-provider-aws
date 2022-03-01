@@ -619,7 +619,7 @@ func testAccCheckTransitGatewayDestroy(s *terraform.State) error {
 
 		transitGateway, err := tfec2.DescribeTransitGateway(conn, rs.Primary.ID)
 
-		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayID.NotFound") {
 			continue
 		}
 
@@ -768,7 +768,7 @@ func testAccPreCheckTransitGateway(t *testing.T) {
 
 	_, err := conn.DescribeTransitGateways(input)
 
-	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InvalidAction", "") {
+	if acctest.PreCheckSkipError(err) || tfawserr.ErrCodeEquals(err, "InvalidAction") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 

@@ -485,7 +485,7 @@ func testAccCheckSecretDestroy(s *terraform.State) error {
 			output, err = conn.DescribeSecret(input)
 		}
 
-		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 			continue
 		}
 

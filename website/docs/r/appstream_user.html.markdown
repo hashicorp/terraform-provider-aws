@@ -15,7 +15,7 @@ Provides an AppStream user.
 ```terraform
 resource "aws_appstream_user" "example" {
   authentication_type = "USERPOOL"
-  user_name           = "EMAIL ADDRESS"
+  user_name           = "EMAIL"
   first_name          = "FIRST NAME"
   last_name           = "LAST NAME"
 }

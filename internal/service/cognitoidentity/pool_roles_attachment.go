@@ -149,7 +149,7 @@ func resourcePoolRolesAttachmentRead(d *schema.ResourceData, meta interface{}) e
 		IdentityPoolId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cognitoidentity.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] Cognito Identity Pool Roles Association %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

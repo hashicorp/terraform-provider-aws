@@ -298,7 +298,7 @@ func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.DeleteEndpoint(deleteEndpointOpts)
 
-	if tfawserr.ErrMessageContains(err, "ValidationException", "") {
+	if tfawserr.ErrCodeEquals(err, "ValidationException") {
 		return nil
 	}
 

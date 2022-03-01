@@ -315,15 +315,6 @@ func resourceTransitGatewayDelete(d *schema.ResourceData, meta interface{}) erro
 
 	return nil
 }
-func DecodeTransitGatewayRouteID(id string) (string, string, error) {
-	parts := strings.Split(id, "_")
-
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected tgw-rtb-ID_DESTINATION", id)
-	}
-
-	return parts[0], parts[1], nil
-}
 
 func DecodeTransitGatewayRouteTableAssociationID(id string) (string, string, error) {
 	parts := strings.Split(id, "_")
@@ -603,7 +594,7 @@ func transitGatewayPeeringAttachmentRefreshFunc(conn *ec2.EC2, transitGatewayAtt
 	return func() (interface{}, string, error) {
 		transitGatewayPeeringAttachment, err := DescribeTransitGatewayPeeringAttachment(conn, transitGatewayAttachmentID)
 
-		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
 			return nil, ec2.TransitGatewayAttachmentStateDeleted, nil
 		}
 
@@ -627,7 +618,7 @@ func transitGatewayRefreshFunc(conn *ec2.EC2, transitGatewayID string) resource.
 	return func() (interface{}, string, error) {
 		transitGateway, err := DescribeTransitGateway(conn, transitGatewayID)
 
-		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayID.NotFound") {
 			return nil, ec2.TransitGatewayStateDeleted, nil
 		}
 
@@ -647,7 +638,7 @@ func transitGatewayRouteTableAssociationRefreshFunc(conn *ec2.EC2, transitGatewa
 	return func() (interface{}, string, error) {
 		transitGatewayAssociation, err := DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidRouteTableID.NotFound") {
 			return nil, ec2.TransitGatewayRouteTableStateDeleted, nil
 		}
 
@@ -738,7 +729,7 @@ func transitGatewayRouteTableRefreshFunc(conn *ec2.EC2, transitGatewayRouteTable
 	return func() (interface{}, string, error) {
 		transitGatewayRouteTable, err := DescribeTransitGatewayRouteTable(conn, transitGatewayRouteTableID)
 
-		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidRouteTableID.NotFound") {
 			return nil, ec2.TransitGatewayRouteTableStateDeleted, nil
 		}
 
@@ -758,7 +749,7 @@ func transitGatewayAttachmentRefreshFunc(conn *ec2.EC2, transitGatewayAttachment
 	return func() (interface{}, string, error) {
 		transitGatewayAttachment, err := DescribeTransitGatewayAttachment(conn, transitGatewayAttachmentID)
 
-		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
 			return nil, ec2.TransitGatewayAttachmentStateDeleted, nil
 		}
 

@@ -1024,7 +1024,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	if err != nil {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNotImplemented) {
 		return fmt.Errorf("error getting S3 Bucket logging: %s", err)
 	}
 
@@ -1286,11 +1286,11 @@ func resourceBucketDelete(d *schema.ResourceData, meta interface{}) error {
 		Bucket: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
+	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 		return nil
 	}
 
-	if tfawserr.ErrMessageContains(err, "BucketNotEmpty", "") {
+	if tfawserr.ErrCodeEquals(err, "BucketNotEmpty") {
 		if d.Get("force_destroy").(bool) {
 			// Use a S3 service client that can handle multiple slashes in URIs.
 			// While aws_s3_object resources cannot create these object

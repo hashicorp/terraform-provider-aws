@@ -155,6 +155,7 @@ func testAccTransitGatewayVPCAttachment_DNSSupport(t *testing.T) {
 func testAccTransitGatewayVPCAttachment_IPv6Support(t *testing.T) {
 	var transitGatewayVpcAttachment1, transitGatewayVpcAttachment2 ec2.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
@@ -163,7 +164,7 @@ func testAccTransitGatewayVPCAttachment_IPv6Support(t *testing.T) {
 		CheckDestroy: testAccCheckTransitGatewayVPCAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayVPCAttachmentIPv6SupportConfig(ec2.Ipv6SupportValueEnable),
+				Config: testAccTransitGatewayVPCAttachmentIPv6SupportConfig(rName, ec2.Ipv6SupportValueEnable),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment1),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_support", ec2.Ipv6SupportValueEnable),
@@ -175,13 +176,12 @@ func testAccTransitGatewayVPCAttachment_IPv6Support(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayVPCAttachmentIPv6SupportConfig(ec2.Ipv6SupportValueDisable),
+				Config: testAccTransitGatewayVPCAttachmentIPv6SupportConfig(rName, ec2.Ipv6SupportValueDisable),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment2),
 					testAccCheckTransitGatewayVPCAttachmentNotRecreated(&transitGatewayVpcAttachment1, &transitGatewayVpcAttachment2),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_support", ec2.Ipv6SupportValueDisable),
 				),
-				ExpectError: regexp.MustCompile(`Ipv6 cannot be disabled`),
 			},
 		},
 	})
@@ -482,7 +482,7 @@ func testAccCheckTransitGatewayVPCAttachmentDestroy(s *terraform.State) error {
 
 		vpcAttachment, err := tfec2.DescribeTransitGatewayVPCAttachment(conn, rs.Primary.ID)
 
-		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
 			continue
 		}
 
@@ -640,14 +640,14 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 `, dnsSupport))
 }
 
-func testAccTransitGatewayVPCAttachmentIPv6SupportConfig(ipv6Support string) string {
+func testAccTransitGatewayVPCAttachmentIPv6SupportConfig(rName, ipv6Support string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = true
   cidr_block                       = "10.0.0.0/16"
 
   tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
+    Name = %[1]q
   }
 }
 
@@ -658,20 +658,27 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
+    Name = %[1]q
   }
 }
 
 resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  ipv6_support       = %[1]q
+  ipv6_support       = %[2]q
   subnet_ids         = [aws_subnet.test.id]
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpc_id             = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, ipv6Support))
+`, rName, ipv6Support))
 }
 
 func testAccTransitGatewayVPCAttachmentSharedTransitGatewayConfig(rName string) string {

@@ -883,6 +883,45 @@ func WaitTransitGatewayPrefixListReferenceStateUpdated(conn *ec2.EC2, transitGat
 }
 
 const (
+	TransitGatewayRouteCreatedTimeout = 2 * time.Minute
+	TransitGatewayRouteDeletedTimeout = 2 * time.Minute
+)
+
+func WaitTransitGatewayRouteCreated(conn *ec2.EC2, transitGatewayRouteTableID, destination string) (*ec2.TransitGatewayRoute, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayRouteStatePending},
+		Target:  []string{ec2.TransitGatewayRouteStateActive, ec2.TransitGatewayRouteStateBlackhole},
+		Timeout: TransitGatewayRouteCreatedTimeout,
+		Refresh: StatusTransitGatewayRouteState(conn, transitGatewayRouteTableID, destination),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayRoute); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitTransitGatewayRouteDeleted(conn *ec2.EC2, transitGatewayRouteTableID, destination string) (*ec2.TransitGatewayRoute, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayRouteStateActive, ec2.TransitGatewayRouteStateBlackhole, ec2.TransitGatewayRouteStateDeleting},
+		Target:  []string{},
+		Timeout: TransitGatewayRouteDeletedTimeout,
+		Refresh: StatusTransitGatewayRouteState(conn, transitGatewayRouteTableID, destination),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayRoute); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
 	TransitGatewayRouteTablePropagationTimeout = 5 * time.Minute
 )
 

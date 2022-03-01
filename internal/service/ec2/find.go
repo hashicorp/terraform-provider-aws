@@ -2681,6 +2681,53 @@ func FindTransitGatewayPrefixListReferenceByTwoPartKey(conn *ec2.EC2, transitGat
 	return output, nil
 }
 
+func FindTransitGatewayRoute(conn *ec2.EC2, transitGatewayRouteTableID, destination string) (*ec2.TransitGatewayRoute, error) {
+	input := &ec2.SearchTransitGatewayRoutesInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"type": ec2.TransitGatewayRouteTypeStatic,
+		}),
+		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
+	}
+
+	output, err := conn.SearchTransitGatewayRoutes(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteTableIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Routes) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	for _, route := range output.Routes {
+		if route == nil {
+			continue
+		}
+
+		if v := aws.StringValue(route.DestinationCidrBlock); verify.CIDRBlocksEqual(v, destination) {
+			if state := aws.StringValue(route.State); state == ec2.TransitGatewayRouteStateDeleted {
+				return nil, &resource.NotFoundError{
+					Message:     state,
+					LastRequest: input,
+				}
+			}
+
+			route.DestinationCidrBlock = aws.String(verify.CanonicalCIDRBlock(v))
+
+			return route, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
+}
+
 func FindTransitGatewayRouteTables(conn *ec2.EC2, input *ec2.DescribeTransitGatewayRouteTablesInput) ([]*ec2.TransitGatewayRouteTable, error) {
 	var output []*ec2.TransitGatewayRouteTable
 

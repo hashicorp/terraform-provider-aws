@@ -56,7 +56,7 @@ func resourcePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 		_, err := conn.AttachPolicy(input)
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, organizations.ErrCodeFinalizingOrganizationException, "") {
+			if tfawserr.ErrCodeEquals(err, organizations.ErrCodeFinalizingOrganizationException) {
 				log.Printf("[DEBUG] Trying to create policy attachment again: %q", err.Error())
 				return resource.RetryableError(err)
 			}
@@ -105,7 +105,7 @@ func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, organizations.ErrCodeTargetNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeTargetNotFoundException) {
 			log.Printf("[WARN] Target does not exist, removing from state: %s", d.Id())
 			d.SetId("")
 			return nil
@@ -140,10 +140,10 @@ func resourcePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Detaching Organizations Policy %q from %q", policyID, targetID)
 	_, err = conn.DetachPolicy(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, organizations.ErrCodePolicyNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, organizations.ErrCodePolicyNotFoundException) {
 			return nil
 		}
-		if tfawserr.ErrMessageContains(err, organizations.ErrCodeTargetNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeTargetNotFoundException) {
 			return nil
 		}
 		return err

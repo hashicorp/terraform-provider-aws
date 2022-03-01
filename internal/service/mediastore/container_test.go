@@ -98,7 +98,7 @@ func testAccCheckContainerDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeContainer(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
 				return nil
 			}
 			return err

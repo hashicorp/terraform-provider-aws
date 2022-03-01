@@ -1021,7 +1021,7 @@ func sweepLaunchTemplates(region string) error {
 			log.Printf("[INFO] Deleting EC2 Launch Template: %s", id)
 			_, err := conn.DeleteLaunchTemplate(input)
 
-			if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") {
+			if tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateId.NotFound") {
 				continue
 			}
 
@@ -1414,7 +1414,7 @@ func sweepSecurityGroups(region string) error {
 			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 				_, err := conn.DeleteSecurityGroup(input)
 
-				if tfawserr.ErrMessageContains(err, "DependencyViolation", "") {
+				if tfawserr.ErrCodeEquals(err, "DependencyViolation") {
 					return resource.RetryableError(err)
 				}
 				if err != nil {
@@ -1562,7 +1562,7 @@ func sweepTransitGatewayPeeringAttachments(region string) error {
 				log.Printf("[INFO] Deleting EC2 Transit Gateway Peering Attachment: %s", id)
 				_, err := conn.DeleteTransitGatewayPeeringAttachment(input)
 
-				if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+				if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
 					continue
 				}
 

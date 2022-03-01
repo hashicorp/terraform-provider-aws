@@ -94,7 +94,7 @@ func resourceArchiveRead(d *schema.ResourceData, meta interface{}) error {
 
 	out, err := conn.DescribeArchive(input)
 
-	if tfawserr.ErrMessageContains(err, eventbridge.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] EventBridge archive (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

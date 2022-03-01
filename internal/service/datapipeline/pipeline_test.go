@@ -182,9 +182,9 @@ func testAccCheckPipelineDestroy(s *terraform.State) error {
 		}
 		// Try to find the Pipeline
 		pipelineDescription, err := tfdatapipeline.PipelineRetrieve(rs.Primary.ID, conn)
-		if tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineNotFoundException) {
 			continue
-		} else if tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineDeletedException, "") {
+		} else if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) {
 			continue
 		}
 

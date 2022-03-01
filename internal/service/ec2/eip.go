@@ -387,7 +387,7 @@ func resourceEIPUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 			_, err := conn.AssociateAddress(assocOpts)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, "InvalidAllocationID.NotFound", "") {
+				if tfawserr.ErrCodeEquals(err, "InvalidAllocationID.NotFound") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)

@@ -138,7 +138,7 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		out, err = conn.AddPermission(&input)
 
-		if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceConflictException, "") || tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceConflictException) || tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -352,7 +352,7 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetPolicy(params)
 
-	if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "") {
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
 		return nil
 	}
 
