@@ -1961,7 +1961,7 @@ resource "aws_dms_endpoint" "test" {
   kms_key_arn                 = aws_kms_key.test.arn
 
   tags = {
-    Name   = %[1]q
+    Name = %[1]q
   }
 }
 `, rName)
