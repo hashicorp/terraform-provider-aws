@@ -7,16 +7,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func testAccTransitGatewayConnectPeer_basic(t *testing.T) {
-	var transitGatewayConnectPeer1 ec2.TransitGatewayConnectPeer
+	var v ec2.TransitGatewayConnectPeer
 	resourceName := "aws_ec2_transit_gateway_connect_peer.test"
 	transitGatewayConnectResourceName := "aws_ec2_transit_gateway_connect.test"
 
@@ -29,7 +29,7 @@ func testAccTransitGatewayConnectPeer_basic(t *testing.T) {
 			{
 				Config: testAccTransitGatewayConnectPeerConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectPeerExists(resourceName, &transitGatewayConnectPeer1),
+					testAccCheckTransitGatewayConnectPeerExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", "64512"),
 					resource.TestCheckResourceAttr(resourceName, "inside_cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "peer_address", "1.1.1.1"),
@@ -48,7 +48,7 @@ func testAccTransitGatewayConnectPeer_basic(t *testing.T) {
 }
 
 func testAccTransitGatewayConnectPeer_disappears(t *testing.T) {
-	var transitGatewayConnectPeer1 ec2.TransitGatewayConnectPeer
+	var v ec2.TransitGatewayConnectPeer
 	resourceName := "aws_ec2_transit_gateway_connect_peer.test"
 
 	resource.Test(t, resource.TestCase{
@@ -60,8 +60,8 @@ func testAccTransitGatewayConnectPeer_disappears(t *testing.T) {
 			{
 				Config: testAccTransitGatewayConnectPeerConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectPeerExists(resourceName, &transitGatewayConnectPeer1),
-					testAccCheckTransitGatewayConnectPeerDisappears(&transitGatewayConnectPeer1),
+					testAccCheckTransitGatewayConnectPeerExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayConnectPeer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -70,7 +70,7 @@ func testAccTransitGatewayConnectPeer_disappears(t *testing.T) {
 }
 
 func testAccTransitGatewayConnectPeer_BgpAsn(t *testing.T) {
-	var transitGatewayConnectPeer1 ec2.TransitGatewayConnectPeer
+	var v ec2.TransitGatewayConnectPeer
 	resourceName := "aws_ec2_transit_gateway_connect_peer.test"
 
 	resource.Test(t, resource.TestCase{
@@ -82,7 +82,7 @@ func testAccTransitGatewayConnectPeer_BgpAsn(t *testing.T) {
 			{
 				Config: testAccTransitGatewayConnectPeerBgpAsnConfig(12345),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectPeerExists(resourceName, &transitGatewayConnectPeer1),
+					testAccCheckTransitGatewayConnectPeerExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", "12345"),
 				),
 			},
@@ -91,7 +91,7 @@ func testAccTransitGatewayConnectPeer_BgpAsn(t *testing.T) {
 }
 
 func testAccTransitGatewayConnectPeer_InsideCidrBlocks(t *testing.T) {
-	var transitGatewayConnectPeer1, transitGatewayConnectPeer2, transitGatewayConnectPeer3 ec2.TransitGatewayConnectPeer
+	var v1, v2, v3 ec2.TransitGatewayConnectPeer
 	resourceName := "aws_ec2_transit_gateway_connect_peer.test"
 
 	resource.Test(t, resource.TestCase{
@@ -103,7 +103,7 @@ func testAccTransitGatewayConnectPeer_InsideCidrBlocks(t *testing.T) {
 			{
 				Config: testAccTransitGatewayConnectPeerInsideCidrBlocks2Config(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectPeerExists(resourceName, &transitGatewayConnectPeer1),
+					testAccCheckTransitGatewayConnectPeerExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "inside_cidr_blocks.#", "2"),
 				),
 			},
@@ -115,16 +115,16 @@ func testAccTransitGatewayConnectPeer_InsideCidrBlocks(t *testing.T) {
 			{
 				Config: testAccTransitGatewayConnectPeerConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectPeerExists(resourceName, &transitGatewayConnectPeer2),
-					testAccCheckTransitGatewayConnectPeerNotRecreated(&transitGatewayConnectPeer1, &transitGatewayConnectPeer2),
+					testAccCheckTransitGatewayConnectPeerExists(resourceName, &v2),
+					testAccCheckTransitGatewayConnectPeerNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "inside_cidr_blocks.#", "1"),
 				),
 			},
 			{
 				Config: testAccTransitGatewayConnectPeerInsideCidrBlocks2Config(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectPeerExists(resourceName, &transitGatewayConnectPeer3),
-					testAccCheckTransitGatewayConnectPeerNotRecreated(&transitGatewayConnectPeer2, &transitGatewayConnectPeer3),
+					testAccCheckTransitGatewayConnectPeerExists(resourceName, &v3),
+					testAccCheckTransitGatewayConnectPeerNotRecreated(&v3, &v3),
 					resource.TestCheckResourceAttr(resourceName, "inside_cidr_blocks.#", "2"),
 				),
 			},
@@ -133,7 +133,7 @@ func testAccTransitGatewayConnectPeer_InsideCidrBlocks(t *testing.T) {
 }
 
 func testAccTransitGatewayConnectPeer_Tags(t *testing.T) {
-	var transitGatewayConnectPeer1, transitGatewayConnectPeer2, transitGatewayConnectPeer3 ec2.TransitGatewayConnectPeer
+	var v ec2.TransitGatewayConnectPeer
 	resourceName := "aws_ec2_transit_gateway_connect_peer.test"
 
 	resource.Test(t, resource.TestCase{
@@ -145,7 +145,7 @@ func testAccTransitGatewayConnectPeer_Tags(t *testing.T) {
 			{
 				Config: testAccTransitGatewayConnectPeerTags1Config("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectPeerExists(resourceName, &transitGatewayConnectPeer1),
+					testAccCheckTransitGatewayConnectPeerExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -158,8 +158,7 @@ func testAccTransitGatewayConnectPeer_Tags(t *testing.T) {
 			{
 				Config: testAccTransitGatewayConnectPeerTags2Config("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectPeerExists(resourceName, &transitGatewayConnectPeer2),
-					testAccCheckTransitGatewayConnectPeerNotRecreated(&transitGatewayConnectPeer1, &transitGatewayConnectPeer2),
+					testAccCheckTransitGatewayConnectPeerExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -168,8 +167,7 @@ func testAccTransitGatewayConnectPeer_Tags(t *testing.T) {
 			{
 				Config: testAccTransitGatewayConnectPeerTags1Config("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectPeerExists(resourceName, &transitGatewayConnectPeer3),
-					testAccCheckTransitGatewayConnectPeerNotRecreated(&transitGatewayConnectPeer2, &transitGatewayConnectPeer3),
+					testAccCheckTransitGatewayConnectPeerExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -179,7 +177,7 @@ func testAccTransitGatewayConnectPeer_Tags(t *testing.T) {
 }
 
 func testAccTransitGatewayConnectPeer_TransitGatewayAddress(t *testing.T) {
-	var transitGatewayConnectPeer1 ec2.TransitGatewayConnectPeer
+	var v ec2.TransitGatewayConnectPeer
 	resourceName := "aws_ec2_transit_gateway_connect_peer.test"
 
 	resource.Test(t, resource.TestCase{
@@ -191,7 +189,7 @@ func testAccTransitGatewayConnectPeer_TransitGatewayAddress(t *testing.T) {
 			{
 				Config: testAccTransitGatewayConnectPeerTransitGatewayAddressConfig("10.20.30.200"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectPeerExists(resourceName, &transitGatewayConnectPeer1),
+					testAccCheckTransitGatewayConnectPeerExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_address", "10.20.30.200"),
 				),
 			},
@@ -199,11 +197,11 @@ func testAccTransitGatewayConnectPeer_TransitGatewayAddress(t *testing.T) {
 	})
 }
 
-func testAccCheckTransitGatewayConnectPeerExists(resourceName string, transitGatewayConnectPeer *ec2.TransitGatewayConnectPeer) resource.TestCheckFunc {
+func testAccCheckTransitGatewayConnectPeerExists(n string, v *ec2.TransitGatewayConnectPeer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
@@ -212,21 +210,13 @@ func testAccCheckTransitGatewayConnectPeerExists(resourceName string, transitGat
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		attachment, err := tfec2.DescribeTransitGatewayConnectPeer(conn, rs.Primary.ID)
+		output, err := tfec2.FindTransitGatewayConnectPeerByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if attachment == nil {
-			return fmt.Errorf("EC2 Transit Gateway Connect Peer not found")
-		}
-
-		if aws.StringValue(attachment.State) != ec2.TransitGatewayAttachmentStateAvailable && aws.StringValue(attachment.State) != ec2.TransitGatewayAttachmentStatePendingAcceptance {
-			return fmt.Errorf("EC2 Transit Gateway Connect Peer (%s) exists in non-available/pending acceptance (%s) state", rs.Primary.ID, aws.StringValue(attachment.State))
-		}
-
-		*transitGatewayConnectPeer = *attachment
+		*v = *output
 
 		return nil
 	}
@@ -236,13 +226,13 @@ func testAccCheckTransitGatewayConnectPeerDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ec2_transit_gateway_route_table" {
+		if rs.Type != "aws_ec2_transit_gateway_connect_peer" {
 			continue
 		}
 
-		vpcAttachment, err := tfec2.DescribeTransitGatewayConnectPeer(conn, rs.Primary.ID)
+		_, err := tfec2.FindTransitGatewayConnectPeerByID(conn, rs.Primary.ID)
 
-		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -250,32 +240,10 @@ func testAccCheckTransitGatewayConnectPeerDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if vpcAttachment == nil {
-			continue
-		}
-
-		if aws.StringValue(vpcAttachment.State) != ec2.TransitGatewayAttachmentStateDeleted {
-			return fmt.Errorf("EC2 Transit Gateway Connect Peer (%s) still exists in non-deleted (%s) state", rs.Primary.ID, aws.StringValue(vpcAttachment.State))
-		}
+		return fmt.Errorf("EC2 Transit Gateway Connect Peer %s still exists", rs.Primary.ID)
 	}
 
 	return nil
-}
-
-func testAccCheckTransitGatewayConnectPeerDisappears(transitGatewayConnectPeer *ec2.TransitGatewayConnectPeer) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-		input := &ec2.DeleteTransitGatewayConnectPeerInput{
-			TransitGatewayConnectPeerId: transitGatewayConnectPeer.TransitGatewayConnectPeerId,
-		}
-
-		if _, err := conn.DeleteTransitGatewayConnectPeer(input); err != nil {
-			return err
-		}
-
-		return tfec2.WaitForTransitGatewayConnectPeerDeletion(conn, aws.StringValue(transitGatewayConnectPeer.TransitGatewayConnectPeerId))
-	}
 }
 
 func testAccCheckTransitGatewayConnectPeerNotRecreated(i, j *ec2.TransitGatewayConnectPeer) resource.TestCheckFunc {

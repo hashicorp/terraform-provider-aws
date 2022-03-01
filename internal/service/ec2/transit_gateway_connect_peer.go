@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -140,31 +141,24 @@ func resourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Resour
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	transitGatewayConnectPeer, err := DescribeTransitGatewayConnectPeer(conn, d.Id())
+	transitGatewayConnectPeer, err := FindTransitGatewayConnectPeerByID(conn, d.Id())
 
-	if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
-		log.Printf("[WARN] EC2 Transit Gateway Connect Peer (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Transit Gateway Connect Peer %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading EC2 Transit Gateway Connect Peer: %s", err)
+		return diag.Errorf("error reading EC2 Transit Gateway Connect Peer (%s): %s", d.Id(), err)
 	}
 
-	if transitGatewayConnectPeer == nil {
-		log.Printf("[WARN] EC2 Transit Gateway Connect Peer (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
+	d.Set("bgp_asn", transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations[0].PeerAsn)
+	d.Set("inside_cidr_blocks", aws.StringValueSlice(transitGatewayConnectPeer.ConnectPeerConfiguration.InsideCidrBlocks))
+	d.Set("peer_address", transitGatewayConnectPeer.ConnectPeerConfiguration.PeerAddress)
+	d.Set("transit_gateway_address", transitGatewayConnectPeer.ConnectPeerConfiguration.TransitGatewayAddress)
+	d.Set("transit_gateway_attachment_id", transitGatewayConnectPeer.TransitGatewayAttachmentId)
 
-	if aws.StringValue(transitGatewayConnectPeer.State) == ec2.TransitGatewayConnectPeerStateDeleting || aws.StringValue(transitGatewayConnectPeer.State) == ec2.TransitGatewayConnectPeerStateDeleted {
-		log.Printf("[WARN] EC2 Transit Gateway Connect Peer (%s) in deleted state (%s), removing from state", d.Id(), aws.StringValue(transitGatewayConnectPeer.State))
-		d.SetId("")
-		return nil
-	}
-
-	transitGatewayAttachmentID := aws.StringValue(transitGatewayConnectPeer.TransitGatewayAttachmentId)
 	tags := KeyValueTags(transitGatewayConnectPeer.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
@@ -175,12 +169,6 @@ func resourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Resour
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return diag.Errorf("error setting tags_all: %s", err)
 	}
-
-	d.Set("bgp_asn", transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations[0].PeerAsn)
-	d.Set("inside_cidr_blocks", transitGatewayConnectPeer.ConnectPeerConfiguration.InsideCidrBlocks)
-	d.Set("peer_address", transitGatewayConnectPeer.ConnectPeerConfiguration.PeerAddress)
-	d.Set("transit_gateway_address", transitGatewayConnectPeer.ConnectPeerConfiguration.TransitGatewayAddress)
-	d.Set("transit_gateway_attachment_id", transitGatewayAttachmentID)
 
 	return nil
 }

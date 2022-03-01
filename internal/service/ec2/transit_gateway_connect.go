@@ -2,7 +2,6 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -10,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -252,97 +250,4 @@ func resourceTransitGatewayConnectDelete(ctx context.Context, d *schema.Resource
 	}
 
 	return nil
-}
-
-func DescribeTransitGatewayConnectPeer(conn *ec2.EC2, transitGatewayConnectPeerID string) (*ec2.TransitGatewayConnectPeer, error) {
-	input := &ec2.DescribeTransitGatewayConnectPeersInput{
-		TransitGatewayConnectPeerIds: []*string{aws.String(transitGatewayConnectPeerID)},
-	}
-
-	log.Printf("[DEBUG] Reading EC2 Transit Gateway Connect Peer (%s): %s", transitGatewayConnectPeerID, input)
-	for {
-		output, err := conn.DescribeTransitGatewayConnectPeers(input)
-
-		if err != nil {
-			return nil, err
-		}
-
-		if output == nil || len(output.TransitGatewayConnectPeers) == 0 {
-			return nil, nil
-		}
-
-		for _, transitGatewayConnectPeer := range output.TransitGatewayConnectPeers {
-			if transitGatewayConnectPeer == nil {
-				continue
-			}
-
-			if aws.StringValue(transitGatewayConnectPeer.TransitGatewayConnectPeerId) == transitGatewayConnectPeerID {
-				return transitGatewayConnectPeer, nil
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil, nil
-}
-
-func transitGatewayConnectPeerRefreshFunc(conn *ec2.EC2, transitGatewayConnectPeerID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		transitGatewayConnectPeer, err := DescribeTransitGatewayConnectPeer(conn, transitGatewayConnectPeerID)
-
-		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayConnectPeerID.NotFound", "") {
-			return nil, ec2.TransitGatewayConnectPeerStateDeleted, nil
-		}
-
-		if err != nil {
-			return nil, "", fmt.Errorf("error reading EC2 Transit Gateway Connect Peer (%s): %s", transitGatewayConnectPeerID, err)
-		}
-
-		if transitGatewayConnectPeer == nil {
-			return nil, ec2.TransitGatewayConnectPeerStateDeleted, nil
-		}
-
-		return transitGatewayConnectPeer, aws.StringValue(transitGatewayConnectPeer.State), nil
-	}
-}
-
-func waitForTransitGatewayConnectPeerCreation(conn *ec2.EC2, transitGatewayConnectPeerID string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.TransitGatewayConnectPeerStatePending},
-		Target:  []string{ec2.TransitGatewayConnectPeerStateAvailable},
-		Refresh: transitGatewayConnectPeerRefreshFunc(conn, transitGatewayConnectPeerID),
-		Timeout: 10 * time.Minute,
-	}
-
-	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway Connect Peer (%s) availability", transitGatewayConnectPeerID)
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func WaitForTransitGatewayConnectPeerDeletion(conn *ec2.EC2, transitGatewayConnectPeerID string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			ec2.TransitGatewayConnectPeerStateAvailable,
-			ec2.TransitGatewayConnectPeerStateDeleting,
-		},
-		Target:         []string{ec2.TransitGatewayConnectPeerStateDeleted},
-		Refresh:        transitGatewayConnectPeerRefreshFunc(conn, transitGatewayConnectPeerID),
-		Timeout:        10 * time.Minute,
-		NotFoundChecks: 1,
-	}
-
-	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway Connect Peer (%s) deletion", transitGatewayConnectPeerID)
-	_, err := stateConf.WaitForState()
-
-	if tfresource.NotFound(err) {
-		return nil
-	}
-
-	return err
 }
