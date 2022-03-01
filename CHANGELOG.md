@@ -1,4 +1,9 @@
 ## 4.4.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_eks_cluster: Retry when `ResourceInUseException` errors are returned from the AWS API during resource deletion ([#23366](https://github.com/hashicorp/terraform-provider-aws/issues/23366))
+
 ## 4.3.0 (February 28, 2022)
 
 NOTES:
