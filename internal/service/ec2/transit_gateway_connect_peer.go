@@ -46,8 +46,7 @@ func ResourceTransitGatewayConnectPeer() *schema.Resource {
 				ValidateFunc: valid4ByteASN,
 			},
 			"inside_cidr_blocks": {
-				// TODO: TypeSet
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
 				MinItems: 1,
@@ -96,28 +95,21 @@ func resourceTransitGatewayConnectPeerCreate(ctx context.Context, d *schema.Reso
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	transitGatewayAttachmentID := d.Get("transit_gateway_attachment_id").(string)
-	insideCidrBlocks := d.Get("inside_cidr_blocks").([]interface{})
-	peerAddress := d.Get("peer_address").(string)
-
 	input := &ec2.CreateTransitGatewayConnectPeerInput{
-		InsideCidrBlocks:           flex.ExpandStringList(insideCidrBlocks),
-		PeerAddress:                aws.String(peerAddress),
-		TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),
+		InsideCidrBlocks:           flex.ExpandStringSet(d.Get("inside_cidr_blocks").(*schema.Set)),
+		PeerAddress:                aws.String(d.Get("peer_address").(string)),
 		TagSpecifications:          ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayConnectPeer),
+		TransitGatewayAttachmentId: aws.String(d.Get("transit_gateway_attachment_id").(string)),
 	}
 
 	if v, ok := d.GetOk("bgp_asn"); ok {
-		bgpOptions := ec2.TransitGatewayConnectRequestBgpOptions{
+		input.BgpOptions = &ec2.TransitGatewayConnectRequestBgpOptions{
 			PeerAsn: aws.Int64(int64(v.(int))),
 		}
-
-		input.BgpOptions = &bgpOptions
 	}
 
-	transitGatewayAddress, transitGatewayAddressOk := d.GetOk("transit_gateway_address")
-	if transitGatewayAddressOk {
-		input.TransitGatewayAddress = aws.String(transitGatewayAddress.(string))
+	if v, ok := d.GetOk("transit_gateway_address"); ok {
+		input.TransitGatewayAddress = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Connect Peer: %s", input)

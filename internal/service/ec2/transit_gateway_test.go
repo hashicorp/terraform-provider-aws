@@ -32,7 +32,7 @@ func TestAccEC2TransitGateway_serial(t *testing.T) {
 			"disappears":            testAccTransitGatewayConnectPeer_disappears,
 			"BgpAsn":                testAccTransitGatewayConnectPeer_BgpAsn,
 			"InsideCidrBlocks":      testAccTransitGatewayConnectPeer_InsideCidrBlocks,
-			"Tags":                  testAccTransitGatewayConnectPeer_Tags,
+			"Tags":                  testAccTransitGatewayConnectPeer_tags,
 			"TransitGatewayAddress": testAccTransitGatewayConnectPeer_TransitGatewayAddress,
 		},
 		"Gateway": {
