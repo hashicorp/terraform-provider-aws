@@ -120,7 +120,7 @@ func resourceTransitGatewayConnectPeerCreate(ctx context.Context, d *schema.Reso
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Connect Peer: %s", input)
-	output, err := conn.CreateTransitGatewayConnectPeer(input)
+	output, err := conn.CreateTransitGatewayConnectPeerWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("error creating EC2 Transit Gateway Connect Peer: %s", err)
@@ -203,7 +203,7 @@ func resourceTransitGatewayConnectPeerDelete(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Connect Peer: %s", d.Id())
-	_, err := conn.DeleteTransitGatewayConnectPeer(&ec2.DeleteTransitGatewayConnectPeerInput{
+	_, err := conn.DeleteTransitGatewayConnectPeerWithContext(ctx, &ec2.DeleteTransitGatewayConnectPeerInput{
 		TransitGatewayConnectPeerId: aws.String(d.Id()),
 	})
 
