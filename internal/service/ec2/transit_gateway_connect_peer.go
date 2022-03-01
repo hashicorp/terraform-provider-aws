@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -22,8 +23,14 @@ func ResourceTransitGatewayConnectPeer() *schema.Resource {
 		Read:   resourceTransitGatewayConnectPeerRead,
 		Update: resourceTransitGatewayConnectPeerUpdate,
 		Delete: resourceTransitGatewayConnectPeerDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
