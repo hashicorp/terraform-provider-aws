@@ -111,7 +111,7 @@ func resourceTransitGatewayConnectCreate(ctx context.Context, d *schema.Resource
 	transitGateway, err := FindTransitGatewayByID(conn, transitGatewayID)
 
 	if err != nil {
-		return diag.Errorf("error reading EC2 Transit Gateway (%s): %s", *transportAttachment.TransitGatewayId, err)
+		return diag.Errorf("error reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 	}
 
 	// We cannot modify Transit Gateway Route Tables for Resource Access Manager shared Transit Gateways
@@ -146,20 +146,16 @@ func resourceTransitGatewayConnectRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	transitGatewayID := aws.StringValue(transitGatewayConnect.TransitGatewayId)
-	transitGateway, err := DescribeTransitGateway(conn, transitGatewayID)
+	transitGateway, err := FindTransitGatewayByID(conn, transitGatewayID)
+
 	if err != nil {
-		return diag.Errorf("error describing EC2 Transit Gateway (%s): %s", transitGatewayID, err)
+		return diag.Errorf("error reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 	}
 
-	transitGatewayAttachment, err := DescribeTransitGatewayAttachment(conn, d.Id())
-	if err != nil {
-		return diag.Errorf("error reading EC2 Transit Gateway Attachment: %s", err)
-	}
+	transitGatewayAttachment, err := FindTransitGatewayAttachmentByID(conn, d.Id())
 
-	if transitGatewayAttachment == nil {
-		log.Printf("[WARN] EC2 Transit Gateway Attachment (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	if err != nil {
+		return diag.Errorf("error reading EC2 Transit Gateway Attachment (%s): %s", d.Id(), err)
 	}
 
 	// We cannot read Transit Gateway Route Tables for Resource Access Manager shared Transit Gateways
@@ -205,14 +201,10 @@ func resourceTransitGatewayConnectUpdate(ctx context.Context, d *schema.Resource
 
 	if d.HasChanges("transit_gateway_default_route_table_association", "transit_gateway_default_route_table_propagation") {
 		transitGatewayID := d.Get("transit_gateway_id").(string)
+		transitGateway, err := FindTransitGatewayByID(conn, transitGatewayID)
 
-		transitGateway, err := DescribeTransitGateway(conn, transitGatewayID)
 		if err != nil {
-			return diag.Errorf("error describing EC2 Transit Gateway (%s): %s", transitGatewayID, err)
-		}
-
-		if transitGateway.Options == nil {
-			return diag.Errorf("error describing EC2 Transit Gateway (%s): missing options", transitGatewayID)
+			return diag.Errorf("error reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 		}
 
 		if d.HasChange("transit_gateway_default_route_table_association") {
