@@ -92,22 +92,43 @@ func sweepApplication(region string) error {
 	conn := client.(*conns.AWSClient).OpsWorksConn
 	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = conn.DescribeDBInstancesPages(&opsworks.DescribeDBInstancesInput{}, func(out *opsworks.DescribeDBInstancesOutput, lastPage bool) bool {
-		for _, dbi := range out.DBInstances {
-			r := ResourceInstance()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(dbi.DBInstanceIdentifier))
-			d.Set("skip_final_snapshot", true)
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-		return !lastPage
-	})
+	output, err := conn.DescribeStacks(&opsworks.DescribeStacksInput{})
+
 	if err != nil {
 		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping RDS DB Instance sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping OpsWorks Application sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error retrieving DB instances: %s", err)
+		return fmt.Errorf("retrieving OpsWorks Stacks (Application sweep): %s", err)
+	}
+
+	var sweeperErrs *multierror.Error
+
+	for _, stack := range output.Stacks {
+		input := &opsworks.DescribeAppsInput{
+			StackId: stack.StackId,
+		}
+
+		appOutput, err := conn.DescribeApps(input)
+
+		if err != nil {
+			sweeperErr := fmt.Errorf("describing OpsWorks Applications for Stack (%s): %w", aws.StringValue(stack.StackId), err)
+			log.Printf("[ERROR] %s", sweeperErr)
+			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			continue
+		}
+
+		for _, app := range appOutput.Apps {
+			if app == nil {
+				continue
+			}
+
+			r := ResourceApplication()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(app.AppId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
 	}
 
 	return sweep.SweepOrchestrator(sweepResources)
@@ -122,22 +143,43 @@ func sweepInstance(region string) error {
 	conn := client.(*conns.AWSClient).OpsWorksConn
 	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = conn.DescribeDBInstancesPages(&opsworks.DescribeDBInstancesInput{}, func(out *opsworks.DescribeDBInstancesOutput, lastPage bool) bool {
-		for _, dbi := range out.DBInstances {
-			r := ResourceInstance()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(dbi.DBInstanceIdentifier))
-			d.Set("skip_final_snapshot", true)
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-		return !lastPage
-	})
+	output, err := conn.DescribeStacks(&opsworks.DescribeStacksInput{})
+
 	if err != nil {
 		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping RDS DB Instance sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping OpsWorks Instance sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error retrieving DB instances: %s", err)
+		return fmt.Errorf("retrieving OpsWorks Stacks (Instance sweep): %s", err)
+	}
+
+	var sweeperErrs *multierror.Error
+
+	for _, stack := range output.Stacks {
+		input := &opsworks.DescribeInstancesInput{
+			StackId: stack.StackId,
+		}
+
+		instanceOutput, err := conn.DescribeInstances(input)
+
+		if err != nil {
+			sweeperErr := fmt.Errorf("describing OpsWorks Instances for Stack (%s): %w", aws.StringValue(stack.StackId), err)
+			log.Printf("[ERROR] %s", sweeperErr)
+			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			continue
+		}
+
+		for _, instance := range instanceOutput.Instances {
+			if instance == nil {
+				continue
+			}
+
+			r := ResourceInstance()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(instance.InstanceId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
 	}
 
 	return sweep.SweepOrchestrator(sweepResources)

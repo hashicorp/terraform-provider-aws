@@ -141,7 +141,6 @@ func ResourceInstance() *schema.Resource {
 
 			"last_service_error_id": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
@@ -548,7 +547,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("virtualization_type", instance.VirtualizationType)
 
 	// Read BlockDeviceMapping
-	ibds := readOpsworksBlockDevices(instance)
+	ibds := readBlockDevices(instance)
 
 	if err := d.Set("ebs_block_device", ibds["ebs"]); err != nil {
 		return err
@@ -727,7 +726,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(instanceId)
 
 	if v, ok := d.GetOk("state"); ok && v.(string) == "running" {
-		err := startOpsworksInstance(d, meta, true, d.Timeout(schema.TimeoutCreate))
+		err := startInstance(d, meta, true, d.Timeout(schema.TimeoutCreate))
 		if err != nil {
 			return err
 		}
@@ -799,14 +798,14 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		state := v.(string)
 		if state == "running" {
 			if status == "stopped" || status == "stopping" || status == "shutting_down" {
-				err := startOpsworksInstance(d, meta, false, d.Timeout(schema.TimeoutUpdate))
+				err := startInstance(d, meta, false, d.Timeout(schema.TimeoutUpdate))
 				if err != nil {
 					return err
 				}
 			}
 		} else {
 			if status != "stopped" && status != "stopping" && status != "shutting_down" {
-				err := stopOpsworksInstance(d, meta, d.Timeout(schema.TimeoutUpdate))
+				err := stopInstance(d, meta, d.Timeout(schema.TimeoutUpdate))
 				if err != nil {
 					return err
 				}
@@ -821,7 +820,7 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	if v, ok := d.GetOk("status"); ok && v.(string) != "stopped" {
-		err := stopOpsworksInstance(d, meta, d.Timeout(schema.TimeoutDelete))
+		err := stopInstance(d, meta, d.Timeout(schema.TimeoutDelete))
 		if err != nil {
 			return err
 		}
@@ -855,7 +854,7 @@ func resourceInstanceImport(
 	return []*schema.ResourceData{d}, nil
 }
 
-func startOpsworksInstance(d *schema.ResourceData, meta interface{}, wait bool, timeout time.Duration) error {
+func startInstance(d *schema.ResourceData, meta interface{}, wait bool, timeout time.Duration) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	instanceId := d.Id()
@@ -878,7 +877,7 @@ func startOpsworksInstance(d *schema.ResourceData, meta interface{}, wait bool, 
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{"requested", "pending", "booting", "running_setup"},
 			Target:     []string{"online"},
-			Refresh:    OpsworksInstanceStateRefreshFunc(client, instanceId),
+			Refresh:    InstanceStateRefreshFunc(client, instanceId),
 			Timeout:    timeout,
 			Delay:      10 * time.Second,
 			MinTimeout: 3 * time.Second,
@@ -893,7 +892,7 @@ func startOpsworksInstance(d *schema.ResourceData, meta interface{}, wait bool, 
 	return nil
 }
 
-func stopOpsworksInstance(d *schema.ResourceData, meta interface{}, timeout time.Duration) error {
+func stopInstance(d *schema.ResourceData, meta interface{}, timeout time.Duration) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	instanceId := d.Id()
@@ -915,7 +914,7 @@ func stopOpsworksInstance(d *schema.ResourceData, meta interface{}, timeout time
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"stopping", "terminating", "shutting_down", "terminated"},
 		Target:     []string{"stopped"},
-		Refresh:    OpsworksInstanceStateRefreshFunc(client, instanceId),
+		Refresh:    InstanceStateRefreshFunc(client, instanceId),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -929,7 +928,7 @@ func stopOpsworksInstance(d *schema.ResourceData, meta interface{}, timeout time
 	return nil
 }
 
-func readOpsworksBlockDevices(instance *opsworks.Instance) map[string]interface{} {
+func readBlockDevices(instance *opsworks.Instance) map[string]interface{} {
 
 	blockDevices := make(map[string]interface{})
 	blockDevices["ebs"] = make([]map[string]interface{}, 0)
@@ -974,7 +973,7 @@ func readOpsworksBlockDevices(instance *opsworks.Instance) map[string]interface{
 	return blockDevices
 }
 
-func OpsworksInstanceStateRefreshFunc(conn *opsworks.OpsWorks, instanceID string) resource.StateRefreshFunc {
+func InstanceStateRefreshFunc(conn *opsworks.OpsWorks, instanceID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeInstances(&opsworks.DescribeInstancesInput{
 			InstanceIds: []*string{aws.String(instanceID)},
