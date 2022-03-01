@@ -694,6 +694,28 @@ func TestAccDMSEndpoint_PostgreSQL_update(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/23143
+func TestAccDMSEndpoint_PostgreSQL_kmsKey(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_postgresKey(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDMSEndpoint_docDB(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1914,6 +1936,33 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   }
 
   username = "tftestupdate"
+}
+`, rName)
+}
+
+func testAccEndpointConfig_postgresKey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "postgres"
+  server_name                 = "tftest"
+  port                        = 27018
+  username                    = "tftest"
+  password                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "require"
+  extra_connection_attributes = ""
+  kms_key_arn                 = aws_kms_key.test.arn
+
+  tags = {
+    Name   = %[1]q
+  }
 }
 `, rName)
 }
