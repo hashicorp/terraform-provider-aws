@@ -309,7 +309,7 @@ func resourceTransitGatewayDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error deleting EC2 Transit Gateway (%s): %w", d.Id(), err)
 	}
 
-	if _, err := WaitTransitGatewayUpdated(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := WaitTransitGatewayDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway (%s) delete: %w", d.Id(), err)
 	}
 
