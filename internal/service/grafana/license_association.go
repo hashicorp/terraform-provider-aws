@@ -70,7 +70,7 @@ func resourceLicenseAssociationCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(aws.StringValue(output.Workspace.Id))
 
-	if _, err = waitLicenseAssociationCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitLicenseAssociationCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Grafana License Association (%s) create: %w", d.Id(), err)
 	}
 
@@ -124,9 +124,7 @@ func resourceLicenseAssociationDelete(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error deleting Grafana License Association (%s): %w", d.Id(), err)
 	}
 
-	_, err = waitWorkspaceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-
-	if err != nil {
+	if _, err := waitWorkspaceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Grafana License Association (%s) delete: %w", d.Id(), err)
 	}
 
