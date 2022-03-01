@@ -24,9 +24,15 @@ const (
 	// MaxResults Valid Range: Minimum value of 1. Maximum value of 1000
 	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListPrompts.html
 	ListPromptsMaxResults = 60
-	// ListLambdaFunctionsMaxResults Valid Range: Minimum value of 1. Maximum value of 1000.
+	// ListQueueQuickConnectsMaxResults Valid Range: Minimum value of 1. Maximum value of 100.
+	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListQueueQuickConnects.html
+	ListQueueQuickConnectsMaxResults = 60
+	// ListQuickConnectsMaxResults Valid Range: Minimum value of 1. Maximum value of 1000.
 	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListQuickConnects.html
 	ListQuickConnectsMaxResults = 60
+	// ListSecurityProfilePermissionsMaxResults Valid Range: Minimum value of 1. Maximum value of 1000.
+	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListSecurityProfilePermissions.html
+	ListSecurityProfilePermissionsMaxResults = 60
 )
 
 func InstanceAttributeMapping() map[string]string {

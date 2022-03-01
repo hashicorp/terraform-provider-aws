@@ -1250,6 +1250,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 			return nil, diag.FromErr(err)
 		}
 	}
+	c.Region = cfg.Region
 
 	sess, err := awsbasev1.GetSession(&cfg, &awsbaseConfig)
 	if err != nil {
