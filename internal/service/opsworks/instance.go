@@ -159,61 +159,51 @@ func ResourceInstance() *schema.Resource {
 
 			"platform": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
 			"private_dns": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
 			"private_ip": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
 			"public_dns": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
 			"public_ip": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
 			"registered_by": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
 			"reported_agent_version": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
 			"reported_os_family": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
 			"reported_os_name": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
 			"reported_os_version": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
@@ -227,7 +217,6 @@ func ResourceInstance() *schema.Resource {
 
 			"root_device_volume_id": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
@@ -240,13 +229,11 @@ func ResourceInstance() *schema.Resource {
 
 			"ssh_host_dsa_key_fingerprint": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
 			"ssh_host_rsa_key_fingerprint": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
