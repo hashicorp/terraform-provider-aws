@@ -262,6 +262,38 @@ func TestAccCloudWatchMetricAlarm_extendedStatistic(t *testing.T) {
 		CheckDestroy: testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
+				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "IQM(1:2)"), // IQM accepts no args
+				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			},
+			{
+				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "iqm10"), // IQM accepts no args
+				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			},
+			// {  TODO: more complex regex to reject this
+			// 	Config: testAccMetricAlarmExtendedStatisticConfig(rName, "PR(5%:10%)"),  // PR args must be absolute
+			// 	ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			// },
+			// {  TODO: more complex regex to reject this
+			// 	Config: testAccMetricAlarmExtendedStatisticConfig(rName, "TC(:)"),  // at least one arg must be provided
+			// 	ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			// },
+			{
+				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "WM"), // missing syntax
+				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			},
+			{
+				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "p"), // missing arg
+				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			},
+			{
+				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "AB(1:2)"), // unknown stat 'AB'
+				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			},
+			{
+				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "cd42"), // unknown stat 'cd'
+				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			},
+			{
 				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "p88.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
@@ -365,38 +397,6 @@ func TestAccCloudWatchMetricAlarm_extendedStatistic(t *testing.T) {
 					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "TC(:0.5)"),
 				),
-			},
-			{
-				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "IQM(1:2)"), // IQM accepts no args
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
-			},
-			{
-				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "iqm10"), // IQM accepts no args
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
-			},
-			// {  TODO: more complex regex to reject this
-			// 	Config: testAccMetricAlarmExtendedStatisticConfig(rName, "PR(5%:10%)"),  // PR args must be absolute
-			// 	ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
-			// },
-			// {  TODO: more complex regex to reject this
-			// 	Config: testAccMetricAlarmExtendedStatisticConfig(rName, "TC(:)"),  // at least one arg must be provided
-			// 	ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
-			// },
-			{
-				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "WM"), // missing syntax
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
-			},
-			{
-				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "p"), // missing arg
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
-			},
-			{
-				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "AB(1:2)"), // unknown stat 'AB'
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
-			},
-			{
-				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "cd42"), // unknown stat 'cd'
-				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 		},
 	})
