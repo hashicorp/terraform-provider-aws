@@ -53,6 +53,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	"github.com/aws/aws-sdk-go/service/codecommit"
@@ -333,6 +334,7 @@ const (
 	CloudTrail                    = "cloudtrail"
 	CloudWatch                    = "cloudwatch"
 	CloudWatchLogs                = "cloudwatchlogs"
+	CloudWatchRUM                 = "cloudwatchrum"
 	CodeArtifact                  = "codeartifact"
 	CodeBuild                     = "codebuild"
 	CodeCommit                    = "codecommit"
@@ -631,6 +633,7 @@ func init() {
 	serviceData[CloudTrail] = &ServiceDatum{AWSClientName: "CloudTrail", AWSServiceName: cloudtrail.ServiceName, AWSEndpointsID: cloudtrail.EndpointsID, AWSServiceID: cloudtrail.ServiceID, ProviderNameUpper: "CloudTrail", HCLKeys: []string{"cloudtrail"}}
 	serviceData[CloudWatch] = &ServiceDatum{AWSClientName: "CloudWatch", AWSServiceName: cloudwatch.ServiceName, AWSEndpointsID: cloudwatch.EndpointsID, AWSServiceID: cloudwatch.ServiceID, ProviderNameUpper: "CloudWatch", HCLKeys: []string{"cloudwatch"}}
 	serviceData[CloudWatchLogs] = &ServiceDatum{AWSClientName: "CloudWatchLogs", AWSServiceName: cloudwatchlogs.ServiceName, AWSEndpointsID: cloudwatchlogs.EndpointsID, AWSServiceID: cloudwatchlogs.ServiceID, ProviderNameUpper: "CloudWatchLogs", HCLKeys: []string{"cloudwatchlogs"}}
+	serviceData[CloudWatchRUM] = &ServiceDatum{AWSClientName: "CloudWatchRUM", AWSServiceName: cloudwatchrum.ServiceName, AWSEndpointsID: cloudwatchrum.EndpointsID, AWSServiceID: cloudwatchrum.ServiceID, ProviderNameUpper: "CloudWatchRUM", HCLKeys: []string{"cloudwatchrum"}}
 	serviceData[CodeArtifact] = &ServiceDatum{AWSClientName: "CodeArtifact", AWSServiceName: codeartifact.ServiceName, AWSEndpointsID: codeartifact.EndpointsID, AWSServiceID: codeartifact.ServiceID, ProviderNameUpper: "CodeArtifact", HCLKeys: []string{"codeartifact"}}
 	serviceData[CodeBuild] = &ServiceDatum{AWSClientName: "CodeBuild", AWSServiceName: codebuild.ServiceName, AWSEndpointsID: codebuild.EndpointsID, AWSServiceID: codebuild.ServiceID, ProviderNameUpper: "CodeBuild", HCLKeys: []string{"codebuild"}}
 	serviceData[CodeCommit] = &ServiceDatum{AWSClientName: "CodeCommit", AWSServiceName: codecommit.ServiceName, AWSEndpointsID: codecommit.EndpointsID, AWSServiceID: codecommit.ServiceID, ProviderNameUpper: "CodeCommit", HCLKeys: []string{"codecommit"}}
@@ -938,6 +941,7 @@ type AWSClient struct {
 	CloudTrailConn                    *cloudtrail.CloudTrail
 	CloudWatchConn                    *cloudwatch.CloudWatch
 	CloudWatchLogsConn                *cloudwatchlogs.CloudWatchLogs
+	CloudWatchRUMConn                 *cloudwatchrum.CloudWatchRUM
 	CodeArtifactConn                  *codeartifact.CodeArtifact
 	CodeBuildConn                     *codebuild.CodeBuild
 	CodeCommitConn                    *codecommit.CodeCommit
@@ -1336,6 +1340,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		CloudTrailConn:                    cloudtrail.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudTrail])})),
 		CloudWatchConn:                    cloudwatch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudWatch])})),
 		CloudWatchLogsConn:                cloudwatchlogs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudWatchLogs])})),
+		CloudWatchRUMConn:                 cloudwatchrum.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CloudWatchRUM])})),
 		CodeArtifactConn:                  codeartifact.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CodeArtifact])})),
 		CodeBuildConn:                     codebuild.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CodeBuild])})),
 		CodeCommitConn:                    codecommit.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[CodeCommit])})),
