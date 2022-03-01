@@ -116,13 +116,13 @@ func resourceLicenseAssociationUpdate(d *schema.ResourceData, meta interface{}) 
 	err := resourceLicenseAssociationDelete(d, meta)
 
 	if err != nil {
-		return fmt.Errorf("error updating Grafana License Assocation (%s): %w", d.Id(), err)
+		return fmt.Errorf("error updating Grafana License Association (%s): %w", d.Id(), err)
 	}
 
 	err = resourceLicenseAssociationCreate(d, meta)
 
 	if err != nil {
-		return fmt.Errorf("error updating Grafana License Assocation (%s): %w", d.Id(), err)
+		return fmt.Errorf("error updating Grafana License Association (%s): %w", d.Id(), err)
 	}
 
 	return resourceLicenseAssociationRead(d, meta)
@@ -142,7 +142,7 @@ func resourceLicenseAssociationDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Grafana License Assocation (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting Grafana License Association (%s): %w", d.Id(), err)
 	}
 
 	_, err = waitWorkspaceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutDelete))

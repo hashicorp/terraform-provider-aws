@@ -3,7 +3,7 @@ subcategory: "Grafana"
 layout: "aws"
 page_title: "AWS: aws_grafana_license_association"
 description: |-
-Provides an Amazon Managed Grafana workspace license association resource.
+  Provides an Amazon Managed Grafana workspace license association resource.
 ---
 
 # Resource: aws_grafana_license_association
