@@ -697,10 +697,10 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		if v, ok := d.GetOk("database_name"); ok {
 			request.DatabaseName = aws.String(v.(string))
 		}
+	}
 
-		if v, ok := d.GetOk("kms_key_arn"); ok {
-			request.KmsKeyId = aws.String(v.(string))
-		}
+	if v, ok := d.GetOk("kms_key_arn"); ok {
+		request.KmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("certificate_arn"); ok {
