@@ -262,16 +262,18 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		},
 	}
 
-	log.Printf("[DEBUG] Reading OpsWorks app: %s", d.Id())
+	log.Printf("[DEBUG] Reading OpsWorks Application: %s", d.Id())
 
 	resp, err := client.DescribeApps(req)
+
+	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		log.Printf("[DEBUG] OpsWorks Application (%s) not found", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
-			log.Printf("[INFO] App not found: %s", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("describing OpsWorks Application (%s): %w", d.Id(), err)
 	}
 
 	app := resp.Apps[0]
