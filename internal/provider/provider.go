@@ -1590,6 +1590,7 @@ func Provider() *schema.Provider {
 			"aws_s3_bucket_analytics_configuration":           s3.ResourceBucketAnalyticsConfiguration(),
 			"aws_s3_bucket_intelligent_tiering_configuration": s3.ResourceBucketIntelligentTieringConfiguration(),
 			"aws_s3_bucket_inventory":                         s3.ResourceBucketInventory(),
+			"aws_s3_bucket_lifecycle_configuration":           s3.ResourceBucketLifecycleConfiguration(),
 			"aws_s3_bucket_metric":                            s3.ResourceBucketMetric(),
 			"aws_s3_bucket_notification":                      s3.ResourceBucketNotification(),
 			"aws_s3_bucket_object":                            s3.ResourceBucketObject(),
