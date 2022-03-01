@@ -3048,7 +3048,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   vpc_id                          = aws_vpc.test.id
-  cidr_block                       = "10.1.1.0/24"
+  cidr_block                      = "10.1.1.0/24"
   ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
   assign_ipv6_address_on_creation = true
 
