@@ -162,12 +162,18 @@ func resourceNetworkInsightsPathUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceNetworkInsightsPathDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
-	_, err := conn.DeleteNetworkInsightsPath(&ec2.DeleteNetworkInsightsPathInput{
+
+	log.Printf("[DEBUG] DeletingEC2 Network Insights Path: %s", d.Id())
+	_, err := conn.DeleteNetworkInsightsPathWithContext(ctx, &ec2.DeleteNetworkInsightsPathInput{
 		NetworkInsightsPathId: aws.String(d.Id()),
 	})
 
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkInsightsPathIdNotFound) {
+		return nil
+	}
+
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Network Insights Path (%s): %w", d.Id(), err))
+		return diag.Errorf("error deleting EC2 Network Insights Path (%s): %s", d.Id(), err)
 	}
 
 	return nil
