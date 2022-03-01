@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const (
@@ -29,23 +28,19 @@ func retryCreateCanary(conn *synthetics.Synthetics, d *schema.ResourceData, inpu
 			// delete canary because it is the only way to reprovision if in an error state
 			err = deleteCanary(conn, d.Id())
 			if err != nil {
-				tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(status.StateReasonCode), aws.StringValue(status.StateReason)))
+				return output, err
 			}
 
 			_, err = conn.CreateCanary(input)
 			if err != nil {
-				tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(status.StateReasonCode), aws.StringValue(status.StateReason)))
+				return output, err
 			}
 
 			_, err = waitCanaryReady(conn, d.Id())
 			if err != nil {
-				tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(status.StateReasonCode), aws.StringValue(status.StateReason)))
+				return output, err
 			}
-
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(status.StateReasonCode), aws.StringValue(status.StateReason)))
 		}
-
-		return output, err
 	}
 
 	return nil, err
