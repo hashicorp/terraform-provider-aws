@@ -327,6 +327,8 @@ resource "aws_s3_bucket" "mybucket" {
 
 ### Using ACL policy grants
 
+~> **NOTE:** The `acl` and `grant` arguments are deprecated in version 4.0 of the Terraform AWS Provider for removal in version 5.0. To independently manage these settings, see the [`aws_s3_bucket_acl` resource](s3_bucket_acl.html.markdown).
+
 ```terraform
 data "aws_canonical_user_id" "current_user" {}
 
