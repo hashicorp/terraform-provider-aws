@@ -614,26 +614,6 @@ func transitGatewayPeeringAttachmentRefreshFunc(conn *ec2.EC2, transitGatewayAtt
 	}
 }
 
-func transitGatewayRefreshFunc(conn *ec2.EC2, transitGatewayID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		transitGateway, err := DescribeTransitGateway(conn, transitGatewayID)
-
-		if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayID.NotFound") {
-			return nil, ec2.TransitGatewayStateDeleted, nil
-		}
-
-		if err != nil {
-			return nil, "", fmt.Errorf("error reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
-		}
-
-		if transitGateway == nil {
-			return nil, ec2.TransitGatewayStateDeleted, nil
-		}
-
-		return transitGateway, aws.StringValue(transitGateway.State), nil
-	}
-}
-
 func transitGatewayRouteTableAssociationRefreshFunc(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		transitGatewayAssociation, err := DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
