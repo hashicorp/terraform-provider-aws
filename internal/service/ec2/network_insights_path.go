@@ -118,7 +118,7 @@ func resourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceData
 
 	nip, err := FindNetworkInsightsPathByID(conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkInsightsPathIDNotFound) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkInsightsPathIdNotFound) {
 		log.Printf("[WARN] Network Insights Path (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

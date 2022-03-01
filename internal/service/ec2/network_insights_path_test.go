@@ -177,7 +177,7 @@ func testAccCheckEmailIdentityDestroy(s *terraform.State) error {
 		id := rs.Primary.ID
 
 		_, err := tfec2.FindNetworkInsightsPathByID(conn, id)
-		if err != nil && !tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidNetworkInsightsPathIDNotFound) {
+		if err != nil && !tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidNetworkInsightsPathIdNotFound) {
 			return err
 		}
 	}

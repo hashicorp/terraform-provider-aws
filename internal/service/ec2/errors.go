@@ -38,7 +38,7 @@ const (
 	ErrCodeInvalidNetworkAclEntryNotFound                 = "InvalidNetworkAclEntry.NotFound"
 	ErrCodeInvalidNetworkAclIDNotFound                    = "InvalidNetworkAclID.NotFound"
 	ErrCodeInvalidNetworkInterfaceIDNotFound              = "InvalidNetworkInterfaceID.NotFound"
-	ErrCodeInvalidNetworkInsightsPathIDNotFound           = "InvalidNetworkInsightsPathId.NotFound"
+	ErrCodeInvalidNetworkInsightsPathIdNotFound           = "InvalidNetworkInsightsPathId.NotFound"
 	ErrCodeInvalidParameter                               = "InvalidParameter"
 	ErrCodeInvalidParameterException                      = "InvalidParameterException"
 	ErrCodeInvalidParameterValue                          = "InvalidParameterValue"
