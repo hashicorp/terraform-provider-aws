@@ -29,6 +29,7 @@ CloudHSM v2
 CloudSearch
 CloudTrail
 CloudWatch
+CloudWatch RUM
 CodeArtifact
 CodeBuild
 CodeCommit
