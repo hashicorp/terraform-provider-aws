@@ -734,7 +734,7 @@ func TestAccEC2Route_ipv6ToNatGateway(t *testing.T) {
 	resourceName := "aws_route.test"
 	ngwResourceName := "aws_nat_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	destinationCidr := "::/0"
+	destinationCidr := "64:ff9b::/96"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
