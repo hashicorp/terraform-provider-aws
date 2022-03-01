@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,19 +28,13 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"source": {
+			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			"destination": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
-			},
-			"source_ip": {
-				Type:     schema.TypeString,
-				Optional: true,
 				ForceNew: true,
 			},
 			"destination_ip": {
@@ -54,18 +47,21 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"protocol": {
+			"source": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"tcp",
-					"udp",
-				}, false),
 			},
-			"arn": {
+			"source_ip": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
+				ForceNew: true,
+			},
+			"protocol": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.Protocol_Values(), false),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
