@@ -66,37 +66,11 @@ func validAmazonSideASN(v interface{}, k string) (ws []string, errors []error) {
 }
 
 func valid4ByteASN(v interface{}, k string) (ws []string, errors []error) {
-	var asn int64 = 0
-	switch value := v.(type) {
-	case string:
-		tmp_asn, err := strconv.ParseInt(value, 10, 64)
-		if err != nil {
-			errors = append(errors, fmt.Errorf("%q (%q) must be a 64-bit integer", k, v))
-			return
-		}
-		asn = tmp_asn
-	case int:
-		asn = int64(value)
-	case int8:
-		asn = int64(value)
-	case int16:
-		asn = int64(value)
-	case int32:
-		asn = int64(value)
-	case int64:
-		asn = value
-	case uint:
-		asn = int64(value)
-	case uint8:
-		asn = int64(value)
-	case uint16:
-		asn = int64(value)
-	case uint32:
-		asn = int64(value)
-	case uint64:
-		asn = int64(value)
-	default:
-		errors = append(errors, fmt.Errorf("%q (%q) is not string nor a 64-bit integer", k, v))
+	value := v.(string)
+
+	asn, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("%q (%q) must be a 64-bit integer", k, v))
 		return
 	}
 

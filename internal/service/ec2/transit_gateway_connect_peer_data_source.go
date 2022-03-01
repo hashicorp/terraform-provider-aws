@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -18,7 +19,7 @@ func DataSourceTransitGatewayConnectPeer() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"bgp_asn": {
-				Type:     schema.TypeInt,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"filter": DataSourceFiltersSchema(),
@@ -70,7 +71,7 @@ func dataSourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Reso
 	}
 
 	d.SetId(aws.StringValue(transitGatewayConnectPeer.TransitGatewayConnectPeerId))
-	d.Set("bgp_asn", transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations[0].PeerAsn)
+	d.Set("bgp_asn", strconv.FormatInt(aws.Int64Value(transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations[0].PeerAsn), 10))
 	d.Set("inside_cidr_blocks", aws.StringValueSlice(transitGatewayConnectPeer.ConnectPeerConfiguration.InsideCidrBlocks))
 	d.Set("peer_address", transitGatewayConnectPeer.ConnectPeerConfiguration.PeerAddress)
 	d.Set("transit_gateway_address", transitGatewayConnectPeer.ConnectPeerConfiguration.TransitGatewayAddress)

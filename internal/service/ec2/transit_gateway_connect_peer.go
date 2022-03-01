@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -39,7 +40,7 @@ func ResourceTransitGatewayConnectPeer() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"bgp_asn": {
-				Type:         schema.TypeInt,
+				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
@@ -103,8 +104,14 @@ func resourceTransitGatewayConnectPeerCreate(ctx context.Context, d *schema.Reso
 	}
 
 	if v, ok := d.GetOk("bgp_asn"); ok {
+		v, err := strconv.ParseInt(v.(string), 10, 64)
+
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
 		input.BgpOptions = &ec2.TransitGatewayConnectRequestBgpOptions{
-			PeerAsn: aws.Int64(int64(v.(int))),
+			PeerAsn: aws.Int64(v),
 		}
 	}
 
@@ -145,7 +152,7 @@ func resourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Resour
 		return diag.Errorf("error reading EC2 Transit Gateway Connect Peer (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bgp_asn", transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations[0].PeerAsn)
+	d.Set("bgp_asn", strconv.FormatInt(aws.Int64Value(transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations[0].PeerAsn), 10))
 	d.Set("inside_cidr_blocks", aws.StringValueSlice(transitGatewayConnectPeer.ConnectPeerConfiguration.InsideCidrBlocks))
 	d.Set("peer_address", transitGatewayConnectPeer.ConnectPeerConfiguration.PeerAddress)
 	d.Set("transit_gateway_address", transitGatewayConnectPeer.ConnectPeerConfiguration.TransitGatewayAddress)
