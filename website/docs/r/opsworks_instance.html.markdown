@@ -70,7 +70,7 @@ to understand the implications of using these attributes.
 
 ### `ebs_block_device`
 
-* `delete_on_termination` - (Optional) Whether the volume should be destroyed on instance termination Default is `true`.
+* `delete_on_termination` - (Optional) Whether the volume should be destroyed on instance termination. Default is `true`.
 * `device_name` - (Required) Name of the device to mount.
 * `iops` - (Optional) Amount of provisioned [IOPS](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). This must be set with a `volume_type` of `io1`.
 * `snapshot_id` - (Optional) Snapshot ID to mount.
