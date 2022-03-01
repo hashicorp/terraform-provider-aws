@@ -59,6 +59,7 @@ const (
 	ErrCodeInvalidSubnetIDNotFound                        = "InvalidSubnetID.NotFound"
 	ErrCodeInvalidSubnetIdNotFound                        = "InvalidSubnetId.NotFound"
 	ErrCodeInvalidTransitGatewayAttachmentIDNotFound      = "InvalidTransitGatewayAttachmentID.NotFound"
+	ErrCodeInvalidTransitGatewayConnectPeerIDNotFound     = "InvalidTransitGatewayConnectPeerID.NotFound"
 	ErrCodeInvalidTransitGatewayIDNotFound                = "InvalidTransitGatewayID.NotFound"
 	ErrCodeInvalidTransitGatewayMulticastDomainIdNotFound = "InvalidTransitGatewayMulticastDomainId.NotFound"
 	ErrCodeInvalidVolumeNotFound                          = "InvalidVolume.NotFound"

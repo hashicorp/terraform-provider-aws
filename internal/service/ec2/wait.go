@@ -759,6 +759,40 @@ func WaitTransitGatewayConnectDeleted(conn *ec2.EC2, id string, timeout time.Dur
 	return nil, err
 }
 
+func WaitTransitGatewayConnectPeerCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.TransitGatewayConnectPeer, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayConnectPeerStatePending},
+		Target:  []string{ec2.TransitGatewayConnectPeerStateAvailable},
+		Refresh: StatusTransitGatewayConnectPeerState(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayConnectPeer); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitTransitGatewayConnectPeerDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.TransitGatewayConnectPeer, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayConnectPeerStateAvailable, ec2.TransitGatewayConnectPeerStateDeleting},
+		Target:  []string{},
+		Refresh: StatusTransitGatewayConnectPeerState(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayConnectPeer); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func WaitTransitGatewayMulticastDomainCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.TransitGatewayMulticastDomain, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.TransitGatewayMulticastDomainStatePending},
