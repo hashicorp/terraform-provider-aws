@@ -16,7 +16,7 @@ import (
 )
 
 func TestAccDMSEndpoint_basic(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -56,7 +56,7 @@ func TestAccDMSEndpoint_basic(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_S3_basic(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -113,7 +113,7 @@ func TestAccDMSEndpoint_S3_basic(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8009
 func TestAccDMSEndpoint_S3_extraConnectionAttributes(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -140,7 +140,7 @@ func TestAccDMSEndpoint_S3_extraConnectionAttributes(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_dynamoDB(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -434,7 +434,7 @@ func TestAccDMSEndpoint_kinesis(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_MongoDB_basic(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -464,7 +464,7 @@ func TestAccDMSEndpoint_MongoDB_basic(t *testing.T) {
 // configured fields and extra_connection_attributes now set in the resource
 // per https://github.com/hashicorp/terraform-provider-aws/issues/8009
 func TestAccDMSEndpoint_MongoDB_update(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -509,7 +509,7 @@ func TestAccDMSEndpoint_MongoDB_update(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_Oracle_basic(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -536,7 +536,7 @@ func TestAccDMSEndpoint_Oracle_basic(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_Oracle_secretID(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -562,7 +562,7 @@ func TestAccDMSEndpoint_Oracle_secretID(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_Oracle_update(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -602,7 +602,7 @@ func TestAccDMSEndpoint_Oracle_update(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_PostgreSQL_basic(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -629,7 +629,7 @@ func TestAccDMSEndpoint_PostgreSQL_basic(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_PostgreSQL_secretID(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -655,7 +655,7 @@ func TestAccDMSEndpoint_PostgreSQL_secretID(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_PostgreSQL_update(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -717,7 +717,7 @@ func TestAccDMSEndpoint_PostgreSQL_kmsKey(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_docDB(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -757,7 +757,7 @@ func TestAccDMSEndpoint_docDB(t *testing.T) {
 }
 
 func TestAccDMSEndpoint_db2(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
+	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -854,7 +854,7 @@ func testAccCheckEndpointExists(n string) resource.TestCheckFunc {
 
 func testAccEndpointConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   database_name               = "tf-test-dms-db"
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
@@ -878,7 +878,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 
 func testAccEndpointConfig_basicUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   database_name               = "tf-test-dms-db-updated"
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
@@ -904,7 +904,7 @@ func testAccEndpointConfig_dynamoDB(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id         = %[1]q
   endpoint_type       = "target"
   engine_name         = "dynamodb"
@@ -970,7 +970,7 @@ func testAccEndpointConfig_dynamoDBUpdate(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id         = %[1]q
   endpoint_type       = "target"
   engine_name         = "dynamodb"
@@ -1034,7 +1034,7 @@ func testAccEndpointConfig_s3(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "target"
   engine_name                 = "s3"
@@ -1114,7 +1114,7 @@ func testAccEndpointConfig_s3ExtraConnectionAttributes(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "target"
   engine_name                 = "s3"
@@ -1192,7 +1192,7 @@ func testAccEndpointConfig_s3Config(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "target"
   engine_name                 = "s3"
@@ -1547,7 +1547,7 @@ data "aws_kms_alias" "dms" {
   name = "alias/aws/dms"
 }
 
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "mongodb"
@@ -1584,7 +1584,7 @@ data "aws_kms_alias" "dms" {
   name = "alias/aws/dms"
 }
 
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "mongodb"
@@ -1615,7 +1615,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 
 func testAccEndpointConfig_oracle(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "oracle"
@@ -1638,7 +1638,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 
 func testAccEndpointConfig_oracleUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "oracle"
@@ -1709,7 +1709,7 @@ resource "aws_iam_role_policy" "test" {
 EOF
 }
 
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id                     = %[1]q
   endpoint_type                   = "source"
   engine_name                     = "oracle"
@@ -1731,7 +1731,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 
 func testAccEndpointConfig_postgreSQL(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "postgres"
@@ -1754,7 +1754,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 
 func testAccEndpointConfig_postgreSQLUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "postgres"
@@ -1824,7 +1824,7 @@ resource "aws_iam_role_policy" "test" {
 }
 EOF
 }
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   endpoint_id                     = %[1]q
   endpoint_type                   = "source"
   engine_name                     = "postgres"
@@ -1846,7 +1846,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 
 func testAccEndpointConfig_docDB(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   database_name               = "tf-test-dms-db"
   endpoint_id                 = %[1]q
   endpoint_type               = "target"
@@ -1870,7 +1870,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 
 func testAccEndpointConfig_docDBUpdate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   database_name               = "tf-test-dms-db-updated"
   endpoint_id                 = %[1]q
   endpoint_type               = "target"
@@ -1894,7 +1894,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 
 func testAccEndpointConfig_db2(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   database_name               = "tf-test-dms-db"
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
@@ -1918,7 +1918,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 
 func testAccEndpointConfig_db2Update(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
+resource "aws_dms_endpoint" "test" {
   database_name               = "tf-test-dms-db-updated"
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
