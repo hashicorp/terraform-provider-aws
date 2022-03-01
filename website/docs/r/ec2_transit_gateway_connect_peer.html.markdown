@@ -49,6 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 
 - `create` - (Default `10 minutes`) Used for EC2 Transit Gateway Connect Peer creation
 - `delete` - (Default `10 minutes`) Used for EC2 Transit Gateway Connect Peer deletion
+
 ## Import
 
 `aws_ec2_transit_gateway_connect_peer` can be imported by using the EC2 Transit Gateway Connect Peer identifier, e.g.,
