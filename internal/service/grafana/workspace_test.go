@@ -31,7 +31,6 @@ func TestAccGrafana_serial(t *testing.T) {
 		},
 		"LicenseAssociation": {
 			"enterpriseFreeTrial": testAccGrafanaLicenseAssociation_freeTrial,
-			"enterprise":          testAccGrafanaLicenseAssociation_enterprise,
 		},
 	}
 

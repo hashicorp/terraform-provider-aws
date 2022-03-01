@@ -38,30 +38,6 @@ func testAccGrafanaLicenseAssociation_freeTrial(t *testing.T) {
 	})
 }
 
-func testAccGrafanaLicenseAssociation_enterprise(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_grafana_license_association.test"
-	workspaceResourceName := "aws_grafana_workspace.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy: nil,
-		Providers:    acctest.Providers,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccLicenseAssociation(rName, managedgrafana.LicenseTypeEnterprise),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLicenseAssociationExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "license_expiration"),
-					resource.TestCheckResourceAttr(resourceName, "license_type", managedgrafana.LicenseTypeEnterprise),
-					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
-				),
-			},
-		},
-	})
-}
-
 func testAccLicenseAssociation(rName string, licenseType string) string {
 	return acctest.ConfigCompose(testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"), fmt.Sprintf(`
 resource "aws_grafana_license_association" "test" {
