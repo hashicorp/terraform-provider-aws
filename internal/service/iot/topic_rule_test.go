@@ -70,19 +70,19 @@ func TestAccIoTTopicRule_cloudWatchAlarm(t *testing.T) {
 }
 
 func TestAccIoTTopicRule_cloudWatchLogs(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIoTTopicRule_cloudWatchLogs(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
+					testAccCheckTopicRuleExists("aws_iot_topic_rule.rule"),
 				),
 			},
 			{
@@ -731,7 +731,9 @@ resource "aws_iot_topic_rule" "rule" {
 }
 
 func testAccIoTTopicRule_cloudWatchLogs(rName string) string {
-	return fmt.Sprintf(testAccIoTTopicRuleRole+`
+	return acctest.ConfigCompose(
+		testAccTopicRuleRole(rName),
+		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -744,7 +746,7 @@ resource "aws_iot_topic_rule" "rule" {
     role_arn       = aws_iam_role.iot_role.arn
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccTopicRule_cloudWatchmetric(rName string) string {
