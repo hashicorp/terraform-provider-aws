@@ -2,7 +2,6 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -47,6 +47,12 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"protocol": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.Protocol_Values(), false),
+			},
 			"source": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -56,12 +62,6 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-			},
-			"protocol": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ec2.Protocol_Values(), false),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -109,40 +109,38 @@ func resourceNetworkInsightsPathCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
-
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	nip, err := FindNetworkInsightsPathByID(conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkInsightsPathIdNotFound) {
-		log.Printf("[WARN] Network Insights Path (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Network Insights Path %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Network Insights Path (%s): %w", d.Id(), err))
+		return diag.Errorf("error reading EC2 Network Insights Path (%s): %s", d.Id(), err)
 	}
 
-	if nip == nil {
-		return diag.FromErr(fmt.Errorf("error getting Network Insights Path (%s): empty output", d.Id()))
-	}
-
-	d.Set("source", nip.Source)
-	d.Set("destination", nip.Destination)
-	d.Set("protocol", nip.Protocol)
 	d.Set("arn", nip.NetworkInsightsPathArn)
-	d.Set("source_ip", nip.SourceIp)
+	d.Set("destination", nip.Destination)
 	d.Set("destination_ip", nip.DestinationIp)
 	d.Set("destination_port", nip.DestinationPort)
+	d.Set("protocol", nip.Protocol)
+	d.Set("source", nip.Source)
+	d.Set("source_ip", nip.SourceIp)
 
 	tags := KeyValueTags(nip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
+		return diag.Errorf("error setting tags: %s", err)
 	}
+
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
+		return diag.Errorf("error setting tags_all: %s", err)
 	}
 
 	return nil

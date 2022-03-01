@@ -978,32 +978,74 @@ func FindNetworkInterfaceSecurityGroup(conn *ec2.EC2, networkInterfaceID string,
 	}
 }
 
-func FindNetworkInsightsPaths(conn *ec2.EC2, input *ec2.DescribeNetworkInsightsPathsInput) ([]*ec2.NetworkInsightsPath, error) {
-	var results []*ec2.NetworkInsightsPath
-	err := conn.DescribeNetworkInsightsPathsPages(input, func(page *ec2.DescribeNetworkInsightsPathsOutput, lastPage bool) bool {
-		results = append(results, page.NetworkInsightsPaths...)
-		return !lastPage
-	})
+func FindNetworkInsightsPath(conn *ec2.EC2, input *ec2.DescribeNetworkInsightsPathsInput) (*ec2.NetworkInsightsPath, error) {
+	output, err := FindNetworkInsightsPaths(conn, input)
+
 	if err != nil {
 		return nil, err
 	}
-	return results, nil
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
 }
 
-func FindNetworkInsightsPathByID(conn *ec2.EC2, nipID string) (*ec2.NetworkInsightsPath, error) {
-	input := ec2.DescribeNetworkInsightsPathsInput{
-		NetworkInsightsPathIds: aws.StringSlice([]string{nipID}),
+func FindNetworkInsightsPaths(conn *ec2.EC2, input *ec2.DescribeNetworkInsightsPathsInput) ([]*ec2.NetworkInsightsPath, error) {
+	var output []*ec2.NetworkInsightsPath
+
+	err := conn.DescribeNetworkInsightsPathsPages(input, func(page *ec2.DescribeNetworkInsightsPathsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.NetworkInsightsPaths {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkInsightsPathIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
 	}
-	result, err := FindNetworkInsightsPaths(conn, &input)
+
 	if err != nil {
 		return nil, err
 	}
-	if len(result) != 1 {
+
+	return output, nil
+}
+
+func FindNetworkInsightsPathByID(conn *ec2.EC2, id string) (*ec2.NetworkInsightsPath, error) {
+	input := &ec2.DescribeNetworkInsightsPathsInput{
+		NetworkInsightsPathIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindNetworkInsightsPath(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.NetworkInsightsPathId) != id {
 		return nil, &resource.NotFoundError{
-			Message: fmt.Sprintf("Network Insights Path (%s) could not be found", nipID),
+			LastRequest: input,
 		}
 	}
-	return result[0], nil
+
+	return output, nil
 }
 
 // FindMainRouteTableAssociationByID returns the main route table association corresponding to the specified identifier.

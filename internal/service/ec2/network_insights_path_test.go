@@ -6,12 +6,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEC2NetworkInsightsPath_basic(t *testing.T) {
@@ -21,12 +21,12 @@ func TestAccEC2NetworkInsightsPath_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEmailIdentityDestroy,
+		CheckDestroy:      testAccCheckNetworkInsightsPathDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEC2NetworkInsightsPath("tcp"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEC2NetworkInsightsPathExists(resourceName),
+					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_network_interface.test_source", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination", "aws_network_interface.test_destination", "id"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
@@ -49,12 +49,12 @@ func TestAccEC2NetworkInsightsPath_SourceIP(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEmailIdentityDestroy,
+		CheckDestroy:      testAccCheckNetworkInsightsPathDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEC2NetworkInsightsPath_source_ip("1.1.1.1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEC2NetworkInsightsPathExists(resourceName),
+					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "source_ip", "1.1.1.1"),
 				),
 			},
@@ -66,7 +66,7 @@ func TestAccEC2NetworkInsightsPath_SourceIP(t *testing.T) {
 			{
 				Config: testAccEC2NetworkInsightsPath_source_ip("8.8.8.8"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEC2NetworkInsightsPathExists(resourceName),
+					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "source_ip", "8.8.8.8"),
 				),
 			},
@@ -81,12 +81,12 @@ func TestAccEC2NetworkInsightsPath_DestinationIP(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEmailIdentityDestroy,
+		CheckDestroy:      testAccCheckNetworkInsightsPathDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEC2NetworkInsightsPath_destination_ip("1.1.1.1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEC2NetworkInsightsPathExists(resourceName),
+					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_ip", "1.1.1.1"),
 				),
 			},
@@ -98,7 +98,7 @@ func TestAccEC2NetworkInsightsPath_DestinationIP(t *testing.T) {
 			{
 				Config: testAccEC2NetworkInsightsPath_destination_ip("8.8.8.8"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEC2NetworkInsightsPathExists(resourceName),
+					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_ip", "8.8.8.8"),
 				),
 			},
@@ -113,12 +113,12 @@ func TestAccEC2NetworkInsightsPath_DestinationPort(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEmailIdentityDestroy,
+		CheckDestroy:      testAccCheckNetworkInsightsPathDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEC2NetworkInsightsPath_destination_port("80"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEC2NetworkInsightsPathExists(resourceName),
+					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_port", "80"),
 				),
 			},
@@ -130,7 +130,7 @@ func TestAccEC2NetworkInsightsPath_DestinationPort(t *testing.T) {
 			{
 				Config: testAccEC2NetworkInsightsPath_destination_port("443"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEC2NetworkInsightsPathExists(resourceName),
+					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_port", "443"),
 				),
 			},
@@ -138,7 +138,7 @@ func TestAccEC2NetworkInsightsPath_DestinationPort(t *testing.T) {
 	})
 }
 
-func testAccCheckEC2NetworkInsightsPathExists(n string) resource.TestCheckFunc {
+func testAccCheckNetworkInsightsPathExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -146,27 +146,22 @@ func testAccCheckEC2NetworkInsightsPathExists(n string) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Network Insights Path is set")
+			return fmt.Errorf("No EC2 Network Insights Path ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		id := rs.Primary.ID
+		_, err := tfec2.FindNetworkInsightsPathByID(conn, rs.Primary.ID)
 
-		response, err := tfec2.FindNetworkInsightsPathByID(conn, id)
 		if err != nil {
 			return err
-		}
-
-		if response == nil || *response.NetworkInsightsPathId != id {
-			return fmt.Errorf("Network Insights Path (%s) not found", id)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckEmailIdentityDestroy(s *terraform.State) error {
+func testAccCheckNetworkInsightsPathDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -174,12 +169,17 @@ func testAccCheckEmailIdentityDestroy(s *terraform.State) error {
 			continue
 		}
 
-		id := rs.Primary.ID
+		_, err := tfec2.FindNetworkInsightsPathByID(conn, rs.Primary.ID)
 
-		_, err := tfec2.FindNetworkInsightsPathByID(conn, id)
-		if err != nil && !tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidNetworkInsightsPathIdNotFound) {
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
 			return err
 		}
+
+		return fmt.Errorf("EC2 Network Insights Path %s still exists", rs.Primary.ID)
 	}
 
 	return nil
