@@ -1,8 +1,14 @@
 ## 4.4.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_route53domains_registered_domain` ([#12711](https://github.com/hashicorp/terraform-provider-aws/issues/12711))
+
 ENHANCEMENTS:
 
 * resource/aws_eks_cluster: Retry when `ResourceInUseException` errors are returned from the AWS API during resource deletion ([#23366](https://github.com/hashicorp/terraform-provider-aws/issues/23366))
+* resource/aws_lambda_function: Add support for `dotnet6` `runtime` value ([#23426](https://github.com/hashicorp/terraform-provider-aws/issues/23426))
+* resource/aws_lambda_layer_version: Add support for `dotnet6` `compatible_runtimes` value ([#23426](https://github.com/hashicorp/terraform-provider-aws/issues/23426))
 
 ## 4.3.0 (February 28, 2022)
 
