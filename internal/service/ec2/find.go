@@ -2354,7 +2354,8 @@ func FindTransitGatewayConnectPeer(conn *ec2.EC2, input *ec2.DescribeTransitGate
 		return nil, err
 	}
 
-	if len(output) == 0 || output[0] == nil || output[0].ConnectPeerConfiguration == nil {
+	if len(output) == 0 || output[0] == nil || output[0].ConnectPeerConfiguration == nil ||
+		len(output[0].ConnectPeerConfiguration.BgpConfigurations) == 0 || output[0].ConnectPeerConfiguration.BgpConfigurations[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 

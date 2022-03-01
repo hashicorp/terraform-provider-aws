@@ -27,7 +27,7 @@ data "aws_ec2_transit_gateway_connect_peer" "example" {
 
 ```terraform
 data "aws_ec2_transit_gateway_connect_peer" "example" {
-  id = "tgw-connect-peer-12345678"
+  transit_gateway_connect_peer_id = "tgw-connect-peer-12345678"
 }
 ```
 
@@ -36,7 +36,7 @@ data "aws_ec2_transit_gateway_connect_peer" "example" {
 The following arguments are supported:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
-* `id` - (Optional) Identifier of the EC2 Transit Gateway Connect Peer.
+* `transit_gateway_connect_peer_id` - (Optional) Identifier of the EC2 Transit Gateway Connect Peer.
 
 ### filter Argument Reference
 
