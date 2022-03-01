@@ -155,7 +155,7 @@ const transitGatewayRouteIDSeparator = "_"
 
 func TransitGatewayRouteCreateResourceID(transitGatewayRouteTableID, destination string) string {
 	parts := []string{transitGatewayRouteTableID, destination}
-	id := strings.Join(parts, clientVPNAuthorizationRuleIDSeparator)
+	id := strings.Join(parts, transitGatewayRouteIDSeparator)
 
 	return id
 }
