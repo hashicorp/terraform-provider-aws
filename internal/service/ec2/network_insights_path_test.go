@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2NetworkInsightsPath_basic(t *testing.T) {
+func TestAccNetworkInsightsPath_basic(t *testing.T) {
 	resourceName := "aws_ec2_network_insights_path.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -42,7 +42,7 @@ func TestAccEC2NetworkInsightsPath_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkInsightsPath_SourceIP(t *testing.T) {
+func TestAccNetworkInsightsPath_sourceIP(t *testing.T) {
 	resourceName := "aws_ec2_network_insights_path.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -74,7 +74,7 @@ func TestAccEC2NetworkInsightsPath_SourceIP(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkInsightsPath_DestinationIP(t *testing.T) {
+func TestAccNetworkInsightsPath_destinationIP(t *testing.T) {
 	resourceName := "aws_ec2_network_insights_path.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -106,7 +106,7 @@ func TestAccEC2NetworkInsightsPath_DestinationIP(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkInsightsPath_DestinationPort(t *testing.T) {
+func TestAccNetworkInsightsPath_destinationPort(t *testing.T) {
 	resourceName := "aws_ec2_network_insights_path.test"
 
 	resource.ParallelTest(t, resource.TestCase{
