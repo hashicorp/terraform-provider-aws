@@ -1,9 +1,11 @@
 package ec2_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
@@ -11,6 +13,7 @@ import (
 func testAccTransitGatewayConnectDataSource_Filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway_connect.test"
 	resourceName := "aws_ec2_transit_gateway_connect.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
@@ -19,12 +22,13 @@ func testAccTransitGatewayConnectDataSource_Filter(t *testing.T) {
 		CheckDestroy: testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectFilterDataSourceConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "protocol", dataSourceName, "protocol"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "transit_gateway_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "transport_attachment_id", dataSourceName, "transport_attachment_id"),
+				Config: testAccTransitGatewayConnectFilterDataSourceConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "protocol", resourceName, "protocol"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_connect_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_id", resourceName, "transit_gateway_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "transport_attachment_id", resourceName, "transport_attachment_id"),
 				),
 			},
 		},
@@ -34,6 +38,7 @@ func testAccTransitGatewayConnectDataSource_Filter(t *testing.T) {
 func testAccTransitGatewayConnectDataSource_ID(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway_connect.test"
 	resourceName := "aws_ec2_transit_gateway_connect.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
@@ -42,24 +47,26 @@ func testAccTransitGatewayConnectDataSource_ID(t *testing.T) {
 		CheckDestroy: testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectIDDataSourceConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "transit_gateway_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "transport_attachment_id", dataSourceName, "transport_attachment_id"),
+				Config: testAccTransitGatewayConnectIDDataSourceConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "protocol", resourceName, "protocol"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_connect_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_id", resourceName, "transit_gateway_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "transport_attachment_id", resourceName, "transport_attachment_id"),
 				),
 			},
 		},
 	})
 }
 
-func testAccTransitGatewayConnectFilterDataSourceConfig() string {
-	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() + `
+func testAccTransitGatewayConnectFilterDataSourceConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-connect"
+    Name = %[1]q
   }
 }
 
@@ -69,21 +76,33 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-connect"
+    Name = %[1]q
   }
 }
 
-resource "aws_ec2_transit_gateway" "test" {}
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   subnet_ids         = [aws_subnet.test.id]
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpc_id             = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_ec2_transit_gateway_connect" "test" {
   transit_gateway_id      = aws_ec2_transit_gateway.test.id
   transport_attachment_id = aws_ec2_transit_gateway_vpc_attachment.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_ec2_transit_gateway_connect" "test" {
@@ -92,16 +111,16 @@ data "aws_ec2_transit_gateway_connect" "test" {
     values = [aws_ec2_transit_gateway_connect.test.id]
   }
 }
-`
+`, rName))
 }
 
-func testAccTransitGatewayConnectIDDataSourceConfig() string {
-	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() + `
+func testAccTransitGatewayConnectIDDataSourceConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-connect"
+    Name = %[1]q
   }
 }
 
@@ -111,25 +130,37 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-connect"
+    Name = %[1]q
   }
 }
 
-resource "aws_ec2_transit_gateway" "test" {}
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   subnet_ids         = [aws_subnet.test.id]
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpc_id             = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_ec2_transit_gateway_connect" "test" {
   transit_gateway_id      = aws_ec2_transit_gateway.test.id
   transport_attachment_id = aws_ec2_transit_gateway_vpc_attachment.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_ec2_transit_gateway_connect" "test" {
-  id = aws_ec2_transit_gateway_connect.test.id
+  transit_gateway_connect_id = aws_ec2_transit_gateway_connect.test.id
 }
-`
+`, rName))
 }

@@ -27,7 +27,7 @@ data "aws_ec2_transit_gateway_connect" "example" {
 
 ```terraform
 data "aws_ec2_transit_gateway_connect" "example" {
-  id = "tgw-attach-12345678"
+  transit_gateway_connect_id = "tgw-attach-12345678"
 }
 ```
 
@@ -36,7 +36,7 @@ data "aws_ec2_transit_gateway_connect" "example" {
 The following arguments are supported:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
-* `id` - (Optional) Identifier of the EC2 Transit Gateway Connect.
+* `transit_gateway_connect_id` - (Optional) Identifier of the EC2 Transit Gateway Connect.
 
 ### filter Argument Reference
 
