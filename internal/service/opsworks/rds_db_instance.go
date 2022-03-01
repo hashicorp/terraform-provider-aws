@@ -82,13 +82,13 @@ func resourceRDSDBInstanceDeregister(d *schema.ResourceData, meta interface{}) e
 
 	_, err := client.DeregisterRdsDbInstance(req)
 
+	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		log.Printf("[DEBUG] OpsWorks RDS DB instance (%s) not found to delete; removed from state", d.Id())
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
-			log.Printf("[INFO] The db instance could not be found. Remove it from state.")
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error deregistering Opsworks RDS DB instance: %s", err)
+		return fmt.Errorf("deregistering Opsworks RDS DB instance: %s", err)
 	}
 
 	return nil

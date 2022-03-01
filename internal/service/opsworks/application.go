@@ -374,6 +374,12 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deleting OpsWorks application: %s", d.Id())
 
 	_, err := client.DeleteApp(req)
+
+	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		log.Printf("[DEBUG] OpsWorks Application (%s) not found to delete; removed from state", d.Id())
+		return nil
+	}
+
 	return err
 }
 

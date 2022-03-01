@@ -613,6 +613,7 @@ func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := client.DeleteStack(req)
 
 	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		log.Printf("[DEBUG] OpsWorks Stack (%s) not found to delete; removed from state", d.Id())
 		return nil
 	}
 

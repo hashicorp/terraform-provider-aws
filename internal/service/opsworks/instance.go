@@ -836,6 +836,12 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deleting OpsWorks instance: %s", d.Id())
 
 	_, err := client.DeleteInstance(req)
+
+	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		log.Printf("[DEBUG] OpsWorks Instance (%s) not found to delete; removed from state", d.Id())
+		return nil
+	}
+
 	return err
 }
 
