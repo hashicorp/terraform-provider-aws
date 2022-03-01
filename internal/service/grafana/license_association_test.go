@@ -84,14 +84,10 @@ func testAccCheckLicenseAssociationExists(name string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn
 
-		workspace, err := tfgrafana.FindWorkspaceByID(conn, rs.Primary.ID)
+		_, err := tfgrafana.FindLicensedWorkspaceByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
-		}
-
-		if workspace.LicenseType == nil {
-			return fmt.Errorf("Not found: %s", name)
 		}
 
 		return nil
@@ -106,13 +102,9 @@ func testAccCheckLicenseAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		workspace, err := tfgrafana.FindWorkspaceByID(conn, rs.Primary.ID)
+		_, err := tfgrafana.FindLicensedWorkspaceByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if workspace.LicenseType == nil {
 			continue
 		}
 

@@ -18,7 +18,6 @@ func ResourceLicenseAssociation() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceLicenseAssociationCreate,
 		Read:   resourceLicenseAssociationRead,
-		Update: resourceLicenseAssociationUpdate,
 		Delete: resourceLicenseAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -27,7 +26,7 @@ func ResourceLicenseAssociation() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
-			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -42,11 +41,13 @@ func ResourceLicenseAssociation() *schema.Resource {
 			"license_type": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(managedgrafana.LicenseType_Values(), false),
 			},
 			"workspace_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -54,13 +55,6 @@ func ResourceLicenseAssociation() *schema.Resource {
 
 func resourceLicenseAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
-
-	workspaceID := d.Get("workspace_id").(string)
-	_, err := FindWorkspaceByID(conn, workspaceID)
-
-	if err != nil {
-		return fmt.Errorf("error reading Grafana Workspace (%s): %w", workspaceID, err)
-	}
 
 	input := &managedgrafana.AssociateLicenseInput{
 		LicenseType: aws.String(d.Get("license_type").(string)),
@@ -76,56 +70,41 @@ func resourceLicenseAssociationCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(aws.StringValue(output.Workspace.Id))
 
-	_, err = waitLicenseAssociationCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-
-	if err != nil {
+	if _, err = waitLicenseAssociationCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Grafana License Association (%s) create: %w", d.Id(), err)
 	}
+
 	return resourceLicenseAssociationRead(d, meta)
 }
 
 func resourceLicenseAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
 
-	workspace, err := FindWorkspaceByID(conn, d.Id())
+	workspace, err := FindLicensedWorkspaceByID(conn, d.Id())
 
 	if tfresource.NotFound(err) && !d.IsNewResource() {
-		log.Printf("[WARN] Grafana Workspace (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Grafana License Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Grafana Workspace (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading Grafana License Association (%s): %w", d.Id(), err)
 	}
-
-	d.Set("license_type", workspace.LicenseType)
 
 	if workspace.FreeTrialExpiration != nil {
 		d.Set("free_trial_expiration", workspace.FreeTrialExpiration.Format(time.RFC3339))
+	} else {
+		d.Set("free_trial_expiration", nil)
 	}
-
 	if workspace.LicenseExpiration != nil {
 		d.Set("license_expiration", workspace.LicenseExpiration.Format(time.RFC3339))
+	} else {
+		d.Set("license_expiration", nil)
 	}
+	d.Set("license_type", workspace.LicenseType)
 
 	return nil
-}
-
-func resourceLicenseAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	err := resourceLicenseAssociationDelete(d, meta)
-
-	if err != nil {
-		return fmt.Errorf("error updating Grafana License Association (%s): %w", d.Id(), err)
-	}
-
-	err = resourceLicenseAssociationCreate(d, meta)
-
-	if err != nil {
-		return fmt.Errorf("error updating Grafana License Association (%s): %w", d.Id(), err)
-	}
-
-	return resourceLicenseAssociationRead(d, meta)
 }
 
 func resourceLicenseAssociationDelete(d *schema.ResourceData, meta interface{}) error {
