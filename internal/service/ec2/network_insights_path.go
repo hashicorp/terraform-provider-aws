@@ -19,10 +19,11 @@ import (
 
 func ResourceNetworkInsightsPath() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceNetworkInsightsPathCreate,
-		ReadContext:   resourceNetworkInsightsPathRead,
-		UpdateContext: resourceNetworkInsightsPathUpdate,
-		DeleteContext: resourceNetworkInsightsPathDelete,
+		CreateWithoutTimeout: resourceNetworkInsightsPathCreate,
+		ReadWithoutTimeout:   resourceNetworkInsightsPathRead,
+		UpdateWithoutTimeout: resourceNetworkInsightsPathUpdate,
+		DeleteWithoutTimeout: resourceNetworkInsightsPathDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -70,9 +71,7 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
