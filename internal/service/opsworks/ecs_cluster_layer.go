@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceEcsClusterLayer() *schema.Resource {
+func ResourceECSClusterLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
 		TypeName:         opsworks.LayerTypeEcsCluster,
 		DefaultLayerName: "Ecs Cluster",

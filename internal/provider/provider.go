@@ -1573,7 +1573,7 @@ func Provider() *schema.Provider {
 
 			"aws_opsworks_application":       opsworks.ResourceApplication(),
 			"aws_opsworks_custom_layer":      opsworks.ResourceCustomLayer(),
-			"aws_opsworks_ecs_cluster_layer": opsworks.ResourceEcsClusterLayer(),
+			"aws_opsworks_ecs_cluster_layer": opsworks.ResourceECSClusterLayer(),
 			"aws_opsworks_ganglia_layer":     opsworks.ResourceGangliaLayer(),
 			"aws_opsworks_haproxy_layer":     opsworks.ResourceHAProxyLayer(),
 			"aws_opsworks_instance":          opsworks.ResourceInstance(),
