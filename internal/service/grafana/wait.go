@@ -58,7 +58,7 @@ func waitWorkspaceDeleted(conn *managedgrafana.ManagedGrafana, id string, timeou
 	return nil, err
 }
 
-func waitLicenseAssociationCreated(conn *managedgrafana.ManagedGrafana, id string, timeout time.Duration) (*managedgrafana.WorkspaceDescription, error) {
+func waitLicenseAssociationCreated(conn *managedgrafana.ManagedGrafana, id string, timeout time.Duration) (*managedgrafana.WorkspaceDescription, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{managedgrafana.WorkspaceStatusUpgrading},
 		Target:  []string{managedgrafana.WorkspaceStatusActive},
