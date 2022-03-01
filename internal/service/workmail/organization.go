@@ -120,7 +120,6 @@ func resourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	response, err := conn.DescribeOrganization(readOpts)
-	log.Printf("[WARN] Response type is %s", reflect.TypeOf(response))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WorkMail Organization (%s) not found, removing from state", d.Id())
