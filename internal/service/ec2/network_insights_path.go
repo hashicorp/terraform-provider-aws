@@ -73,19 +73,14 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 
 func resourceNetworkInsightsPathCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
-
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateNetworkInsightsPathInput{
-		Source:            aws.String(d.Get("source").(string)),
 		Destination:       aws.String(d.Get("destination").(string)),
 		Protocol:          aws.String(d.Get("protocol").(string)),
+		Source:            aws.String(d.Get("source").(string)),
 		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNetworkInsightsPath),
-	}
-
-	if v, ok := d.GetOk("source_ip"); ok {
-		input.SourceIp = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("destination_ip"); ok {
@@ -96,12 +91,19 @@ func resourceNetworkInsightsPathCreate(ctx context.Context, d *schema.ResourceDa
 		input.DestinationPort = aws.Int64(int64(v.(int)))
 	}
 
-	response, err := conn.CreateNetworkInsightsPath(input)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Network Insights Path: %w", err))
+	if v, ok := d.GetOk("source_ip"); ok {
+		input.SourceIp = aws.String(v.(string))
 	}
 
-	d.SetId(aws.StringValue(response.NetworkInsightsPath.NetworkInsightsPathId))
+	log.Printf("[DEBUG] Creating EC2 Network Insights Path: %s", input)
+	output, err := conn.CreateNetworkInsightsPathWithContext(ctx, input)
+
+	if err != nil {
+		return diag.Errorf("error creating EC2 Network Insights Path: %s", err)
+	}
+
+	d.SetId(aws.StringValue(output.NetworkInsightsPath.NetworkInsightsPathId))
+
 	return resourceNetworkInsightsPathRead(ctx, d, meta)
 }
 
