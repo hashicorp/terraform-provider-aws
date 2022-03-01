@@ -150,20 +150,22 @@ func resourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceData
 
 func resourceNetworkInsightsPathUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
-	if d.HasChange("tags_all") && !d.IsNewResource() {
+
+	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating Network Insights Path (%s) tags: %w", d.Id(), err))
+			return diag.Errorf("error updating EC2 Network Insights Path (%s) tags: %s", d.Id(), err)
 		}
 	}
+
 	return resourceNetworkInsightsPathRead(ctx, d, meta)
 }
 
 func resourceNetworkInsightsPathDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	log.Printf("[DEBUG] DeletingEC2 Network Insights Path: %s", d.Id())
+	log.Printf("[DEBUG] Deleting EC2 Network Insights Path: %s", d.Id())
 	_, err := conn.DeleteNetworkInsightsPathWithContext(ctx, &ec2.DeleteNetworkInsightsPathInput{
 		NetworkInsightsPathId: aws.String(d.Id()),
 	})
