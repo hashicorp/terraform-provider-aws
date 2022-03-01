@@ -155,7 +155,7 @@ service/cloudwatchlogs:
   - 'website/**/cloudwatch_query_definition*'
 service/cloudwatchrum:
   - 'internal/service/cloudwatchrum/**/*'
-  - 'website/**/cloudwatch_rum_*'
+  - 'website/**/cloudwatchrum_*'
 service/codeartifact:
   - 'internal/service/codeartifact/**/*'
   - 'website/**/codeartifact_*'
