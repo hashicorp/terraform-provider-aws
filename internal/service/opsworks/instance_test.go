@@ -15,8 +15,8 @@ import (
 )
 
 func TestAccOpsWorksInstance_basic(t *testing.T) {
-	stackName := fmt.Sprintf("tf-%d", sdkacctest.RandInt())
 	var opsinst opsworks.Instance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_instance.test"
 	dataSourceName := "data.aws_availability_zones.available"
 
@@ -27,7 +27,7 @@ func TestAccOpsWorksInstance_basic(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceCreateConfig(stackName),
+				Config: testAccInstanceCreateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &opsinst),
 					testAccCheckInstanceAttributes(&opsinst),
@@ -50,7 +50,7 @@ func TestAccOpsWorksInstance_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"state"}, //state is something we pass to the API and get back as status :(
 			},
 			{
-				Config: testAccInstanceUpdateConfig(stackName),
+				Config: testAccInstanceUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &opsinst),
 					testAccCheckInstanceAttributes(&opsinst),
@@ -66,7 +66,7 @@ func TestAccOpsWorksInstance_basic(t *testing.T) {
 }
 
 func TestAccOpsWorksInstance_updateHostNameForceNew(t *testing.T) {
-	stackName := fmt.Sprintf("tf-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_instance.test"
 	var before, after opsworks.Instance
 
@@ -77,7 +77,7 @@ func TestAccOpsWorksInstance_updateHostNameForceNew(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceCreateConfig(stackName),
+				Config: testAccInstanceCreateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "hostname", "tf-acc1"),
@@ -90,7 +90,7 @@ func TestAccOpsWorksInstance_updateHostNameForceNew(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"state"},
 			},
 			{
-				Config: testAccInstanceUpdateHostNameConfig(stackName),
+				Config: testAccInstanceUpdateHostNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "hostname", "tf-acc2"),
@@ -197,10 +197,12 @@ func testAccCheckInstanceDestroy(s *terraform.State) error {
 	return fmt.Errorf("Fall through error on OpsWorks instance test")
 }
 
-func testAccInstanceUpdateHostNameConfig(name string) string {
-	return fmt.Sprintf(`
+func testAccInstanceUpdateHostNameConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccStackVPCCreateConfig(rName),
+		fmt.Sprintf(`
 resource "aws_security_group" "tf-ops-acc-web" {
-  name = "%s-web"
+  name = "%[1]s-web"
 
   ingress {
     from_port   = 80
@@ -211,7 +213,7 @@ resource "aws_security_group" "tf-ops-acc-web" {
 }
 
 resource "aws_security_group" "tf-ops-acc-php" {
-  name = "%s-php"
+  name = "%[1]s-php"
 
   ingress {
     from_port   = 8080
@@ -248,15 +250,15 @@ resource "aws_opsworks_instance" "test" {
   state         = "stopped"
   hostname      = "tf-acc2"
 }
-
-%s
-`, name, name, testAccStackVPCCreateConfig(name))
+`, rName))
 }
 
-func testAccInstanceCreateConfig(name string) string {
-	return fmt.Sprintf(`
+func testAccInstanceCreateConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccStackVPCCreateConfig(rName),
+		fmt.Sprintf(`
 resource "aws_security_group" "tf-ops-acc-web" {
-  name = "%s-web"
+  name = "%[1]s-web"
 
   ingress {
     from_port   = 80
@@ -267,7 +269,7 @@ resource "aws_security_group" "tf-ops-acc-web" {
 }
 
 resource "aws_security_group" "tf-ops-acc-php" {
-  name = "%s-php"
+  name = "%[1]s-php"
 
   ingress {
     from_port   = 8080
@@ -304,15 +306,15 @@ resource "aws_opsworks_instance" "test" {
   state         = "stopped"
   hostname      = "tf-acc1"
 }
-
-%s
-`, name, name, testAccStackVPCCreateConfig(name))
+`, rName))
 }
 
-func testAccInstanceUpdateConfig(name string) string {
-	return fmt.Sprintf(`
+func testAccInstanceUpdateConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccStackVPCCreateConfig(rName),
+		fmt.Sprintf(`
 resource "aws_security_group" "tf-ops-acc-web" {
-  name = "%s-web"
+  name = "%[1]s-web"
 
   ingress {
     from_port   = 80
@@ -323,7 +325,7 @@ resource "aws_security_group" "tf-ops-acc-web" {
 }
 
 resource "aws_security_group" "tf-ops-acc-php" {
-  name = "%s-php"
+  name = "%[1]s-php"
 
   ingress {
     from_port   = 8080
@@ -366,7 +368,5 @@ resource "aws_opsworks_instance" "test" {
     update = "15s"
   }
 }
-
-%s
-`, name, name, testAccStackVPCCreateConfig(name))
+`, rName))
 }
