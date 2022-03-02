@@ -1024,7 +1024,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	if err != nil {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNotImplemented) {
 		return fmt.Errorf("error getting S3 Bucket logging: %s", err)
 	}
 

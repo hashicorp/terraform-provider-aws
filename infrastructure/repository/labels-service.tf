@@ -44,6 +44,7 @@ variable "service_labels" {
     "cloudtrail",
     "cloudwatch",
     "cloudwatchlogs",
+    "cloudwatchrum",
     "codeartifact",
     "codebuild",
     "codecommit",
