@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -16,6 +17,7 @@ import (
 
 func TestAccNetworkInsightsPath_basic(t *testing.T) {
 	resourceName := "aws_ec2_network_insights_path.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -24,7 +26,7 @@ func TestAccNetworkInsightsPath_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckNetworkInsightsPathDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2NetworkInsightsPath("tcp"),
+				Config: testAccEC2NetworkInsightsPath(rName, "tcp"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_network_interface.test_source", "id"),
@@ -44,6 +46,7 @@ func TestAccNetworkInsightsPath_basic(t *testing.T) {
 
 func TestAccNetworkInsightsPath_sourceIP(t *testing.T) {
 	resourceName := "aws_ec2_network_insights_path.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -52,7 +55,7 @@ func TestAccNetworkInsightsPath_sourceIP(t *testing.T) {
 		CheckDestroy:      testAccCheckNetworkInsightsPathDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2NetworkInsightsPath_sourceIP("1.1.1.1"),
+				Config: testAccEC2NetworkInsightsPath_sourceIP(rName, "1.1.1.1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "source_ip", "1.1.1.1"),
@@ -64,7 +67,7 @@ func TestAccNetworkInsightsPath_sourceIP(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEC2NetworkInsightsPath_sourceIP("8.8.8.8"),
+				Config: testAccEC2NetworkInsightsPath_sourceIP(rName, "8.8.8.8"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "source_ip", "8.8.8.8"),
@@ -76,6 +79,7 @@ func TestAccNetworkInsightsPath_sourceIP(t *testing.T) {
 
 func TestAccNetworkInsightsPath_destinationIP(t *testing.T) {
 	resourceName := "aws_ec2_network_insights_path.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -84,7 +88,7 @@ func TestAccNetworkInsightsPath_destinationIP(t *testing.T) {
 		CheckDestroy:      testAccCheckNetworkInsightsPathDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2NetworkInsightsPath_destinationIP("1.1.1.1"),
+				Config: testAccEC2NetworkInsightsPath_destinationIP(rName, "1.1.1.1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_ip", "1.1.1.1"),
@@ -96,7 +100,7 @@ func TestAccNetworkInsightsPath_destinationIP(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEC2NetworkInsightsPath_destinationIP("8.8.8.8"),
+				Config: testAccEC2NetworkInsightsPath_destinationIP(rName, "8.8.8.8"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_ip", "8.8.8.8"),
@@ -108,6 +112,7 @@ func TestAccNetworkInsightsPath_destinationIP(t *testing.T) {
 
 func TestAccNetworkInsightsPath_destinationPort(t *testing.T) {
 	resourceName := "aws_ec2_network_insights_path.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -116,7 +121,7 @@ func TestAccNetworkInsightsPath_destinationPort(t *testing.T) {
 		CheckDestroy:      testAccCheckNetworkInsightsPathDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2NetworkInsightsPath_destinationPort("80"),
+				Config: testAccEC2NetworkInsightsPath_destinationPort(rName, 80),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_port", "80"),
@@ -128,7 +133,7 @@ func TestAccNetworkInsightsPath_destinationPort(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEC2NetworkInsightsPath_destinationPort("443"),
+				Config: testAccEC2NetworkInsightsPath_destinationPort(rName, 443),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_port", "443"),
@@ -185,113 +190,189 @@ func testAccCheckNetworkInsightsPathDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccEC2NetworkInsightsPath(protocol string) string {
+func testAccEC2NetworkInsightsPath(rName, protocol string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
   vpc_id     = aws_vpc.test.id
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_network_interface" "test_source" {
   subnet_id = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_network_interface" "test_destination" {
   subnet_id = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_ec2_network_insights_path" "test" {
   source      = aws_network_interface.test_source.id
   destination = aws_network_interface.test_destination.id
-  protocol    = "%s"
+  protocol    = %[2]q
 }
-`, protocol)
+`, rName, protocol)
 }
 
-func testAccEC2NetworkInsightsPath_sourceIP(sourceIP string) string {
+func testAccEC2NetworkInsightsPath_sourceIP(rName, sourceIP string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
   vpc_id     = aws_vpc.test.id
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_network_interface" "test" {
   subnet_id = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_ec2_network_insights_path" "test" {
   source      = aws_internet_gateway.test.id
   destination = aws_network_interface.test.id
   protocol    = "tcp"
-  source_ip   = "%s"
+  source_ip   = %[2]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, sourceIP)
+`, rName, sourceIP)
 }
 
-func testAccEC2NetworkInsightsPath_destinationIP(destinationIP string) string {
+func testAccEC2NetworkInsightsPath_destinationIP(rName, destinationIP string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
   vpc_id     = aws_vpc.test.id
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_network_interface" "test" {
   subnet_id = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_ec2_network_insights_path" "test" {
   source         = aws_network_interface.test.id
   destination    = aws_internet_gateway.test.id
   protocol       = "tcp"
-  destination_ip = "%s"
+  destination_ip = %[2]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, destinationIP)
+`, rName, destinationIP)
 }
 
-func testAccEC2NetworkInsightsPath_destinationPort(destinationPort string) string {
+func testAccEC2NetworkInsightsPath_destinationPort(rName string, destinationPort int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
   vpc_id     = aws_vpc.test.id
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_network_interface" "test_source" {
   subnet_id = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_network_interface" "test_destination" {
   subnet_id = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_ec2_network_insights_path" "test" {
   source           = aws_network_interface.test_source.id
   destination      = aws_network_interface.test_destination.id
   protocol         = "tcp"
-  destination_port = %s
+  destination_port = %[2]d
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, destinationPort)
+`, rName, destinationPort)
 }
