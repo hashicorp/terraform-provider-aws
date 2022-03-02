@@ -319,7 +319,7 @@ func resourceCanaryCreate(d *schema.ResourceData, meta interface{}) error {
 	_, err = tfresource.RetryWhen(
 		iamPropagationTimeout+canaryCreatedTimeout,
 		func() (interface{}, error) {
-			return waitCanaryReady(conn, d.Id())
+			return retryCreateCanary(conn, d, input)
 		},
 		func(err error) (bool, error) {
 			// Only retry IAM eventual consistency errors up to that timeout.
@@ -797,6 +797,10 @@ func syntheticsStopCanary(name string, conn *synthetics.Synthetics) error {
 	_, err := conn.StopCanary(&synthetics.StopCanaryInput{
 		Name: aws.String(name),
 	})
+
+	if tfawserr.ErrCodeEquals(err, synthetics.ErrCodeConflictException) {
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("error stopping Synthetics Canary (%s): %w", name, err)

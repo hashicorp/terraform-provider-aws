@@ -763,6 +763,8 @@ resource "aws_synthetics_canary" "test" {
   run_config {
     timeout_in_seconds = 60
   }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 `, rName))
 }
@@ -785,6 +787,8 @@ resource "aws_synthetics_canary" "test" {
     timeout_in_seconds = 120
     memory_in_mb       = 960
   }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 `, rName))
 }
@@ -807,6 +811,8 @@ resource "aws_synthetics_canary" "test" {
     active_tracing     = %[2]t
     timeout_in_seconds = 60
   }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 `, rName, tracing))
 }
@@ -815,7 +821,7 @@ func testAccCanaryBasicConfig(rName string) string {
 	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   # Must have bucket versioning enabled first
-  depends_on = [aws_s3_bucket_versioning.test]
+  depends_on = [aws_s3_bucket_versioning.test, aws_iam_role.test, aws_iam_role_policy.test]
 
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -850,6 +856,8 @@ resource "aws_synthetics_canary" "test" {
   schedule {
     expression = "rate(0 minute)"
   }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 `, rName))
 }
@@ -879,6 +887,8 @@ resource "aws_synthetics_canary" "test" {
   schedule {
     expression = "rate(0 minute)"
   }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 `, rName))
 }
@@ -896,6 +906,8 @@ resource "aws_synthetics_canary" "test" {
   schedule {
     expression = "rate(0 minute)"
   }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 `, rName, version))
 }
@@ -913,6 +925,8 @@ resource "aws_synthetics_canary" "test" {
   schedule {
     expression = "rate(0 minute)"
   }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 `, rName))
 }
@@ -931,6 +945,8 @@ resource "aws_synthetics_canary" "test" {
   schedule {
     expression = "rate(0 minute)"
   }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 `, rName, state))
 }
@@ -949,6 +965,8 @@ resource "aws_synthetics_canary" "test" {
   schedule {
     expression = "rate(0 minute)"
   }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 `, rName, state))
 }
@@ -968,6 +986,8 @@ resource "aws_synthetics_canary" "test" {
   schedule {
     expression = "rate(0 minute)"
   }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 
 resource "aws_s3_object" "test" {
@@ -1156,6 +1176,8 @@ resource "aws_synthetics_canary" "test" {
     %[2]q = %[3]q
     %[4]q = %[5]q
   }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
