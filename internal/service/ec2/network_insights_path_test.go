@@ -52,7 +52,7 @@ func TestAccNetworkInsightsPath_sourceIP(t *testing.T) {
 		CheckDestroy:      testAccCheckNetworkInsightsPathDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2NetworkInsightsPath_source_ip("1.1.1.1"),
+				Config: testAccEC2NetworkInsightsPath_sourceIP("1.1.1.1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "source_ip", "1.1.1.1"),
@@ -64,7 +64,7 @@ func TestAccNetworkInsightsPath_sourceIP(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEC2NetworkInsightsPath_source_ip("8.8.8.8"),
+				Config: testAccEC2NetworkInsightsPath_sourceIP("8.8.8.8"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "source_ip", "8.8.8.8"),
@@ -84,7 +84,7 @@ func TestAccNetworkInsightsPath_destinationIP(t *testing.T) {
 		CheckDestroy:      testAccCheckNetworkInsightsPathDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2NetworkInsightsPath_destination_ip("1.1.1.1"),
+				Config: testAccEC2NetworkInsightsPath_destinationIP("1.1.1.1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_ip", "1.1.1.1"),
@@ -96,7 +96,7 @@ func TestAccNetworkInsightsPath_destinationIP(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEC2NetworkInsightsPath_destination_ip("8.8.8.8"),
+				Config: testAccEC2NetworkInsightsPath_destinationIP("8.8.8.8"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_ip", "8.8.8.8"),
@@ -116,7 +116,7 @@ func TestAccNetworkInsightsPath_destinationPort(t *testing.T) {
 		CheckDestroy:      testAccCheckNetworkInsightsPathDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2NetworkInsightsPath_destination_port("80"),
+				Config: testAccEC2NetworkInsightsPath_destinationPort("80"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_port", "80"),
@@ -128,7 +128,7 @@ func TestAccNetworkInsightsPath_destinationPort(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEC2NetworkInsightsPath_destination_port("443"),
+				Config: testAccEC2NetworkInsightsPath_destinationPort("443"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_port", "443"),
@@ -212,7 +212,7 @@ resource "aws_ec2_network_insights_path" "test" {
 `, protocol)
 }
 
-func testAccEC2NetworkInsightsPath_source_ip(source_ip string) string {
+func testAccEC2NetworkInsightsPath_sourceIP(sourceIP string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -237,10 +237,10 @@ resource "aws_ec2_network_insights_path" "test" {
   protocol    = "tcp"
   source_ip   = "%s"
 }
-`, source_ip)
+`, sourceIP)
 }
 
-func testAccEC2NetworkInsightsPath_destination_ip(destination_ip string) string {
+func testAccEC2NetworkInsightsPath_destinationIP(destinationIP string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -265,10 +265,10 @@ resource "aws_ec2_network_insights_path" "test" {
   protocol       = "tcp"
   destination_ip = "%s"
 }
-`, destination_ip)
+`, destinationIP)
 }
 
-func testAccEC2NetworkInsightsPath_destination_port(destination_port string) string {
+func testAccEC2NetworkInsightsPath_destinationPort(destinationPort string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -293,5 +293,5 @@ resource "aws_ec2_network_insights_path" "test" {
   protocol         = "tcp"
   destination_port = %s
 }
-`, destination_port)
+`, destinationPort)
 }
