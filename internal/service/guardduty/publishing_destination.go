@@ -158,7 +158,7 @@ func resourcePublishingDestinationDelete(d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG] Delete GuardDuty publishing destination: %s", input)
 	_, err := conn.DeletePublishingDestination(&input)
 
-	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "") {
+	if tfawserr.ErrCodeEquals(err, guardduty.ErrCodeBadRequestException) {
 		return nil
 	}
 

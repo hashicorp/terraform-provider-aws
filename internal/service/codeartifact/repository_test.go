@@ -322,7 +322,7 @@ func testAccCheckRepositoryDestroy(s *terraform.State) error {
 			}
 		}
 
-		if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 

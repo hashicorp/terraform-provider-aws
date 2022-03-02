@@ -94,7 +94,7 @@ func resourcePublicKeyRead(d *schema.ResourceData, meta interface{}) error {
 
 	output, err := conn.GetPublicKey(request)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchPublicKey, "") {
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
 			log.Printf("[WARN] No PublicKey found: %s, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -145,7 +145,7 @@ func resourcePublicKeyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.DeletePublicKey(request)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchPublicKey, "") {
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
 			return nil
 		}
 		return err

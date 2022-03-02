@@ -174,7 +174,7 @@ func testAccCheckAccountDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeAccount(params)
 
-		if tfawserr.ErrMessageContains(err, organizations.ErrCodeAccountNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAccountNotFoundException) {
 			return nil
 		}
 

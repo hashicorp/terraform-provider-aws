@@ -371,7 +371,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 
 	resp, err := conn.DescribeLayers(req)
 	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
 			d.SetId("")
 			return nil
 		}
@@ -646,7 +646,12 @@ func (lt *opsworksLayerType) Delete(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Deleting OpsWorks layer: %s", d.Id())
 
 	_, err := conn.DeleteLayer(req)
-	if err != nil {
+
+	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		log.Printf("[DEBUG] OpsWorks Layer (%s) not found to delete; removed from state", d.Id())
+	}
+
+	if err != nil && !tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
 		return fmt.Errorf("error Deleting Opsworks Layer (%s): %w", d.Id(), err)
 	}
 

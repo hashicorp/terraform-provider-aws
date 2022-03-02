@@ -169,10 +169,10 @@ func resourceSnapshotScheduleAssociationStateRefreshFunc(clusterIdentifier, sche
 			ClusterIdentifier:  aws.String(clusterIdentifier),
 			ScheduleIdentifier: aws.String(scheduleIdentifier),
 		})
-		if tfawserr.ErrMessageContains(err, redshift.ErrCodeClusterNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterNotFoundFault) {
 			return 42, "destroyed", nil
 		}
-		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotScheduleNotFoundFault) {
 			return 42, "destroyed", nil
 		}
 		if err != nil {

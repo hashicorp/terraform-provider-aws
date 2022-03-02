@@ -120,7 +120,7 @@ func resourceOpenIDConnectProviderRead(d *schema.ResourceData, meta interface{})
 		OpenIDConnectProviderArn: aws.String(d.Id()),
 	}
 	out, err := conn.GetOpenIDConnectProvider(input)
-	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		log.Printf("[WARN] IAM OIDC Provider (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -189,7 +189,7 @@ func resourceOpenIDConnectProviderDelete(d *schema.ResourceData, meta interface{
 		OpenIDConnectProviderArn: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteOpenIDConnectProvider(input)
-	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		return nil
 	}
 	if err != nil {

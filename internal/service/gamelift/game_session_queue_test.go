@@ -267,7 +267,7 @@ func testAccCheckGameSessionQueueDestroy(s *terraform.State) error {
 		err := resource.Retry(30*time.Second, func() *resource.RetryError {
 			out, err := conn.DescribeGameSessionQueues(input)
 
-			if tfawserr.ErrMessageContains(err, gamelift.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
 				return nil
 			}
 

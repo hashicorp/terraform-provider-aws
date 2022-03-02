@@ -14,7 +14,7 @@ import (
 // These tests assume the existence of predefined Opsworks IAM roles named `aws-opsworks-ec2-role`
 // and `aws-opsworks-service-role`.
 
-func TestAccOpsWorksEcsClusterLayer_basic(t *testing.T) {
+func TestAccOpsWorksECSClusterLayer_basic(t *testing.T) {
 	var opslayer opsworks.Layer
 	stackName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_ecs_cluster_layer.test"
@@ -22,10 +22,10 @@ func TestAccOpsWorksEcsClusterLayer_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEcsClusterLayerDestroy,
+		CheckDestroy: testAccCheckECSClusterLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEcsClusterLayerBasic(stackName),
+				Config: testAccECSClusterLayerBasic(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", stackName),
@@ -36,7 +36,7 @@ func TestAccOpsWorksEcsClusterLayer_basic(t *testing.T) {
 	})
 }
 
-func TestAccOpsWorksEcsClusterLayer_tags(t *testing.T) {
+func TestAccOpsWorksECSClusterLayer_tags(t *testing.T) {
 	var opslayer opsworks.Layer
 	stackName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_ecs_cluster_layer.test"
@@ -44,10 +44,10 @@ func TestAccOpsWorksEcsClusterLayer_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEcsClusterLayerDestroy,
+		CheckDestroy: testAccCheckECSClusterLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEcsClusterLayerTags1Config(stackName, "key1", "value1"),
+				Config: testAccECSClusterLayerTags1Config(stackName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -55,7 +55,7 @@ func TestAccOpsWorksEcsClusterLayer_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEcsClusterLayerTags2Config(stackName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccECSClusterLayerTags2Config(stackName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -64,7 +64,7 @@ func TestAccOpsWorksEcsClusterLayer_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEcsClusterLayerTags1Config(stackName, "key2", "value2"),
+				Config: testAccECSClusterLayerTags1Config(stackName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -75,20 +75,21 @@ func TestAccOpsWorksEcsClusterLayer_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckEcsClusterLayerDestroy(s *terraform.State) error {
+func testAccCheckECSClusterLayerDestroy(s *terraform.State) error {
 	return testAccCheckLayerDestroy("aws_opsworks_ecs_cluster_layer", s)
 }
 
-func testAccEcsClusterLayerBasic(name string) string {
-	return testAccStackVPCCreateConfig(name) +
-		testAccCustomLayerSecurityGroups(name) +
+func testAccECSClusterLayerBasic(name string) string {
+	return acctest.ConfigCompose(
+		testAccStackVPCCreateConfig(name),
+		testAccCustomLayerSecurityGroups(name),
 		fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
 resource "aws_opsworks_ecs_cluster_layer" "test" {
-  stack_id        = aws_opsworks_stack.tf-acc.id
+  stack_id        = aws_opsworks_stack.test.id
   name            = %[1]q
   ecs_cluster_arn = aws_ecs_cluster.test.arn
 
@@ -97,19 +98,20 @@ resource "aws_opsworks_ecs_cluster_layer" "test" {
     aws_security_group.tf-ops-acc-layer2.id,
   ]
 }
-`, name)
+`, name))
 }
 
-func testAccEcsClusterLayerTags1Config(name, tagKey1, tagValue1 string) string {
-	return testAccStackVPCCreateConfig(name) +
-		testAccCustomLayerSecurityGroups(name) +
+func testAccECSClusterLayerTags1Config(name, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(
+		testAccStackVPCCreateConfig(name),
+		testAccCustomLayerSecurityGroups(name),
 		fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
 resource "aws_opsworks_ecs_cluster_layer" "test" {
-  stack_id        = aws_opsworks_stack.tf-acc.id
+  stack_id        = aws_opsworks_stack.test.id
   name            = %[1]q
   ecs_cluster_arn = aws_ecs_cluster.test.arn
 
@@ -122,19 +124,20 @@ resource "aws_opsworks_ecs_cluster_layer" "test" {
     %[2]q = %[3]q
   }
 }
-`, name, tagKey1, tagValue1)
+`, name, tagKey1, tagValue1))
 }
 
-func testAccEcsClusterLayerTags2Config(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccStackVPCCreateConfig(name) +
-		testAccCustomLayerSecurityGroups(name) +
+func testAccECSClusterLayerTags2Config(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccStackVPCCreateConfig(name),
+		testAccCustomLayerSecurityGroups(name),
 		fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
 resource "aws_opsworks_ecs_cluster_layer" "test" {
-  stack_id        = aws_opsworks_stack.tf-acc.id
+  stack_id        = aws_opsworks_stack.test.id
   name            = %[1]q
   ecs_cluster_arn = aws_ecs_cluster.test.arn
 
@@ -148,5 +151,5 @@ resource "aws_opsworks_ecs_cluster_layer" "test" {
     %[4]q = %[5]q
   }
 }
-`, name, tagKey1, tagValue1, tagKey2, tagValue2)
+`, name, tagKey1, tagValue1, tagKey2, tagValue2))
 }

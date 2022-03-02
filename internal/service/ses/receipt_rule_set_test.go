@@ -78,7 +78,7 @@ func testAccCheckSESReceiptRuleSetDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeReceiptRuleSet(params)
 
-		if tfawserr.ErrMessageContains(err, ses.ErrCodeRuleSetDoesNotExistException, "") {
+		if tfawserr.ErrCodeEquals(err, ses.ErrCodeRuleSetDoesNotExistException) {
 			continue
 		}
 

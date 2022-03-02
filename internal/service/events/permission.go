@@ -223,7 +223,7 @@ func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Update EventBridge permission: %s", input)
 	_, err = conn.PutPermission(&input)
-	if tfawserr.ErrMessageContains(err, eventbridge.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] EventBridge permission %q not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -249,7 +249,7 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Delete EventBridge permission: %s", input)
 	_, err = conn.RemovePermission(&input)
-	if tfawserr.ErrMessageContains(err, eventbridge.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 	if err != nil {

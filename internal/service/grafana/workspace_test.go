@@ -29,6 +29,9 @@ func TestAccGrafana_serial(t *testing.T) {
 		"DataSource": {
 			"basic": testAccGrafanaWorkspaceDataSource_basic,
 		},
+		"LicenseAssociation": {
+			"enterpriseFreeTrial": testAccGrafanaLicenseAssociation_freeTrial,
+		},
 	}
 
 	for group, m := range testCases {
@@ -423,7 +426,7 @@ func testAccCheckWorkspaceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_managed_grafana" {
+		if rs.Type != "aws_grafana_workspace" {
 			continue
 		}
 

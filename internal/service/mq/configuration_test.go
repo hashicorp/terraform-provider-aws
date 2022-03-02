@@ -196,7 +196,7 @@ func testAccCheckConfigurationDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeConfiguration(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, mq.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, mq.ErrCodeNotFoundException) {
 				return nil
 			}
 			return err

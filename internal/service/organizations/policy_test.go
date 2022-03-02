@@ -424,11 +424,11 @@ func testAccCheckPolicyDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribePolicy(input)
 
-		if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
 			continue
 		}
 
-		if tfawserr.ErrMessageContains(err, organizations.ErrCodePolicyNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, organizations.ErrCodePolicyNotFoundException) {
 			continue
 		}
 

@@ -253,7 +253,7 @@ func testAccCheckApplicationDestroy(s *terraform.State) error {
 			}
 		}
 
-		if !tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
+		if !tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
 			return err
 		}
 	}
@@ -261,14 +261,15 @@ func testAccCheckApplicationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccApplicationCreate(name string) string {
-	return testAccStackVPCCreateConfig(name) +
+func testAccApplicationCreate(rName string) string {
+	return acctest.ConfigCompose(
+		testAccStackVPCCreateConfig(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_application" "test" {
   document_root = "foo"
   enable_ssl    = false
-  name          = %q
-  stack_id      = aws_opsworks_stack.tf-acc.id
+  name          = %[1]q
+  stack_id      = aws_opsworks_stack.test.id
   type          = "other"
 
   app_source {
@@ -281,20 +282,21 @@ resource "aws_opsworks_application" "test" {
     secure = false
   }
 }
-`, name)
+`, rName))
 }
 
-func testAccApplicationUpdate(name string) string {
-	return testAccStackVPCCreateConfig(name) +
+func testAccApplicationUpdate(rName string) string {
+	return acctest.ConfigCompose(
+		testAccStackVPCCreateConfig(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_application" "test" {
   auto_bundle_on_deploy = "true"
   document_root         = "root"
   domains               = ["example.com", "sub.example.com"]
   enable_ssl            = true
-  name                  = %q
+  name                  = %[1]q
   rails_env             = "staging"
-  stack_id              = aws_opsworks_stack.tf-acc.id
+  stack_id              = aws_opsworks_stack.test.id
   type                  = "rails"
 
   ssl_configuration {
@@ -349,5 +351,5 @@ EOS
     value = "value2"
   }
 }
-`, name)
+`, rName))
 }

@@ -919,7 +919,7 @@ func testAccRDSPerformanceInsightsPreCheck(t *testing.T, engine string, engineVe
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, "InvalidParameterCombination", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidParameterCombination") {
 		t.Skipf("RDS Performance Insights not supported, skipping acceptance test")
 	}
 

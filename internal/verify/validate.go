@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -174,6 +175,16 @@ func ValidIPv6CIDRNetworkAddress(v interface{}, k string) (ws []string, errors [
 	}
 
 	return
+}
+
+// IsIPv4CIDRBlockOrIPv6CIDRBlock returns a SchemaValidateFunc that test if the provided value:
+// - Is a valid IPv4 CIDR block and passes the specified validation, or
+// - Is a valid IPv6 CIDR block and passes the specified validation
+func IsIPv4CIDRBlockOrIPv6CIDRBlock(ipv4Validator, ipv6Validator schema.SchemaValidateFunc) schema.SchemaValidateFunc {
+	return validation.Any(
+		validation.All(ValidIPv4CIDRNetworkAddress, ipv4Validator),
+		validation.All(ValidIPv6CIDRNetworkAddress, ipv6Validator),
+	)
 }
 
 func ValidLaunchTemplateID(v interface{}, k string) (ws []string, errors []error) {

@@ -79,8 +79,9 @@ func ResourceBucketObjectLockConfiguration() *schema.Resource {
 				},
 			},
 			"token": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 		},
 	}

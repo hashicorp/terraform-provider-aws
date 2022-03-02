@@ -142,7 +142,7 @@ func resourceLocalGatewayRouteTableVPCAssociationDelete(d *schema.ResourceData, 
 
 	_, err := conn.DeleteLocalGatewayRouteTableVpcAssociation(input)
 
-	if tfawserr.ErrMessageContains(err, "InvalidLocalGatewayRouteTableVpcAssociationID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidLocalGatewayRouteTableVpcAssociationID.NotFound") {
 		return nil
 	}
 

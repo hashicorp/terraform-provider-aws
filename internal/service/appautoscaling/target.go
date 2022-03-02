@@ -158,7 +158,7 @@ func resourceTargetDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.DeregisterScalableTarget(input)
 
-	if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeObjectNotFoundException) {
 		return nil
 	}
 

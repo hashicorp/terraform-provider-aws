@@ -514,7 +514,7 @@ func testAccCheckCertificateAuthorityDestroy(s *terraform.State) error {
 		output, err := conn.DescribeCertificateAuthority(input)
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, acmpca.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 			return err

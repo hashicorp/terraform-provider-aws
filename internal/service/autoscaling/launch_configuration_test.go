@@ -581,7 +581,7 @@ func testAccCheckLaunchConfigurationDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error
-		if !tfawserr.ErrMessageContains(err, "InvalidLaunchConfiguration.NotFound", "") {
+		if !tfawserr.ErrCodeEquals(err, "InvalidLaunchConfiguration.NotFound") {
 			return err
 		}
 	}
@@ -1038,7 +1038,7 @@ func testAccCheckAmiExists(n string, ami *ec2.Image) resource.TestCheckFunc {
 			resp, err = conn.DescribeImages(opts)
 			if err != nil {
 				// This can be just eventual consistency
-				if tfawserr.ErrMessageContains(err, "InvalidAMIID.NotFound", "") {
+				if tfawserr.ErrCodeEquals(err, "InvalidAMIID.NotFound") {
 					return resource.RetryableError(err)
 				}
 

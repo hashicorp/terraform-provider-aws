@@ -362,7 +362,7 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		res, err = client.DescribeImages(req)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidAMIID.NotFound", "") {
+			if tfawserr.ErrCodeEquals(err, "InvalidAMIID.NotFound") {
 				if d.IsNewResource() {
 					return resource.RetryableError(err)
 				}
@@ -553,7 +553,7 @@ func AMIStateRefreshFunc(client *ec2.EC2, id string) resource.StateRefreshFunc {
 
 		resp, err := client.DescribeImages(&ec2.DescribeImagesInput{ImageIds: []*string{aws.String(id)}})
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidAMIID.NotFound", "") {
+			if tfawserr.ErrCodeEquals(err, "InvalidAMIID.NotFound") {
 				return emptyResp, "destroyed", nil
 			} else if resp != nil && len(resp.Images) == 0 {
 				return emptyResp, "destroyed", nil
