@@ -365,13 +365,13 @@ The `abort_incomplete_multipart_upload` configuration block supports the followi
 
 The `expiration` configuration block supports the following arguments:
 
-* `date` - (Optional) The date the object is to be moved or deleted. Should be in GMT ISO 8601 Format.
+* `date` - (Optional) The date the object is to be moved or deleted. Should be in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 * `days` - (Optional) The lifetime, in days, of the objects that are subject to the rule. The value must be a non-zero positive integer.
 * `expired_object_delete_marker` - (Optional, Conflicts with `date` and `days`) Indicates whether Amazon S3 will remove a delete marker with no noncurrent versions. If set to `true`, the delete marker will be expired; if set to `false` the policy takes no action.
 
 ### filter
 
-~> **NOTE:** The `filter` configuration block must have exactly one of `prefix`, `tag`, or `and` specified.
+~> **NOTE:** The `filter` configuration block must have exactly one of `prefix`, `tag`, `and`, `object_size_greater_than` or `object_size_less_than` specified.
 
 The `filter` configuration block supports the following arguments:
 
@@ -392,7 +392,7 @@ The `noncurrent_version_expiration` configuration block supports the following a
 
 The `noncurrent_version_transition` configuration block supports the following arguments:
 
-* `newer_noncurrent_versions` - (Optional) The number of noncurrent versions Amazon S3 will retain.
+* `newer_noncurrent_versions` - (Optional) The number of noncurrent versions Amazon S3 will retain. Must be a non-zero positive integer.
 * `noncurrent_days` - (Optional) The number of days an object is noncurrent before Amazon S3 can perform the associated action.
 * `storage_class` - (Required) The class of storage used to store the object. Valid Values: `GLACIER`, `STANDARD_IA`, `ONEZONE_IA`, `INTELLIGENT_TIERING`, `DEEP_ARCHIVE`, `GLACIER_IR`.
 
@@ -402,7 +402,7 @@ The `transition` configuration block supports the following arguments:
 
 ~> **Note:** Only one of `date` or `days` should be specified. If neither are specified, the `transition` will default to 0 `days`.
 
-* `date` - (Optional, Conflicts with `days`) The date objects are transitioned to the specified storage class. The date value must be in ISO 8601 format and set to midnight UTC e.g. `2023-01-13T00:00:00Z`.
+* `date` - (Optional, Conflicts with `days`) The date objects are transitioned to the specified storage class. The date value must be in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) and set to midnight UTC e.g. `2023-01-13T00:00:00Z`.
 * `days` - (Optional, Conflicts with `date`) The number of days after creation when objects are transitioned to the specified storage class. The value must be a positive integer. If both `days` and `date` are not specified, defaults to `0`. Valid values depend on `storage_class`, see [Transition objects using Amazon S3 Lifecycle](https://docs.aws.amazon.com/AmazonS3/latest/userguide/lifecycle-transition-general-considerations.html) for more details.
 * `storage_class` - The class of storage used to store the object. Valid Values: `GLACIER`, `STANDARD_IA`, `ONEZONE_IA`, `INTELLIGENT_TIERING`, `DEEP_ARCHIVE`, `GLACIER_IR`.
 
