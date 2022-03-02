@@ -63,6 +63,7 @@ func waitCapacityProviderUpdated(conn *ecs.ECS, arn string) (*ecs.CapacityProvid
 }
 
 func waitServiceStable(conn *ecs.ECS, id, cluster string) error {
+	var err error
 	input := &ecs.DescribeServicesInput{
 		Services: aws.StringSlice([]string{id}),
 	}
@@ -71,10 +72,12 @@ func waitServiceStable(conn *ecs.ECS, id, cluster string) error {
 		input.Cluster = aws.String(cluster)
 	}
 
-	if err := conn.WaitUntilServicesStable(input); err != nil {
-		return err
+	for i := 0; i < 3; i++ {
+		if err := conn.WaitUntilServicesStable(input); err == nil {
+			return nil
+		}
 	}
-	return nil
+	return err
 }
 
 func waitServiceInactive(conn *ecs.ECS, id, cluster string) error {
