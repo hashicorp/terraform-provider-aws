@@ -6,8 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -31,7 +33,12 @@ func ResourcePolicy() *schema.Resource {
 			"policy": {
 				Type:             schema.TypeString,
 				Required:         true,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -49,9 +56,15 @@ func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 
 	conn := meta.(*conns.AWSClient).IoTConn
 
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+	}
+
 	out, err := conn.CreatePolicy(&iot.CreatePolicyInput{
 		PolicyName:     aws.String(d.Get("name").(string)),
-		PolicyDocument: aws.String(d.Get("policy").(string)),
+		PolicyDocument: aws.String(policy),
 	})
 
 	if err != nil {
@@ -70,7 +83,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 		PolicyName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] IoT Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -83,7 +96,14 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", out.PolicyArn)
 	d.Set("default_version_id", out.DefaultVersionId)
 	d.Set("name", out.PolicyName)
-	d.Set("policy", out.PolicyDocument)
+
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(out.PolicyDocument))
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("policy", policyToSet)
 
 	return nil
 }
@@ -92,9 +112,15 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	if d.HasChange("policy") {
-		_, err := conn.CreatePolicyVersion(&iot.CreatePolicyVersionInput{
+		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+		if err != nil {
+			return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+		}
+
+		_, err = conn.CreatePolicyVersion(&iot.CreatePolicyVersionInput{
 			PolicyName:     aws.String(d.Id()),
-			PolicyDocument: aws.String(d.Get("policy").(string)),
+			PolicyDocument: aws.String(policy),
 			SetAsDefault:   aws.Bool(true),
 		})
 
@@ -126,7 +152,7 @@ func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 				PolicyVersionId: ver.VersionId,
 			})
 
-			if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 				continue
 			}
 
@@ -141,7 +167,7 @@ func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 		PolicyName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 

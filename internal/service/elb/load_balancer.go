@@ -14,7 +14,7 @@ import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -255,6 +255,17 @@ func ResourceLoadBalancer() *schema.Resource {
 				Computed: true,
 			},
 
+			"desync_mitigation_mode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "defensive",
+				ValidateFunc: validation.StringInSlice([]string{
+					"monitor",
+					"defensive",
+					"strictest",
+				}, false),
+			},
+
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -453,6 +464,13 @@ func flattenLoadBalancerEResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbc
 		}
 	}
 
+	for _, attr := range lbAttrs.AdditionalAttributes {
+		switch aws.StringValue(attr.Key) {
+		case "elb.http.desyncmitigationmode":
+			d.Set("desync_mitigation_mode", attr.Value)
+		}
+	}
+
 	tags, err := ListTags(elbconn, d.Id())
 
 	if err != nil {
@@ -522,7 +540,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 				_, err := elbconn.CreateLoadBalancerListeners(input)
 				if err != nil {
-					if tfawserr.ErrMessageContains(err, elb.ErrCodeDuplicateListenerException, "") {
+					if tfawserr.ErrCodeEquals(err, elb.ErrCodeDuplicateListenerException) {
 						log.Printf("[DEBUG] Duplicate listener found for ELB (%s), retrying", d.Id())
 						return resource.RetryableError(err)
 					}
@@ -580,10 +598,16 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	if d.HasChanges("cross_zone_load_balancing", "idle_timeout", "access_logs") {
+	if d.HasChanges("cross_zone_load_balancing", "idle_timeout", "access_logs", "desync_mitigation_mode") {
 		attrs := elb.ModifyLoadBalancerAttributesInput{
 			LoadBalancerName: aws.String(d.Get("name").(string)),
 			LoadBalancerAttributes: &elb.LoadBalancerAttributes{
+				AdditionalAttributes: []*elb.AdditionalAttribute{
+					{
+						Key:   aws.String("elb.http.desyncmitigationmode"),
+						Value: aws.String(d.Get("desync_mitigation_mode").(string)),
+					},
+				},
 				CrossZoneLoadBalancing: &elb.CrossZoneLoadBalancing{
 					Enabled: aws.Bool(d.Get("cross_zone_load_balancing").(bool)),
 				},

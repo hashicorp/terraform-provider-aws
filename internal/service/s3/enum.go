@@ -10,6 +10,9 @@ const DefaultKmsKeyAlias = "alias/aws/s3"
 const (
 	BucketCannedACLExecRead         = "aws-exec-read"
 	BucketCannedACLLogDeliveryWrite = "log-delivery-write"
+
+	LifecycleRuleStatusEnabled  = "Enabled"
+	LifecycleRuleStatusDisabled = "Disabled"
 )
 
 func BucketCannedACL_Values() []string {

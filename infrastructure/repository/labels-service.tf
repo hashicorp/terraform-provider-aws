@@ -6,6 +6,7 @@
 variable "service_labels" {
   default = [
     "accessanalyzer",
+    "account",
     "acm",
     "acmpca",
     "alexaforbusiness",
@@ -43,6 +44,7 @@ variable "service_labels" {
     "cloudtrail",
     "cloudwatch",
     "cloudwatchlogs",
+    "cloudwatchrum",
     "codeartifact",
     "codebuild",
     "codecommit",
@@ -100,6 +102,7 @@ variable "service_labels" {
     "glacier",
     "globalaccelerator",
     "glue",
+    "grafana",
     "greengrass",
     "groundstation",
     "guardduty",
@@ -116,6 +119,7 @@ variable "service_labels" {
     "iotthingsgraph",
     "ivs",
     "kafka",
+    "kafkaconnect",
     "kendra",
     "kinesis",
     "kinesisanalytics",

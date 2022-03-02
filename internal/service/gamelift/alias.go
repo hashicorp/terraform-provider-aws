@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -109,7 +109,7 @@ func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 		AliasId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, gamelift.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
 			d.SetId("")
 			log.Printf("[WARN] Gamelift Alias (%s) not found, removing from state", d.Id())
 			return nil

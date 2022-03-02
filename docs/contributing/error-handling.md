@@ -4,14 +4,14 @@ _Please Note: This documentation is intended for Terraform AWS Provider code dev
 
 The Terraform AWS Provider codebase bridges the implementation of a [Terraform Plugin](https://www.terraform.io/docs/extend/how-terraform-works.html) and an AWS API client to support AWS operations and data types as Terraform Resources. An important aspect of performing resource and remote actions is properly handling those operations, but those operations are not guaranteed to succeed every time. Some common examples include where network connections are unreliable, necessary permissions are not properly setup, incorrect Terraform configurations, or the remote system responds unexpectedly. All these situations lead to an unexpected workflow action that must be surfaced to the Terraform user interface for operators to troubleshoot. This guide is intended to explain and show various Terraform AWS Provider code implementations that are considered best practice for surfacing these issues properly to operators and code maintainers.
 
-For further details about how the AWS Go SDK and the Terraform AWS Provider resource logic handle retryable errors, see the [Retries and Waiters documentation](retries-and-waiters.md).
+For further details about how the AWS SDK for Go v1 and the Terraform AWS Provider resource logic handle retryable errors, see the [Retries and Waiters documentation](retries-and-waiters.md).
 
 - [General Guidelines and Helpers](#general-guidelines-and-helpers)
     - [Naming and Check Style](#naming-and-check-style)
     - [Wrap Errors](#wrap-errors)
-    - [AWS Go SDK Errors](#aws-go-sdk-errors)
-        - [AWS Go SDK Error Helpers](#aws-go-sdk-error-helpers)
-        - [Use AWS Go SDK Error Code Constants](#use-aws-go-sdk-error-code-constants)
+    - [AWS SDK for Go v1 Errors](#aws-go-sdk-errors)
+        - [AWS SDK for Go v1 Error Helpers](#aws-go-sdk-error-helpers)
+        - [Use AWS SDK for Go v1 Error Code Constants](#use-aws-go-sdk-error-code-constants)
     - [Terraform Plugin SDK Types and Helpers](#terraform-plugin-sdk-types-and-helpers)
 - [Resource Lifecycle Guidelines](#resource-lifecycle-guidelines)
     - [Resource Creation](#resource-creation)
@@ -65,22 +65,22 @@ return fmt.Errorf("adding some additional message: %w", err)
 
 This type of error wrapping should be applied to all Terraform resource logic. It should also be applied to any nested functions that contains two or more error conditions (e.g., a function that calls an update API and waits for the update to finish) so practitioners and code maintainers have a clear idea which generated the error. When returning errors in those situations, it is important to only include necessary additional context. Resource logic will typically include the information such as the type of operation and resource identifier (e.g., `error updating Service Thing (%s): %w`), so these messages can be more terse such as `error waiting for completion: %w`.
 
-### AWS Go SDK Errors
+### AWS SDK for Go v1 Errors
 
-The [AWS Go SDK documentation](https://docs.aws.amazon.com/sdk-for-go/) includes a [section on handling errors](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/handling-errors.html), which is recommended reading.
+The [AWS SDK for Go v1 documentation](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/welcome.html) includes a [section on handling errors](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/handling-errors.html), which is recommended reading.
 
 For the purposes of this documentation, the most important concepts with handling these errors are:
 
 - Each response error (which eventually implements `awserr.Error`) has a `string` error code (`Code`) and `string` error message (`Message`). When printed as a string, they format as: `Code: Message`, e.g., `InvalidParameterValueException: IAM Role arn:aws:iam::123456789012:role/XXX cannot be assumed by AWS Backup`.
 - Error handling is almost exclusively done via those `string` fields and not other response information, such as HTTP Status Codes.
 - When the error code is non-specific, the error message should also be checked. Unfortunately, AWS APIs generally do not provide documentation or API modeling with the contents of these messages and often the Terraform AWS Provider code must rely on substring matching.
-- Not all errors are returned in the response error from an AWS Go SDK operation. This is service and sometimes API call specific. For example, the [EC2 `DeleteVpcEndpoints` API call](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DeleteVpcEndpoints.html) can return a "successful" response (in terms of no response error) but include information in an `Unsuccessful` field in the response body.
+- Not all errors are returned in the response error from an AWS API operation. This is service- and sometimes API-call-specific. For example, the [EC2 `DeleteVpcEndpoints` API call](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DeleteVpcEndpoints.html) can return a "successful" response (in terms of no response error) but include information in an `Unsuccessful` field in the response body.
 
-When working with AWS Go SDK errors, it is preferred to use the helpers outlined below and use the `%w` format verb. Code should generally avoid type assertions with the underlying `awserr.Error` type or calling its `Code()`, `Error()`, `Message()`, or `String()` receiver methods. Using the `%v`, `%#v`, or `%+v` format verbs generally provides extraneous information that is not helpful to operators or code maintainers.
+When working with AWS SDK for Go v1 errors, it is preferred to use the helpers outlined below and use the `%w` format verb. Code should generally avoid type assertions with the underlying `awserr.Error` type or calling its `Code()`, `Error()`, `Message()`, or `String()` receiver methods. Using the `%v`, `%#v`, or `%+v` format verbs generally provides extraneous information that is not helpful to operators or code maintainers.
 
-#### AWS Go SDK Error Helpers
+#### AWS SDK for Go Error Helpers
 
-To simplify operations with AWS Go SDK error types, the following helpers are available via the `github.com/hashicorp/aws-sdk-go-base/tfawserr` Go package:
+To simplify operations with AWS SDK for Go error types, the following helpers are available via the `github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr` Go package:
 
 - `tfawserr.ErrCodeEquals(err, "Code")`: Preferred when the error code is specific enough for the check condition. For example, a `ResourceNotFoundError` code provides enough information that the requested API resource identifier/Amazon Resource Name does not exist.
 - `tfawserr.ErrMessageContains(err, "Code", "MessageContains")`: Does simple substring matching for the error message.
@@ -101,13 +101,11 @@ if tfawserr.ErrMessageContains(err, backup.ErrCodeInvalidParameterValueException
 
 The Amazon Resource Name in the error message will be different for every environment and does not add value to the check. The AWS Backup suffix is also extraneous and could change should the service ever rename.
 
-_The codebase also contains an older style `isAWSErr(err, "CodeEquals", "MessageContains")` helper, which has not yet been refactored out. The helpers above are preferred for clarity._
+#### Use AWS SDK for Go v1 Error Code Constants
 
-#### Use AWS Go SDK Error Code Constants
+Each AWS SDK for Go v1 service API typically implements common error codes, which get exported as public constants in the SDK. In the [AWS SDK for Go v1 API Reference](https://docs.aws.amazon.com/sdk-for-go/api/), these can be found in each of the service packages under the `Constants` section (typically named `ErrCode{ExceptionName}`).
 
-Each AWS Go SDK service API typically implements common error codes, which get exported as public constants in the AWS Go SDK. In the [AWS Go SDK API Reference](https://docs.aws.amazon.com/sdk-for-go/api/), these can be found in each of the service packages under the `Constants` section (typically named `ErrCode{ExceptionName}`).
-
-If an AWS Go SDK service API is missing an error code constant, an AWS Support case should be submitted and a new constant can be added to `internal/service/{SERVICE}/errors.go` file (created if not present), e.g.
+If an AWS SDK for Go service API is missing an error code constant, an AWS Support case should be submitted and a new constant can be added to `internal/service/{SERVICE}/errors.go` file (created if not present), e.g.
 
 ```go
 const(
@@ -145,7 +143,7 @@ The Terraform Plugin SDK includes some error types which are used in certain ope
 The Terraform AWS Provider codebase implements some additional helpers for working with these in the `github.com/hashicorp/terraform-provider-aws/internal/tfresource` package:
 
 - `tfresource.NotFound(err)`: Returns true if the error is a `resource.NotFoundError`.
-- `tfresource.TimedOut(err)`: Returns true if the error is a `resource.TimeoutError` and contains no `LastError`. This typically signifies that the retry logic was never signaled for a retry, which can happen when AWS Go SDK operations are automatically retrying before returning.
+- `tfresource.TimedOut(err)`: Returns true if the error is a `resource.TimeoutError` and contains no `LastError`. This typically signifies that the retry logic was never signaled for a retry, which can happen when AWS API operations are automatically retrying before returning.
 
 ## Resource Lifecycle Guidelines
 
@@ -225,7 +223,7 @@ if err != nil {
 Code that also uses waiters or other operations that return errors should follow a similar pattern, including the resource identifier since it has typically been set before this execution:
 
 ```go
-if _, err := waiter.VpcAvailable(conn, d.Id()); err != nil {
+if _, err := VpcAvailable(conn, d.Id()); err != nil {
     return fmt.Errorf("error waiting for EC2 VPC (%s) availability: %w", d.Id(), err)
 }
 ```
@@ -281,7 +279,7 @@ if err != nil {
 Code that also uses [waiters](retries-and-waiters.md) or other operations that return errors should follow a similar pattern:
 
 ```go
-if _, err := waiter.VpcDeleted(conn, d.Id()); err != nil {
+if _, err := VpcDeleted(conn, d.Id()); err != nil {
     return fmt.Errorf("error waiting for EC2 VPC (%s) deletion: %w", d.Id(), err)
 }
 ```
@@ -364,7 +362,7 @@ if err != nil {
 Code that also uses waiters or other operations that return errors should follow a similar pattern:
 
 ```go
-if _, err := waiter.VpcAvailable(conn, d.Id()); err != nil {
+if _, err := VpcAvailable(conn, d.Id()); err != nil {
     return fmt.Errorf("error waiting for EC2 VPC (%s) update: %w", d.Id(), err)
 }
 ```

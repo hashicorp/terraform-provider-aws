@@ -42,7 +42,7 @@ func waitForASGCapacity(
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
-		if g == nil {
+		if g == nil && !d.IsNewResource() {
 			log.Printf("[WARN] Auto Scaling Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -62,7 +62,7 @@ func waitForASGCapacity(
 			return fmt.Errorf("Error getting Auto Scaling Group info: %s", err)
 		}
 
-		if g == nil {
+		if g == nil && !d.IsNewResource() {
 			log.Printf("[WARN] Auto Scaling Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -185,11 +185,13 @@ func CapacitySatisfiedCreate(d *schema.ResourceData, haveASG, haveELB int) (bool
 
 // CapacitySatisfiedUpdate only cares about specific targets
 func CapacitySatisfiedUpdate(d *schema.ResourceData, haveASG, haveELB int) (bool, string) {
-	if wantASG := d.Get("desired_capacity").(int); wantASG > 0 {
-		if haveASG != wantASG {
-			return false, fmt.Sprintf(
-				"Need exactly %d healthy instances in ASG, have %d", wantASG, haveASG)
-		}
+	minASG := d.Get("min_size").(int)
+	if wantASG := d.Get("desired_capacity").(int); wantASG > minASG {
+		minASG = wantASG
+	}
+	if haveASG != minASG {
+		return false, fmt.Sprintf(
+			"Need exactly %d healthy instances in ASG, have %d", minASG, haveASG)
 	}
 	if wantELB := d.Get("wait_for_elb_capacity").(int); wantELB > 0 {
 		if haveELB != wantELB {

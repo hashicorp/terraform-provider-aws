@@ -14,6 +14,8 @@ const (
 	addonCreatedTimeout = 20 * time.Minute
 	addonUpdatedTimeout = 20 * time.Minute
 	addonDeletedTimeout = 40 * time.Minute
+
+	clusterDeleteRetryTimeout = 60 * time.Minute
 )
 
 func waitAddonCreated(ctx context.Context, conn *eks.EKS, clusterName, addonName string) (*eks.Addon, error) {

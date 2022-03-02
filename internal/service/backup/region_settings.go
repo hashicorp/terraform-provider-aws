@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func ResourceRegionSettings() *schema.Resource {
@@ -20,6 +21,12 @@ func ResourceRegionSettings() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"resource_type_management_preference": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeBool},
+			},
 			"resource_type_opt_in_preference": {
 				Type:     schema.TypeMap,
 				Required: true,
@@ -32,17 +39,18 @@ func ResourceRegionSettings() *schema.Resource {
 func resourceRegionSettingsUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
-	prefrences := d.Get("resource_type_opt_in_preference").(map[string]interface{})
-	list := make(map[string]*bool, len(prefrences))
-	for i, v := range prefrences {
-		list[i] = aws.Bool(v.(bool))
+	input := &backup.UpdateRegionSettingsInput{}
+
+	if v, ok := d.GetOk("resource_type_management_preference"); ok && len(v.(map[string]interface{})) > 0 {
+		input.ResourceTypeManagementPreference = flex.ExpandBoolMap(v.(map[string]interface{}))
 	}
 
-	input := &backup.UpdateRegionSettingsInput{
-		ResourceTypeOptInPreference: list,
+	if v, ok := d.GetOk("resource_type_opt_in_preference"); ok && len(v.(map[string]interface{})) > 0 {
+		input.ResourceTypeOptInPreference = flex.ExpandBoolMap(v.(map[string]interface{}))
 	}
 
 	_, err := conn.UpdateRegionSettings(input)
+
 	if err != nil {
 		return fmt.Errorf("error setting Backup Region Settings (%s): %w", d.Id(), err)
 	}
@@ -56,11 +64,13 @@ func resourceRegionSettingsRead(d *schema.ResourceData, meta interface{}) error 
 	conn := meta.(*conns.AWSClient).BackupConn
 
 	resp, err := conn.DescribeRegionSettings(&backup.DescribeRegionSettingsInput{})
+
 	if err != nil {
 		return fmt.Errorf("error reading Backup Region Settings (%s): %w", d.Id(), err)
 	}
 
 	d.Set("resource_type_opt_in_preference", aws.BoolValueMap(resp.ResourceTypeOptInPreference))
+	d.Set("resource_type_management_preference", aws.BoolValueMap(resp.ResourceTypeManagementPreference))
 
 	return nil
 }

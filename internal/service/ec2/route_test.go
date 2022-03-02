@@ -761,6 +761,10 @@ func TestAccEC2Route_doesNotCrashWithVPCEndpoint(t *testing.T) {
 }
 
 func TestAccEC2Route_ipv4ToTransitGateway(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	tgwResourceName := "aws_ec2_transit_gateway.test"
@@ -806,6 +810,10 @@ func TestAccEC2Route_ipv4ToTransitGateway(t *testing.T) {
 }
 
 func TestAccEC2Route_ipv6ToTransitGateway(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	tgwResourceName := "aws_ec2_transit_gateway.test"
@@ -1025,6 +1033,10 @@ func TestAccEC2Route_conditionalCIDRBlock(t *testing.T) {
 }
 
 func TestAccEC2Route_IPv4Update_target(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	vgwResourceName := "aws_vpn_gateway.test"
@@ -1232,6 +1244,10 @@ func TestAccEC2Route_IPv4Update_target(t *testing.T) {
 }
 
 func TestAccEC2Route_IPv6Update_target(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	vgwResourceName := "aws_vpn_gateway.test"
@@ -1392,6 +1408,10 @@ func TestAccEC2Route_IPv6Update_target(t *testing.T) {
 }
 
 func TestAccEC2Route_ipv4ToVPCEndpoint(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var route ec2.Route
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route.test"
@@ -1793,6 +1813,10 @@ func TestAccEC2Route_prefixListToNatGateway(t *testing.T) {
 }
 
 func TestAccEC2Route_prefixListToTransitGateway(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	tgwResourceName := "aws_ec2_transit_gateway.test"
@@ -2514,8 +2538,8 @@ resource "aws_route" "test" {
   route_table_id = aws_route_table.test.id
   gateway_id     = aws_internet_gateway.test.id
 
-  destination_cidr_block      = local.ipv6 ? "" : local.destination
-  destination_ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
+  destination_cidr_block      = local.ipv6 ? null : local.destination
+  destination_ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : null
 }
 `, rName, destinationCidr, destinationIpv6Cidr, ipv6Route)
 }

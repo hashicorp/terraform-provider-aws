@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -181,7 +181,7 @@ func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 		AccessPointId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, efs.ErrCodeAccessPointNotFound, "") {
+		if tfawserr.ErrCodeEquals(err, efs.ErrCodeAccessPointNotFound) {
 			log.Printf("[WARN] EFS access point %q could not be found.", d.Id())
 			d.SetId("")
 			return nil
@@ -240,14 +240,14 @@ func resourceAccessPointDelete(d *schema.ResourceData, meta interface{}) error {
 		AccessPointId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, efs.ErrCodeAccessPointNotFound, "") {
+		if tfawserr.ErrCodeEquals(err, efs.ErrCodeAccessPointNotFound) {
 			return nil
 		}
 		return fmt.Errorf("error deleting EFS Access Point (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waitAccessPointDeleted(conn, d.Id()); err != nil {
-		if tfawserr.ErrMessageContains(err, efs.ErrCodeAccessPointNotFound, "") {
+		if tfawserr.ErrCodeEquals(err, efs.ErrCodeAccessPointNotFound) {
 			return nil
 		}
 		return fmt.Errorf("error waiting for EFS access point (%s) deletion: %w", d.Id(), err)

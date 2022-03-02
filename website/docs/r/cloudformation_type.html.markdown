@@ -16,7 +16,7 @@ Manages a version of a CloudFormation Type.
 
 ```terraform
 resource "aws_cloudformation_type" "example" {
-  schema_handler_package = "s3://${aws_s3_bucket_object.example.bucket}/${aws_s3_bucket_object.example.key}"
+  schema_handler_package = "s3://${aws_s3_object.example.bucket}/${aws_s3_object.example.key}"
   type                   = "RESOURCE"
   type_name              = "ExampleCompany::ExampleService::ExampleResource"
 

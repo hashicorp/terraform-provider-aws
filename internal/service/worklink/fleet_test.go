@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/worklink"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -183,7 +183,6 @@ func TestAccWorkLinkFleet_network(t *testing.T) {
 func TestAccWorkLinkFleet_deviceCaCertificate(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
-	fName := "test-fixtures/worklink-device-ca-certificate.pem"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -192,7 +191,7 @@ func TestAccWorkLinkFleet_deviceCaCertificate(t *testing.T) {
 		CheckDestroy: testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetDeviceCaCertificateConfig(rName, fName),
+				Config: testAccFleetDeviceCaCertificateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "device_ca_certificate", regexp.MustCompile("^-----BEGIN CERTIFICATE-----")),
@@ -217,7 +216,7 @@ func TestAccWorkLinkFleet_deviceCaCertificate(t *testing.T) {
 func TestAccWorkLinkFleet_identityProvider(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
-	fName := "test-fixtures/saml-metadata.xml"
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -226,7 +225,7 @@ func TestAccWorkLinkFleet_identityProvider(t *testing.T) {
 		CheckDestroy: testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetIdentityProviderConfig(rName, fName),
+				Config: testAccFleetIdentityProviderConfig(rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider.#", "1"),
@@ -319,7 +318,7 @@ func testAccCheckFleetDestroy(s *terraform.State) error {
 
 		if err != nil {
 			// Return nil if the Worklink Fleet is already destroyed
-			if tfawserr.ErrMessageContains(err, worklink.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, worklink.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 
@@ -442,9 +441,9 @@ resource "aws_subnet" "test" {
 }
 
 func testAccFleetNetworkConfig(r, cidrBlock string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(
+		testAccFleetNetworkConfig_Base(r, cidrBlock),
+		fmt.Sprintf(`
 resource "aws_worklink_fleet" "test" {
   name = "tf-worklink-fleet-%s"
 
@@ -454,43 +453,43 @@ resource "aws_worklink_fleet" "test" {
     security_group_ids = [aws_security_group.test.id]
   }
 }
-`, testAccFleetNetworkConfig_Base(r, cidrBlock), r)
+`, r))
 }
 
 func testAccFleetAuditStreamARNConfig(r string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test_stream" {
-  name        = "AmazonWorkLink-%s_kinesis_test"
+  name        = "AmazonWorkLink-%[1]s_kinesis_test"
   shard_count = 1
 }
 
 resource "aws_worklink_fleet" "test" {
-  name = "tf-worklink-fleet-%s"
+  name = "tf-worklink-fleet-%[1]s"
 
   audit_stream_arn = aws_kinesis_stream.test_stream.arn
 }
-`, r, r)
+`, r)
 }
 
-func testAccFleetDeviceCaCertificateConfig(r string, fName string) string {
+func testAccFleetDeviceCaCertificateConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_worklink_fleet" "test" {
-  name = "tf-worklink-fleet-%s"
+  name = "tf-worklink-fleet-%[1]s"
 
-  device_ca_certificate = file("%s")
+  device_ca_certificate = file("./test-fixtures/worklink-device-ca-certificate.pem")
 }
-`, r, fName)
+`, rName)
 }
 
-func testAccFleetIdentityProviderConfig(r string, fName string) string {
+func testAccFleetIdentityProviderConfig(rName, idpEntityId string) string {
 	return fmt.Sprintf(`
 resource "aws_worklink_fleet" "test" {
-  name = "tf-worklink-fleet-%s"
+  name = "tf-worklink-fleet-%[1]s"
 
   identity_provider {
     type          = "SAML"
-    saml_metadata = file("%s")
+    saml_metadata = templatefile("./test-fixtures/saml-metadata.xml.tpl", { entity_id = %[2]q })
   }
 }
-`, r, fName)
+`, rName, idpEntityId)
 }

@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apprunner"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -135,7 +135,7 @@ func ResourceService() *schema.Resource {
 						},
 						"instance_role_arn": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 						"memory": {
@@ -652,7 +652,7 @@ func expandAppRunnerServiceInstanceConfiguration(l []interface{}) *apprunner.Ins
 		result.Cpu = aws.String(v)
 	}
 
-	if v, ok := tfMap["instance_role_arn"].(string); ok {
+	if v, ok := tfMap["instance_role_arn"].(string); ok && v != "" {
 		result.InstanceRoleArn = aws.String(v)
 	}
 

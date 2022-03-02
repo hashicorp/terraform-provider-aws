@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -130,7 +130,7 @@ func resourceLicenseConfigurationRead(d *schema.ResourceData, meta interface{}) 
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, licensemanager.ErrCodeInvalidParameterValueException, "") {
+		if tfawserr.ErrCodeEquals(err, licensemanager.ErrCodeInvalidParameterValueException) {
 			log.Printf("[WARN] License Manager license configuration (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -203,7 +203,7 @@ func resourceLicenseConfigurationDelete(d *schema.ResourceData, meta interface{}
 
 	_, err := conn.DeleteLicenseConfiguration(opts)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, licensemanager.ErrCodeInvalidParameterValueException, "") {
+		if tfawserr.ErrCodeEquals(err, licensemanager.ErrCodeInvalidParameterValueException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting License Manager license configuration: %s", err)

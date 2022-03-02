@@ -3,7 +3,7 @@ package sagemaker
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -109,6 +109,33 @@ func FindImageVersionByName(conn *sagemaker.SageMaker, name string) (*sagemaker.
 
 	if output == nil {
 		return nil, nil
+	}
+
+	return output, nil
+}
+
+func FindDeviceByName(conn *sagemaker.SageMaker, deviceFleetName, deviceName string) (*sagemaker.DescribeDeviceOutput, error) {
+	input := &sagemaker.DescribeDeviceInput{
+		DeviceFleetName: aws.String(deviceFleetName),
+		DeviceName:      aws.String(deviceName),
+	}
+
+	output, err := conn.DescribeDevice(input)
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "No device with name") ||
+		tfawserr.ErrMessageContains(err, ErrCodeValidationException, "No device fleet with name") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil
@@ -424,6 +451,39 @@ func FindStudioLifecycleConfigByName(conn *sagemaker.SageMaker, name string) (*s
 
 	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindProjectByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeProjectOutput, error) {
+	input := &sagemaker.DescribeProjectInput{
+		ProjectName: aws.String(name),
+	}
+
+	output, err := conn.DescribeProject(input)
+
+	if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	status := aws.StringValue(output.ProjectStatus)
+	if status == sagemaker.ProjectStatusDeleteCompleted {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
 	}
 
 	return output, nil

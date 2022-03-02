@@ -8,9 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceDeployment() *schema.Resource {
@@ -81,21 +83,15 @@ func resourceDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
 	// Create the gateway
 	log.Printf("[DEBUG] Creating API Gateway Deployment")
 
-	variables := make(map[string]string)
-	for k, v := range d.Get("variables").(map[string]interface{}) {
-		variables[k] = v.(string)
-	}
-
-	var err error
 	deployment, err := conn.CreateDeployment(&apigateway.CreateDeploymentInput{
 		RestApiId:        aws.String(d.Get("rest_api_id").(string)),
 		StageName:        aws.String(d.Get("stage_name").(string)),
 		Description:      aws.String(d.Get("description").(string)),
 		StageDescription: aws.String(d.Get("stage_description").(string)),
-		Variables:        aws.StringMap(variables),
+		Variables:        flex.ExpandStringMap(d.Get("variables").(map[string]interface{})),
 	})
 	if err != nil {
-		return fmt.Errorf("Error creating API Gateway Deployment: %s", err)
+		return fmt.Errorf("Error creating API Gateway Deployment: %w", err)
 	}
 
 	d.SetId(aws.StringValue(deployment.Id))
@@ -114,12 +110,12 @@ func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
 		DeploymentId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 			log.Printf("[WARN] API Gateway Deployment (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("error reading API Gateway Deployment (%s): %w", d.Id(), err)
 	}
 	log.Printf("[DEBUG] Received API Gateway Deployment: %s", out)
 	d.Set("description", out.Description)
@@ -188,14 +184,12 @@ func resourceDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
 	// InvalidParameter: 1 validation error(s) found.
 	//  - minimum field size of 1, GetStageInput.StageName.
 	stageName := d.Get("stage_name").(string)
+	restApiId := d.Get("rest_api_id").(string)
 	if stageName != "" {
-		stage, err := conn.GetStage(&apigateway.GetStageInput{
-			StageName: aws.String(stageName),
-			RestApiId: aws.String(d.Get("rest_api_id").(string)),
-		})
+		stage, err := FindStageByName(conn, restApiId, stageName)
 
-		if err != nil && !tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
-			return fmt.Errorf("error getting referenced stage: %s", err)
+		if err != nil && !tfresource.NotFound(err) {
+			return fmt.Errorf("error getting referenced stage: %w", err)
 		}
 
 		if stage != nil && aws.StringValue(stage.DeploymentId) == d.Id() {
@@ -205,8 +199,8 @@ func resourceDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
 
 	if shouldDeleteStage {
 		if _, err := conn.DeleteStage(&apigateway.DeleteStageInput{
-			StageName: aws.String(d.Get("stage_name").(string)),
-			RestApiId: aws.String(d.Get("rest_api_id").(string)),
+			StageName: aws.String(stageName),
+			RestApiId: aws.String(restApiId),
 		}); err == nil {
 			return nil
 		}
@@ -214,15 +208,15 @@ func resourceDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.DeleteDeployment(&apigateway.DeleteDeploymentInput{
 		DeploymentId: aws.String(d.Id()),
-		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:    aws.String(restApiId),
 	})
 
-	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway Deployment (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting API Gateway Deployment (%s): %w", d.Id(), err)
 	}
 
 	return nil

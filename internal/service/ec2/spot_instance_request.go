@@ -1,7 +1,6 @@
 package ec2
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"math/big"
@@ -10,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -101,23 +100,12 @@ func ResourceSpotInstanceRequest() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntDivisibleBy(60),
 			}
-			s["instance_interruption_behaviour"] = &schema.Schema{
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
-				Deprecated:    "Use the parameter \"instance_interruption_behavior\" instead.",
-				ConflictsWith: []string{"instance_interruption_behavior"},
-			}
 			s["instance_interruption_behavior"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true, // Only during `instance_interruption_behaviour` deprecation period
-				// Default:       ec2.InstanceInterruptionBehaviorTerminate,
-				ForceNew:      true,
-				ValidateFunc:  validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
-				ConflictsWith: []string{"instance_interruption_behaviour"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.InstanceInterruptionBehaviorTerminate,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
 			}
 			s["valid_from"] = &schema.Schema{
 				Type:         schema.TypeString,
@@ -138,21 +126,6 @@ func ResourceSpotInstanceRequest() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
-			// This function exists to apply a default value to `instance_interruption_behavior` while
-			// accounting for the deprecated parameter `instance_interruption_behaviour`. It can be removed
-			// in favor of setting a `Default` on the parameter once `instance_interruption_behaviour` is removed.
-			// https://github.com/hashicorp/terraform-provider-aws/issues/20101
-			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-				if v, ok := diff.GetOk("instance_interruption_behavior"); ok && v != "" {
-					return nil
-				}
-				if v, ok := diff.GetOk("instance_interruption_behaviour"); ok && v != "" {
-					diff.SetNew("instance_interruption_behavior", v)
-					return nil
-				}
-				diff.SetNew("instance_interruption_behavior", ec2.InstanceInterruptionBehaviorTerminate)
-				return nil
-			},
 		),
 	}
 }
@@ -373,7 +346,6 @@ func resourceSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Set("instance_interruption_behavior", request.InstanceInterruptionBehavior)
-	d.Set("instance_interruption_behaviour", request.InstanceInterruptionBehavior)
 	d.Set("valid_from", aws.TimeValue(request.ValidFrom).Format(time.RFC3339))
 	d.Set("valid_until", aws.TimeValue(request.ValidUntil).Format(time.RFC3339))
 	d.Set("spot_type", request.Type)
@@ -392,7 +364,7 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		// If the instance was not found, return nil so that we can show
 		// that the instance is gone.
-		if tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
 			return fmt.Errorf("no instance found")
 		}
 
@@ -515,7 +487,7 @@ func SpotInstanceStateRefreshFunc(
 		})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidSpotInstanceRequestID.NotFound", "") {
+			if tfawserr.ErrCodeEquals(err, "InvalidSpotInstanceRequestID.NotFound") {
 				// Set this to nil as if we didn't find anything.
 				resp = nil
 			} else {

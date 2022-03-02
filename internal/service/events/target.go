@@ -8,7 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -69,8 +71,12 @@ func ResourceTarget() *schema.Resource {
 			},
 
 			"input": {
-				Type:          schema.TypeString,
-				Optional:      true,
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringIsJSON,
+					validation.StringLenBetween(0, 8192),
+				),
 				ConflictsWith: []string{"input_path", "input_transformer"},
 				// We could be normalizing the JSON here,
 				// but for built-in targets input may not be JSON
@@ -79,6 +85,7 @@ func ResourceTarget() *schema.Resource {
 			"input_path": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				ValidateFunc:  validation.StringLenBetween(0, 256),
 				ConflictsWith: []string{"input", "input_transformer"},
 			},
 
@@ -102,7 +109,11 @@ func ResourceTarget() *schema.Resource {
 						"values": {
 							Type:     schema.TypeList,
 							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							MaxItems: 50,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
 						},
 					},
 				},
@@ -117,15 +128,27 @@ func ResourceTarget() *schema.Resource {
 						"header_parameters": {
 							Type:     schema.TypeMap,
 							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							ValidateDiagFunc: allDiagFunc(
+								validation.MapKeyLenBetween(0, 512),
+								validation.MapKeyMatch(regexp.MustCompile(`^[!#$%&'*+-.^_|~0-9a-zA-Z]+$`), ""),
+								validation.MapValueLenBetween(0, 512),
+								validation.MapValueMatch(regexp.MustCompile(`^[ \t]*[\x20-\x7E]+([ \t]+[\x20-\x7E]+)*[ \t]*$`), ""),
+							),
+							Elem: &schema.Schema{Type: schema.TypeString},
 						},
 						"query_string_parameters": {
 							Type:     schema.TypeMap,
 							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							ValidateDiagFunc: allDiagFunc(
+								validation.MapKeyLenBetween(0, 512),
+								validation.MapKeyMatch(regexp.MustCompile(`[^\x00-\x1F\x7F]+`), ""),
+								validation.MapValueLenBetween(0, 512),
+								validation.MapValueMatch(regexp.MustCompile(`[^\x00-\x09\x0B\x0C\x0E-\x1F\x7F]+`), ""),
+							),
+							Elem: &schema.Schema{Type: schema.TypeString},
 						},
 						"path_parameter_values": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -155,13 +178,9 @@ func ResourceTarget() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
 						"launch_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  eventbridge.LaunchTypeEc2,
-							ValidateFunc: validation.Any(
-								validation.StringIsEmpty,
-								validation.StringInSlice(eventbridge.LaunchType_Values(), false),
-							),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(eventbridge.LaunchType_Values(), false),
 						},
 						"network_configuration": {
 							Type:     schema.TypeList,
@@ -282,24 +301,29 @@ func ResourceTarget() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"database": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 64),
 						},
 						"db_user": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
 						"secrets_manager_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 						"sql": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 100000),
 						},
 						"statement_name": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 500),
 						},
 						"with_event": {
 							Type:     schema.TypeBool,
@@ -335,7 +359,7 @@ func ResourceTarget() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							ValidateFunc: validation.All(
-								mapMaxItems(100),
+								mapMaxItems(targetInputTransformerMaxInputPaths),
 								mapKeysDoNotMatch(regexp.MustCompile(`^AWS.*$`), "input_path must not start with \"AWS\""),
 							),
 						},
@@ -357,11 +381,12 @@ func ResourceTarget() *schema.Resource {
 						"maximum_event_age_in_seconds": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(60),
+							ValidateFunc: validation.IntBetween(0, 86400),
 						},
 						"maximum_retry_attempts": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 185),
 						},
 					},
 				},
@@ -1072,4 +1097,14 @@ func resourceTargetImport(d *schema.ResourceData, meta interface{}) ([]*schema.R
 	d.Set("event_bus_name", busName)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
+	return func(i interface{}, k cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		for _, validator := range validators {
+			diags = append(diags, validator(i, k)...)
+		}
+		return diags
+	}
 }

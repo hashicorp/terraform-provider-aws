@@ -6,10 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceTransitGatewayPrefixListReference() *schema.Resource {
@@ -95,9 +96,15 @@ func resourceTransitGatewayPrefixListReferenceCreate(d *schema.ResourceData, met
 func resourceTransitGatewayPrefixListReferenceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	transitGatewayPrefixListReference, err := FindTransitGatewayPrefixListReferenceByID(conn, d.Id())
+	transitGatewayRouteTableID, prefixListID, err := TransitGatewayPrefixListReferenceParseID(d.Id())
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteTableIDNotFound) {
+	if err != nil {
+		return err
+	}
+
+	transitGatewayPrefixListReference, err := FindTransitGatewayPrefixListReferenceByTwoPartKey(conn, transitGatewayRouteTableID, prefixListID)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway Prefix List Reference (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -107,28 +114,14 @@ func resourceTransitGatewayPrefixListReferenceRead(d *schema.ResourceData, meta 
 		return fmt.Errorf("error reading EC2 Transit Gateway Prefix List Reference (%s): %w", d.Id(), err)
 	}
 
-	if transitGatewayPrefixListReference == nil {
-		log.Printf("[WARN] EC2 Transit Gateway Prefix List Reference (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if aws.StringValue(transitGatewayPrefixListReference.State) == ec2.TransitGatewayPrefixListReferenceStateDeleting {
-		log.Printf("[WARN] EC2 Transit Gateway Prefix List Reference (%s) deleting, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
 	d.Set("blackhole", transitGatewayPrefixListReference.Blackhole)
 	d.Set("prefix_list_id", transitGatewayPrefixListReference.PrefixListId)
 	d.Set("prefix_list_owner_id", transitGatewayPrefixListReference.PrefixListOwnerId)
-
 	if transitGatewayPrefixListReference.TransitGatewayAttachment == nil {
 		d.Set("transit_gateway_attachment_id", nil)
 	} else {
 		d.Set("transit_gateway_attachment_id", transitGatewayPrefixListReference.TransitGatewayAttachment.TransitGatewayAttachmentId)
 	}
-
 	d.Set("transit_gateway_route_table_id", transitGatewayPrefixListReference.TransitGatewayRouteTableId)
 
 	return nil
@@ -178,7 +171,7 @@ func resourceTransitGatewayPrefixListReferenceDelete(d *schema.ResourceData, met
 	transitGatewayRouteTableID, prefixListID, err := TransitGatewayPrefixListReferenceParseID(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error parsing EC2 Transit Gateway Prefix List Reference (%s) idenfitier: %w", d.Id(), err)
+		return err
 	}
 
 	input := &ec2.DeleteTransitGatewayPrefixListReferenceInput{

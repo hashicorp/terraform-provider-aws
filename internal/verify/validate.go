@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -176,6 +177,16 @@ func ValidIPv6CIDRNetworkAddress(v interface{}, k string) (ws []string, errors [
 	return
 }
 
+// IsIPv4CIDRBlockOrIPv6CIDRBlock returns a SchemaValidateFunc that test if the provided value:
+// - Is a valid IPv4 CIDR block and passes the specified validation, or
+// - Is a valid IPv6 CIDR block and passes the specified validation
+func IsIPv4CIDRBlockOrIPv6CIDRBlock(ipv4Validator, ipv6Validator schema.SchemaValidateFunc) schema.SchemaValidateFunc {
+	return validation.Any(
+		validation.All(ValidIPv4CIDRNetworkAddress, ipv4Validator),
+		validation.All(ValidIPv6CIDRNetworkAddress, ipv6Validator),
+	)
+}
+
 func ValidLaunchTemplateID(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) < 1 {
@@ -200,6 +211,29 @@ func ValidLaunchTemplateName(v interface{}, k string) (ws []string, errors []err
 	} else if !regexp.MustCompile(`^[0-9a-zA-Z()./_\-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q can only alphanumeric characters and ()./_- symbols", k))
 	}
+	return
+}
+
+// validateMulticastIPAddress validates that the specified string is a multicast IP address.
+func validateMulticastIPAddress(s string) error {
+	ip := net.ParseIP(s)
+	if ip == nil {
+		return fmt.Errorf("%q is not a valid IP address", s)
+	}
+
+	if !ip.IsMulticast() {
+		return fmt.Errorf("%q is not a valid multicast address", s)
+	}
+
+	return nil
+}
+
+func ValidMulticastIPAddress(v interface{}, k string) (ws []string, errors []error) {
+	if err := validateMulticastIPAddress(v.(string)); err != nil {
+		errors = append(errors, err)
+		return
+	}
+
 	return
 }
 
@@ -229,8 +263,23 @@ func ValidOnceAWeekWindowFormat(v interface{}, k string) (ws []string, errors []
 	return
 }
 
+func ValidRegionName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if value == "" {
+		return ws, errors
+	}
+	if !regionRegexp.MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q region name is malformed(%q): %q",
+			k, regionRegexp, value))
+	}
+
+	return
+}
+
 func ValidStringIsJSONOrYAML(v interface{}, k string) (ws []string, errors []error) {
-	if looksLikeJsonString(v) {
+	if looksLikeJSONString(v) {
 		if _, err := structure.NormalizeJsonString(v); err != nil {
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
 		}

@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -65,10 +65,20 @@ func ResourceApp() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
 						},
+						"lifecycle_config_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 						"sagemaker_image_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"sagemaker_image_version_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 					},
@@ -140,7 +150,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 
 	app, err := FindAppByName(conn, domainID, userProfileName, appType, appName)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker App (%s), removing from state", d.Id())
 			return nil
@@ -221,13 +231,13 @@ func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			return fmt.Errorf("error deleting SageMaker App (%s): %w", d.Id(), err)
 		}
 	}
 
 	if _, err := WaitAppDeleted(conn, domainID, userProfileName, appType, appName); err != nil {
-		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			return fmt.Errorf("error waiting for SageMaker App (%s) to delete: %w", d.Id(), err)
 		}
 	}

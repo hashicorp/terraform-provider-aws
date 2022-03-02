@@ -188,6 +188,11 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
+			"desync_mitigation_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"tags": tftags.TagsSchemaComputed(),
 
 			"zone_id": {
@@ -301,6 +306,13 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 		}
 		if err := d.Set("access_logs", flattenAccessLog(elbal)); err != nil {
 			return err
+		}
+	}
+
+	for _, attr := range lbAttrs.AdditionalAttributes {
+		switch aws.StringValue(attr.Key) {
+		case "elb.http.desyncmitigationmode":
+			d.Set("desync_mitigation_mode", attr.Value)
 		}
 	}
 

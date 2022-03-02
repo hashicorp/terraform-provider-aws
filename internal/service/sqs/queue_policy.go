@@ -6,8 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -39,6 +40,10 @@ func ResourceQueuePolicy() *schema.Resource {
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 
 			"queue_url": {
@@ -53,9 +58,16 @@ func ResourceQueuePolicy() *schema.Resource {
 func resourceQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SQSConn
 
-	policyAttributes := map[string]string{
-		sqs.QueueAttributeNamePolicy: d.Get("policy").(string),
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
 	}
+
+	policyAttributes := map[string]string{
+		sqs.QueueAttributeNamePolicy: policy,
+	}
+
 	url := d.Get("queue_url").(string)
 	input := &sqs.SetQueueAttributesInput{
 		Attributes: aws.StringMap(policyAttributes),
@@ -63,7 +75,7 @@ func resourceQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Setting SQS Queue Policy: %s", input)
-	_, err := conn.SetQueueAttributes(input)
+	_, err = conn.SetQueueAttributes(input)
 
 	if err != nil {
 		return fmt.Errorf("error setting SQS Queue Policy (%s): %w", url, err)
@@ -83,7 +95,9 @@ func resourceQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) error {
 func resourceQueuePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SQSConn
 
-	policy, err := FindQueuePolicyByURL(conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNotFound(queuePolicyReadTimeout, func() (interface{}, error) {
+		return FindQueuePolicyByURL(conn, d.Id())
+	})
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SQS Queue Policy (%s) not found, removing from state", d.Id())
@@ -95,7 +109,14 @@ func resourceQueuePolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading SQS Queue Policy (%s): %w", d.Id(), err)
 	}
 
-	d.Set("policy", policy)
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), outputRaw.(string))
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("policy", policyToSet)
+
 	d.Set("queue_url", d.Id())
 
 	return nil

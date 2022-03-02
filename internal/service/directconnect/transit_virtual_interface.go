@@ -96,6 +96,10 @@ func ResourceTransitVirtualInterface() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"sitelink_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"vlan": {
@@ -127,6 +131,7 @@ func resourceTransitVirtualInterfaceCreate(d *schema.ResourceData, meta interfac
 			AddressFamily:          aws.String(d.Get("address_family").(string)),
 			Asn:                    aws.Int64(int64(d.Get("bgp_asn").(int))),
 			DirectConnectGatewayId: aws.String(d.Get("dx_gateway_id").(string)),
+			EnableSiteLink:         aws.Bool(d.Get("sitelink_enabled").(bool)),
 			Mtu:                    aws.Int64(int64(d.Get("mtu").(int))),
 			VirtualInterfaceName:   aws.String(d.Get("name").(string)),
 			Vlan:                   aws.Int64(int64(d.Get("vlan").(int))),
@@ -195,6 +200,7 @@ func resourceTransitVirtualInterfaceRead(d *schema.ResourceData, meta interface{
 	d.Set("jumbo_frame_capable", vif.JumboFrameCapable)
 	d.Set("mtu", vif.Mtu)
 	d.Set("name", vif.VirtualInterfaceName)
+	d.Set("sitelink_enabled", vif.SiteLinkEnabled)
 	d.Set("vlan", vif.Vlan)
 
 	tags, err := ListTags(conn, arn)

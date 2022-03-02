@@ -94,6 +94,10 @@ In addition to all arguments above, the following attributes are exported:
 * `last_record_id` - Record identifier of the last request performed on this provisioned product.
 * `last_successful_provisioning_record_id` - Record identifier of the last successful request performed on this provisioned product of the following types: `ProvisionedProduct`, `UpdateProvisionedProduct`, `ExecuteProvisionedProductPlan`, `TerminateProvisionedProduct`.
 * `launch_role_arn` - ARN of the launch role associated with the provisioned product.
+* `outputs` - The set of outputs for the product created.
+    * `description` -  The description of the output.
+    * `key` - The output key.
+    * `value` - The output value.
 * `status` - Current status of the provisioned product. See meanings below.
 * `status_message` - Current status message of the provisioned product.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
