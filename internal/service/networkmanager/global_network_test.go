@@ -1,93 +1,36 @@
-package networkmanager
+package networkmanager_test
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_networkmanager_global_network", &resource.Sweeper{
-		Name: "aws_networkmanager_global_network",
-		F:    testSweepGlobalNetwork,
-	})
-}
-
-func testSweepGlobalNetwork(region string) error {
-	client, err := sharedClientForRegion(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*AWSClient).networkmanagerconn
-	input := &networkmanager.DescribeGlobalNetworksInput{}
-	var sweeperErrs *multierror.Error
-
-	err = conn.DescribeGlobalNetworksPages(input,
-		func(page *networkmanager.DescribeGlobalNetworksOutput, lastPage bool) bool {
-			for _, globalNetwork := range page.GlobalNetworks {
-				input := &networkmanager.DeleteGlobalNetworkInput{
-					GlobalNetworkId: globalNetwork.GlobalNetworkId,
-				}
-				id := aws.StringValue(globalNetwork.GlobalNetworkId)
-
-				log.Printf("[INFO] Deleting Network Manager Global Network: %s", id)
-				_, err := conn.DeleteGlobalNetwork(input)
-
-				if tfawserr.ErrCodeEquals(err, "InvalidGlobalNetworkID.NotFound", "") {
-					continue
-				}
-
-				if err != nil {
-					sweeperErr := fmt.Errorf("failed to delete Network Manager Global Network %s: %s", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-					continue
-				}
-
-				if err := waitForGlobalNetworkDeletion(conn, id); err != nil {
-					sweeperErr := fmt.Errorf("error waiting for Network Manager Global Network (%s) deletion: %s", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-					continue
-				}
-			}
-			return !lastPage
-		})
-	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping Network Manager Global Network sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("Error retrieving Network Manager Global Networks: %s", err)
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
-
-func TestAccGlobalNetwork_basic(t *testing.T) {
+func TestAccNetworkManagerGlobalNetwork_basic(t *testing.T) {
 	resourceName := "aws_networkmanager_global_network.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsGlobalNetworkDestroy,
+		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckGlobalNetworkDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalNetworkConfig("test"),
+				Config: testAccGlobalNetworkConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGlobalNetworkExists(resourceName),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexp.MustCompile(`global-network/global-network-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					testAccCheckGlobalNetworkExists(resourceName),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexp.MustCompile(`global-network/global-network-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -95,32 +38,44 @@ func TestAccGlobalNetwork_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+		},
+	})
+}
+
+func TestAccNetworkManagerGlobalNetwork_disappears(t *testing.T) {
+	resourceName := "aws_networkmanager_global_network.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckGlobalNetworkDestroy,
+		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalNetworkConfig_Update("test updated"),
+				Config: testAccGlobalNetworkConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGlobalNetworkExists(resourceName),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexp.MustCompile(`global-network/global-network-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "description", "test updated"),
+					testAccCheckGlobalNetworkExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceGlobalNetwork(), resourceName),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
 }
 
-func TestAccGlobalNetwork_tags(t *testing.T) {
+func TestAccNetworkManagerGlobalNetwork_tags(t *testing.T) {
 	resourceName := "aws_networkmanager_global_network.test"
-	description := "test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsGlobalNetworkDestroy,
+		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckGlobalNetworkDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalNetworkConfigTags1(description, "key1", "value1"),
+				Config: testAccGlobalNetworkConfigTags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGlobalNetworkExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					testAccCheckGlobalNetworkExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -131,20 +86,18 @@ func TestAccGlobalNetwork_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGlobalNetworkConfigTags2(description, "key1", "value1updated", "key2", "value2"),
+				Config: testAccGlobalNetworkConfigTags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGlobalNetworkExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					testAccCheckGlobalNetworkExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccGlobalNetworkConfigTags1(description, "key2", "value2"),
+				Config: testAccGlobalNetworkConfigTags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGlobalNetworkExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					testAccCheckGlobalNetworkExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -153,96 +106,116 @@ func TestAccGlobalNetwork_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsGlobalNetworkDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).networkmanagerconn
+func TestAccNetworkManagerGlobalNetwork_description(t *testing.T) {
+	resourceName := "aws_networkmanager_global_network.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckGlobalNetworkDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalNetworkDescriptionConfig("description1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalNetworkExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGlobalNetworkDescriptionConfig("description2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalNetworkExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckGlobalNetworkDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_networkmanager_global_network" {
 			continue
 		}
 
-		globalNetwork, err := networkmanagerDescribeGlobalNetwork(conn, rs.Primary.ID)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException, "") {
-				return nil
-			}
-			return err
-		}
+		_, err := tfnetworkmanager.FindGlobalNetworkByID(context.TODO(), conn, rs.Primary.ID)
 
-		if globalNetwork == nil {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
-		return fmt.Errorf("Expected Global Network to be destroyed, %s found", rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("Network Manager Global Network %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckAwsGlobalNetworkExists(name string) resource.TestCheckFunc {
+func testAccCheckGlobalNetworkExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).networkmanagerconn
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Network Manager Global Network ID is set")
+		}
 
-		globalNetwork, err := networkmanagerDescribeGlobalNetwork(conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+
+		_, err := tfnetworkmanager.FindGlobalNetworkByID(context.TODO(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if globalNetwork == nil {
-			return fmt.Errorf("Network Manager Global Network not found")
-		}
-
-		if aws.StringValue(globalNetwork.State) != networkmanager.GlobalNetworkStateAvailable && aws.StringValue(globalNetwork.State) != networkmanager.GlobalNetworkStatePending {
-			return fmt.Errorf("Network Manager Global Network (%s) exists in (%s) state", rs.Primary.ID, aws.StringValue(globalNetwork.State))
-		}
-
-		return err
+		return nil
 	}
 }
 
-func testAccGlobalNetworkConfig(description string) string {
-	return fmt.Sprintf(`
-resource "aws_networkmanager_global_network" "test" {
-  description = %q
-}
-`, description)
+func testAccGlobalNetworkConfig() string {
+	return `
+resource "aws_networkmanager_global_network" "test" {}
+`
 }
 
-func testAccGlobalNetworkConfigTags1(description, tagKey1, tagValue1 string) string {
+func testAccGlobalNetworkConfigTags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
-  description = %q
-
   tags = {
-  	%q = %q
+  	%[1]q = %[2]q
   }
 }
-`, description, tagKey1, tagValue1)
+`, tagKey1, tagValue1)
 }
 
-func testAccGlobalNetworkConfigTags2(description, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccGlobalNetworkConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
- description = %q
-
   tags = {
-  	%q = %q
-	%q = %q
+  	%[1]q = %[2]q
+	%[3]q = %[4]q
   }
 }
-`, description, tagKey1, tagValue1, tagKey2, tagValue2)
+`, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccGlobalNetworkConfig_Update(description string) string {
+func testAccGlobalNetworkDescriptionConfig(description string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
-  description = %q
+  description = %[1]q
 }
 `, description)
 }
