@@ -713,6 +713,8 @@ func Provider() *schema.Provider {
 			"aws_neptune_engine_version":        neptune.DataSourceEngineVersion(),
 			"aws_neptune_orderable_db_instance": neptune.DataSourceOrderableDBInstance(),
 
+			"aws_networkmanager_global_network": networkmanager.DataSourceGlobalNetwork(),
+
 			"aws_organizations_delegated_administrators": organizations.DataSourceDelegatedAdministrators(),
 			"aws_organizations_delegated_services":       organizations.DataSourceDelegatedServices(),
 			"aws_organizations_organization":             organizations.DataSourceOrganization(),
