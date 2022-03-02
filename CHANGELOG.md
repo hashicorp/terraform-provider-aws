@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_ec2_transit_gateway_connect` ([#22181](https://github.com/hashicorp/terraform-provider-aws/issues/22181))
 * **New Data Source:** `aws_ec2_transit_gateway_connect_peer` ([#22181](https://github.com/hashicorp/terraform-provider-aws/issues/22181))
+* **New Resource:** `aws_ec2_network_insights_path` ([#23330](https://github.com/hashicorp/terraform-provider-aws/issues/23330))
 * **New Resource:** `aws_ec2_transit_gateway_connect` ([#22181](https://github.com/hashicorp/terraform-provider-aws/issues/22181))
 * **New Resource:** `aws_ec2_transit_gateway_connect_peer` ([#22181](https://github.com/hashicorp/terraform-provider-aws/issues/22181))
 * **New Resource:** `aws_grafana_license_association` ([#23401](https://github.com/hashicorp/terraform-provider-aws/issues/23401))
@@ -12,6 +13,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_ec2_transit_gateway: Add `transit_gateway_cidr_blocks` attribute ([#22181](https://github.com/hashicorp/terraform-provider-aws/issues/22181))
+* data-source/aws_eks_node_group: Add `taints` attribute ([#23452](https://github.com/hashicorp/terraform-provider-aws/issues/23452))
 * resource/aws_cloudwatch_metric_alarm: Additional allowed values for `extended_statistic` and `metric_query.metric.stat` arguments ([#22942](https://github.com/hashicorp/terraform-provider-aws/issues/22942))
 * resource/aws_ec2_transit_gateway: Add [custom `timeouts`](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts) block ([#22181](https://github.com/hashicorp/terraform-provider-aws/issues/22181))
 * resource/aws_ec2_transit_gateway: Add `transit_gateway_cidr_blocks` argument ([#22181](https://github.com/hashicorp/terraform-provider-aws/issues/22181))
@@ -21,6 +23,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_dms_endpoint: Fix bug where KMS key was ignored for DynamoDB, OpenSearch, Kafka, Kinesis, Oracle, PostgreSQL, and S3 engines. ([#23444](https://github.com/hashicorp/terraform-provider-aws/issues/23444))
 * resource/aws_opsworks_application: Fix error reported on successful deletion ([#23397](https://github.com/hashicorp/terraform-provider-aws/issues/23397))
 * resource/aws_opsworks_custom_layer: Fix error reported on successful deletion ([#23397](https://github.com/hashicorp/terraform-provider-aws/issues/23397))
 * resource/aws_opsworks_ecs_cluster_layer: Fix error reported on successful deletion ([#23397](https://github.com/hashicorp/terraform-provider-aws/issues/23397))
