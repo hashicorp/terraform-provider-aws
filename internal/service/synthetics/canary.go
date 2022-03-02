@@ -798,6 +798,10 @@ func syntheticsStopCanary(name string, conn *synthetics.Synthetics) error {
 		Name: aws.String(name),
 	})
 
+	if tfawserr.ErrCodeEquals(err, synthetics.ErrCodeConflictException) {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("error stopping Synthetics Canary (%s): %w", name, err)
 	}
