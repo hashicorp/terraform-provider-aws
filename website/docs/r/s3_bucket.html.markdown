@@ -12,6 +12,10 @@ Provides a S3 bucket resource.
 
 -> This functionality is for managing S3 in an AWS Partition. To manage [S3 on Outposts](https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html), see the [`aws_s3control_bucket`](/docs/providers/aws/r/s3control_bucket.html) resource.
 
+~> **NOTE on S3 Bucket Object Lock Configuration:** S3 Bucket Object Lock can be configured in either the standalone resource [`aws_s3_bucket_object_lock_configuration`](s3_bucket_object_lock_configuration.html)
+or with the deprecated parameter `object_lock_configuration` in the resource `aws_s3_bucket`.
+Configuring with both will cause inconsistencies and may overwrite configuration.
+
 ## Example Usage
 
 ### Private Bucket w/ Tags
@@ -371,7 +375,8 @@ the costs of any data transfer. See [Requester Pays Buckets](http://docs.aws.ama
 developer guide for more information.
 * `replication_configuration` - (Optional) A configuration of [replication configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html) (documented below).
 * `server_side_encryption_configuration` - (Optional) A configuration of [server-side encryption configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html) (documented below)
-* `object_lock_configuration` - (Optional) A configuration of [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html) (documented below)
+* `object_lock_configuration` - (Optional, **Deprecated**) A configuration of [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html) (documented below).
+  Use the resource [`aws_s3_bucket_object_lock_configuration`](s3_bucket_object_lock_configuration.html) instead.
 
 ~> **NOTE:** You cannot use `acceleration_status` in `cn-north-1` or `us-gov-west-1`
 

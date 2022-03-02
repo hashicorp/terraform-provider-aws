@@ -1592,6 +1592,7 @@ func Provider() *schema.Provider {
 			"aws_s3_bucket_metric":                            s3.ResourceBucketMetric(),
 			"aws_s3_bucket_notification":                      s3.ResourceBucketNotification(),
 			"aws_s3_bucket_object":                            s3.ResourceBucketObject(),
+			"aws_s3_bucket_object_lock_configuration":         s3.ResourceBucketObjectLockConfiguration(),
 			"aws_s3_bucket_ownership_controls":                s3.ResourceBucketOwnershipControls(),
 			"aws_s3_bucket_policy":                            s3.ResourceBucketPolicy(),
 			"aws_s3_bucket_public_access_block":               s3.ResourceBucketPublicAccessBlock(),

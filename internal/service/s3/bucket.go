@@ -609,9 +609,11 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"object_lock_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:       schema.TypeList,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "Use the aws_s3_bucket_object_lock_configuration resource instead",
+				MaxItems:   1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"object_lock_enabled": {
@@ -624,6 +626,7 @@ func ResourceBucket() *schema.Resource {
 						"rule": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -842,7 +845,7 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("object_lock_configuration") {
-		if err := resourceBucketObjectLockConfigurationUpdate(conn, d); err != nil {
+		if err := resourceBucketInternalObjectLockConfigurationUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -2014,7 +2017,7 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *schem
 	return nil
 }
 
-func resourceBucketObjectLockConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketInternalObjectLockConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	// S3 Object Lock configuration cannot be deleted, only updated.
 	req := &s3.PutObjectLockConfigurationInput{
 		Bucket:                  aws.String(d.Get("bucket").(string)),
