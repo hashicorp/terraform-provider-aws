@@ -3,7 +3,6 @@ package workmail
 import (
 	"fmt"
 	"log"
-	"reflect"
 	"regexp"
 	"time"
 
