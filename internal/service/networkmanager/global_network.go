@@ -1,27 +1,40 @@
 package networkmanager
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceGlobalNetwork() *schema.Resource {
 	return &schema.Resource{
-		Create: ResourceGlobalNetworkCreate,
-		Read:   ResourceGlobalNetworkRead,
-		Update: ResourceGlobalNetworkUpdate,
-		Delete: ResourceGlobalNetworkDelete,
+		CreateWithoutTimeout: resourceGlobalNetworkCreate,
+		ReadWithoutTimeout:   resourceGlobalNetworkRead,
+		UpdateWithoutTimeout: resourceGlobalNetworkUpdate,
+		DeleteWithoutTimeout: resourceGlobalNetworkDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		CustomizeDiff: verify.SetTagsDiff,
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -30,259 +43,271 @@ func ResourceGlobalNetwork() *schema.Resource {
 				Computed: true,
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
-			"tags": tagsSchema(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func ResourceGlobalNetworkCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).networkmanagerconn
+func resourceGlobalNetworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	input := &networkmanager.CreateGlobalNetworkInput{
-		Description: aws.String(d.Get("description").(string)),
-		Tags:        keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().NetworkmanagerTags(),
-	}
+	input := &networkmanager.CreateGlobalNetworkInput{}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Network Manager Global Network: %s", input)
-	var output *networkmanager.CreateGlobalNetworkOutput
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
-		output, err = conn.CreateGlobalNetwork(input)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Resource already exists with ID") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateGlobalNetwork(input)
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
+
+	log.Printf("[DEBUG] Creating Network Manager Global Network: %s", input)
+	output, err := conn.CreateGlobalNetworkWithContext(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error creating Network Manager Global Network: %s", err)
+		return diag.Errorf("error creating Network Manager Global Network: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.GlobalNetwork.GlobalNetworkId))
 
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{networkmanager.GlobalNetworkStatePending},
-		Target:  []string{networkmanager.GlobalNetworkStateAvailable},
-		Refresh: networkmanagerGlobalNetworkRefreshFunc(conn, aws.StringValue(output.GlobalNetwork.GlobalNetworkId)),
-		Timeout: 10 * time.Minute,
+	if _, err := waitGlobalNetworkCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return diag.Errorf("error waiting for Network Manager Global Network (%s) create: %s", d.Id(), err)
 	}
 
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("error waiting for networkmanager Global Network (%s) availability: %s", d.Id(), err)
-	}
-
-	return ResourceGlobalNetworkRead(d, meta)
+	return resourceGlobalNetworkRead(ctx, d, meta)
 }
 
-func ResourceGlobalNetworkRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).networkmanagerconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+func resourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	globalNetwork, err := networkmanagerDescribeGlobalNetwork(conn, d.Id())
+	globalNetwork, err := FindGlobalNetworkByID(ctx, conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, "InvalidGlobalNetworkID.NotFound", "") {
-		log.Printf("[WARN] networkmanager Global Network (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Network Manager Global Network %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading networkmanager Global Network: %s", err)
-	}
-
-	if globalNetwork == nil {
-		log.Printf("[WARN] networkmanager Global Network (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if aws.StringValue(globalNetwork.State) == networkmanager.GlobalNetworkStateDeleting {
-		log.Printf("[WARN] networkmanager Global Network (%s) in deleted state (%s), removing from state", d.Id(), aws.StringValue(globalNetwork.State))
-		d.SetId("")
-		return nil
+		return diag.Errorf("error reading Network Manager Global Network (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", globalNetwork.GlobalNetworkArn)
 	d.Set("description", globalNetwork.Description)
 
-	if err := d.Set("tags", keyvaluetags.NetworkmanagerKeyValueTags(globalNetwork.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags := KeyValueTags(globalNetwork.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.Errorf("error setting tags: %s", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.Errorf("error setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func ResourceGlobalNetworkUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).networkmanagerconn
+func resourceGlobalNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
 	if d.HasChange("description") {
-		request := &networkmanager.UpdateGlobalNetworkInput{
+		input := &networkmanager.UpdateGlobalNetworkInput{
 			Description:     aws.String(d.Get("description").(string)),
 			GlobalNetworkId: aws.String(d.Id()),
 		}
 
-		_, err := conn.UpdateGlobalNetwork(request)
+		log.Printf("[DEBUG] Updating Network Manager Global Network: %s", input)
+		_, err := conn.UpdateGlobalNetworkWithContext(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("Failure updating Network Manager Global Network description: %s", err)
+			return diag.Errorf("error updating Network Manager Global Network (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitGlobalNetworkUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.Errorf("error waiting for Network Manager Global Network (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.NetworkmanagerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating networkmanager Global Network (%s) tags: %s", d.Id(), err)
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return diag.Errorf("error updating Network Manager Global Network (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return resourceGlobalNetworkRead(ctx, d, meta)
 }
 
-func ResourceGlobalNetworkDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).networkmanagerconn
+func resourceGlobalNetworkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
-	input := &networkmanager.DeleteGlobalNetworkInput{
-		GlobalNetworkId: aws.String(d.Id()),
-	}
+	log.Printf("[DEBUG] Deleting Network Manager Global Network: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, globalNetworkValidationException, func() (interface{}, error) {
+		return conn.DeleteGlobalNetworkWithContext(ctx, &networkmanager.DeleteGlobalNetworkInput{
+			GlobalNetworkId: aws.String(d.Id()),
+		})
+	}, networkmanager.ErrCodeValidationException)
 
-	log.Printf("[DEBUG] Deleting networkmanager Global Network (%s): %s", d.Id(), input)
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteGlobalNetwork(input)
-
-		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Transit Gateway Registrations") {
-			return resource.RetryableError(err)
-		}
-
-		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Customer Gateway Associations") {
-			return resource.RetryableError(err)
-		}
-
-		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Device") {
-			return resource.RetryableError(err)
-		}
-
-		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Link") {
-			return resource.RetryableError(err)
-		}
-
-		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Site") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteGlobalNetwork(input)
-	}
-
-	if tfawserr.ErrCodeEquals(err, "InvalidGlobalNetworkID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting networkmanager Global Network: %s", err)
+		return diag.Errorf("error deleting Network Manager Global Network (%s): %s", d.Id(), err)
 	}
 
-	if err := waitForGlobalNetworkDeletion(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for networkmanager Global Network (%s) deletion: %s", d.Id(), err)
+	if _, err := waitGlobalNetworkDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return diag.Errorf("error waiting for Network Manager Global Network (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func networkmanagerGlobalNetworkRefreshFunc(conn *networkmanager.NetworkManager, globalNetworkID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		globalNetwork, err := networkmanagerDescribeGlobalNetwork(conn, globalNetworkID)
+func FindGlobalNetwork(ctx context.Context, conn *networkmanager.NetworkManager, input *networkmanager.DescribeGlobalNetworksInput) (*networkmanager.GlobalNetwork, error) {
+	output, err := FindGlobalNetworks(ctx, conn, input)
 
-		if tfawserr.ErrCodeEquals(err, "InvalidGlobalNetworkID.NotFound", "") {
-			return nil, "DELETED", nil
-		}
-
-		if err != nil {
-			return nil, "", fmt.Errorf("error reading  Global Network (%s): %s", globalNetworkID, err)
-		}
-
-		if globalNetwork == nil {
-			return nil, "DELETED", nil
-		}
-
-		return globalNetwork, aws.StringValue(globalNetwork.State), nil
+	if err != nil {
+		return nil, err
 	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
 }
 
-func networkmanagerDescribeGlobalNetwork(conn *networkmanager.NetworkManager, globalNetworkID string) (*networkmanager.GlobalNetwork, error) {
-	input := &networkmanager.DescribeGlobalNetworksInput{
-		GlobalNetworkIds: []*string{aws.String(globalNetworkID)},
-	}
+func FindGlobalNetworks(ctx context.Context, conn *networkmanager.NetworkManager, input *networkmanager.DescribeGlobalNetworksInput) ([]*networkmanager.GlobalNetwork, error) {
+	var output []*networkmanager.GlobalNetwork
 
-	log.Printf("[DEBUG] Reading  Global Network (%s): %s", globalNetworkID, input)
-	for {
-		output, err := conn.DescribeGlobalNetworks(input)
-
-		if err != nil {
-			return nil, err
+	err := conn.DescribeGlobalNetworksPagesWithContext(ctx, input, func(page *networkmanager.DescribeGlobalNetworksOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if output == nil || len(output.GlobalNetworks) == 0 {
-			return nil, nil
-		}
-
-		for _, globalNetwork := range output.GlobalNetworks {
-			if globalNetwork == nil {
+		for _, v := range page.GlobalNetworks {
+			if v == nil {
 				continue
 			}
 
-			if aws.StringValue(globalNetwork.GlobalNetworkId) == globalNetworkID {
-				return globalNetwork, nil
-			}
+			output = append(output, v)
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextToken = output.NextToken
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, nil
+	return output, nil
 }
 
-func waitForGlobalNetworkDeletion(conn *networkmanager.NetworkManager, globalNetworkID string) error {
+func FindGlobalNetworkByID(ctx context.Context, conn *networkmanager.NetworkManager, id string) (*networkmanager.GlobalNetwork, error) {
+	input := &networkmanager.DescribeGlobalNetworksInput{
+		GlobalNetworkIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindGlobalNetwork(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.GlobalNetworkId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func statusGlobalNetworkState(ctx context.Context, conn *networkmanager.NetworkManager, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindGlobalNetworkByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(*output.State), nil
+	}
+}
+
+func waitGlobalNetworkCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.GlobalNetwork, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			networkmanager.GlobalNetworkStateAvailable,
-			networkmanager.GlobalNetworkStateDeleting,
-		},
-		Target:         []string{""},
-		Refresh:        networkmanagerGlobalNetworkRefreshFunc(conn, globalNetworkID),
-		Timeout:        10 * time.Minute,
+		Pending: []string{networkmanager.GlobalNetworkStatePending},
+		Target:  []string{networkmanager.GlobalNetworkStateAvailable},
+		Timeout: timeout,
+		Refresh: statusGlobalNetworkState(ctx, conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*networkmanager.GlobalNetwork); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitGlobalNetworkDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.GlobalNetwork, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:        []string{networkmanager.GlobalNetworkStateDeleting},
+		Target:         []string{},
+		Timeout:        timeout,
+		Refresh:        statusGlobalNetworkState(ctx, conn, id),
 		NotFoundChecks: 1,
 	}
 
-	log.Printf("[DEBUG] Waiting for  Global Network (%s) deletion", globalNetworkID)
-	_, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if tfresource.NotFound(err) {
-		return nil
+	if output, ok := outputRaw.(*networkmanager.GlobalNetwork); ok {
+		return output, err
 	}
 
-	return err
+	return nil, err
 }
+
+func waitGlobalNetworkUpdated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.GlobalNetwork, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{networkmanager.GlobalNetworkStateUpdating},
+		Target:  []string{networkmanager.GlobalNetworkStateAvailable},
+		Timeout: timeout,
+		Refresh: statusGlobalNetworkState(ctx, conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*networkmanager.GlobalNetwork); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	globalNetworkValidationException = 2 * time.Minute
+)
