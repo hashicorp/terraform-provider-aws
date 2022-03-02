@@ -14,7 +14,7 @@ Creates a WorkMail organization.
 
 ```terraform
 resource "aws_workmail_organization" "example" {
-  alias           = "Example"
+  alias           = "test-alias"
   directory_id    = "d-xxxxxxx"
 }
 ```
@@ -23,16 +23,16 @@ resource "aws_workmail_organization" "example" {
 
 The following arguments are supported:
 
-- `alias` - (Required) The name of the accelerator.
-- `directory_id` - (Optional) The value for the address type. Defaults to `IPV4`. Valid values: `IPV4`.
-- `enable_interoperability` - (Optional) Indicates whether the accelerator is enabled. Defaults to `true`. Valid values: `true`, `false`.
-- `attributes` - (Optional) The attributes of the accelerator. Fields documented below.
-- `kms_key_arn` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+- `alias` - (Required) The alias for the organization.
+- `directory_id` - (Optional) The AWS Directory Service directory ID.
+- `enable_interoperability` - (Optional) When `true` , allows organization interoperability between Amazon WorkMail and Microsoft Exchange. Can only be set to true if an AD Connector directory ID is included in the request. Defaults to `false`. Valid values: `true`, `false`.
+- `domains` - (Optional) The email domains to associate with the organization.
+- `kms_key_arn` - (Optional) The Amazon Resource Name (ARN) of a customer managed master key from AWS KMS.
 
 **domains** supports the following attributes:
 
-- `domain_name` - (Optional) Indicates whether flow logs are enabled. Defaults to `false`. Valid values: `true`, `false`.
-- `hosted_zone_id` - (Optional) The name of the Amazon S3 bucket for the flow logs. Required if `flow_logs_enabled` is `true`.
+- `domain_name` - (Optional) The fully qualified domain name.
+- `hosted_zone_id` - (Optional) The hosted zone ID for a domain hosted in Route 53. Required when configuring a domain hosted in Route 53.
 
 ## Attributes Reference
 
