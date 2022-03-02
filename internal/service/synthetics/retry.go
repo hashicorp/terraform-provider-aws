@@ -28,17 +28,17 @@ func retryCreateCanary(conn *synthetics.Synthetics, d *schema.ResourceData, inpu
 			// delete canary because it is the only way to reprovision if in an error state
 			err = deleteCanary(conn, d.Id())
 			if err != nil {
-				return output, err
+				return output, fmt.Errorf("error deleting Synthetics Canary on retry (%s): %w", d.Id(), err)
 			}
 
 			_, err = conn.CreateCanary(input)
 			if err != nil {
-				return output, err
+				return output, fmt.Errorf("error creating Synthetics Canary on retry (%s): %w", d.Id(), err)
 			}
 
 			_, err = waitCanaryReady(conn, d.Id())
 			if err != nil {
-				return output, err
+				return output, fmt.Errorf("error waiting on Synthetics Canary on retry (%s): %w", d.Id(), err)
 			}
 		}
 	}
