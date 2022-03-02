@@ -154,7 +154,7 @@ func resourceGlobalNetworkDelete(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
 	log.Printf("[DEBUG] Deleting Network Manager Global Network: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, globalNetworkValidationException, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, globalNetworkValidationExceptionTimeout, func() (interface{}, error) {
 		return conn.DeleteGlobalNetworkWithContext(ctx, &networkmanager.DeleteGlobalNetworkInput{
 			GlobalNetworkId: aws.String(d.Id()),
 		})
@@ -252,7 +252,7 @@ func statusGlobalNetworkState(ctx context.Context, conn *networkmanager.NetworkM
 			return nil, "", err
 		}
 
-		return output, string(*output.State), nil
+		return output, aws.StringValue(output.State), nil
 	}
 }
 
@@ -309,5 +309,5 @@ func waitGlobalNetworkUpdated(ctx context.Context, conn *networkmanager.NetworkM
 }
 
 const (
-	globalNetworkValidationException = 2 * time.Minute
+	globalNetworkValidationExceptionTimeout = 2 * time.Minute
 )
