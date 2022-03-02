@@ -1,96 +1,38 @@
-package networkmanager
+package networkmanager_test
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/go-multierror"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_networkmanager_site", &resource.Sweeper{
-		Name: "aws_networkmanager_site",
-		F:    testSweepSite,
-	})
-}
-
-func testSweepSite(region string) error {
-	client, err := sharedClientForRegion(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*AWSClient).networkmanagerconn
-	var sweeperErrs *multierror.Error
-
-	err = conn.GetSitesPages(&networkmanager.GetSitesInput{},
-		func(page *networkmanager.GetSitesOutput, lastPage bool) bool {
-			for _, site := range page.Sites {
-				input := &networkmanager.DeleteSiteInput{
-					GlobalNetworkId: site.GlobalNetworkId,
-					SiteId:          site.SiteId,
-				}
-				id := aws.StringValue(site.SiteId)
-				globalNetworkID := aws.StringValue(site.GlobalNetworkId)
-
-				log.Printf("[INFO] Deleting Network Manager Site: %s", id)
-				_, err := conn.DeleteSite(input)
-
-				if tfawserr.ErrCodeEquals(err, "InvalidSiteID.NotFound", "") {
-					continue
-				}
-
-				if err != nil {
-					sweeperErr := fmt.Errorf("failed to delete Network Manager Site %s: %s", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-					continue
-				}
-
-				if err := waitForSiteDeletion(conn, globalNetworkID, id); err != nil {
-					sweeperErr := fmt.Errorf("error waiting for Network Manager Site (%s) deletion: %s", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-					continue
-				}
-			}
-			return !lastPage
-		})
-	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping Network Manager Site sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("Error retrieving Network Manager Sites: %s", err)
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
-
-func TestAccSite_basic(t *testing.T) {
+func TestAccNetworkManagerSite_basic(t *testing.T) {
 	resourceName := "aws_networkmanager_site.test"
-	gloablNetworkResourceName := "aws_networkmanager_global_network.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsSiteDestroy,
+		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSiteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteConfig("test"),
+				Config: testAccSiteConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSiteExists(resourceName),
+					testAccCheckSiteExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
-					resource.TestCheckResourceAttrPair(resourceName, "global_network_id", gloablNetworkResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -99,23 +41,11 @@ func TestAccSite_basic(t *testing.T) {
 				ImportStateIdFunc: testAccSiteImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
-			{
-				Config: testAccSiteConfig_Update("test updated", "18.0029784", "-76.7897987"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSiteExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test updated"),
-					resource.TestCheckResourceAttrPair(resourceName, "global_network_id", gloablNetworkResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "location.0.address", ""),
-					resource.TestCheckResourceAttr(resourceName, "location.0.latitude", "18.0029784"),
-					resource.TestCheckResourceAttr(resourceName, "location.0.longitude", "-76.7897987"),
-				),
-			},
 		},
 	})
 }
 
+/*
 func TestAccSite_tags(t *testing.T) {
 	resourceName := "aws_networkmanager_site.test"
 	description := "test"
@@ -162,124 +92,67 @@ func TestAccSite_tags(t *testing.T) {
 		},
 	})
 }
+*/
 
-func testAccCheckAwsSiteDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).networkmanagerconn
+func testAccCheckSiteDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_networkmanager_site" {
 			continue
 		}
 
-		site, err := networkmanagerDescribeSite(conn, rs.Primary.Attributes["global_network_id"], rs.Primary.ID)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeValidationException, "") {
-				return nil
-			}
-			return err
-		}
+		_, err := tfnetworkmanager.FindSiteByTwoPartKey(context.TODO(), conn, rs.Primary.Attributes["global_network_id"], rs.Primary.ID)
 
-		if site == nil {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
-		return fmt.Errorf("Expected Site to be destroyed, %s found", rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("Network Manager Site %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckAwsSiteExists(name string) resource.TestCheckFunc {
+func testAccCheckSiteExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).networkmanagerconn
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Network Manager Site ID is set")
+		}
 
-		site, err := networkmanagerDescribeSite(conn, rs.Primary.Attributes["global_network_id"], rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+
+		_, err := tfnetworkmanager.FindSiteByTwoPartKey(context.TODO(), conn, rs.Primary.Attributes["global_network_id"], rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if site == nil {
-			return fmt.Errorf("Network Manager Site not found")
-		}
-
-		if aws.StringValue(site.State) != networkmanager.SiteStateAvailable && aws.StringValue(site.State) != networkmanager.SiteStatePending {
-			return fmt.Errorf("Network Manager Site (%s) exists in (%s) state", rs.Primary.ID, aws.StringValue(site.State))
-		}
-
-		return err
+		return nil
 	}
 }
 
-func testAccSiteConfig(description string) string {
+func testAccSiteConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
- description = "test"
-}
-
-resource "aws_networkmanager_site" "test" {
- description       = %q
- global_network_id = aws_networkmanager_global_network.test.id
-}
-`, description)
-}
-
-func testAccSiteConfigTags1(description, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_networkmanager_global_network" "test" {
- description = "test"
-}
-
-resource "aws_networkmanager_site" "test" {
- description       = %q
- global_network_id = aws_networkmanager_global_network.test.id
-
   tags = {
-  	%q = %q
+    Name = %[1]q
   }
 }
-`, description, tagKey1, tagValue1)
-}
-
-func testAccSiteConfigTags2(description, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_networkmanager_global_network" "test" {
- description = "test"
-}
 
 resource "aws_networkmanager_site" "test" {
- description       = %q
  global_network_id = aws_networkmanager_global_network.test.id
-
-  tags = {
-  	%q = %q
-	%q = %q
-  }
 }
-`, description, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccSiteConfig_Update(description, latitude, longitude string) string {
-	return fmt.Sprintf(`
-resource "aws_networkmanager_global_network" "test" {
- description = "test"
-}
-
-resource "aws_networkmanager_site" "test" {
- description       = %q
- global_network_id = aws_networkmanager_global_network.test.id
-
- location {
-  latitude  = %q	
-  longitude = %q
- }
-}
-`, description, latitude, longitude)
+`, rName)
 }
 
 func testAccSiteImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {

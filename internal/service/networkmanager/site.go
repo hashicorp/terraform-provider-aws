@@ -281,6 +281,13 @@ func FindSites(ctx context.Context, conn *networkmanager.NetworkManager, input *
 		return !lastPage
 	})
 
+	if validationExceptionMessageContains(err, networkmanager.ValidationExceptionReasonFieldValidationFailed, "Global network not found") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
