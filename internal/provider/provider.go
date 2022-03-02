@@ -105,7 +105,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/outposts"
@@ -1357,8 +1356,6 @@ func Provider() *schema.Provider {
 			"aws_networkfirewall_logging_configuration": networkfirewall.ResourceLoggingConfiguration(),
 			"aws_networkfirewall_resource_policy":       networkfirewall.ResourceResourcePolicy(),
 			"aws_networkfirewall_rule_group":            networkfirewall.ResourceRuleGroup(),
-
-			"aws_networkmanager_global_network": networkmanager.ResourceGlobalNetwork(),
 
 			"aws_opsworks_application":      opsworks.ResourceApplication(),
 			"aws_opsworks_custom_layer":     opsworks.ResourceCustomLayer(),
