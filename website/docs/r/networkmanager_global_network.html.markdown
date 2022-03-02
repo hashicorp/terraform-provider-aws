@@ -12,7 +12,7 @@ Provides a global network resource.
 
 ## Example Usage
 
-```terraform
+```hcl
 resource "aws_networkmanager_global_network" "example" {
   description = "example"
 }

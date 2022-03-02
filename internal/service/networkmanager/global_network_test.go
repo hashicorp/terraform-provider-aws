@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/apigateway"
 	nm "github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -24,7 +25,6 @@ func TestAccNetworkManagerGlobalNetwork_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckResourceGlobalNetworkDestroy,
-		ErrorCheck:   acctest.ErrorCheck(t, nm.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccresourceGlobalNetworkConfig(),
@@ -53,7 +53,6 @@ func TestAccNetworkManagerGlobalNetwork_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckResourceGlobalNetworkDestroy,
-		ErrorCheck:   acctest.ErrorCheck(t, nm.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccresourceGlobalNetworkTagsConfig(rName, "key1", "value1"),
@@ -98,7 +97,7 @@ func TestAccNetworkManagerGlobalNetwork_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, nm.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckResourceGlobalNetworkDestroy,
 		Steps: []resource.TestStep{
@@ -167,12 +166,10 @@ func testAccCheckResourceGlobalNetworkExists(resourceName string, globalNetwork 
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
-
-		var err error
-		globalNetwork, err = networkmanager.DescribeGlobalNetwork(conn, rs.Primary.ID)
+		globalNetwork, err := networkmanager.DescribeGlobalNetwork(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("Error describing Global Network: %s", err)
+			return nil
 		}
 
 		if globalNetwork == nil {
@@ -180,7 +177,7 @@ func testAccCheckResourceGlobalNetworkExists(resourceName string, globalNetwork 
 		}
 
 		if aws.StringValue(globalNetwork.State) != nm.GlobalNetworkStateAvailable {
-			return fmt.Errorf("Network Manager Global Network (%s) exists in non-available (%s) state", rs.Primary.ID, aws.StringValue(globalNetwork.State))
+			return fmt.Errorf("Network Manager Global Netowrk (%s) exists in non-available (%s) state", rs.Primary.ID, aws.StringValue(globalNetwork.State))
 		}
 
 		return nil
