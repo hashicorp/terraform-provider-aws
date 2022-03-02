@@ -10,9 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -50,7 +49,7 @@ func ResourceRouteTable() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(2 * time.Minute),
+			Create: schema.DefaultTimeout(5 * time.Minute),
 			Update: schema.DefaultTimeout(2 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
@@ -85,24 +84,18 @@ func ResourceRouteTable() *schema.Resource {
 						// Destinations.
 						///
 						"cidr_block": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.Any(
-								validation.StringIsEmpty,
-								verify.ValidIPv4CIDRNetworkAddress,
-							),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 						},
 						"destination_prefix_list_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"ipv6_cidr_block": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.Any(
-								validation.StringIsEmpty,
-								verify.ValidIPv6CIDRNetworkAddress,
-							),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
 						},
 
 						//
@@ -121,8 +114,9 @@ func ResourceRouteTable() *schema.Resource {
 							Optional: true,
 						},
 						"instance_id": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:       schema.TypeString,
+							Optional:   true,
+							Deprecated: "Use network_interface_id instead",
 						},
 						"local_gateway_id": {
 							Type:     schema.TypeString,

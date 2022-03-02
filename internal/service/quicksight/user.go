@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -147,7 +147,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	resp, err := conn.DescribeUser(descOpts)
-	if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] QuickSight User %s is not found", d.Id())
 		d.SetId("")
 		return nil
@@ -183,7 +183,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	_, err = conn.UpdateUser(updateOpts)
-	if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] QuickSight User %s is not found", d.Id())
 		d.SetId("")
 		return nil
@@ -210,7 +210,7 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := conn.DeleteUser(deleteOpts); err != nil {
-		if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting QuickSight User %s: %s", d.Id(), err)

@@ -92,7 +92,7 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading certificate details: %v", err)
 	}
 
-	d.Set("active", aws.Bool(*out.CertificateDescription.Status == iot.CertificateStatusActive))
+	d.Set("active", aws.Bool(aws.StringValue(out.CertificateDescription.Status) == iot.CertificateStatusActive))
 	d.Set("arn", out.CertificateDescription.CertificateArn)
 	d.Set("certificate_pem", out.CertificateDescription.CertificatePem)
 

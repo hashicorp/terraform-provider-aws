@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -39,10 +39,13 @@ func ResourceDocument() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validName,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]+$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+					validation.StringLenBetween(3, 128),
+				),
 			},
 			"attachments_source": {
 				Type:     schema.TypeList,
@@ -59,7 +62,7 @@ func ResourceDocument() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]+$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
 								validation.StringLenBetween(3, 128),
 							),
 						},
@@ -264,7 +267,7 @@ func resourceDocumentRead(d *schema.ResourceData, meta interface{}) error {
 
 	describeDocumentOutput, err := conn.DescribeDocument(describeDocumentInput)
 
-	if tfawserr.ErrMessageContains(err, ssm.ErrCodeInvalidDocument, "") {
+	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeInvalidDocument) {
 		log.Printf("[WARN] SSM Document not found so removing from state")
 		d.SetId("")
 		return nil
@@ -443,7 +446,7 @@ func resourceDocumentDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = waitDocumentDeleted(conn, d.Id())
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ssm.ErrCodeInvalidDocument, "") {
+		if tfawserr.ErrCodeEquals(err, ssm.ErrCodeInvalidDocument) {
 			return nil
 		}
 		return fmt.Errorf("error waiting for SSM Document (%s) to be Deleted: %w", d.Id(), err)
@@ -682,7 +685,7 @@ func updateDocument(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 	updated, err := conn.UpdateDocument(updateDocInput)
 
-	if tfawserr.ErrMessageContains(err, ssm.ErrCodeDuplicateDocumentContent, "") {
+	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDuplicateDocumentContent) {
 		log.Printf("[DEBUG] Content is a duplicate of the latest version so update is not necessary: %s", d.Id())
 		log.Printf("[INFO] Updating the default version to the latest version %s: %s", newDefaultVersion, d.Id())
 

@@ -45,6 +45,10 @@ func TestAccSageMakerEndpoint_basic(t *testing.T) {
 }
 
 func TestAccSageMakerEndpoint_endpointName(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resourceName := "aws_sagemaker_endpoint.test"
@@ -81,6 +85,10 @@ func TestAccSageMakerEndpoint_endpointName(t *testing.T) {
 }
 
 func TestAccSageMakerEndpoint_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint.test"
 
@@ -116,6 +124,10 @@ func TestAccSageMakerEndpoint_tags(t *testing.T) {
 }
 
 func TestAccSageMakerEndpoint_deploymentConfig(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint.test"
 
@@ -152,6 +164,10 @@ func TestAccSageMakerEndpoint_deploymentConfig(t *testing.T) {
 }
 
 func TestAccSageMakerEndpoint_deploymentConfig_full(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint.test"
 
@@ -304,11 +320,15 @@ resource "aws_iam_role_policy" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  acl    = "private"
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = "model.tar.gz"
   source = "test-fixtures/sagemaker-tensorflow-serving-test-model.tar.gz"
@@ -325,7 +345,7 @@ resource "aws_sagemaker_model" "test" {
 
   primary_container {
     image          = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
-    model_data_url = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
+    model_data_url = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
   }
 
   depends_on = [aws_iam_role_policy.test]

@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -30,6 +30,13 @@ func ResourceImagePipeline() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"container_recipe_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):container-recipe/[a-z0-9-_]+/\d+\.\d+\.\d+$`), "valid container recipe ARN must be provided"),
+				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
 			},
 			"date_created": {
 				Type:     schema.TypeString,
@@ -64,9 +71,10 @@ func ResourceImagePipeline() *schema.Resource {
 			},
 			"image_recipe_arn": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):image-recipe/[a-z0-9-_]+/\d+\.\d+\.\d+$`), "valid image recipe ARN must be provided"),
+				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
 			},
 			"image_tests_configuration": {
 				Type:     schema.TypeList,
@@ -121,6 +129,14 @@ func ResourceImagePipeline() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
+						"timezone": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(3, 100),
+								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]{2,}(?:\/[a-zA-z0-9-_+]+)*`), "")),
+						},
 					},
 				},
 			},
@@ -146,6 +162,10 @@ func resourceImagePipelineCreate(d *schema.ResourceData, meta interface{}) error
 	input := &imagebuilder.CreateImagePipelineInput{
 		ClientToken:                  aws.String(resource.UniqueId()),
 		EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
+	}
+
+	if v, ok := d.GetOk("container_recipe_arn"); ok {
+		input.ContainerRecipeArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -227,6 +247,7 @@ func resourceImagePipelineRead(d *schema.ResourceData, meta interface{}) error {
 	imagePipeline := output.ImagePipeline
 
 	d.Set("arn", imagePipeline.Arn)
+	d.Set("container_recipe_arn", imagePipeline.ContainerRecipeArn)
 	d.Set("date_created", imagePipeline.DateCreated)
 	d.Set("date_last_run", imagePipeline.DateLastRun)
 	d.Set("date_next_run", imagePipeline.DateNextRun)
@@ -284,6 +305,10 @@ func resourceImagePipelineUpdate(d *schema.ResourceData, meta interface{}) error
 			ClientToken:                  aws.String(resource.UniqueId()),
 			EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
 			ImagePipelineArn:             aws.String(d.Id()),
+		}
+
+		if v, ok := d.GetOk("container_recipe_arn"); ok {
+			input.ContainerRecipeArn = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("description"); ok {
@@ -385,6 +410,10 @@ func expandPipelineSchedule(tfMap map[string]interface{}) *imagebuilder.Schedule
 		apiObject.ScheduleExpression = aws.String(v)
 	}
 
+	if v, ok := tfMap["timezone"].(string); ok && v != "" {
+		apiObject.Timezone = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -419,6 +448,10 @@ func flattenSchedule(apiObject *imagebuilder.Schedule) map[string]interface{} {
 
 	if v := apiObject.ScheduleExpression; v != nil {
 		tfMap["schedule_expression"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Timezone; v != nil {
+		tfMap["timezone"] = aws.StringValue(v)
 	}
 
 	return tfMap

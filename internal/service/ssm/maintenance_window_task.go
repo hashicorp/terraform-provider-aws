@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -706,7 +706,7 @@ func resourceMaintenanceWindowTaskRead(d *schema.ResourceData, meta interface{})
 		WindowTaskId: aws.String(d.Id()),
 	}
 	resp, err := conn.GetMaintenanceWindowTask(params)
-	if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
+	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 		log.Printf("[WARN] Maintenance Window (%s) Task (%s) not found, removing from state", windowID, d.Id())
 		d.SetId("")
 		return nil
@@ -770,7 +770,7 @@ func resourceMaintenanceWindowTaskUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	_, err := conn.UpdateMaintenanceWindowTask(params)
-	if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
+	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 		log.Printf("[WARN] Maintenance Window (%s) Task (%s) not found, removing from state", windowID, d.Id())
 		d.SetId("")
 		return nil
@@ -794,7 +794,7 @@ func resourceMaintenanceWindowTaskDelete(d *schema.ResourceData, meta interface{
 	}
 
 	_, err := conn.DeregisterTaskFromMaintenanceWindow(params)
-	if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
+	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 		return nil
 	}
 	if err != nil {

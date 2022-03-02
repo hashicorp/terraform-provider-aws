@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -557,7 +557,7 @@ func resourceDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) err
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		resp, err = conn.CreateDeploymentGroup(&input)
 
-		if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeInvalidRoleException, "") {
+		if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeInvalidRoleException) {
 			return resource.RetryableError(err)
 		}
 
@@ -598,8 +598,8 @@ func resourceDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException, "") ||
-			tfawserr.ErrMessageContains(err, codedeploy.ErrCodeApplicationDoesNotExistException, "") {
+		if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException) ||
+			tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeApplicationDoesNotExistException) {
 			log.Printf("[INFO] CodeDeployment DeploymentGroup %s not found", deploymentGroupName)
 			d.SetId("")
 			return nil
@@ -787,7 +787,7 @@ func resourceDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) err
 		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 			_, err = conn.UpdateDeploymentGroup(&input)
 
-			if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeInvalidRoleException, "") {
+			if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeInvalidRoleException) {
 				return resource.RetryableError(err)
 			}
 
@@ -831,7 +831,7 @@ func resourceDeploymentGroupDelete(d *schema.ResourceData, meta interface{}) err
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException, "") {
+		if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException) {
 			return nil
 		}
 		return err

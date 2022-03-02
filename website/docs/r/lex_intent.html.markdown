@@ -178,7 +178,7 @@ documented below under [statement](#statement).
 Describes how the intent is fulfilled after the user provides all of the information required for the intent.
 
 * `type` - (Required) How the intent should be fulfilled, either by running a Lambda function or by
-returning the slot data to the client application.
+returning the slot data to the client application. Type can be either `ReturnIntent` or `CodeHook`, as documented [here](https://docs.aws.amazon.com/lex/latest/dg/API_FulfillmentActivity.html).
 * `code_hook` - (Optional) A description of the Lambda function that is run to fulfill the intent.
 Required if type is CodeHook. Attributes are documented under [code_hook](#code_hook).
 

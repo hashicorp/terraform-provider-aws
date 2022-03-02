@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -217,7 +217,7 @@ func resourceReplicationInstanceRead(d *schema.ResourceData, meta interface{}) e
 		},
 	})
 
-	if tfawserr.ErrMessageContains(err, dms.ErrCodeResourceNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 		log.Printf("[WARN] DMS Replication Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -389,7 +389,7 @@ func resourceReplicationInstanceDelete(d *schema.ResourceData, meta interface{})
 
 	_, err := conn.DeleteReplicationInstance(request)
 
-	if tfawserr.ErrMessageContains(err, dms.ErrCodeResourceNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 		return nil
 	}
 
@@ -426,7 +426,7 @@ func resourceReplicationInstanceStateRefreshFunc(conn *dms.DatabaseMigrationServ
 			},
 		})
 
-		if tfawserr.ErrMessageContains(err, dms.ErrCodeResourceNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 			return nil, "", nil
 		}
 

@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -94,7 +94,7 @@ func resourceVPCEndpointConnectionNotificationRead(d *schema.ResourceData, meta 
 		ConnectionNotificationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidConnectionNotification", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidConnectionNotification") {
 			log.Printf("[WARN] VPC Endpoint connection notification (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -137,7 +137,7 @@ func resourceVPCEndpointConnectionNotificationDelete(d *schema.ResourceData, met
 		ConnectionNotificationIds: aws.StringSlice([]string{d.Id()}),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidConnectionNotification", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidConnectionNotification") {
 			log.Printf("[DEBUG] VPC Endpoint connection notification %s is already gone", d.Id())
 		} else {
 			return fmt.Errorf("Error deleting VPC Endpoint connection notification: %s", err.Error())

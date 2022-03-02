@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -81,6 +81,12 @@ func ResourceDomainName() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"ownership_verification_certificate_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 					},
 				},
 			},
@@ -118,8 +124,8 @@ func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &apigatewayv2.CreateDomainNameInput{
 		DomainName:               aws.String(domainName),
-		DomainNameConfigurations: expandApiGatewayV2DomainNameConfiguration(d.Get("domain_name_configuration").([]interface{})),
-		MutualTlsAuthentication:  expandApiGatewayV2MutualTlsAuthentication(d.Get("mutual_tls_authentication").([]interface{})),
+		DomainNameConfigurations: expandDomainNameConfigurations(d.Get("domain_name_configuration").([]interface{})),
+		MutualTlsAuthentication:  expandMutualTLSAuthentication(d.Get("mutual_tls_authentication").([]interface{})),
 		Tags:                     Tags(tags.IgnoreAWS()),
 	}
 
@@ -165,12 +171,13 @@ func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 	}.String()
 	d.Set("arn", arn)
 	d.Set("domain_name", output.DomainName)
-	err = d.Set("domain_name_configuration", flattenApiGatewayV2DomainNameConfiguration(output.DomainNameConfigurations[0]))
+
+	err = d.Set("domain_name_configuration", flattenDomainNameConfiguration(output.DomainNameConfigurations[0]))
 	if err != nil {
 		return fmt.Errorf("error setting domain_name_configuration: %w", err)
 	}
-	err = d.Set("mutual_tls_authentication", flattenApiGatewayV2MutualTlsAuthentication(output.MutualTlsAuthentication))
-	if err != nil {
+
+	if err = d.Set("mutual_tls_authentication", flattenMutualTLSAuthentication(output.MutualTlsAuthentication)); err != nil {
 		return fmt.Errorf("error setting mutual_tls_authentication: %w", err)
 	}
 
@@ -194,20 +201,20 @@ func resourceDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChanges("domain_name_configuration", "mutual_tls_authentication") {
 		input := &apigatewayv2.UpdateDomainNameInput{
 			DomainName:               aws.String(d.Id()),
-			DomainNameConfigurations: expandApiGatewayV2DomainNameConfiguration(d.Get("domain_name_configuration").([]interface{})),
+			DomainNameConfigurations: expandDomainNameConfigurations(d.Get("domain_name_configuration").([]interface{})),
 		}
 
 		if d.HasChange("mutual_tls_authentication") {
-			vMutualTlsAuthentication := d.Get("mutual_tls_authentication").([]interface{})
+			mutTLSAuth := d.Get("mutual_tls_authentication").([]interface{})
 
-			if len(vMutualTlsAuthentication) == 0 || vMutualTlsAuthentication[0] == nil {
+			if len(mutTLSAuth) == 0 || mutTLSAuth[0] == nil {
 				// To disable mutual TLS for a custom domain name, remove the truststore from your custom domain name.
 				input.MutualTlsAuthentication = &apigatewayv2.MutualTlsAuthenticationInput{
 					TruststoreUri: aws.String(""),
 				}
 			} else {
 				input.MutualTlsAuthentication = &apigatewayv2.MutualTlsAuthenticationInput{
-					TruststoreVersion: aws.String(vMutualTlsAuthentication[0].(map[string]interface{})["truststore_version"].(string)),
+					TruststoreVersion: aws.String(mutTLSAuth[0].(map[string]interface{})["truststore_version"].(string)),
 				}
 			}
 		}
@@ -253,57 +260,126 @@ func resourceDomainNameDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandApiGatewayV2DomainNameConfiguration(vDomainNameConfiguration []interface{}) []*apigatewayv2.DomainNameConfiguration {
-	if len(vDomainNameConfiguration) == 0 || vDomainNameConfiguration[0] == nil {
+func expandDomainNameConfiguration(tfMap map[string]interface{}) *apigatewayv2.DomainNameConfiguration {
+	if tfMap == nil {
 		return nil
 	}
-	mDomainNameConfiguration := vDomainNameConfiguration[0].(map[string]interface{})
 
-	return []*apigatewayv2.DomainNameConfiguration{{
-		CertificateArn: aws.String(mDomainNameConfiguration["certificate_arn"].(string)),
-		EndpointType:   aws.String(mDomainNameConfiguration["endpoint_type"].(string)),
-		SecurityPolicy: aws.String(mDomainNameConfiguration["security_policy"].(string)),
-	}}
-}
+	apiObject := &apigatewayv2.DomainNameConfiguration{}
 
-func flattenApiGatewayV2DomainNameConfiguration(domainNameConfiguration *apigatewayv2.DomainNameConfiguration) []interface{} {
-	if domainNameConfiguration == nil {
-		return []interface{}{}
+	if v, ok := tfMap["certificate_arn"].(string); ok && v != "" {
+		apiObject.CertificateArn = aws.String(v)
 	}
 
-	return []interface{}{map[string]interface{}{
-		"certificate_arn":    aws.StringValue(domainNameConfiguration.CertificateArn),
-		"endpoint_type":      aws.StringValue(domainNameConfiguration.EndpointType),
-		"hosted_zone_id":     aws.StringValue(domainNameConfiguration.HostedZoneId),
-		"security_policy":    aws.StringValue(domainNameConfiguration.SecurityPolicy),
-		"target_domain_name": aws.StringValue(domainNameConfiguration.ApiGatewayDomainName),
-	}}
+	if v, ok := tfMap["endpoint_type"].(string); ok && v != "" {
+		apiObject.EndpointType = aws.String(v)
+	}
+
+	if v, ok := tfMap["security_policy"].(string); ok && v != "" {
+		apiObject.SecurityPolicy = aws.String(v)
+	}
+
+	if v, ok := tfMap["ownership_verification_certificate_arn"].(string); ok && v != "" {
+		apiObject.OwnershipVerificationCertificateArn = aws.String(v)
+	}
+
+	return apiObject
 }
 
-func expandApiGatewayV2MutualTlsAuthentication(vMutualTlsAuthentication []interface{}) *apigatewayv2.MutualTlsAuthenticationInput {
-	if len(vMutualTlsAuthentication) == 0 || vMutualTlsAuthentication[0] == nil {
+func expandDomainNameConfigurations(tfList []interface{}) []*apigatewayv2.DomainNameConfiguration {
+	if len(tfList) == 0 {
 		return nil
 	}
-	mMutualTlsAuthentication := vMutualTlsAuthentication[0].(map[string]interface{})
 
-	mutualTlsAuthentication := &apigatewayv2.MutualTlsAuthenticationInput{
-		TruststoreUri: aws.String(mMutualTlsAuthentication["truststore_uri"].(string)),
+	var apiObjects []*apigatewayv2.DomainNameConfiguration
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandDomainNameConfiguration(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	if vTruststoreVersion, ok := mMutualTlsAuthentication["truststore_version"].(string); ok && vTruststoreVersion != "" {
-		mutualTlsAuthentication.TruststoreVersion = aws.String(vTruststoreVersion)
-	}
-
-	return mutualTlsAuthentication
+	return apiObjects
 }
 
-func flattenApiGatewayV2MutualTlsAuthentication(mutualTlsAuthentication *apigatewayv2.MutualTlsAuthentication) []interface{} {
-	if mutualTlsAuthentication == nil {
-		return []interface{}{}
+func flattenDomainNameConfiguration(apiObject *apigatewayv2.DomainNameConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	return []interface{}{map[string]interface{}{
-		"truststore_uri":     aws.StringValue(mutualTlsAuthentication.TruststoreUri),
-		"truststore_version": aws.StringValue(mutualTlsAuthentication.TruststoreVersion),
-	}}
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CertificateArn; v != nil {
+		tfMap["certificate_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.EndpointType; v != nil {
+		tfMap["endpoint_type"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.HostedZoneId; v != nil {
+		tfMap["hosted_zone_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SecurityPolicy; v != nil {
+		tfMap["security_policy"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.ApiGatewayDomainName; v != nil {
+		tfMap["target_domain_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.OwnershipVerificationCertificateArn; v != nil {
+		tfMap["ownership_verification_certificate_arn"] = aws.StringValue(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func expandMutualTLSAuthentication(tfList []interface{}) *apigatewayv2.MutualTlsAuthenticationInput {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+
+	apiObject := &apigatewayv2.MutualTlsAuthenticationInput{}
+
+	if v, ok := tfMap["truststore_uri"].(string); ok && v != "" {
+		apiObject.TruststoreUri = aws.String(v)
+	}
+
+	if v, ok := tfMap["truststore_version"].(string); ok && v != "" {
+		apiObject.TruststoreVersion = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenMutualTLSAuthentication(apiObject *apigatewayv2.MutualTlsAuthentication) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.TruststoreUri; v != nil {
+		tfMap["truststore_uri"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.TruststoreVersion; v != nil {
+		tfMap["truststore_version"] = aws.StringValue(v)
+	}
+
+	return []interface{}{tfMap}
 }

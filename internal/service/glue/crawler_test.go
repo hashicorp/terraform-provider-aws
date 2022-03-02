@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -497,6 +497,50 @@ func TestAccGlueCrawler_MongoDBTarget_multiple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.1.connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.1.scan_all", "true"),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.1.path", "database-name/table2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccGlueCrawler_deltaTarget(t *testing.T) {
+	var crawler glue.Crawler
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_crawler.test"
+
+	connectionUrl := fmt.Sprintf("mongodb://%s:27017/testdatabase", acctest.RandomDomainName())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckCrawlerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCrawlerConfigDeltaTarget(rName, connectionUrl, "s3://table1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "delta_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "delta_target.0.connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "delta_target.0.delta_tables.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "delta_target.0.delta_tables.*", "s3://table1"),
+					resource.TestCheckResourceAttr(resourceName, "delta_target.0.write_manifest", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGlueCrawlerConfigDeltaTarget(rName, connectionUrl, "s3://table2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "delta_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "delta_target.0.connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "delta_target.0.delta_tables.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "delta_target.0.delta_tables.*", "s3://table2"),
+					resource.TestCheckResourceAttr(resourceName, "delta_target.0.write_manifest", "false"),
 				),
 			},
 		},
@@ -1503,7 +1547,7 @@ func testAccCheckCrawlerDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				return nil
 			}
 			return err
@@ -2716,6 +2760,39 @@ resource "aws_glue_crawler" "test" {
   }
 }
 `, rName, connectionUrl, path1, path2)
+}
+
+func testAccGlueCrawlerConfigDeltaTarget(rName, connectionUrl, tableName string) string {
+	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_connection" "test" {
+  name            = %[1]q
+  connection_type = "MONGODB"
+
+  connection_properties = {
+    CONNECTION_URL = %[2]q
+    PASSWORD       = "testpassword"
+    USERNAME       = "testusername"
+  }
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
+
+  delta_target {
+    connection_name = aws_glue_connection.test.name
+    delta_tables    = [%[3]q]
+    write_manifest  = false
+  }
+}
+`, rName, connectionUrl, tableName)
 }
 
 func testAccGlueCrawlerLineageConfig(rName, lineageConfig string) string {

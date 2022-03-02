@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -68,7 +68,15 @@ func resourceBusCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Creating EventBridge event bus: %v", input)
 
-	_, err := conn.CreateEventBus(input)
+	output, err := conn.CreateEventBus(input)
+
+	// Some partitions may not support tag-on-create
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] EventBridge Bus (%s) create failed (%s) with tags. Trying create without tags.", eventBusName, err)
+		input.Tags = nil
+		output, err = conn.CreateEventBus(input)
+	}
+
 	if err != nil {
 		return fmt.Errorf("Creating EventBridge event bus (%s) failed: %w", eventBusName, err)
 	}
@@ -76,6 +84,20 @@ func resourceBusCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(eventBusName)
 
 	log.Printf("[INFO] EventBridge event bus (%s) created", d.Id())
+
+	// Post-create tagging supported in some partitions
+	if input.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(conn, aws.StringValue(output.EventBusArn), nil, tags)
+
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] error adding tags after create for EventBridge Bus (%s): %s", d.Id(), err)
+			return resourceBusRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error creating EventBridge Bus (%s) tags: %w", d.Id(), err)
+		}
+	}
 
 	return resourceBusRead(d, meta)
 }
@@ -91,7 +113,7 @@ func resourceBusRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Reading EventBridge event bus (%s)", d.Id())
 	output, err := conn.DescribeEventBus(input)
-	if tfawserr.ErrMessageContains(err, eventbridge.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] EventBridge event bus (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -106,9 +128,17 @@ func resourceBusRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", output.Name)
 
 	tags, err := ListTags(conn, aws.StringValue(output.Arn))
+
+	// ISO partitions may not support tagging, giving error
+	if verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] Unable to list tags for EventBridge Bus %s: %s", d.Id(), err)
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("error listing tags for EventBridge event bus (%s): %w", d.Id(), err)
 	}
+
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
@@ -130,8 +160,15 @@ func resourceBusUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating CloudwWatch Events event bus (%s) tags: %w", arn, err)
+		err := UpdateTags(conn, arn, o, n)
+
+		if verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] Unable to update tags for EventBridge Bus %s: %s", d.Id(), err)
+			return resourceBusRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error updating EventBridge Bus tags: %w", err)
 		}
 	}
 
@@ -144,7 +181,7 @@ func resourceBusDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.DeleteEventBus(&eventbridge.DeleteEventBusInput{
 		Name: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, eventbridge.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] EventBridge event bus (%s) not found", d.Id())
 		return nil
 	}

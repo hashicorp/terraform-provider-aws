@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -234,6 +234,10 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
+						"instance_metadata_tags": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -447,8 +451,8 @@ func dataSourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) erro
 	dlt, err := conn.DescribeLaunchTemplates(params)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") ||
-			tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateName.NotFoundException", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateId.NotFound") ||
+			tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateName.NotFoundException") {
 			return fmt.Errorf("Launch Template not found")
 		}
 		return fmt.Errorf("Error getting launch template: %w", err)

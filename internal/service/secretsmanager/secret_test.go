@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -424,22 +424,24 @@ func TestAccSecretsManagerSecret_policy(t *testing.T) {
 		CheckDestroy: testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretConfig_Policy(rName),
+				Config: testAccSecretPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "description", "San Holo feat. Duskus"),
 					resource.TestMatchResourceAttr(resourceName, "policy",
 						regexp.MustCompile(`{"Action":"secretsmanager:GetSecretValue".+`)),
 				),
 			},
 			{
-				Config: testAccSecretConfig_Name(rName),
+				Config: testAccSecretPolicyEmptyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "description", "Poliça"),
 					resource.TestCheckResourceAttr(resourceName, "policy", ""),
 				),
 			},
 			{
-				Config: testAccSecretConfig_Policy(rName),
+				Config: testAccSecretPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(resourceName, &secret),
 					resource.TestMatchResourceAttr(resourceName, "policy",
@@ -483,7 +485,7 @@ func testAccCheckSecretDestroy(s *terraform.State) error {
 			output, err = conn.DescribeSecret(input)
 		}
 
-		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 			continue
 		}
 
@@ -801,47 +803,67 @@ resource "aws_secretsmanager_secret" "test" {
 `, rName)
 }
 
-func testAccSecretConfig_Policy(rName string) string {
+func testAccSecretPolicyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.amazonaws.com"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Principal = {
+        Service = "ec2.amazonaws.com"
       },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 }
 
 resource "aws_secretsmanager_secret" "test" {
+  name        = %[1]q
+  description = "San Holo feat. Duskus"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "EnableAllPermissions"
+      Effect = "Allow"
+      Principal = {
+        AWS = aws_iam_role.test.arn
+      }
+      Action   = "secretsmanager:GetSecretValue"
+      Resource = "*"
+    }]
+  })
+}
+`, rName)
+}
+
+func testAccSecretPolicyEmptyConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
   name = %[1]q
 
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "EnableAllPermissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "${aws_iam_role.test.arn}"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Principal = {
+        Service = "ec2.amazonaws.com"
       },
-      "Action": "secretsmanager:GetSecretValue",
-      "Resource": "*"
-    }
-  ]
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 }
-POLICY
+
+resource "aws_secretsmanager_secret" "test" {
+  name        = %[1]q
+  description = "Poliça"
+
+  policy = "{}"
 }
 `, rName)
 }

@@ -28,7 +28,7 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `block_device_mapping` - Set of objects with block device mappings for the the image recipe.
+* `block_device_mapping` - Set of objects with block device mappings for the image recipe.
     * `device_name` - Name of the device. For example, `/dev/sda` or `/dev/xvdb`.
     * `ebs` - Single list of object with Elastic Block Storage (EBS) block device mapping settings.
         * `delete_on_termination` - Whether to delete the volume on termination. Defaults to unset, which is the value inherited from the parent image.
@@ -42,12 +42,16 @@ In addition to all arguments above, the following attributes are exported:
     * `virtual_name` - Virtual device name. For example, `ephemeral0`. Instance store volumes are numbered starting from 0.
 * `component` - List of objects with components for the image recipe.
     * `component_arn` - Amazon Resource Name (ARN) of the Image Builder Component.
+    * `parameter` - Set of parameters that are used to configure the component.
+        * `name` - Name of the component parameter.
+        * `value` - Value of the component parameter.
 * `date_created` - Date the image recipe was created.
 * `description` - Description of the image recipe.
 * `name` - Name of the image recipe.
 * `owner` - Owner of the image recipe.
-* `parent_image` - Platform of the image recipe.
+* `parent_image` - Base image of the image recipe.
 * `platform` - Platform of the image recipe.
 * `tags` - Key-value map of resource tags for the image recipe.
+* `user_data_base64` - Base64 encoded contents of user data. Commands or a command script to run when build instance is launched.
 * `version` - Version of the image recipe.
 * `working_directory` - The working directory used during build and test workflows.

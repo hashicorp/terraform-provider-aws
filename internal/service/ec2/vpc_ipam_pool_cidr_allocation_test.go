@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -22,7 +22,7 @@ func TestAccVPCIpamPoolAllocation_ipv4Basic(t *testing.T) {
 	cidr := "172.2.0.0/28"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVPCIpamPoolAllocationDestroy,
@@ -52,7 +52,7 @@ func TestAccVPCIpamPoolAllocation_ipv4BasicNetmask(t *testing.T) {
 	netmask := "28"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVPCIpamPoolAllocationDestroy,
@@ -69,6 +69,33 @@ func TestAccVPCIpamPoolAllocation_ipv4BasicNetmask(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"netmask_length"},
+			},
+		},
+	})
+}
+
+func TestAccVPCIpamPoolAllocation_ipv4DisallowedCidr(t *testing.T) {
+	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
+	disallowedCidr := "172.2.0.0/28"
+	netmaskLength := "28"
+	expectedCidr := "172.2.0.16/28"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCIpamPoolAllocationIpv4DisallowedCidr(netmaskLength, disallowedCidr),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "cidr", expectedCidr),
+					resource.TestCheckResourceAttr(resourceName, "disallowed_cidrs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "disallowed_cidrs.0", disallowedCidr),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "netmask_length", netmaskLength),
+				),
 			},
 		},
 	})
@@ -150,7 +177,9 @@ resource "aws_vpc_ipam_pool_cidr" "test" {
 `
 
 func testAccVPCIpamPoolAllocationIpv4(cidr string) string {
-	return testAccVPCIpamPoolCidrPrivateBase + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccVPCIpamPoolCidrPrivateBase,
+		fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
   cidr         = %[1]q
@@ -158,11 +187,13 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
     aws_vpc_ipam_pool_cidr.test
   ]
 }
-`, cidr)
+`, cidr))
 }
 
 func testAccVPCIpamPoolAllocationIpv4Netmask(netmask string) string {
-	return testAccVPCIpamPoolCidrPrivateBase + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccVPCIpamPoolCidrPrivateBase,
+		fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
   ipam_pool_id   = aws_vpc_ipam_pool.test.id
   netmask_length = %[1]q
@@ -170,5 +201,24 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
     aws_vpc_ipam_pool_cidr.test
   ]
 }
-`, netmask)
+`, netmask))
+}
+
+func testAccVPCIpamPoolAllocationIpv4DisallowedCidr(netmaskLength, disallowedCidr string) string {
+	return acctest.ConfigCompose(
+		testAccVPCIpamPoolCidrPrivateBase,
+		fmt.Sprintf(`
+resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
+  ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  netmask_length = %[1]q
+
+  disallowed_cidrs = [
+    %[2]q
+  ]
+
+  depends_on = [
+    aws_vpc_ipam_pool_cidr.test
+  ]
+}
+`, netmaskLength, disallowedCidr))
 }

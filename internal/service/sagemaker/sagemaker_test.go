@@ -25,10 +25,11 @@ func testAccErrorCheckSkipSagemaker(t *testing.T) resource.ErrorCheckFunc {
 func TestAccSageMaker_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"App": {
-			"basic":        testAccApp_basic,
-			"disappears":   testAccApp_tags,
-			"tags":         testAccApp_disappears,
-			"resourceSpec": testAccApp_resourceSpec,
+			"basic":                 testAccApp_basic,
+			"disappears":            testAccApp_disappears,
+			"tags":                  testAccApp_tags,
+			"resourceSpec":          testAccApp_resourceSpec,
+			"resourceSpecLifecycle": testAccApp_resourceSpecLifecycle,
 		},
 		"Domain": {
 			"basic":                                    testAccDomain_basic,
@@ -39,10 +40,11 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"kernelGatewayAppSettings":                 testAccDomain_kernelGatewayAppSettings,
 			"kernelGatewayAppSettings_customImage":     testAccDomain_kernelGatewayAppSettings_customImage,
 			"kernelGatewayAppSettings_lifecycleConfig": testAccDomain_kernelGatewayAppSettings_lifecycleConfig,
-			"jupyterServerAppSettings":                 testAccDomain_jupyterServerAppSettings,
-			"kms":                                      testAccDomain_kms,
-			"securityGroup":                            testAccDomain_securityGroup,
-			"sharingSettings":                          testAccDomain_sharingSettings,
+			"kernelGatewayAppSettings_defaultResourceAndCustomImage": testAccDomain_kernelGatewayAppSettings_defaultResourceSpecAndCustomImage,
+			"jupyterServerAppSettings":                               testAccDomain_jupyterServerAppSettings,
+			"kms":                                                    testAccDomain_kms,
+			"securityGroup":                                          testAccDomain_securityGroup,
+			"sharingSettings":                                        testAccDomain_sharingSettings,
 		},
 		"FlowDefinition": {
 			"basic":                          testAccFlowDefinition_basic,
@@ -59,6 +61,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"tensorboardAppSettingsWithImage": testAccUserProfile_tensorboardAppSettingsWithImage,
 			"kernelGatewayAppSettings":        testAccUserProfile_kernelGatewayAppSettings,
 			"kernelGatewayAppSettings_lifecycleConfig": testAccUserProfile_kernelGatewayAppSettings_lifecycleconfig,
+			"kernelGatewayAppSettings_imageConfig":     testAccUserProfile_kernelGatewayAppSettings_imageconfig,
 			"jupyterServerAppSettings":                 testAccUserProfile_jupyterServerAppSettings,
 		},
 		"Workforce": {

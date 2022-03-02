@@ -17,6 +17,11 @@ Manages an Amazon Managed Service for Prometheus (AMP) Workspace.
 ```terraform
 resource "aws_prometheus_workspace" "demo" {
   alias = "prometheus-test"
+
+  tags = {
+    Environment = "production"
+    Owner       = "abhi"
+  }
 }
 ```
 
@@ -25,6 +30,7 @@ resource "aws_prometheus_workspace" "demo" {
 The following argument is supported:
 
 * `alias` - (Optional) The alias of the prometheus workspace. See more [in AWS Docs](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-onboard-create-workspace.html).
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -33,6 +39,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Amazon Resource Name (ARN) of the workspace.
 * `id` - Identifier of the workspace
 * `prometheus_endpoint` - Prometheus endpoint available for this workspace.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 

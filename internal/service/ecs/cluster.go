@@ -1,6 +1,7 @@
 package ecs
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -8,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -42,15 +43,17 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
+				ValidateFunc: validateClusterName,
 			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"capacity_providers": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "Use the aws_ecs_cluster_capacity_providers resource instead",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -112,8 +115,10 @@ func ResourceCluster() *schema.Resource {
 				},
 			},
 			"default_capacity_provider_strategy": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "Use the aws_ecs_cluster_capacity_providers resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"base": {
@@ -181,8 +186,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &ecs.CreateClusterInput{
 		ClusterName:                     aws.String(clusterName),
-		DefaultCapacityProviderStrategy: expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set)),
-		Tags:                            Tags(tags.IgnoreAWS()),
+		DefaultCapacityProviderStrategy: expandCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("capacity_providers"); ok {
@@ -190,21 +194,70 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("setting"); ok {
-		input.Settings = expandEcsSettings(v.(*schema.Set))
+		input.Settings = expandClusterSettings(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 {
-		input.Configuration = expandECSClusterConfiguration(v.([]interface{}))
+		input.Configuration = expandClusterConfiguration(v.([]interface{}))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	// CreateCluster will create the ECS IAM Service Linked Role on first ECS provision
 	// This process does not complete before the initial API call finishes.
-	var out *ecs.CreateClusterOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
-		var err error
-		out, err = conn.CreateCluster(input)
+	out, err := retryClusterCreate(conn, input)
 
-		if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "Unable to assume the service linked role") {
+	// Some partitions (i.e., ISO) may not support tag-on-create
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] ECS tagging failed creating Cluster (%s) with tags: %s. Trying create without tags.", clusterName, err)
+		input.Tags = nil
+
+		out, err = retryClusterCreate(conn, input)
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed creating ECS Cluster (%s): %w", clusterName, err)
+	}
+
+	log.Printf("[DEBUG] ECS cluster %s created", aws.StringValue(out.Cluster.ClusterArn))
+
+	d.SetId(aws.StringValue(out.Cluster.ClusterArn))
+
+	if _, err := waitClusterAvailable(context.Background(), conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available while creating: %w", d.Id(), err)
+	}
+
+	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
+	if input.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(conn, d.Id(), nil, tags)
+
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+			// If default tags only, log and continue. Otherwise, error.
+			log.Printf("[WARN] ECS tagging failed adding tags after create for Cluster (%s): %s", d.Id(), err)
+			return resourceClusterRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("ECS tagging failed adding tags after create for Cluster (%s): %w", d.Id(), err)
+		}
+	}
+
+	return resourceClusterRead(d, meta)
+}
+
+func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).ECSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	var cluster *ecs.Cluster
+	err := resource.Retry(clusterReadTimeout, func() *resource.RetryError {
+		var err error
+		cluster, err = FindClusterByNameOrARN(context.Background(), conn, d.Id())
+
+		if d.IsNewResource() && tfresource.NotFound(err) {
 			return resource.RetryableError(err)
 		}
 
@@ -216,49 +269,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		out, err = conn.CreateCluster(input)
-	}
-
-	if err != nil {
-		return fmt.Errorf("error creating ECS Cluster (%s): %w", clusterName, err)
-	}
-
-	log.Printf("[DEBUG] ECS cluster %s created", aws.StringValue(out.Cluster.ClusterArn))
-
-	d.SetId(aws.StringValue(out.Cluster.ClusterArn))
-
-	if _, err := waitClusterAvailable(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
-	}
-
-	return resourceClusterRead(d, meta)
-}
-
-func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	var out *ecs.DescribeClustersOutput
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		var err error
-		out, err = FindClusterByARN(conn, d.Id())
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		if out == nil || len(out.Failures) > 0 {
-			if d.IsNewResource() {
-				return resource.RetryableError(&resource.NotFoundError{})
-			}
-			return resource.NonRetryableError(&resource.NotFoundError{})
-		}
-
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		out, err = FindClusterByARN(conn, d.Id())
+		cluster, err = FindClusterByNameOrARN(context.Background(), conn, d.Id())
 	}
 
 	if tfresource.NotFound(err) {
@@ -269,20 +280,6 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		return fmt.Errorf("error reading ECS Cluster (%s): %s", d.Id(), err)
-	}
-
-	var cluster *ecs.Cluster
-	for _, c := range out.Clusters {
-		if aws.StringValue(c.ClusterArn) == d.Id() {
-			cluster = c
-			break
-		}
-	}
-
-	if cluster == nil {
-		log.Printf("[WARN] ECS Cluster (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
 	}
 
 	// Status==INACTIVE means deleted cluster
@@ -298,16 +295,16 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("capacity_providers", aws.StringValueSlice(cluster.CapacityProviders)); err != nil {
 		return fmt.Errorf("error setting capacity_providers: %w", err)
 	}
-	if err := d.Set("default_capacity_provider_strategy", flattenEcsCapacityProviderStrategy(cluster.DefaultCapacityProviderStrategy)); err != nil {
+	if err := d.Set("default_capacity_provider_strategy", flattenCapacityProviderStrategy(cluster.DefaultCapacityProviderStrategy)); err != nil {
 		return fmt.Errorf("error setting default_capacity_provider_strategy: %w", err)
 	}
 
-	if err := d.Set("setting", flattenEcsSettings(cluster.Settings)); err != nil {
+	if err := d.Set("setting", flattenClusterSettings(cluster.Settings)); err != nil {
 		return fmt.Errorf("error setting setting: %w", err)
 	}
 
 	if cluster.Configuration != nil {
-		if err := d.Set("configuration", flattenECSClusterConfiguration(cluster.Configuration)); err != nil {
+		if err := d.Set("configuration", flattenClusterConfiguration(cluster.Configuration)); err != nil {
 			return fmt.Errorf("error setting configuration: %w", err)
 		}
 	}
@@ -335,11 +332,11 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if v, ok := d.GetOk("setting"); ok {
-			input.Settings = expandEcsSettings(v.(*schema.Set))
+			input.Settings = expandClusterSettings(v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 {
-			input.Configuration = expandECSClusterConfiguration(v.([]interface{}))
+			input.Configuration = expandClusterConfiguration(v.([]interface{}))
 		}
 
 		_, err := conn.UpdateCluster(&input)
@@ -347,16 +344,8 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error changing ECS cluster (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waitClusterAvailable(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating ECS Cluster (%s) tags: %w", d.Id(), err)
+		if _, err := waitClusterAvailable(context.Background(), conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available while updating setting and configuration: %w", d.Id(), err)
 		}
 	}
 
@@ -364,34 +353,33 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		input := ecs.PutClusterCapacityProvidersInput{
 			Cluster:                         aws.String(d.Id()),
 			CapacityProviders:               flex.ExpandStringSet(d.Get("capacity_providers").(*schema.Set)),
-			DefaultCapacityProviderStrategy: expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set)),
+			DefaultCapacityProviderStrategy: expandCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set)),
 		}
 
-		err := resource.Retry(ecsClusterTimeoutUpdate, func() *resource.RetryError {
-			_, err := conn.PutClusterCapacityProviders(&input)
-			if err != nil {
-				if tfawserr.ErrMessageContains(err, ecs.ErrCodeClientException, "Cluster was not ACTIVE") {
-					return resource.RetryableError(err)
-				}
-				if tfawserr.ErrMessageContains(err, ecs.ErrCodeResourceInUseException, "") {
-					return resource.RetryableError(err)
-				}
-				if tfawserr.ErrMessageContains(err, ecs.ErrCodeUpdateInProgressException, "") {
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if tfresource.TimedOut(err) {
-			_, err = conn.PutClusterCapacityProviders(&input)
-		}
+		err := retryClusterCapacityProvidersPut(context.Background(), conn, &input)
+
 		if err != nil {
 			return fmt.Errorf("error changing ECS cluster capacity provider settings (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waitClusterAvailable(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
+		if _, err := waitClusterAvailable(context.Background(), conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available while updating capacity_providers, default_capacity_provider_strategy: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		err := UpdateTags(conn, d.Id(), o, n)
+
+		// Some partitions (i.e., ISO) may not support tagging, giving error
+		if verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] ECS tagging failed updating tags for Cluster (%s): %s", d.Id(), err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("ECS tagging failed updating tags for Cluster (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -413,19 +401,19 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		if tfawserr.ErrMessageContains(err, "ClusterContainsContainerInstancesException", "") {
+		if tfawserr.ErrCodeEquals(err, "ClusterContainsContainerInstancesException") {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}
-		if tfawserr.ErrMessageContains(err, "ClusterContainsServicesException", "") {
+		if tfawserr.ErrCodeEquals(err, "ClusterContainsServicesException") {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}
-		if tfawserr.ErrMessageContains(err, "ClusterContainsTasksException", "") {
+		if tfawserr.ErrCodeEquals(err, "ClusterContainsTasksException") {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}
-		if tfawserr.ErrMessageContains(err, ecs.ErrCodeUpdateInProgressException, "") {
+		if tfawserr.ErrCodeEquals(err, ecs.ErrCodeUpdateInProgressException) {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}
@@ -446,7 +434,31 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandEcsSettings(configured *schema.Set) []*ecs.ClusterSetting {
+func retryClusterCreate(conn *ecs.ECS, input *ecs.CreateClusterInput) (*ecs.CreateClusterOutput, error) {
+	var output *ecs.CreateClusterOutput
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		var err error
+		output, err = conn.CreateCluster(input)
+
+		if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "Unable to assume the service linked role") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		output, err = conn.CreateCluster(input)
+	}
+
+	return output, err
+}
+
+func expandClusterSettings(configured *schema.Set) []*ecs.ClusterSetting {
 	list := configured.List()
 	if len(list) == 0 {
 		return nil
@@ -468,7 +480,7 @@ func expandEcsSettings(configured *schema.Set) []*ecs.ClusterSetting {
 	return settings
 }
 
-func flattenEcsSettings(list []*ecs.ClusterSetting) []map[string]interface{} {
+func flattenClusterSettings(list []*ecs.ClusterSetting) []map[string]interface{} {
 	if len(list) == 0 {
 		return nil
 	}
@@ -485,7 +497,7 @@ func flattenEcsSettings(list []*ecs.ClusterSetting) []map[string]interface{} {
 	return result
 }
 
-func flattenECSClusterConfiguration(apiObject *ecs.ClusterConfiguration) []interface{} {
+func flattenClusterConfiguration(apiObject *ecs.ClusterConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -493,12 +505,12 @@ func flattenECSClusterConfiguration(apiObject *ecs.ClusterConfiguration) []inter
 	tfMap := map[string]interface{}{}
 
 	if apiObject.ExecuteCommandConfiguration != nil {
-		tfMap["execute_command_configuration"] = flattenECSClusterConfigurationExecuteCommandConfiguration(apiObject.ExecuteCommandConfiguration)
+		tfMap["execute_command_configuration"] = flattenClusterConfigurationExecuteCommandConfiguration(apiObject.ExecuteCommandConfiguration)
 	}
 	return []interface{}{tfMap}
 }
 
-func flattenECSClusterConfigurationExecuteCommandConfiguration(apiObject *ecs.ExecuteCommandConfiguration) []interface{} {
+func flattenClusterConfigurationExecuteCommandConfiguration(apiObject *ecs.ExecuteCommandConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -510,7 +522,7 @@ func flattenECSClusterConfigurationExecuteCommandConfiguration(apiObject *ecs.Ex
 	}
 
 	if apiObject.LogConfiguration != nil {
-		tfMap["log_configuration"] = flattenECSClusterConfigurationExecuteCommandConfigurationLogConfiguration(apiObject.LogConfiguration)
+		tfMap["log_configuration"] = flattenClusterConfigurationExecuteCommandConfigurationLogConfiguration(apiObject.LogConfiguration)
 	}
 
 	if apiObject.Logging != nil {
@@ -520,7 +532,7 @@ func flattenECSClusterConfigurationExecuteCommandConfiguration(apiObject *ecs.Ex
 	return []interface{}{tfMap}
 }
 
-func flattenECSClusterConfigurationExecuteCommandConfigurationLogConfiguration(apiObject *ecs.ExecuteCommandLogConfiguration) []interface{} {
+func flattenClusterConfigurationExecuteCommandConfigurationLogConfiguration(apiObject *ecs.ExecuteCommandLogConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -545,7 +557,7 @@ func flattenECSClusterConfigurationExecuteCommandConfigurationLogConfiguration(a
 	return []interface{}{tfMap}
 }
 
-func expandECSClusterConfiguration(nc []interface{}) *ecs.ClusterConfiguration {
+func expandClusterConfiguration(nc []interface{}) *ecs.ClusterConfiguration {
 	if len(nc) == 0 {
 		return &ecs.ClusterConfiguration{}
 	}
@@ -553,13 +565,13 @@ func expandECSClusterConfiguration(nc []interface{}) *ecs.ClusterConfiguration {
 
 	config := &ecs.ClusterConfiguration{}
 	if v, ok := raw["execute_command_configuration"].([]interface{}); ok && len(v) > 0 {
-		config.ExecuteCommandConfiguration = expandECSClusterConfigurationExecuteCommandConfiguration(v)
+		config.ExecuteCommandConfiguration = expandClusterConfigurationExecuteCommandConfiguration(v)
 	}
 
 	return config
 }
 
-func expandECSClusterConfigurationExecuteCommandConfiguration(nc []interface{}) *ecs.ExecuteCommandConfiguration {
+func expandClusterConfigurationExecuteCommandConfiguration(nc []interface{}) *ecs.ExecuteCommandConfiguration {
 	if len(nc) == 0 {
 		return &ecs.ExecuteCommandConfiguration{}
 	}
@@ -567,7 +579,7 @@ func expandECSClusterConfigurationExecuteCommandConfiguration(nc []interface{}) 
 
 	config := &ecs.ExecuteCommandConfiguration{}
 	if v, ok := raw["log_configuration"].([]interface{}); ok && len(v) > 0 {
-		config.LogConfiguration = expandECSClusterConfigurationExecuteCommandLogConfiguration(v)
+		config.LogConfiguration = expandClusterConfigurationExecuteCommandLogConfiguration(v)
 	}
 
 	if v, ok := raw["kms_key_id"].(string); ok && v != "" {
@@ -581,7 +593,7 @@ func expandECSClusterConfigurationExecuteCommandConfiguration(nc []interface{}) 
 	return config
 }
 
-func expandECSClusterConfigurationExecuteCommandLogConfiguration(nc []interface{}) *ecs.ExecuteCommandLogConfiguration {
+func expandClusterConfigurationExecuteCommandLogConfiguration(nc []interface{}) *ecs.ExecuteCommandLogConfiguration {
 	if len(nc) == 0 {
 		return &ecs.ExecuteCommandLogConfiguration{}
 	}
