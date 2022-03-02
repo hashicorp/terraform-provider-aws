@@ -324,8 +324,8 @@ func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociati
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway1),
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment1),
-					testAccCheckTransitGatewayAssociationDefaultRouteTableVPCAttachmentNotAssociated(&transitGateway1, &transitGatewayVpcAttachment1),
-					testAccCheckTransitGatewayPropagationDefaultRouteTableVPCAttachmentNotPropagated(&transitGateway1, &transitGatewayVpcAttachment1),
+					testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociated(&transitGateway1, &transitGatewayVpcAttachment1),
+					testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagated(&transitGateway1, &transitGatewayVpcAttachment1),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", "false"),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", "false"),
 				),
@@ -356,7 +356,7 @@ func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociati
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway1),
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment1),
-					testAccCheckTransitGatewayAssociationDefaultRouteTableVPCAttachmentNotAssociated(&transitGateway1, &transitGatewayVpcAttachment1),
+					testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociated(&transitGateway1, &transitGatewayVpcAttachment1),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", "false"),
 				),
 			},
@@ -371,7 +371,7 @@ func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociati
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway2),
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment2),
 					testAccCheckTransitGatewayVPCAttachmentNotRecreated(&transitGatewayVpcAttachment1, &transitGatewayVpcAttachment2),
-					testAccCheckTransitGatewayAssociationDefaultRouteTableVPCAttachmentAssociated(&transitGateway2, &transitGatewayVpcAttachment2),
+					testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(&transitGateway2, &transitGatewayVpcAttachment2),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", "true"),
 				),
 			},
@@ -381,7 +381,7 @@ func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociati
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway3),
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment3),
 					testAccCheckTransitGatewayVPCAttachmentNotRecreated(&transitGatewayVpcAttachment2, &transitGatewayVpcAttachment3),
-					testAccCheckTransitGatewayAssociationDefaultRouteTableVPCAttachmentNotAssociated(&transitGateway3, &transitGatewayVpcAttachment3),
+					testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociated(&transitGateway3, &transitGatewayVpcAttachment3),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", "false"),
 				),
 			},
@@ -406,7 +406,7 @@ func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTablePropagati
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway1),
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment1),
-					testAccCheckTransitGatewayPropagationDefaultRouteTableVPCAttachmentNotPropagated(&transitGateway1, &transitGatewayVpcAttachment1),
+					testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagated(&transitGateway1, &transitGatewayVpcAttachment1),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", "false"),
 				),
 			},
@@ -421,7 +421,7 @@ func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTablePropagati
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway2),
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment2),
 					testAccCheckTransitGatewayVPCAttachmentNotRecreated(&transitGatewayVpcAttachment1, &transitGatewayVpcAttachment2),
-					testAccCheckTransitGatewayPropagationDefaultRouteTableVPCAttachmentPropagated(&transitGateway2, &transitGatewayVpcAttachment2),
+					testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(&transitGateway2, &transitGatewayVpcAttachment2),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", "true"),
 				),
 			},
@@ -431,7 +431,7 @@ func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTablePropagati
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway3),
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment3),
 					testAccCheckTransitGatewayVPCAttachmentNotRecreated(&transitGatewayVpcAttachment2, &transitGatewayVpcAttachment3),
-					testAccCheckTransitGatewayPropagationDefaultRouteTableVPCAttachmentNotPropagated(&transitGateway3, &transitGatewayVpcAttachment3),
+					testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagated(&transitGateway3, &transitGatewayVpcAttachment3),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", "false"),
 				),
 			},
@@ -514,7 +514,7 @@ func testAccCheckTransitGatewayVPCAttachmentDisappears(transitGatewayVpcAttachme
 			return err
 		}
 
-		return tfec2.WaitForTransitGatewayVPCAttachmentDeletion(conn, aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId))
+		return tfec2.WaitForTransitGatewayAttachmentDeletion(conn, aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId))
 	}
 }
 
@@ -525,6 +525,24 @@ func testAccCheckTransitGatewayVPCAttachmentNotRecreated(i, j *ec2.TransitGatewa
 		}
 
 		return nil
+	}
+}
+
+func testAccPreCheckTransitGatewayVpcAttachment(t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
+	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{
+		MaxResults: aws.Int64(5),
+	}
+
+	_, err := conn.DescribeTransitGatewayVpcAttachments(input)
+
+	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InvalidAction", "") {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 

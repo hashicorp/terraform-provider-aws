@@ -2130,7 +2130,7 @@ func FindTransitGateway(conn *ec2.EC2, input *ec2.DescribeTransitGatewaysInput) 
 		return nil, err
 	}
 
-	if len(output) == 0 || output[0] == nil {
+	if len(output) == 0 || output[0] == nil || output[0].Options == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -2262,6 +2262,161 @@ func FindTransitGatewayAttachmentByID(conn *ec2.EC2, id string) (*ec2.TransitGat
 
 	// Eventual consistency check.
 	if aws.StringValue(output.TransitGatewayAttachmentId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindTransitGatewayConnect(conn *ec2.EC2, input *ec2.DescribeTransitGatewayConnectsInput) (*ec2.TransitGatewayConnect, error) {
+	output, err := FindTransitGatewayConnects(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil || output[0].Options == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindTransitGatewayConnects(conn *ec2.EC2, input *ec2.DescribeTransitGatewayConnectsInput) ([]*ec2.TransitGatewayConnect, error) {
+	var output []*ec2.TransitGatewayConnect
+
+	err := conn.DescribeTransitGatewayConnectsPages(input, func(page *ec2.DescribeTransitGatewayConnectsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TransitGatewayConnects {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidTransitGatewayAttachmentIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindTransitGatewayConnectByID(conn *ec2.EC2, id string) (*ec2.TransitGatewayConnect, error) {
+	input := &ec2.DescribeTransitGatewayConnectsInput{
+		TransitGatewayAttachmentIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindTransitGatewayConnect(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.TransitGatewayAttachmentStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.TransitGatewayAttachmentId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindTransitGatewayConnectPeer(conn *ec2.EC2, input *ec2.DescribeTransitGatewayConnectPeersInput) (*ec2.TransitGatewayConnectPeer, error) {
+	output, err := FindTransitGatewayConnectPeers(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil || output[0].ConnectPeerConfiguration == nil ||
+		len(output[0].ConnectPeerConfiguration.BgpConfigurations) == 0 || output[0].ConnectPeerConfiguration.BgpConfigurations[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindTransitGatewayConnectPeers(conn *ec2.EC2, input *ec2.DescribeTransitGatewayConnectPeersInput) ([]*ec2.TransitGatewayConnectPeer, error) {
+	var output []*ec2.TransitGatewayConnectPeer
+
+	err := conn.DescribeTransitGatewayConnectPeersPages(input, func(page *ec2.DescribeTransitGatewayConnectPeersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TransitGatewayConnectPeers {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidTransitGatewayConnectPeerIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindTransitGatewayConnectPeerByID(conn *ec2.EC2, id string) (*ec2.TransitGatewayConnectPeer, error) {
+	input := &ec2.DescribeTransitGatewayConnectPeersInput{
+		TransitGatewayConnectPeerIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindTransitGatewayConnectPeer(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.TransitGatewayConnectPeerStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.TransitGatewayConnectPeerId) != id {
 		return nil, &resource.NotFoundError{
 			LastRequest: input,
 		}
@@ -2732,7 +2887,7 @@ func FindTransitGatewayVPCAttachment(conn *ec2.EC2, input *ec2.DescribeTransitGa
 		return nil, err
 	}
 
-	if len(output) == 0 || output[0] == nil {
+	if len(output) == 0 || output[0] == nil || output[0].Options == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
