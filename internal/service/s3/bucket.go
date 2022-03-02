@@ -384,6 +384,7 @@ func ResourceBucket() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
+				Deprecated:   "Use the aws_s3_bucket_accelerate_configuration resource instead",
 				ValidateFunc: validation.StringInSlice(s3.BucketAccelerateStatus_Values(), false),
 			},
 
