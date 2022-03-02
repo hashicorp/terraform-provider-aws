@@ -4,68 +4,47 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/networkmanager"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceGlobalNetwork_basic(t *testing.T) {
-	dataSourceByIdName := "data.aws_networkmanager_global_network.test_by_id"
-	dataSourceByTagsName := "data.aws_networkmanager_global_network.test_by_tags"
+func TestAccNetworkManagerGlobalNetworkDataSource_basic(t *testing.T) {
+	dataSourceName := "data.aws_networkmanager_global_network.test"
 	resourceName := "aws_networkmanager_global_network.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsGlobalNetworkDestroy,
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceGlobalNetworkConfig(),
+				Config: testAccGlobalNetworkDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceByIdName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceByIdName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceByIdName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceByIdName, "tags.Name", resourceName, "tags.Name"),
-					resource.TestCheckResourceAttrPair(dataSourceByIdName, "tags.OtherTag", resourceName, "tags.OtherTag"),
-					resource.TestCheckResourceAttrPair(dataSourceByTagsName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceByTagsName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceByTagsName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceByTagsName, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "global_network_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 				),
 			},
 		},
 	})
 }
 
-func testAccDataSourceGlobalNetworkConfig() string {
+func testAccGlobalNetworkDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   description = "test"
 
   tags = {
-    Name     = "terraform-testacc-global-network-%d"
-    OtherTag = "some-value"
+    Name  = %[1]q
   }
 }
 
-resource "aws_networkmanager_global_network" "test2" {
-  description = "test2"
-
-  tags = {
-    Name     = "terraform-testacc-global-network2"
-  }
+data "aws_networkmanager_global_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
 }
-
-data "aws_networkmanager_global_network" "test_by_id" {
-  id = aws_networkmanager_global_network.test.id
-}
-
-data "aws_networkmanager_global_network" "test_by_tags" {
-    tags = {
-	Name = aws_networkmanager_global_network.test.tags["Name"]
-  }
-}
-`, sdkacctest.RandInt())
+`, rName)
 }
