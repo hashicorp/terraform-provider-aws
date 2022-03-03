@@ -183,15 +183,12 @@ func resourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interfac
 func resourceSiteUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
-	if d.HasChanges("description", "location") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		globalNetworkID := d.Get("global_network_id").(string)
 		input := &networkmanager.UpdateSiteInput{
+			Description:     aws.String(d.Get("description").(string)),
 			GlobalNetworkId: aws.String(globalNetworkID),
 			SiteId:          aws.String(d.Id()),
-		}
-
-		if v, ok := d.GetOk("description"); ok {
-			input.Description = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
