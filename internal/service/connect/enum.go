@@ -27,6 +27,9 @@ const (
 	// ListQueueQuickConnectsMaxResults Valid Range: Minimum value of 1. Maximum value of 100.
 	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListQueueQuickConnects.html
 	ListQueueQuickConnectsMaxResults = 60
+	// ListQueuesMaxResults Valid Range: Minimum value of 1. Maximum value of 1000.
+	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListQueues.html
+	ListQueuesMaxResults = 60
 	// ListQuickConnectsMaxResults Valid Range: Minimum value of 1. Maximum value of 1000.
 	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListQuickConnects.html
 	ListQuickConnectsMaxResults = 60
