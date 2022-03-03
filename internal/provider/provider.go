@@ -1582,6 +1582,7 @@ func Provider() *schema.Provider {
 			"aws_networkfirewall_resource_policy":       networkfirewall.ResourceResourcePolicy(),
 			"aws_networkfirewall_rule_group":            networkfirewall.ResourceRuleGroup(),
 
+			"aws_networkmanager_device":         networkmanager.ResourceDevice(),
 			"aws_networkmanager_global_network": networkmanager.ResourceGlobalNetwork(),
 			"aws_networkmanager_site":           networkmanager.ResourceSite(),
 
