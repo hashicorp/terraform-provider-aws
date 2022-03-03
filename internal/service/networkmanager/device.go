@@ -1,6 +1,7 @@
 package networkmanager
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,21 +10,25 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/terraform-providers/terraform-provider-aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceDevice() *schema.Resource {
 	return &schema.Resource{
-		Create: ResourceDeviceCreate,
-		Read:   ResourceDeviceRead,
-		Update: ResourceDeviceUpdate,
-		Delete: ResourceDeviceDelete,
+		CreateWithoutTimeout: resourceDeviceCreate,
+		ReadWithoutTimeout:   resourceDeviceRead,
+		UpdateWithoutTimeout: resourceDeviceUpdate,
+		DeleteWithoutTimeout: resourceDeviceDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("arn", d.Id())
 
 				idErr := fmt.Errorf("Expected ID in format of arn:aws:networkmanager::ACCOUNTID:device/GLOBALNETWORKID/DEVICEID and provided: %s", d.Id())
@@ -43,6 +48,14 @@ func ResourceDevice() *schema.Resource {
 
 				return []*schema.ResourceData{d}, nil
 			},
+		},
+
+		CustomizeDiff: verify.SetTagsDiff,
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -92,7 +105,8 @@ func ResourceDevice() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -105,101 +119,121 @@ func ResourceDevice() *schema.Resource {
 	}
 }
 
-func ResourceDeviceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).networkmanagerconn
+func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	globalNetworkID := d.Get("global_network_id").(string)
 
 	input := &networkmanager.CreateDeviceInput{
-		Description:     aws.String(d.Get("description").(string)),
-		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
-		Location:        expandLocation(d.Get("location").([]interface{})),
-		Model:           aws.String(d.Get("model").(string)),
-		SerialNumber:    aws.String(d.Get("serial_number").(string)),
-		SiteId:          aws.String(d.Get("site_id").(string)),
-		Tags:            keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().NetworkmanagerTags(),
-		Type:            aws.String(d.Get("type").(string)),
-		Vendor:          aws.String(d.Get("vendor").(string)),
+		GlobalNetworkId: aws.String(globalNetworkID),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Location = expandLocation(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("model"); ok {
+		input.Model = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("serial_number"); ok {
+		input.SerialNumber = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("site_id"); ok {
+		input.SiteId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("type"); ok {
+		input.Type = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("vendor"); ok {
+		input.Vendor = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating Network Manager Device: %s", input)
+	output, err := conn.CreateDeviceWithContext(ctx, input)
 
-	output, err := conn.CreateDevice(input)
 	if err != nil {
-		return fmt.Errorf("error creating Network Manager Device: %s", err)
+		return diag.Errorf("error creating Network Manager Device: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.Device.DeviceId))
 
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{networkmanager.DeviceStatePending},
-		Target:  []string{networkmanager.DeviceStateAvailable},
-		Refresh: networkmanagerDeviceRefreshFunc(conn, aws.StringValue(output.Device.GlobalNetworkId), aws.StringValue(output.Device.DeviceId)),
-		Timeout: 10 * time.Minute,
+	if _, err := waitDeviceCreated(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return diag.Errorf("error waiting for Network Manager Device (%s) create: %s", d.Id(), err)
 	}
 
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("error waiting for Network Manager Device (%s) availability: %s", d.Id(), err)
-	}
-
-	return ResourceDeviceRead(d, meta)
+	return resourceDeviceRead(ctx, d, meta)
 }
 
-func ResourceDeviceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).networkmanagerconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	device, err := networkmanagerDescribeDevice(conn, d.Get("global_network_id").(string), d.Id())
+	globalNetworkID := d.Get("global_network_id").(string)
+	device, err := FindDeviceByTwoPartKey(ctx, conn, globalNetworkID, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, "InvalidDeviceID.NotFound", "") {
-		log.Printf("[WARN] Network Manager Device (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Network Manager Device %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Network Manager Device: %s", err)
-	}
-
-	if device == nil {
-		log.Printf("[WARN] Network Manager Device (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if aws.StringValue(device.State) == networkmanager.DeviceStateDeleting {
-		log.Printf("[WARN] Network Manager Device (%s) in deleted state (%s), removing from state", d.Id(), aws.StringValue(device.State))
-		d.SetId("")
-		return nil
+		return diag.Errorf("error reading Network Manager Device (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", device.DeviceArn)
 	d.Set("description", device.Description)
+	if device.Location != nil {
+		if err := d.Set("location", []interface{}{flattenLocation(device.Location)}); err != nil {
+			return diag.Errorf("error setting location: %s", err)
+		}
+	} else {
+		d.Set("location", nil)
+	}
 	d.Set("model", device.Model)
 	d.Set("serial_number", device.SerialNumber)
 	d.Set("site_id", device.SiteId)
 	d.Set("type", device.Type)
 	d.Set("vendor", device.Vendor)
 
-	if err := d.Set("location", flattenLocation(device.Location)); err != nil {
-		return fmt.Errorf("error setting location: %s", err)
+	tags := KeyValueTags(device.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.Errorf("error setting tags: %s", err)
 	}
 
-	if err := d.Set("tags", keyvaluetags.NetworkmanagerKeyValueTags(device.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.Errorf("error setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func ResourceDeviceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).networkmanagerconn
+func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
-	if d.HasChanges("description", "location", "model", "serial_number", "site_id", "type", "vendor") {
-		request := &networkmanager.UpdateDeviceInput{
+	if d.HasChangesExcept("tags", "tags_all") {
+		globalNetworkID := d.Get("global_network_id").(string)
+		input := &networkmanager.UpdateDeviceInput{
 			Description:     aws.String(d.Get("description").(string)),
 			DeviceId:        aws.String(d.Id()),
-			GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
-			Location:        expandLocation(d.Get("location").([]interface{})),
+			GlobalNetworkId: aws.String(globalNetworkID),
 			Model:           aws.String(d.Get("model").(string)),
 			SerialNumber:    aws.String(d.Get("serial_number").(string)),
 			SiteId:          aws.String(d.Get("site_id").(string)),
@@ -207,145 +241,195 @@ func ResourceDeviceUpdate(d *schema.ResourceData, meta interface{}) error {
 			Vendor:          aws.String(d.Get("vendor").(string)),
 		}
 
-		_, err := conn.UpdateDevice(request)
+		if v, ok := d.GetOk("location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.Location = expandLocation(v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		log.Printf("[DEBUG] Updating Network Manager Device: %s", input)
+		_, err := conn.UpdateDeviceWithContext(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("Failure updating Network Manager Device (%s): %s", d.Id(), err)
+			return diag.Errorf("error updating Network Manager Device (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitDeviceUpdated(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.Errorf("error waiting for Network Manager Device (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.NetworkmanagerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Network Manager Device (%s) tags: %s", d.Id(), err)
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.Errorf("error updating Network Manager Device (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return resourceDeviceRead(ctx, d, meta)
 }
 
-func ResourceDeviceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).networkmanagerconn
+func resourceDeviceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
-	input := &networkmanager.DeleteDeviceInput{
-		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
+	globalNetworkID := d.Get("global_network_id").(string)
+
+	log.Printf("[DEBUG] Deleting Network Manager Device: %s", d.Id())
+	_, err := conn.DeleteDeviceWithContext(ctx, &networkmanager.DeleteDeviceInput{
+		GlobalNetworkId: aws.String(globalNetworkID),
 		DeviceId:        aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Deleting Network Manager Device (%s): %s", d.Id(), input)
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteDevice(input)
-
-		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Device Associations") {
-			return resource.RetryableError(err)
-		}
-
-		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Device") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
 	})
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteDevice(input)
-	}
-
-	if tfawserr.ErrCodeEquals(err, "InvalidDeviceID.NotFound", "") {
+	if globalNetworkIDNotFoundError(err) || tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Network Manager Device: %s", err)
+		return diag.Errorf("error deleting Network Manager Device (%s): %s", d.Id(), err)
 	}
 
-	if err := waitForDeviceDeletion(conn, d.Get("global_network_id").(string), d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Network Manager Device (%s) deletion: %s", d.Id(), err)
+	if _, err := waitDeviceDeleted(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return diag.Errorf("error waiting for Network Manager Device (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func networkmanagerDeviceRefreshFunc(conn *networkmanager.NetworkManager, globalNetworkID, deviceID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		device, err := networkmanagerDescribeDevice(conn, globalNetworkID, deviceID)
+func FindDevice(ctx context.Context, conn *networkmanager.NetworkManager, input *networkmanager.GetDevicesInput) (*networkmanager.Device, error) {
+	output, err := FindDevices(ctx, conn, input)
 
-		if tfawserr.ErrCodeEquals(err, "InvalidDeviceID.NotFound", "") {
-			return nil, "DELETED", nil
-		}
-
-		if err != nil {
-			return nil, "", fmt.Errorf("error reading Network Manager Device (%s): %s", deviceID, err)
-		}
-
-		if device == nil {
-			return nil, "DELETED", nil
-		}
-
-		return device, aws.StringValue(device.State), nil
+	if err != nil {
+		return nil, err
 	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
 }
 
-func networkmanagerDescribeDevice(conn *networkmanager.NetworkManager, globalNetworkID, deviceID string) (*networkmanager.Device, error) {
-	input := &networkmanager.GetDevicesInput{
-		GlobalNetworkId: aws.String(globalNetworkID),
-		DeviceIds:       []*string{aws.String(deviceID)},
-	}
+func FindDevices(ctx context.Context, conn *networkmanager.NetworkManager, input *networkmanager.GetDevicesInput) ([]*networkmanager.Device, error) {
+	var output []*networkmanager.Device
 
-	log.Printf("[DEBUG] Reading Network Manager Device (%s): %s", deviceID, input)
-	for {
-		output, err := conn.GetDevices(input)
-
-		if err != nil {
-			return nil, err
+	err := conn.GetDevicesPagesWithContext(ctx, input, func(page *networkmanager.GetDevicesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if output == nil || len(output.Devices) == 0 {
-			return nil, nil
-		}
-
-		for _, device := range output.Devices {
-			if device == nil {
+		for _, v := range page.Devices {
+			if v == nil {
 				continue
 			}
 
-			if aws.StringValue(device.DeviceId) == deviceID {
-				return device, nil
-			}
+			output = append(output, v)
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextToken = output.NextToken
+	if globalNetworkIDNotFoundError(err) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
 	}
 
-	return nil, nil
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
-func waitForNetworkManagerDeviceDeletion(conn *networkmanager.NetworkManager, globalNetworkID, deviceID string) error {
+func FindDeviceByTwoPartKey(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, deviceID string) (*networkmanager.Device, error) {
+	input := &networkmanager.GetDevicesInput{
+		DeviceIds:       aws.StringSlice([]string{deviceID}),
+		GlobalNetworkId: aws.String(globalNetworkID),
+	}
+
+	output, err := FindDevice(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.GlobalNetworkId) != globalNetworkID || aws.StringValue(output.DeviceId) != deviceID {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func statusDeviceState(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, deviceID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDeviceByTwoPartKey(ctx, conn, globalNetworkID, deviceID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func waitDeviceCreated(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, deviceID string, timeout time.Duration) (*networkmanager.Device, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			networkmanager.DeviceStateAvailable,
-			networkmanager.DeviceStateDeleting,
-		},
-		Target:         []string{""},
-		Refresh:        networkmanagerDeviceRefreshFunc(conn, globalNetworkID, deviceID),
-		Timeout:        10 * time.Minute,
-		NotFoundChecks: 1,
+		Pending: []string{networkmanager.DeviceStatePending},
+		Target:  []string{networkmanager.DeviceStateAvailable},
+		Timeout: timeout,
+		Refresh: statusDeviceState(ctx, conn, globalNetworkID, deviceID),
 	}
 
-	log.Printf("[DEBUG] Waiting for Network Manager Device (%s) deletion", deviceID)
-	_, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if tfresource.NotFound(err) {
-		return nil
+	if output, ok := outputRaw.(*networkmanager.Device); ok {
+		return output, err
 	}
 
-	return err
+	return nil, err
+}
+
+func waitDeviceDeleted(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, deviceID string, timeout time.Duration) (*networkmanager.Device, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{networkmanager.DeviceStateDeleting},
+		Target:  []string{},
+		Timeout: timeout,
+		Refresh: statusDeviceState(ctx, conn, globalNetworkID, deviceID),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*networkmanager.Device); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDeviceUpdated(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, deviceID string, timeout time.Duration) (*networkmanager.Device, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{networkmanager.DeviceStateUpdating},
+		Target:  []string{networkmanager.DeviceStateAvailable},
+		Timeout: timeout,
+		Refresh: statusDeviceState(ctx, conn, globalNetworkID, deviceID),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*networkmanager.Device); ok {
+		return output, err
+	}
+
+	return nil, err
 }

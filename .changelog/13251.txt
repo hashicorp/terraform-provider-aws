@@ -6,6 +6,10 @@ aws_networkmanager_global_network
 aws_networkmanager_site
 ```
 
+```release-note:new-resource
+aws_networkmanager_device
+```
+
 ```release-note:new-data-source
 aws_networkmanager_global_network
 ```
