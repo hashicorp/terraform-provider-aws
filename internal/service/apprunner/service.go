@@ -155,27 +155,25 @@ func ResourceService() *schema.Resource {
 			"network_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"egress_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"egress_type": {
 										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
+										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.StringInSlice(apprunner.EgressType_Values(), false),
 									},
 									"vpc_connector_arn": {
 										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
+										Optional:     true,
 										ValidateFunc: verify.ValidARN,
 									},
 								},
