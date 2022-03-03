@@ -156,8 +156,8 @@ func resourceVpcConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	tags, err := ListTags(conn, arn)
 
-	if err := WaitVpcConnectorActive(ctx, conn, d.Id()); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for creating App Runner vpc (%s) creation: %w", d.Id(), err))
+	if err != nil {
+		return diag.Errorf("error listing tags for App Runner vpc connector (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
