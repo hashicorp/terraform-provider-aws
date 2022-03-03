@@ -70,7 +70,7 @@ resource "aws_autoscaling_policy" "example" {
             stat = "Average"
           }
         }
-      }      
+      }
       customized_capacity_metric_specification {
         metric_data_queries {
           id          = "capacity_sum"
