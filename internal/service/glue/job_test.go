@@ -1076,25 +1076,6 @@ resource "aws_glue_job" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccJobConfig_StreamingTimeout(rName string, timeout int) string {
-	return fmt.Sprintf(`
-%s
-
-resource "aws_glue_job" "test" {
-  name     = "%s"
-  role_arn = aws_iam_role.test.arn
-  timeout  = %d
-
-  command {
-    name            = "gluestreaming"
-    script_location = "testscriptlocation"
-  }
-
-  depends_on = [aws_iam_role_policy_attachment.test]
-}
-`, testAccJobConfig_Base(rName), rName, timeout)
-}
-
 func testAccJobConfig_Timeout(rName string, timeout int) string {
 	return fmt.Sprintf(`
 %s
