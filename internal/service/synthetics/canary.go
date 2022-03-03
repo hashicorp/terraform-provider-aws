@@ -391,12 +391,15 @@ func resourceCanaryRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// get environment variables since they are not available on describe
-	runConfig := &synthetics.CanaryRunConfigInput{}
+	envVars := make(map[string]*string)
 	if v, ok := d.GetOk("run_config"); ok {
-		runConfig = expandCanaryRunConfig(v.([]interface{}))
+		runConfig := expandCanaryRunConfig(v.([]interface{}))
+		for k, v := range runConfig.EnvironmentVariables {
+			envVars[k] = v
+		}
 	}
 
-	if err := d.Set("run_config", flattenCanaryRunConfig(canary.RunConfig, runConfig.EnvironmentVariables)); err != nil {
+	if err := d.Set("run_config", flattenCanaryRunConfig(canary.RunConfig, envVars)); err != nil {
 		return fmt.Errorf("error setting run config: %w", err)
 	}
 
@@ -714,8 +717,12 @@ func expandCanaryRunConfig(l []interface{}) *synthetics.CanaryRunConfigInput {
 		codeConfig.ActiveTracing = aws.Bool(v)
 	}
 
-	if v, ok := m["enviroment_variables"].(map[string]string); ok {
-		codeConfig.EnvironmentVariables = aws.StringMap(v)
+	if vars, ok := m["environment_variables"].(map[string]interface{}); ok {
+		ev := make(map[string]string)
+		for k, v := range vars {
+			ev[k] = v.(string)
+		}
+		codeConfig.EnvironmentVariables = aws.StringMap(ev)
 	}
 
 	return codeConfig
@@ -727,10 +734,13 @@ func flattenCanaryRunConfig(canaryCodeOut *synthetics.CanaryRunConfigOutput, env
 	}
 
 	m := map[string]interface{}{
-		"timeout_in_seconds":    aws.Int64Value(canaryCodeOut.TimeoutInSeconds),
-		"memory_in_mb":          aws.Int64Value(canaryCodeOut.MemoryInMB),
-		"active_tracing":        aws.BoolValue(canaryCodeOut.ActiveTracing),
-		"environment_variables": aws.StringValueMap(envVars),
+		"timeout_in_seconds": aws.Int64Value(canaryCodeOut.TimeoutInSeconds),
+		"memory_in_mb":       aws.Int64Value(canaryCodeOut.MemoryInMB),
+		"active_tracing":     aws.BoolValue(canaryCodeOut.ActiveTracing),
+	}
+
+	if v := envVars; v != nil {
+		m["environment_variables"] = aws.StringValueMap(envVars)
 	}
 
 	return []interface{}{m}

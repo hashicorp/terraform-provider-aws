@@ -319,14 +319,14 @@ func TestAccSyntheticsCanary_run(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "60"),
-					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.test1", "result1"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "run_config.0.environment_variables"},
 			},
 			{
 				Config: testAccCanaryRun2Config(rName),
@@ -334,6 +334,7 @@ func TestAccSyntheticsCanary_run(t *testing.T) {
 					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "960"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "120"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.test2", "result2"),
 				),
 			},
 			{
@@ -764,7 +765,7 @@ resource "aws_synthetics_canary" "test" {
   run_config {
     timeout_in_seconds    = 60
 	environment_variables = {
-		foo = "bar"
+		test1 = "result1"
 	}
   }
 
@@ -790,6 +791,10 @@ resource "aws_synthetics_canary" "test" {
   run_config {
     timeout_in_seconds = 120
     memory_in_mb       = 960
+	environment_variables = {
+		test1  = "result1"
+		test2 = "result2"
+	}
   }
 
   depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
