@@ -52,7 +52,7 @@ resource "aws_glue_job" "example" {
   role_arn = aws_iam_role.example.arn
 
   command {
-    name = "gluestreaming"
+    name            = "gluestreaming"
     script_location = "s3://${aws_s3_bucket.example.bucket}/example.script"
   }
 }
