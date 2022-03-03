@@ -1091,8 +1091,9 @@ func Provider() *schema.Provider {
 			"aws_connect_lambda_function_association": connect.ResourceLambdaFunctionAssociation(),
 			"aws_connect_queue":                       connect.ResourceQueue(),
 			"aws_connect_quick_connect":               connect.ResourceQuickConnect(),
-			"aws_connect_security_profile":            connect.ResourceSecurityProfile(),
 			"aws_connect_routing_profile":             connect.ResourceRoutingProfile(),
+			"aws_connect_security_profile":            connect.ResourceSecurityProfile(),
+			"aws_connect_user_hierarchy_structure":    connect.ResourceUserHierarchyStructure(),
 
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
 
