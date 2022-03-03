@@ -1024,7 +1024,7 @@ resource "aws_glue_job" "test" {
   role_arn     = aws_iam_role.test.arn
 
   command {
-	name = "gluestreaming"
+    name            = "gluestreaming"
     script_location = "testscriptlocation"
   }
 
@@ -1081,12 +1081,12 @@ func testAccJobConfig_StreamingTimeout(rName string, timeout int) string {
 %s
 
 resource "aws_glue_job" "test" {
-  name         = "%s"
-  role_arn     = aws_iam_role.test.arn
-  timeout      = %d
+  name     = "%s"
+  role_arn = aws_iam_role.test.arn
+  timeout  = %d
 
   command {
-	name = "gluestreaming"
+    name            = "gluestreaming"
     script_location = "testscriptlocation"
   }
 
