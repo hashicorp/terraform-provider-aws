@@ -1,3 +1,14 @@
+---
+subcategory: "App Runner"
+layout: "aws"
+page_title: "AWS: aws_apprunner_vpc_connector"
+description: |-
+  Manages an App Runner VPC Connector.
+---
+
+# Resource: aws_apprunner_vpc_connector
+
+Manages an App Runner VPC Connector.
 
 ## Example Usage
 

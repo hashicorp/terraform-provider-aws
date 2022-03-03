@@ -47,7 +47,6 @@ resource "aws_apprunner_service" "example" {
     }
   }
 
-
   tags = {
     Name = "example-apprunner-service"
   }
@@ -138,6 +137,7 @@ The `authentication_configuration` block supports the following arguments:
 ### Network Configuration
 
 The `network_configuration` block supports the following arguments:
+
 * `egress_configuration` - (Optional) Network configuration settings for outbound message traffic.
 * `egress_type` - (Optional) The type of egress configuration.Set to DEFAULT for access to resources hosted on public networks.Set to VPC to associate your service to a custom VPC specified by VpcConnectorArn.
 * `vpc_connector_arn` - The Amazon Resource Name (ARN) of the App Runner VPC connector that you want to associate with your App Runner service. Only valid when EgressType = VPC.
