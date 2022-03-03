@@ -1,16 +1,17 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func DataSourceSerialConsoleAccess() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSerialConsoleAccessRead,
+		ReadWithoutTimeout: dataSourceSerialConsoleAccessRead,
 
 		Schema: map[string]*schema.Schema{
 			"enabled": {
@@ -20,16 +21,17 @@ func DataSourceSerialConsoleAccess() *schema.Resource {
 		},
 	}
 }
-func dataSourceSerialConsoleAccessRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceSerialConsoleAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	res, err := conn.GetSerialConsoleAccessStatus(&ec2.GetSerialConsoleAccessStatusInput{})
+	output, err := conn.GetSerialConsoleAccessStatus(&ec2.GetSerialConsoleAccessStatusInput{})
+
 	if err != nil {
-		return fmt.Errorf("Error reading serial console access toggle: %w", err)
+		return diag.Errorf("error reading EC2 Serial Console Access: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("enabled", res.SerialConsoleAccessEnabled)
+	d.Set("enabled", output.SerialConsoleAccessEnabled)
 
 	return nil
 }
