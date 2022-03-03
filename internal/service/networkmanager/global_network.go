@@ -121,7 +121,7 @@ func resourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta
 func resourceGlobalNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
-	if d.HasChange("description") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &networkmanager.UpdateGlobalNetworkInput{
 			Description:     aws.String(d.Get("description").(string)),
 			GlobalNetworkId: aws.String(d.Id()),
