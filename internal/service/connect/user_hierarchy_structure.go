@@ -120,7 +120,7 @@ func resourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceD
 		InstanceId: aws.String(instanceID),
 	})
 
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, connect.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Connect User Hierarchy Structure (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
