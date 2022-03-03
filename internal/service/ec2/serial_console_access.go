@@ -1,23 +1,25 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func ResourceSerialConsoleAccess() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSerialConsoleAccessCreate,
-		Read:   resourceSerialConsoleAccessRead,
-		Update: resourceSerialConsoleAccessUpdate,
-		Delete: resourceSerialConsoleAccessDelete,
+		CreateWithoutTimeout: resourceSerialConsoleAccessCreate,
+		ReadWithoutTimeout:   resourceSerialConsoleAccessRead,
+		UpdateWithoutTimeout: resourceSerialConsoleAccessUpdate,
+		DeleteWithoutTimeout: resourceSerialConsoleAccessDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"enabled": {
 				Type:     schema.TypeBool,
@@ -28,62 +30,62 @@ func ResourceSerialConsoleAccess() *schema.Resource {
 	}
 }
 
-func resourceSerialConsoleAccessCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSerialConsoleAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	enabled := d.Get("enabled").(bool)
-	if err := setSerialConsoleAccess(conn, enabled); err != nil {
-		return fmt.Errorf("error creating serial console access (%t): %s", enabled, err)
+	if err := setSerialConsoleAccess(ctx, conn, enabled); err != nil {
+		return diag.Errorf("error setting EC2 Serial Console Access (%t): %s", enabled, err)
 	}
 
-	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
-	d.SetId(resource.UniqueId())
+	d.SetId(meta.(*conns.AWSClient).Region)
 
-	return resourceSerialConsoleAccessRead(d, meta)
+	return resourceSerialConsoleAccessRead(ctx, d, meta)
 }
 
-func resourceSerialConsoleAccessRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSerialConsoleAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	resp, err := conn.GetSerialConsoleAccessStatus(&ec2.GetSerialConsoleAccessStatusInput{})
+	output, err := conn.GetSerialConsoleAccessStatusWithContext(ctx, &ec2.GetSerialConsoleAccessStatusInput{})
+
 	if err != nil {
-		return fmt.Errorf("error reading serial console access: %s", err)
+		return diag.Errorf("error reading EC2 Serial Console Access: %s", err)
 	}
 
-	d.Set("enabled", resp.SerialConsoleAccessEnabled)
+	d.Set("enabled", output.SerialConsoleAccessEnabled)
 
 	return nil
 }
 
-func resourceSerialConsoleAccessUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSerialConsoleAccessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	enabled := d.Get("enabled").(bool)
-	if err := setSerialConsoleAccess(conn, enabled); err != nil {
-		return fmt.Errorf("error updating serial console access (%t): %s", enabled, err)
+	if err := setSerialConsoleAccess(ctx, conn, enabled); err != nil {
+		return diag.Errorf("error updating EC2 Serial Console Access (%t): %s", enabled, err)
 	}
 
-	return resourceSerialConsoleAccessRead(d, meta)
+	return resourceSerialConsoleAccessRead(ctx, d, meta)
 }
 
-func resourceSerialConsoleAccessDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSerialConsoleAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	// Removing the resource disables default encryption.
-	if err := setSerialConsoleAccess(conn, false); err != nil {
-		return fmt.Errorf("error disabling serial console access: %s", err)
+	// Removing the resource disables serial console access.
+	if err := setSerialConsoleAccess(ctx, conn, false); err != nil {
+		return diag.Errorf("error disabling EC2 Serial Console Access: %s", err)
 	}
 
 	return nil
 }
 
-func setSerialConsoleAccess(conn *ec2.EC2, enabled bool) error {
+func setSerialConsoleAccess(ctx context.Context, conn *ec2.EC2, enabled bool) error {
 	var err error
 
 	if enabled {
-		_, err = conn.EnableSerialConsoleAccess(&ec2.EnableSerialConsoleAccessInput{})
+		_, err = conn.EnableSerialConsoleAccessWithContext(ctx, &ec2.EnableSerialConsoleAccessInput{})
 	} else {
-		_, err = conn.DisableSerialConsoleAccess(&ec2.DisableSerialConsoleAccessInput{})
+		_, err = conn.DisableSerialConsoleAccessWithContext(ctx, &ec2.DisableSerialConsoleAccessInput{})
 	}
 
 	return err
