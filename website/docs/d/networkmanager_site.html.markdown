@@ -1,7 +1,7 @@
 ---
-subcategory: "Transit Gateway Network Manager"
+subcategory: "Network Manager"
 layout: "aws"
-page_title: "AWS:  aws_networkmanager_site"
+page_title: "AWS: aws_networkmanager_site"
 description: |-
   Retrieve information about a site.
 ---
@@ -14,18 +14,15 @@ Retrieve information about a site.
 
 ```hcl
 data " aws_networkmanager_site" "example" {
-  id = var.global_network_id
+  global_network_id = var.global_network_id
+  site_id           = var.site_id
 }
 ```
 
 ## Argument Reference
 
-* `id` - (Optional) The id of the specific site to retrieve.
-
 * `global_network_id` - (Required) The ID of the Global Network of the site to retrieve.
-
-* `tags` - (Optional) A map of tags, each pair of which must exactly match
-  a pair on the desired site.
+* `site_id` - (Required) The id of the specific site to retrieve.
 
 ## Attributes Reference
 

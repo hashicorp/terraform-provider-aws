@@ -1,19 +1,17 @@
 package networkmanager
 
 import (
-	"errors"
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/networkmanager"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceSite() *schema.Resource {
 	return &schema.Resource{
-		Read: DataSourceSiteRead,
+		ReadWithoutTimeout: dataSourceSiteRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -27,10 +25,6 @@ func DataSourceSite() *schema.Resource {
 			"global_network_id": {
 				Type:     schema.TypeString,
 				Required: true,
-			},
-			"id": {
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 			"location": {
 				Type:     schema.TypeList,
@@ -52,72 +46,43 @@ func DataSourceSite() *schema.Resource {
 					},
 				},
 			},
-			"tags": tagsSchemaComputed(),
+			"site_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func DataSourceSiteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).networkmanagerconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+func dataSourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &networkmanager.GetSitesInput{
-		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
-	}
-
-	if v, ok := d.GetOk("id"); ok {
-		input.SiteIds = aws.StringSlice([]string{v.(string)})
-	}
-
-	log.Printf("[DEBUG] Reading Network Manager Site: %s", input)
-	output, err := conn.GetSites(input)
+	globalNetworkID := d.Get("global_network_id").(string)
+	siteID := d.Get("site_id").(string)
+	site, err := FindSiteByTwoPartKey(ctx, conn, globalNetworkID, siteID)
 
 	if err != nil {
-		return fmt.Errorf("error reading Network Manager Site: %s", err)
+		return diag.Errorf("error reading Network Manager Site (%s): %s", siteID, err)
 	}
 
-	// do filtering here
-	var filteredSites []*networkmanager.Site
-	if tags, ok := d.GetOk("tags"); ok {
-		keyValueTags := keyvaluetags.New(tags.(map[string]interface{})).IgnoreAws()
-		for _, site := range output.Sites {
-			tagsMatch := true
-			if len(keyValueTags) > 0 {
-				listTags := keyvaluetags.NetworkmanagerKeyValueTags(site.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
-				tagsMatch = listTags.ContainsAll(keyValueTags)
-			}
-			if tagsMatch {
-				filteredSites = append(filteredSites, site)
-			}
+	d.SetId(siteID)
+	d.Set("arn", site.SiteArn)
+	d.Set("description", site.Description)
+	d.Set("global_network_id", site.GlobalNetworkId)
+	if site.Location != nil {
+		if err := d.Set("location", []interface{}{flattenLocation(site.Location)}); err != nil {
+			return diag.Errorf("error setting location: %s", err)
 		}
 	} else {
-		filteredSites = output.Sites
+		d.Set("location", nil)
 	}
+	d.Set("site_id", site.SiteId)
 
-	if output == nil || len(filteredSites) == 0 {
-		return errors.New("error reading Network Manager Site: no results found")
+	if err := d.Set("tags", KeyValueTags(site.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return diag.Errorf("error setting tags: %s", err)
 	}
-
-	if len(filteredSites) > 1 {
-		return errors.New("error reading Network Manager Site: more than one result found. Please try a more specific search criteria.")
-	}
-
-	site := filteredSites[0]
-
-	if site == nil {
-		return errors.New("error reading Network Manager Site: empty result")
-	}
-
-	d.Set("description", site.Description)
-	d.Set("arn", site.SiteArn)
-	if err := d.Set("location", flattenLocation(site.Location)); err != nil {
-		return fmt.Errorf("error setting location: %s", err)
-	}
-	if err := d.Set("tags", keyvaluetags.NetworkmanagerKeyValueTags(site.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
-	}
-
-	d.SetId(aws.StringValue(site.SiteId))
 
 	return nil
 }
