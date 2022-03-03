@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -226,10 +227,25 @@ func resourceSiteDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	globalNetworkID := d.Get("global_network_id").(string)
 
 	log.Printf("[DEBUG] Deleting Network Manager Site: %s", d.Id())
-	_, err := conn.DeleteSiteWithContext(ctx, &networkmanager.DeleteSiteInput{
-		GlobalNetworkId: aws.String(globalNetworkID),
-		SiteId:          aws.String(d.Id()),
-	})
+	_, err := tfresource.RetryWhenContext(ctx, siteValidationExceptionTimeout,
+		func() (interface{}, error) {
+			return conn.DeleteSiteWithContext(ctx, &networkmanager.DeleteSiteInput{
+				GlobalNetworkId: aws.String(globalNetworkID),
+				SiteId:          aws.String(d.Id()),
+			})
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, networkmanager.ErrCodeValidationException, "cannot be deleted due to existing association") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
+	if globalNetworkIDNotFoundError(err) || tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
+		return nil
+	}
 
 	if err != nil {
 		return diag.Errorf("error deleting Network Manager Site (%s): %s", d.Id(), err)
@@ -279,7 +295,7 @@ func FindSites(ctx context.Context, conn *networkmanager.NetworkManager, input *
 		return !lastPage
 	})
 
-	if validationExceptionMessageContains(err, networkmanager.ValidationExceptionReasonFieldValidationFailed, "Global network not found") {
+	if globalNetworkIDNotFoundError(err) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

@@ -154,11 +154,20 @@ func resourceGlobalNetworkDelete(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
 	log.Printf("[DEBUG] Deleting Network Manager Global Network: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, globalNetworkValidationExceptionTimeout, func() (interface{}, error) {
-		return conn.DeleteGlobalNetworkWithContext(ctx, &networkmanager.DeleteGlobalNetworkInput{
-			GlobalNetworkId: aws.String(d.Id()),
-		})
-	}, networkmanager.ErrCodeValidationException)
+	_, err := tfresource.RetryWhenContext(ctx, globalNetworkValidationExceptionTimeout,
+		func() (interface{}, error) {
+			return conn.DeleteGlobalNetworkWithContext(ctx, &networkmanager.DeleteGlobalNetworkInput{
+				GlobalNetworkId: aws.String(d.Id()),
+			})
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, networkmanager.ErrCodeValidationException, "cannot be deleted due to existing devices, sites, or links") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
 
 	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
 		return nil
@@ -173,6 +182,10 @@ func resourceGlobalNetworkDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	return nil
+}
+
+func globalNetworkIDNotFoundError(err error) bool {
+	return validationExceptionMessageContains(err, networkmanager.ValidationExceptionReasonFieldValidationFailed, "Global network not found")
 }
 
 func FindGlobalNetwork(ctx context.Context, conn *networkmanager.NetworkManager, input *networkmanager.DescribeGlobalNetworksInput) (*networkmanager.GlobalNetwork, error) {
