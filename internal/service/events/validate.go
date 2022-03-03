@@ -99,6 +99,5 @@ var validCustomEventBusEventSourceName = validation.All(
 
 var validCustomEventBusName = validation.All(
 	validation.StringLenBetween(1, 256),
-	validation.StringMatch(regexp.MustCompile(`^[/\.\-_A-Za-z0-9]+$`), ""),
-	validation.StringDoesNotMatch(regexp.MustCompile(`^default$`), "cannot be 'default'"),
+	validation.StringMatch(regexp.MustCompile(`^[/\.\-_A-Za-z0-9]+$`), ""),	
 )
