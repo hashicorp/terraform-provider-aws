@@ -29,22 +29,21 @@ func ResourceDevice() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("arn", d.Id())
+				parsedARN, err := arn.Parse(d.Id())
 
-				idErr := fmt.Errorf("Expected ID in format of arn:aws:networkmanager::ACCOUNTID:device/GLOBALNETWORKID/DEVICEID and provided: %s", d.Id())
-
-				resARN, err := arn.Parse(d.Id())
 				if err != nil {
-					return nil, idErr
+					return nil, fmt.Errorf("error parsing ARN (%s): %w", d.Id(), err)
 				}
 
-				identifiers := strings.TrimPrefix(resARN.Resource, "device/")
-				identifierParts := strings.Split(identifiers, "/")
-				if len(identifierParts) != 2 {
-					return nil, idErr
+				// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_networkmanager.html#networkmanager-resources-for-iam-policies.
+				resourceParts := strings.Split(parsedARN.Resource, "/")
+
+				if actual, expected := len(resourceParts), 3; actual < expected {
+					return nil, fmt.Errorf("expected at least %d resource parts in ARN (%s), got: %d", expected, d.Id(), actual)
 				}
-				d.SetId(identifierParts[1])
-				d.Set("global_network_id", identifierParts[0])
+
+				d.SetId(resourceParts[2])
+				d.Set("global_network_id", resourceParts[1])
 
 				return []*schema.ResourceData{d}, nil
 			},
