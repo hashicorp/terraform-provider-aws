@@ -160,21 +160,35 @@ func testAccCheckVpcConnectorExists(n string) resource.TestCheckFunc {
 func testAccAppRunnerVpcConnector_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-	cidr_block = "10.1.0.0/16"
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 	  
 resource "aws_security_group" "test" {
-	vpc_id = aws_vpc.test.id
+  vpc_id = aws_vpc.test.id
+  name   = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 	  
 resource "aws_subnet" "test" {
-	cidr_block = "10.1.1.0/24"
-	vpc_id     = aws_vpc.test.id
+  cidr_block = "10.1.1.0/24"
+  vpc_id     = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
+
 resource "aws_apprunner_vpc_connector" "test" {
-	vpc_connector_name = %q
-	subnets   = [aws_subnet.test.id]
-	security_groups    = [aws_security_group.test.id]
+  vpc_connector_name = %[1]q
+  subnets            = [aws_subnet.test.id]
+  security_groups    = [aws_security_group.test.id]
 }
 `, rName)
 }
@@ -182,21 +196,36 @@ resource "aws_apprunner_vpc_connector" "test" {
 func testAccAppRunnerVpcConnectorConfigTags1(rName string, tagKey1 string, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-	cidr_block = "10.1.0.0/16"
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 			  
 resource "aws_security_group" "test" {
-	vpc_id = aws_vpc.test.id
+  vpc_id = aws_vpc.test.id
+  name   = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 			  
 resource "aws_subnet" "test" {
-	cidr_block = "10.1.1.0/24"
-	vpc_id     = aws_vpc.test.id
+  cidr_block = "10.1.1.0/24"
+  vpc_id     = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
+
 resource "aws_apprunner_vpc_connector" "test" {
-	vpc_connector_name = %[1]q
-	subnets   = [aws_subnet.test.id]
-	security_groups    = [aws_security_group.test.id]
+  vpc_connector_name = %[1]q
+  subnets            = [aws_subnet.test.id]
+  security_groups    = [aws_security_group.test.id]
+
   tags = {
     %[2]q = %[3]q
   }
