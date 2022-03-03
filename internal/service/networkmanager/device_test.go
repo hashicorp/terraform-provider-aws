@@ -50,21 +50,42 @@ func TestAccNetworkManagerDevice_basic(t *testing.T) {
 	})
 }
 
-/*
-func TestAccDevice_tags(t *testing.T) {
+func TestAccNetworkManagerDevice_disapears(t *testing.T) {
 	resourceName := "aws_networkmanager_device.test"
-	description := "test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsDeviceDestroy,
+		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDeviceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceConfigTags1(description, "key1", "value1"),
+				Config: testAccDeviceConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDeviceExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceDevice(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerDevice_tags(t *testing.T) {
+	resourceName := "aws_networkmanager_device.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDeviceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeviceConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDeviceExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					testAccCheckDeviceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -76,20 +97,18 @@ func TestAccDevice_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceConfigTags2(description, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDeviceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDeviceExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					testAccCheckDeviceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccDeviceConfigTags1(description, "key2", "value2"),
+				Config: testAccDeviceConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDeviceExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					testAccCheckDeviceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -97,7 +116,60 @@ func TestAccDevice_tags(t *testing.T) {
 		},
 	})
 }
-*/
+
+func TestAccNetworkManagerDevice_allAttributes(t *testing.T) {
+	resourceName := "aws_networkmanager_device.test"
+	site1ResourceName := "aws_networkmanager_site.test1"
+	site2ResourceName := "aws_networkmanager_site.test2"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDeviceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeviceAllAttributesConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDeviceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "location.0.address", "Address 1"),
+					resource.TestCheckResourceAttr(resourceName, "location.0.latitude", "1.1"),
+					resource.TestCheckResourceAttr(resourceName, "location.0.longitude", "-1.1"),
+					resource.TestCheckResourceAttr(resourceName, "model", "model1"),
+					resource.TestCheckResourceAttr(resourceName, "serial_number", "sn1"),
+					resource.TestCheckResourceAttrPair(resourceName, "site_id", site1ResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "type", "type1"),
+					resource.TestCheckResourceAttr(resourceName, "vendor", "vendor1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccDeviceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeviceAllAttributesUpdatedConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDeviceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "location.0.address", "Address 2"),
+					resource.TestCheckResourceAttr(resourceName, "location.0.latitude", "22"),
+					resource.TestCheckResourceAttr(resourceName, "location.0.longitude", "-22"),
+					resource.TestCheckResourceAttr(resourceName, "model", "model2"),
+					resource.TestCheckResourceAttr(resourceName, "serial_number", "sn2"),
+					resource.TestCheckResourceAttrPair(resourceName, "site_id", site2ResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "type", "type2"),
+					resource.TestCheckResourceAttr(resourceName, "vendor", "vendor2"),
+				),
+			},
+		},
+	})
+}
 
 func testAccCheckDeviceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
@@ -156,6 +228,137 @@ resource "aws_networkmanager_global_network" "test" {
 
 resource "aws_networkmanager_device" "test" {
   global_network_id = aws_networkmanager_global_network.test.id
+}
+`, rName)
+}
+
+func testAccDeviceConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_device" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccDeviceConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_device" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  tags = {
+  	%[2]q = %[3]q
+	%[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccDeviceAllAttributesConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_site" "test1" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_site" "test2" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_device" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  description   = "description1"
+  model         = "model1"
+  serial_number = "sn1"
+  site_id       = aws_networkmanager_site.test1.id
+  type          = "type1"
+  vendor        = "vendor1"
+
+  location {
+    address   = "Address 1"
+    latitude  = "1.1"
+    longitude = "-1.1"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccDeviceAllAttributesUpdatedConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_site" "test1" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_site" "test2" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_device" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  description   = "description2"
+  model         = "model2"
+  serial_number = "sn2"
+  site_id       = aws_networkmanager_site.test2.id
+  type          = "type2"
+  vendor        = "vendor2"
+
+  location {
+    address   = "Address 2"
+    latitude  = "22"
+    longitude = "-22"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName)
 }
