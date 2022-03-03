@@ -20,6 +20,10 @@ resource "aws_kms_key" "mykey" {
 
 resource "aws_s3_bucket" "mybucket" {
   bucket = "mybucket"
+
+  lifecycle {
+    ignore_changes = [server_side_encryption_configuration]
+  }
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "example" {
