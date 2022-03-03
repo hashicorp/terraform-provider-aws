@@ -42,7 +42,6 @@ func ResourceFirewallDomainList() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MinItems: 0,
-				MaxItems: 255,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
