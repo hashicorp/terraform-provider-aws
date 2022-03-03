@@ -40,6 +40,7 @@ resource "aws_autoscaling_group" "bar" {
 ```
 
 ### Create predictive scaling policy using customized metrics
+
 ```terraform
 resource "aws_autoscaling_policy" "example" {
   autoscaling_group_name = "my-test-asg"
@@ -92,6 +93,7 @@ resource "aws_autoscaling_policy" "example" {
 ```
 
 ### Create predictive scaling policy using customized scaling and predefined load metric
+
 ```terraform
 resource "aws_autoscaling_policy" "example" {
   autoscaling_group_name = "my-test-asg"
@@ -124,6 +126,7 @@ resource "aws_autoscaling_policy" "example" {
   }
 }
 ```
+
 ## Argument Reference
 
 * `name` - (Required) The name of the policy.
@@ -246,7 +249,7 @@ The following arguments are supported:
 
 * `customized_capacity_metric_specification` - (Optional) The customized capacity metric specification. The field is only valid when you use `customized_load_metric_specification`
 * `customized_load_metric_specification` - (Optional) The customized load metric specification.
-* `customized_scaling_metric_specification` - (Optional) The customized scaling metric specification. 
+* `customized_scaling_metric_specification` - (Optional) The customized scaling metric specification.
 * `predefined_load_metric_specification` - (Optional) The predefined load metric specification.
 * `predefined_metric_pair_specification` - (Optional) The metric pair specification from which Amazon EC2 Auto Scaling determines the appropriate scaling metric and load metric to use.
 * `predefined_scaling_metric_specification` - (Optional) The predefined scaling metric specification.
@@ -279,14 +282,17 @@ The following arguments are supported:
 
 ##### customized_load_metric_specification
 The following arguments are supported:
+
 * `metric_data_queries` - (Required) A list of up to 10 structures that defines custom load metric in predictive scaling policy
 
 ##### customized_capacity_metric_specification
 The following arguments are supported:
+
 * `metric_data_queries` - (Required) A list of up to 10 structures that defines custom capacity metric in predictive scaling policy
 
 ##### metric_data_queries
 The following arguments are supported:
+
 * `expression` - (Optional) The math expression used on the returned metric. You must specify either `expression` or `metric_stat`, but not both.
 * `id` - (Required) A short name for the metric used in predictive scaling policy.
 * `metric_stat` - (Optional) A structure that defines CloudWatch metric to be used in predictive scaling policy. You must specify either `expression` or `metric_stat`, but not both.
@@ -295,18 +301,21 @@ The following arguments are supported:
 
 ##### metric_stat
 The following arguments are supported:
+
 * `metric` - (Required) A structure that defines the CloudWatch metric to return, including the metric name, namespace, and dimensions.
 * `stat` - (Required) The statistic of the metrics to return.
 * `unit` - (Optional) The unit of the metrics to return.
 
 ##### metric
 The following arguments are supported:
+
 * `dimensions` - (Optional) The dimensions of the metric.
 * `metric_name` - (Required) The name of the metric.
 * `namespace` - (Required) The namespace of the metric.
 
 ##### dimensions
 The following arguments are supported:
+
 * `name` - (Required) The name of the dimension.
 * `value` - (Required) The value of the dimension.
 
