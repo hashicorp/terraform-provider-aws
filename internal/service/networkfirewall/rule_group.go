@@ -185,7 +185,6 @@ func ResourceRuleGroup() *schema.Resource {
 															"destination": {
 																Type:     schema.TypeString,
 																Required: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
 															},
 															"destination_port": {
 																Type:     schema.TypeString,
@@ -204,7 +203,6 @@ func ResourceRuleGroup() *schema.Resource {
 															"source": {
 																Type:     schema.TypeString,
 																Required: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
 															},
 															"source_port": {
 																Type:     schema.TypeString,
