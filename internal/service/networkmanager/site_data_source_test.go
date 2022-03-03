@@ -4,82 +4,62 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/networkmanager"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceSite_basic(t *testing.T) {
+func TestAccNetworkManagerSiteDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_networkmanager_site.test"
-	dataSourceByIdName := "data.aws_networkmanager_site.test_by_id"
-	dataSourceByTagsName := "data.aws_networkmanager_site.test_by_tags"
 	resourceName := "aws_networkmanager_site.test"
-	resourceGlobalNetworkName := "aws_networkmanager_global_network.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsSiteDestroy,
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceSiteConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
+				Config: testAccSiteDataSourceConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "global_network_id", resourceGlobalNetworkName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Name", resourceName, "tags.Name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.OtherTag", resourceName, "tags.OtherTag"),
-					resource.TestCheckResourceAttr(dataSourceName, "location.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "location.0.address", ""),
-					resource.TestCheckResourceAttr(dataSourceName, "location.0.latitude", "18.0029784"),
-					resource.TestCheckResourceAttr(dataSourceName, "location.0.longitude", "-76.7897987"),
-					resource.TestCheckResourceAttrPair(dataSourceByIdName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceByTagsName, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "global_network_id", resourceName, "global_network_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "location.#", resourceName, "location.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "site_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 				),
 			},
 		},
 	})
 }
 
-func testAccDataSourceSiteConfig() string {
+func testAccSiteDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
-  description = "test"
+  tags = {
+    Name  = %[1]q
+  }
 }
 
 resource "aws_networkmanager_site" "test" {
- description       = "test"
- global_network_id = aws_networkmanager_global_network.test.id
+  description       = "test"
+  global_network_id = aws_networkmanager_global_network.test.id
 
   location {
-   latitude  = "18.0029784"	
-   longitude = "-76.7897987"
+    latitude  = "18.0029784"	
+    longitude = "-76.7897987"
   }
 
   tags = {
-    Name     = "terraform-testacc-site-%d"
-    OtherTag = "some-value"
+    Name  = %[1]q
   }
 }
 
 data "aws_networkmanager_site" "test" {
-  global_network_id = aws_networkmanager_site.test.global_network_id
-}
-
-data "aws_networkmanager_site" "test_by_id" {
   global_network_id = aws_networkmanager_global_network.test.id
-  id                = aws_networkmanager_site.test.id
+  site_id           = aws_networkmanager_site.test.id
 }
-
-data "aws_networkmanager_site" "test_by_tags" {
-  global_network_id = aws_networkmanager_global_network.test.id
-
-  tags = {
-	Name = aws_networkmanager_site.test.tags["Name"]
-  }
-}
-`, sdkacctest.RandInt())
+`, rName)
 }
