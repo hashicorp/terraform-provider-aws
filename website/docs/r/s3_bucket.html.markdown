@@ -12,6 +12,10 @@ Provides a S3 bucket resource.
 
 -> This functionality is for managing S3 in an AWS Partition. To manage [S3 on Outposts](https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html), see the [`aws_s3control_bucket`](/docs/providers/aws/r/s3control_bucket.html) resource.
 
+~> **NOTE on S3 Bucket Server Side Encryption Configuration:** S3 Bucket Server Side Encryption can be configured in either the standalone resource [`aws_s3_bucket_server_side_encryption_configuration`](s3_bucket_server_side_encryption_configuration.html)
+or with the deprecated parameter `server_side_encryption_configuration` in the resource `aws_s3_bucket`.
+Configuring with both will cause inconsistencies and may overwrite configuration.
+
 ## Example Usage
 
 ### Private Bucket w/ Tags
@@ -305,6 +309,9 @@ resource "aws_s3_bucket" "source" {
 
 ### Enable Default Server Side Encryption
 
+-> **NOTE:** The parameter `server_side_encryption_configuration` is deprecated.
+Use the resource [`aws_s3_bucket_server_side_encryption_configuration`](s3_bucket_server_side_encryption_configuration.html) instead.
+
 ```terraform
 resource "aws_kms_key" "mykey" {
   description             = "This key is used to encrypt bucket objects"
@@ -370,7 +377,8 @@ Can be either `BucketOwner` or `Requester`. By default, the owner of the S3 buck
 the costs of any data transfer. See [Requester Pays Buckets](http://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html)
 developer guide for more information.
 * `replication_configuration` - (Optional) A configuration of [replication configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html) (documented below).
-* `server_side_encryption_configuration` - (Optional) A configuration of [server-side encryption configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html) (documented below)
+* `server_side_encryption_configuration` - (Optional, **Deprecated**) A configuration of [server-side encryption configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html) (documented below).
+  Use the resource [`aws_s3_bucket_server_side_encryption_configuration`](s3_bucket_server_side_encryption_configuration.html) instead.
 * `object_lock_configuration` - (Optional) A configuration of [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html) (documented below)
 
 ~> **NOTE:** You cannot use `acceleration_status` in `cn-north-1` or `us-gov-west-1`

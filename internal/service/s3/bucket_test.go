@@ -853,38 +853,38 @@ func TestAccS3Bucket_Security_enableDefaultEncryptionWhenAES256IsUsed(t *testing
 	})
 }
 
-func TestAccS3Bucket_Security_disableDefaultEncryptionWhenDefaultEncryptionIsEnabled(t *testing.T) {
-	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	resourceName := "aws_s3_bucket.arbitrary"
+// func TestAccS3Bucket_Security_disableDefaultEncryptionWhenDefaultEncryptionIsEnabled(t *testing.T) {
+// 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+// 	resourceName := "aws_s3_bucket.arbitrary"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBucketEnableDefaultEncryptionWithDefaultKey(bucketName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
-			},
-			{
-				Config: testAccBucketDisableDefaultEncryption(bucketName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "0"),
-				),
-			},
-		},
-	})
-}
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck:     func() { acctest.PreCheck(t) },
+// 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+// 		Providers:    acctest.Providers,
+// 		CheckDestroy: testAccCheckBucketDestroy,
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccBucketEnableDefaultEncryptionWithDefaultKey(bucketName),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckBucketExists(resourceName),
+// 				),
+// 			},
+// 			{
+// 				ResourceName:            resourceName,
+// 				ImportState:             true,
+// 				ImportStateVerify:       true,
+// 				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+// 			},
+// 			{
+// 				Config: testAccBucketDisableDefaultEncryption(bucketName),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckBucketExists(resourceName),
+// 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "0"),
+// 				),
+// 			},
+// 		},
+// 	})
+// }
 
 func TestAccS3Bucket_Basic_keyEnabled(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
