@@ -130,7 +130,7 @@ func resourceIdentityProviderRead(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] Cognito Identity Provider %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -213,7 +213,7 @@ func resourceIdentityProviderDelete(d *schema.ResourceData, meta interface{}) er
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return err

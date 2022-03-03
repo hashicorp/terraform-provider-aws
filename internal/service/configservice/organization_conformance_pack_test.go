@@ -631,8 +631,12 @@ EOT
 
 resource "aws_s3_bucket" "test" {
   bucket        = %q
-  acl           = "private"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 `, rName, bName))
 }
@@ -649,8 +653,12 @@ resource "aws_config_organization_conformance_pack" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket        = %[2]q
-  acl           = "private"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_s3_object" "test" {

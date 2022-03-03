@@ -15,7 +15,7 @@ import (
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
-func TestAccIAMOpenidConnectProvider_basic(t *testing.T) {
+func TestAccIAMOpenIDConnectProvider_basic(t *testing.T) {
 	rString := sdkacctest.RandString(5)
 	url := "accounts.testle.com/" + rString
 	resourceName := "aws_iam_openid_connect_provider.test"
@@ -62,7 +62,7 @@ func TestAccIAMOpenidConnectProvider_basic(t *testing.T) {
 	})
 }
 
-func TestAccIAMOpenidConnectProvider_tags(t *testing.T) {
+func TestAccIAMOpenIDConnectProvider_tags(t *testing.T) {
 	rString := sdkacctest.RandString(5)
 	resourceName := "aws_iam_openid_connect_provider.test"
 
@@ -107,7 +107,7 @@ func TestAccIAMOpenidConnectProvider_tags(t *testing.T) {
 	})
 }
 
-func TestAccIAMOpenidConnectProvider_disappears(t *testing.T) {
+func TestAccIAMOpenIDConnectProvider_disappears(t *testing.T) {
 	rString := sdkacctest.RandString(5)
 	resourceName := "aws_iam_openid_connect_provider.test"
 
@@ -142,7 +142,7 @@ func testAccCheckIAMOpenIDConnectProviderDestroy(s *terraform.State) error {
 		}
 		out, err := conn.GetOpenIDConnectProvider(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 				// none found, that's good
 				return nil
 			}

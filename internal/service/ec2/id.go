@@ -7,25 +7,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 )
 
-const clientVpnRouteIDSeparator = ","
-
-func ClientVPNRouteCreateID(endpointID, targetSubnetID, destinationCidr string) string {
-	parts := []string{endpointID, targetSubnetID, destinationCidr}
-	id := strings.Join(parts, clientVpnRouteIDSeparator)
-	return id
-}
-
-func ClientVPNRouteParseID(id string) (string, string, string, error) {
-	parts := strings.Split(id, clientVpnRouteIDSeparator)
-	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
-		return parts[0], parts[1], parts[2], nil
-	}
-
-	return "", "", "",
-		fmt.Errorf("unexpected format for ID (%q), expected endpoint-id"+clientVpnRouteIDSeparator+
-			"target-subnet-id"+clientVpnRouteIDSeparator+"destination-cidr-block", id)
-}
-
 const managedPrefixListEntryIDSeparator = ","
 
 func ManagedPrefixListEntryCreateID(prefixListID, cidrBlock string) string {

@@ -461,7 +461,7 @@ func resourceGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error 
 		VirtualGatewayName: aws.String(d.Get("virtual_gateway_name").(string)),
 	})
 
-	if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		return nil
 	}
 

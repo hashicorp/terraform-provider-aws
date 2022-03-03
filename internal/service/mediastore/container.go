@@ -96,7 +96,7 @@ func resourceContainerRead(d *schema.ResourceData, meta interface{}) error {
 		ContainerName: aws.String(d.Id()),
 	}
 	resp, err := conn.DescribeContainer(input)
-	if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
 		log.Printf("[WARN] No Container found: %s, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -153,7 +153,7 @@ func resourceContainerDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 	_, err := conn.DeleteContainer(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
 			return nil
 		}
 		return err
@@ -165,7 +165,7 @@ func resourceContainerDelete(d *schema.ResourceData, meta interface{}) error {
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeContainer(dcinput)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
 				return nil
 			}
 			return resource.NonRetryableError(err)

@@ -71,12 +71,12 @@ A `config` block supports the following arguments:
 * `end_time` - (Required) A end time block specifies the time that your contact center closes. The `end_time` is documented below.
 * `start_time` - (Required) A start time block specifies the time that your contact center opens. The `start_time` is documented below.
 
-A `end_time` blocks supports the following arguments:
+A `end_time` block supports the following arguments:
 
 * `hours` - (Required) Specifies the hour of closing.
 * `minutes` - (Required) Specifies the minute of closing.
 
-A `start_time` blocks supports the following arguments:
+A `start_time` block supports the following arguments:
 
 * `hours` - (Required) Specifies the hour of opening.
 * `minutes` - (Required) Specifies the minute of opening.
@@ -85,17 +85,11 @@ A `start_time` blocks supports the following arguments:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `hours_of_operation_arn` - The Amazon Resource Name (ARN) of the Hours of Operation.
+* `arn` - The Amazon Resource Name (ARN) of the Hours of Operation.
+* `hours_of_operation_arn` - (**Deprecated**) The Amazon Resource Name (ARN) of the Hours of Operation.
 * `hours_of_operation_id` - The identifier for the hours of operation.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Hours of Operation separated by a colon (`:`).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
-
-### Timeouts
-
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
-
-* `create` - (Defaults to 5 min) Used when creating the Hours of Operation.
-* `update` - (Defaults to 5 min) Used when updating the Hours of Operation.
 
 ## Import
 

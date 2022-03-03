@@ -44,14 +44,11 @@ func ResourceMountTarget() *schema.Resource {
 			},
 
 			"ip_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.Any(
-					validation.IsIPv4Address,
-					validation.StringIsEmpty,
-				),
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsIPv4Address,
 			},
 
 			"security_groups": {
@@ -193,7 +190,7 @@ func resourceMountTargetRead(d *schema.ResourceData, meta interface{}) error {
 		MountTargetId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, efs.ErrCodeMountTargetNotFound, "") {
+		if tfawserr.ErrCodeEquals(err, efs.ErrCodeMountTargetNotFound) {
 			// The EFS mount target could not be found,
 			// which would indicate that it might be
 			// already deleted.
@@ -287,7 +284,7 @@ func WaitForDeleteMountTarget(conn *efs.EFS, id string, timeout time.Duration) e
 				MountTargetId: aws.String(id),
 			})
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, efs.ErrCodeMountTargetNotFound, "") {
+				if tfawserr.ErrCodeEquals(err, efs.ErrCodeMountTargetNotFound) {
 					return nil, "", nil
 				}
 

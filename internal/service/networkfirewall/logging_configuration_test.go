@@ -745,12 +745,16 @@ func testAccNetworkFirewallLoggingConfigurationS3BucketDependencyConfig(rName st
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %q
-  acl           = "private"
   force_destroy = true
 
   lifecycle {
     create_before_destroy = true
   }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 `, rName)
 }
@@ -839,8 +843,12 @@ EOF
 
 resource "aws_s3_bucket" "logs" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "logs_acl" {
+  bucket = aws_s3_bucket.logs.id
+  acl    = "private"
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {

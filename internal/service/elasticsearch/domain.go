@@ -264,13 +264,10 @@ func ResourceDomain() *schema.Resource {
 							Optional: true,
 						},
 						"volume_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ValidateFunc: validation.Any(
-								validation.StringIsEmpty,
-								validation.StringInSlice(elasticsearch.VolumeType_Values(), false),
-							),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(elasticsearch.VolumeType_Values(), false),
 						},
 					},
 				},
@@ -978,7 +975,7 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 		DomainName: aws.String(domainName),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, elasticsearch.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, elasticsearch.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return err

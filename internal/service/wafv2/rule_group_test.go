@@ -1711,7 +1711,7 @@ func testAccCheckRuleGroupDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the RuleGroup is already destroyed
-		if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
 			return nil
 		}
 

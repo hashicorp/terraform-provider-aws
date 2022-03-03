@@ -160,9 +160,9 @@ func resourceGrantCreate(d *schema.ResourceData, meta interface{}) error {
 			// Error Codes: https://docs.aws.amazon.com/sdk-for-go/api/service/kms/#KMS.CreateGrant
 			// Under some circumstances a newly created IAM Role doesn't show up and causes
 			// an InvalidArnException to be thrown.
-			if tfawserr.ErrMessageContains(err, kms.ErrCodeDependencyTimeoutException, "") ||
-				tfawserr.ErrMessageContains(err, kms.ErrCodeInternalException, "") ||
-				tfawserr.ErrMessageContains(err, kms.ErrCodeInvalidArnException, "") {
+			if tfawserr.ErrCodeEquals(err, kms.ErrCodeDependencyTimeoutException) ||
+				tfawserr.ErrCodeEquals(err, kms.ErrCodeInternalException) ||
+				tfawserr.ErrCodeEquals(err, kms.ErrCodeInvalidArnException) {
 				return resource.RetryableError(
 					fmt.Errorf("error creating KMS Grant for Key (%s), retrying: %w", keyId, err))
 			}
@@ -275,7 +275,7 @@ func resourceGrantDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, kms.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
 			return nil
 		}
 		return err
@@ -376,9 +376,9 @@ func findKmsGrantById(conn *kms.KMS, keyId string, grantId string, marker *strin
 		out, err = conn.ListGrants(&input)
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, kms.ErrCodeDependencyTimeoutException, "") ||
-				tfawserr.ErrMessageContains(err, kms.ErrCodeInternalException, "") ||
-				tfawserr.ErrMessageContains(err, kms.ErrCodeInvalidArnException, "") {
+			if tfawserr.ErrCodeEquals(err, kms.ErrCodeDependencyTimeoutException) ||
+				tfawserr.ErrCodeEquals(err, kms.ErrCodeInternalException) ||
+				tfawserr.ErrCodeEquals(err, kms.ErrCodeInvalidArnException) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)

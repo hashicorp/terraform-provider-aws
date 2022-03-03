@@ -106,7 +106,7 @@ func resourceByteMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetByteMatchSet(params)
 
-	if tfawserr.ErrMessageContains(err, waf.ErrCodeNonexistentItemException, "") {
+	if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
 		log.Printf("[WARN] WAF Regional Byte Set Match (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

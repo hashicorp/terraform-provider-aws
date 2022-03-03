@@ -128,7 +128,7 @@ func resourceFirewallRuleRead(d *schema.ResourceData, meta interface{}) error {
 
 	rule, err := FindFirewallRuleByID(conn, d.Id())
 
-	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Route53 Resolver DNS Firewall rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -201,7 +201,7 @@ func resourceFirewallRuleDelete(d *schema.ResourceData, meta interface{}) error 
 		FirewallDomainListId: aws.String(d.Get("firewall_domain_list_id").(string)),
 	})
 
-	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 

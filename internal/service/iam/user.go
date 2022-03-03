@@ -109,7 +109,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed creating IAM User (%s): %s", name, err)
+		return fmt.Errorf("failed creating IAM User (%s): %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(createResp.User.UserName))
@@ -187,12 +187,6 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags := KeyValueTags(output.User.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] failed listing tags for IAM User (%s): %s", d.Id(), err)
-		return nil
-	}
-
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
@@ -221,12 +215,12 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Println("[DEBUG] Update IAM User request:", request)
 		_, err := conn.UpdateUser(request)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 				log.Printf("[WARN] No IAM user by name (%s) found", d.Id())
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("Error updating IAM User %s: %s", d.Id(), err)
+			return fmt.Errorf("Error updating IAM User %s: %w", d.Id(), err)
 		}
 
 		d.SetId(nn.(string))
@@ -241,7 +235,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			_, err := conn.PutUserPermissionsBoundary(input)
 			if err != nil {
-				return fmt.Errorf("error updating IAM User permissions boundary: %s", err)
+				return fmt.Errorf("error updating IAM User permissions boundary: %w", err)
 			}
 		} else {
 			input := &iam.DeleteUserPermissionsBoundaryInput{
@@ -249,7 +243,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			_, err := conn.DeleteUserPermissionsBoundary(input)
 			if err != nil {
-				return fmt.Errorf("error deleting IAM User permissions boundary: %s", err)
+				return fmt.Errorf("error deleting IAM User permissions boundary: %w", err)
 			}
 		}
 	}
@@ -284,27 +278,31 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 	// All access keys, MFA devices and login profile for the user must be removed
 	if d.Get("force_destroy").(bool) {
 		if err := DeleteUserAccessKeys(conn, d.Id()); err != nil {
-			return fmt.Errorf("error removing IAM User (%s) access keys: %s", d.Id(), err)
+			return fmt.Errorf("error removing IAM User (%s) access keys: %w", d.Id(), err)
 		}
 
 		if err := DeleteUserSSHKeys(conn, d.Id()); err != nil {
-			return fmt.Errorf("error removing IAM User (%s) SSH keys: %s", d.Id(), err)
+			return fmt.Errorf("error removing IAM User (%s) SSH keys: %w", d.Id(), err)
 		}
 
 		if err := DeleteUserVirtualMFADevices(conn, d.Id()); err != nil {
-			return fmt.Errorf("error removing IAM User (%s) Virtual MFA devices: %s", d.Id(), err)
+			return fmt.Errorf("error removing IAM User (%s) Virtual MFA devices: %w", d.Id(), err)
 		}
 
 		if err := DeactivateUserMFADevices(conn, d.Id()); err != nil {
-			return fmt.Errorf("error removing IAM User (%s) MFA devices: %s", d.Id(), err)
+			return fmt.Errorf("error removing IAM User (%s) MFA devices: %w", d.Id(), err)
 		}
 
 		if err := DeleteUserLoginProfile(conn, d.Id()); err != nil {
-			return fmt.Errorf("error removing IAM User (%s) login profile: %s", d.Id(), err)
+			return fmt.Errorf("error removing IAM User (%s) login profile: %w", d.Id(), err)
 		}
 
 		if err := deleteUserSigningCertificates(conn, d.Id()); err != nil {
-			return fmt.Errorf("error removing IAM User (%s) signing certificate: %s", d.Id(), err)
+			return fmt.Errorf("error removing IAM User (%s) signing certificate: %w", d.Id(), err)
+		}
+
+		if err := DeleteServiceSpecificCredentials(conn, d.Id()); err != nil {
+			return fmt.Errorf("error removing IAM User (%s) Service Specific Credentials: %w", d.Id(), err)
 		}
 	}
 
@@ -315,12 +313,12 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Println("[DEBUG] Delete IAM User request:", deleteUserInput)
 	_, err := conn.DeleteUser(deleteUserInput)
 
-	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting IAM User %s: %s", d.Id(), err)
+		return fmt.Errorf("Error deleting IAM User %s: %w", d.Id(), err)
 	}
 
 	return nil
@@ -367,7 +365,7 @@ func DeleteUserSSHKeys(svc *iam.IAM, username string) error {
 	}
 	err = svc.ListSSHPublicKeysPages(listSSHPublicKeys, pageOfListSSHPublicKeys)
 	if err != nil {
-		return fmt.Errorf("Error removing public SSH keys of user %s: %s", username, err)
+		return fmt.Errorf("Error removing public SSH keys of user %s: %w", username, err)
 	}
 	for _, k := range publicKeys {
 		_, err := svc.DeleteSSHPublicKey(&iam.DeleteSSHPublicKeyInput{
@@ -375,7 +373,7 @@ func DeleteUserSSHKeys(svc *iam.IAM, username string) error {
 			SSHPublicKeyId: aws.String(k),
 		})
 		if err != nil {
-			return fmt.Errorf("Error deleting public SSH key %s: %s", k, err)
+			return fmt.Errorf("Error deleting public SSH key %s: %w", k, err)
 		}
 	}
 
@@ -400,7 +398,7 @@ func DeleteUserVirtualMFADevices(svc *iam.IAM, username string) error {
 	}
 	err = svc.ListVirtualMFADevicesPages(listVirtualMFADevices, pageOfVirtualMFADevices)
 	if err != nil {
-		return fmt.Errorf("Error removing Virtual MFA devices of user %s: %s", username, err)
+		return fmt.Errorf("Error removing Virtual MFA devices of user %s: %w", username, err)
 	}
 	for _, m := range VirtualMFADevices {
 		_, err := svc.DeactivateMFADevice(&iam.DeactivateMFADeviceInput{
@@ -408,13 +406,13 @@ func DeleteUserVirtualMFADevices(svc *iam.IAM, username string) error {
 			SerialNumber: aws.String(m),
 		})
 		if err != nil {
-			return fmt.Errorf("Error deactivating Virtual MFA device %s: %s", m, err)
+			return fmt.Errorf("Error deactivating Virtual MFA device %s: %w", m, err)
 		}
 		_, err = svc.DeleteVirtualMFADevice(&iam.DeleteVirtualMFADeviceInput{
 			SerialNumber: aws.String(m),
 		})
 		if err != nil {
-			return fmt.Errorf("Error deleting Virtual MFA device %s: %s", m, err)
+			return fmt.Errorf("Error deleting Virtual MFA device %s: %w", m, err)
 		}
 	}
 
@@ -436,7 +434,7 @@ func DeactivateUserMFADevices(svc *iam.IAM, username string) error {
 	}
 	err = svc.ListMFADevicesPages(listMFADevices, pageOfMFADevices)
 	if err != nil {
-		return fmt.Errorf("Error removing MFA devices of user %s: %s", username, err)
+		return fmt.Errorf("Error removing MFA devices of user %s: %w", username, err)
 	}
 	for _, m := range MFADevices {
 		_, err := svc.DeactivateMFADevice(&iam.DeactivateMFADeviceInput{
@@ -444,7 +442,7 @@ func DeactivateUserMFADevices(svc *iam.IAM, username string) error {
 			SerialNumber: aws.String(m),
 		})
 		if err != nil {
-			return fmt.Errorf("Error deactivating MFA device %s: %s", m, err)
+			return fmt.Errorf("Error deactivating MFA device %s: %w", m, err)
 		}
 	}
 
@@ -459,11 +457,11 @@ func DeleteUserLoginProfile(svc *iam.IAM, username string) error {
 	err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		_, err = svc.DeleteLoginProfile(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 				return nil
 			}
 			// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
-			if tfawserr.ErrMessageContains(err, iam.ErrCodeEntityTemporarilyUnmodifiableException, "") {
+			if tfawserr.ErrCodeEquals(err, iam.ErrCodeEntityTemporarilyUnmodifiableException) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -474,7 +472,7 @@ func DeleteUserLoginProfile(svc *iam.IAM, username string) error {
 		_, err = svc.DeleteLoginProfile(input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting Account Login Profile: %s", err)
+		return fmt.Errorf("Error deleting Account Login Profile: %w", err)
 	}
 
 	return nil
@@ -494,7 +492,7 @@ func DeleteUserAccessKeys(svc *iam.IAM, username string) error {
 	}
 	err = svc.ListAccessKeysPages(listAccessKeys, pageOfAccessKeys)
 	if err != nil {
-		return fmt.Errorf("Error removing access keys of user %s: %s", username, err)
+		return fmt.Errorf("Error removing access keys of user %s: %w", username, err)
 	}
 	for _, k := range accessKeys {
 		_, err := svc.DeleteAccessKey(&iam.DeleteAccessKeyInput{
@@ -502,7 +500,7 @@ func DeleteUserAccessKeys(svc *iam.IAM, username string) error {
 			AccessKeyId: aws.String(k),
 		})
 		if err != nil {
-			return fmt.Errorf("Error deleting access key %s: %s", k, err)
+			return fmt.Errorf("Error deleting access key %s: %w", k, err)
 		}
 	}
 
@@ -523,7 +521,7 @@ func deleteUserSigningCertificates(svc *iam.IAM, userName string) error {
 			return !lastPage
 		})
 	if err != nil {
-		return fmt.Errorf("Error removing signing certificates of user %s: %s", userName, err)
+		return fmt.Errorf("Error removing signing certificates of user %s: %w", userName, err)
 	}
 
 	for _, c := range certificateIDList {
@@ -532,7 +530,29 @@ func deleteUserSigningCertificates(svc *iam.IAM, userName string) error {
 			UserName:      aws.String(userName),
 		})
 		if err != nil {
-			return fmt.Errorf("Error deleting signing certificate %s: %s", c, err)
+			return fmt.Errorf("Error deleting signing certificate %s: %w", c, err)
+		}
+	}
+
+	return nil
+}
+
+func DeleteServiceSpecificCredentials(svc *iam.IAM, username string) error {
+	input := &iam.ListServiceSpecificCredentialsInput{
+		UserName: aws.String(username),
+	}
+
+	output, err := svc.ListServiceSpecificCredentials(input)
+	if err != nil {
+		return fmt.Errorf("Error listing Service Specific Credentials of user %s: %w", username, err)
+	}
+	for _, m := range output.ServiceSpecificCredentials {
+		_, err := svc.DeleteServiceSpecificCredential(&iam.DeleteServiceSpecificCredentialInput{
+			UserName:                    aws.String(username),
+			ServiceSpecificCredentialId: m.ServiceSpecificCredentialId,
+		})
+		if err != nil {
+			return fmt.Errorf("Error deleting Service Specific Credentials %s: %w", m, err)
 		}
 	}
 

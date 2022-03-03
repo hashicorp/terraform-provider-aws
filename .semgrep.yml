@@ -181,26 +181,26 @@ rules:
 
   - id: helper-schema-Set-extraneous-NewSet-with-flattenStringList
     languages: [go]
-    message: Prefer `flattenStringSet()` function for casting a list of string pointers to a set
+    message: Prefer `flex.FlattenStringSet()` function for casting a list of string pointers to a set
     paths:
       include:
         - internal/
-    pattern: schema.NewSet(schema.HashString, flattenStringList($APIOBJECT))
+    pattern: schema.NewSet(schema.HashString, flex.FlattenStringList($APIOBJECT))
     severity: WARNING
 
   - id: helper-schema-Set-extraneous-expandStringList-with-List
     languages: [go]
-    message: Prefer `expandStringSet()` function for casting a set to a list of string pointers
+    message: Prefer `flex.ExpandStringSet()` function for casting a set to a list of string pointers
     paths:
       include:
         - internal/
     patterns:
       - pattern-either:
-        - pattern: expandStringList($SET.List())
+        - pattern: flex.ExpandStringList($SET.List())
         - pattern: |
             $LIST := $SET.List()
             ...
-            expandStringList($LIST)
+            flex.ExpandStringList($LIST)
     severity: WARNING
 
   - id: helper-schema-ResourceData-GetOk-with-extraneous-conditional
@@ -410,7 +410,7 @@ rules:
 
   - id: helper-schema-TimeoutError-check-doesnt-return-output
     languages: [go]
-    message: If the resource.Retry() or resource.RetryContext() function returns a value, ensure the isResourceTimeoutError() check does as well
+    message: If the resource.Retry(), resource.RetryContext(), or tfresource.RetryConfigContext() function returns a value, ensure the isResourceTimeoutError() check does as well
     paths:
       exclude:
         - "*_test.go"
@@ -439,6 +439,14 @@ rules:
               })
               ...
               if isResourceTimeoutError($ERR) { ... }
+          - pattern-not-inside: |
+              $ERR = tfresource.RetryConfigContext(..., func() *resource.RetryError {
+                ...
+                _, $ERR2 = $CONN.$FUNC(...)
+                ...
+              })
+              ...
+              if tfresource.TimedOut($ERR) { ... }
         - patterns:
           - pattern: |
               if tfresource.TimedOut($ERR) {
@@ -454,6 +462,14 @@ rules:
               if tfresource.TimedOut($ERR) { ... }
           - pattern-not-inside: |
               $ERR = resource.RetryContext(..., func() *resource.RetryError {
+                ...
+                _, $ERR2 = $CONN.$FUNC(...)
+                ...
+              })
+              ...
+              if tfresource.TimedOut($ERR) { ... }
+          - pattern-not-inside: |
+              $ERR = tfresource.RetryConfigContext(..., func() *resource.RetryError {
                 ...
                 _, $ERR2 = $CONN.$FUNC(...)
                 ...
@@ -683,3 +699,23 @@ rules:
           metavariable: "$FUNC"
           regex: "^resource\\w*(Delete|Disable)$"
     severity: WARNING
+
+  - id: avoid-string-is-empty-validation
+    languages: [go]
+    message: Empty strings should not be included in validation
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern: validation.Any(..., validation.StringIsEmpty, ...)
+    severity: ERROR
+
+  - id: use-error-code-equals-if-not-checking-message
+    languages: [go]
+    message: Use tfawserr.ErrCodeEquals() when message parameter is empty string
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern: tfawserr.ErrMessageContains(err, ..., "")
+    severity: ERROR

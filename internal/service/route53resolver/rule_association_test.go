@@ -57,7 +57,7 @@ func testAccCheckRoute53ResolverRuleAssociationDestroy(s *terraform.State) error
 			ResolverRuleAssociationId: aws.String(rs.Primary.ID),
 		})
 		// Verify the error is what we want
-		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 			continue
 		}
 		if err != nil {

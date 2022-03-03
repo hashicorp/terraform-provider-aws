@@ -527,7 +527,7 @@ func testAccCheckReplicationInstanceDestroy(s *terraform.State) error {
 			},
 		})
 
-		if tfawserr.ErrMessageContains(err, dms.ErrCodeResourceNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 			continue
 		}
 

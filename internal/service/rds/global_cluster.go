@@ -165,7 +165,7 @@ func resourceGlobalClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	globalCluster, err := DescribeGlobalCluster(conn, d.Id())
 
-	if tfawserr.ErrMessageContains(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) {
 		log.Printf("[WARN] RDS Global Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -221,7 +221,7 @@ func resourceGlobalClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] Updating RDS Global Cluster (%s): %s", d.Id(), input)
 	_, err := conn.ModifyGlobalCluster(input)
 
-	if tfawserr.ErrMessageContains(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) {
 		return nil
 	}
 
@@ -313,7 +313,7 @@ func resourceGlobalClusterDelete(d *schema.ResourceData, meta interface{}) error
 		_, err = conn.DeleteGlobalCluster(input)
 	}
 
-	if tfawserr.ErrMessageContains(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) {
 		return nil
 	}
 
@@ -418,7 +418,7 @@ func rdsGlobalClusterRefreshFunc(conn *rds.RDS, globalClusterID string) resource
 	return func() (interface{}, string, error) {
 		globalCluster, err := DescribeGlobalCluster(conn, globalClusterID)
 
-		if tfawserr.ErrMessageContains(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) {
 			return nil, "deleted", nil
 		}
 
@@ -529,7 +529,7 @@ func resourceGlobalClusterUpgradeMajorEngineVersion(clusterId string, engineVers
 	err := resource.Retry(rdsClusterInitiateUpgradeTimeout, func() *resource.RetryError {
 		_, err := conn.ModifyGlobalCluster(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) {
 				return resource.NonRetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "ModifyGlobalCluster only supports Major Version Upgrades. To patch the members of your global cluster to a newer minor version you need to call ModifyDbCluster in each one of them.") {
@@ -567,7 +567,7 @@ func resourceGlobalClusterUpgradeMinorEngineVersion(clusterMembers *schema.Set, 
 						return resource.NonRetryableError(err)
 					}
 
-					if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "") {
+					if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidDBClusterStateFault) {
 						return resource.RetryableError(err)
 					}
 					return resource.NonRetryableError(err)

@@ -498,9 +498,33 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EKSConn
 
 	log.Printf("[DEBUG] Deleting EKS Cluster: %s", d.Id())
-	_, err := conn.DeleteCluster(&eks.DeleteClusterInput{
+
+	input := &eks.DeleteClusterInput{
 		Name: aws.String(d.Id()),
+	}
+
+	// If a cluster is scaling up due to load a delete request will fail
+	// This is a temporary workaround until EKS supports multiple parallel mutating operations
+	err := tfresource.RetryConfigContext(context.Background(), 0*time.Second, 1*time.Minute, 0*time.Second, 30*time.Second, clusterDeleteRetryTimeout, func() *resource.RetryError {
+		var err error
+
+		_, err = conn.DeleteCluster(input)
+
+		if tfawserr.ErrMessageContains(err, eks.ErrCodeResourceInUseException, "in progress") {
+			log.Printf("[DEBUG] eks cluster update in progress: %v", err)
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
 	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.DeleteCluster(input)
+	}
 
 	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
 		return nil
@@ -516,9 +540,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting EKS Cluster (%s): %w", d.Id(), err)
 	}
 
-	_, err = waitClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-
-	if err != nil {
+	if _, err = waitClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for EKS Cluster (%s) to delete: %w", d.Id(), err)
 	}
 

@@ -185,10 +185,6 @@ func ResourceRuleGroup() *schema.Resource {
 															"destination": {
 																Type:     schema.TypeString,
 																Required: true,
-																ValidateFunc: validation.Any(
-																	verify.ValidIPv4CIDRNetworkAddress,
-																	validation.StringInSlice([]string{networkfirewall.StatefulRuleDirectionAny}, false),
-																),
 															},
 															"destination_port": {
 																Type:     schema.TypeString,
@@ -207,10 +203,6 @@ func ResourceRuleGroup() *schema.Resource {
 															"source": {
 																Type:     schema.TypeString,
 																Required: true,
-																ValidateFunc: validation.Any(
-																	verify.ValidIPv4CIDRNetworkAddress,
-																	validation.StringInSlice([]string{networkfirewall.StatefulRuleDirectionAny}, false),
-																),
 															},
 															"source_port": {
 																Type:     schema.TypeString,

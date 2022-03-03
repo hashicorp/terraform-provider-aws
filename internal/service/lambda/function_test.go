@@ -3414,15 +3414,25 @@ func testAccFunctionConfig_s3(bucketName, key, path, roleName, funcName string) 
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "artifacts" {
   bucket        = "%s"
-  acl           = "private"
   force_destroy = true
+}
 
-  versioning {
-    enabled = true
+resource "aws_s3_bucket_acl" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_versioning" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
 resource "aws_s3_object" "o" {
+  # Must have versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.artifacts]
+
   bucket = aws_s3_bucket.artifacts.bucket
   key    = "%s"
   source = "%s"
@@ -3465,8 +3475,12 @@ func testAccFunctionConfig_s3_unversioned_tpl(bucketName, roleName, funcName, ke
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "artifacts" {
   bucket        = "%s"
-  acl           = "private"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+  acl    = "private"
 }
 
 resource "aws_s3_object" "o" {

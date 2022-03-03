@@ -16,6 +16,8 @@ when using autoscaling policies. It's good practice to pick either
 or [dynamic](https://docs.aws.amazon.com/AutoScaling/latest/DeveloperGuide/as-scale-based-on-demand.html)
 (policy-based) scaling.
 
+> **Hands-on:** Try the [Manage AWS Auto Scaling Groups](https://learn.hashicorp.com/tutorials/terraform/aws-asg?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) tutorial on HashiCorp Learn.
+
 ## Example Usage
 
 ```terraform
@@ -36,6 +38,94 @@ resource "aws_autoscaling_group" "bar" {
   health_check_type         = "ELB"
   force_delete              = true
   launch_configuration      = aws_launch_configuration.foo.name
+}
+```
+
+### Create predictive scaling policy using customized metrics
+
+```terraform
+resource "aws_autoscaling_policy" "example" {
+  autoscaling_group_name = "my-test-asg"
+  name                   = "foo"
+  policy_type            = "PredictiveScaling"
+  predictive_scaling_configuration {
+    metric_specification {
+      target_value = 10
+      customized_load_metric_specification {
+        metric_data_queries {
+          id         = "load_sum"
+          expression = "SUM(SEARCH('{AWS/EC2,AutoScalingGroupName} MetricName=\"CPUUtilization\" my-test-asg', 'Sum', 3600))"
+        }
+      }
+      customized_scaling_metric_specification {
+        metric_data_queries {
+          id = "scaling"
+          metric_stat {
+            metric {
+              metric_name = "CPUUtilization"
+              namespace   = "AWS/EC2"
+              dimensions {
+                name  = "AutoScalingGroupName"
+                value = "my-test-asg"
+              }
+            }
+            stat = "Average"
+          }
+        }
+      }
+      customized_capacity_metric_specification {
+        metric_data_queries {
+          id          = "capacity_sum"
+          expression  = "SUM(SEARCH('{AWS/AutoScaling,AutoScalingGroupName} MetricName=\"GroupInServiceIntances\" my-test-asg', 'Average', 300))"
+          return_data = false
+        }
+        metric_data_queries {
+          id          = "load_sum"
+          expression  = "SUM(SEARCH('{AWS/EC2,AutoScalingGroupName} MetricName=\"CPUUtilization\" my-test-asg', 'Sum', 300))"
+          return_data = false
+        }
+        metric_data_queries {
+          id         = "weighted_average"
+          expression = "load_sum / capacity_sum"
+        }
+      }
+    }
+  }
+}
+```
+
+### Create predictive scaling policy using customized scaling and predefined load metric
+
+```terraform
+resource "aws_autoscaling_policy" "example" {
+  autoscaling_group_name = "my-test-asg"
+  name                   = "foo"
+  policy_type            = "PredictiveScaling"
+  predictive_scaling_configuration {
+    metric_specification {
+      target_value = 10
+      predefined_load_metric_specification {
+        predefined_metric_type = "ASGTotalCPUUtilization"
+        resource_label         = "testLabel"
+      }
+      customized_scaling_metric_specification {
+        metric_data_queries {
+          id = "scaling"
+          metric_stat {
+            metric {
+              metric_name = "CPUUtilization"
+              namespace   = "AWS/EC2"
+              dimensions {
+                name  = "AutoScalingGroupName"
+                value = "my-test-asg"
+              }
+            }
+            stat = "Average"
+          }
+        }
+      }
+    }
+  }
 }
 ```
 
@@ -88,10 +178,10 @@ scale, when the adjustment bounds are breached. A positive value scales
 up. A negative value scales down.
 * `metric_interval_lower_bound` - (Optional) The lower bound for the
 difference between the alarm threshold and the CloudWatch metric.
-Without a value, AWS will treat this bound as infinity.
+Without a value, AWS will treat this bound as negative infinity.
 * `metric_interval_upper_bound` - (Optional) The upper bound for the
 difference between the alarm threshold and the CloudWatch metric.
-Without a value, AWS will treat this bound as infinity. The upper bound
+Without a value, AWS will treat this bound as positive infinity. The upper bound
 must be greater than the lower bound.
 
 Notice the bounds are **relative** to the alarm threshold, meaning that the starting point is not 0%, but the alarm threshold. Check the official [docs](https://docs.aws.amazon.com/autoscaling/ec2/userguide/as-scaling-simple-step.html#as-scaling-steps) for a detailed example.
@@ -159,9 +249,12 @@ The following arguments are supported:
 
 The following arguments are supported:
 
-* `predefined_load_metric_specification` - (Optional) The load metric specification.
+* `customized_capacity_metric_specification` - (Optional) The customized capacity metric specification. The field is only valid when you use `customized_load_metric_specification`
+* `customized_load_metric_specification` - (Optional) The customized load metric specification.
+* `customized_scaling_metric_specification` - (Optional) The customized scaling metric specification.
+* `predefined_load_metric_specification` - (Optional) The predefined load metric specification.
 * `predefined_metric_pair_specification` - (Optional) The metric pair specification from which Amazon EC2 Auto Scaling determines the appropriate scaling metric and load metric to use.
-* `predefined_scaling_metric_specification` - (Optional) The scaling metric specification.
+* `predefined_scaling_metric_specification` - (Optional) The predefined scaling metric specification.
 
 ##### predefined_load_metric_specification
 
@@ -183,6 +276,50 @@ The following arguments are supported:
 
 * `predefined_metric_type` - (Required) Describes a scaling metric for a predictive scaling policy. Valid values are `ASGAverageCPUUtilization`, `ASGAverageNetworkIn`, `ASGAverageNetworkOut`, or `ALBRequestCountPerTarget`.
 * `resource_label` - (Required) A label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group.
+
+##### customized_scaling_metric_specification
+The following arguments are supported:
+
+* `metric_data_queries` - (Required) A list of up to 10 structures that defines custom scaling metric in predictive scaling policy
+
+##### customized_load_metric_specification
+The following arguments are supported:
+
+* `metric_data_queries` - (Required) A list of up to 10 structures that defines custom load metric in predictive scaling policy
+
+##### customized_capacity_metric_specification
+The following arguments are supported:
+
+* `metric_data_queries` - (Required) A list of up to 10 structures that defines custom capacity metric in predictive scaling policy
+
+##### metric_data_queries
+The following arguments are supported:
+
+* `expression` - (Optional) The math expression used on the returned metric. You must specify either `expression` or `metric_stat`, but not both.
+* `id` - (Required) A short name for the metric used in predictive scaling policy.
+* `metric_stat` - (Optional) A structure that defines CloudWatch metric to be used in predictive scaling policy. You must specify either `expression` or `metric_stat`, but not both.
+* `label` - (Optional) A human-readable label for this metric or expression.
+* `return_data` - (Optional) A boolean that indicates whether to return the timestamps and raw data values of this metric, the default it true
+
+##### metric_stat
+The following arguments are supported:
+
+* `metric` - (Required) A structure that defines the CloudWatch metric to return, including the metric name, namespace, and dimensions.
+* `stat` - (Required) The statistic of the metrics to return.
+* `unit` - (Optional) The unit of the metrics to return.
+
+##### metric
+The following arguments are supported:
+
+* `dimensions` - (Optional) The dimensions of the metric.
+* `metric_name` - (Required) The name of the metric.
+* `namespace` - (Required) The namespace of the metric.
+
+##### dimensions
+The following arguments are supported:
+
+* `name` - (Required) The name of the dimension.
+* `value` - (Required) The value of the dimension.
 
 ## Attributes Reference
 

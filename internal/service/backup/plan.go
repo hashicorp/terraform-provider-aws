@@ -198,7 +198,7 @@ func resourcePlanRead(d *schema.ResourceData, meta interface{}) error {
 	resp, err := conn.GetBackupPlan(&backup.GetBackupPlanInput{
 		BackupPlanId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Backup Plan (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -284,7 +284,7 @@ func resourcePlanDelete(d *schema.ResourceData, meta interface{}) error {
 			return resource.RetryableError(err)
 		}
 
-		if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 

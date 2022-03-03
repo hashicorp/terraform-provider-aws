@@ -924,7 +924,7 @@ func resourceClusterStateRefreshFunc(id string, conn *redshift.Redshift) resourc
 		})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, redshift.ErrCodeClusterNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterNotFoundFault) {
 				return 42, "destroyed", nil
 			}
 			log.Printf("[WARN] Error on retrieving Redshift Cluster (%s) when waiting: %s", id, err)

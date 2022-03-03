@@ -119,11 +119,16 @@ func DataSourceClientVPNEndpoint() *schema.Resource {
 				Computed: true,
 			},
 			"dns_servers": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"filter": DataSourceFiltersSchema(),
+			"security_group_ids": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"self_service_portal": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -142,6 +147,10 @@ func DataSourceClientVPNEndpoint() *schema.Resource {
 			},
 			"tags": tftags.TagsSchemaComputed(),
 			"transport_protocol": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -219,6 +228,7 @@ func dataSourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("description", ep.Description)
 	d.Set("dns_name", ep.DnsName)
 	d.Set("dns_servers", aws.StringValueSlice(ep.DnsServers))
+	d.Set("security_group_ids", aws.StringValueSlice(ep.SecurityGroupIds))
 	if aws.StringValue(ep.SelfServicePortalUrl) != "" {
 		d.Set("self_service_portal", ec2.SelfServicePortalEnabled)
 	} else {
@@ -228,6 +238,7 @@ func dataSourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("session_timeout_hours", ep.SessionTimeoutHours)
 	d.Set("split_tunnel", ep.SplitTunnel)
 	d.Set("transport_protocol", ep.TransportProtocol)
+	d.Set("vpc_id", ep.VpcId)
 	d.Set("vpn_port", ep.VpnPort)
 
 	if err := d.Set("tags", KeyValueTags(ep.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

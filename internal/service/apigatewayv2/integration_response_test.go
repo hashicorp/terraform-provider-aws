@@ -133,7 +133,7 @@ func testAccCheckIntegrationResponseDestroy(s *terraform.State) error {
 			IntegrationId:         aws.String(rs.Primary.Attributes["integration_id"]),
 			IntegrationResponseId: aws.String(rs.Primary.ID),
 		})
-		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 			continue
 		}
 		if err != nil {

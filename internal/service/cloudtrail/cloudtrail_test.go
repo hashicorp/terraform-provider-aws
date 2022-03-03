@@ -879,7 +879,10 @@ data "aws_partition" "current" {}
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
+}
 
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.test.id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -911,6 +914,9 @@ resource "aws_s3_bucket" "test" {
 func testAccConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
 }
@@ -920,6 +926,9 @@ resource "aws_cloudtrail" "test" {
 func testAccModifiedConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name                          = %[1]q
   s3_bucket_name                = aws_s3_bucket.test.id
   s3_key_prefix                 = "prefix"
@@ -931,6 +940,9 @@ resource "aws_cloudtrail" "test" {
 func testAccEnableLoggingConfig(rName string, enableLogging bool) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name                          = %[1]q
   s3_bucket_name                = aws_s3_bucket.test.id
   s3_key_prefix                 = "prefix"
@@ -943,6 +955,9 @@ resource "aws_cloudtrail" "test" {
 func testAccCloudWatchConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
 
@@ -997,6 +1012,9 @@ resource "aws_iam_role_policy" "test" {
 func testAccCloudWatchModifiedConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
 
@@ -1055,6 +1073,9 @@ resource "aws_iam_role_policy" "test" {
 func testAccMultiRegionConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name                  = %[1]q
   s3_bucket_name        = aws_s3_bucket.test.id
   is_multi_region_trail = true
@@ -1069,6 +1090,9 @@ resource "aws_organizations_organization" "test" {
 }
 
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   is_organization_trail = true
   name                  = %[1]q
   s3_bucket_name        = aws_s3_bucket.test.id
@@ -1079,6 +1103,9 @@ resource "aws_cloudtrail" "test" {
 func testAccLogValidationConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name                          = %[1]q
   s3_bucket_name                = aws_s3_bucket.test.id
   is_multi_region_trail         = true
@@ -1091,6 +1118,9 @@ resource "aws_cloudtrail" "test" {
 func testAccLogValidationModifiedConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name                          = %[1]q
   s3_bucket_name                = aws_s3_bucket.test.id
   include_global_service_events = true
@@ -1121,6 +1151,9 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name                          = %[1]q
   s3_bucket_name                = aws_s3_bucket.test.id
   include_global_service_events = true
@@ -1132,6 +1165,9 @@ resource "aws_cloudtrail" "test" {
 func testAccGlobalServiceEventsConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name                          = %[1]q
   s3_bucket_name                = aws_s3_bucket.test.id
   include_global_service_events = false
@@ -1142,6 +1178,9 @@ resource "aws_cloudtrail" "test" {
 func testAccTagsConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
 
@@ -1156,6 +1195,9 @@ resource "aws_cloudtrail" "test" {
 func testAccTagsModifiedConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
 
@@ -1171,6 +1213,9 @@ resource "aws_cloudtrail" "test" {
 func testAccTagsModifiedAgainConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
 }
@@ -1180,6 +1225,9 @@ resource "aws_cloudtrail" "test" {
 func testAccEventSelectorConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
 
@@ -1208,6 +1256,9 @@ resource "aws_s3_bucket" "test2" {
 func testAccEventSelectorReadWriteTypeConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
 
@@ -1222,6 +1273,9 @@ resource "aws_cloudtrail" "test" {
 func testAccEventSelectorModifiedConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
 
@@ -1298,6 +1352,9 @@ resource "aws_lambda_function" "test" {
 func testAccEventSelectorNoneConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
 }
@@ -1307,6 +1364,9 @@ resource "aws_cloudtrail" "test" {
 func testAccEventSelectorDynamoDBConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
 
@@ -1343,6 +1403,9 @@ func testAccEventSelectorExcludeKMSConfig(rName string) string {
 		testAccBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
 
@@ -1358,6 +1421,9 @@ func testAccEventSelectorExcludeKMSAndRDSDataConfig(rName string) string {
 		testAccBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
 
@@ -1374,6 +1440,9 @@ resource "aws_cloudtrail" "test" {
 func testAccInsightSelectorConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
 
@@ -1388,6 +1457,9 @@ resource "aws_cloudtrail" "test" {
 func testAccInsightSelectorMultiConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test.id
 
@@ -1406,6 +1478,9 @@ resource "aws_cloudtrail" "test" {
 func testAccConfig_advancedEventSelector(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   name           = %[1]q
   s3_bucket_name = aws_s3_bucket.test1.id
 
@@ -1502,7 +1577,10 @@ data "aws_partition" "current" {}
 resource "aws_s3_bucket" "test1" {
   bucket        = "%[1]s-1"
   force_destroy = true
+}
 
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.test1.id
   policy = <<POLICY
 {
   "Version": "2012-10-17",

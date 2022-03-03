@@ -127,7 +127,9 @@ func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.Resource
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	output, err := conn.GetBucketCorsWithContext(ctx, input)
+	corsResponse, err := verify.RetryOnAWSCode(ErrCodeNoSuchCORSConfiguration, func() (interface{}, error) {
+		return conn.GetBucketCorsWithContext(ctx, input)
+	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, ErrCodeNoSuchCORSConfiguration) {
 		log.Printf("[WARN] S3 Bucket CORS Configuration (%s) not found, removing from state", d.Id())
@@ -139,7 +141,8 @@ func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.Resource
 		return diag.FromErr(fmt.Errorf("error reading S3 bucket CORS configuration (%s): %w", d.Id(), err))
 	}
 
-	if output == nil {
+	output, ok := corsResponse.(*s3.GetBucketCorsOutput)
+	if !ok || output == nil {
 		if d.IsNewResource() {
 			return diag.FromErr(fmt.Errorf("error reading S3 bucket CORS configuration (%s): empty output", d.Id()))
 		}
