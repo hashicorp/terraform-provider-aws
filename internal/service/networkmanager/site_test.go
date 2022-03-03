@@ -45,21 +45,42 @@ func TestAccNetworkManagerSite_basic(t *testing.T) {
 	})
 }
 
-/*
-func TestAccSite_tags(t *testing.T) {
+func TestAccNetworkManagerSite_disappears(t *testing.T) {
 	resourceName := "aws_networkmanager_site.test"
-	description := "test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsSiteDestroy,
+		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSiteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteConfigTags1(description, "key1", "value1"),
+				Config: testAccSiteConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSiteExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					testAccCheckSiteExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceSite(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerSite_tags(t *testing.T) {
+	resourceName := "aws_networkmanager_site.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSiteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSiteConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSiteExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -71,20 +92,18 @@ func TestAccSite_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSiteConfigTags2(description, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSiteConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSiteExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					testAccCheckSiteExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccSiteConfigTags1(description, "key2", "value2"),
+				Config: testAccSiteConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSiteExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					testAccCheckSiteExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -92,7 +111,80 @@ func TestAccSite_tags(t *testing.T) {
 		},
 	})
 }
-*/
+
+func TestAccNetworkManagerSite_description(t *testing.T) {
+	resourceName := "aws_networkmanager_site.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSiteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSiteDescriptionConfig(rName, "description1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSiteExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccSiteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSiteDescriptionConfig(rName, "description2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSiteExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerSite_location(t *testing.T) {
+	resourceName := "aws_networkmanager_site.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSiteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSiteLocationConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSiteExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "location.0.address", "Stuart, FL"),
+					resource.TestCheckResourceAttr(resourceName, "location.0.latitude", "27.198"),
+					resource.TestCheckResourceAttr(resourceName, "location.0.longitude", "-80.253"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccSiteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSiteLocationUpdatedConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSiteExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "location.0.address", "Brisbane, QLD"),
+					resource.TestCheckResourceAttr(resourceName, "location.0.latitude", "-27.470"),
+					resource.TestCheckResourceAttr(resourceName, "location.0.longitude", "153.026"),
+				),
+			},
+		},
+	})
+}
 
 func testAccCheckSiteDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
@@ -150,7 +242,111 @@ resource "aws_networkmanager_global_network" "test" {
 }
 
 resource "aws_networkmanager_site" "test" {
- global_network_id = aws_networkmanager_global_network.test.id
+  global_network_id = aws_networkmanager_global_network.test.id
+}
+`, rName)
+}
+
+func testAccSiteConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_site" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccSiteConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_site" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  tags = {
+  	%[2]q = %[3]q
+	%[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccSiteDescriptionConfig(rName, description string) string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_site" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+  description       = %[2]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, description)
+}
+
+func testAccSiteLocationConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_site" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  location {
+    address   = "Stuart, FL"
+    latitude  = "27.198"
+	longitude = "-80.253"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccSiteLocationUpdatedConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_site" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  location {
+    address   = "Brisbane, QLD"
+    latitude  = "-27.470"
+	longitude = "153.026"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName)
 }

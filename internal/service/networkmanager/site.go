@@ -226,12 +226,10 @@ func resourceSiteDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	globalNetworkID := d.Get("global_network_id").(string)
 
 	log.Printf("[DEBUG] Deleting Network Manager Site: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, siteValidationExceptionTimeout, func() (interface{}, error) {
-		return conn.DeleteSiteWithContext(ctx, &networkmanager.DeleteSiteInput{
-			GlobalNetworkId: aws.String(globalNetworkID),
-			SiteId:          aws.String(d.Id()),
-		})
-	}, networkmanager.ErrCodeValidationException)
+	_, err := conn.DeleteSiteWithContext(ctx, &networkmanager.DeleteSiteInput{
+		GlobalNetworkId: aws.String(globalNetworkID),
+		SiteId:          aws.String(d.Id()),
+	})
 
 	if err != nil {
 		return diag.Errorf("error deleting Network Manager Site (%s): %s", d.Id(), err)
