@@ -12,6 +12,10 @@ Provides a S3 bucket resource.
 
 -> This functionality is for managing S3 in an AWS Partition. To manage [S3 on Outposts](https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html), see the [`aws_s3control_bucket`](/docs/providers/aws/r/s3control_bucket.html) resource.
 
+~> **NOTE on S3 Bucket Request Payment Configuration:** S3 Bucket Request Payment can be configured in either the standalone resource [`aws_s3_bucket_request_payment_configuration`](s3_bucket_request_payment_configuration.html)
+or with the deprecated parameter `request_payer` in the resource `aws_s3_bucket`.
+Configuring with both will cause inconsistencies and may overwrite configuration.
+
 ## Example Usage
 
 ### Private Bucket w/ Tags
@@ -365,10 +369,10 @@ The following arguments are supported:
 * `logging` - (Optional) A settings of [bucket logging](https://docs.aws.amazon.com/AmazonS3/latest/UG/ManagingBucketLogging.html) (documented below).
 * `lifecycle_rule` - (Optional) A configuration of [object lifecycle management](http://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html) (documented below).
 * `acceleration_status` - (Optional) Sets the accelerate configuration of an existing bucket. Can be `Enabled` or `Suspended`.
-* `request_payer` - (Optional) Specifies who should bear the cost of Amazon S3 data transfer.
-Can be either `BucketOwner` or `Requester`. By default, the owner of the S3 bucket would incur
-the costs of any data transfer. See [Requester Pays Buckets](http://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html)
-developer guide for more information.
+* `request_payer` - (Optional, **Deprecated**) Specifies who should bear the cost of Amazon S3 data transfer.
+  Can be either `BucketOwner` or `Requester`. By default, the owner of the S3 bucket would incur the costs of any data transfer.
+  See [Requester Pays Buckets](http://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html) developer guide for more information.
+  Use the resource [`aws_s3_bucket_request_payment_configuration`](s3_bucket_request_payment_configuration.html) instead.
 * `replication_configuration` - (Optional) A configuration of [replication configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html) (documented below).
 * `server_side_encryption_configuration` - (Optional) A configuration of [server-side encryption configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html) (documented below)
 * `object_lock_configuration` - (Optional) A configuration of [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html) (documented below)
