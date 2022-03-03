@@ -1,8 +1,47 @@
 ## 4.4.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_ec2_transit_gateway_connect` ([#22181](https://github.com/hashicorp/terraform-provider-aws/issues/22181))
+* **New Data Source:** `aws_ec2_transit_gateway_connect_peer` ([#22181](https://github.com/hashicorp/terraform-provider-aws/issues/22181))
+* **New Resource:** `aws_ec2_network_insights_path` ([#23330](https://github.com/hashicorp/terraform-provider-aws/issues/23330))
+* **New Resource:** `aws_ec2_transit_gateway_connect` ([#22181](https://github.com/hashicorp/terraform-provider-aws/issues/22181))
+* **New Resource:** `aws_ec2_transit_gateway_connect_peer` ([#22181](https://github.com/hashicorp/terraform-provider-aws/issues/22181))
+* **New Resource:** `aws_grafana_license_association` ([#23401](https://github.com/hashicorp/terraform-provider-aws/issues/23401))
+* **New Resource:** `aws_route53domains_registered_domain` ([#12711](https://github.com/hashicorp/terraform-provider-aws/issues/12711))
+
 ENHANCEMENTS:
 
+* data-source/aws_ec2_transit_gateway: Add `transit_gateway_cidr_blocks` attribute ([#22181](https://github.com/hashicorp/terraform-provider-aws/issues/22181))
+* data-source/aws_eks_node_group: Add `taints` attribute ([#23452](https://github.com/hashicorp/terraform-provider-aws/issues/23452))
+* resource/aws_cloudwatch_metric_alarm: Additional allowed values for `extended_statistic` and `metric_query.metric.stat` arguments ([#22942](https://github.com/hashicorp/terraform-provider-aws/issues/22942))
+* resource/aws_ec2_transit_gateway: Add [custom `timeouts`](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts) block ([#22181](https://github.com/hashicorp/terraform-provider-aws/issues/22181))
+* resource/aws_ec2_transit_gateway: Add `transit_gateway_cidr_blocks` argument ([#22181](https://github.com/hashicorp/terraform-provider-aws/issues/22181))
 * resource/aws_eks_cluster: Retry when `ResourceInUseException` errors are returned from the AWS API during resource deletion ([#23366](https://github.com/hashicorp/terraform-provider-aws/issues/23366))
+* resource/aws_lambda_function: Add support for `dotnet6` `runtime` value ([#23426](https://github.com/hashicorp/terraform-provider-aws/issues/23426))
+* resource/aws_lambda_layer_version: Add support for `dotnet6` `compatible_runtimes` value ([#23426](https://github.com/hashicorp/terraform-provider-aws/issues/23426))
+* resource/aws_route: `nat_gateway_id` target no longer conflicts with `destination_ipv6_cidr_block` ([#23427](https://github.com/hashicorp/terraform-provider-aws/issues/23427))
+
+BUG FIXES:
+
+* resource/aws_dms_endpoint: Fix bug where KMS key was ignored for DynamoDB, OpenSearch, Kafka, Kinesis, Oracle, PostgreSQL, and S3 engines. ([#23444](https://github.com/hashicorp/terraform-provider-aws/issues/23444))
+* resource/aws_opsworks_application: Fix error reported on successful deletion ([#23397](https://github.com/hashicorp/terraform-provider-aws/issues/23397))
+* resource/aws_opsworks_custom_layer: Fix error reported on successful deletion ([#23397](https://github.com/hashicorp/terraform-provider-aws/issues/23397))
+* resource/aws_opsworks_ecs_cluster_layer: Fix error reported on successful deletion ([#23397](https://github.com/hashicorp/terraform-provider-aws/issues/23397))
+* resource/aws_opsworks_ganglia_layer: Fix error reported on successful deletion ([#23397](https://github.com/hashicorp/terraform-provider-aws/issues/23397))
+* resource/aws_opsworks_haproxy_layer: Fix error reported on successful deletion ([#23397](https://github.com/hashicorp/terraform-provider-aws/issues/23397))
+* resource/aws_opsworks_instance: Fix error reported on successful deletion ([#23397](https://github.com/hashicorp/terraform-provider-aws/issues/23397))
+* resource/aws_opsworks_java_app_layer: Fix error reported on successful deletion ([#23397](https://github.com/hashicorp/terraform-provider-aws/issues/23397))
+* resource/aws_opsworks_memcached_layer: Fix error reported on successful deletion ([#23397](https://github.com/hashicorp/terraform-provider-aws/issues/23397))
+* resource/aws_opsworks_mysql_layer: Fix error reported on successful deletion ([#23397](https://github.com/hashicorp/terraform-provider-aws/issues/23397))
+* resource/aws_opsworks_nodejs_app_layer: Fix error reported on successful deletion ([#23397](https://github.com/hashicorp/terraform-provider-aws/issues/23397))
+* resource/aws_opsworks_php_app_layer: Fix error reported on successful deletion ([#23397](https://github.com/hashicorp/terraform-provider-aws/issues/23397))
+* resource/aws_opsworks_rails_app_layer: Fix error reported on successful deletion ([#23397](https://github.com/hashicorp/terraform-provider-aws/issues/23397))
+* resource/aws_opsworks_rds_db_instance: Correctly remove from state in certain deletion situations ([#23397](https://github.com/hashicorp/terraform-provider-aws/issues/23397))
+* resource/aws_opsworks_stack: Fix error reported on successful deletion, lack of eventual consistency wait ([#23397](https://github.com/hashicorp/terraform-provider-aws/issues/23397))
+* resource/aws_opsworks_static_web_layer: Fix error reported on successful deletion ([#23397](https://github.com/hashicorp/terraform-provider-aws/issues/23397))
+* resource/aws_opsworks_user_profile: Fix error reported on successful deletion ([#23397](https://github.com/hashicorp/terraform-provider-aws/issues/23397))
+* resource/aws_synthetics_canary: Retry canary creation if it fails because of IAM propagation. ([#23394](https://github.com/hashicorp/terraform-provider-aws/issues/23394))
 
 ## 4.3.0 (February 28, 2022)
 

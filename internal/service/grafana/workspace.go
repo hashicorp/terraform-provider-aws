@@ -159,11 +159,10 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.Workspace.Id))
 
-	_, err = waitWorkspaceCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-
-	if err != nil {
+	if _, err := waitWorkspaceCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Grafana Workspace (%s) create: %w", d.Id(), err)
 	}
+
 	return resourceWorkspaceRead(d, meta)
 }
 
@@ -262,9 +261,7 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating Grafana Workspace (%s): %w", d.Id(), err)
 	}
 
-	_, err = waitWorkspaceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
-
-	if err != nil {
+	if _, err := waitWorkspaceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return fmt.Errorf("error waiting for Grafana Workspace (%s) update: %w", d.Id(), err)
 	}
 
@@ -287,9 +284,7 @@ func resourceWorkspaceDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Grafana Workspace (%s): %w", d.Id(), err)
 	}
 
-	_, err = waitWorkspaceDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-
-	if err != nil {
+	if _, err := waitWorkspaceDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Grafana Workspace (%s) delete: %w", d.Id(), err)
 	}
 

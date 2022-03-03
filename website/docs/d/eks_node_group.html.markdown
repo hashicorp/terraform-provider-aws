@@ -47,5 +47,9 @@ data "aws_eks_node_group" "example" {
     * `min_size` - Minimum number of worker nodes.
 * `status` - Status of the EKS Node Group.
 * `subnet_ids` – Identifiers of EC2 Subnets to associate with the EKS Node Group.
+* `taints` - List of objects containing information about taints applied to the nodes in the EKS Node Group.
+    * `key` - The key of the taint.
+    * `value` - The value of the taint.
+    * `effect` - The effect of the taint.
 * `tags` - Key-value map of resource tags.
 * `version` – Kubernetes version.

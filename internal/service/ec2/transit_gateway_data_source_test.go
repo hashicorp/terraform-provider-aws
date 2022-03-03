@@ -10,6 +10,14 @@ import (
 
 func TestAccEC2TransitGatewayDataSource_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
+		"Connect": {
+			"Filter": testAccTransitGatewayConnectDataSource_Filter,
+			"ID":     testAccTransitGatewayConnectDataSource_ID,
+		},
+		"ConnectPeer": {
+			"Filter": testAccTransitGatewayConnectPeerDataSource_Filter,
+			"ID":     testAccTransitGatewayConnectPeerDataSource_ID,
+		},
 		"DxGatewayAttachment": {
 			"Filter":                         testAccTransitGatewayDxGatewayAttachmentDataSource_filter,
 			"TransitGatewayIdAndDxGatewayId": testAccTransitGatewayDxGatewayAttachmentDataSource_TransitGatewayIdAndDxGatewayID,
@@ -90,6 +98,7 @@ func testAccTransitGatewayDataSource_Filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "owner_id", dataSourceName, "owner_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "propagation_default_route_table_id", dataSourceName, "propagation_default_route_table_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_cidr_blocks.#", dataSourceName, "transit_gateway_cidr_blocks.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpn_ecmp_support", dataSourceName, "vpn_ecmp_support"),
 				),
 			},
@@ -121,6 +130,7 @@ func testAccTransitGatewayDataSource_ID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "owner_id", dataSourceName, "owner_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "propagation_default_route_table_id", dataSourceName, "propagation_default_route_table_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_cidr_blocks.#", dataSourceName, "transit_gateway_cidr_blocks.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpn_ecmp_support", dataSourceName, "vpn_ecmp_support"),
 				),
 			},
