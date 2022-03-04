@@ -24,6 +24,7 @@ func TestAccNetworkManagerDeviceDataSource_basic(t *testing.T) {
 				Config: testAccDeviceDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "aws_location.#", resourceName, "aws_location.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "device_id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "global_network_id", resourceName, "global_network_id"),

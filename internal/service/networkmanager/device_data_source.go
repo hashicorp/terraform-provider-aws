@@ -18,6 +18,22 @@ func DataSourceDevice() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"aws_location": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"subnet_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"zone": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -37,15 +53,15 @@ func DataSourceDevice() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"address": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"latitude": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"longitude": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -89,6 +105,13 @@ func dataSourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(deviceID)
 	d.Set("arn", device.DeviceArn)
+	if device.AWSLocation != nil {
+		if err := d.Set("aws_location", []interface{}{flattenAWSLocation(device.AWSLocation)}); err != nil {
+			return diag.Errorf("error setting aws_location: %s", err)
+		}
+	} else {
+		d.Set("aws_location", nil)
+	}
 	d.Set("description", device.Description)
 	d.Set("device_id", device.DeviceId)
 	if device.Location != nil {

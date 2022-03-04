@@ -21,24 +21,31 @@ data "aws_networkmanager_device" "example" {
 
 ## Argument Reference
 
-* `device_id` - (Required) The id of the specific device to retrieve.
-* `global_network_id` - (Required) The ID of the Global Network of the device to retrieve.
+* `device_id` - (Required) The ID of the device.
+* `global_network_id` - (Required) The ID of the global network.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `description` - Description of the device.
-* `location` - The device location as documented below.
-* `type` - The type of device.
+* `arn` - The Amazon Resource Name (ARN) of the device.
+* `aws_location` - The AWS location of the device. Documented below.
+* `description` - A description of the device.
+* `location` - The location of the device. Documented below.
 * `model` - The model of device.
 * `serial_number` - The serial number of the device.
-* `site_id` - The site of the device.
+* `site_id` - The ID of the site.
 * `tags` - Key-value tags for the device.
+* `type` - The type of device.
 * `vendor` - The vendor of the device.
+
+The `aws_location` object supports the following:
+
+* `subnet_arn` - The Amazon Resource Name (ARN) of the subnet that the device is located in.
+* `zone` - The Zone that the device is located in.
 
 The `location` object supports the following:
 
-* `address` - Address of the location.
-* `latitude` - Latitude of the location.
-* `longitude` - Longitude of the location.
+* `address` - The physical address.
+* `latitude` - The latitude.
+* `longitude` - The longitude.

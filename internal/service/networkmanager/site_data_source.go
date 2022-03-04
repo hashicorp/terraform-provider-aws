@@ -33,15 +33,15 @@ func DataSourceSite() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"address": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"latitude": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"longitude": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 					},
 				},
