@@ -69,6 +69,8 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", "false"),
+					resource.TestCheckResourceAttr(resourceName, "request_payer", "BucketOwner"),
+					testAccCheckRequestPayer(resourceName, "BucketOwner"),
 				),
 			},
 			{
@@ -411,7 +413,7 @@ func TestAccS3Bucket_Basic_acceleration(t *testing.T) {
 
 func TestAccS3Bucket_Basic_requestPayer(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	resourceName := "aws_s3_bucket.bucket"
+	resourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -3681,7 +3683,7 @@ resource "aws_s3_bucket" "bucket" {
 
 func testAccBucketRequestPayerBucketOwnerConfig(bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   request_payer = "BucketOwner"
 }
@@ -3690,7 +3692,7 @@ resource "aws_s3_bucket" "bucket" {
 
 func testAccBucketRequestPayerRequesterConfig(bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   request_payer = "Requester"
 }
