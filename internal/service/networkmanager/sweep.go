@@ -27,6 +27,14 @@ func init() {
 	resource.AddTestSweepers("aws_networkmanager_site", &resource.Sweeper{
 		Name: "aws_networkmanager_site",
 		F:    sweepSites,
+		Dependencies: []string{
+			"aws_networkmanager_device",
+		},
+	})
+
+	resource.AddTestSweepers("aws_networkmanager_device", &resource.Sweeper{
+		Name: "aws_networkmanager_device",
+		F:    sweepDevices,
 	})
 }
 
@@ -135,6 +143,73 @@ func sweepSites(region string) error {
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Network Manager Sites (%s): %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepDevices(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).NetworkManagerConn
+	input := &networkmanager.DescribeGlobalNetworksInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = conn.DescribeGlobalNetworksPages(input, func(page *networkmanager.DescribeGlobalNetworksOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.GlobalNetworks {
+			input := &networkmanager.GetDevicesInput{
+				GlobalNetworkId: v.GlobalNetworkId,
+			}
+
+			err := conn.GetDevicesPages(input, func(page *networkmanager.GetDevicesOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, v := range page.Devices {
+					r := ResourceDevice()
+					d := r.Data(nil)
+					d.SetId(aws.StringValue(v.DeviceId))
+					d.Set("global_network_id", v.GlobalNetworkId)
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+
+				return !lastPage
+			})
+
+			if sweep.SkipSweepError(err) {
+				continue
+			}
+
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Network Manager Devices (%s): %w", region, err))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Network Manager Device sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Network Manager Global Networks (%s): %w", region, err))
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Network Manager Devices (%s): %w", region, err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
