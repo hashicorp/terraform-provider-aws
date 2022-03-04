@@ -48,7 +48,7 @@ resource "aws_networkmanager_site" "test" {
   global_network_id = aws_networkmanager_global_network.test.id
 
   location {
-    latitude  = "18.0029784"	
+    latitude  = "18.0029784"
     longitude = "-76.7897987"
   }
 
