@@ -16,11 +16,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccNetworkManageTransitGatewayRegistration_basic(t *testing.T) {
+func TestAccNetworkManageTransitGatewayRegistration_serial(t *testing.T) {
+	testCases := map[string]func(t *testing.T){
+		"basic":                     testAccNetworkManageTransitGatewayRegistration_basic,
+		"disappears":                testAccNetworkManageTransitGatewayRegistration_disappears,
+		"disappears_TransitGateway": testAccNetworkManageTransitGatewayRegistration_disappears_TransitGateway,
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			tc(t)
+		})
+	}
+}
+
+func testAccNetworkManageTransitGatewayRegistration_basic(t *testing.T) {
 	resourceName := "aws_networkmanager_transit_gateway_registration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		Providers:    acctest.Providers,
@@ -41,11 +56,11 @@ func TestAccNetworkManageTransitGatewayRegistration_basic(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManageTransitGatewayRegistration_disappears(t *testing.T) {
+func testAccNetworkManageTransitGatewayRegistration_disappears(t *testing.T) {
 	resourceName := "aws_networkmanager_transit_gateway_registration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		Providers:    acctest.Providers,
@@ -63,12 +78,12 @@ func TestAccNetworkManageTransitGatewayRegistration_disappears(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManageTransitGatewayRegistration_disappears_TransitGateway(t *testing.T) {
+func testAccNetworkManageTransitGatewayRegistration_disappears_TransitGateway(t *testing.T) {
 	resourceName := "aws_networkmanager_transit_gateway_registration.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		Providers:    acctest.Providers,
