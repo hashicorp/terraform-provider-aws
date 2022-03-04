@@ -237,6 +237,7 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("aws_location", nil)
 	}
 	d.Set("description", device.Description)
+	d.Set("global_network_id", device.GlobalNetworkId)
 	if device.Location != nil {
 		if err := d.Set("location", []interface{}{flattenLocation(device.Location)}); err != nil {
 			return diag.Errorf("error setting location: %s", err)

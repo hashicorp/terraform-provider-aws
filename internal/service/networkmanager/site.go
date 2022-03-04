@@ -161,6 +161,7 @@ func resourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	d.Set("arn", site.SiteArn)
 	d.Set("description", site.Description)
+	d.Set("global_network_id", site.GlobalNetworkId)
 	if site.Location != nil {
 		if err := d.Set("location", []interface{}{flattenLocation(site.Location)}); err != nil {
 			return diag.Errorf("error setting location: %s", err)

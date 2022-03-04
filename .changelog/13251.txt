@@ -14,6 +14,10 @@ aws_networkmanager_device
 aws_networkmanager_transit_gateway_registration
 ```
 
+```release-note:new-resource
+aws_networkmanager_link
+```
+
 ```release-note:new-data-source
 aws_networkmanager_global_network
 ```

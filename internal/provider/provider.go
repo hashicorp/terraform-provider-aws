@@ -1586,6 +1586,7 @@ func Provider() *schema.Provider {
 
 			"aws_networkmanager_device":                       networkmanager.ResourceDevice(),
 			"aws_networkmanager_global_network":               networkmanager.ResourceGlobalNetwork(),
+			"aws_networkmanager_link":                         networkmanager.ResourceLink(),
 			"aws_networkmanager_site":                         networkmanager.ResourceSite(),
 			"aws_networkmanager_transit_gateway_registration": networkmanager.ResourceTransitGatewayRegistration(),
 
