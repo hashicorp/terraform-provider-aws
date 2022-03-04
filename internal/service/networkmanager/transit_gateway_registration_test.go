@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +22,7 @@ func TestAccNetworkManageTransitGatewayRegistration_serial(t *testing.T) {
 		"basic":                     testAccNetworkManageTransitGatewayRegistration_basic,
 		"disappears":                testAccNetworkManageTransitGatewayRegistration_disappears,
 		"disappears_TransitGateway": testAccNetworkManageTransitGatewayRegistration_disappears_TransitGateway,
+		"crossRegion":               testAccNetworkManageTransitGatewayRegistration_crossRegion,
 	}
 
 	for name, tc := range testCases {
@@ -96,6 +98,32 @@ func testAccNetworkManageTransitGatewayRegistration_disappears_TransitGateway(t 
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGateway(), transitGatewayResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccNetworkManageTransitGatewayRegistration_crossRegion(t *testing.T) {
+	resourceName := "aws_networkmanager_transit_gateway_registration.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var providers []*schema.Provider
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckTransitGatewayRegistrationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayRegistrationCrossRegionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayRegistrationExists(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -178,4 +206,27 @@ resource "aws_networkmanager_transit_gateway_registration" "test" {
  transit_gateway_arn = aws_ec2_transit_gateway.test.arn
 }
 `, rName)
+}
+
+func testAccTransitGatewayRegistrationCrossRegionConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway" "test" {
+  provider = "awsalternate"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_transit_gateway_registration" "test" {
+ global_network_id   = aws_networkmanager_global_network.test.id
+ transit_gateway_arn = aws_ec2_transit_gateway.test.arn
+}
+`, rName))
 }
