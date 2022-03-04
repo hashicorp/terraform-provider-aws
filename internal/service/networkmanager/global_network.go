@@ -153,8 +153,34 @@ func resourceGlobalNetworkUpdate(ctx context.Context, d *schema.ResourceData, me
 func resourceGlobalNetworkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
+	tgwRegistrations, err := FindTransitGatewayRegistrations(ctx, conn, &networkmanager.GetTransitGatewayRegistrationsInput{
+		GlobalNetworkId: aws.String(d.Id()),
+	})
+
+	if tfresource.NotFound(err) {
+		err = nil
+	}
+
+	if err != nil {
+		return diag.Errorf("error listing Transit Gateway Registrations (%s): %s", d.Id(), err)
+	}
+
+	var diags diag.Diagnostics
+
+	for _, v := range tgwRegistrations {
+		err := deregisterTransitGateway(ctx, conn, d.Id(), aws.StringValue(v.TransitGatewayArn), d.Timeout(schema.TimeoutDelete))
+
+		if err != nil {
+			diags = append(diags, diag.FromErr(err)...)
+		}
+	}
+
+	if diags.HasError() {
+		return diags
+	}
+
 	log.Printf("[DEBUG] Deleting Network Manager Global Network: %s", d.Id())
-	_, err := tfresource.RetryWhenContext(ctx, globalNetworkValidationExceptionTimeout,
+	_, err = tfresource.RetryWhenContext(ctx, globalNetworkValidationExceptionTimeout,
 		func() (interface{}, error) {
 			return conn.DeleteGlobalNetworkWithContext(ctx, &networkmanager.DeleteGlobalNetworkInput{
 				GlobalNetworkId: aws.String(d.Id()),
