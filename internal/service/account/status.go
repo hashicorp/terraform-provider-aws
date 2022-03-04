@@ -11,7 +11,6 @@ import (
 
 const (
 	statusFound      = "FOUND"
-	statusNotFound   = "NOT_FOUND"
 	statusUpdated    = "UPDATED"
 	statusNotUpdated = "NOT_UPDATED"
 )
@@ -37,7 +36,7 @@ func statusAlternateContactUpdate(ctx context.Context, conn *account.Account, ac
 		output, err := FindAlternateContactByAccountIDAndContactType(ctx, conn, accountID, contactType)
 
 		if tfresource.NotFound(err) {
-			return nil, statusNotFound, nil
+			return nil, "", nil
 		}
 
 		if err != nil {

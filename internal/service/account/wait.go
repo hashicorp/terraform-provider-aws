@@ -16,7 +16,7 @@ const (
 
 func waitAlternateContactCreated(ctx context.Context, conn *account.Account, accountID, contactType string, timeout time.Duration) (*account.AlternateContact, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{statusNotFound},
+		Pending:                   []string{},
 		Target:                    []string{statusFound},
 		Refresh:                   statusAlternateContact(ctx, conn, accountID, contactType),
 		Timeout:                   timeout,
@@ -35,7 +35,7 @@ func waitAlternateContactCreated(ctx context.Context, conn *account.Account, acc
 
 func waitAlternateContactUpdated(ctx context.Context, conn *account.Account, accountID, contactType, email, name, phone, title string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{statusNotFound, statusNotUpdated},
+		Pending:                   []string{statusNotUpdated},
 		Target:                    []string{statusUpdated},
 		Refresh:                   statusAlternateContactUpdate(ctx, conn, accountID, contactType, email, name, phone, title),
 		Timeout:                   timeout,
