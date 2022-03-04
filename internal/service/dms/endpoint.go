@@ -43,6 +43,51 @@ func ResourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"dms_transfer_settings": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"service_access_role_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"bucket_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"docdb_settings": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"docs_to_investigate": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      1000,
+							ValidateFunc: validation.IntAtLeast(1),
+						},
+						"extract_doc_id": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"nesting_level": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.NestingLevelValueNone,
+							ValidateFunc: validation.StringInSlice(dms.NestingLevelValue_Values(), false),
+						},
+					},
+				},
+			},
 			"elasticsearch_settings": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -106,11 +151,90 @@ func ResourceEndpoint() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(engineName_Values(), false),
 			},
+			"engine_display_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"external_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"external_table_definition": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"extra_connection_attributes": {
 				Type:             schema.TypeString,
 				Computed:         true,
 				Optional:         true,
 				DiffSuppressFunc: suppressExtraConnectionAttributesDiffs,
+				Deprecated:       "Will be deprecated by AWS; use <engine>_settings instead",
+			},
+			"gcp_mysql_settings": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"after_connect_script": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"clean_source_metadata_on_mismatch": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"events_poll_interval": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  5,
+						},
+						"max_file_size": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"parallel_load_threads": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  1,
+						},
+						"server_timezone": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"target_db_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(dms.TargetDbType_Values(), false),
+						},
+					},
+				},
+			},
+			"ibm_db2_settings": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"current_lsn": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"max_k_bytes_per_read": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  64,
+						},
+						"set_data_capture_changes": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+					},
+				},
 			},
 			"kafka_settings": {
 				Type:             schema.TypeList,
@@ -250,6 +374,10 @@ func ResourceEndpoint() *schema.Resource {
 							Default:      dms.MessageFormatValueJson,
 							ValidateFunc: validation.StringInSlice(dms.MessageFormatValue_Values(), false),
 						},
+						"no_hex_prefix": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 						"partition_include_schema_table": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -274,6 +402,47 @@ func ResourceEndpoint() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
+			},
+			"microsoft_sql_server_settings": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bcp_packet_size": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntAtLeast(1),
+						},
+						"control_tables_file_group": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"query_string_always_on_mode": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"read_backup_only": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"safeguard_policy": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.SafeguardPolicyRelyOnSqlServerReplicationAgent,
+							ValidateFunc: validation.StringInSlice(dms.SafeguardPolicy_Values(), false),
+						},
+						"use_bcp_full_load": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"use_third_party_backup_device": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
 			},
 			"mongodb_settings": {
 				Type:             schema.TypeList,
@@ -318,6 +487,247 @@ func ResourceEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"mysql_settings": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"after_connect_script": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"clean_source_metadata_on_mismatch": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"events_poll_interval": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  5,
+						},
+						"max_file_size": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"parallel_load_threads": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  1,
+						},
+						"server_timezone": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"target_db_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(dms.TargetDbType_Values(), false),
+						},
+					},
+				},
+			},
+			"neptune_settings": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"error_retry_duration": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  250,
+						},
+						"iam_auth_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"max_file_size": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  1048576,
+						},
+						"max_retry_count": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  5,
+						},
+						"s3_bucket_folder": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"s3_bucket_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"service_access_role_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"oracle_settings": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"access_alternate_directly": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"additional_archived_log_dest_id": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"add_supplemental_logging": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"allow_select_nested_tables": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"archived_log_dest_id": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"archived_logs_only": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"asm_password": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"oracle_settings.0.secrets_manager_oracle_asm_access_role_arn", "oracle_settings.0.secrets_manager_oracle_asm_secret_id"},
+						},
+						"asm_server": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"oracle_settings.0.secrets_manager_oracle_asm_access_role_arn", "oracle_settings.0.secrets_manager_oracle_asm_secret_id"},
+						},
+						"asm_user": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"oracle_settings.0.secrets_manager_oracle_asm_access_role_arn", "oracle_settings.0.secrets_manager_oracle_asm_secret_id"},
+						},
+						"char_length_semantics": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.CharLengthSemanticsDefault,
+							ValidateFunc: validation.StringInSlice(dms.CharLengthSemantics_Values(), false),
+						},
+						"direct_path_no_log": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"direct_path_parallel_load": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"enable_homogenous_tablespace": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"extra_archived_log_dest_ids": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeInt},
+						},
+						"fail_tasks_on_lob_truncation": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"number_datatype_scale": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      10,
+							ValidateFunc: validation.IntBetween(0, 38),
+						},
+						"oracle_path_prefix": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"parallel_asm_read_threads": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      2,
+							ValidateFunc: validation.IntBetween(2, 8),
+						},
+						"read_ahead_blocks": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      1000,
+							ValidateFunc: validation.IntBetween(1000, 200000),
+						},
+						"read_table_space_name": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"replace_path_prefix": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"retry_interval": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"secrets_manager_oracle_asm_access_role_arn": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"oracle_settings.0.asm_password", "oracle_settings.0.asm_server", "oracle_settings.0.asm_user"},
+						},
+						"secrets_manager_oracle_asm_secret_id": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"oracle_settings.0.asm_password", "oracle_settings.0.asm_server", "oracle_settings.0.asm_user"},
+						},
+						"security_db_encryption": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"security_db_encryption_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"spatial_data_option_to_geo_json_function_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"standby_delay_time": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"use_alternate_folder_for_online": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"use_b_file": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"use_direct_path_full_load": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"use_logminer_reader": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"use_path_prefix": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"password": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -328,6 +738,221 @@ func ResourceEndpoint() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ConflictsWith: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
+			},
+			"postgresql_settings": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"after_connect_script": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"capture_ddls": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"ddl_artifacts_schema": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"execute_timeout": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  60,
+						},
+						"fail_tasks_on_lob_truncation": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"heartbeat_enable": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"heartbeat_frequency": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"heartbeat_schema": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"max_file_size": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"plugin_name": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(dms.PluginNameValue_Values(), false),
+						},
+						"slot_name": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"redis_settings": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auth_password": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"auth_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(dms.AuthTypeValue_Values(), false),
+						},
+						"auth_user_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"ssl_ca_certificate_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"ssl_security_protocol": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.SslSecurityProtocolValueSslEncryption,
+							ValidateFunc: validation.StringInSlice(dms.SslSecurityProtocolValue_Values(), false),
+						},
+					},
+				},
+			},
+			"redshift_settings": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"accept_any_date": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"after_connect_script": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"bucket_folder": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"bucket_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"case_sensitive_names": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"comp_update": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"connection_timeout": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"date_format": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"empty_as_null": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"encryption_mode": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.EncryptionModeValueSseS3,
+							ValidateFunc: validation.StringInSlice(dms.EncryptionModeValue_Values(), false),
+						},
+						"explicit_ids": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"file_transfer_upload_streams": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      10,
+							ValidateFunc: validation.IntBetween(1, 64),
+						},
+						"load_timeout": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"max_file_size": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  1048576,
+						},
+						"remove_quotes": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"replace_chars": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "?",
+						},
+						"replace_invalid_chars": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"server_side_encryption_kms_key_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"service_access_role_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"time_format": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "auto",
+							ValidateFunc: validation.StringInSlice([]string{
+								"auto",
+								"timeformat_string",
+								"epochsecs",
+								"epochmillisecs",
+							}, false),
+						},
+						"trim_blanks": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"truncate_columns": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"write_buffer_size": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  1000,
+						},
+					},
+				},
 			},
 			"s3_settings": {
 				Type:             schema.TypeList,
@@ -344,12 +969,10 @@ func ResourceEndpoint() *schema.Resource {
 						"bucket_folder": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "",
 						},
 						"bucket_name": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "",
 						},
 						"canned_acl_for_objects": {
 							Type:         schema.TypeString,
@@ -385,13 +1008,15 @@ func ResourceEndpoint() *schema.Resource {
 						"cdc_path": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "",
 						},
 						"compression_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      s3SettingsCompressionTypeNone,
-							ValidateFunc: validation.StringInSlice(s3SettingsCompressionType_Values(), false),
+							Default:      strings.ToLower(dms.CompressionTypeValueNone),
+							ValidateFunc: validation.StringInSlice(dms.CompressionTypeValue_Values(), true),
+							StateFunc: func(v interface{}) string {
+								return strings.ToLower(v.(string))
+							},
 						},
 						"csv_delimiter": {
 							Type:     schema.TypeString,
@@ -401,7 +1026,6 @@ func ResourceEndpoint() *schema.Resource {
 						"csv_no_sup_value": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "",
 						},
 						"csv_null_value": {
 							Type:     schema.TypeString,
@@ -448,6 +1072,10 @@ func ResourceEndpoint() *schema.Resource {
 								return strings.ToLower(v.(string))
 							},
 						},
+						"date_partition_timezone": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"dict_page_size_limit": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -474,7 +1102,6 @@ func ResourceEndpoint() *schema.Resource {
 						"external_table_definition": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "",
 						},
 						"ignore_headers_row": {
 							Type:         schema.TypeInt,
@@ -523,20 +1150,22 @@ func ResourceEndpoint() *schema.Resource {
 						"server_side_encryption_kms_key_id": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "",
 						},
 						"service_access_role_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      "",
 							ValidateFunc: verify.ValidARN,
 						},
 						"timestamp_column_name": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "",
 						},
 						"use_csv_no_sup_value": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"use_task_start_time_for_full_load_timestamp": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
@@ -572,6 +1201,10 @@ func ResourceEndpoint() *schema.Resource {
 				Computed:     true,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(dms.DmsSslModeValue_Values(), false),
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -1513,6 +2146,9 @@ func expandS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
 	if v, ok := tfMap["date_partition_sequence"].(string); ok {
 		apiObject.DatePartitionSequence = aws.String(v)
 	}
+	if v, ok := tfMap["date_partition_timezone"].(string); ok {
+		apiObject.DatePartitionTimezone = aws.String(v)
+	}
 	if v, ok := tfMap["dict_page_size_limit"].(int); ok {
 		apiObject.DictPageSizeLimit = aws.Int64(int64(v))
 	}
@@ -1564,6 +2200,9 @@ func expandS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
 	if v, ok := tfMap["use_csv_no_sup_value"].(bool); ok {
 		apiObject.UseCsvNoSupValue = aws.Bool(v)
 	}
+	if v, ok := tfMap["use_task_start_time_for_full_load_timestamp"].(bool); ok {
+		apiObject.UseTaskStartTimeForFullLoadTimestamp = aws.Bool(v)
+	}
 
 	return apiObject
 }
@@ -1585,7 +2224,7 @@ func flattenS3Settings(apiObject *dms.S3Settings) []map[string]interface{} {
 		tfMap["bucket_name"] = aws.StringValue(v)
 	}
 	if v := apiObject.CannedAclForObjects; v != nil {
-		tfMap["canned_acl_for_objects"] = aws.StringValue(v)
+		tfMap["canned_acl_for_objects"] = strings.ToLower(aws.StringValue(v))
 	}
 	if v := apiObject.CdcInsertsAndUpdates; v != nil {
 		tfMap["cdc_inserts_and_updates"] = aws.BoolValue(v)
@@ -1603,7 +2242,7 @@ func flattenS3Settings(apiObject *dms.S3Settings) []map[string]interface{} {
 		tfMap["cdc_path"] = aws.StringValue(v)
 	}
 	if v := apiObject.CompressionType; v != nil {
-		tfMap["compression_type"] = aws.StringValue(v)
+		tfMap["compression_type"] = strings.ToLower(aws.StringValue(v))
 	}
 	if v := apiObject.CsvDelimiter; v != nil {
 		tfMap["csv_delimiter"] = aws.StringValue(v)
@@ -1624,13 +2263,16 @@ func flattenS3Settings(apiObject *dms.S3Settings) []map[string]interface{} {
 		tfMap["data_page_size"] = aws.Int64Value(v)
 	}
 	if v := apiObject.DatePartitionDelimiter; v != nil {
-		tfMap["date_partition_delimiter"] = aws.StringValue(v)
+		tfMap["date_partition_delimiter"] = strings.ToLower(aws.StringValue(v))
 	}
 	if v := apiObject.DatePartitionEnabled; v != nil {
 		tfMap["date_partition_enabled"] = aws.BoolValue(v)
 	}
 	if v := apiObject.DatePartitionSequence; v != nil {
-		tfMap["date_partition_sequence"] = aws.StringValue(v)
+		tfMap["date_partition_sequence"] = strings.ToLower(aws.StringValue(v))
+	}
+	if v := apiObject.DatePartitionTimezone; v != nil {
+		tfMap["date_partition_timezone"] = aws.StringValue(v)
 	}
 	if v := apiObject.DictPageSizeLimit; v != nil {
 		tfMap["dict_page_size_limit"] = aws.Int64Value(v)
@@ -1662,6 +2304,9 @@ func flattenS3Settings(apiObject *dms.S3Settings) []map[string]interface{} {
 	if v := apiObject.ParquetVersion; v != nil {
 		tfMap["parquet_version"] = aws.StringValue(v)
 	}
+	if v := apiObject.PreserveTransactions; v != nil {
+		tfMap["preserve_transactions"] = aws.BoolValue(v)
+	}
 	if v := apiObject.Rfc4180; v != nil {
 		tfMap["rfc_4180"] = aws.BoolValue(v)
 	}
@@ -1679,6 +2324,9 @@ func flattenS3Settings(apiObject *dms.S3Settings) []map[string]interface{} {
 	}
 	if v := apiObject.UseCsvNoSupValue; v != nil {
 		tfMap["use_csv_no_sup_value"] = aws.BoolValue(v)
+	}
+	if v := apiObject.UseTaskStartTimeForFullLoadTimestamp; v != nil {
+		tfMap["use_task_start_time_for_full_load_timestamp"] = aws.BoolValue(v)
 	}
 
 	return []map[string]interface{}{tfMap}
