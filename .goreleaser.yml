@@ -1,24 +1,15 @@
 archives:
   - files:
-      # Ensure only built binary is archived
-      - 'none*'
+      - none*
     format: zip
     name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
 before:
   hooks:
-    - 'go mod download'
+    - go mod download
 builds:
-  - # Binary naming only required for Terraform CLI 0.12
-    binary: '{{ .ProjectName }}_v{{ .Version }}_x5'
-    env:
-      - CGO_ENABLED=0
+  - binary: '{{ .ProjectName }}_{{ .Version }}'
     flags:
       - -trimpath
-    goos:
-      - darwin
-      - freebsd
-      - linux
-      - windows
     goarch:
       - '386'
       - amd64
@@ -62,14 +53,12 @@ release:
   ids:
     - none
 signs:
-  - args: ["sign", "--dearmor", "--file", "${artifact}", "--out", "${signature}"]
-    artifacts: checksum
-    cmd: signore
-    signature: ${artifact}.sig
-  - args: ["sign", "--dearmor", "--file", "${artifact}", "--out", "${signature}"]
-    artifacts: checksum
-    cmd: signore
-    id: key-id
-    signature: ${artifact}.72D7468F.sig
-snapshot:
-  name_template: "{{ .Tag }}-next"
+  - artifacts: checksum
+    args:
+      - "--batch"
+      - "--local-user"
+      - "{{ .Env.GPG_FINGERPRINT }}" # set this environment variable for your signing key
+      - "--output"
+      - "${signature}"
+      - "--detach-sign"
+      - "${artifact}"
