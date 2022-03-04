@@ -1,5 +1,5 @@
 ---
-subcategory: "Transit Gateway Network Manager"
+subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_transit_gateway_registration"
 description: |-
@@ -36,8 +36,8 @@ The following arguments are supported:
 
 ## Import
 
-`aws_networkmanager_transit_gateway_registration` can be imported using the transit gateway ARN and the global network ID, e.g.
+`aws_networkmanager_transit_gateway_registration` can be imported using the global network ID and transit gateway ARN, e.g.
 
 ```
-$ terraform import aws_networkmanager_transit_gateway_registration.example arn:aws:ec2:us-west-2:123456789012:transit-gateway/tgw-123abc05e04123abc,global-network-0d47f6t230mz46dy4
+$ terraform import aws_networkmanager_transit_gateway_registration.example global-network-0d47f6t230mz46dy4,arn:aws:ec2:us-west-2:123456789012:transit-gateway/tgw-123abc05e04123abc
 ```

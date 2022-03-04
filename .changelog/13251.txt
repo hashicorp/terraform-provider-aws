@@ -10,6 +10,10 @@ aws_networkmanager_site
 aws_networkmanager_device
 ```
 
+```release-note:new-resource
+aws_networkmanager_transit_gateway_registration
+```
+
 ```release-note:new-data-source
 aws_networkmanager_global_network
 ```
