@@ -39,7 +39,7 @@ resource "aws_networkmanager_global_network" "test" {
   description = "test"
 
   tags = {
-    Name  = %[1]q
+    Name = %[1]q
   }
 }
 

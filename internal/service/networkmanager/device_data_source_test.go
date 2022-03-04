@@ -44,7 +44,7 @@ func testAccDeviceDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   tags = {
-    Name  = %[1]q
+    Name = %[1]q
   }
 }
 
@@ -64,7 +64,7 @@ resource "aws_networkmanager_device" "test" {
   }
 
   tags = {
-    Name  = %[1]q
+    Name = %[1]q
   }
 }
 

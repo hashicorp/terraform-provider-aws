@@ -195,7 +195,7 @@ func testAccGlobalNetworkConfigTags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   tags = {
-  	%[1]q = %[2]q
+    %[1]q = %[2]q
   }
 }
 `, tagKey1, tagValue1)
@@ -205,8 +205,8 @@ func testAccGlobalNetworkConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 stri
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   tags = {
-  	%[1]q = %[2]q
-	%[3]q = %[4]q
+    %[1]q = %[2]q
+    %[3]q = %[4]q
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)

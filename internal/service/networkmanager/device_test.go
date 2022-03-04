@@ -302,8 +302,8 @@ resource "aws_networkmanager_device" "test" {
   global_network_id = aws_networkmanager_global_network.test.id
 
   tags = {
-  	%[2]q = %[3]q
-	%[4]q = %[5]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)

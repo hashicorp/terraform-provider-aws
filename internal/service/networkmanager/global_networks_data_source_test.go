@@ -37,7 +37,7 @@ resource "aws_networkmanager_global_network" "test1" {
   description = "test1"
 
   tags = {
-    Name  = %[1]q
+    Name = %[1]q
   }
 }
 
@@ -51,7 +51,7 @@ data "aws_networkmanager_global_networks" "all" {
 
 data "aws_networkmanager_global_networks" "by_tags" {
   tags = {
-    Name  = %[1]q
+    Name = %[1]q
   }
 
   depends_on = [aws_networkmanager_global_network.test1, aws_networkmanager_global_network.test2]

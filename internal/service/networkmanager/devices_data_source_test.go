@@ -35,7 +35,7 @@ func testAccDevicesDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   tags = {
-    Name  = %[1]q
+    Name = %[1]q
   }
 }
 
@@ -43,7 +43,7 @@ resource "aws_networkmanager_device" "test1" {
   global_network_id = aws_networkmanager_global_network.test.id
 
   tags = {
-    Name  = %[1]q
+    Name = %[1]q
   }
 }
 
@@ -61,7 +61,7 @@ data "aws_networkmanager_devices" "by_tags" {
   global_network_id = aws_networkmanager_global_network.test.id
 
   tags = {
-    Name  = %[1]q
+    Name = %[1]q
   }
 
   depends_on = [aws_networkmanager_device.test1, aws_networkmanager_device.test2]

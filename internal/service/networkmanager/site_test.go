@@ -277,8 +277,8 @@ resource "aws_networkmanager_site" "test" {
   global_network_id = aws_networkmanager_global_network.test.id
 
   tags = {
-  	%[2]q = %[3]q
-	%[4]q = %[5]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
@@ -317,7 +317,7 @@ resource "aws_networkmanager_site" "test" {
   location {
     address   = "Stuart, FL"
     latitude  = "27.198"
-	longitude = "-80.253"
+    longitude = "-80.253"
   }
 
   tags = {
@@ -341,7 +341,7 @@ resource "aws_networkmanager_site" "test" {
   location {
     address   = "Brisbane, QLD"
     latitude  = "-27.470"
-	longitude = "153.026"
+    longitude = "153.026"
   }
 
   tags = {
