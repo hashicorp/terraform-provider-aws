@@ -25,6 +25,7 @@ data "aws_networkmanager_devices" "example" {
 ## Argument Reference
 
 * `global_network_id` - (Required) The ID of the Global Network of the devices to retrieve.
+* `site_id` - (Optional) The ID of the site of the devices to retrieve.
 * `tags` - (Optional) Restricts the list to the devices with these tags.
 
 ## Attributes Reference

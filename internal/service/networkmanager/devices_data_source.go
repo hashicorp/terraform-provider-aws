@@ -25,6 +25,10 @@ func DataSourceDevices() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"site_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"tags": tftags.TagsSchema(),
 		},
 	}
@@ -35,9 +39,15 @@ func dataSourceDevicesRead(ctx context.Context, d *schema.ResourceData, meta int
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	tagsToMatch := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	output, err := FindDevices(ctx, conn, &networkmanager.GetDevicesInput{
+	input := &networkmanager.GetDevicesInput{
 		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
-	})
+	}
+
+	if v, ok := d.GetOk("site_id"); ok {
+		input.SiteId = aws.String(v.(string))
+	}
+
+	output, err := FindDevices(ctx, conn, input)
 
 	if err != nil {
 		return diag.Errorf("error listing Network Manager Devices: %s", err)
