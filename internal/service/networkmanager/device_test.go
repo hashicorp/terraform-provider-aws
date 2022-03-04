@@ -51,7 +51,7 @@ func TestAccNetworkManagerDevice_basic(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerDevice_disapears(t *testing.T) {
+func TestAccNetworkManagerDevice_disappears(t *testing.T) {
 	resourceName := "aws_networkmanager_device.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
