@@ -38,7 +38,6 @@ jobs:
       hc-releases-aws-access-key-id: '${{ secrets.TF_PROVIDER_RELEASE_AWS_ACCESS_KEY_ID }}'
       hc-releases-aws-secret-access-key: '${{ secrets.TF_PROVIDER_RELEASE_AWS_SECRET_ACCESS_KEY }}'
       hc-releases-aws-role-arn: '${{ secrets.TF_PROVIDER_RELEASE_AWS_ROLE_ARN }}'
-      hc-releases-aws-role-duration-seconds: 7200
       hc-releases-fastly-api-token: '${{ secrets.HASHI_FASTLY_PURGE_TOKEN }}'
       hc-releases-github-token: '${{ secrets.HASHI_RELEASES_GITHUB_TOKEN }}'
       hc-releases-terraform-registry-sync-token: '${{ secrets.TF_PROVIDER_RELEASE_TERRAFORM_REGISTRY_SYNC_TOKEN }}'
@@ -47,6 +46,7 @@ jobs:
       signore-client-secret: '${{ secrets.SIGNORE_CLIENT_SECRET }}'
     with:
       goreleaser-release-args: --timeout 2h
+      hc-releases-aws-role-duration-seconds: 7200
       release-notes: true
       setup-go-version: '${{ needs.go-version.outputs.version }}'
   changelog-newversion:
