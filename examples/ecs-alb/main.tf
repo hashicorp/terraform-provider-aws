@@ -79,11 +79,11 @@ resource "aws_launch_configuration" "app" {
     aws_security_group.instance_sg.id,
   ]
 
-  key_name                    = var.key_name
-  image_id                    = data.aws_ami.stable_coreos.id
-  instance_type               = var.instance_type
-  iam_instance_profile        = aws_iam_instance_profile.app.name
-  user_data                   = templatefile("${path.module}/cloud-config.yml", {
+  key_name             = var.key_name
+  image_id             = data.aws_ami.stable_coreos.id
+  instance_type        = var.instance_type
+  iam_instance_profile = aws_iam_instance_profile.app.name
+  user_data = templatefile("${path.module}/cloud-config.yml", {
     aws_region         = var.aws_region
     ecs_cluster_name   = aws_ecs_cluster.main.name
     ecs_log_level      = "info"
@@ -163,7 +163,7 @@ resource "aws_ecs_cluster" "main" {
 }
 
 resource "aws_ecs_task_definition" "ghost" {
-  family                = "tf_example_ghost_td"
+  family = "tf_example_ghost_td"
   container_definitions = templatefile("${path.module}/task-definition.json", {
     image_url        = "ghost:latest"
     container_name   = "ghost"
@@ -264,8 +264,8 @@ EOF
 }
 
 resource "aws_iam_role_policy" "instance" {
-  name   = "TfEcsExampleInstanceRole"
-  role   = aws_iam_role.app_instance.name
+  name = "TfEcsExampleInstanceRole"
+  role = aws_iam_role.app_instance.name
   policy = templatefile("${path.module}/instance-profile-policy.json", {
     app_log_group_arn = aws_cloudwatch_log_group.app.arn
     ecs_log_group_arn = aws_cloudwatch_log_group.ecs.arn
