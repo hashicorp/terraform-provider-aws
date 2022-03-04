@@ -55,5 +55,5 @@ In addition to all arguments above, the following attributes are exported:
 `aws_networkmanager_link` can be imported using the link ARN, e.g.
 
 ```
-$ terraform import aws_networkmanager_site.example arn:aws:networkmanager::123456789012:link/global-network-0d47f6t230mz46dy4/link-444555aaabbb11223
+$ terraform import aws_networkmanager_link.example arn:aws:networkmanager::123456789012:link/global-network-0d47f6t230mz46dy4/link-444555aaabbb11223
 ```

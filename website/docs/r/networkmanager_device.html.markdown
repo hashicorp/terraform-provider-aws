@@ -1,5 +1,5 @@
 ---
-subcategory: "Transit Gateway Network Manager"
+subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_device"
 description: |-
