@@ -43,6 +43,11 @@ func ResourceAssociation() *schema.Resource {
 				Default:  false,
 				Optional: true,
 			},
+			"sync_compliance": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"AUTO", "MANUAL"}, false),
+			},
 			"association_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -166,6 +171,10 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 		Name: aws.String(d.Get("name").(string)),
 	}
 
+	if v, ok := d.GetOk("sync_compliance"); ok {
+		associationInput.SyncCompliance = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("apply_only_at_cron_interval"); ok {
 		associationInput.ApplyOnlyAtCronInterval = aws.Bool(v.(bool))
 	}
@@ -260,6 +269,7 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 		Resource:  fmt.Sprintf("association/%s", aws.StringValue(association.AssociationId)),
 	}.String()
 	d.Set("arn", arn)
+	d.Set("sync_compliance", association.SyncCompliance)
 	d.Set("apply_only_at_cron_interval", association.ApplyOnlyAtCronInterval)
 	d.Set("association_name", association.AssociationName)
 	d.Set("instance_id", association.InstanceId)

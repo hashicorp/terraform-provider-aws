@@ -608,6 +608,32 @@ func TestAccSSMAssociation_rateControl(t *testing.T) {
 	})
 }
 
+func TestAccSSMAssociation_syncCompliance(t *testing.T) {
+	rName := "AWS-RunPatchBaselineAssociation"
+	resourceName := "aws_ssm_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAssociationSyncComplianceConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAssociationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "sync_compliance", "MANUAL"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1567,6 +1593,30 @@ resource "aws_ssm_association" "test" {
   }
 }
 `, rName, rate)
+}
+
+func testAccAssociationSyncComplianceConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_association" "test" {
+  name = %[1]q
+  targets {
+    key    = "InstanceIds"
+    values = ["*"]
+  }
+  apply_only_at_cron_interval = false
+  sync_compliance             = "MANUAL"
+  parameters = {
+    Operation    = "Scan"
+    RebootOption = "NoReboot"
+  }
+  schedule_expression = "cron(0 6 ? * * *)"
+  lifecycle {
+    ignore_changes = [
+      parameters["AssociationId"]
+    ]
+  }
+}
+`, rName)
 }
 
 func testAccAssociationConfig_outputLocationAndWaitForSuccess(rName string) string {
