@@ -20,7 +20,7 @@ package ecs
 
 Some flags control generation a certain section of code, such as whether the generator generates a certain function. Other flags determine how generated code will work. Do not include flags where you want the generator to use the default value.
 
-| Flag | Default | Description | Example Use | 
+| Flag | Default | Description | Example Use |
 | --- | --- | --- | --- |
 | `GetTag` |  | Whether to generate GetTag | `-GetTag` |
 | `ListTags` |  | Whether to generate ListTags | `-ListTags` |
