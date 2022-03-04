@@ -30,6 +30,7 @@ func TestAccNetworkManagerDevice_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeviceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "aws_location.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "model", ""),
@@ -165,6 +166,45 @@ func TestAccNetworkManagerDevice_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "site_id", site2ResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "type", "type2"),
 					resource.TestCheckResourceAttr(resourceName, "vendor", "vendor2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerDevice_awsLocation(t *testing.T) {
+	resourceName := "aws_networkmanager_device.test"
+	subnetResourceName := "aws_subnet.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDeviceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeviceAWSLocationConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDeviceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "aws_location.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "aws_location.0.subnet_arn", subnetResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "aws_location.0.zone", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccDeviceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeviceAWSLocationUpdatedConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDeviceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "aws_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aws_location.0.subnet_arn", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "aws_location.0.zone", subnetResourceName, "availability_zone"),
 				),
 			},
 		},
@@ -361,6 +401,86 @@ resource "aws_networkmanager_device" "test" {
   }
 }
 `, rName)
+}
+
+func testAccDeviceAWSLocationConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_global_network" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_device" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  aws_location {
+    subnet_arn = aws_subnet.test.arn
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccDeviceAWSLocationUpdatedConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_global_network" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_device" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  aws_location {
+    zone = aws_subnet.test.availability_zone
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
 
 func testAccDeviceImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {

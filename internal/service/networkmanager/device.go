@@ -63,6 +63,26 @@ func ResourceDevice() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"aws_location": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"subnet_arn": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ValidateFunc:  verify.ValidARN,
+							ConflictsWith: []string{"aws_location.0.zone"},
+						},
+						"zone": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"aws_location.0.subnet_arn"},
+						},
+					},
+				},
+			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -142,6 +162,10 @@ func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Description = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("aws_location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.AWSLocation = expandAWSLocation(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Location = expandLocation(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -205,6 +229,13 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("arn", device.DeviceArn)
+	if device.AWSLocation != nil {
+		if err := d.Set("aws_location", []interface{}{flattenAWSLocation(device.AWSLocation)}); err != nil {
+			return diag.Errorf("error setting aws_location: %s", err)
+		}
+	} else {
+		d.Set("aws_location", nil)
+	}
 	d.Set("description", device.Description)
 	if device.Location != nil {
 		if err := d.Set("location", []interface{}{flattenLocation(device.Location)}); err != nil {
@@ -247,6 +278,10 @@ func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			SiteId:          aws.String(d.Get("site_id").(string)),
 			Type:            aws.String(d.Get("type").(string)),
 			Vendor:          aws.String(d.Get("vendor").(string)),
+		}
+
+		if v, ok := d.GetOk("aws_location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.AWSLocation = expandAWSLocation(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk("location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -440,4 +475,40 @@ func waitDeviceUpdated(ctx context.Context, conn *networkmanager.NetworkManager,
 	}
 
 	return nil, err
+}
+
+func expandAWSLocation(tfMap map[string]interface{}) *networkmanager.AWSLocation {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &networkmanager.AWSLocation{}
+
+	if v, ok := tfMap["subnet_arn"].(string); ok {
+		apiObject.SubnetArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["zone"].(string); ok {
+		apiObject.Zone = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenAWSLocation(apiObject *networkmanager.AWSLocation) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.SubnetArn; v != nil {
+		tfMap["subnet_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Zone; v != nil {
+		tfMap["zone"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }

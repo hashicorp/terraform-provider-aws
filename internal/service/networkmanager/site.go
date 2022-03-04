@@ -409,15 +409,15 @@ func expandLocation(tfMap map[string]interface{}) *networkmanager.Location {
 
 	apiObject := &networkmanager.Location{}
 
-	if v, ok := tfMap["address"].(string); ok && v != "" {
+	if v, ok := tfMap["address"].(string); ok {
 		apiObject.Address = aws.String(v)
 	}
 
-	if v, ok := tfMap["latitude"].(string); ok && v != "" {
+	if v, ok := tfMap["latitude"].(string); ok {
 		apiObject.Latitude = aws.String(v)
 	}
 
-	if v, ok := tfMap["longitude"].(string); ok && v != "" {
+	if v, ok := tfMap["longitude"].(string); ok {
 		apiObject.Longitude = aws.String(v)
 	}
 
