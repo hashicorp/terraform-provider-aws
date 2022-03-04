@@ -611,7 +611,7 @@ func testAccCheckClusterDestroyWithProvider(s *terraform.State, provider *schema
 
 		// Return nil if the cluster is already destroyed
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBClusterNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
 				return nil
 			}
 		}
@@ -693,7 +693,7 @@ func testAccCheckClusterSnapshot(rName string) resource.TestCheckFunc {
 
 			// Return nil if the cluster is already destroyed
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBClusterNotFoundFault, "") {
+				if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
 					return nil
 				}
 			}

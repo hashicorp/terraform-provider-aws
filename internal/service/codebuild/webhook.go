@@ -237,7 +237,7 @@ func resourceWebhookDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, codebuild.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, codebuild.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return err

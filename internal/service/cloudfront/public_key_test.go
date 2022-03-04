@@ -165,7 +165,7 @@ func testAccCheckCloudFrontPublicKeyDestroy(s *terraform.State) error {
 		}
 
 		_, err := conn.GetPublicKey(params)
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchPublicKey, "") {
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
 			continue
 		}
 		if err != nil {

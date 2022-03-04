@@ -30,11 +30,13 @@ import (
 // layer resource types, which have names matching aws_opsworks_*_layer .
 
 type opsworksLayerTypeAttribute struct {
-	AttrName  string
-	Type      schema.ValueType
-	Default   interface{}
-	Required  bool
-	WriteOnly bool
+	AttrName     string
+	Type         schema.ValueType
+	Default      interface{}
+	ForceNew     bool
+	Required     bool
+	ValidateFunc schema.SchemaValidateFunc
+	WriteOnly    bool
 }
 
 type opsworksLayerType struct {
@@ -322,10 +324,12 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 
 	for key, def := range lt.Attributes {
 		resourceSchema[key] = &schema.Schema{
-			Type:     def.Type,
-			Default:  def.Default,
-			Required: def.Required,
-			Optional: !def.Required,
+			Type:         def.Type,
+			Default:      def.Default,
+			ForceNew:     def.ForceNew,
+			Required:     def.Required,
+			Optional:     !def.Required,
+			ValidateFunc: def.ValidateFunc,
 		}
 	}
 
@@ -367,7 +371,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 
 	resp, err := conn.DescribeLayers(req)
 	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
 			d.SetId("")
 			return nil
 		}
@@ -495,9 +499,22 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[DEBUG] Creating OpsWorks layer: %s", d.Id())
 
+	if v, ok := d.GetOk("ecs_cluster_arn"); ok {
+		ecsClusterArn := v.(string)
+		//Need to attach the ECS Cluster to the stack before creating the layer
+		log.Printf("[DEBUG] Attaching ECS Cluster: %s", ecsClusterArn)
+		_, err := conn.RegisterEcsCluster(&opsworks.RegisterEcsClusterInput{
+			EcsClusterArn: aws.String(ecsClusterArn),
+			StackId:       req.StackId,
+		})
+		if err != nil {
+			return fmt.Errorf("error Registering Opsworks Layer ECS Cluster (%s): %w", d.Get("name").(string), err)
+		}
+	}
+
 	resp, err := conn.CreateLayer(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("error Creating Opsworks Layer (%s): %w", d.Get("name").(string), err)
 	}
 
 	layerId := *resp.LayerId
@@ -511,7 +528,7 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 			LayerId:                 &layerId,
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("error Attaching Opsworks Layer (%s) load balancer: %w", d.Id(), err)
 		}
 	}
 
@@ -525,7 +542,7 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 
 	if len(tags) > 0 {
 		if err := UpdateTags(conn, arn, nil, tags); err != nil {
-			return fmt.Errorf("error updating Opsworks stack (%s) tags: %w", arn, err)
+			return fmt.Errorf("error updating Opsworks Layer (%s) tags: %w", arn, err)
 		}
 	}
 
@@ -535,40 +552,48 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OpsWorksConn
 
-	attributes, err := lt.AttributeMap(d)
-	if err != nil {
-		return err
-	}
-	req := &opsworks.UpdateLayerInput{
-		LayerId:                     aws.String(d.Id()),
-		AutoAssignElasticIps:        aws.Bool(d.Get("auto_assign_elastic_ips").(bool)),
-		AutoAssignPublicIps:         aws.Bool(d.Get("auto_assign_public_ips").(bool)),
-		CustomInstanceProfileArn:    aws.String(d.Get("custom_instance_profile_arn").(string)),
-		CustomRecipes:               lt.CustomRecipes(d),
-		CustomSecurityGroupIds:      flex.ExpandStringSet(d.Get("custom_security_group_ids").(*schema.Set)),
-		EnableAutoHealing:           aws.Bool(d.Get("auto_healing").(bool)),
-		InstallUpdatesOnBoot:        aws.Bool(d.Get("install_updates_on_boot").(bool)),
-		LifecycleEventConfiguration: lt.LifecycleEventConfiguration(d),
-		Name:                        aws.String(d.Get("name").(string)),
-		Packages:                    flex.ExpandStringSet(d.Get("system_packages").(*schema.Set)),
-		UseEbsOptimizedInstances:    aws.Bool(d.Get("use_ebs_optimized_instances").(bool)),
-		Attributes:                  attributes,
-		VolumeConfigurations:        lt.VolumeConfigurations(d),
-	}
+	if d.HasChangesExcept("ecs_cluster_arn", "elastic_load_balancer", "tags", "tags_all") {
+		attributes, err := lt.AttributeMap(d)
+		if err != nil {
+			return err
+		}
 
-	if v, ok := d.GetOk("cloudwatch_configuration"); ok {
-		req.CloudWatchLogsConfiguration = expandOpsworksCloudWatchConfig(v.([]interface{}))
+		req := &opsworks.UpdateLayerInput{
+			LayerId:                     aws.String(d.Id()),
+			AutoAssignElasticIps:        aws.Bool(d.Get("auto_assign_elastic_ips").(bool)),
+			AutoAssignPublicIps:         aws.Bool(d.Get("auto_assign_public_ips").(bool)),
+			CustomInstanceProfileArn:    aws.String(d.Get("custom_instance_profile_arn").(string)),
+			CustomRecipes:               lt.CustomRecipes(d),
+			CustomSecurityGroupIds:      flex.ExpandStringSet(d.Get("custom_security_group_ids").(*schema.Set)),
+			EnableAutoHealing:           aws.Bool(d.Get("auto_healing").(bool)),
+			InstallUpdatesOnBoot:        aws.Bool(d.Get("install_updates_on_boot").(bool)),
+			LifecycleEventConfiguration: lt.LifecycleEventConfiguration(d),
+			Name:                        aws.String(d.Get("name").(string)),
+			Packages:                    flex.ExpandStringSet(d.Get("system_packages").(*schema.Set)),
+			UseEbsOptimizedInstances:    aws.Bool(d.Get("use_ebs_optimized_instances").(bool)),
+			Attributes:                  attributes,
+			VolumeConfigurations:        lt.VolumeConfigurations(d),
+		}
+
+		if v, ok := d.GetOk("cloudwatch_configuration"); ok {
+			req.CloudWatchLogsConfiguration = expandOpsworksCloudWatchConfig(v.([]interface{}))
+		}
+
+		if lt.CustomShortName {
+			req.Shortname = aws.String(d.Get("short_name").(string))
+		} else {
+			req.Shortname = aws.String(lt.TypeName)
+		}
+
+		req.CustomJson = aws.String(d.Get("custom_json").(string))
+
+		log.Printf("[DEBUG] Updating OpsWorks layer: %s", d.Id())
+
+		_, err = conn.UpdateLayer(req)
+		if err != nil {
+			return fmt.Errorf("error updating Opsworks Layer (%s): %w", d.Id(), err)
+		}
 	}
-
-	if lt.CustomShortName {
-		req.Shortname = aws.String(d.Get("short_name").(string))
-	} else {
-		req.Shortname = aws.String(lt.TypeName)
-	}
-
-	req.CustomJson = aws.String(d.Get("custom_json").(string))
-
-	log.Printf("[DEBUG] Updating OpsWorks layer: %s", d.Id())
 
 	if d.HasChange("elastic_load_balancer") {
 		lbo, lbn := d.GetChange("elastic_load_balancer")
@@ -583,7 +608,7 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 				LayerId:                 aws.String(d.Id()),
 			})
 			if err != nil {
-				return err
+				return fmt.Errorf("error Dettaching Opsworks Layer (%s) load balancer: %w", d.Id(), err)
 			}
 		}
 
@@ -594,14 +619,9 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 				LayerId:                 aws.String(d.Id()),
 			})
 			if err != nil {
-				return err
+				return fmt.Errorf("error Attaching Opsworks Layer (%s) load balancer: %w", d.Id(), err)
 			}
 		}
-	}
-
-	_, err = conn.UpdateLayer(req)
-	if err != nil {
-		return err
 	}
 
 	if d.HasChange("tags_all") {
@@ -626,7 +646,27 @@ func (lt *opsworksLayerType) Delete(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Deleting OpsWorks layer: %s", d.Id())
 
 	_, err := conn.DeleteLayer(req)
-	return err
+
+	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		log.Printf("[DEBUG] OpsWorks Layer (%s) not found to delete; removed from state", d.Id())
+	}
+
+	if err != nil && !tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		return fmt.Errorf("error Deleting Opsworks Layer (%s): %w", d.Id(), err)
+	}
+
+	if v, ok := d.GetOk("ecs_cluster_arn"); ok {
+		ecsClusterArn := v.(string)
+		log.Printf("[DEBUG] Detaching ECS Cluster: %s", ecsClusterArn)
+		_, err := conn.DeregisterEcsCluster(&opsworks.DeregisterEcsClusterInput{
+			EcsClusterArn: aws.String(ecsClusterArn),
+		})
+		if err != nil {
+			return fmt.Errorf("error Deregistering Opsworks Layer ECS Cluster (%s): %w", d.Id(), err)
+		}
+	}
+
+	return nil
 }
 
 func (lt *opsworksLayerType) AttributeMap(d *schema.ResourceData) (map[string]*string, error) {
@@ -788,27 +828,27 @@ func (lt *opsworksLayerType) SetVolumeConfigurations(d *schema.ResourceData, v [
 		newValue[i] = &data
 
 		if config.Iops != nil {
-			data["iops"] = int(*config.Iops)
+			data["iops"] = aws.Int64Value(config.Iops)
 		} else {
 			data["iops"] = 0
 		}
 		if config.MountPoint != nil {
-			data["mount_point"] = *config.MountPoint
+			data["mount_point"] = aws.StringValue(config.MountPoint)
 		}
 		if config.NumberOfDisks != nil {
-			data["number_of_disks"] = int(*config.NumberOfDisks)
+			data["number_of_disks"] = aws.Int64Value(config.NumberOfDisks)
 		}
 		if config.RaidLevel != nil {
 			data["raid_level"] = strconv.Itoa(int(*config.RaidLevel))
 		}
 		if config.Size != nil {
-			data["size"] = int(*config.Size)
+			data["size"] = aws.Int64Value(config.Size)
 		}
 		if config.VolumeType != nil {
-			data["type"] = *config.VolumeType
+			data["type"] = aws.StringValue(config.VolumeType)
 		}
 		if config.Encrypted != nil {
-			data["encrypted"] = *config.Encrypted
+			data["encrypted"] = aws.BoolValue(config.Encrypted)
 		}
 	}
 

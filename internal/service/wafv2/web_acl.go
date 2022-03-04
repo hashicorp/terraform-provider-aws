@@ -177,7 +177,7 @@ func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		resp, err = conn.CreateWebACL(params)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFUnavailableEntityException) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -215,7 +215,7 @@ func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetWebACL(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
 			log.Printf("[WARN] WAFv2 WebACL (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -294,7 +294,7 @@ func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := resource.Retry(webACLUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateWebACL(u)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
+				if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFUnavailableEntityException) {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -307,7 +307,7 @@ func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFOptimisticLockException, "") {
+			if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFOptimisticLockException) {
 				return fmt.Errorf("Error updating WAFv2 WebACL, resource has changed since last refresh please run a new plan before applying again: %w", err)
 			}
 			return fmt.Errorf("Error updating WAFv2 WebACL: %w", err)

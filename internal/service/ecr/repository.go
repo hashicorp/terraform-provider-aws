@@ -349,7 +349,7 @@ func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 		Force:          aws.Bool(true),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error deleting ECR repository: %s", err)
@@ -362,7 +362,7 @@ func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err = conn.DescribeRepositories(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -374,7 +374,7 @@ func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 		_, err = conn.DescribeRepositories(input)
 	}
 
-	if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
 		return nil
 	}
 

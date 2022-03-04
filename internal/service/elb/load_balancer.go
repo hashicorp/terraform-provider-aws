@@ -540,7 +540,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 				_, err := elbconn.CreateLoadBalancerListeners(input)
 				if err != nil {
-					if tfawserr.ErrMessageContains(err, elb.ErrCodeDuplicateListenerException, "") {
+					if tfawserr.ErrCodeEquals(err, elb.ErrCodeDuplicateListenerException) {
 						log.Printf("[DEBUG] Duplicate listener found for ELB (%s), retrying", d.Id())
 						return resource.RetryableError(err)
 					}

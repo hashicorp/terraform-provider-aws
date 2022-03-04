@@ -468,7 +468,7 @@ func testAccCheckUserDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error is what we want
-		if !tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if !tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return err
 		}
 	}

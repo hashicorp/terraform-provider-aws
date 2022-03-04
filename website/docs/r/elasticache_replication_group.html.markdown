@@ -139,9 +139,9 @@ resource "aws_elasticache_replication_group" "primary" {
 
 The following arguments are required:
 
-* `description` – (Required) User-created description for the replication group.
+* `description` – (Required) User-created description for the replication group. Must not be empty.
 * `replication_group_id` – (Required) Replication group identifier. This parameter is stored as a lowercase string.
-* `replication_group_description` – (**Deprecated** use `description` instead) User-created description for the replication group.
+* `replication_group_description` – (**Deprecated** use `description` instead) User-created description for the replication group. Must not be empty.
 
 The following arguments are optional:
 

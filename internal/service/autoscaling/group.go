@@ -1413,7 +1413,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteAutoScalingGroup(&deleteopts)
-		if tfawserr.ErrMessageContains(err, "InvalidGroup.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidGroup.NotFound") {
 			return nil
 		}
 	}

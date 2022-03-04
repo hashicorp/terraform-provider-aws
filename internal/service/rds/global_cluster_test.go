@@ -457,7 +457,7 @@ func testAccCheckGlobalClusterDestroy(s *terraform.State) error {
 
 		globalCluster, err := tfrds.DescribeGlobalCluster(conn, rs.Primary.ID)
 
-		if tfawserr.ErrMessageContains(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) {
 			continue
 		}
 

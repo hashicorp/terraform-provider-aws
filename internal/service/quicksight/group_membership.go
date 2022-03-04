@@ -141,7 +141,7 @@ func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if _, err := conn.DeleteGroupMembershipWithContext(ctx, deleteOpts); err != nil {
-		if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return diag.Errorf("Error deleting QuickSight User-group membership %s: %s", d.Id(), err)

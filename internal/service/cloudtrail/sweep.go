@@ -68,7 +68,7 @@ func sweeps(region string) error {
 			_, err = conn.DeleteTrail(&cloudtrail.DeleteTrailInput{
 				Name: aws.String(name),
 			})
-			if tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeTrailNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, cloudtrail.ErrCodeTrailNotFoundException) {
 				continue
 			}
 			if err != nil {

@@ -114,7 +114,7 @@ func resourceResourceAssociationDelete(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Disassociating RAM Resource Share: %s", input)
 	_, err = conn.DisassociateResourceShare(input)
 
-	if tfawserr.ErrMessageContains(err, ram.ErrCodeUnknownResourceException, "") {
+	if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
 		return nil
 	}
 
@@ -149,7 +149,7 @@ func GetResourceShareAssociation(conn *ram.RAM, resourceShareARN, resourceARN st
 
 	output, err := conn.GetResourceShareAssociations(input)
 
-	if tfawserr.ErrMessageContains(err, ram.ErrCodeUnknownResourceException, "") {
+	if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
 		return nil, nil
 	}
 

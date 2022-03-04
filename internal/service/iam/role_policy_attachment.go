@@ -119,7 +119,7 @@ func resourceRolePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}
 
 	err := DetachPolicyFromRole(conn, role, arn)
 
-	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		return nil
 	}
 

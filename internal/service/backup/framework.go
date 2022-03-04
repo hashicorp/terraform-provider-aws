@@ -176,7 +176,7 @@ func resourceFrameworkRead(d *schema.ResourceData, meta interface{}) error {
 		FrameworkName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Backup Framework (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

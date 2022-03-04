@@ -605,7 +605,7 @@ func testAccCheckOptionGroupDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error
-		if !tfawserr.ErrMessageContains(err, rds.ErrCodeOptionGroupNotFoundFault, "") {
+		if !tfawserr.ErrCodeEquals(err, rds.ErrCodeOptionGroupNotFoundFault) {
 			return err
 		}
 	}

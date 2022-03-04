@@ -174,7 +174,7 @@ func FindRoleByName(conn *iam.IAM, name string) (*iam.Role, error) {
 	return output.Role, nil
 }
 
-func FindVirtualMfaDevice(conn *iam.IAM, serialNum string) (*iam.VirtualMFADevice, error) {
+func FindVirtualMFADevice(conn *iam.IAM, serialNum string) (*iam.VirtualMFADevice, error) {
 	input := &iam.ListVirtualMFADevicesInput{}
 
 	output, err := conn.ListVirtualMFADevices(input)

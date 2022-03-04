@@ -93,7 +93,7 @@ func resourceTransitGatewayPeeringAttachmentRead(d *schema.ResourceData, meta in
 
 	transitGatewayPeeringAttachment, err := DescribeTransitGatewayPeeringAttachment(conn, d.Id())
 
-	if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
 		log.Printf("[WARN] EC2 Transit Gateway Peering Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -158,7 +158,7 @@ func resourceTransitGatewayPeeringAttachmentDelete(d *schema.ResourceData, meta 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Peering Attachment (%s): %s", d.Id(), input)
 	_, err := conn.DeleteTransitGatewayPeeringAttachment(input)
 
-	if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
 		return nil
 	}
 

@@ -75,7 +75,7 @@ func testAccCheckConditionalForwarderDestroy(s *terraform.State) error {
 			RemoteDomainNames: []*string{aws.String(domainName)},
 		})
 
-		if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
+		if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
 			continue
 		}
 

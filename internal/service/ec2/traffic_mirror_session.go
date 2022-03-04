@@ -201,7 +201,7 @@ func resourceTrafficMirrorSessionRead(d *schema.ResourceData, meta interface{}) 
 
 	out, err := conn.DescribeTrafficMirrorSessions(input)
 
-	if tfawserr.ErrMessageContains(err, "InvalidTrafficMirrorSessionId.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidTrafficMirrorSessionId.NotFound") {
 		log.Printf("[WARN] EC2 Traffic Mirror Session (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

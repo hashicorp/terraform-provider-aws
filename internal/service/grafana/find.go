@@ -8,6 +8,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func FindLicensedWorkspaceByID(conn *managedgrafana.ManagedGrafana, id string) (*managedgrafana.WorkspaceDescription, error) {
+	output, err := FindWorkspaceByID(conn, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.LicenseType == nil {
+		return nil, &resource.NotFoundError{}
+	}
+
+	return output, nil
+}
+
 func FindWorkspaceByID(conn *managedgrafana.ManagedGrafana, id string) (*managedgrafana.WorkspaceDescription, error) {
 	input := &managedgrafana.DescribeWorkspaceInput{
 		WorkspaceId: aws.String(id),

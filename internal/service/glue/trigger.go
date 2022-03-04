@@ -274,7 +274,7 @@ func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Waiting for Glue Trigger (%s) to create", d.Id())
 	if _, err := waitTriggerCreated(conn, d.Id()); err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error waiting for Glue Trigger (%s) to be Created: %w", d.Id(), err)
@@ -302,7 +302,7 @@ func resourceTriggerRead(d *schema.ResourceData, meta interface{}) error {
 
 	output, err := FindTriggerByName(conn, d.Id())
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue Trigger (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -465,7 +465,7 @@ func resourceTriggerDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Waiting for Glue Trigger (%s) to delete", d.Id())
 	if _, err := waitTriggerDeleted(conn, d.Id()); err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error waiting for Glue Trigger (%s) to be Deleted: %w", d.Id(), err)
@@ -481,7 +481,7 @@ func deleteGlueTrigger(conn *glue.Glue, Name string) error {
 
 	_, err := conn.DeleteTrigger(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 		return err

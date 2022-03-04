@@ -350,7 +350,7 @@ func testAccCheckRepositoryDestroy(s *terraform.State) error {
 
 		out, err := conn.DescribeRepositories(&input)
 
-		if tfawserr.ErrMessageContains(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, ecrpublic.ErrCodeRepositoryNotFoundException) {
 			return nil
 		}
 

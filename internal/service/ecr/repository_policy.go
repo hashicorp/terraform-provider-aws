@@ -173,8 +173,8 @@ func resourceRepositoryPolicyDelete(d *schema.ResourceData, meta interface{}) er
 		RegistryId:     aws.String(d.Get("registry_id").(string)),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") ||
-			tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryPolicyNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) ||
+			tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryPolicyNotFoundException) {
 			return nil
 		}
 		return err

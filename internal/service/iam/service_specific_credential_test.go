@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccServiceSpecificCredential_basic(t *testing.T) {
+func TestAccIAMServiceSpecificCredential_basic(t *testing.T) {
 	var cred iam.ServiceSpecificCredentialMetadata
 
 	resourceName := "aws_iam_service_specific_credential.test"
@@ -47,7 +47,7 @@ func TestAccServiceSpecificCredential_basic(t *testing.T) {
 	})
 }
 
-func TestAccServiceSpecificCredential_multi(t *testing.T) {
+func TestAccIAMServiceSpecificCredential_multi(t *testing.T) {
 	var cred iam.ServiceSpecificCredentialMetadata
 
 	resourceName := "aws_iam_service_specific_credential.test"
@@ -86,7 +86,7 @@ func TestAccServiceSpecificCredential_multi(t *testing.T) {
 	})
 }
 
-func TestAccServiceSpecificCredential_status(t *testing.T) {
+func TestAccIAMServiceSpecificCredential_status(t *testing.T) {
 	var cred iam.ServiceSpecificCredentialMetadata
 
 	resourceName := "aws_iam_service_specific_credential.test"
@@ -129,7 +129,7 @@ func TestAccServiceSpecificCredential_status(t *testing.T) {
 	})
 }
 
-func TestAccServiceSpecificCredential_disappears(t *testing.T) {
+func TestAccIAMServiceSpecificCredential_disappears(t *testing.T) {
 	var cred iam.ServiceSpecificCredentialMetadata
 	resourceName := "aws_iam_service_specific_credential.test"
 

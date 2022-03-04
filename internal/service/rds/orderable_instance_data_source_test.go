@@ -330,7 +330,7 @@ data "aws_rds_orderable_db_instance" "test" {
   storage_type                 = "standard"
   supports_enhanced_monitoring = true
 
-  preferred_engine_versions  = ["5.6.35", "5.6.41", "5.6.44"]
+  preferred_engine_versions  = ["8.0.25", "8.0.26", "8.0.27"]
   preferred_instance_classes = ["db.t2.small", "db.t3.medium", "db.t3.large"]
 }
 `
@@ -344,7 +344,7 @@ data "aws_rds_orderable_db_instance" "test" {
   storage_type                         = "standard"
   supports_iam_database_authentication = true
 
-  preferred_engine_versions  = ["5.6.35", "5.6.41", "5.6.44"]
+  preferred_engine_versions  = ["8.0.25", "8.0.26", "8.0.27"]
   preferred_instance_classes = ["db.t2.small", "db.t3.medium", "db.t3.large"]
 }
 `
@@ -384,7 +384,7 @@ data "aws_rds_orderable_db_instance" "test" {
   license_model                 = "general-public-license"
   supports_performance_insights = true
 
-  preferred_engine_versions  = ["5.6.35", "5.6.41", "5.6.44"]
+  preferred_engine_versions  = ["8.0.25", "8.0.26", "8.0.27"]
   preferred_instance_classes = ["db.t2.small", "db.t3.medium", "db.t3.large"]
 }
 `
@@ -411,7 +411,7 @@ data "aws_rds_orderable_db_instance" "test" {
   storage_type                = "standard"
   supports_storage_encryption = true
 
-  preferred_engine_versions  = ["5.6.35", "5.6.41", "5.6.44"]
+  preferred_engine_versions  = ["8.0.25", "8.0.26", "8.0.27"]
   preferred_instance_classes = ["db.t2.small", "db.t3.medium", "db.t3.large"]
 }
 `

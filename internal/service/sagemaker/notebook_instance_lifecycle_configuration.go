@@ -96,7 +96,7 @@ func resourceNotebookInstanceLifeCycleConfigurationRead(d *schema.ResourceData, 
 
 	lifecycleConfig, err := conn.DescribeNotebookInstanceLifecycleConfig(request)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "ValidationException", "") {
+		if tfawserr.ErrCodeEquals(err, "ValidationException") {
 			log.Printf("[INFO] unable to find the SageMaker notebook instance lifecycle configuration (%s); therefore it is removed from the state", d.Id())
 			d.SetId("")
 			return nil
@@ -162,7 +162,7 @@ func resourceNotebookInstanceLifeCycleConfigurationDelete(d *schema.ResourceData
 	_, err := conn.DeleteNotebookInstanceLifecycleConfig(deleteOpts)
 	if err != nil {
 
-		if tfawserr.ErrMessageContains(err, "ValidationException", "") {
+		if tfawserr.ErrCodeEquals(err, "ValidationException") {
 			return nil
 		}
 

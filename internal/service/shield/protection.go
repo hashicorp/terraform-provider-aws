@@ -90,7 +90,7 @@ func resourceProtectionRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.DescribeProtection(input)
 
-	if tfawserr.ErrMessageContains(err, shield.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, shield.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Shield Protection (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -134,7 +134,7 @@ func resourceProtectionDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.DeleteProtection(input)
 
-	if tfawserr.ErrMessageContains(err, shield.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, shield.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
