@@ -14,7 +14,7 @@ You cannot register a transit gateway in more than one global network.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_networkmanager_global_network" "example" {
   description = "example"
 }

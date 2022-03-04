@@ -12,7 +12,7 @@ Retrieve information about a global network.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_networkmanager_global_network" "example" {
   global_network_id = var.global_network_id
 }

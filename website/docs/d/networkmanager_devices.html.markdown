@@ -12,7 +12,7 @@ Retrieve information about devices.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_networkmanager_devices" "example" {
   global_network_id = var.global_network_id
 

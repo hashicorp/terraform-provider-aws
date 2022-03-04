@@ -12,7 +12,7 @@ Retrieve information about a site.
 
 ## Example Usage
 
-```hcl
+```terraform
 data " aws_networkmanager_site" "example" {
   global_network_id = var.global_network_id
   site_id           = var.site_id

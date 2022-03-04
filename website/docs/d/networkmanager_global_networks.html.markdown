@@ -12,7 +12,7 @@ Retrieve information about global networks.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_networkmanager_global_networks" "example" {
   tags = {
     Env = "test"
