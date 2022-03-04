@@ -1,5 +1,5 @@
 ---
-subcategory: "Transit Gateway Network Manager"
+subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_device"
 description: |-
@@ -14,20 +14,15 @@ Retrieve information about a device.
 
 ```hcl
 data "aws_networkmanager_device" "example" {
-  id = var.global_network_id
+  global_network_id_id = var.global_network_id
+  device_id            = var.device_id
 }
 ```
 
 ## Argument Reference
 
-* `id` - (Optional) The id of the specific device to retrieve.
-
+* `device_id` - (Required) The id of the specific device to retrieve.
 * `global_network_id` - (Required) The ID of the Global Network of the device to retrieve.
-
-* `site_id` - (Optional) The ID of the Site of the device to retrieve.
-
-* `tags` - (Optional) A map of tags, each pair of which must exactly match
-  a pair on the desired device.
 
 ## Attributes Reference
 
@@ -38,6 +33,8 @@ In addition to all arguments above, the following attributes are exported:
 * `type` - The type of device.
 * `model` - The model of device.
 * `serial_number` - The serial number of the device.
+* `site_id` - The site of the device.
+* `tags` - Key-value tags for the device.
 * `vendor` - The vendor of the device.
 
 The `location` object supports the following:

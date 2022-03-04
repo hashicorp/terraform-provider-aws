@@ -1,19 +1,17 @@
 package networkmanager
 
 import (
-	"errors"
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/networkmanager"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceDevice() *schema.Resource {
 	return &schema.Resource{
-		Read: DataSourceDeviceRead,
+		ReadWithoutTimeout: dataSourceDeviceRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -24,13 +22,13 @@ func DataSourceDevice() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"global_network_id": {
+			"device_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"id": {
+			"global_network_id": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"location": {
 				Type:     schema.TypeList,
@@ -62,9 +60,9 @@ func DataSourceDevice() *schema.Resource {
 			},
 			"site_id": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -77,77 +75,38 @@ func DataSourceDevice() *schema.Resource {
 	}
 }
 
-func DataSourceDeviceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).networkmanagerconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+func dataSourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &networkmanager.GetDevicesInput{
-		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
-	}
-
-	if v, ok := d.GetOk("id"); ok {
-		input.DeviceIds = aws.StringSlice([]string{v.(string)})
-	}
-
-	if v, ok := d.GetOk("site_id"); ok {
-		input.SiteId = aws.String(v.(string))
-	}
-
-	log.Printf("[DEBUG] Reading Network Manager Device: %s", input)
-	output, err := conn.GetDevices(input)
+	globalNetworkID := d.Get("global_network_id").(string)
+	deviceID := d.Get("device_id").(string)
+	device, err := FindDeviceByTwoPartKey(ctx, conn, globalNetworkID, deviceID)
 
 	if err != nil {
-		return fmt.Errorf("error reading Network Manager Device: %s", err)
+		return diag.Errorf("error reading Network Manager Device (%s): %s", deviceID, err)
 	}
 
-	// do filtering here
-	var filteredDevices []*networkmanager.Device
-	if tags, ok := d.GetOk("tags"); ok {
-		keyValueTags := keyvaluetags.New(tags.(map[string]interface{})).IgnoreAws()
-		for _, device := range output.Devices {
-			tagsMatch := true
-			if len(keyValueTags) > 0 {
-				listTags := keyvaluetags.NetworkmanagerKeyValueTags(device.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
-				tagsMatch = listTags.ContainsAll(keyValueTags)
-			}
-			if tagsMatch {
-				filteredDevices = append(filteredDevices, device)
-			}
-		}
-	} else {
-		filteredDevices = output.Devices
-	}
-
-	if output == nil || len(filteredDevices) == 0 {
-		return errors.New("error reading Network Manager Device: no results found")
-	}
-
-	if len(filteredDevices) > 1 {
-		return errors.New("error reading Network Manager Device: more than one result found. Please try a more specific search criteria.")
-	}
-
-	device := filteredDevices[0]
-
-	if device == nil {
-		return errors.New("error reading Network Manager Device: empty result")
-	}
-
+	d.SetId(deviceID)
 	d.Set("arn", device.DeviceArn)
 	d.Set("description", device.Description)
+	d.Set("device_id", device.DeviceId)
+	if device.Location != nil {
+		if err := d.Set("location", []interface{}{flattenLocation(device.Location)}); err != nil {
+			return diag.Errorf("error setting location: %s", err)
+		}
+	} else {
+		d.Set("location", nil)
+	}
 	d.Set("model", device.Model)
 	d.Set("serial_number", device.SerialNumber)
 	d.Set("site_id", device.SiteId)
 	d.Set("type", device.Type)
 	d.Set("vendor", device.Vendor)
 
-	if err := d.Set("location", flattenNetworkManagerLocation(device.Location)); err != nil {
-		return fmt.Errorf("error setting location: %s", err)
+	if err := d.Set("tags", KeyValueTags(device.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return diag.Errorf("error setting tags: %s", err)
 	}
-	if err := d.Set("tags", keyvaluetags.NetworkmanagerKeyValueTags(device.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
-	}
-
-	d.SetId(aws.StringValue(device.DeviceId))
 
 	return nil
 }
