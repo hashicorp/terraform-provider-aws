@@ -139,6 +139,34 @@ func TestAccDMSEndpoint_S3_extraConnectionAttributes(t *testing.T) {
 	})
 }
 
+func TestAccDMSEndpoint_S3_settingsVsECAParquet(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_s3SettingsVsECAParquet1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(fmt.Sprintf(`bucketName=%s;`, rName))),
+				),
+			},
+			{
+				Config: testAccEndpointConfig_s3SettingsVsECAParquet2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(fmt.Sprintf(`bucketName=%s;`, rName))),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDMSEndpoint_dynamoDB(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1963,6 +1991,117 @@ resource "aws_dms_endpoint" "test" {
   tags = {
     Name = %[1]q
   }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_s3SettingsVsECAParquet1(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "dms.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_dms_endpoint" "test" {
+  endpoint_type = "target"
+  engine_name   = "s3"
+  endpoint_id   = %[1]q
+
+  s3_settings {
+    bucket_folder                    = "some/prefix"
+    bucket_name                      = aws_s3_bucket.test.id
+    cdc_path                         = "cdc"
+    data_format                      = "parquet"
+    date_partition_enabled           = true   
+    include_op_for_full_load         = true
+    parquet_timestamp_in_millisecond = true
+    parquet_version                  = "parquet-2-0"
+    service_access_role_arn          = aws_iam_role.test.arn
+    timestamp_column_name            = "timestamp"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_s3SettingsVsECAParquet2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "dms.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_dms_endpoint" "test" {
+  endpoint_type = "target"
+  engine_name   = "s3"
+  endpoint_id   = %[1]q
+
+  s3_settings {
+    bucket_folder                    = "some/prefix"
+    bucket_name                      = aws_s3_bucket.test.id
+    cdc_path                         = "cdc"
+    data_format                      = "parquet"
+    date_partition_enabled           = true   
+    include_op_for_full_load         = true
+    parquet_timestamp_in_millisecond = true
+    parquet_version                  = "parquet-2-0"
+    service_access_role_arn          = aws_iam_role.test.arn
+    timestamp_column_name            = "timestamp"
+  }
+
+  extra_connection_attributes = join(";", [
+    "bucketName=${aws_s3_bucket.test.id}",
+    "bucketFolder=some/prefix",
+    "data_format=parquet",
+    "cdcPath=cdc",
+    "dataFormat=parquet",
+    "datePartitionEnabled=true",
+    "includeOpForFullLoad=true",
+    "parquetTimestampInMillisecond=true",
+    "parquetVersion=PARQUET_2_0",
+    "timestampColumnName=timestamp",
+  ])
 }
 `, rName)
 }
