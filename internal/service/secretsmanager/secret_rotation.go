@@ -48,6 +48,7 @@ func ResourceSecretRotation() *schema.Resource {
 						"automatically_after_days": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"duration": {
 							Type:     schema.TypeString,
@@ -66,7 +67,6 @@ func ResourceSecretRotation() *schema.Resource {
 }
 
 func resourceSecretRotationCreate(d *schema.ResourceData, meta interface{}) error {
-
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 	secretID := d.Get("secret_id").(string)
 	if v, ok := d.GetOk("rotation_lambda_arn"); ok && v.(string) != "" {
@@ -75,7 +75,6 @@ func resourceSecretRotationCreate(d *schema.ResourceData, meta interface{}) erro
 			RotationRules:     expandSecretsManagerRotationRules(d.Get("rotation_rules").([]interface{})),
 			SecretId:          aws.String(secretID),
 		}
-
 		log.Printf("[DEBUG] Enabling Secrets Manager Secret rotation: %s", input)
 		var output *secretsmanager.RotateSecretOutput
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
@@ -101,7 +100,7 @@ func resourceSecretRotationCreate(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		d.SetId(aws.StringValue(output.ARN))
-		fmt.Printf("resourceSecretRotationCreate output: %v\n", d.Get("rotation_rules"))
+		log.Printf("[DEBUG] resourceSecretRotationCreate output: %v\n", d.Get("rotation_rules"))
 	}
 
 	return resourceSecretRotationRead(d, meta)
@@ -119,7 +118,7 @@ func resourceSecretRotationRead(d *schema.ResourceData, meta interface{}) error 
 		var err error
 
 		output, err = conn.DescribeSecret(input)
-		fmt.Printf("resourceSecretRotationRead: %v\n", output)
+		log.Printf("[DEBUG] resourceSecretRotationRead: %v\n", output)
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 			return resource.RetryableError(err)
 		}
@@ -154,7 +153,7 @@ func resourceSecretRotationRead(d *schema.ResourceData, meta interface{}) error 
 	if aws.BoolValue(output.RotationEnabled) {
 		d.Set("rotation_lambda_arn", output.RotationLambdaARN)
 		x := flattenSecretsManagerRotationRules(output.RotationRules)
-		fmt.Printf("*** Flattened rules: %v\n", x)
+		log.Printf("[DEBUG] *** Flattened rules: %v\n", x)
 		if err := d.Set("rotation_rules", flattenSecretsManagerRotationRules(output.RotationRules)); err != nil {
 			return fmt.Errorf("error setting rotation_rules: %s", err)
 		}
