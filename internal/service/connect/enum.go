@@ -39,6 +39,9 @@ const (
 	// ListSecurityProfilePermissionsMaxResults Valid Range: Minimum value of 1. Maximum value of 1000.
 	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListSecurityProfilePermissions.html
 	ListSecurityProfilePermissionsMaxResults = 60
+	// ListSecurityProfilesMaxResults Valid Range: Minimum value of 1. Maximum value of 1000.
+	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListSecurityProfiles.html
+	ListSecurityProfilesMaxResults = 60
 )
 
 func InstanceAttributeMapping() map[string]string {
