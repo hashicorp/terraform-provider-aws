@@ -38,6 +38,34 @@ func TestAccConnectSecurityProfileDataSource_securityProfileID(t *testing.T) {
 	})
 }
 
+func TestAccConnectSecurityProfileDataSource_name(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_security_profile.test"
+	datasourceName := "data.aws_connect_security_profile.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
+		Providers:  acctest.Providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecurityProfileDataSourceConfig_Name(rName, rName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "permissions.#", resourceName, "permissions.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "security_profile_id", resourceName, "security_profile_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
+				),
+			},
+		},
+	})
+}
+
 func testAccSecurityProfileBaseDataSourceConfig(rName, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
@@ -71,6 +99,17 @@ func testAccSecurityProfileDataSourceConfig_SecurityProfileID(rName, rName2 stri
 data "aws_connect_security_profile" "test" {
   instance_id         = aws_connect_instance.test.id
   security_profile_id = aws_connect_security_profile.test.security_profile_id
+}
+`)
+}
+
+func testAccSecurityProfileDataSourceConfig_Name(rName, rName2 string) string {
+	return acctest.ConfigCompose(
+		testAccSecurityProfileBaseDataSourceConfig(rName, rName2),
+		`
+data "aws_connect_security_profile" "test" {
+  instance_id = aws_connect_instance.test.id
+  name        = aws_connect_security_profile.test.name
 }
 `)
 }
