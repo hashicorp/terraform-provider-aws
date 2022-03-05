@@ -665,6 +665,117 @@ func TestAccS3BucketLifecycleConfiguration_EmptyFilter_NonCurrentVersions(t *tes
 		},
 	})
 }
+func TestAccS3BucketLifecycleConfiguration_migrate_noChange(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+	bucketResourceName := "aws_s3_bucket.bucket"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketLifecycleConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketWithLifecycleExpireMarkerConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(bucketResourceName),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.id", "id1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.enabled", "true"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.prefix", "path1/"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.days", "0"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.date", ""),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.expired_object_delete_marker", "true"),
+				),
+			},
+			{
+				Config: testAccBucketLifecycleConfiguration_Migrate_NoChangeConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.id", "id1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.status", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.prefix", "path1/"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.date", ""),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.expired_object_delete_marker", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLifecycleConfiguration_migrate_withChange(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+	bucketResourceName := "aws_s3_bucket.bucket"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketLifecycleConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketWithLifecycleExpireMarkerConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(bucketResourceName),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.id", "id1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.enabled", "true"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.prefix", "path1/"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.days", "0"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.date", ""),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.expired_object_delete_marker", "true"),
+				),
+			},
+			{
+				Config: testAccBucketLifecycleConfiguration_Migrate_WithChangeConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.id", "id1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.status", "Disabled"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.prefix", "path1/"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.date", ""),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.expired_object_delete_marker", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLifecycleConfiguration_remove(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+	bucketResourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfigurationBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+					testAccCheckBucketLifecycle(bucketResourceName, true),
+				),
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationRemovedConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLifecycle(bucketResourceName, false),
+				),
+			},
+		},
+	})
+}
 
 func testAccCheckBucketLifecycleConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
@@ -753,6 +864,13 @@ func testAccBucketLifecycleConfigurationBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      acl,
+      lifecycle_rule,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -778,6 +896,13 @@ func testAccBucketLifecycleConfiguration_Basic_statusConfig(rName, status string
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      acl,
+      lifecycle_rule,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -803,6 +928,13 @@ func testAccBucketLifecycleConfiguration_Basic_updateConfig(rName, date, prefix 
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      acl,
+      lifecycle_rule,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -833,6 +965,13 @@ func testAccBucketLifecycleConfiguration_Basic_prefixConfig(rName, prefix string
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      acl,
+      lifecycle_rule,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -861,6 +1000,13 @@ func testAccBucketLifecycleConfiguration_Filter_TagConfig(rName, key, value stri
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      acl,
+      lifecycle_rule,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -893,6 +1039,13 @@ func testAccBucketLifecycleConfiguration_RuleExpiration_expiredDeleteMarkerConfi
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      acl,
+      lifecycle_rule,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -919,6 +1072,13 @@ func testAccBucketLifecycleConfiguration_RuleExpiration_emptyConfigurationBlockC
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      acl,
+      lifecycle_rule,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -943,6 +1103,13 @@ func testAccBucketLifecycleConfiguration_ruleAbortIncompleteMultipartUploadConfi
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      acl,
+      lifecycle_rule,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -969,6 +1136,13 @@ func testAccBucketLifecycleConfiguration_multipleRulesConfig(rName, date string)
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      acl,
+      lifecycle_rule,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -1031,6 +1205,13 @@ func testAccBucketLifecycleConfiguration_nonCurrentVersionExpirationConfig(rName
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      acl,
+      lifecycle_rule,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -1063,6 +1244,13 @@ func testAccBucketLifecycleConfiguration_nonCurrentVersionTransitionConfig(rName
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      acl,
+      lifecycle_rule,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -1101,6 +1289,13 @@ func testAccBucketLifecycleConfiguration_transitionStorageClassOnlyConfig(rName,
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      acl,
+      lifecycle_rule,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -1137,6 +1332,13 @@ func testAccBucketLifecycleConfiguration_zeroDaysTransitionConfig(rName, storage
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      acl,
+      lifecycle_rule,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -1174,6 +1376,13 @@ func testAccBucketLifecycleConfiguration_dateTransitionConfig(rName, transitionD
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      acl,
+      lifecycle_rule,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -1211,6 +1420,13 @@ func testAccBucketLifecycleConfiguration_EmptyFilter_NonCurrentVersionsConfig(rN
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      acl,
+      lifecycle_rule,
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -1238,6 +1454,94 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 
     status = "Enabled"
   }
+}
+`, rName)
+}
+
+func testAccBucketLifecycleConfiguration_Migrate_NoChangeConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      acl,
+      lifecycle_rule,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.bucket.bucket
+
+  rule {
+    id     = "id1"
+    prefix = "path1/"
+    status = "Enabled"
+
+    expiration {
+      expired_object_delete_marker = true
+    }
+  }
+}
+`, rName)
+}
+
+func testAccBucketLifecycleConfiguration_Migrate_WithChangeConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      acl,
+      lifecycle_rule,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.bucket.bucket
+
+  rule {
+    id     = "id1"
+    prefix = "path1/"
+    status = "Disabled"
+
+    expiration {
+      expired_object_delete_marker = false
+    }
+  }
+}
+`, rName)
+}
+
+func testAccBucketLifecycleConfigurationRemovedConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      acl,
+      lifecycle_rule,
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 `, rName)
 }

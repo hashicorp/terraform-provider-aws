@@ -1278,6 +1278,7 @@ func TestAccS3Bucket_Manage_lifecycleBasic(t *testing.T) {
 				Config: testAccBucketWithLifecycleConfig(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.#", "6"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.id", "id1"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.prefix", "path1/"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.days", "365"),
@@ -1461,6 +1462,36 @@ func TestAccS3Bucket_Manage_lifecycleRuleAbortIncompleteMultipartUploadDaysNoExp
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Manage_lifecycleRemove(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resourceName := "aws_s3_bucket.bucket"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketWithLifecycleConfig(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.#", "6"),
+					testAccCheckBucketLifecycle(resourceName, true),
+				),
+			},
+			{
+				Config: testAccBucketRemoveLifecycleConfig(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.#", "0"),
+					testAccCheckBucketLifecycle(resourceName, false),
+				),
 			},
 		},
 	})
@@ -3326,6 +3357,30 @@ func testAccCheckBucketLogging(n, b, p string) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckBucketLifecycle(n string, enabled bool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs := s.RootModule().Resources[n]
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+
+		_, err := conn.GetBucketLifecycleConfiguration(&s3.GetBucketLifecycleConfigurationInput{
+			Bucket: aws.String(rs.Primary.ID),
+		})
+
+		if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchLifecycleConfiguration) {
+			if enabled {
+				return fmt.Errorf("expected lifecycle configuration on bucket %q, found none", rs.Primary.ID)
+			} else {
+				return nil
+			}
+		}
+		if err != nil {
+			return fmt.Errorf("GetBucketLifecycleConfiguration error for bucket %q: %w", rs.Primary.ID, err)
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckBucketReplicationRules(n string, rules []*s3.ReplicationRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
@@ -4164,6 +4219,15 @@ resource "aws_s3_bucket" "bucket" {
   }
 }
 `, rName)
+}
+
+func testAccBucketRemoveLifecycleConfig(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = %[1]q
+  acl    = "private"
+}
+`, bucketName)
 }
 
 func testAccBucketReplicationBasicConfig(randInt int) string {
