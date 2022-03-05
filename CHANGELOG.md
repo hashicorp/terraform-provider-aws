@@ -1,5 +1,15 @@
 ## 4.4.0 (March 04, 2022)
 
+ENHANCEMENTS:
+
+* resource/aws_account_alternate_contact: Add configurable timeouts ([#23516](https://github.com/hashicorp/terraform-provider-aws/issues/23516))
+
+BUG FIXES:
+
+* resource/aws_account_alternate_contact: Improve eventual consistency handling to avoid "no resource found" on updates ([#23516](https://github.com/hashicorp/terraform-provider-aws/issues/23516))
+
+## 4.4.0 (March 04, 2022)
+
 FEATURES:
 
 * **New Data Source:** `aws_connect_queue` ([#22768](https://github.com/hashicorp/terraform-provider-aws/issues/22768))
