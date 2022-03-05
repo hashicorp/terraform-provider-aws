@@ -1205,6 +1205,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_local_gateway_route_table_vpc_association":    ec2.ResourceLocalGatewayRouteTableVPCAssociation(),
 			"aws_ec2_managed_prefix_list":                          ec2.ResourceManagedPrefixList(),
 			"aws_ec2_managed_prefix_list_entry":                    ec2.ResourceManagedPrefixListEntry(),
+			"aws_ec2_network_insights_analysis":                    ec2.ResourceNetworkInsightsAnalysis(),
 			"aws_ec2_network_insights_path":                        ec2.ResourceNetworkInsightsPath(),
 			"aws_ec2_serial_console_access":                        ec2.ResourceSerialConsoleAccess(),
 			"aws_ec2_subnet_cidr_reservation":                      ec2.ResourceSubnetCIDRReservation(),
