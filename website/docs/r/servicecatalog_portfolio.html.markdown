@@ -42,7 +42,7 @@ In addition to all arguments above, the following attributes are exported:
 [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `30 minutes`)
-- `read` - (Default `3 minutes`)
+- `read` - (Default `10 minutes`)
 - `update` - (Default `30 minutes`)
 - `delete` - (Default `30 minutes`)
 

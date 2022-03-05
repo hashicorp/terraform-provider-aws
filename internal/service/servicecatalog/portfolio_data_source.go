@@ -18,10 +18,7 @@ func DataSourcePortfolio() *schema.Resource {
 		Read: dataSourcePortfolioRead,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(ConstraintReadyTimeout),
-			Read:   schema.DefaultTimeout(ConstraintReadTimeout),
-			Update: schema.DefaultTimeout(ConstraintUpdateTimeout),
-			Delete: schema.DefaultTimeout(ConstraintDeleteTimeout),
+			Read: schema.DefaultTimeout(ConstraintReadTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{

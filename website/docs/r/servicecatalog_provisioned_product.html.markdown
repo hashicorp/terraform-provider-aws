@@ -118,7 +118,7 @@ valid results. Wait for an `AVAILABLE` status before performing operations.
 [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `30 minutes`)
-- `read` - (Default `5 minutes`)
+- `read` - (Default `10 minutes`)
 - `update` - (Default `30 minutes`)
 - `delete` - (Default `30 minutes`)
 
