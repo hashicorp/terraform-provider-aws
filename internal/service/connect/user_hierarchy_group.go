@@ -18,7 +18,8 @@ import (
 
 func ResourceUserHierarchyGroup() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: resourceUserHierarchyGroupRead,
+		CreateContext: resourceUserHierarchyGroupCreate,
+		ReadContext:   resourceUserHierarchyGroupRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -106,6 +107,43 @@ func connectUserHierarchyPathLevelSchema() *schema.Schema {
 			},
 		},
 	}
+}
+
+func resourceUserHierarchyGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	instanceID := d.Get("instance_id").(string)
+	userHierarchyGroupName := d.Get("name").(string)
+
+	input := &connect.CreateUserHierarchyGroupInput{
+		InstanceId: aws.String(instanceID),
+		Name:       aws.String(userHierarchyGroupName),
+	}
+
+	if v, ok := d.GetOk("parent_group_id"); ok {
+		input.ParentGroupId = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	log.Printf("[DEBUG] Creating Connect User Hierarchy Group %s", input)
+	output, err := conn.CreateUserHierarchyGroupWithContext(ctx, input)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error creating Connect User Hierarchy Group (%s): %w", userHierarchyGroupName, err))
+	}
+
+	if output == nil {
+		return diag.FromErr(fmt.Errorf("error creating Connect User Hierarchy Group (%s): empty output", userHierarchyGroupName))
+	}
+
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.HierarchyGroupId)))
+
+	return resourceUserHierarchyGroupRead(ctx, d, meta)
 }
 
 func resourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
