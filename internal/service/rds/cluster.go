@@ -157,6 +157,11 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 			},
 
+			"db_cluster_instance_class": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			"engine": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -229,6 +234,22 @@ func ResourceCluster() *schema.Resource {
 						},
 					},
 				},
+			},
+
+			"allocated_storage": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+
+			"storage_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+
+			"iops": {
+				Type:     schema.TypeInt,
+				Optional: true,
 			},
 
 			"storage_encrypted": {
@@ -870,6 +891,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			createOpts.DBClusterParameterGroupName = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("db_cluster_instance_class"); ok {
+			createOpts.DBClusterInstanceClass = aws.String(attr.(string))
+		}
+
 		if attr, ok := d.GetOk("engine_version"); ok {
 			createOpts.EngineVersion = aws.String(attr.(string))
 		}
@@ -920,6 +945,18 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if attr, ok := d.GetOk("replication_source_identifier"); ok && createOpts.GlobalClusterIdentifier == nil {
 			createOpts.ReplicationSourceIdentifier = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOkExists("allocated_storage"); ok {
+			createOpts.AllocatedStorage = aws.Int64(int64(attr.(int)))
+		}
+
+		if attr, ok := d.GetOkExists("storage_type"); ok {
+			createOpts.StorageType = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOkExists("iops"); ok {
+			createOpts.Iops = aws.Int64(int64(attr.(int)))
 		}
 
 		if attr, ok := d.GetOkExists("storage_encrypted"); ok {
@@ -1075,6 +1112,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("endpoint", dbc.Endpoint)
+	d.Set("db_cluster_instance_class", dbc.DBClusterInstanceClass)
 	d.Set("engine_mode", dbc.EngineMode)
 	d.Set("engine", dbc.Engine)
 	d.Set("hosted_zone_id", dbc.HostedZoneId)
@@ -1102,7 +1140,11 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting scaling_configuration: %s", err)
 	}
 
+	d.Set("allocated_storage", dbc.AllocatedStorage)
+	d.Set("storage_type", dbc.StorageType)
+	d.Set("iops", dbc.Iops)
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
+
 	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
 
 	var vpcg []string
@@ -1181,6 +1223,11 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		requestUpdate = true
 	}
 
+	if d.HasChange("db_cluster_instance_class") {
+		req.EngineVersion = aws.String(d.Get("db_cluster_instance_class").(string))
+		requestUpdate = true
+	}
+
 	if d.HasChange("engine_version") {
 		req.EngineVersion = aws.String(d.Get("engine_version").(string))
 		requestUpdate = true
@@ -1197,6 +1244,21 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("port") {
 		req.Port = aws.Int64(int64(d.Get("port").(int)))
+		requestUpdate = true
+	}
+
+	if d.HasChange("storage_type") {
+		req.StorageType = aws.String(d.Get("storage_type").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("allocated_storage") {
+		req.AllocatedStorage = aws.Int64(int64(d.Get("allocated_storage").(int)))
+		requestUpdate = true
+	}
+
+	if d.HasChange("iops") {
+		req.Iops = aws.Int64(int64(d.Get("iops").(int)))
 		requestUpdate = true
 	}
 
