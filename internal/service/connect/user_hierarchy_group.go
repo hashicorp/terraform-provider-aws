@@ -20,6 +20,7 @@ func ResourceUserHierarchyGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceUserHierarchyGroupCreate,
 		ReadContext:   resourceUserHierarchyGroupRead,
+		UpdateContext: resourceUserHierarchyGroupUpdate,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -198,6 +199,36 @@ func resourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	return nil
+}
+
+func resourceUserHierarchyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	instanceID, userHierarchyGroupID, err := UserHierarchyGroupParseID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if d.HasChange("name") {
+		_, err = conn.UpdateUserHierarchyGroupNameWithContext(ctx, &connect.UpdateUserHierarchyGroupNameInput{
+			HierarchyGroupId: aws.String(userHierarchyGroupID),
+			InstanceId:       aws.String(instanceID),
+			Name:             aws.String(d.Get("name").(string)),
+		})
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating User Hierarchy Group (%s): %w", d.Id(), err))
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
+		}
+	}
+
+	return resourceUserHierarchyGroupRead(ctx, d, meta)
 }
 
 func UserHierarchyGroupParseID(id string) (string, string, error) {
