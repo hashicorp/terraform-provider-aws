@@ -21,6 +21,7 @@ func ResourceUserHierarchyGroup() *schema.Resource {
 		CreateContext: resourceUserHierarchyGroupCreate,
 		ReadContext:   resourceUserHierarchyGroupRead,
 		UpdateContext: resourceUserHierarchyGroupUpdate,
+		DeleteContext: resourceUserHierarchyGroupDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -229,6 +230,27 @@ func resourceUserHierarchyGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	return resourceUserHierarchyGroupRead(ctx, d, meta)
+}
+
+func resourceUserHierarchyGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	instanceID, userHierarchyGroupID, err := UserHierarchyGroupParseID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	_, err = conn.DeleteUserHierarchyGroupWithContext(ctx, &connect.DeleteUserHierarchyGroupInput{
+		HierarchyGroupId: aws.String(userHierarchyGroupID),
+		InstanceId:       aws.String(instanceID),
+	})
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error deleting User Hierarchy Group (%s): %w", d.Id(), err))
+	}
+
+	return nil
 }
 
 func UserHierarchyGroupParseID(id string) (string, string, error) {
