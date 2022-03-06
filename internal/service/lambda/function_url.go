@@ -2,6 +2,10 @@ package lambda
 
 import (
 	"fmt"
+	"log"
+	"strings"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lambda"
@@ -10,9 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"log"
-	"strings"
-	"time"
 )
 
 func ResourceFunctionUrl() *schema.Resource {
@@ -33,12 +34,12 @@ func ResourceFunctionUrl() *schema.Resource {
 			"authorization_type": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice(lambda.AuthorizationType_Values(), false),
+				ValidateFunc: validation.StringInSlice(lambda.FunctionUrlAuthType_Values(), false),
 			},
 			"cors": {
 				Type:     schema.TypeList,
 				Optional: true,
-				//MaxItems: 1,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"allow_credentials": {
@@ -114,8 +115,8 @@ func resourceFunctionUrlCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	params := &lambda.CreateFunctionUrlConfigInput{
-		FunctionName:      aws.String(d.Get("function_name").(string)),
-		AuthorizationType: aws.String(d.Get("authorization_type").(string)),
+		FunctionName: aws.String(d.Get("function_name").(string)),
+		AuthType:     aws.String(d.Get("authorization_type").(string)),
 	}
 
 	if v, ok := d.GetOk("qualifier"); ok {
@@ -132,6 +133,22 @@ func resourceFunctionUrlCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error creating Lambda function url: %s", err)
 	}
 	log.Printf("[DEBUG] Creating Lambda Function Url Config Output: %s", output)
+
+	if d.Get("authorization_type").(string) == lambda.FunctionUrlAuthTypeNone {
+		permissionParams := &lambda.AddPermissionInput{
+			Action:              aws.String("lambda:InvokeFunctionUrl"),
+			FunctionName:        aws.String(d.Get("function_name").(string)),
+			Principal:           aws.String("*"),
+			FunctionUrlAuthType: aws.String(lambda.FunctionUrlAuthTypeNone),
+			StatementId:         aws.String("FunctionURLAllowPublicAccess"),
+		}
+		permissionOutput, permissionErr := conn.AddPermission(permissionParams)
+
+		if permissionErr != nil {
+			return fmt.Errorf("Error adding permission for Lambda function url: %s", permissionErr)
+		}
+		log.Printf("[DEBUG] Add permission for Lambda Function Url Output: %s", permissionOutput)
+	}
 
 	d.SetId(aws.StringValue(output.FunctionArn))
 
@@ -160,7 +177,7 @@ func resourceFunctionUrlRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error getting Lambda Function Url Config (%s): %w", d.Id(), err)
 	}
 
-	if err = d.Set("authorization_type", output.AuthorizationType); err != nil {
+	if err = d.Set("authorization_type", output.AuthType); err != nil {
 		return err
 	}
 	if err = d.Set("cors", flattenFunctionUrlCorsConfigs(output.Cors)); err != nil {
@@ -196,7 +213,7 @@ func resourceFunctionUrlUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("authorization_type") {
-		params.AuthorizationType = aws.String(d.Get("authorization_type").(string))
+		params.AuthType = aws.String(d.Get("authorization_type").(string))
 	}
 
 	if d.HasChange("cors") {

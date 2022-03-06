@@ -32,7 +32,7 @@ func TestAccLambdaFunctionUrl_basic(t *testing.T) {
 				Config: testAccFunctionUrlBasicConfig(funcName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionUrlExists(resourceName, funcName, nil, &conf),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", lambda.AuthorizationTypeNone),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", lambda.FunctionUrlAuthTypeNone),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "function_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, tflambda.FunctionVersionLatest)),
 					resource.TestCheckResourceAttr(resourceName, "cors.#", "0"),
 				),
@@ -65,7 +65,7 @@ func TestAccLambdaFunctionUrl_Cors(t *testing.T) {
 				Config: testAccFunctionUrlCoresConfig(funcName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionUrlExists(resourceName, funcName, nil, &conf),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", lambda.AuthorizationTypeAwsIam),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", lambda.FunctionUrlAuthTypeAwsIam),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "function_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, tflambda.FunctionVersionLatest)),
 					resource.TestCheckResourceAttr(resourceName, "cors.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_credentials", "true"),
@@ -107,7 +107,7 @@ func TestAccLambdaFunctionUrl_Alias(t *testing.T) {
 				Config: testAccFunctionUrlAliasConfig(funcName, aliasName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionUrlExists(resourceName, funcName, &aliasName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", lambda.AuthorizationTypeAwsIam),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", lambda.FunctionUrlAuthTypeAwsIam),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "function_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, aliasName)),
 					resource.TestCheckResourceAttr(resourceName, "cors.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_credentials", "true"),

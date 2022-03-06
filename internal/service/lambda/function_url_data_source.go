@@ -2,11 +2,12 @@ package lambda
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"log"
 )
 
 func DataSourceFunctionUrl() *schema.Resource {
@@ -101,7 +102,7 @@ func dataSourceFunctionUrlRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(aws.StringValue(output.FunctionArn))
-	if err = d.Set("authorization_type", output.AuthorizationType); err != nil {
+	if err = d.Set("authorization_type", output.AuthType); err != nil {
 		return err
 	}
 	if err = d.Set("cors", flattenFunctionUrlCorsConfigs(output.Cors)); err != nil {
