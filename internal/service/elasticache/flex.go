@@ -49,6 +49,15 @@ func flattenLogDeliveryConfigurations(logDeliveryConfiguration []*elasticache.Lo
 
 	return logDeliveryConfigurations
 }
+
+func expandEmptyLogDeliveryConfigurations(v map[string]interface{}) elasticache.LogDeliveryConfigurationRequest {
+	logDeliveryConfigurationRequest := elasticache.LogDeliveryConfigurationRequest{}
+	logDeliveryConfigurationRequest.SetEnabled(false)
+	logDeliveryConfigurationRequest.SetLogType(v["log_type"].(string))
+
+	return logDeliveryConfigurationRequest
+}
+
 func expandLogDeliveryConfigurations(v map[string]interface{}) elasticache.LogDeliveryConfigurationRequest {
 
 	logDeliveryConfigurationRequest := elasticache.LogDeliveryConfigurationRequest{}
