@@ -68,29 +68,9 @@ resource "aws_elasticache_cluster" "replica" {
 }
 ```
 
-### Redis SLOWLOG configuration with CloudWatch Logs log group as destination
+### Redis Log Delivery configuration
 
 ```terraform
-data "aws_iam_policy_document" "p" {
-  statement {
-    actions = [
-      "logs:CreateLogStream",
-      "logs:PutLogEvents"
-    ]
-    resources = ["${aws_cloudwatch_log_group.lg.arn}:log-stream:*"]
-    principals {
-      identifiers = ["delivery.logs.amazonaws.com"]
-      type        = "Service"
-    }
-  }
-}
-resource "aws_cloudwatch_log_resource_policy" "rp" {
-  policy_document = data.aws_iam_policy_document.p.json
-  policy_name     = "mypolicyname"
-}
-resource "aws_cloudwatch_log_group" "lg" {
-  name = "myloggroup"
-}
 resource "aws_elasticache_cluster" "test" {
   cluster_id        = "mycluster"
   engine            = "redis"
@@ -99,90 +79,16 @@ resource "aws_elasticache_cluster" "test" {
   port              = 6379
   apply_immediately = true
   log_delivery_configurations {
-    destination_details {
-      cloudwatch_logs {
-        log_group = aws_cloudwatch_log_group.lg.name
-      }
-    }
+    destination      = aws_cloudwatch_log_group.example.name
     destination_type = "cloudwatch-logs"
     log_format       = "text"
     log_type         = "slow-log"
   }
-}
-```
-
-### Redis SLOWLOG configuration with Kinesis Data Firehose delivery stream as destination
-
-```terraform
-resource "aws_s3_bucket" "b" {
-  acl           = "private"
-  force_destroy = true
-}
-resource "aws_iam_role" "r" {
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
-        Principal = {
-          Service = "firehose.amazonaws.com"
-        }
-      },
-    ]
-  })
-  inline_policy {
-    name = "my_inline_s3_policy"
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Action = [
-            "s3:AbortMultipartUpload",
-            "s3:GetBucketLocation",
-            "s3:GetObject",
-            "s3:ListBucket",
-            "s3:ListBucketMultipartUploads",
-            "s3:PutObject",
-            "s3:PutObjectAcl",
-          ]
-          Effect   = "Allow"
-          Resource = ["${aws_s3_bucket.b.arn}", "${aws_s3_bucket.b.arn}/*"]
-        },
-      ]
-    })
-  }
-}
-resource "aws_kinesis_firehose_delivery_stream" "ds" {
-  name        = "mydeliverystream"
-  destination = "s3"
-  s3_configuration {
-    role_arn   = aws_iam_role.r.arn
-    bucket_arn = aws_s3_bucket.b.arn
-  }
-  lifecycle {
-    ignore_changes = [
-      tags["LogDeliveryEnabled"],
-    ]
-  }
-}
-resource "aws_elasticache_cluster" "test" {
-  cluster_id        = "mycluster"
-  engine            = "redis"
-  node_type         = "cache.t3.micro"
-  num_cache_nodes   = 1
-  port              = 6379
-  apply_immediately = true
   log_delivery_configurations {
-    destination_details {
-      kinesis_firehose {
-        delivery_stream = aws_kinesis_firehose_delivery_stream.ds.name
-      }
-    }
-    destination_type = "kinesis-firehose"
+    destination      = aws_kinesis_firehose_delivery_stream.example.name
+    destination_type = "kinesis-firegose"
     log_format       = "json"
-    log_type         = "slow-log"
+    log_type         = "engine-log"
   }
 }
 ```
@@ -206,7 +112,7 @@ The following arguments are optional:
 See [Describe Cache Engine Versions](https://docs.aws.amazon.com/cli/latest/reference/elasticache/describe-cache-engine-versions.html)
 in the AWS Documentation for supported versions. When `engine` is `redis` and the version is 6 or higher, only the major version can be set, e.g., `6.x`, otherwise, specify the full version desired, e.g., `5.0.6`. The actual engine version used is returned in the attribute `engine_version_actual`, [defined below](#engine_version_actual).
 * `final_snapshot_identifier` - (Optional, Redis only) Name of your final cluster snapshot. If omitted, no final snapshot will be made.
-* `log_delivery_configurations` - (Optional, Redis only) Specifies the destination and format of Redis [SLOWLOG](https://redis.io/commands/slowlog). See the documentation on [Amazon ElastiCache](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html). See [Log Delivery Configurations](#log-delivery-configurations) below for more details.
+* `log_delivery_configurations` - (Optional, Redis only) Specifies the destination and format of Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log). See the documentation on [Amazon ElastiCache](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html). See [Log Delivery Configurations](#log-delivery-configurations) below for more details.
 * `maintenance_window` – (Optional) Specifies the weekly time range for when maintenance
 on the cache cluster is performed. The format is `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC).
 The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09:00`.
@@ -236,24 +142,12 @@ In addition to all arguments above, the following attributes are exported:
 
 ### Log Delivery Configurations
 
-The `log_delivery_configurations` block allows the streaming of Redis [SLOWLOG](https://redis.io/commands/slowlog) to CloudWatch Logs or Kinesis Data Firehose.
+The `log_delivery_configurations` block allows the streaming of Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log) to CloudWatch Logs or Kinesis Data Firehose. Max of 2 blocks.
 
-* `destination_details` - Destination details of either CloudWatch Logs or Kinesis Data Firehose. See [Log Delivery Configurations - Destination Details](#log-delivery-configurations---destination-details) below for more details.
+* `destination` - Name of either the CloudWatch Logs LogGroup or Kinesis Data Firehose resource.
 * `destination_type` - For CloudWatch Logs use `cloudwatch-logs` or for Kinesis Data Firehose use `kinesis-firehose`.
 * `log_format` - Valid values are `json` or `text`
-* `log_type` - (Optional) The only valid value is`slow-log`.
-
-### Log Delivery Configurations - Destination Details
-
-The `destination_details` block contains the target delivery stream or log group attribute. Only one of `kinesis_firehose` or `cloudwatch_logs` can be specified at a time.
-
-The `kinesis_firehose` block supports the following:
-
-* `delivery_stream` - The name of an existing Kinesis Firehose delivery stream.
-
-The `cloudwatch_logs` block supports the following:
-
-* `log_group` - The name of an existing CloudWatch Logs log group.
+* `log_type` - Valid values are  `slow-log` or `engine-log`. Max 1 of each.
 
 ## Import
 
