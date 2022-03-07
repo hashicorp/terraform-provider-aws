@@ -63,7 +63,7 @@ func waitConnectorDeletedWithContext(ctx context.Context, conn *kafkaconnect.Kaf
 	return nil, err
 }
 
-func waitConnectorOperationCompletedWithContext(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.ConnectorSummary, error) { //nolint:unparam
+func waitConnectorOperationCompletedWithContext(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.ConnectorSummary, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kafkaconnect.ConnectorStateUpdating},
 		Target:  []string{kafkaconnect.ConnectorStateRunning},
