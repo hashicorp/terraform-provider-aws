@@ -196,7 +196,7 @@ resource "aws_s3_object" "test" {
 func testAccCustomPluginConfigBasicS3ObjectJar(name string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
   force_destroy = true
 }
 

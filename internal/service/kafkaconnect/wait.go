@@ -3,9 +3,10 @@ package kafkaconnect
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"time"
 
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"

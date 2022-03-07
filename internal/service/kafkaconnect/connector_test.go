@@ -143,66 +143,68 @@ func testAccConnectorConfigBasic(name string, bootstrapServers string, workerCon
 		testAccConnectorConfigBase(name),
 		fmt.Sprintf(`
 resource "aws_mskconnect_connector" "test" {
-	name         = %[1]q
+  name         = %[1]q
 	
-	kafkaconnect_version = "4.0"
+  kafkaconnect_version = "4.0"
     
-	capacity {
-		autoscaling {
-			mcu_count        = 4
-			min_worker_count = 1
-			max_worker_count = 10
-			scale_in_policy {
-				cpu_utilization_percentage = 50
-			}
-			scale_out_policy {
-				cpu_utilization_percentage = 50
-			}
-		}
+    capacity {
+      autoscaling {
+        mcu_count        = 4
+        min_worker_count = 1
+        max_worker_count = 10
+        
+        scale_in_policy {
+          cpu_utilization_percentage = 50
+        }
+
+        scale_out_policy {
+          cpu_utilization_percentage = 50
+        }
+      }
 	}
 
-	configuration = {}
+    configuration = {}
 
-	kafka_cluster {
-		apache_kafka_cluster {
-			bootstrap_servers  = %[2]q
+    kafka_cluster {
+      apache_kafka_cluster {
+        bootstrap_servers  = %[2]q
             
-            vpc {
-				security_group_ids = [aws_security_group.test.id]
-				subnet_ids         = [aws_subnet.test.id]	
-			}
-		}
-	}
+        vpc {
+          security_group_ids = [aws_security_group.test.id]
+          subnet_ids         = [aws_subnet.test.id]	
+        }
+      }
+    }
 
-	client_authentication {
-		authentication_type = "NONE"
-	}
+    client_authentication {
+      authentication_type = "NONE"
+    }
 
-	encryption_in_transit {
-		encryption_type = "PLAINTEXT"
-	}
+    encryption_in_transit {
+      encryption_type = "PLAINTEXT"
+    }
 
-	custom_plugin {
-		arn      = aws_mskconnect_custom_plugin.test.arn
-		revision = aws_mskconnect_custom_plugin.test.latest_revision
-	}
+    custom_plugin {
+      arn      = aws_mskconnect_custom_plugin.test.arn
+      revision = aws_mskconnect_custom_plugin.test.latest_revision
+    }
 
-	service_execution_role_arn = aws_iam_role.test.arn
+    service_execution_role_arn = aws_iam_role.test.arn
 
-	log_delivery {
-		worker_log_delivery {
-			s3 {
-				enabled = true
-				bucket  = aws_s3_bucket.test.id
-				prefix  = "connector/"
-			}
-		}
-	}
+    log_delivery {
+      worker_log_delivery {
+        s3 {
+          enabled = true
+          bucket  = aws_s3_bucket.test.id
+          prefix  = "connector/"
+        }
+      }
+    }
 
-	worker_configuration {
-		  arn      = aws_mskconnect_worker_configuration.test.arn
-		  revision = aws_mskconnect_worker_configuration.test.latest_revision
-	}
+    worker_configuration {
+      arn      = aws_mskconnect_worker_configuration.test.arn
+      revision = aws_mskconnect_worker_configuration.test.latest_revision
+    }
 }
 `, name, bootstrapServers))
 }
