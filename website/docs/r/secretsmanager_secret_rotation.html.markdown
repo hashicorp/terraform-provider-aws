@@ -68,10 +68,10 @@ The following arguments are supported:
 ### rotation_rules
 
 * `automatically_after_days` - (Optional) Specifies the number of days between automatic scheduled rotations of the secret.
-* `schedule_expression` - (Optional) A rate or cron expression  specifying when rotations of the secret should occur.  
+* `schedule_expression` - (Optional) A rate or cron expression specifying when rotations of the secret should occur.  
 ** `rate` - a rate expression - for example, 'rate(20 days)'.  
 ** `cron` - a cron expression detailing when rotation should occur.  
-* `duration` - (Optional) Can only be used with a schedule expression.  Used to shorten the window in which AWS will execute the rotation (the default is 24 hours).
+* `duration` - (Optional) Can only be used with a schedule expression.  Used to shorten the window in which AWS will execute the rotation.
 
 You must supply one of 'automatically_after_days' or 'schedule_expression' when defining secrets rotation.  
 

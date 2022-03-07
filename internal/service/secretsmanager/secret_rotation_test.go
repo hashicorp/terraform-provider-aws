@@ -281,7 +281,7 @@ resource "aws_secretsmanager_secret_rotation" "test" {
   rotation_lambda_arn = aws_lambda_function.test1.arn
 
   rotation_rules {
-    schedule_expression 	 = "rate(%[2]d days)"
+    schedule_expression = "rate(%[2]d days)"
   }
 
   depends_on = [aws_lambda_permission.test1]
@@ -332,7 +332,7 @@ resource "aws_secretsmanager_secret_rotation" "test" {
   rotation_lambda_arn = aws_lambda_function.test1.arn
 
   rotation_rules {
-    schedule_expression 	 = "%[2]s"
+    schedule_expression = "%[2]s"
   }
 
   depends_on = [aws_lambda_permission.test1]
