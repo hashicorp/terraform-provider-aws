@@ -6319,9 +6319,11 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_AllocatedStorage(rName string, allocatedStorage int) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
-  allocated_storage       = 5
+  allocated_storage       = %[2]d
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"

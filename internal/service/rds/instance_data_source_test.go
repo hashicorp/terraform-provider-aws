@@ -11,14 +11,15 @@ import (
 )
 
 func TestAccRDSInstanceDataSource_basic(t *testing.T) {
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig(rInt),
+				Config: testAccInstanceDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "address"),
 					resource.TestCheckResourceAttrSet("data.aws_db_instance.bar", "allocated_storage"),
@@ -44,7 +45,7 @@ func TestAccRDSInstanceDataSource_basic(t *testing.T) {
 }
 
 func TestAccRDSInstanceDataSource_ec2Classic(t *testing.T) {
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
@@ -52,7 +53,7 @@ func TestAccRDSInstanceDataSource_ec2Classic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_ec2Classic(rInt),
+				Config: testAccInstanceDataSourceConfig_ec2Classic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_db_instance.bar", "db_subnet_group", ""),
 				),
@@ -61,7 +62,7 @@ func TestAccRDSInstanceDataSource_ec2Classic(t *testing.T) {
 	})
 }
 
-func testAccInstanceDataSourceConfig(rInt int) string {
+func testAccInstanceDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = "mariadb"
@@ -69,7 +70,7 @@ data "aws_rds_orderable_db_instance" "test" {
 }
 
 resource "aws_db_instance" "bar" {
-  identifier = "datasource-test-terraform-%d"
+  identifier = %[1]q
 
   allocated_storage = 10
   engine            = data.aws_rds_orderable_db_instance.test.engine
@@ -94,21 +95,21 @@ resource "aws_db_instance" "bar" {
 data "aws_db_instance" "bar" {
   db_instance_identifier = aws_db_instance.bar.identifier
 }
-`, rInt)
+`, rName)
 }
 
-func testAccInstanceDataSourceConfig_ec2Classic(rInt int) string {
+func testAccInstanceDataSourceConfig_ec2Classic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = "mysql"
-  engine_version             = "5.6.41"
-  preferred_instance_classes = ["db.m3.medium", "db.m3.large", "db.r3.large"]
+  engine_version             = "8.0.25"
+  preferred_instance_classes = ["db.t2.micro", "db.m3.medium", "db.m3.large", "db.r3.large"]
 }
 
 resource "aws_db_instance" "bar" {
-  identifier           = "foobarbaz-test-terraform-%[1]d"
+  identifier           = %[1]q
   allocated_storage    = 10
   engine               = data.aws_rds_orderable_db_instance.test.engine
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
@@ -118,12 +119,12 @@ resource "aws_db_instance" "bar" {
   username             = "foo"
   publicly_accessible  = true
   security_group_names = ["default"]
-  parameter_group_name = "default.mysql5.6"
+  parameter_group_name = "default.mysql8.0"
   skip_final_snapshot  = true
 }
 
 data "aws_db_instance" "bar" {
   db_instance_identifier = aws_db_instance.bar.identifier
 }
-`, rInt))
+`, rName))
 }
