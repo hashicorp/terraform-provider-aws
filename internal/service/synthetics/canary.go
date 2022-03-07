@@ -390,16 +390,13 @@ func resourceCanaryRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting vpc config: %w", err)
 	}
 
-	// get environment variables since they are not available on describe
-	envVars := make(map[string]*string)
+	// get environment variables since they a
+	runConfig := &synthetics.CanaryRunConfigInput{}
 	if v, ok := d.GetOk("run_config"); ok {
-		runConfig := expandCanaryRunConfig(v.([]interface{}))
-		for k, v := range runConfig.EnvironmentVariables {
-			envVars[k] = v
-		}
+		runConfig = expandCanaryRunConfig(v.([]interface{}))
 	}
 
-	if err := d.Set("run_config", flattenCanaryRunConfig(canary.RunConfig, envVars)); err != nil {
+	if err := d.Set("run_config", flattenCanaryRunConfig(canary.RunConfig, runConfig.EnvironmentVariables)); err != nil {
 		return fmt.Errorf("error setting run config: %w", err)
 	}
 
