@@ -3599,7 +3599,7 @@ func testAccClusterConfig_SnapshotIdentifier_EngineVersion(rName string, same bo
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine             = "aurora-postgresql"
-  preferred_versions = ["11.4", "10.4", "9.6.6"]
+  preferred_versions = ["13.3", "12.9", "11.14"]
 }
 
 data "aws_rds_engine_version" "upgrade" {
