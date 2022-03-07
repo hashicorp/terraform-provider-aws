@@ -135,10 +135,32 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			"log_delivery_configurations": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
-				MaxItems: 1,
-				Elem:     getLogDeliveryConfigurationsSchema(),
+				MaxItems: 2,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"destination_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(elasticache.DestinationType_Values(), false),
+						},
+						"destination": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"log_format": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(elasticache.LogFormat_Values(), false),
+						},
+						"log_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(elasticache.LogType_Values(), false),
+						},
+					},
+				},
 			},
 			"maintenance_window": {
 				Type:     schema.TypeString,

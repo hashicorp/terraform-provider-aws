@@ -75,11 +75,29 @@ func DataSourceCluster() *schema.Resource {
 			},
 
 			"log_delivery_configurations": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Computed: true,
-				Elem:     getLogDeliveryConfigurationsComputedSchema(),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"destination_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"destination": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"log_format": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"log_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
-
 			"maintenance_window": {
 				Type:     schema.TypeString,
 				Computed: true,
