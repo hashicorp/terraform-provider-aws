@@ -186,9 +186,7 @@ func testAccBucketObjectLockConfigurationBasicConfig(bucketName string) string {
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 }
 
 resource "aws_s3_bucket_object_lock_configuration" "test" {
@@ -209,9 +207,7 @@ func testAccBucketObjectLockConfigurationUpdateConfig(bucketName string) string 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 }
 
 resource "aws_s3_bucket_object_lock_configuration" "test" {
