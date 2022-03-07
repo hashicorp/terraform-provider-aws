@@ -38,6 +38,7 @@ resource "aws_secretsmanager_secret_rotation" "example" {
 ```
 
 ### Cron Expression With 2 Hour Duration
+
 ```terraform
 resource "aws_secretsmanager_secret_rotation" "example" {
   secret_id           = aws_secretsmanager_secret.example.id
@@ -49,6 +50,7 @@ resource "aws_secretsmanager_secret_rotation" "example" {
   }
 }
 ```
+
 ### Rotation Configuration
 
 To enable automatic secret rotation, the Secrets Manager service requires usage of a Lambda function. The [Rotate Secrets section in the Secrets Manager User Guide](https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotating-secrets_strategies.html) provides additional information about deploying a prebuilt Lambda functions for supported credential rotation (e.g., RDS) or deploying a custom Lambda function.
