@@ -1672,7 +1672,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basi
 	})
 }
 
-func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_Cloudwatch_KinesisFirehose_Update(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_ClusterMode_Disabled(t *testing.T) {
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_replication_group.test"
@@ -1684,15 +1684,19 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 		CheckDestroy: testAccCheckReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_Cloudwatch(rName, true, false),
+				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations(rName, false, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.cloudwatch_logs.0.log_group", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination", rName),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_type", "cloudwatch-logs"),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_format", "text"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_type", "slow-log"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_type", "engine-log"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.destination_type", "cloudwatch-logs"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.log_format", "text"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.log_type", "slow-log"),
 				),
 			},
 			{
@@ -1702,33 +1706,50 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				ImportStateVerifyIgnore: []string{"apply_immediately"},
 			},
 			{
-				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_KinesisFirehose(rName, true, false),
+				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations(rName, false, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.kinesis_firehose.0.delivery_stream", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_type", "cloudwatch-logs"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_format", "text"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_type", "slow-log"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.destination_type", "kinesis-firehose"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.log_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.log_type", "engine-log"),
+				),
+			},
+			{
+				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations(rName, false, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson, false, "", ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination", rName),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_type", "kinesis-firehose"),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_format", "json"),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_type", "slow-log"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.destination"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.destination_type"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.log_format"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.log_type"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
-			},
-			{
-				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_Cloudwatch(rName, true, false),
+				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations(rName, false, false, "", "", false, "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.cloudwatch_logs.0.log_group", rName),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_type", "cloudwatch-logs"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_format", "text"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_type", "slow-log"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_type"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_format"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_type"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.destination"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.destination_type"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.log_format"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.log_type"),
 				),
 			},
 			{
@@ -1741,7 +1762,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 	})
 }
 
-func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_Cloudwatch_EnableDisable(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_ClusterMode_Enabled(t *testing.T) {
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_replication_group.test"
@@ -1753,15 +1774,21 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 		CheckDestroy: testAccCheckReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_Cloudwatch(rName, false, false),
+				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations(rName, true, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.cloudwatch_logs.0.log_group"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_type"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_format"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_type"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_type", "cloudwatch-logs"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_format", "text"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_type", "engine-log"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.destination_type", "cloudwatch-logs"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.log_format", "text"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.log_type", "slow-log"),
 				),
 			},
 			{
@@ -1771,322 +1798,56 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				ImportStateVerifyIgnore: []string{"apply_immediately"},
 			},
 			{
-				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_Cloudwatch(rName, true, false),
+				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations(rName, true, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.cloudwatch_logs.0.log_group", rName),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination", rName),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_type", "cloudwatch-logs"),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_format", "text"),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_type", "slow-log"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.destination_type", "kinesis-firehose"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.log_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.log_type", "engine-log"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
-			},
-
-			{
-				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_Cloudwatch(rName, false, false),
+				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations(rName, true, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson, false, "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.cloudwatch_logs.0.log_group"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_type"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_format"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_type"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
-			},
-		},
-	})
-}
-
-func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_KinesisFirehose_EnableDisable(t *testing.T) {
-	var rg elasticache.ReplicationGroup
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_elasticache_replication_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_KinesisFirehose(rName, false, false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationGroupExists(resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.kinesis_firehose.0.delivery_stream"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_type"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_format"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_type"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
-			},
-			{
-				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_KinesisFirehose(rName, true, false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationGroupExists(resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.kinesis_firehose.0.delivery_stream", rName),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination", rName),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_type", "kinesis-firehose"),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_format", "json"),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_type", "slow-log"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.destination"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.destination_type"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.log_format"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.log_type"),
 				),
 			},
 			{
-				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_KinesisFirehose(rName, false, false),
+				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations(rName, true, false, "", "", false, "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.kinesis_firehose.0.delivery_stream"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination"),
 					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_type"),
 					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_format"),
 					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_type"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
-			},
-		},
-	})
-}
-
-func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_ClusterMode_Cloudwatch_KinesisFirehose_Update(t *testing.T) {
-	var rg elasticache.ReplicationGroup
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_elasticache_replication_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_Cloudwatch(rName, true, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationGroupExists(resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.cloudwatch_logs.0.log_group", rName),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_type", "cloudwatch-logs"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_format", "text"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_type", "slow-log"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
-			},
-			{
-				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_KinesisFirehose(rName, true, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationGroupExists(resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.kinesis_firehose.0.delivery_stream", rName),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_type", "kinesis-firehose"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_format", "json"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_type", "slow-log"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
-			},
-			{
-				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_Cloudwatch(rName, true, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationGroupExists(resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.cloudwatch_logs.0.log_group", rName),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_type", "cloudwatch-logs"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_format", "text"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_type", "slow-log"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
-			},
-		},
-	})
-}
-
-func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_ClusterMode_Cloudwatch_EnableDisable(t *testing.T) {
-	var rg elasticache.ReplicationGroup
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_elasticache_replication_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_Cloudwatch(rName, false, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationGroupExists(resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.cloudwatch_logs.0.log_group"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_type"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_format"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_type"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
-			},
-			{
-				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_Cloudwatch(rName, true, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationGroupExists(resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.cloudwatch_logs.0.log_group", rName),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_type", "cloudwatch-logs"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_format", "text"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_type", "slow-log"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
-			},
-			{
-				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_Cloudwatch(rName, false, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationGroupExists(resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.cloudwatch_logs.0.log_group"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_type"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_format"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_type"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
-			},
-		},
-	})
-}
-
-func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_ClusterMode_KinesisFirehose_EnableDisable(t *testing.T) {
-	var rg elasticache.ReplicationGroup
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_elasticache_replication_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_KinesisFirehose(rName, false, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationGroupExists(resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.kinesis_firehose.0.delivery_stream"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_type"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_format"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_type"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
-			},
-			{
-				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_KinesisFirehose(rName, true, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationGroupExists(resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.kinesis_firehose.0.delivery_stream", rName),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_type", "kinesis-firehose"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_format", "json"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_type", "slow-log"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
-			},
-			{
-				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_KinesisFirehose(rName, false, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationGroupExists(resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.kinesis_firehose.0.delivery_stream"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_type"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_format"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_type"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.destination"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.destination_type"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.log_format"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.log_type"),
 				),
 			},
 			{
@@ -3619,16 +3380,15 @@ resource "aws_elasticache_replication_group" "test" {
 `, rName)
 }
 
-func testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_Cloudwatch(rName string, enableLogDelivery bool, enableClusterMode bool) string {
+func testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations(rName string, enableClusterMode bool, slowLogDeliveryEnabled bool, slowDeliveryDestination string, slowDeliveryFormat string, engineLogDeliveryEnabled bool, engineDeliveryDestination string, engineLogDeliveryFormat string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "p" {
-  count = tobool("%[2]t") ? 1 : 0
   statement {
     actions = [
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ]
-    resources = ["${aws_cloudwatch_log_group.lg[0].arn}:log-stream:*"]
+    resources = ["${aws_cloudwatch_log_group.lg.arn}:log-stream:*"]
     principals {
       identifiers = ["delivery.logs.amazonaws.com"]
       type        = "Service"
@@ -3636,62 +3396,21 @@ data "aws_iam_policy_document" "p" {
   }
 }
 resource "aws_cloudwatch_log_resource_policy" "rp" {
-  count           = tobool("%[2]t") ? 1 : 0
-  policy_document = data.aws_iam_policy_document.p[0].json
+  policy_document = data.aws_iam_policy_document.p.json
   policy_name     = "%[1]s"
   depends_on = [
-    aws_cloudwatch_log_group.lg[0]
+    aws_cloudwatch_log_group.lg
   ]
 }
 resource "aws_cloudwatch_log_group" "lg" {
-  count             = tobool("%[2]t") ? 1 : 0
   retention_in_days = 1
   name              = "%[1]s"
 }
-resource "aws_elasticache_replication_group" "test" {
-  replication_group_id          = "%[1]s"
-  replication_group_description = "test description"
-  node_type                     = "cache.t3.small"
-  port                          = 6379
-  apply_immediately             = true
-  auto_minor_version_upgrade    = false
-  maintenance_window            = "tue:06:30-tue:07:30"
-  snapshot_window               = "01:00-02:00"
-  parameter_group_name          = tobool("%[3]t") ? "default.redis6.x.cluster.on" : "default.redis6.x"
-  automatic_failover_enabled    = tobool("%[3]t")
-  dynamic "cluster_mode" {
-    for_each = tobool("%[3]t") ? [""] : []
-    content {
-      num_node_groups         = 1
-      replicas_per_node_group = 0
-    }
-  }
-  dynamic "log_delivery_configurations" {
-    for_each = tobool("%[2]t") ? [""] : []
-    content {
-      destination_details {
-        cloudwatch_logs {
-          log_group = aws_cloudwatch_log_group.lg[0].name
-        }
-      }
-      destination_type = "cloudwatch-logs"
-      log_format       = "text"
-      log_type         = "slow-log"
-    }
-  }
-}
-`, rName, enableLogDelivery, enableClusterMode)
-}
-
-func testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_KinesisFirehose(rName string, enableLogDelivery bool, enableClusterMode bool) string {
-	return fmt.Sprintf(`
 resource "aws_s3_bucket" "b" {
-  count         = tobool("%[2]t") ? 1 : 0
   acl           = "private"
   force_destroy = true
 }
 resource "aws_iam_role" "r" {
-  count = tobool("%[2]t") ? 1 : 0
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -3721,19 +3440,18 @@ resource "aws_iam_role" "r" {
             "s3:PutObjectAcl",
           ]
           Effect   = "Allow"
-          Resource = ["${aws_s3_bucket.b[0].arn}", "${aws_s3_bucket.b[0].arn}/*"]
+          Resource = ["${aws_s3_bucket.b.arn}", "${aws_s3_bucket.b.arn}/*"]
         },
       ]
     })
   }
 }
 resource "aws_kinesis_firehose_delivery_stream" "ds" {
-  count       = tobool("%[2]t") ? 1 : 0
   name        = "%[1]s"
   destination = "s3"
   s3_configuration {
-    role_arn   = aws_iam_role.r[0].arn
-    bucket_arn = aws_s3_bucket.b[0].arn
+    role_arn   = aws_iam_role.r.arn
+    bucket_arn = aws_s3_bucket.b.arn
   }
   lifecycle {
     ignore_changes = [
@@ -3750,30 +3468,38 @@ resource "aws_elasticache_replication_group" "test" {
   auto_minor_version_upgrade    = false
   maintenance_window            = "tue:06:30-tue:07:30"
   snapshot_window               = "01:00-02:00"
-  parameter_group_name          = tobool("%[3]t") ? "default.redis6.x.cluster.on" : "default.redis6.x"
-  automatic_failover_enabled    = tobool("%[3]t")
+  parameter_group_name          = tobool("%[2]t") ? "default.redis6.x.cluster.on" : "default.redis6.x"
+  automatic_failover_enabled    = tobool("%[2]t")
   dynamic "cluster_mode" {
-    for_each = tobool("%[3]t") ? [""] : []
+    for_each = tobool("%[2]t") ? [""] : []
     content {
       num_node_groups         = 1
       replicas_per_node_group = 0
     }
   }
   dynamic "log_delivery_configurations" {
-    for_each = tobool("%[2]t") ? [""] : []
+    for_each = tobool("%[3]t") ? [""] : []
     content {
-      destination_details {
-        kinesis_firehose {
-          delivery_stream = aws_kinesis_firehose_delivery_stream.ds[0].name
-        }
-      }
-      destination_type = "kinesis-firehose"
-      log_format       = "json"
+      destination      = ("%[4]s" == "cloudwatch-logs") ? aws_cloudwatch_log_group.lg.name : (("%[4]s" == "kinesis-firehose") ? aws_kinesis_firehose_delivery_stream.ds.name : null)
+      destination_type = "%[4]s"
+      log_format       = "%[5]s"
       log_type         = "slow-log"
     }
   }
+  dynamic "log_delivery_configurations" {
+    for_each = tobool("%[6]t") ? [""] : []
+    content {
+      destination      = ("%[7]s" == "cloudwatch-logs") ? aws_cloudwatch_log_group.lg.name : (("%[7]s" == "kinesis-firehose") ? aws_kinesis_firehose_delivery_stream.ds.name : null)
+      destination_type = "%[7]s"
+      log_format       = "%[8]s"
+      log_type         = "engine-log"
+    }
+  }
 }
-`, rName, enableLogDelivery, enableClusterMode)
+data "aws_elasticache_replication_group" "test" {
+  replication_group_id = aws_elasticache_replication_group.test.replication_group_id
+}
+`, rName, enableClusterMode, slowLogDeliveryEnabled, slowDeliveryDestination, slowDeliveryFormat, engineLogDeliveryEnabled, engineDeliveryDestination, engineLogDeliveryFormat)
 }
 
 func resourceReplicationGroupDisableAutomaticFailover(conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) error {
