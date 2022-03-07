@@ -23,3 +23,29 @@ func flattenSecurityGroupNames(securityGroups []*elasticache.CacheSecurityGroupM
 	}
 	return result
 }
+
+func flattenLogDeliveryConfigurations(logDeliveryConfiguration []*elasticache.LogDeliveryConfiguration) []map[string]interface{} {
+	if len(logDeliveryConfiguration) == 0 {
+		return nil
+	}
+
+	var logDeliveryConfigurations []map[string]interface{}
+	for _, v := range logDeliveryConfiguration {
+
+		logDeliveryConfig := make(map[string]interface{})
+
+		switch aws.StringValue(v.DestinationType) {
+		case elasticache.DestinationTypeKinesisFirehose:
+			logDeliveryConfig["destination"] = aws.StringValue(v.DestinationDetails.KinesisFirehoseDetails.DeliveryStream)
+		case elasticache.DestinationTypeCloudwatchLogs:
+			logDeliveryConfig["destination"] = aws.StringValue(v.DestinationDetails.CloudWatchLogsDetails.LogGroup)
+		}
+
+		logDeliveryConfig["destination_type"] = aws.StringValue(v.DestinationType)
+		logDeliveryConfig["log_format"] = aws.StringValue(v.LogFormat)
+		logDeliveryConfig["log_type"] = aws.StringValue(v.LogType)
+		logDeliveryConfigurations = append(logDeliveryConfigurations, logDeliveryConfig)
+	}
+
+	return logDeliveryConfigurations
+}
