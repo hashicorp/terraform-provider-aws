@@ -49,3 +49,27 @@ func flattenLogDeliveryConfigurations(logDeliveryConfiguration []*elasticache.Lo
 
 	return logDeliveryConfigurations
 }
+func expandLogDeliveryConfigurations(v map[string]interface{}) elasticache.LogDeliveryConfigurationRequest {
+
+	logDeliveryConfigurationRequest := elasticache.LogDeliveryConfigurationRequest{}
+
+	logDeliveryConfigurationRequest.LogType = aws.String(v["log_type"].(string))
+	logDeliveryConfigurationRequest.DestinationType = aws.String(v["destination_type"].(string))
+	logDeliveryConfigurationRequest.LogFormat = aws.String(v["log_format"].(string))
+	destinationDetails := elasticache.DestinationDetails{}
+
+	switch v["destination_type"].(string) {
+	case elasticache.DestinationTypeCloudwatchLogs:
+		destinationDetails.CloudWatchLogsDetails = &elasticache.CloudWatchLogsDestinationDetails{
+			LogGroup: aws.String(v["destination"].(string)),
+		}
+	case elasticache.DestinationTypeKinesisFirehose:
+		destinationDetails.KinesisFirehoseDetails = &elasticache.KinesisFirehoseDestinationDetails{
+			DeliveryStream: aws.String(v["destination"].(string)),
+		}
+	}
+
+	logDeliveryConfigurationRequest.DestinationDetails = &destinationDetails
+
+	return logDeliveryConfigurationRequest
+}
