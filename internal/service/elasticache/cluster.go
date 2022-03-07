@@ -562,11 +562,28 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("log_delivery_configurations") {
-		validateError := validateLogDeliveryConfigurations(d)
-		if validateError != nil {
-			return validateError
+
+		oldLogDeliveryConfig, newLogDeliveryConfig := d.GetChange("log_delivery_configurations")
+
+		req.LogDeliveryConfigurations = []*elasticache.LogDeliveryConfigurationRequest{}
+		logTypesToSubmit := make(map[string]bool)
+
+		currentLogDeliveryConfig := newLogDeliveryConfig.(*schema.Set).List()
+		for _, current := range currentLogDeliveryConfig {
+			logDeliveryConfigurationRequest := expandLogDeliveryConfigurations(current.(map[string]interface{}))
+			logTypesToSubmit[*logDeliveryConfigurationRequest.LogType] = true
+			req.LogDeliveryConfigurations = append(req.LogDeliveryConfigurations, &logDeliveryConfigurationRequest)
 		}
-		req.LogDeliveryConfigurations = expandLogDeliveryConfigurations(d)
+
+		previousLogDeliveryConfig := oldLogDeliveryConfig.(*schema.Set).List()
+		for _, previous := range previousLogDeliveryConfig {
+			logDeliveryConfigurationRequest := expandEmptyLogDeliveryConfigurations(previous.(map[string]interface{}))
+			//if something was removed, send an empty request
+			if !logTypesToSubmit[*logDeliveryConfigurationRequest.LogType] {
+				req.LogDeliveryConfigurations = append(req.LogDeliveryConfigurations, &logDeliveryConfigurationRequest)
+			}
+		}
+
 		requestUpdate = true
 	}
 
