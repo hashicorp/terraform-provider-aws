@@ -100,6 +100,8 @@ service/cloudwatch:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_(?!(event_|log_|query_))'
 service/cloudwatchlogs:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_(log_|query_)'
+service/cloudwatchrum:
+  - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatchrum_'
 service/codeartifact:
   - '((\*|-) ?`?|(data|resource) "?)aws_codeartifact_'
 service/codebuild:

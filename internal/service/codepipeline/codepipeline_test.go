@@ -1,6 +1,7 @@
 package codepipeline_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -610,14 +611,14 @@ func testAccPreCheckSupported(t *testing.T, regions ...string) {
 		conf := &conns.Config{
 			Region: region,
 		}
-		client, err := conf.Client()
-		if err != nil {
+		client, diags := conf.Client(context.TODO())
+		if diags.HasError() {
 			t.Fatalf("error getting AWS client for region %s", region)
 		}
 		conn := client.(*conns.AWSClient).CodePipelineConn
 
 		input := &codepipeline.ListPipelinesInput{}
-		_, err = conn.ListPipelines(input)
+		_, err := conn.ListPipelines(input)
 
 		if acctest.PreCheckSkipError(err) {
 			t.Skipf("skipping acceptance testing: %s", err)

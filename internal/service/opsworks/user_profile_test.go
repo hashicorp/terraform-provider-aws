@@ -15,8 +15,9 @@ import (
 )
 
 func TestAccOpsWorksUserProfile_basic(t *testing.T) {
-	rName := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
-	updateRName := fmt.Sprintf("test-user-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opsworks_user_profile.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
@@ -26,33 +27,19 @@ func TestAccOpsWorksUserProfile_basic(t *testing.T) {
 			{
 				Config: testAccUserProfileCreate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(
-						"aws_opsworks_user_profile.user", rName),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_user_profile.user", "ssh_public_key", "",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_user_profile.user", "ssh_username", rName,
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_user_profile.user", "allow_self_management", "false",
-					),
+					testAccCheckUserProfileExists(resourceName, rName),
+					resource.TestCheckResourceAttr(resourceName, "ssh_public_key", ""),
+					resource.TestCheckResourceAttr(resourceName, "ssh_username", rName),
+					resource.TestCheckResourceAttr(resourceName, "allow_self_management", "false"),
 				),
 			},
 			{
-				Config: testAccUserProfileUpdate(rName, updateRName),
+				Config: testAccUserProfileUpdate(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(
-						"aws_opsworks_user_profile.user", updateRName),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_user_profile.user", "ssh_public_key", "",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_user_profile.user", "ssh_username", updateRName,
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_user_profile.user", "allow_self_management", "false",
-					),
+					testAccCheckUserProfileExists(resourceName, rName2),
+					resource.TestCheckResourceAttr(resourceName, "ssh_public_key", ""),
+					resource.TestCheckResourceAttr(resourceName, "ssh_username", rName2),
+					resource.TestCheckResourceAttr(resourceName, "allow_self_management", "false"),
 				),
 			},
 		},
@@ -133,35 +120,35 @@ func testAccCheckUserProfileDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccUserProfileCreate(rn string) string {
+func testAccUserProfileCreate(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_opsworks_user_profile" "user" {
-  user_arn     = aws_iam_user.user.arn
-  ssh_username = aws_iam_user.user.name
+resource "aws_opsworks_user_profile" "test" {
+  user_arn     = aws_iam_user.test.arn
+  ssh_username = aws_iam_user.test.name
 }
 
-resource "aws_iam_user" "user" {
-  name = "%s"
+resource "aws_iam_user" "test" {
+  name = %[1]q
   path = "/"
 }
-`, rn)
+`, rName)
 }
 
-func testAccUserProfileUpdate(rn, updateRn string) string {
+func testAccUserProfileUpdate(rName, rName2 string) string {
 	return fmt.Sprintf(`
-resource "aws_opsworks_user_profile" "user" {
-  user_arn     = aws_iam_user.new-user.arn
-  ssh_username = aws_iam_user.new-user.name
+resource "aws_opsworks_user_profile" "test" {
+  user_arn     = aws_iam_user.new-test.arn
+  ssh_username = aws_iam_user.new-test.name
 }
 
-resource "aws_iam_user" "user" {
-  name = "%s"
+resource "aws_iam_user" "test" {
+  name = %[1]q
   path = "/"
 }
 
-resource "aws_iam_user" "new-user" {
-  name = "%s"
+resource "aws_iam_user" "new-test" {
+  name = %[2]q
   path = "/"
 }
-`, rn, updateRn)
+`, rName, rName2)
 }

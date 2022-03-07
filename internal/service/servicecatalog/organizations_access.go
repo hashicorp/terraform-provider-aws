@@ -16,6 +16,10 @@ func ResourceOrganizationsAccess() *schema.Resource {
 		Read:   resourceOrganizationsAccessRead,
 		Delete: resourceOrganizationsAccessDelete,
 
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(OrganizationsAccessStableTimeout),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"enabled": {
 				Type:     schema.TypeBool,
@@ -56,7 +60,7 @@ func resourceOrganizationsAccessCreate(d *schema.ResourceData, meta interface{})
 func resourceOrganizationsAccessRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	output, err := WaitOrganizationsAccessStable(conn)
+	output, err := WaitOrganizationsAccessStable(conn, d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		// theoretically this should not be possible

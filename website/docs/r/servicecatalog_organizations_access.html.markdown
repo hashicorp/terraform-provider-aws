@@ -33,3 +33,10 @@ The following arguments are required:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Account ID for the account using the resource.
+
+## Timeouts
+
+`aws_servicecatalog_organizations_access` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `read` - (Default `10 minutes`)
