@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_networkfirewall_rule_group: Allow any character in `source` and `destination` `rule_group.rules_source.stateful_rule.header` arguments as per the AWS API docs
+```

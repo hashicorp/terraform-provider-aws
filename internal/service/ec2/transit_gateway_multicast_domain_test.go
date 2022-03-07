@@ -74,7 +74,7 @@ func testAccTransitGatewayMulticastDomain_disappears(t *testing.T) {
 func testAccTransitGatewayMulticastDomain_tags(t *testing.T) {
 	var v ec2.TransitGatewayMulticastDomain
 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
-	rName := fmt.Sprintf("tf-testacc-tgwmulticast-%s", sdkacctest.RandString(8))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },

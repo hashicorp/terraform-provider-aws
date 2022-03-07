@@ -601,6 +601,24 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		Tags:               Tags(tags.IgnoreAWS()),
 	}
 
+	if v, ok := d.GetOk("certificate_arn"); ok {
+		request.CertificateArn = aws.String(v.(string))
+	}
+
+	// Send ExtraConnectionAttributes in the API request for all resource types
+	// per https://github.com/hashicorp/terraform-provider-aws/issues/8009
+	if v, ok := d.GetOk("extra_connection_attributes"); ok {
+		request.ExtraConnectionAttributes = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("kms_key_arn"); ok {
+		request.KmsKeyId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ssl_mode"); ok {
+		request.SslMode = aws.String(v.(string))
+	}
+
 	switch d.Get("engine_name").(string) {
 	case engineNameDynamoDB:
 		request.DynamoDbSettings = &dms.DynamoDbSettings{
@@ -697,24 +715,6 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		if v, ok := d.GetOk("database_name"); ok {
 			request.DatabaseName = aws.String(v.(string))
 		}
-
-		if v, ok := d.GetOk("kms_key_arn"); ok {
-			request.KmsKeyId = aws.String(v.(string))
-		}
-	}
-
-	if v, ok := d.GetOk("certificate_arn"); ok {
-		request.CertificateArn = aws.String(v.(string))
-	}
-
-	// Send ExtraConnectionAttributes in the API request for all resource types
-	// per https://github.com/hashicorp/terraform-provider-aws/issues/8009
-	if v, ok := d.GetOk("extra_connection_attributes"); ok {
-		request.ExtraConnectionAttributes = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("ssl_mode"); ok {
-		request.SslMode = aws.String(v.(string))
 	}
 
 	log.Println("[DEBUG] DMS create endpoint:", request)
