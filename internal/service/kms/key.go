@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -35,13 +35,11 @@ func ResourceKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"bypass_policy_lockout_safety_check": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
 			"customer_master_key_spec": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -49,37 +47,31 @@ func ResourceKey() *schema.Resource {
 				Default:      kms.CustomerMasterKeySpecSymmetricDefault,
 				ValidateFunc: validation.StringInSlice(kms.CustomerMasterKeySpec_Values(), false),
 			},
-
 			"deletion_window_in_days": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(7, 30),
 			},
-
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(0, 8192),
 			},
-
 			"enable_key_rotation": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
 			"is_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-
 			"key_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"key_usage": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -87,7 +79,12 @@ func ResourceKey() *schema.Resource {
 				Default:      kms.KeyUsageTypeEncryptDecrypt,
 				ValidateFunc: validation.StringInSlice(kms.KeyUsageType_Values(), false),
 			},
-
+			"multi_region": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -95,7 +92,6 @@ func ResourceKey() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 				ValidateFunc:     validation.StringIsJSON,
 			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -115,6 +111,10 @@ func resourceKeyCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("multi_region"); ok {
+		input.MultiRegion = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("policy"); ok {
@@ -140,7 +140,6 @@ func resourceKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*kms.CreateKeyOutput).KeyMetadata.KeyId))
-	d.Set("key_id", d.Id())
 
 	if enableKeyRotation := d.Get("enable_key_rotation").(bool); enableKeyRotation {
 		if err := updateKmsKeyRotationEnabled(conn, d.Id(), enableKeyRotation); err != nil {
@@ -187,6 +186,11 @@ func resourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	if aws.BoolValue(key.metadata.MultiRegion) &&
+		aws.StringValue(key.metadata.MultiRegionConfiguration.MultiRegionKeyType) != kms.MultiRegionKeyTypePrimary {
+		return fmt.Errorf("KMS Key (%s) is not a multi-Region primary key", d.Id())
+	}
+
 	d.Set("arn", key.metadata.Arn)
 	d.Set("customer_master_key_spec", key.metadata.CustomerMasterKeySpec)
 	d.Set("description", key.metadata.Description)
@@ -194,7 +198,15 @@ func resourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("is_enabled", key.metadata.Enabled)
 	d.Set("key_id", key.metadata.KeyId)
 	d.Set("key_usage", key.metadata.KeyUsage)
-	d.Set("policy", key.policy)
+	d.Set("multi_region", key.metadata.MultiRegion)
+
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), key.policy)
+
+	if err != nil {
+		return fmt.Errorf("while setting policy (%s), encountered: %w", key.policy, err)
+	}
+
+	d.Set("policy", policyToSet)
 
 	tags := key.tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 

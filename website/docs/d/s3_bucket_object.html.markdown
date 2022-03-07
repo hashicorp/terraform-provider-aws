@@ -8,6 +8,8 @@ description: |-
 
 # Data Source: aws_s3_bucket_object
 
+~> **NOTE:** The `aws_s3_bucket_object` data source is DEPRECATED and will be removed in a future version! Use `aws_s3_object` instead, where new features and fixes will be added.
+
 The S3 object data source allows access to the metadata and
 _optionally_ (see below) content of an object stored inside S3 bucket.
 

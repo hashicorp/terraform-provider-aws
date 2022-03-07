@@ -154,6 +154,7 @@ func waitDBInstanceDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rd
 			InstanceStatusCreating,
 			InstanceStatusDeleting,
 			InstanceStatusIncompatibleParameters,
+			InstanceStatusIncompatibleRestore,
 			InstanceStatusModifying,
 			InstanceStatusStarting,
 			InstanceStatusStopping,

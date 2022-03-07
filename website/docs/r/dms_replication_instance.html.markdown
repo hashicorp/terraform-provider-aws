@@ -113,7 +113,7 @@ The following arguments are supported:
     - Constraints: Minimum 30-minute window.
 
 * `publicly_accessible` - (Optional, Default: false) Specifies the accessibility options for the replication instance. A value of true represents an instance with a public IP address. A value of false represents an instance with a private IP address.
-* `replication_instance_class` - (Required) The compute and memory capacity of the replication instance as specified by the replication instance class. Can be one of `dms.t2.micro | dms.t2.small | dms.t2.medium | dms.t2.large | dms.c4.large | dms.c4.xlarge | dms.c4.2xlarge | dms.c4.4xlarge`
+* `replication_instance_class` - (Required) The compute and memory capacity of the replication instance as specified by the replication instance class. See [AWS DMS User Guide](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.Types.html) for available instance sizes and advice on which one to choose.
 * `replication_instance_id` - (Required) The replication instance identifier. This parameter is stored as a lowercase string.
 
     - Must contain from 1 to 63 alphanumeric characters or hyphens.

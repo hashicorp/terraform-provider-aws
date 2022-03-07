@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -335,6 +335,10 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
+						"instance_metadata_tags": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -582,7 +586,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 
 		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US)
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362
-		if err != nil && !tfawserr.ErrMessageContains(err, "UnsupportedOperation", "") {
+		if err != nil && !tfawserr.ErrCodeEquals(err, "UnsupportedOperation") {
 			return fmt.Errorf("error getting EC2 Instance (%s) Credit Specifications: %w", d.Id(), err)
 		}
 	}

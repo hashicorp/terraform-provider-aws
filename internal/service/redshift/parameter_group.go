@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -231,7 +231,7 @@ func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) erro
 	_, err := conn.DeleteClusterParameterGroup(&redshift.DeleteClusterParameterGroupInput{
 		ParameterGroupName: aws.String(d.Id()),
 	})
-	if err != nil && tfawserr.ErrMessageContains(err, "RedshiftParameterGroupNotFoundFault", "") {
+	if err != nil && tfawserr.ErrCodeEquals(err, "RedshiftParameterGroupNotFoundFault") {
 		return nil
 	}
 	return err

@@ -69,7 +69,7 @@ func dataSourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", aliasConfiguration.Description)
 	d.Set("function_version", aliasConfiguration.FunctionVersion)
 
-	invokeArn := lambdaFunctionInvokeArn(*aliasConfiguration.AliasArn, meta)
+	invokeArn := functionInvokeArn(*aliasConfiguration.AliasArn, meta)
 	d.Set("invoke_arn", invokeArn)
 
 	return nil

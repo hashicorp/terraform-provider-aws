@@ -11,7 +11,8 @@ import (
 )
 
 func TestAccEC2EBSVolumesDataSource_basic(t *testing.T) {
-	rInt := sdkacctest.RandIntRange(0, 256)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -19,47 +20,56 @@ func TestAccEC2EBSVolumesDataSource_basic(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeIDsDataSourceConfig(rInt),
-			},
-			{
-				Config: testAccEBSVolumeIDsWithDataSourceDataSourceConfig(rInt),
+				Config: testAccEBSVolumeIDsDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_ebs_volumes.subject_under_test", "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_ebs_volumes.by_tags", "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_ebs_volumes.by_filter", "ids.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_ebs_volumes.empty", "ids.#", "0"),
 				),
-			},
-			{
-				// Force the destroy to not refresh the data source (leading to an error)
-				Config: testAccEBSVolumeIDsDataSourceConfig(rInt),
 			},
 		},
 	})
 }
 
-func testAccEBSVolumeIDsWithDataSourceDataSourceConfig(rInt int) string {
-	return fmt.Sprintf(`
-%s
-
-data "aws_ebs_volumes" "subject_under_test" {
-  tags = {
-    TestIdentifierSet = "testAccDataSourceAwsEbsVolumes-%d"
-  }
-}
-`, testAccEBSVolumeIDsDataSourceConfig(rInt), rInt)
-}
-
-func testAccEBSVolumeIDsDataSourceConfig(rInt int) string {
-	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
+func testAccEBSVolumeIDsDataSourceConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_region" "current" {}
 
-resource "aws_ebs_volume" "volume" {
+resource "aws_ebs_volume" "test" {
   count = 2
 
   availability_zone = data.aws_availability_zones.available.names[0]
   size              = 1
 
   tags = {
-    TestIdentifierSet = "testAccDataSourceAwsEbsVolumes-%d"
+    Name = %[1]q
   }
 }
-`, rInt)
+
+data "aws_ebs_volumes" "by_tags" {
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_ebs_volume.test[0], aws_ebs_volume.test[1]]
+}
+
+data "aws_ebs_volumes" "by_filter" {
+  filter {
+    name   = "volume-id"
+    values = [aws_ebs_volume.test[0].id]
+  }
+
+  depends_on = [aws_ebs_volume.test[0], aws_ebs_volume.test[1]]
+}
+
+data "aws_ebs_volumes" "empty" {
+  filter {
+    name   = "create-time"
+    values = ["2000-01-01T00:00:00.000Z"]
+  }
+
+  depends_on = [aws_ebs_volume.test[0], aws_ebs_volume.test[1]]
+}
+`, rName))
 }

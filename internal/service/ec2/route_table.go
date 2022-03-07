@@ -10,9 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -50,7 +49,7 @@ func ResourceRouteTable() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(2 * time.Minute),
+			Create: schema.DefaultTimeout(5 * time.Minute),
 			Update: schema.DefaultTimeout(2 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
@@ -85,24 +84,18 @@ func ResourceRouteTable() *schema.Resource {
 						// Destinations.
 						///
 						"cidr_block": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.Any(
-								validation.StringIsEmpty,
-								verify.ValidIPv4CIDRNetworkAddress,
-							),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 						},
 						"destination_prefix_list_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"ipv6_cidr_block": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.Any(
-								validation.StringIsEmpty,
-								verify.ValidIPv6CIDRNetworkAddress,
-							),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
 						},
 
 						//
@@ -121,8 +114,9 @@ func ResourceRouteTable() *schema.Resource {
 							Optional: true,
 						},
 						"instance_id": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:       schema.TypeString,
+							Optional:   true,
+							Deprecated: "Use network_interface_id instead",
 						},
 						"local_gateway_id": {
 							Type:     schema.TypeString,
@@ -240,11 +234,12 @@ func resourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting propagating_vgws: %w", err)
 	}
 
-	if err := d.Set("route", flattenEc2Routes(routeTable.Routes)); err != nil {
+	if err := d.Set("route", flattenEc2Routes(conn, routeTable.Routes)); err != nil {
 		return fmt.Errorf("error setting route: %w", err)
 	}
 
-	tags := KeyValueTags(routeTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	//Ignore the AmazonFSx service tag in addition to standard ignores
+	tags := KeyValueTags(routeTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New([]string{"AmazonFSx"}))
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -849,7 +844,7 @@ func flattenEc2Route(apiObject *ec2.Route) map[string]interface{} {
 	return tfMap
 }
 
-func flattenEc2Routes(apiObjects []*ec2.Route) []interface{} {
+func flattenEc2Routes(conn *ec2.EC2, apiObjects []*ec2.Route) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -873,6 +868,18 @@ func flattenEc2Routes(apiObjects []*ec2.Route) []interface{} {
 			// Skipping because VPC endpoint routes are handled separately
 			// See aws_vpc_endpoint
 			continue
+		}
+
+		// Skip cross-account ENIs for AWS services.
+		if networkInterfaceID := aws.StringValue(apiObject.NetworkInterfaceId); networkInterfaceID != "" {
+			networkInterface, err := FindNetworkInterfaceByID(conn, networkInterfaceID)
+
+			if err == nil && networkInterface.Attachment != nil {
+				if ownerID, instanceOwnerID := aws.StringValue(networkInterface.OwnerId), aws.StringValue(networkInterface.Attachment.InstanceOwnerId); ownerID != "" && instanceOwnerID != ownerID {
+					log.Printf("[DEBUG] Skip cross-account ENI (%s)", networkInterfaceID)
+					continue
+				}
+			}
 		}
 
 		tfList = append(tfList, flattenEc2Route(apiObject))

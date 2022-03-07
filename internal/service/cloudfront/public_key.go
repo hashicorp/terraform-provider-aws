@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -94,7 +94,7 @@ func resourcePublicKeyRead(d *schema.ResourceData, meta interface{}) error {
 
 	output, err := conn.GetPublicKey(request)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchPublicKey, "") {
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
 			log.Printf("[WARN] No PublicKey found: %s, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -145,7 +145,7 @@ func resourcePublicKeyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.DeletePublicKey(request)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchPublicKey, "") {
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
 			return nil
 		}
 		return err

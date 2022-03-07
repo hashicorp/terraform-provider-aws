@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -81,13 +81,14 @@ func resourceRDSDBInstanceDeregister(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG] Unregistering rds db instance '%s' from stack: %s", d.Get("rds_db_instance_arn"), d.Get("stack_id"))
 
 	_, err := client.DeregisterRdsDbInstance(req)
+
+	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		log.Printf("[DEBUG] OpsWorks RDS DB instance (%s) not found to delete; removed from state", d.Id())
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "") {
-			log.Printf("[INFO] The db instance could not be found. Remove it from state.")
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error deregistering Opsworks RDS DB instance: %s", err)
+		return fmt.Errorf("deregistering Opsworks RDS DB instance: %s", err)
 	}
 
 	return nil
@@ -103,8 +104,15 @@ func resourceRDSDBInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading OpsWorks registered rds db instances for stack: %s", d.Get("stack_id"))
 
 	resp, err := client.DescribeRdsDbInstances(req)
+
+	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] OpsWorks RDS DB Instance (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		return err
+		return fmt.Errorf("while describing OpsWorks RDS DB Instance (%s): %w", d.Get("stack_id"), err)
 	}
 
 	found := false
@@ -124,7 +132,7 @@ func resourceRDSDBInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	if !found {
 		d.SetId("")
-		log.Printf("[INFO] The rds instance '%s' could not be found for stack: '%s'", d.Get("rds_db_instance_arn"), d.Get("stack_id"))
+		log.Printf("[INFO] The RDS instance '%s' could not be found for stack: '%s'", d.Get("rds_db_instance_arn"), d.Get("stack_id"))
 	}
 
 	return nil
@@ -141,6 +149,7 @@ func resourceRDSDBInstanceRegister(d *schema.ResourceData, meta interface{}) err
 	}
 
 	_, err := client.RegisterRdsDbInstance(req)
+
 	if err != nil {
 		return fmt.Errorf("Error registering Opsworks RDS DB instance: %s", err)
 	}

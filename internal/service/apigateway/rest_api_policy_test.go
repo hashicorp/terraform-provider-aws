@@ -36,9 +36,10 @@ func TestAccAPIGatewayRestAPIPolicy_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"policy"},
 			},
 			{
 				Config: testAccRestAPIPolicyUpdatedConfig(rName),
@@ -171,21 +172,17 @@ resource "aws_api_gateway_rest_api" "test" {
 resource "aws_api_gateway_rest_api_policy" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
 
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-   "Statement": [
-       {
-           "Effect": "Deny",
-           "Principal": {
-               "AWS": "*"
-           },
-           "Action": "execute-api:Invoke",
-           "Resource": "${aws_api_gateway_rest_api.test.arn}"
-       }
-   ]
-}
-EOF
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Deny"
+      Principal = {
+        AWS = "*"
+      }
+      Action   = "execute-api:Invoke"
+      Resource = aws_api_gateway_rest_api.test.arn
+    }]
+  })
 }
 `, rName)
 }
@@ -199,26 +196,22 @@ resource "aws_api_gateway_rest_api" "test" {
 resource "aws_api_gateway_rest_api_policy" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
 
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "execute-api:Invoke",
-      "Resource": "${aws_api_gateway_rest_api.test.arn}",
-      "Condition": {
-        "IpAddress": {
-          "aws:SourceIp": "123.123.123.123/32"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        AWS = "*"
+      }
+      Action   = "execute-api:Invoke"
+      Resource = aws_api_gateway_rest_api.test.arn
+      Condition = {
+        IpAddress = {
+          "aws:SourceIp" = "123.123.123.123/32"
         }
       }
-    }
-  ]
-}
-EOF
+    }]
+  })
 }
 `, rName)
 }

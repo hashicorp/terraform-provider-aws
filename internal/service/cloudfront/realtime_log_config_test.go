@@ -6,13 +6,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccCloudFrontRealtimeLogConfig_basic(t *testing.T) {
@@ -148,16 +148,17 @@ func testAccCheckCloudFrontRealtimeLogConfigDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to find the resource
 		_, err := tfcloudfront.FindRealtimeLogConfigByARN(conn, rs.Primary.ID)
-		// Verify the error is what we want
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchRealtimeLogConfig, "") {
+
+		if tfresource.NotFound(err) {
 			continue
 		}
+
 		if err != nil {
 			return err
 		}
-		return fmt.Errorf("CloudFront Real-time Log Config still exists: %s", rs.Primary.ID)
+
+		return fmt.Errorf("CloudFront Real-time Log Config %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -175,12 +176,14 @@ func testAccCheckCloudFrontRealtimeLogConfigExists(n string, v *cloudfront.Realt
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
-		out, err := tfcloudfront.FindRealtimeLogConfigByARN(conn, rs.Primary.ID)
+
+		output, err := tfcloudfront.FindRealtimeLogConfigByARN(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*v = *out
+		*v = *output
 
 		return nil
 	}

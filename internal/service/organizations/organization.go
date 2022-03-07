@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -233,7 +233,7 @@ func resourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Reading Organization: %s", d.Id())
 	org, err := conn.DescribeOrganization(&organizations.DescribeOrganizationInput{})
 
-	if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
 		log.Printf("[WARN] Organization does not exist, removing from state: %s", d.Id())
 		d.SetId("")
 		return nil

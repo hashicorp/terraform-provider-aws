@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -290,7 +290,7 @@ func DBClusterEndpointStateRefreshFunc(conn *rds.RDS, id string) resource.StateR
 				DBClusterEndpointIdentifier: aws.String(id),
 			})
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
 				return emptyResp, "destroyed", nil
 			} else if resp != nil && len(resp.DBClusterEndpoints) == 0 {
 				return emptyResp, "destroyed", nil

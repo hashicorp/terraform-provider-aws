@@ -909,7 +909,10 @@ data "aws_redshift_service_account" "main" {}
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
+}
 
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.test.id
   policy = <<EOF
 {
   "Version": "2008-10-17",
@@ -938,6 +941,9 @@ EOF
 }
 
 resource "aws_redshift_cluster" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"

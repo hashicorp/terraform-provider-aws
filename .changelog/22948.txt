@@ -1,0 +1,15 @@
+```release-note:breaking-change
+resource/aws_default_vpc: `ipv6_cidr_block` can no longer be set to `""`; remove or set to `null`
+```
+
+```release-note:breaking-change
+resource/aws_instance: `private_ip` can no longer be set to `""`; remove or set to `null`
+```
+
+```release-note:breaking-change
+resource/aws_vpc_ipv6_cidr_block_association: `ipv6_cidr_block` can no longer be set to `""`; remove or set to `null`
+```
+
+```release-note:breaking-change
+resource/aws_vpc: `ipv6_cidr_block` can no longer be set to `""`; remove or set to `null`
+```

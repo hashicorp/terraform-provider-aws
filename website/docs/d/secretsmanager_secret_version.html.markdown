@@ -17,7 +17,7 @@ Retrieve information about a Secrets Manager secret version, including its secre
 By default, this data sources retrieves information based on the `AWSCURRENT` staging label.
 
 ```terraform
-data "aws_secretsmanager_secret_version" "example" {
+data "aws_secretsmanager_secret_version" "secret-version" {
   secret_id = data.aws_secretsmanager_secret.example.id
 }
 ```

@@ -35,6 +35,14 @@ In addition to all arguments above, the following attributes are exported:
 * `application_version_id` - The current application version ID when the snapshot was created.
 * `snapshot_creation_timestamp` - The timestamp of the application snapshot.
 
+## Timeouts
+
+`aws_kinesisanalyticsv2_application_snapshot` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for Snapshot creation
+- `delete` - (Default `10 minutes`) Used for Snapshot destruction
+
 ## Import
 
 `aws_kinesisanalyticsv2_application` can be imported by using `application_name` together with `snapshot_name`, e.g.,

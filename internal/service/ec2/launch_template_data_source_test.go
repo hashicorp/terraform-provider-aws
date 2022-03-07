@@ -151,6 +151,7 @@ func TestAccEC2LaunchTemplateDataSource_metadataOptions(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "metadata_options.0.http_protocol_ipv6", resourceName, "metadata_options.0.http_protocol_ipv6"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "metadata_options.0.http_tokens", resourceName, "metadata_options.0.http_tokens"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "metadata_options.0.http_put_response_hop_limit", resourceName, "metadata_options.0.http_put_response_hop_limit"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "metadata_options.0.instance_metadata_tags", resourceName, "metadata_options.0.instance_metadata_tags"),
 				),
 			},
 		},
@@ -370,6 +371,7 @@ resource "aws_launch_template" "test" {
     http_endpoint               = "enabled"
     http_tokens                 = "required"
     http_put_response_hop_limit = 2
+    instance_metadata_tags      = "enabled"
   }
 }
 

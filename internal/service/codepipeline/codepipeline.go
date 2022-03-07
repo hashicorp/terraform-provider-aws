@@ -6,11 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -50,11 +51,16 @@ func ResourceCodePipeline() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 100),
+					validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+				),
 			},
 
 			"role_arn": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"artifact_store": {
 				Type:     schema.TypeSet,
@@ -105,6 +111,10 @@ func ResourceCodePipeline() *schema.Resource {
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 100),
+								validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+							),
 						},
 						"action": {
 							Type:     schema.TypeList,
@@ -112,8 +122,12 @@ func ResourceCodePipeline() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"configuration": {
-										Type:             schema.TypeMap,
-										Optional:         true,
+										Type:     schema.TypeMap,
+										Optional: true,
+										ValidateDiagFunc: allDiagFunc(
+											validation.MapKeyLenBetween(1, 50),
+											validation.MapKeyLenBetween(1, 1000),
+										),
 										Elem:             &schema.Schema{Type: schema.TypeString},
 										DiffSuppressFunc: suppressCodePipelineStageActionConfiguration,
 									},
@@ -135,6 +149,10 @@ func ResourceCodePipeline() *schema.Resource {
 									"version": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 9),
+											validation.StringMatch(regexp.MustCompile(`[0-9A-Za-z_-]+`), ""),
+										),
 									},
 									"input_artifacts": {
 										Type:     schema.TypeList,
@@ -149,15 +167,21 @@ func ResourceCodePipeline() *schema.Resource {
 									"name": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 100),
+											validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+										),
 									},
 									"role_arn": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
 									},
 									"run_order": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										Computed: true,
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.IntBetween(1, 999),
 									},
 									"region": {
 										Type:     schema.TypeString,
@@ -167,6 +191,10 @@ func ResourceCodePipeline() *schema.Resource {
 									"namespace": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 100),
+											validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9@\-_]+`), ""),
+										),
 									},
 								},
 							},
@@ -510,7 +538,7 @@ func resourceCodePipelineRead(d *schema.ResourceData, meta interface{}) error {
 		Name: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, codepipeline.ErrCodePipelineNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, codepipeline.ErrCodePipelineNotFoundException) {
 		log.Printf("[WARN] CodePipeline (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -565,17 +593,19 @@ func resourceCodePipelineRead(d *schema.ResourceData, meta interface{}) error {
 func resourceCodePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 
-	pipeline, err := expand(d)
-	if err != nil {
-		return err
-	}
-	params := &codepipeline.UpdatePipelineInput{
-		Pipeline: pipeline,
-	}
-	_, err = conn.UpdatePipeline(params)
+	if d.HasChangesExcept("tags", "tags_all") {
+		pipeline, err := expand(d)
+		if err != nil {
+			return err
+		}
+		params := &codepipeline.UpdatePipelineInput{
+			Pipeline: pipeline,
+		}
+		_, err = conn.UpdatePipeline(params)
 
-	if err != nil {
-		return fmt.Errorf("[ERROR] Error updating CodePipeline (%s): %w", d.Id(), err)
+		if err != nil {
+			return fmt.Errorf("[ERROR] Error updating CodePipeline (%s): %w", d.Id(), err)
+		}
 	}
 
 	arn := d.Get("arn").(string)
@@ -597,7 +627,7 @@ func resourceCodePipelineDelete(d *schema.ResourceData, meta interface{}) error 
 		Name: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, codepipeline.ErrCodePipelineNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, codepipeline.ErrCodePipelineNotFoundException) {
 		return nil
 	}
 
@@ -650,4 +680,15 @@ func hashCodePipelineGitHubToken(token string) string {
 	}
 	sum := sha256.Sum256([]byte(token))
 	return codePipelineGitHubTokenHashPrefix + hex.EncodeToString(sum[:])
+}
+
+// https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
+func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
+	return func(i interface{}, k cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		for _, validator := range validators {
+			diags = append(diags, validator(i, k)...)
+		}
+		return diags
+	}
 }

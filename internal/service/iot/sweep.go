@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -53,6 +53,11 @@ func init() {
 		Name:         "aws_iot_thing",
 		F:            sweepThings,
 		Dependencies: []string{"aws_iot_thing_principal_attachment"},
+	})
+
+	resource.AddTestSweepers("aws_iot_thing_group", &resource.Sweeper{
+		Name: "aws_iot_policy_attachment",
+		F:    sweepThingGroups,
 	})
 
 	resource.AddTestSweepers("aws_iot_thing_type", &resource.Sweeper{
@@ -456,7 +461,7 @@ func sweepTopicRules(region string) error {
 			_, err := conn.DeleteTopicRule(&iot.DeleteTopicRuleInput{
 				RuleName: aws.String(name),
 			})
-			if tfawserr.ErrMessageContains(err, iot.ErrCodeUnauthorizedException, "") {
+			if tfawserr.ErrCodeEquals(err, iot.ErrCodeUnauthorizedException) {
 				continue
 			}
 			if err != nil {
@@ -474,4 +479,47 @@ func sweepTopicRules(region string) error {
 	}
 
 	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepThingGroups(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).IoTConn
+	input := &iot.ListThingGroupsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = conn.ListThingGroupsPages(input, func(page *iot.ListThingGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, group := range page.ThingGroups {
+			r := ResourceThingGroup()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(group.GroupName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IoT Thing Group sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing IoT Thing Groups (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping IoT Thing Groups (%s): %w", region, err)
+	}
+
+	return nil
 }
