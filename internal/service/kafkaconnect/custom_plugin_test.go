@@ -197,6 +197,12 @@ func testAccCustomPluginConfigBasicS3ObjectJar(name string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_s3_object" "test" {

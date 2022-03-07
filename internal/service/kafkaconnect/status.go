@@ -1,6 +1,7 @@
 package kafkaconnect
 
 import (
+	"context"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -20,5 +21,21 @@ func statusCustomPluginState(conn *kafkaconnect.KafkaConnect, arn string) resour
 		}
 
 		return output, aws.StringValue(output.CustomPluginState), nil
+	}
+}
+
+func statusConnectorState(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindConnectorByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.ConnectorState), nil
 	}
 }
