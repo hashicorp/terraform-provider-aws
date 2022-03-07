@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -132,9 +132,10 @@ func ResourceJob() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"timeout": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  2880,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"security_configuration": {
 				Type:     schema.TypeString,
@@ -172,7 +173,10 @@ func resourceJobCreate(d *schema.ResourceData, meta interface{}) error {
 		Name:    aws.String(name),
 		Role:    aws.String(d.Get("role_arn").(string)),
 		Tags:    Tags(tags.IgnoreAWS()),
-		Timeout: aws.Int64(int64(d.Get("timeout").(int))),
+	}
+
+	if v, ok := d.GetOk("timeout"); ok {
+		input.Timeout = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("max_capacity"); ok {
@@ -248,7 +252,7 @@ func resourceJobRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading Glue Job: %s", input)
 	output, err := conn.GetJob(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue Job (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -334,7 +338,10 @@ func resourceJobUpdate(d *schema.ResourceData, meta interface{}) error {
 		jobUpdate := &glue.JobUpdate{
 			Command: expandGlueJobCommand(d.Get("command").([]interface{})),
 			Role:    aws.String(d.Get("role_arn").(string)),
-			Timeout: aws.Int64(int64(d.Get("timeout").(int))),
+		}
+
+		if v, ok := d.GetOk("timeout"); ok {
+			jobUpdate.Timeout = aws.Int64(int64(v.(int)))
 		}
 
 		if v, ok := d.GetOk("number_of_workers"); ok {
@@ -428,7 +435,7 @@ func DeleteJob(conn *glue.Glue, jobName string) error {
 
 	_, err := conn.DeleteJob(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 		return err

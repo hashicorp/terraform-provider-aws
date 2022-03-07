@@ -56,7 +56,7 @@ The following arguments are supported:
 * `invalid_user_list` - (Optional) A list of users in the Active Directory that are not allowed to access the file share. Only valid if `authentication` is set to `ActiveDirectory`.
 * `kms_encrypted` - (Optional) Boolean value if `true` to use Amazon S3 server side encryption with your own AWS KMS key, or `false` to use a key managed by Amazon S3. Defaults to `false`.
 * `kms_key_arn` - (Optional) Amazon Resource Name (ARN) for KMS key used for Amazon S3 server side encryption. This value can only be set when `kms_encrypted` is true.
-* `object_acl` - (Optional) Access Control List permission for S3 bucket objects. Defaults to `private`.
+* `object_acl` - (Optional) Access Control List permission for S3 objects. Defaults to `private`.
 * `oplocks_enabled` - (Optional) Boolean to indicate Opportunistic lock (oplock) status. Defaults to `true`.
 * `cache_attributes` - (Optional) Refresh cache information. see [Cache Attributes](#cache_attributes) for more details.
 * `read_only` - (Optional) Boolean to indicate write status of file share. File share does not accept writes if `true`. Defaults to `false`.

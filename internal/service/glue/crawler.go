@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -112,7 +112,7 @@ func ResourceCrawler() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				MinItems:     1,
-				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target"},
+				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"connection_name": {
@@ -150,7 +150,7 @@ func ResourceCrawler() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				MinItems:     1,
-				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target"},
+				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"path": {
@@ -174,7 +174,7 @@ func ResourceCrawler() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				MinItems:     1,
-				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target"},
+				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"connection_name": {
@@ -197,7 +197,7 @@ func ResourceCrawler() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				MinItems:     1,
-				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target"},
+				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"connection_name": {
@@ -216,11 +216,34 @@ func ResourceCrawler() *schema.Resource {
 					},
 				},
 			},
+			"delta_target": {
+				Type:         schema.TypeList,
+				Optional:     true,
+				MinItems:     1,
+				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"connection_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"delta_tables": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"write_manifest": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
+			},
 			"catalog_target": {
 				Type:         schema.TypeList,
 				Optional:     true,
 				MinItems:     1,
-				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target"},
+				AtLeastOneOf: []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"database_name": {
@@ -480,6 +503,10 @@ func expandGlueCrawlerTargets(d *schema.ResourceData) *glue.CrawlerTargets {
 		crawlerTargets.MongoDBTargets = expandGlueMongoDBTargets(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("delta_target"); ok {
+		crawlerTargets.DeltaTargets = expandGlueDeltaTargets(v.([]interface{}))
+	}
+
 	return crawlerTargets
 }
 
@@ -620,6 +647,29 @@ func expandGlueMongoDBTarget(cfg map[string]interface{}) *glue.MongoDBTarget {
 	return target
 }
 
+func expandGlueDeltaTargets(targets []interface{}) []*glue.DeltaTarget {
+	if len(targets) < 1 {
+		return []*glue.DeltaTarget{}
+	}
+
+	perms := make([]*glue.DeltaTarget, len(targets))
+	for i, rawCfg := range targets {
+		cfg := rawCfg.(map[string]interface{})
+		perms[i] = expandGlueDeltaTarget(cfg)
+	}
+	return perms
+}
+
+func expandGlueDeltaTarget(cfg map[string]interface{}) *glue.DeltaTarget {
+	target := &glue.DeltaTarget{
+		ConnectionName: aws.String(cfg["connection_name"].(string)),
+		DeltaTables:    flex.ExpandStringSet(cfg["delta_tables"].(*schema.Set)),
+		WriteManifest:  aws.Bool(cfg["write_manifest"].(bool)),
+	}
+
+	return target
+}
+
 func resourceCrawlerUpdate(d *schema.ResourceData, meta interface{}) error {
 	glueConn := meta.(*conns.AWSClient).GlueConn
 	name := d.Get("name").(string)
@@ -688,7 +738,7 @@ func resourceCrawlerRead(d *schema.ResourceData, meta interface{}) error {
 
 	crawlerOutput, err := glueConn.GetCrawler(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue Crawler (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -752,6 +802,10 @@ func resourceCrawlerRead(d *schema.ResourceData, meta interface{}) error {
 
 		if err := d.Set("mongodb_target", flattenGlueMongoDBTargets(crawler.Targets.MongoDBTargets)); err != nil {
 			return fmt.Errorf("error setting mongodb_target: %w", err)
+		}
+
+		if err := d.Set("delta_target", flattenGlueDeltaTargets(crawler.Targets.DeltaTargets)); err != nil {
+			return fmt.Errorf("error setting delta_target: %w", err)
 		}
 	}
 
@@ -859,6 +913,20 @@ func flattenGlueMongoDBTargets(mongoDBTargets []*glue.MongoDBTarget) []map[strin
 	return result
 }
 
+func flattenGlueDeltaTargets(deltaTargets []*glue.DeltaTarget) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0)
+
+	for _, deltaTarget := range deltaTargets {
+		attrs := make(map[string]interface{})
+		attrs["connection_name"] = aws.StringValue(deltaTarget.ConnectionName)
+		attrs["delta_tables"] = flex.FlattenStringSet(deltaTarget.DeltaTables)
+		attrs["write_manifest"] = aws.BoolValue(deltaTarget.WriteManifest)
+
+		result = append(result, attrs)
+	}
+	return result
+}
+
 func resourceCrawlerDelete(d *schema.ResourceData, meta interface{}) error {
 	glueConn := meta.(*conns.AWSClient).GlueConn
 
@@ -867,7 +935,7 @@ func resourceCrawlerDelete(d *schema.ResourceData, meta interface{}) error {
 		Name: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error deleting Glue crawler: %w", err)

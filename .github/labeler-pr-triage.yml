@@ -153,6 +153,9 @@ service/cloudwatchlogs:
   - 'internal/service/cloudwatchlogs/**/*'
   - 'website/**/cloudwatch_log_*'
   - 'website/**/cloudwatch_query_definition*'
+service/cloudwatchrum:
+  - 'internal/service/cloudwatchrum/**/*'
+  - 'website/**/cloudwatchrum_*'
 service/codeartifact:
   - 'internal/service/codeartifact/**/*'
   - 'website/**/codeartifact_*'
@@ -337,6 +340,9 @@ service/globalaccelerator:
 service/glue:
   - 'internal/service/glue/**/*'
   - 'website/**/glue_*'
+service/grafana:
+  - 'internal/service/grafana/**/*'
+  - 'website/**/grafana_*'
 service/greengrass:
   - 'internal/service/greengrass/**/*'
   - 'website/**/greengrass_*'
@@ -367,6 +373,9 @@ service/iotevents:
 service/kafka:
   - 'internal/service/kafka/**/*'
   - 'website/**/msk_*'
+service/kafkaconnect:
+  - 'internal/service/kafkaconnect/**/*'
+  - 'website/**/mskconnect_*'
 service/kinesis:
   - 'internal/service/kinesis/**/*'
   - '*_aws_kinesis_stream*'

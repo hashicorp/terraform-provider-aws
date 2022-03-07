@@ -28,35 +28,38 @@ resource "aws_opsworks_instance" "my-instance" {
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
-* `instance_type` - (Required) The type of instance to start
-* `stack_id` - (Required) The id of the stack the instance will belong to.
-* `layer_ids` - (Required) The ids of the layers the instance will belong to.
-* `state` - (Optional) The desired state of the instance.  Can be either `"running"` or `"stopped"`.
-* `install_updates_on_boot` - (Optional) Controls where to install OS and package updates when the instance boots.  Defaults to `true`.
-* `auto_scaling_type` - (Optional) Creates load-based or time-based instances.  If set, can be either: `"load"` or `"timer"`.
-* `availability_zone` - (Optional) Name of the availability zone where instances will be created
-  by default.
-* `ebs_optimized` - (Optional) If true, the launched EC2 instance will be EBS-optimized.
-* `hostname` - (Optional) The instance's host name.
-* `architecture` - (Optional) Machine architecture for created instances.  Can be either `"x86_64"` (the default) or `"i386"`
-* `ami_id` - (Optional) The AMI to use for the instance.  If an AMI is specified, `os` must be `"Custom"`.
+* `layer_ids` - (Required) List of the layers the instance will belong to.
+* `stack_id` - (Required) Identifier of the stack the instance will belong to.
+
+The following arguments are optional:
+
+* `agent_version` - (Optional) OpsWorks agent to install. Default is `INHERIT`.
+* `ami_id` - (Optional) AMI to use for the instance.  If an AMI is specified, `os` must be `Custom`.
+* `architecture` - (Optional) Machine architecture for created instances.  Valid values are `x86_64` or `i386`. The default is `x86_64`.
+* `auto_scaling_type` - (Optional) Creates load-based or time-based instances.  Valid values are `load`, `timer`.
+* `availability_zone` - (Optional) Name of the availability zone where instances will be created by default.
+* `delete_ebs` - (Optional) Whether to delete EBS volume on deletion. Default is `true`.
+* `delete_eip` - (Optional) Whether to delete the Elastic IP on deletion.
+* `ebs_block_device` - (Optional) Configuration block for additional EBS block devices to attach to the instance. See [Block Devices](#block-devices) below.
+* `ebs_optimized` - (Optional) Whether the launched EC2 instance will be EBS-optimized.
+* `ecs_cluster_arn` - (Optional) ECS cluster's ARN for container instances.
+* `elastic_ip` - (Optional) Instance Elastic IP address.
+* `ephemeral_block_device` - (Optional) Configuration block for ephemeral (also known as "Instance Store") volumes on the instance. See [Block Devices](#block-devices) below.
+* `hostname` - (Optional) Instance's host name.
+* `infrastructure_class` - (Optional) For registered instances, infrastructure class: ec2 or on-premises.
+* `install_updates_on_boot` - (Optional) Controls where to install OS and package updates when the instance boots.  Default is `true`.
+* `instance_profile_arn` - (Optional) ARN of the instance's IAM profile.
+* `instance_type` - (Optional) Type of instance to start.
 * `os` - (Optional) Name of operating system that will be installed.
-* `root_device_type` - (Optional) Name of the type of root device instances will have by default.  Can be either `"ebs"` or `"instance-store"`
+* `root_block_device` - (Optional) Configuration block for the root block device of the instance. See [Block Devices](#block-devices) below.
+* `root_device_type` - (Optional) Name of the type of root device instances will have by default. Valid values are `ebs` or `instance-store`.
 * `ssh_key_name` - (Optional) Name of the SSH keypair that instances will have by default.
-* `agent_version` - (Optional) The AWS OpsWorks agent to install.  Defaults to `"INHERIT"`.
-* `subnet_id` - (Optional) Subnet ID to attach to
-* `tenancy` - (Optional) Instance tenancy to use. Can be one of `"default"`, `"dedicated"` or `"host"`
-* `virtualization_type` - (Optional) Keyword to choose what virtualization mode created instances
-  will use. Can be either `"paravirtual"` or `"hvm"`.
-* `root_block_device` - (Optional) Customize details about the root block
-  device of the instance. See [Block Devices](#block-devices) below for details.
-* `ebs_block_device` - (Optional) Additional EBS block devices to attach to the
-  instance.  See [Block Devices](#block-devices) below for details.
-* `ephemeral_block_device` - (Optional) Customize Ephemeral (also known as
-  "Instance Store") volumes on the instance. See [Block Devices](#block-devices) below for details.
-
+* `state` - (Optional) Desired state of the instance. Valid values are `running` or `stopped`.
+* `subnet_id` - (Optional) Subnet ID to attach to.
+* `tenancy` - (Optional) Instance tenancy to use. Valid values are `default`, `dedicated` or `host`.
+* `virtualization_type` - (Optional) Keyword to choose what virtualization mode created instances will use. Valid values are `paravirtual` or `hvm`.
 
 ## Block devices
 
@@ -65,73 +68,66 @@ Instance's "Block Device Mapping". It's a good idea to familiarize yourself with
 Mapping docs](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html)
 to understand the implications of using these attributes.
 
-The `root_block_device` mapping supports the following:
+### `ebs_block_device`
 
-* `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`,
-  or `"io1"`. (Default: `"standard"`).
-* `volume_size` - (Optional) The size of the volume in gigabytes.
-* `iops` - (Optional) The amount of provisioned
-  [IOPS](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
-  This must be set with a `volume_type` of `"io1"`.
-* `delete_on_termination` - (Optional) Whether the volume should be destroyed
-  on instance termination (Default: `true`).
-
-Modifying any of the `root_block_device` settings requires resource
-replacement.
-
-Each `ebs_block_device` supports the following:
-
-* `device_name` - The name of the device to mount.
-* `snapshot_id` - (Optional) The Snapshot ID to mount.
-* `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`,
-  or `"io1"`. (Default: `"standard"`).
-* `volume_size` - (Optional) The size of the volume in gigabytes.
-* `iops` - (Optional) The amount of provisioned
-  [IOPS](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
-  This must be set with a `volume_type` of `"io1"`.
-* `delete_on_termination` - (Optional) Whether the volume should be destroyed
-  on instance termination (Default: `true`).
+* `delete_on_termination` - (Optional) Whether the volume should be destroyed on instance termination. Default is `true`.
+* `device_name` - (Required) Name of the device to mount.
+* `iops` - (Optional) Amount of provisioned [IOPS](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). This must be set with a `volume_type` of `io1`.
+* `snapshot_id` - (Optional) Snapshot ID to mount.
+* `volume_size` - (Optional) Size of the volume in gigabytes.
+* `volume_type` - (Optional) Type of volume. Valid values are `standard`, `gp2`, or `io1`. Default is `standard`.
 
 Modifying any `ebs_block_device` currently requires resource replacement.
 
-Each `ephemeral_block_device` supports the following:
+### `ephemeral_block_device`
 
-* `device_name` - The name of the block device to mount on the instance.
-* `virtual_name` - The [Instance Store Device
-  Name](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#InstanceStoreDeviceNames)
-  (e.g., `"ephemeral0"`)
+* `device_name` - Name of the block device to mount on the instance.
+* `virtual_name` - The [Instance Store Device Name](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#InstanceStoreDeviceNames) (e.g., `ephemeral0`).
 
 Each AWS Instance type has a different set of Instance Store block devices
 available for attachment. AWS [publishes a
 list](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#StorageOnInstanceTypes)
 of which ephemeral devices are available on each type. The devices are always
-identified by the `virtual_name` in the format `"ephemeral{0..N}"`.
+identified by the `virtual_name` in the format `ephemeral{0..N}`.
+
+### `root_block_device`
+
+* `delete_on_termination` - (Optional) Whether the volume should be destroyed on instance termination. Default is `true`.
+* `iops` - (Optional) Amount of provisioned [IOPS](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). This must be set with a `volume_type` of `io1`.
+* `volume_size` - (Optional) Size of the volume in gigabytes.
+* `volume_type` - (Optional) Type of volume. Valid values are `standard`, `gp2`, or `io1`. Default is `standard`.
+
+Modifying any of the `root_block_device` settings requires resource
+replacement.
 
 ~> **NOTE:** Currently, changes to `*_block_device` configuration of _existing_
 resources cannot be automatically detected by Terraform. After making updates
 to block device configuration, resource recreation can be manually triggered by
 using the [`taint` command](https://www.terraform.io/docs/commands/taint.html).
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The id of the OpsWorks instance.
-* `agent_version` - The AWS OpsWorks agent version.
-* `availability_zone` - The availability zone of the instance.
-* `ec2_instance_id` - EC2 instance ID
-* `ssh_key_name` - The key name of the instance
-* `public_dns` - The public DNS name assigned to the instance. For EC2-VPC, this
-  is only available if you've enabled DNS hostnames for your VPC
-* `public_ip` - The public IP address assigned to the instance, if applicable.
-* `private_dns` - The private DNS name assigned to the instance. Can only be
-  used inside the Amazon EC2, and only available if you've enabled DNS hostnames
-  for your VPC
-* `private_ip` - The private IP address assigned to the instance
-* `subnet_id` - The VPC subnet ID.
-* `tenancy` - The Instance tenancy
-* `security_group_ids` - The associated security groups.
+* `created_at` - Time that the instance was created.
+* `ec2_instance_id` - EC2 instance ID.
+* `id` - ID of the OpsWorks instance.
+* `last_service_error_id` - ID of the last service error.
+* `platform` - Instance's platform.
+* `private_dns` - Private DNS name assigned to the instance. Can only be used inside the Amazon EC2, and only available if you've enabled DNS hostnames for your VPC.
+* `private_ip` - Private IP address assigned to the instance.
+* `public_dns` - Public DNS name assigned to the instance. For EC2-VPC, this is only available if you've enabled DNS hostnames for your VPC.
+* `public_ip` - Public IP address assigned to the instance, if applicable.
+* `registered_by` - For registered instances, who performed the registration.
+* `reported_agent_version` - Instance's reported AWS OpsWorks Stacks agent version.
+* `reported_os_family` - For registered instances, the reported operating system family.
+* `reported_os_name` - For registered instances, the reported operating system name.
+* `reported_os_version` - For registered instances, the reported operating system version.
+* `root_device_volume_id` - Root device volume ID.
+* `security_group_ids` - Associated security groups.
+* `ssh_host_dsa_key_fingerprint` - SSH key's Deep Security Agent (DSA) fingerprint.
+* `ssh_host_rsa_key_fingerprint` - SSH key's RSA fingerprint.
+* `status` - Instance status. Will be one of `booting`, `connection_lost`, `online`, `pending`, `rebooting`, `requested`, `running_setup`, `setup_failed`, `shutting_down`, `start_failed`, `stop_failed`, `stopped`, `stopping`, `terminated`, or `terminating`.
 
 ## Timeouts
 

@@ -1,9 +1,10 @@
 package ec2
 
 import (
+	"errors"
 	"fmt"
-	"log"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -15,31 +16,29 @@ func DataSourceSubnetIDs() *schema.Resource {
 		Read: dataSourceSubnetIDsRead,
 		Schema: map[string]*schema.Schema{
 			"filter": CustomFiltersSchema(),
-
-			"tags": tftags.TagsSchemaComputed(),
-
-			"vpc_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
 			"ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+			},
+			"tags": tftags.TagsSchemaComputed(),
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 		},
+		DeprecationMessage: `The aws_subnet_ids data source has been deprecated and will be removed in a future version. ` +
+			`Use the aws_subnets data source instead.`,
 	}
 }
 
 func dataSourceSubnetIDsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	req := &ec2.DescribeSubnetsInput{}
+	input := &ec2.DescribeSubnetsInput{}
 
 	if vpc, vpcOk := d.GetOk("vpc_id"); vpcOk {
-		req.Filters = BuildAttributeFilterList(
+		input.Filters = BuildAttributeFilterList(
 			map[string]string{
 				"vpc-id": vpc.(string),
 			},
@@ -47,39 +46,39 @@ func dataSourceSubnetIDsRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		req.Filters = append(req.Filters, BuildTagFilterList(
+		input.Filters = append(input.Filters, BuildTagFilterList(
 			Tags(tftags.New(tags.(map[string]interface{}))),
 		)...)
 	}
 
 	if filters, filtersOk := d.GetOk("filter"); filtersOk {
-		req.Filters = append(req.Filters, BuildCustomFilterList(
+		input.Filters = append(input.Filters, BuildCustomFilterList(
 			filters.(*schema.Set),
 		)...)
 	}
 
-	if len(req.Filters) == 0 {
-		req.Filters = nil
+	if len(input.Filters) == 0 {
+		input.Filters = nil
 	}
 
-	log.Printf("[DEBUG] DescribeSubnets %s\n", req)
-	resp, err := conn.DescribeSubnets(req)
+	output, err := FindSubnets(conn, input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading EC2 Subnets: %w", err)
 	}
 
-	if resp == nil || len(resp.Subnets) == 0 {
-		return fmt.Errorf("no matching subnet found for vpc with id %s", d.Get("vpc_id").(string))
+	if len(output) == 0 {
+		return errors.New("no matching EC2 Subnets found")
 	}
 
-	subnets := make([]string, 0)
+	var subnetIDs []string
 
-	for _, subnet := range resp.Subnets {
-		subnets = append(subnets, *subnet.SubnetId)
+	for _, v := range output {
+		subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetId))
 	}
 
 	d.SetId(d.Get("vpc_id").(string))
-	d.Set("ids", subnets)
+	d.Set("ids", subnetIDs)
 
 	return nil
 }

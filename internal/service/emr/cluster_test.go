@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEMRCluster_basic(t *testing.T) {
@@ -1545,24 +1546,17 @@ func testAccCheckDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &emr.DescribeClusterInput{
-			ClusterId: aws.String(rs.Primary.ID),
+		_, err := tfemr.FindClusterByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		output, err := conn.DescribeCluster(input)
 		if err != nil {
 			return err
 		}
 
-		// if output.Cluster != nil &&
-		// 	*output.Cluster.Status.State == "WAITING" {
-		// 	return fmt.Errorf("EMR Cluster still exists")
-		// }
-		if output.Cluster == nil || output.Cluster.Status == nil || aws.StringValue(output.Cluster.Status.State) == emr.ClusterStateTerminated {
-			continue
-		}
-
-		return fmt.Errorf("EMR Cluster still exists")
+		return fmt.Errorf("EMR Cluster %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -1574,29 +1568,20 @@ func testAccCheckClusterExists(n string, v *emr.Cluster) resource.TestCheckFunc 
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
+
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No cluster id set")
+			return fmt.Errorf("No EMR Cluster ID is set")
 		}
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
-		describe, err := conn.DescribeCluster(&emr.DescribeClusterInput{
-			ClusterId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfemr.FindClusterByID(conn, rs.Primary.ID)
+
 		if err != nil {
-			return fmt.Errorf("EMR error: %w", err)
+			return err
 		}
 
-		if describe.Cluster == nil || *describe.Cluster.Id != rs.Primary.ID {
-			return fmt.Errorf("EMR cluster %q not found", rs.Primary.ID)
-		}
-
-		*v = *describe.Cluster
-
-		if describe.Cluster.Status != nil {
-			state := aws.StringValue(describe.Cluster.Status.State)
-			if state != emr.ClusterStateRunning && state != emr.ClusterStateWaiting {
-				return fmt.Errorf("EMR cluster %q is not RUNNING or WAITING, currently: %s", rs.Primary.ID, state)
-			}
-		}
+		*v = *output
 
 		return nil
 	}
@@ -1906,10 +1891,14 @@ func testAccClusterBootstrapActionBucketConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "tester" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "tester" {
+  bucket = aws_s3_bucket.tester.id
   acl    = "public-read"
 }
 
-resource "aws_s3_bucket_object" "testobject" {
+resource "aws_s3_object" "testobject" {
   bucket  = aws_s3_bucket.tester.bucket
   key     = "testscript.sh"
   content = <<EOF
@@ -2903,7 +2892,7 @@ resource "aws_emr_cluster" "test" {
   }
 
   bootstrap_action {
-    path = "s3://${aws_s3_bucket_object.testobject.bucket}/${aws_s3_bucket_object.testobject.key}"
+    path = "s3://${aws_s3_object.testobject.bucket}/${aws_s3_object.testobject.key}"
     name = "test"
 
     args = ["1",
@@ -2967,7 +2956,7 @@ resource "aws_emr_cluster" "test" {
   }
 
   bootstrap_action {
-    path = "s3://${aws_s3_bucket_object.testobject.bucket}/${aws_s3_bucket_object.testobject.key}"
+    path = "s3://${aws_s3_object.testobject.bucket}/${aws_s3_object.testobject.key}"
     name = "test"
 
     args = ["1",
@@ -3043,7 +3032,7 @@ resource "aws_emr_cluster" "test" {
   }
 
   bootstrap_action {
-    path = "s3://${aws_s3_bucket_object.testobject.bucket}/${aws_s3_bucket_object.testobject.key}"
+    path = "s3://${aws_s3_object.testobject.bucket}/${aws_s3_object.testobject.key}"
     name = "test"
 
     args = ["1",

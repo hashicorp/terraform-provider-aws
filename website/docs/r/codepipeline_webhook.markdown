@@ -131,6 +131,7 @@ A `filter` block supports the following arguments:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The CodePipeline webhook's ARN.
 * `id` - The CodePipeline webhook's ARN.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `url` - The CodePipeline webhook's URL. POST events to this endpoint to trigger the target.

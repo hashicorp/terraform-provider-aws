@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -148,7 +148,7 @@ func resourceSecurityConfigurationRead(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Reading Glue Security Configuration: %s", input)
 	output, err := conn.GetSecurityConfiguration(input)
 
-	if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 		log.Printf("[WARN] Glue Security Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -193,7 +193,7 @@ func DeleteSecurityConfiguration(conn *glue.Glue, name string) error {
 
 	_, err := conn.DeleteSecurityConfiguration(input)
 
-	if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 		return nil
 	}
 

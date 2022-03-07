@@ -8,20 +8,21 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceVPCPeeringConnection() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceVPCPeeringCreate,
-		Read:   resourceVPCPeeringRead,
-		Update: resourceVPCPeeringUpdate,
-		Delete: resourceVPCPeeringDelete,
+		Create: resourceVPCPeeringConnectionCreate,
+		Read:   resourceVPCPeeringConnectionRead,
+		Update: resourceVPCPeeringConnectionUpdate,
+		Delete: resourceVPCPeeringConnectionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -32,8 +33,25 @@ func ResourceVPCPeeringConnection() *schema.Resource {
 			Delete: schema.DefaultTimeout(1 * time.Minute),
 		},
 
+		// Keep in sync with aws_vpc_peering_connection_accepter's schema.
+		// See notes in vpc_peering_connection_accepter.go.
 		Schema: map[string]*schema.Schema{
+			"accept_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"accepter": vpcPeeringConnectionOptionsSchema,
+			"auto_accept": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"peer_owner_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
+			"peer_region": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -44,136 +62,148 @@ func ResourceVPCPeeringConnection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"requester": vpcPeeringConnectionOptionsSchema,
+			"tags":      tftags.TagsSchema(),
+			"tags_all":  tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"auto_accept": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"accept_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"peer_region": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-			"accepter":  vpcPeeringConnectionOptionsSchema(),
-			"requester": vpcPeeringConnectionOptionsSchema(),
-			"tags":      tftags.TagsSchema(),
-			"tags_all":  tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceVPCPeeringCreate(d *schema.ResourceData, meta interface{}) error {
+var vpcPeeringConnectionOptionsSchema = &schema.Schema{
+	Type:     schema.TypeList,
+	Optional: true,
+	Computed: true,
+	MaxItems: 1,
+	Elem: &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"allow_classic_link_to_remote_vpc": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"allow_remote_vpc_dns_resolution": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"allow_vpc_to_remote_classic_link": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+		},
+	},
+}
+
+func resourceVPCPeeringConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	// Create the vpc peering connection
-	createOpts := &ec2.CreateVpcPeeringConnectionInput{
+	input := &ec2.CreateVpcPeeringConnectionInput{
 		PeerVpcId:         aws.String(d.Get("peer_vpc_id").(string)),
-		VpcId:             aws.String(d.Get("vpc_id").(string)),
 		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcPeeringConnection),
+		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 
 	if v, ok := d.GetOk("peer_owner_id"); ok {
-		createOpts.PeerOwnerId = aws.String(v.(string))
+		input.PeerOwnerId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("peer_region"); ok {
 		if _, ok := d.GetOk("auto_accept"); ok {
-			return fmt.Errorf("peer_region cannot be set whilst auto_accept is true when creating a vpc peering connection")
+			return fmt.Errorf("`peer_region` cannot be set whilst `auto_accept` is `true` when creating an EC2 VPC Peering Connection")
 		}
-		createOpts.PeerRegion = aws.String(v.(string))
+
+		input.PeerRegion = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] VPC Peering Create options: %#v", createOpts)
+	log.Printf("[DEBUG] Creating EC2 VPC Peering Connection: %s", input)
+	output, err := conn.CreateVpcPeeringConnection(input)
 
-	resp, err := conn.CreateVpcPeeringConnection(createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating VPC Peering Connection: %s", err)
+		return fmt.Errorf("error creating EC2 VPC Peering Connection: %w", err)
 	}
 
-	// Get the ID and store it
-	rt := resp.VpcPeeringConnection
-	d.SetId(aws.StringValue(rt.VpcPeeringConnectionId))
-	log.Printf("[INFO] VPC Peering Connection ID: %s", d.Id())
+	d.SetId(aws.StringValue(output.VpcPeeringConnection.VpcPeeringConnectionId))
 
-	err = vpcPeeringConnectionWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	vpcPeeringConnection, err := WaitVPCPeeringConnectionActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+
 	if err != nil {
-		return fmt.Errorf("Error waiting for VPC Peering Connection to become available: %s", err)
+		return fmt.Errorf("error waiting for EC2 VPC Peering Connection (%s) create: %w", d.Id(), err)
 	}
 
-	return resourceVPCPeeringUpdate(d, meta)
+	if _, ok := d.GetOk("auto_accept"); ok && aws.StringValue(vpcPeeringConnection.Status.Code) == ec2.VpcPeeringConnectionStateReasonCodePendingAcceptance {
+		vpcPeeringConnection, err = acceptVPCPeeringConnection(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+
+		if err != nil {
+			return err
+		}
+	}
+
+	if err := modifyVPCPeeringConnectionOptions(conn, d, vpcPeeringConnection, true); err != nil {
+		return err
+	}
+
+	return resourceVPCPeeringConnectionRead(d, meta)
 }
 
-func resourceVPCPeeringRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient)
-	defaultTagsConfig := client.DefaultTagsConfig
-	ignoreTagsConfig := client.IgnoreTagsConfig
+func resourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	pcRaw, statusCode, err := vpcPeeringConnectionRefreshState(client.EC2Conn, d.Id())()
-	// Allow a failed VPC Peering Connection to fallthrough,
-	// to allow rest of the logic below to do its work.
-	if err != nil && statusCode != ec2.VpcPeeringConnectionStateReasonCodeFailed {
-		return fmt.Errorf("Error reading VPC Peering Connection: %s", err)
-	}
+	vpcPeeringConnection, err := FindVPCPeeringConnectionByID(conn, d.Id())
 
-	// The failed status is a status that we can assume just means the
-	// connection is gone. Destruction isn't allowed, and it eventually
-	// just "falls off" the console. See GH-2322
-	status := map[string]bool{
-		ec2.VpcPeeringConnectionStateReasonCodeDeleted:  true,
-		ec2.VpcPeeringConnectionStateReasonCodeDeleting: true,
-		ec2.VpcPeeringConnectionStateReasonCodeExpired:  true,
-		ec2.VpcPeeringConnectionStateReasonCodeFailed:   true,
-		ec2.VpcPeeringConnectionStateReasonCodeRejected: true,
-		"": true, // AWS consistency issue, see vpcPeeringConnectionRefreshState
-	}
-	if _, ok := status[statusCode]; ok {
-		log.Printf("[WARN] VPC Peering Connection (%s) has status code %s, removing from state", d.Id(), statusCode)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 VPC Peering Connection %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	pc := pcRaw.(*ec2.VpcPeeringConnection)
-	log.Printf("[DEBUG] VPC Peering Connection response: %#v", pc)
+	if err != nil {
+		return fmt.Errorf("error reading EC2 VPC Peering Connection (%s): %w", d.Id(), err)
+	}
 
-	log.Printf("[DEBUG] Account ID %s, VPC PeerConn Requester %s, Accepter %s",
-		client.AccountID, *pc.RequesterVpcInfo.OwnerId, *pc.AccepterVpcInfo.OwnerId)
+	d.Set("accept_status", vpcPeeringConnection.Status.Code)
+	d.Set("peer_region", vpcPeeringConnection.AccepterVpcInfo.Region)
 
-	if (client.AccountID == aws.StringValue(pc.AccepterVpcInfo.OwnerId)) && (client.AccountID != aws.StringValue(pc.RequesterVpcInfo.OwnerId)) {
-		// We're the accepter
-		d.Set("peer_owner_id", pc.RequesterVpcInfo.OwnerId)
-		d.Set("peer_vpc_id", pc.RequesterVpcInfo.VpcId)
-		d.Set("vpc_id", pc.AccepterVpcInfo.VpcId)
+	if accountID := meta.(*conns.AWSClient).AccountID; accountID == aws.StringValue(vpcPeeringConnection.AccepterVpcInfo.OwnerId) && accountID != aws.StringValue(vpcPeeringConnection.RequesterVpcInfo.OwnerId) {
+		// We're the accepter.
+		d.Set("peer_owner_id", vpcPeeringConnection.RequesterVpcInfo.OwnerId)
+		d.Set("peer_vpc_id", vpcPeeringConnection.RequesterVpcInfo.VpcId)
+		d.Set("vpc_id", vpcPeeringConnection.AccepterVpcInfo.VpcId)
 	} else {
-		// We're the requester
-		d.Set("peer_owner_id", pc.AccepterVpcInfo.OwnerId)
-		d.Set("peer_vpc_id", pc.AccepterVpcInfo.VpcId)
-		d.Set("vpc_id", pc.RequesterVpcInfo.VpcId)
+		// We're the requester.
+		d.Set("peer_owner_id", vpcPeeringConnection.AccepterVpcInfo.OwnerId)
+		d.Set("peer_vpc_id", vpcPeeringConnection.AccepterVpcInfo.VpcId)
+		d.Set("vpc_id", vpcPeeringConnection.RequesterVpcInfo.VpcId)
 	}
 
-	d.Set("peer_region", pc.AccepterVpcInfo.Region)
-	d.Set("accept_status", pc.Status.Code)
-
-	if err := d.Set("accepter", flattenVPCPeeringConnectionOptions(pc.AccepterVpcInfo.PeeringOptions)); err != nil {
-		return fmt.Errorf("Error setting VPC Peering Connection accepter information: %s", err)
-	}
-	if err := d.Set("requester", flattenVPCPeeringConnectionOptions(pc.RequesterVpcInfo.PeeringOptions)); err != nil {
-		return fmt.Errorf("Error setting VPC Peering Connection requester information: %s", err)
+	if vpcPeeringConnection.AccepterVpcInfo.PeeringOptions != nil {
+		if err := d.Set("accepter", []interface{}{flattenVpcPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions)}); err != nil {
+			return fmt.Errorf("error setting accepter: %w", err)
+		}
+	} else {
+		d.Set("accepter", nil)
 	}
 
-	tags := KeyValueTags(pc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	if vpcPeeringConnection.RequesterVpcInfo.PeeringOptions != nil {
+		if err := d.Set("requester", []interface{}{flattenVpcPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions)}); err != nil {
+			return fmt.Errorf("error setting requester: %w", err)
+		}
+	} else {
+		d.Set("requester", nil)
+	}
+
+	tags := KeyValueTags(vpcPeeringConnection.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -183,102 +213,53 @@ func resourceVPCPeeringRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
-	if err != nil {
-		return fmt.Errorf("Error setting VPC Peering Connection tags: %s", err)
-	}
 
 	return nil
 }
 
-func resourceVPCPeeringConnectionAccept(conn *ec2.EC2, id string) (string, error) {
-	log.Printf("[INFO] Accept VPC Peering Connection with ID: %s", id)
-
-	req := &ec2.AcceptVpcPeeringConnectionInput{
-		VpcPeeringConnectionId: aws.String(id),
-	}
-
-	resp, err := conn.AcceptVpcPeeringConnection(req)
-	if err != nil {
-		return "", err
-	}
-
-	return aws.StringValue(resp.VpcPeeringConnection.Status.Code), nil
-}
-
-func resourceVPCPeeringUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCPeeringConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	if d.HasChange("tags_all") && !d.IsNewResource() {
-		o, n := d.GetChange("tags_all")
+	vpcPeeringConnection, err := FindVPCPeeringConnectionByID(conn, d.Id())
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 VPC Peering Connection (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	pcRaw, statusCode, err := vpcPeeringConnectionRefreshState(conn, d.Id())()
 	if err != nil {
-		return fmt.Errorf("Error reading VPC Peering Connection: %s", err)
+		return fmt.Errorf("error reading EC2 VPC Peering Connection (%s): %w", d.Id(), err)
 	}
 
-	if pcRaw == nil {
-		log.Printf("[WARN] VPC Peering Connection (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
+	if _, ok := d.GetOk("auto_accept"); ok && aws.StringValue(vpcPeeringConnection.Status.Code) == ec2.VpcPeeringConnectionStateReasonCodePendingAcceptance {
+		vpcPeeringConnection, err = acceptVPCPeeringConnection(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
-	if _, ok := d.GetOk("auto_accept"); ok && statusCode == ec2.VpcPeeringConnectionStateReasonCodePendingAcceptance {
-		statusCode, err = resourceVPCPeeringConnectionAccept(conn, d.Id())
 		if err != nil {
-			return fmt.Errorf("Unable to accept VPC Peering Connection: %s", err)
-		}
-		log.Printf("[DEBUG] VPC Peering Connection accept status: %s", statusCode)
-
-		// "OperationNotPermitted: Peering pcx-0000000000000000 is not active. Peering options can be added only to active peerings."
-		if err := vpcPeeringConnectionWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("Error waiting for VPC Peering Connection to become available: %s", err)
+			return err
 		}
 	}
 
 	if d.HasChanges("accepter", "requester") {
-		if statusCode == ec2.VpcPeeringConnectionStateReasonCodeActive || statusCode == ec2.VpcPeeringConnectionStateReasonCodeProvisioning {
-			pc := pcRaw.(*ec2.VpcPeeringConnection)
-			crossRegionPeering := aws.StringValue(pc.RequesterVpcInfo.Region) != aws.StringValue(pc.AccepterVpcInfo.Region)
-
-			req := &ec2.ModifyVpcPeeringConnectionOptionsInput{
-				VpcPeeringConnectionId: aws.String(d.Id()),
-			}
-			if d.HasChange("accepter") {
-				req.AccepterPeeringConnectionOptions = expandVPCPeeringConnectionOptions(d.Get("accepter").([]interface{}), crossRegionPeering)
-			}
-			if d.HasChange("requester") {
-				req.RequesterPeeringConnectionOptions = expandVPCPeeringConnectionOptions(d.Get("requester").([]interface{}), crossRegionPeering)
-			}
-
-			log.Printf("[DEBUG] Modifying VPC Peering Connection options: %s", req)
-			if _, err := conn.ModifyVpcPeeringConnectionOptions(req); err != nil {
-				return fmt.Errorf("error modifying VPC Peering Connection (%s) Options: %s", d.Id(), err)
-			}
-		} else {
-			return fmt.Errorf("Unable to modify peering options. The VPC Peering Connection "+
-				"%q is not active. Please set `auto_accept` attribute to `true`, "+
-				"or activate VPC Peering Connection manually.", d.Id())
+		if err := modifyVPCPeeringConnectionOptions(conn, d, vpcPeeringConnection, true); err != nil {
+			return err
 		}
 	}
 
-	return resourceVPCPeeringRead(d, meta)
-}
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
-func resourceVPCPeeringDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-
-	req := &ec2.DeleteVpcPeeringConnectionInput{
-		VpcPeeringConnectionId: aws.String(d.Id()),
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating EC2 VPC Peering Connection (%s) tags: %w", d.Id(), err)
+		}
 	}
 
-	_, err := conn.DeleteVpcPeeringConnection(req)
+	return resourceVPCPeeringConnectionRead(d, meta)
+}
 
-	if tfawserr.ErrMessageContains(err, "InvalidVpcPeeringConnectionID.NotFound", "") {
+func resourceVPCPeeringConnectionDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
+
+	log.Printf("[INFO] Deleting EC2 VPC Peering Connection: %s", d.Id())
+	_, err := conn.DeleteVpcPeeringConnection(&ec2.DeleteVpcPeeringConnectionInput{
+		VpcPeeringConnectionId: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcPeeringConnectionIDNotFound) {
 		return nil
 	}
 
@@ -288,132 +269,157 @@ func resourceVPCPeeringDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting VPC Peering Connection (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting EC2 VPC Peering Connection (%s): %w", d.Id(), err)
 	}
 
-	if err := WaitForVPCPeeringConnectionDeletion(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("Error waiting for VPC Peering Connection (%s) to be deleted: %s", d.Id(), err)
+	if _, err := WaitVPCPeeringConnectionDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for EC2 VPC Peering Connection (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-// vpcPeeringConnection returns the VPC peering connection corresponding to the specified identifier.
-// Returns nil if no VPC peering connection is found or the connection has reached a terminal state
-// according to https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-lifecycle.
-func vpcPeeringConnection(conn *ec2.EC2, vpcPeeringConnectionID string) (*ec2.VpcPeeringConnection, error) {
-	outputRaw, _, err := StatusVPCPeeringConnection(conn, vpcPeeringConnectionID)()
+func acceptVPCPeeringConnection(conn *ec2.EC2, vpcPeeringConnectionID string, timeout time.Duration) (*ec2.VpcPeeringConnection, error) {
+	log.Printf("[INFO] Accepting EC2 VPC Peering Connection: %s", vpcPeeringConnectionID)
+	_, err := conn.AcceptVpcPeeringConnection(&ec2.AcceptVpcPeeringConnectionInput{
+		VpcPeeringConnectionId: aws.String(vpcPeeringConnectionID),
+	})
 
-	if output, ok := outputRaw.(*ec2.VpcPeeringConnection); ok {
-		return output, err
+	if err != nil {
+		return nil, fmt.Errorf("error acccepting EC2 VPC Peering Connection (%s): %w", vpcPeeringConnectionID, err)
 	}
 
-	return nil, err
+	// "OperationNotPermitted: Peering pcx-0000000000000000 is not active. Peering options can be added only to active peerings."
+	vpcPeeringConnection, err := WaitVPCPeeringConnectionActive(conn, vpcPeeringConnectionID, timeout)
+
+	if err != nil {
+		return nil, fmt.Errorf("error waiting for EC2 VPC Peering Connection (%s) update: %w", vpcPeeringConnectionID, err)
+	}
+
+	return vpcPeeringConnection, nil
 }
 
-func vpcPeeringConnectionRefreshState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeVpcPeeringConnections(&ec2.DescribeVpcPeeringConnectionsInput{
-			VpcPeeringConnectionIds: aws.StringSlice([]string{id}),
-		})
+func modifyVPCPeeringConnectionOptions(conn *ec2.EC2, d *schema.ResourceData, vpcPeeringConnection *ec2.VpcPeeringConnection, checkActive bool) error {
+	var accepterPeeringConnectionOptions, requesterPeeringConnectionOptions *ec2.PeeringConnectionOptionsRequest
+	crossRegionPeering := aws.StringValue(vpcPeeringConnection.RequesterVpcInfo.Region) != aws.StringValue(vpcPeeringConnection.AccepterVpcInfo.Region)
+
+	if key := "accepter"; d.HasChange(key) {
+		if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			accepterPeeringConnectionOptions = expandPeeringConnectionOptionsRequest(v.([]interface{})[0].(map[string]interface{}), crossRegionPeering)
+		}
+	}
+
+	if key := "requester"; d.HasChange(key) {
+		if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			requesterPeeringConnectionOptions = expandPeeringConnectionOptionsRequest(v.([]interface{})[0].(map[string]interface{}), crossRegionPeering)
+		}
+	}
+
+	if accepterPeeringConnectionOptions == nil && requesterPeeringConnectionOptions == nil {
+		return nil
+	}
+
+	if checkActive {
+		switch statusCode := aws.StringValue(vpcPeeringConnection.Status.Code); statusCode {
+		case ec2.VpcPeeringConnectionStateReasonCodeActive, ec2.VpcPeeringConnectionStateReasonCodeProvisioning:
+		default:
+			return fmt.Errorf(
+				"Unable to modify EC2 VPC Peering Connection Options. EC2 VPC Peering Connection (%s) is not active (current status: %s). "+
+					"Please set the `auto_accept` attribute to `true` or activate the EC2 VPC Peering Connection manually.",
+				d.Id(), statusCode)
+		}
+	}
+
+	input := &ec2.ModifyVpcPeeringConnectionOptionsInput{
+		AccepterPeeringConnectionOptions:  accepterPeeringConnectionOptions,
+		RequesterPeeringConnectionOptions: requesterPeeringConnectionOptions,
+		VpcPeeringConnectionId:            aws.String(d.Id()),
+	}
+
+	log.Printf("[DEBUG] Modifying VPC Peering Connection Options: %s", input)
+	if _, err := conn.ModifyVpcPeeringConnectionOptions(input); err != nil {
+		return fmt.Errorf("error modifying EC2 VPC Peering Connection (%s) Options: %w", d.Id(), err)
+	}
+
+	// Retry reading back the modified options to deal with eventual consistency.
+	// Often this is to do with a delay transitioning from pending-acceptance to active.
+	err := resource.Retry(VPCPeeringConnectionOptionsPropagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+		vpcPeeringConnection, err := FindVPCPeeringConnectionByID(conn, d.Id())
+
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidVpcPeeringConnectionID.NotFound", "") {
-				return nil, ec2.VpcPeeringConnectionStateReasonCodeDeleted, nil
+			return resource.NonRetryableError(err)
+		}
+
+		if v := vpcPeeringConnection.AccepterVpcInfo; v != nil && accepterPeeringConnectionOptions != nil {
+			if !vpcPeeringConnectionOptionsEqual(v.PeeringOptions, accepterPeeringConnectionOptions) {
+				return resource.RetryableError(errors.New("Accepter Options not stable"))
 			}
-
-			return nil, "", err
 		}
 
-		if resp == nil || resp.VpcPeeringConnections == nil ||
-			len(resp.VpcPeeringConnections) == 0 || resp.VpcPeeringConnections[0] == nil {
-			// Sometimes AWS just has consistency issues and doesn't see
-			// our peering connection yet. Return an empty state.
-			return nil, "", nil
-		}
-		pc := resp.VpcPeeringConnections[0]
-		if pc.Status == nil {
-			// Sometimes AWS just has consistency issues and doesn't see
-			// our peering connection yet. Return an empty state.
-			return nil, "", nil
-		}
-		statusCode := aws.StringValue(pc.Status.Code)
-
-		// A VPC Peering Connection can exist in a failed state due to
-		// incorrect VPC ID, account ID, or overlapping IP address range,
-		// thus we short circuit before the time out would occur.
-		if statusCode == ec2.VpcPeeringConnectionStateReasonCodeFailed {
-			return nil, statusCode, errors.New(aws.StringValue(pc.Status.Message))
+		if v := vpcPeeringConnection.RequesterVpcInfo; v != nil && requesterPeeringConnectionOptions != nil {
+			if !vpcPeeringConnectionOptionsEqual(v.PeeringOptions, requesterPeeringConnectionOptions) {
+				return resource.RetryableError(errors.New("Requester Options not stable"))
+			}
 		}
 
-		return pc, statusCode, nil
-	}
-}
+		return nil
+	})
 
-func vpcPeeringConnectionOptionsSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		Computed: true,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"allow_remote_vpc_dns_resolution": {
-					Type:     schema.TypeBool,
-					Optional: true,
-					Default:  false,
-				},
-				"allow_classic_link_to_remote_vpc": {
-					Type:     schema.TypeBool,
-					Optional: true,
-					Default:  false,
-				},
-				"allow_vpc_to_remote_classic_link": {
-					Type:     schema.TypeBool,
-					Optional: true,
-					Default:  false,
-				},
-			},
-		},
+	if err != nil {
+		return fmt.Errorf("error waiting for EC2 VPC Peering Connection (%s) Options update: %w", d.Id(), err)
 	}
-}
 
-func vpcPeeringConnectionWaitUntilAvailable(conn *ec2.EC2, id string, timeout time.Duration) error {
-	// Wait for the vpc peering connection to become available
-	log.Printf("[DEBUG] Waiting for VPC Peering Connection (%s) to become available.", id)
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			ec2.VpcPeeringConnectionStateReasonCodeInitiatingRequest,
-			ec2.VpcPeeringConnectionStateReasonCodeProvisioning,
-		},
-		Target: []string{
-			ec2.VpcPeeringConnectionStateReasonCodePendingAcceptance,
-			ec2.VpcPeeringConnectionStateReasonCodeActive,
-		},
-		Refresh: vpcPeeringConnectionRefreshState(conn, id),
-		Timeout: timeout,
-	}
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("Error waiting for VPC Peering Connection (%s) to become available: %s", id, err)
-	}
 	return nil
 }
 
-func WaitForVPCPeeringConnectionDeletion(conn *ec2.EC2, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			ec2.VpcPeeringConnectionStateReasonCodeActive,
-			ec2.VpcPeeringConnectionStateReasonCodePendingAcceptance,
-			ec2.VpcPeeringConnectionStateReasonCodeDeleting,
-		},
-		Target: []string{
-			ec2.VpcPeeringConnectionStateReasonCodeRejected,
-			ec2.VpcPeeringConnectionStateReasonCodeDeleted,
-		},
-		Refresh: vpcPeeringConnectionRefreshState(conn, id),
-		Timeout: timeout,
+func vpcPeeringConnectionOptionsEqual(o1 *ec2.VpcPeeringConnectionOptionsDescription, o2 *ec2.PeeringConnectionOptionsRequest) bool {
+	return aws.BoolValue(o1.AllowDnsResolutionFromRemoteVpc) == aws.BoolValue(o2.AllowDnsResolutionFromRemoteVpc) &&
+		aws.BoolValue(o1.AllowEgressFromLocalClassicLinkToRemoteVpc) == aws.BoolValue(o2.AllowEgressFromLocalClassicLinkToRemoteVpc) &&
+		aws.BoolValue(o1.AllowEgressFromLocalVpcToRemoteClassicLink) == aws.BoolValue(o2.AllowEgressFromLocalVpcToRemoteClassicLink)
+}
+
+func expandPeeringConnectionOptionsRequest(tfMap map[string]interface{}, crossRegionPeering bool) *ec2.PeeringConnectionOptionsRequest {
+	if tfMap == nil {
+		return nil
 	}
 
-	_, err := stateConf.WaitForState()
+	apiObject := &ec2.PeeringConnectionOptionsRequest{}
 
-	return err
+	if v, ok := tfMap["allow_remote_vpc_dns_resolution"].(bool); ok {
+		apiObject.AllowDnsResolutionFromRemoteVpc = aws.Bool(v)
+	}
+
+	if !crossRegionPeering {
+		if v, ok := tfMap["allow_classic_link_to_remote_vpc"].(bool); ok {
+			apiObject.AllowEgressFromLocalClassicLinkToRemoteVpc = aws.Bool(v)
+		}
+
+		if v, ok := tfMap["allow_vpc_to_remote_classic_link"].(bool); ok {
+			apiObject.AllowEgressFromLocalVpcToRemoteClassicLink = aws.Bool(v)
+		}
+	}
+
+	return apiObject
+}
+
+func flattenVpcPeeringConnectionOptionsDescription(apiObject *ec2.VpcPeeringConnectionOptionsDescription) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AllowDnsResolutionFromRemoteVpc; v != nil {
+		tfMap["allow_remote_vpc_dns_resolution"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.AllowEgressFromLocalClassicLinkToRemoteVpc; v != nil {
+		tfMap["allow_classic_link_to_remote_vpc"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.AllowEgressFromLocalVpcToRemoteClassicLink; v != nil {
+		tfMap["allow_vpc_to_remote_classic_link"] = aws.BoolValue(v)
+	}
+
+	return tfMap
 }

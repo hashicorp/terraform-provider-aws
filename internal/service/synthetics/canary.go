@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/synthetics"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -319,7 +319,7 @@ func resourceCanaryCreate(d *schema.ResourceData, meta interface{}) error {
 	_, err = tfresource.RetryWhen(
 		iamPropagationTimeout+canaryCreatedTimeout,
 		func() (interface{}, error) {
-			return waitCanaryReady(conn, d.Id())
+			return retryCreateCanary(conn, d, input)
 		},
 		func(err error) (bool, error) {
 			// Only retry IAM eventual consistency errors up to that timeout.
@@ -797,6 +797,10 @@ func syntheticsStopCanary(name string, conn *synthetics.Synthetics) error {
 	_, err := conn.StopCanary(&synthetics.StopCanaryInput{
 		Name: aws.String(name),
 	})
+
+	if tfawserr.ErrCodeEquals(err, synthetics.ErrCodeConflictException) {
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("error stopping Synthetics Canary (%s): %w", name, err)

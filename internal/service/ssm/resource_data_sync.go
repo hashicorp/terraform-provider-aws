@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -122,7 +122,7 @@ func resourceResourceDataSyncDelete(d *schema.ResourceData, meta interface{}) er
 
 	_, err := conn.DeleteResourceDataSync(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ssm.ErrCodeResourceDataSyncNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, ssm.ErrCodeResourceDataSyncNotFoundException) {
 			return nil
 		}
 		return err

@@ -9,14 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func flattenAttributeValues(l []*ec2.AttributeValue) []string {
-	values := make([]string, 0, len(l))
-	for _, v := range l {
-		values = append(values, aws.StringValue(v.Value))
-	}
-	return values
-}
-
 //Flattens security group identifiers into a []string, where the elements returned are the GroupIDs
 func FlattenGroupIdentifiers(dtos []*ec2.GroupIdentifier) []string {
 	ids := make([]string, 0, len(dtos))
@@ -187,43 +179,4 @@ func FlattenSecurityGroups(list []*ec2.UserIdGroupPair, ownerId *string) []*Grou
 		}
 	}
 	return result
-}
-
-func expandVPCPeeringConnectionOptions(vOptions []interface{}, crossRegionPeering bool) *ec2.PeeringConnectionOptionsRequest {
-	if len(vOptions) == 0 || vOptions[0] == nil {
-		return nil
-	}
-
-	mOptions := vOptions[0].(map[string]interface{})
-
-	options := &ec2.PeeringConnectionOptionsRequest{}
-
-	if v, ok := mOptions["allow_remote_vpc_dns_resolution"].(bool); ok {
-		options.AllowDnsResolutionFromRemoteVpc = aws.Bool(v)
-	}
-	if !crossRegionPeering {
-		if v, ok := mOptions["allow_classic_link_to_remote_vpc"].(bool); ok {
-			options.AllowEgressFromLocalClassicLinkToRemoteVpc = aws.Bool(v)
-		}
-		if v, ok := mOptions["allow_vpc_to_remote_classic_link"].(bool); ok {
-			options.AllowEgressFromLocalVpcToRemoteClassicLink = aws.Bool(v)
-		}
-	}
-
-	return options
-}
-
-func flattenVPCPeeringConnectionOptions(options *ec2.VpcPeeringConnectionOptionsDescription) []interface{} {
-	// When the VPC Peering Connection is pending acceptance,
-	// the details about accepter and/or requester peering
-	// options would not be included in the response.
-	if options == nil {
-		return []interface{}{}
-	}
-
-	return []interface{}{map[string]interface{}{
-		"allow_remote_vpc_dns_resolution":  aws.BoolValue(options.AllowDnsResolutionFromRemoteVpc),
-		"allow_classic_link_to_remote_vpc": aws.BoolValue(options.AllowEgressFromLocalClassicLinkToRemoteVpc),
-		"allow_vpc_to_remote_classic_link": aws.BoolValue(options.AllowEgressFromLocalVpcToRemoteClassicLink),
-	}}
 }

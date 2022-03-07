@@ -31,6 +31,12 @@ func TestAccEC2VPCEndpointSubnetAssociation_basic(t *testing.T) {
 					testAccCheckVpcEndpointSubnetAssociationExists(resourceName, &vpce),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccVPCEndpointSubnetAssociationImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -205,4 +211,16 @@ resource "aws_vpc_endpoint_subnet_association" "test" {
   subnet_id       = aws_subnet.test[count.index].id
 }
 `)
+}
+
+func testAccVPCEndpointSubnetAssociationImportStateIdFunc(n string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", n)
+		}
+
+		id := fmt.Sprintf("%s/%s", rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["subnet_id"])
+		return id, nil
+	}
 }

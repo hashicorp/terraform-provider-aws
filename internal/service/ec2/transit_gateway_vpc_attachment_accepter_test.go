@@ -153,8 +153,8 @@ func testAccTransitGatewayVPCAttachmentAccepter_TransitGatewayDefaultRouteTableA
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway),
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment),
-					testAccCheckTransitGatewayAssociationDefaultRouteTableVPCAttachmentNotAssociated(&transitGateway, &transitGatewayVpcAttachment),
-					testAccCheckTransitGatewayPropagationDefaultRouteTableVPCAttachmentNotPropagated(&transitGateway, &transitGatewayVpcAttachment),
+					testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociated(&transitGateway, &transitGatewayVpcAttachment),
+					testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagated(&transitGateway, &transitGatewayVpcAttachment),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", "false"),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", "false"),
 				),
@@ -164,8 +164,8 @@ func testAccTransitGatewayVPCAttachmentAccepter_TransitGatewayDefaultRouteTableA
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway),
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment),
-					testAccCheckTransitGatewayAssociationDefaultRouteTableVPCAttachmentAssociated(&transitGateway, &transitGatewayVpcAttachment),
-					testAccCheckTransitGatewayPropagationDefaultRouteTableVPCAttachmentNotPropagated(&transitGateway, &transitGatewayVpcAttachment),
+					testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(&transitGateway, &transitGatewayVpcAttachment),
+					testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagated(&transitGateway, &transitGatewayVpcAttachment),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", "true"),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", "false"),
 				),
@@ -175,8 +175,8 @@ func testAccTransitGatewayVPCAttachmentAccepter_TransitGatewayDefaultRouteTableA
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway),
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment),
-					testAccCheckTransitGatewayAssociationDefaultRouteTableVPCAttachmentNotAssociated(&transitGateway, &transitGatewayVpcAttachment),
-					testAccCheckTransitGatewayPropagationDefaultRouteTableVPCAttachmentPropagated(&transitGateway, &transitGatewayVpcAttachment),
+					testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociated(&transitGateway, &transitGatewayVpcAttachment),
+					testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(&transitGateway, &transitGatewayVpcAttachment),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", "false"),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", "true"),
 				),
@@ -186,8 +186,8 @@ func testAccTransitGatewayVPCAttachmentAccepter_TransitGatewayDefaultRouteTableA
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway),
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment),
-					testAccCheckTransitGatewayAssociationDefaultRouteTableVPCAttachmentAssociated(&transitGateway, &transitGatewayVpcAttachment),
-					testAccCheckTransitGatewayPropagationDefaultRouteTableVPCAttachmentPropagated(&transitGateway, &transitGatewayVpcAttachment),
+					testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(&transitGateway, &transitGatewayVpcAttachment),
+					testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(&transitGateway, &transitGatewayVpcAttachment),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", "true"),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", "true"),
 				),

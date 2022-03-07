@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -407,6 +407,12 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.IntBetween(1, 64),
 						},
+						"instance_metadata_tags": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      ec2.LaunchTemplateInstanceMetadataTagsStateDisabled,
+							ValidateFunc: validation.StringInSlice(ec2.LaunchTemplateInstanceMetadataTagsState_Values(), false),
+						},
 					},
 				},
 			},
@@ -711,14 +717,14 @@ func resourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error 
 		LaunchTemplateIds: []*string{aws.String(d.Id())},
 	})
 
-	if tfawserr.ErrMessageContains(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
+	if tfawserr.ErrCodeEquals(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist) {
 		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	// AWS SDK constant above is currently incorrect
-	if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateId.NotFound") {
 		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -935,11 +941,11 @@ func resourceLaunchTemplateDelete(d *schema.ResourceData, meta interface{}) erro
 		LaunchTemplateId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
+	if tfawserr.ErrCodeEquals(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist) {
 		return nil
 	}
 	// AWS SDK constant above is currently incorrect
-	if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateId.NotFound") {
 		return nil
 	}
 	if err != nil {
@@ -1141,6 +1147,10 @@ func expandLaunchTemplateInstanceMetadataOptions(l []interface{}) *ec2.LaunchTem
 		if v, ok := m["http_put_response_hop_limit"].(int); ok && v != 0 {
 			opts.HttpPutResponseHopLimit = aws.Int64(int64(v))
 		}
+
+		if v, ok := m["instance_metadata_tags"].(string); ok && v != "" {
+			opts.InstanceMetadataTags = aws.String(v)
+		}
 	}
 
 	return opts
@@ -1156,6 +1166,7 @@ func flattenLaunchTemplateInstanceMetadataOptions(opts *ec2.LaunchTemplateInstan
 		"http_protocol_ipv6":          aws.StringValue(opts.HttpProtocolIpv6),
 		"http_put_response_hop_limit": aws.Int64Value(opts.HttpPutResponseHopLimit),
 		"http_tokens":                 aws.StringValue(opts.HttpTokens),
+		"instance_metadata_tags":      aws.StringValue(opts.InstanceMetadataTags),
 	}
 
 	return []interface{}{m}
