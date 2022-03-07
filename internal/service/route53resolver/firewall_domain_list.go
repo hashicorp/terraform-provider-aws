@@ -114,9 +114,9 @@ func resourceFirewallDomainListRead(d *schema.ResourceData, meta interface{}) er
 	domains := []*string{}
 
 	err = conn.ListFirewallDomainsPages(input, func(output *route53resolver.ListFirewallDomainsOutput, lastPage bool) bool {
-		// AWS' response contains a dot at the end, this causes the domains to never match.
+		// AWS' response contains a trailing dot at the end, this causes the domains to never match.
 		for _, domain := range output.Domains {
-			var sanitizedDomain := strings.TrimSuffix(*domain, ".")
+			var sanitizedDomain = strings.TrimSuffix(*domain, ".")
 			domains = append(domains, &sanitizedDomain)
 		}
 		return !lastPage
