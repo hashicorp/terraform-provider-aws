@@ -559,7 +559,6 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if attr, ok := d.GetOk("engine_version"); ok {
-			fmt.Printf("[CREATE/cluster/snapshot_identifier] engine_version: %s\n", attr.(string))
 			opts.EngineVersion = aws.String(attr.(string))
 		}
 
@@ -655,7 +654,6 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if attr, ok := d.GetOk("engine_version"); ok {
-			fmt.Printf("[CREATE/cluster/s3_import] engine_version: %s\n", attr.(string))
 			createOpts.EngineVersion = aws.String(attr.(string))
 		}
 
@@ -873,7 +871,6 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if attr, ok := d.GetOk("engine_version"); ok {
-			fmt.Printf("[CREATE/cluster/else] engine_version: %s\n", attr.(string))
 			createOpts.EngineVersion = aws.String(attr.(string))
 		}
 
@@ -1186,7 +1183,6 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("engine_version") {
-		fmt.Printf("[UPDATE/cluster] engine_version: %s\n", d.Get("engine_version").(string))
 		req.EngineVersion = aws.String(d.Get("engine_version").(string))
 		requestUpdate = true
 	}

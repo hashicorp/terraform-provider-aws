@@ -128,7 +128,6 @@ func resourceGlobalClusterCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("engine_version"); ok {
-		fmt.Printf("[CREATE/global_cluster] engine_version: %s\n", v.(string))
 		input.EngineVersion = aws.String(v.(string))
 	}
 
@@ -193,7 +192,6 @@ func resourceGlobalClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("deletion_protection", globalCluster.DeletionProtection)
 	d.Set("engine", globalCluster.Engine)
 	d.Set("engine_version", globalCluster.EngineVersion)
-	fmt.Printf("[READ/global_cluster] engine_verison: %s\n", aws.StringValue(globalCluster.EngineVersion))
 	d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
 
 	if err := d.Set("global_cluster_members", flattenGlobalClusterMembers(globalCluster.GlobalClusterMembers)); err != nil {
@@ -215,7 +213,6 @@ func resourceGlobalClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("engine_version") {
-		fmt.Printf("[UPDATE/global_cluster] engine_version: %s\n", d.Get("engine_version").(string))
 		if err := resourceGlobalClusterUpgradeEngineVersion(d, conn); err != nil {
 			return err
 		}
