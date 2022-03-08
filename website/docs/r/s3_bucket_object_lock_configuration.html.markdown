@@ -25,6 +25,10 @@ resource "aws_s3_bucket" "example" {
   object_lock_configuration {
     object_lock_enabled = "Enabled"
   }
+
+  lifecycle {
+    ignore_changes = [object_lock_configuration[0].rule]
+  }
 }
 
 resource "aws_s3_bucket_object_lock_configuration" "example" {
@@ -49,6 +53,10 @@ Doing so will generate an "Object Lock token" in the back-end.
    ```terraform
     resource "aws_s3_bucket" "example" {
       bucket = "mybucket"
+
+      lifecycle {
+        ignore_changes = [object_lock_configuration[0].rule]
+      }
     }
 
     resource "aws_s3_bucket_versioning" "example" {

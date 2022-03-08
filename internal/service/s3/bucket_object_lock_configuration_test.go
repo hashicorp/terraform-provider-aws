@@ -27,7 +27,7 @@ func TestAccS3BucketObjectLockConfiguration_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectLockConfigurationBasicConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectLockConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", s3.ObjectLockEnabledEnabled),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
@@ -57,7 +57,7 @@ func TestAccS3BucketObjectLockConfiguration_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectLockConfigurationBasicConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectLockConfigurationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucketObjectLockConfiguration(), resourceName),
 				),
@@ -75,17 +75,17 @@ func TestAccS3BucketObjectLockConfiguration_update(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketDestroy,
+		CheckDestroy:      testAccCheckBucketObjectLockConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectLockConfigurationBasicConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectLockConfigurationExists(resourceName),
 				),
 			},
 			{
 				Config: testAccBucketObjectLockConfigurationUpdateConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", s3.ObjectLockEnabledEnabled),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.#", "1"),
@@ -97,6 +97,78 @@ func TestAccS3BucketObjectLockConfiguration_update(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketObjectLockConfiguration_migrate_noChange(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_object_lock_configuration.test"
+	bucketResourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectLockConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketObjectLockEnabledWithDefaultRetention(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(bucketResourceName),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.object_lock_enabled", s3.ObjectLockEnabledEnabled),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.0.default_retention.0.mode", s3.ObjectLockRetentionModeCompliance),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.0.default_retention.0.days", "3"),
+				),
+			},
+			{
+				Config: testAccBucketObjectLockConfigurationBasicConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketObjectLockConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", s3.ObjectLockEnabledEnabled),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.days", "3"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.mode", s3.ObjectLockRetentionModeCompliance),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketObjectLockConfiguration_migrate_withChange(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_object_lock_configuration.test"
+	bucketResourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketObjectLockConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketObjectLockEnabledNoDefaultRetention(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(bucketResourceName),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.object_lock_enabled", s3.ObjectLockEnabledEnabled),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.#", "0"),
+				),
+			},
+			{
+				Config: testAccBucketObjectLockConfigurationBasicConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketObjectLockConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", s3.ObjectLockEnabledEnabled),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.days", "3"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.mode", s3.ObjectLockRetentionModeCompliance),
+				),
 			},
 		},
 	})
@@ -189,6 +261,10 @@ resource "aws_s3_bucket" "test" {
   object_lock_configuration {
     object_lock_enabled = "Enabled"
   }
+
+  lifecycle {
+    ignore_changes = [object_lock_configuration[0].rule]
+  }
 }
 
 resource "aws_s3_bucket_object_lock_configuration" "test" {
@@ -211,6 +287,10 @@ resource "aws_s3_bucket" "test" {
 
   object_lock_configuration {
     object_lock_enabled = "Enabled"
+  }
+
+  lifecycle {
+    ignore_changes = [object_lock_configuration[0].rule]
   }
 }
 

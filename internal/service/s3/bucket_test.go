@@ -2519,7 +2519,7 @@ func TestAccS3Bucket_Replication_RTC_valid(t *testing.T) {
 
 func TestAccS3Bucket_Manage_objectLock(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	resourceName := "aws_s3_bucket.arbitrary"
+	resourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -5044,7 +5044,7 @@ resource "aws_s3_bucket" "bucket" {
 
 func testAccBucketObjectLockEnabledNoDefaultRetention(bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "arbitrary" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
   object_lock_configuration {
@@ -5056,7 +5056,7 @@ resource "aws_s3_bucket" "arbitrary" {
 
 func testAccBucketObjectLockEnabledWithDefaultRetention(bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "arbitrary" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
   object_lock_configuration {
