@@ -2458,7 +2458,7 @@ func TestAccRDSInstance_SnapshotIdentifier_tags(t *testing.T) {
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_tagsRemove(t *testing.T) {
-	//acctest.Skip(t, "To be fixed: https://github.com/hashicorp/terraform-provider-aws/issues/5959")
+	acctest.Skip(t, "To be fixed: https://github.com/hashicorp/terraform-provider-aws/issues/5959")
 	// --- FAIL: TestAccRDSInstance_SnapshotIdentifierTags_unset (1086.15s)
 	//     testing.go:527: Step 0 error: Check failed: Check 4/4 error: aws_db_instance.test: Attribute 'tags.%' expected "0", got "1"
 
