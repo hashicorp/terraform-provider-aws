@@ -606,11 +606,15 @@ func testAccCheckOptionGroupDestroy(s *terraform.State) error {
 
 func testAccOptionGroupBasicTimeoutBlockConfig(rName string) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
 resource "aws_db_option_group" "test" {
   name                     = %[1]q
   option_group_description = "Test option group for terraform"
-  engine_name              = "mysql"
-  major_engine_version     = "8.0"
+  engine_name              = data.aws_rds_engine_version.default.engine
+  major_engine_version     = regex("^\\d+\\.\\d+", data.aws_rds_engine_version.default.version)
 
   timeouts {
     delete = "10m"
@@ -621,16 +625,30 @@ resource "aws_db_option_group" "test" {
 
 func testAccOptionGroupBasicConfig(rName string) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
 resource "aws_db_option_group" "test" {
   name                 = %[1]q
-  engine_name          = "mysql"
-  major_engine_version = "8.0"
+  engine_name          = data.aws_rds_engine_version.default.engine
+  major_engine_version = regex("^\\d+\\.\\d+", data.aws_rds_engine_version.default.version)
 }
 `, rName)
 }
 
 func testAccOptionGroupBasicDestroyConfig(rName string) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  preferred_instance_classes = [%[1]s]
+}
+
 resource "aws_db_instance" "test" {
   allocated_storage = 10
   engine            = data.aws_rds_orderable_db_instance.test.engine
@@ -651,31 +669,26 @@ resource "aws_db_instance" "test" {
   option_group_name = aws_db_option_group.test.name
 }
 
-data "aws_rds_orderable_db_instance" "test" {
-  engine        = "mysql"
-  license_model = "general-public-license"
-  storage_type  = "standard"
-
-  preferred_engine_versions  = ["8.0.25", "8.0.26", "8.0.27"]
-  preferred_instance_classes = ["db.t2.micro", "db.t2.small", "db.t3.medium", "db.t3.large"]
-}
-
 resource "aws_db_option_group" "test" {
-  name                     = %[1]q
+  name                     = %[2]q
   option_group_description = "Test option group for terraform"
-  engine_name              = "mysql"
-  major_engine_version     = "8.0"
+  engine_name              = data.aws_rds_engine_version.default.engine
+  major_engine_version     = regex("^\\d+\\.\\d+", data.aws_rds_engine_version.default.version)
 }
-`, rName)
+`, mySQLPreferredInstanceClasses, rName)
 }
 
 func testAccOptionGroupOptionSettings(rName string) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "oracle-ee"
+}
+
 resource "aws_db_option_group" "test" {
   name                     = %[1]q
   option_group_description = "Test option group for terraform"
-  engine_name              = "oracle-ee"
-  major_engine_version     = "12.2"
+  engine_name              = data.aws_rds_engine_version.default.engine
+  major_engine_version     = regex("^\\d+", data.aws_rds_engine_version.default.version)
 
   option {
     option_name = "Timezone"
@@ -692,6 +705,10 @@ resource "aws_db_option_group" "test" {
 func testAccOptionGroupOptionSettingsIAMRole(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+
+data "aws_rds_engine_version" "default" {
+  engine = "sqlserver-ex"
+}
 
 data "aws_iam_policy_document" "rds_assume_role" {
   statement {
@@ -712,8 +729,8 @@ resource "aws_iam_role" "sql_server_backup" {
 resource "aws_db_option_group" "test" {
   name                     = %[1]q
   option_group_description = "Test option group for terraform"
-  engine_name              = "sqlserver-ex"
-  major_engine_version     = "14.00"
+  engine_name              = data.aws_rds_engine_version.default.engine
+  major_engine_version     = regex("^\\d+\\.\\d+", data.aws_rds_engine_version.default.version)
 
   option {
     option_name = "SQLSERVER_BACKUP_RESTORE"
@@ -729,11 +746,15 @@ resource "aws_db_option_group" "test" {
 
 func testAccOptionGroupOptionSettings_update(rName string) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "oracle-ee"
+}
+
 resource "aws_db_option_group" "test" {
   name                     = %[1]q
   option_group_description = "Test option group for terraform"
-  engine_name              = "oracle-ee"
-  major_engine_version     = "12.2"
+  engine_name              = data.aws_rds_engine_version.default.engine
+  major_engine_version     = regex("^\\d+", data.aws_rds_engine_version.default.version)
 
   option {
     option_name = "Timezone"
@@ -749,22 +770,30 @@ resource "aws_db_option_group" "test" {
 
 func testAccOptionGroupSQLServerEEOptions(rName string) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "sqlserver-ee"
+}
+
 resource "aws_db_option_group" "test" {
   name                     = %[1]q
   option_group_description = "Test option group for terraform"
-  engine_name              = "sqlserver-ee"
-  major_engine_version     = "11.00"
+  engine_name              = data.aws_rds_engine_version.default.engine
+  major_engine_version     = regex("^\\d+\\.\\d+", data.aws_rds_engine_version.default.version)
 }
 `, rName)
 }
 
 func testAccOptionGroupSQLServerEEOptions_update(rName string) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "sqlserver-ee"
+}
+
 resource "aws_db_option_group" "test" {
   name                     = %[1]q
   option_group_description = "Test option group for terraform"
-  engine_name              = "sqlserver-ee"
-  major_engine_version     = "11.00"
+  engine_name              = data.aws_rds_engine_version.default.engine
+  major_engine_version     = regex("^\\d+\\.\\d+", data.aws_rds_engine_version.default.version)
 
   option {
     option_name = "TDE"
@@ -775,6 +804,10 @@ resource "aws_db_option_group" "test" {
 
 func testAccOptionGroupOracleEEOptionSettings(rName, optionVersion string) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "oracle-ee"
+}
+
 resource "aws_security_group" "foo" {
   name = %[1]q
 }
@@ -782,8 +815,8 @@ resource "aws_security_group" "foo" {
 resource "aws_db_option_group" "test" {
   name                     = %[1]q
   option_group_description = "Test option group for terraform issue 748"
-  engine_name              = "oracle-ee"
-  major_engine_version     = "12.2"
+  engine_name              = data.aws_rds_engine_version.default.engine
+  major_engine_version     = regex("^\\d+", data.aws_rds_engine_version.default.version)
 
   option {
     option_name = "OEM_AGENT"
@@ -813,11 +846,15 @@ resource "aws_db_option_group" "test" {
 
 func testAccOptionGroupMultipleOptions(rName string) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "oracle-ee"
+}
+
 resource "aws_db_option_group" "test" {
   name                     = %[1]q
   option_group_description = "Test option group for terraform"
-  engine_name              = "oracle-ee"
-  major_engine_version     = "12.2"
+  engine_name              = data.aws_rds_engine_version.default.engine
+  major_engine_version     = regex("^\\d+", data.aws_rds_engine_version.default.version)
 
   option {
     option_name = "SPATIAL"
@@ -831,27 +868,39 @@ resource "aws_db_option_group" "test" {
 }
 
 const testAccOptionGroup_namePrefix = `
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
 resource "aws_db_option_group" "test" {
   name_prefix              = "tf-test-"
   option_group_description = "Test option group for terraform"
-  engine_name              = "mysql"
-  major_engine_version     = "8.0"
+  engine_name              = data.aws_rds_engine_version.default.engine
+  major_engine_version     = regex("^\\d+\\.\\d+", data.aws_rds_engine_version.default.version)
 }
 `
 
 const testAccOptionGroup_generatedName = `
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
 resource "aws_db_option_group" "test" {
   option_group_description = "Test option group for terraform"
-  engine_name              = "mysql"
-  major_engine_version     = "8.0"
+  engine_name              = data.aws_rds_engine_version.default.engine
+  major_engine_version     = regex("^\\d+\\.\\d+", data.aws_rds_engine_version.default.version)
 }
 `
 
 func testAccOptionGroupOptionGroupDescriptionConfig(rName, optionGroupDescription string) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
 resource "aws_db_option_group" "test" {
-  engine_name              = "mysql"
-  major_engine_version     = "8.0"
+  engine_name              = data.aws_rds_engine_version.default.engine
+  major_engine_version     = regex("^\\d+\\.\\d+", data.aws_rds_engine_version.default.version)
   name                     = %[1]q
   option_group_description = %[2]q
 }
@@ -860,9 +909,13 @@ resource "aws_db_option_group" "test" {
 
 func testAccOptionGroupOptionOptionSettingsMultipleConfig(rName, value string) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
 resource "aws_db_option_group" "test" {
-  engine_name          = "mysql"
-  major_engine_version = "8.0"
+  engine_name          = data.aws_rds_engine_version.default.engine
+  major_engine_version = regex("^\\d+\\.\\d+", data.aws_rds_engine_version.default.version)
   name                 = %[1]q
 
   option {
@@ -889,9 +942,13 @@ resource "aws_db_option_group" "test" {
 
 func testAccOptionGroupTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
 resource "aws_db_option_group" "test" {
-  engine_name          = "mysql"
-  major_engine_version = "8.0"
+  engine_name          = data.aws_rds_engine_version.default.engine
+  major_engine_version = regex("^\\d+\\.\\d+", data.aws_rds_engine_version.default.version)
   name                 = %[1]q
 
   tags = {
@@ -903,9 +960,13 @@ resource "aws_db_option_group" "test" {
 
 func testAccOptionGroupTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
 resource "aws_db_option_group" "test" {
-  engine_name          = "mysql"
-  major_engine_version = "8.0"
+  engine_name          = data.aws_rds_engine_version.default.engine
+  major_engine_version = regex("^\\d+\\.\\d+", data.aws_rds_engine_version.default.version)
   name                 = %[1]q
 
   tags = {
@@ -918,9 +979,13 @@ resource "aws_db_option_group" "test" {
 
 func testAccOptionGroupTagsWithOption1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
 resource "aws_db_option_group" "test" {
-  engine_name          = "mysql"
-  major_engine_version = "8.0"
+  engine_name          = data.aws_rds_engine_version.default.engine
+  major_engine_version = regex("^\\d+\\.\\d+", data.aws_rds_engine_version.default.version)
   name                 = %[1]q
 
   option {
@@ -941,9 +1006,13 @@ resource "aws_db_option_group" "test" {
 
 func testAccOptionGroupTagsWithOption2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
 resource "aws_db_option_group" "test" {
-  engine_name          = "mysql"
-  major_engine_version = "8.0"
+  engine_name          = data.aws_rds_engine_version.default.engine
+  major_engine_version = regex("^\\d+\\.\\d+", data.aws_rds_engine_version.default.version)
   name                 = %[1]q
 
   option {
