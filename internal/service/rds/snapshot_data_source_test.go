@@ -44,11 +44,21 @@ func testAccCheckSnapshotIDDataSource(n string) resource.TestCheckFunc {
 
 func testAccCheckSnapshotDataSourceConfig(rInt int) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  preferred_instance_classes = [%[1]s]
+}
+
 resource "aws_db_instance" "bar" {
   allocated_storage   = 10
-  engine              = "mysql"
-  engine_version      = "5.6.35"
-  instance_class      = "db.t2.micro"
+  engine              = data.aws_rds_engine_version.default.engine
+  engine_version      = data.aws_rds_engine_version.default.version
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   name                = "baz"
   password            = "barbarbarbar"
   username            = "foo"
@@ -61,7 +71,7 @@ resource "aws_db_instance" "bar" {
 
   backup_retention_period = 0
 
-  parameter_group_name = "default.mysql5.6"
+  parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
 }
 
 data "aws_db_snapshot" "snapshot" {
@@ -71,7 +81,7 @@ data "aws_db_snapshot" "snapshot" {
 
 resource "aws_db_snapshot" "test" {
   db_instance_identifier = aws_db_instance.bar.id
-  db_snapshot_identifier = "testsnapshot%d"
+  db_snapshot_identifier = "testsnapshot%[2]d"
 }
-`, rInt)
+`, mySQLPreferredInstanceClasses, rInt)
 }
