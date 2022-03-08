@@ -764,9 +764,8 @@ resource "aws_synthetics_canary" "test" {
 
   run_config {
     timeout_in_seconds = 60
-	
     environment_variables = {
-        test1 = "result1"
+      test1 = "result1"
     }
   }
 
@@ -792,10 +791,9 @@ resource "aws_synthetics_canary" "test" {
   run_config {
     timeout_in_seconds = 120
     memory_in_mb       = 960
-	
     environment_variables = {
-        test1  = "result1"
-        test2  = "result2"
+      test1 = "result1"
+      test2 = "result2"
     }
   }
 
