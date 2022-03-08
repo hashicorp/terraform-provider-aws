@@ -4185,7 +4185,7 @@ resource "aws_db_instance" "test" {
 func testAccInstanceConfig_MajorVersionOnly() string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
-		fmt.Sprintf(`
+		`
 resource "aws_db_instance" "test" {
   allocated_storage       = 10
   backup_retention_period = 0
@@ -4203,7 +4203,7 @@ resource "aws_db_instance" "test" {
   # validation error).
   maintenance_window = "Fri:09:00-Fri:09:30"
 }
-`))
+`)
 }
 
 func testAccInstanceConfig_namePrefix(identifierPrefix string) string {
