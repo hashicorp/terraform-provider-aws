@@ -23,9 +23,9 @@ import (
 )
 
 const (
-	rdsClusterScalingConfiguration_DefaultMinCapacity = 1
-	rdsClusterScalingConfiguration_DefaultMaxCapacity = 16
-	rdsClusterTimeoutDelete                           = 2 * time.Minute
+	clusterScalingConfiguration_DefaultMinCapacity = 1
+	clusterScalingConfiguration_DefaultMaxCapacity = 16
+	clusterTimeoutDelete                           = 2 * time.Minute
 )
 
 func ResourceCluster() *schema.Resource {
@@ -205,12 +205,12 @@ func ResourceCluster() *schema.Resource {
 						"max_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  rdsClusterScalingConfiguration_DefaultMaxCapacity,
+							Default:  clusterScalingConfiguration_DefaultMaxCapacity,
 						},
 						"min_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  rdsClusterScalingConfiguration_DefaultMinCapacity,
+							Default:  clusterScalingConfiguration_DefaultMinCapacity,
 						},
 						"seconds_until_auto_pause": {
 							Type:         schema.TypeInt,
@@ -1084,7 +1084,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("hosted_zone_id", dbc.HostedZoneId)
 	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
 
-	rdsClusterSetResourceDataEngineVersionFromCluster(d, dbc)
+	clusterSetResourceDataEngineVersionFromCluster(d, dbc)
 
 	var roles []string
 	for _, r := range dbc.AssociatedRoles {
@@ -1401,7 +1401,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] RDS Cluster delete options: %s", deleteOpts)
 
-	err := resource.Retry(rdsClusterTimeoutDelete, func() *resource.RetryError {
+	err := resource.Retry(clusterTimeoutDelete, func() *resource.RetryError {
 		_, err := conn.DeleteDBCluster(&deleteOpts)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
@@ -1538,25 +1538,8 @@ func WaitForClusterDeletion(conn *rds.RDS, id string, timeout time.Duration) err
 	return err
 }
 
-func rdsClusterSetResourceDataEngineVersionFromCluster(d *schema.ResourceData, c *rds.DBCluster) {
+func clusterSetResourceDataEngineVersionFromCluster(d *schema.ResourceData, c *rds.DBCluster) {
 	oldVersion := d.Get("engine_version").(string)
 	newVersion := aws.StringValue(c.EngineVersion)
 	compareActualEngineVersion(d, oldVersion, newVersion)
-}
-
-func compareActualEngineVersion(d *schema.ResourceData, oldVersion string, newVersion string) {
-	newVersionSubstr := newVersion
-
-	if len(newVersion) > len(oldVersion) {
-		newVersionSubstr = string([]byte(newVersion)[0 : len(oldVersion)+1])
-	}
-
-	if oldVersion != newVersion && string(append([]byte(oldVersion), []byte(".")...)) != newVersionSubstr {
-		d.Set("engine_version", newVersion)
-		fmt.Printf("[READ/cluster] engine_version: %s\n", newVersion)
-	}
-
-	d.Set("engine_version_actual", newVersion)
-	fmt.Printf("[READ/cluster] engine_version_actual: %s\n", newVersion)
-
 }
