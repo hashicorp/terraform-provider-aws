@@ -602,7 +602,6 @@ resource "aws_rds_cluster" "test" {
 resource "aws_rds_cluster_instance" "test" {
   apply_immediately  = true
   cluster_identifier = aws_rds_cluster.test.id
-  #cluster_identifier = %[3]q
   engine             = %[1]q
   engine_version     = %[2]q
   identifier         = %[3]q

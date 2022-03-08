@@ -5480,7 +5480,7 @@ resource "aws_vpc" "test" {
 resource "aws_db_subnet_group" "test" {
   name        = %[1]q
   description = "db subnets"
-  subnet_ids = [aws_subnet.test.id, aws_subnet.test2.id]
+  subnet_ids  = [aws_subnet.test.id, aws_subnet.test2.id]
 }
 
 resource "aws_subnet" "test" {
@@ -5606,8 +5606,7 @@ resource "aws_vpc" "foo" {
 resource "aws_db_subnet_group" "rds_one" {
   name        = %[1]q
   description = "db subnets for rds_one"
-
-  subnet_ids = [aws_subnet.main.id, aws_subnet.other.id]
+  subnet_ids  = [aws_subnet.main.id, aws_subnet.other.id]
 }
 
 resource "aws_subnet" "main" {
@@ -5668,8 +5667,7 @@ resource "aws_vpc" "foo" {
 resource "aws_db_subnet_group" "rds_one" {
   name        = %[1]q
   description = "db subnets for rds_one"
-
-  subnet_ids = [aws_subnet.main.id, aws_subnet.other.id]
+  subnet_ids  = [aws_subnet.main.id, aws_subnet.other.id]
 }
 
 resource "aws_subnet" "main" {
@@ -5733,8 +5731,7 @@ resource "aws_vpc" "foo" {
 resource "aws_db_subnet_group" "rds_one" {
   name        = %[1]q
   description = "db subnets for rds_one"
-
-  subnet_ids = [aws_subnet.main.id, aws_subnet.other.id]
+  subnet_ids  = [aws_subnet.main.id, aws_subnet.other.id]
 }
 
 resource "aws_subnet" "main" {
@@ -5798,8 +5795,7 @@ resource "aws_vpc" "foo" {
 resource "aws_db_subnet_group" "rds_one" {
   name        = %[1]q
   description = "db subnets for rds_one"
-
-  subnet_ids = [aws_subnet.main.id, aws_subnet.other.id]
+  subnet_ids  = [aws_subnet.main.id, aws_subnet.other.id]
 }
 
 resource "aws_subnet" "main" {
@@ -6597,7 +6593,7 @@ resource "aws_db_subnet_group" "test" {
 }
 
 data "aws_rds_engine_version" "default" {
-  provider = "awsalternate"  
+  provider = "awsalternate"
   engine   = "mysql"
 }
 
