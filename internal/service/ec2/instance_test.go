@@ -6501,6 +6501,36 @@ resource "aws_instance" "test" {
 `)
 }
 
+func testAccInstanceConfig_UserData_Specified_With_Replace_Flag_On(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false),
+		`
+resource "aws_instance" "test" {
+  ami           			  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type 			  = "t2.micro"
+  subnet_id     			  = aws_subnet.test.id
+  user_data     			  = "3dc39dda39be1205215e776bad998da361a5955d"
+  user_data_replace_on_change = true
+}
+`)
+}
+
+func testAccInstanceConfig_UserData64_Specified_With_Replace_Flag_On(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false),
+		`
+resource "aws_instance" "test" {
+  ami           			  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type 			  = "t2.micro"
+  subnet_id     			  = aws_subnet.test.id
+  user_data_base64     		  = base64encode(%[2]q)
+  user_data_replace_on_change = true
+}
+`)
+}
+
 // testAccInstanceVPCConfig returns the configuration for tests that create
 //   1) a VPC without IPv6 support
 //   2) a subnet in the VPC that optionally assigns public IP addresses to ENIs
