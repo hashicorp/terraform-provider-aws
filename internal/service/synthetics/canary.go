@@ -390,7 +390,6 @@ func resourceCanaryRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting vpc config: %w", err)
 	}
 
-	// get environment variables since they a
 	runConfig := &synthetics.CanaryRunConfigInput{}
 	if v, ok := d.GetOk("run_config"); ok {
 		runConfig = expandCanaryRunConfig(v.([]interface{}))
@@ -715,7 +714,7 @@ func expandCanaryRunConfig(l []interface{}) *synthetics.CanaryRunConfigInput {
 	}
 
 	if vars, ok := m["environment_variables"].(map[string]interface{}); ok && len(vars) > 0 {
-		codeConfig.EnvironmentVariables = flex.ExpandStringMap(ev)
+		codeConfig.EnvironmentVariables = flex.ExpandStringMap(vars)
 	}
 
 	return codeConfig
