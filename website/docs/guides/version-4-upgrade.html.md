@@ -937,9 +937,7 @@ resource "aws_s3_bucket" "example" {
   bucket = "yournamehere"
 
   # ... other configuration ...
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 }
 
 resource "aws_s3_bucket_object_lock_configuration" "example" {
