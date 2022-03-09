@@ -5259,9 +5259,7 @@ resource "aws_s3_bucket" "bucket" {
     enabled = true
   }
 
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 }
 `, bucketName)
 }
