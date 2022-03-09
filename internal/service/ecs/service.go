@@ -153,7 +153,6 @@ func ResourceService() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-				ForceNew: true,
 			},
 			"enable_execute_command": {
 				Type:     schema.TypeBool,
@@ -185,7 +184,6 @@ func ResourceService() *schema.Resource {
 			"load_balancer": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"elb_name": {
@@ -309,7 +307,6 @@ func ResourceService() *schema.Resource {
 			"propagate_tags": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					if old == "NONE" && new == "" {
 						return true
@@ -335,7 +332,6 @@ func ResourceService() *schema.Resource {
 			"service_registries": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
