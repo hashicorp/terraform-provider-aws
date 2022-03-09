@@ -5,13 +5,13 @@ go 1.17
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7
 	github.com/aws/aws-sdk-go v1.43.9
-	github.com/aws/aws-sdk-go-v2 v1.14.0
+	github.com/aws/aws-sdk-go-v2 v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.11.0
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.7
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.16.0
-	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.12
-	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.13
+	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.13
+	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.14
 	github.com/hashicorp/awspolicyequivalence v1.5.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
@@ -34,17 +34,17 @@ require (
 	github.com/apparentlymart/go-cidr v1.0.1 // indirect
 	github.com/apparentlymart/go-textseg v1.0.0 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
-	github.com/aws/aws-sdk-go-v2/config v1.14.0 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.9.0 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.11.0 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.5 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.3.0 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/iam v1.17.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.8.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.10.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.15.0 // indirect
-	github.com/aws/smithy-go v1.11.0 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.15.0 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.10.0 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.0 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.6 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.0 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/iam v1.18.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.11.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.16.0 // indirect
+	github.com/aws/smithy-go v1.11.1 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v0.5.2 // indirect
