@@ -153,16 +153,21 @@ func resourceTrafficPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 func resourceTrafficPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
-	input := &route53.CreateTrafficPolicyVersionInput{
-		Id:       aws.String(d.Id()),
-		Document: aws.String(d.Get("document").(string)),
+	object, err := FindTrafficPolicyById(ctx, conn, d.Id())
+	if err != nil {
+		return diag.Errorf("error getting Route53 Traffic Policy %s from ListTrafficPolicies: %s", d.Get("name").(string), err)
+	}
+
+	input := &route53.UpdateTrafficPolicyCommentInput{
+		Id:      aws.String(d.Id()),
+		Version: object.LatestVersion,
 	}
 
 	if d.HasChange("comment") {
 		input.Comment = aws.String(d.Get("comment").(string))
 	}
 
-	_, err := conn.CreateTrafficPolicyVersionWithContext(ctx, input)
+	_, err = conn.UpdateTrafficPolicyCommentWithContext(ctx, input)
 	if err != nil {
 		return diag.Errorf("error updating Route53 Traffic Policy: %s. %s", d.Get("name").(string), err)
 	}
