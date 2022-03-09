@@ -714,12 +714,8 @@ func expandCanaryRunConfig(l []interface{}) *synthetics.CanaryRunConfigInput {
 		codeConfig.ActiveTracing = aws.Bool(v)
 	}
 
-	if vars, ok := m["environment_variables"].(map[string]interface{}); ok {
-		ev := make(map[string]string)
-		for k, v := range vars {
-			ev[k] = v.(string)
-		}
-		codeConfig.EnvironmentVariables = aws.StringMap(ev)
+	if vars, ok := m["environment_variables"].(map[string]interface{}); ok && len(vars) > 0 {
+		codeConfig.EnvironmentVariables = flex.ExpandStringMap(ev)
 	}
 
 	return codeConfig
