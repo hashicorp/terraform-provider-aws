@@ -316,7 +316,7 @@ func ResourceService() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					ecs.PropagateTagsService,
 					ecs.PropagateTagsTaskDefinition,
-					"",
+					ecs.PropagateTagsNone,
 				}, false),
 			},
 			"scheduling_strategy": {
@@ -1105,6 +1105,26 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("enable_execute_command") {
 		updateService = true
 		input.EnableExecuteCommand = aws.Bool(d.Get("enable_execute_command").(bool))
+	}
+
+	if d.HasChange("enable_ecs_managed_tags") {
+		updateService = true
+		input.EnableECSManagedTags = aws.Bool(d.Get("enable_ecs_managed_tags").(bool))
+	}
+
+	if d.HasChange("load_balancer") {
+		updateService = true
+		input.LoadBalancers = expandLoadBalancers(d.Get("load_balancer").([]interface{}))
+	}
+
+	if d.HasChange("propagate_tags") {
+		updateService = true
+		input.PropagateTags = aws.String(d.Get("propagate_tags").(string))
+	}
+
+	if d.HasChange("service_registries") {
+		updateService = true
+		input.ServiceRegistries = expandServiceRegistries(d.Get("service_registries").([]interface{}))
 	}
 
 	if updateService {
