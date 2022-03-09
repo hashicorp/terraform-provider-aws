@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * resource/aws_account_alternate_contact: Add configurable timeouts ([#23516](https://github.com/hashicorp/terraform-provider-aws/issues/23516))
+* resource/aws_s3_bucket: Add top-level `object_lock_enabled` parameter ([#23556](https://github.com/hashicorp/terraform-provider-aws/issues/23556))
 * resource/aws_servicecatalog_budget_resource_association: Add configurable timeouts ([#23518](https://github.com/hashicorp/terraform-provider-aws/issues/23518))
 * resource/aws_servicecatalog_constraint: Add configurable timeouts ([#23518](https://github.com/hashicorp/terraform-provider-aws/issues/23518))
 * resource/aws_servicecatalog_organizations_access: Add configurable timeouts ([#23518](https://github.com/hashicorp/terraform-provider-aws/issues/23518))
