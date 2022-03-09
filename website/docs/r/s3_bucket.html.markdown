@@ -375,6 +375,8 @@ the costs of any data transfer. See [Requester Pays Buckets](http://docs.aws.ama
 developer guide for more information.
 * `replication_configuration` - (Optional) A configuration of [replication configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html) (documented below).
 * `server_side_encryption_configuration` - (Optional) A configuration of [server-side encryption configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html) (documented below)
+* `object_lock_enabled` - (Optional, Default:`false`, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled.
+  Conflicts with `object_lock_configuration`.
 * `object_lock_configuration` - (Optional, **Deprecated**) A configuration of [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html) (documented below).
   Use the resource [`aws_s3_bucket_object_lock_configuration`](s3_bucket_object_lock_configuration.html) instead.
 
@@ -534,6 +536,8 @@ The `access_control_translation` object supports the following:
 
 * `owner` - (Required) The override value for the owner on replicated objects. Currently only `Destination` is supported.
 
+The `object_lock_configuration` object is **deprecated**.
+Use the [`aws_s3_bucket_object_lock_configuration` resource](s3_bucket_object_lock_configuration.html.markdown) instead.
 The `object_lock_configuration` object supports the following:
 
 * `object_lock_enabled` - (Required) Indicates whether this bucket has an Object Lock configuration enabled. Valid value is `Enabled`.
@@ -554,6 +558,8 @@ Either `days` or `years` must be specified, but not both.
 ~> **NOTE on `object_lock_configuration`:** You can only enable S3 Object Lock for new buckets. If you need to turn on S3 Object Lock for an existing bucket, please contact AWS Support.
 When you create a bucket with S3 Object Lock enabled, Amazon S3 automatically enables versioning for the bucket.
 Once you create a bucket with S3 Object Lock enabled, you can't disable Object Lock or suspend versioning for the bucket.
+To configure the default retention rule of the Object Lock configuration, see the [`aws_s3_bucket_object_lock_configuration` resource](s3_bucket_object_lock_configuration.html.markdown) for configuration details.
+
 
 ## Attributes Reference
 

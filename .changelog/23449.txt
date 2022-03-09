@@ -1,3 +1,7 @@
 ```release-note:new-resource
 aws_s3_bucket_object_lock_configuration
 ```
+
+```release-note:enhancement
+resource/aws_s3_bucket: Add top-level `object_lock_enabled` parameter
+```

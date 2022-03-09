@@ -114,7 +114,7 @@ func TestAccS3BucketObjectLockConfiguration_migrate_noChange(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketObjectLockConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectLockEnabledWithDefaultRetention(rName),
+				Config: testAccObjectLockEnabledWithDefaultRetention(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.#", "1"),
@@ -151,7 +151,7 @@ func TestAccS3BucketObjectLockConfiguration_migrate_withChange(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketObjectLockConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectLockEnabledNoDefaultRetention(rName),
+				Config: testAccObjectLockEnabledNoDefaultRetention(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.#", "1"),
@@ -258,9 +258,7 @@ func testAccBucketObjectLockConfigurationBasicConfig(bucketName string) string {
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 
   lifecycle {
     ignore_changes = [object_lock_configuration[0].rule]
@@ -285,9 +283,7 @@ func testAccBucketObjectLockConfigurationUpdateConfig(bucketName string) string 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 
   lifecycle {
     ignore_changes = [object_lock_configuration[0].rule]
