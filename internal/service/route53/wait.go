@@ -1,6 +1,7 @@
 package route53
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -21,6 +22,8 @@ const (
 	hostedZoneDNSSECStatusTimeout = 5 * time.Minute
 
 	keySigningKeyStatusTimeout = 5 * time.Minute
+
+	trafficPolicyInstanceOperationTimeout = 4 * time.Minute
 )
 
 func waitChangeInfoStatusInsync(conn *route53.Route53, changeID string) (*route53.ChangeInfo, error) { //nolint:unparam
@@ -102,6 +105,42 @@ func waitKeySigningKeyStatusUpdated(conn *route53.Route53, hostedZoneID string, 
 			}
 		}
 
+		return output, err
+	}
+
+	return nil, err
+}
+
+// waitTrafficPolicyInstanceStateApplied waits for a traffic policy instance applied
+func waitTrafficPolicyInstanceStateApplied(ctx context.Context, conn *route53.Route53, id string) (*route53.GetTrafficPolicyInstanceOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"Creating"},
+		Target:  []string{"Applied", "Failed"},
+		Refresh: statusTrafficPolicyInstanceState(ctx, conn, id),
+		Timeout: trafficPolicyInstanceOperationTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*route53.GetTrafficPolicyInstanceOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// waitTrafficPolicyInstanceStateDeleted waits for a traffic policy instance deleted
+func waitTrafficPolicyInstanceStateDeleted(ctx context.Context, conn *route53.Route53, id string) (*route53.GetTrafficPolicyInstanceOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"Deleting"},
+		Target:  []string{},
+		Refresh: statusTrafficPolicyInstanceState(ctx, conn, id),
+		Timeout: trafficPolicyInstanceOperationTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*route53.GetTrafficPolicyInstanceOutput); ok {
 		return output, err
 	}
 

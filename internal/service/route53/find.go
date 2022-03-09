@@ -117,3 +117,31 @@ func FindTrafficPolicyById(ctx context.Context, conn *route53.Route53, trafficPo
 
 	return nil, nil
 }
+
+func FindTrafficPolicyInstanceId(ctx context.Context, conn *route53.Route53, id string) (*route53.GetTrafficPolicyInstanceOutput, error) {
+	input := &route53.GetTrafficPolicyInstanceInput{
+		Id: aws.String(id),
+	}
+
+	resp, err := conn.GetTrafficPolicyInstanceWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchTrafficPolicyInstance) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if resp == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return resp, nil
+}
