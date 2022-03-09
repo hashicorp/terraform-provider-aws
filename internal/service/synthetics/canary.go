@@ -736,7 +736,7 @@ func flattenCanaryRunConfig(canaryCodeOut *synthetics.CanaryRunConfigOutput, env
 		"active_tracing":     aws.BoolValue(canaryCodeOut.ActiveTracing),
 	}
 
-	if v := envVars; v != nil {
+	if envVars != nil {
 		m["environment_variables"] = aws.StringValueMap(envVars)
 	}
 
