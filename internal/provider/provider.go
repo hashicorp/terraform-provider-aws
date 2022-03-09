@@ -1669,6 +1669,7 @@ func Provider() *schema.Provider {
 			"aws_route53_key_signing_key":               route53.ResourceKeySigningKey(),
 			"aws_route53_query_log":                     route53.ResourceQueryLog(),
 			"aws_route53_record":                        route53.ResourceRecord(),
+			"aws_route53_traffic_policy":                route53.ResourceTrafficPolicy(),
 			"aws_route53_vpc_association_authorization": route53.ResourceVPCAssociationAuthorization(),
 			"aws_route53_zone":                          route53.ResourceZone(),
 			"aws_route53_zone_association":              route53.ResourceZoneAssociation(),

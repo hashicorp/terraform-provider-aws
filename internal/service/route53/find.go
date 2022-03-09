@@ -1,6 +1,7 @@
 package route53
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -84,4 +85,35 @@ func FindKeySigningKeyByResourceID(conn *route53.Route53, resourceID string) (*r
 	}
 
 	return FindKeySigningKey(conn, hostedZoneID, name)
+}
+
+func FindTrafficPolicyById(ctx context.Context, conn *route53.Route53, trafficPolicyId string) (*route53.TrafficPolicySummary, error) {
+	var idMarker *string
+
+	for allPoliciesListed := false; !allPoliciesListed; {
+		input := &route53.ListTrafficPoliciesInput{}
+
+		if idMarker != nil {
+			input.TrafficPolicyIdMarker = idMarker
+		}
+
+		listResponse, err := conn.ListTrafficPoliciesWithContext(ctx, input)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, summary := range listResponse.TrafficPolicySummaries {
+			if aws.StringValue(summary.Id) == trafficPolicyId {
+				return summary, nil
+			}
+		}
+
+		if aws.BoolValue(listResponse.IsTruncated) {
+			idMarker = listResponse.TrafficPolicyIdMarker
+		} else {
+			allPoliciesListed = true
+		}
+	}
+
+	return nil, nil
 }
