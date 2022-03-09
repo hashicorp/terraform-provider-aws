@@ -319,14 +319,13 @@ func TestAccSyntheticsCanary_run(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "60"),
-					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.test1", "result1"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "run_config.0.environment_variables"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
 			},
 			{
 				Config: testAccCanaryRun2Config(rName),
@@ -334,7 +333,6 @@ func TestAccSyntheticsCanary_run(t *testing.T) {
 					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "960"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "120"),
-					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.test2", "result2"),
 				),
 			},
 			{
@@ -424,7 +422,7 @@ func TestAccSyntheticsCanary_runEnvironmentVariables(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCanaryRunEnvVariables3Config(rName),
+				Config: testAccCanaryBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckNoResourceAttr(resourceName, "run_config.0.environment_variables"),
@@ -878,8 +876,8 @@ resource "aws_synthetics_canary" "test" {
 
   run_config {
     environment_variables = {
-	  test1 = "result1"
-	}
+      test1 = "result1"
+    }
   }
 
   depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
@@ -903,28 +901,9 @@ resource "aws_synthetics_canary" "test" {
 
   run_config {
     environment_variables = {
-	  test1 = "result1"
+      test1 = "result1"
       test2 = "result2"
-	}
-  }
-
-  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
-}
-`, rName))
-}
-
-func testAccCanaryRunEnvVariables3Config(rName string) string {
-	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
-resource "aws_synthetics_canary" "test" {
-  name                 = %[1]q
-  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
-  execution_role_arn   = aws_iam_role.test.arn
-  handler              = "exports.handler"
-  zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.2"
-
-  schedule {
-    expression = "rate(0 minute)"
+    }
   }
 
   depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
