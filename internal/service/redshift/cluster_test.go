@@ -33,11 +33,13 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_nodes.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_nodes.0.public_ip_address"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_type", "single-node"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
 					resource.TestMatchResourceAttr(resourceName, "dns_name", regexp.MustCompile(fmt.Sprintf("^%s.*\\.redshift\\..*", rName))),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation", "false"),
 				),
 			},
 			{
@@ -458,7 +460,7 @@ func TestAccRedshiftCluster_forceNewUsername(t *testing.T) {
 }
 
 func TestAccRedshiftCluster_changeAvailabilityZone(t *testing.T) {
-	var v redshift.Cluster
+	var v1, v2 redshift.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -471,14 +473,15 @@ func TestAccRedshiftCluster_changeAvailabilityZone(t *testing.T) {
 			{
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(resourceName, &v1),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.0"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_updatedAvailabilityZone(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(resourceName, &v2),
+					testAccCheckClusterRecreated(&v1, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.1"),
 				),
 			},
@@ -548,7 +551,8 @@ func TestAccRedshiftCluster_changeEncryption2(t *testing.T) {
 
 func TestAccRedshiftCluster_availabilityZoneRelocation(t *testing.T) {
 	var v redshift.Cluster
-	rInt := sdkacctest.RandInt()
+	resourceName := "aws_redshift_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -557,15 +561,14 @@ func TestAccRedshiftCluster_availabilityZoneRelocation(t *testing.T) {
 		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_availabilityZoneRelocation(rInt, true),
+				Config: testAccClusterConfig_availabilityZoneRelocation(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists("aws_redshift_cluster.default", &v),
-					resource.TestCheckResourceAttr(
-						"aws_redshift_cluster.default", "availability_zone_relocation", "true"),
+					testAccCheckClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation", "true"),
 				),
 			},
 			{
-				ResourceName:      "aws_redshift_cluster.default",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
@@ -575,11 +578,10 @@ func TestAccRedshiftCluster_availabilityZoneRelocation(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterConfig_availabilityZoneRelocation(rInt, false),
+				Config: testAccClusterConfig_availabilityZoneRelocation(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists("aws_redshift_cluster.default", &v),
-					resource.TestCheckResourceAttr(
-						"aws_redshift_cluster.default", "availability_zone_relocation", "false"),
+					testAccCheckClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation", "false"),
 				),
 			},
 		},
@@ -689,6 +691,21 @@ func testAccCheckClusterNotRecreated(i, j *redshift.Cluster) resource.TestCheckF
 		// Clusters with the same identifier can/will have an overlapping Endpoint.Address.
 		if aws.StringValue(i.ClusterPublicKey) != aws.StringValue(j.ClusterPublicKey) {
 			return errors.New("Redshift Cluster was recreated")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckClusterRecreated(i, j *redshift.Cluster) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		// In lieu of some other uniquely identifying attribute from the API that always changes
+		// when a cluster is destroyed and recreated with the same identifier, we use the SSH key
+		// as it will get regenerated when a cluster is destroyed.
+		// Certain update operations (e.g KMS encrypting a cluster) will change ClusterCreateTime.
+		// Clusters with the same identifier can/will have an overlapping Endpoint.Address.
+		if aws.StringValue(i.ClusterPublicKey) == aws.StringValue(j.ClusterPublicKey) {
+			return errors.New("Redshift Cluster was not recreated")
 		}
 
 		return nil
@@ -1319,10 +1336,10 @@ resource "aws_redshift_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterConfig_availabilityZoneRelocation(rInt int, enabled bool) string {
+func testAccClusterConfig_availabilityZoneRelocation(rName string, enabled bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
-resource "aws_redshift_cluster" "default" {
-  cluster_identifier                  = "tf-redshift-cluster-%[1]d"
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo_test"
@@ -1336,5 +1353,5 @@ resource "aws_redshift_cluster" "default" {
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
 }
-`, rInt, enabled))
+`, rName, enabled))
 }
