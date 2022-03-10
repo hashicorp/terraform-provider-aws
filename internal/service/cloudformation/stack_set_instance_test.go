@@ -264,6 +264,43 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 	})
 }
 
+func TestAccCloudFormationStackSetInstance_operationPreferences(t *testing.T) {
+	var stackInstance cloudformation.StackInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckStackSet(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckStackSetInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetInstanceOperationPreferencesConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_stack",
+				},
+			},
+			{
+				Config: testAccStackSetInstanceConfig_ServiceManagedStackSet(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckCloudFormationStackSetInstanceExists(resourceName string, v *cloudformation.StackInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -665,6 +702,23 @@ func testAccStackSetInstanceConfig_ServiceManagedStackSet(rName string) string {
 		`
 resource "aws_cloudformation_stack_set_instance" "test" {
   depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
+
+  stack_set_name = aws_cloudformation_stack_set.test.name
+}
+`)
+}
+
+func testAccStackSetInstanceOperationPreferencesConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName),
+		`
+resource "aws_cloudformation_stack_set_instance" "test" {
+  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
+
+  operational_preferences {
+    failure_tolerance_count = 1
+		max_concurrent_count = 2
+  }
 
   stack_set_name = aws_cloudformation_stack_set.test.name
 }
