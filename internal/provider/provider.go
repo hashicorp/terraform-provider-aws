@@ -717,6 +717,7 @@ func Provider() *schema.Provider {
 			"aws_networkmanager_devices":         networkmanager.DataSourceDevices(),
 			"aws_networkmanager_global_network":  networkmanager.DataSourceGlobalNetwork(),
 			"aws_networkmanager_global_networks": networkmanager.DataSourceGlobalNetworks(),
+			"aws_networkmanager_link":            networkmanager.DataSourceLink(),
 			"aws_networkmanager_site":            networkmanager.DataSourceSite(),
 			"aws_networkmanager_sites":           networkmanager.DataSourceSites(),
 
