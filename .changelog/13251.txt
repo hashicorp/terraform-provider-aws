@@ -45,3 +45,7 @@ aws_networkmanager_devices
 ```release-note:new-data-source
 aws_networkmanager_link
 ```
+
+```release-note:new-data-source
+aws_networkmanager_links
+```
