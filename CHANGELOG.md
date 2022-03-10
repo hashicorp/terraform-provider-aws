@@ -28,6 +28,7 @@ BUG FIXES:
 * resource/aws_kms_replica_external_key: Increase `tags` eventual consistency timeout from 5 minutes to 10 minutes ([#23593](https://github.com/hashicorp/terraform-provider-aws/issues/23593))
 * resource/aws_kms_replica_key: Increase `tags` eventual consistency timeout from 5 minutes to 10 minutes ([#23593](https://github.com/hashicorp/terraform-provider-aws/issues/23593))
 * resource/aws_s3_bucket_replication_configuration: Correctly configure empty `rule.filter` configuration block in API requests ([#23586](https://github.com/hashicorp/terraform-provider-aws/issues/23586))
+* resource/aws_s3_bucket_replication_configuration: Ensure both `key` and `value` arguments of the `rule.filter.tag` configuration block are correctly populated in the outgoing API request and terraform state. ([#23579](https://github.com/hashicorp/terraform-provider-aws/issues/23579))
 * resource/aws_s3_bucket_replication_configuration: Prevent inconsistent final plan when `rule.filter.prefix` is an empty string ([#23586](https://github.com/hashicorp/terraform-provider-aws/issues/23586))
 
 ## 4.4.0 (March 04, 2022)
