@@ -79,6 +79,29 @@ func TestAccQuickSightUser_withInvalidFormattedEmailStillWorks(t *testing.T) {
 	})
 }
 
+func TestAccQuickSightUser_withNamespace(t *testing.T) {
+	var user quicksight.User
+	rName := "tfacctest" + sdkacctest.RandString(10)
+	rNamespace := "terraform"
+	resourceName := "aws_quicksight_user." + rName
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckQuickSightUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserWithNamespaceConfig(rName, rNamespace),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQuickSightUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "namespace", rNamespace),
+				),
+			},
+		},
+	})
+}
+
 func TestAccQuickSightUser_disappears(t *testing.T) {
 	var user quicksight.User
 	rName := "tfacctest" + sdkacctest.RandString(10)
@@ -206,6 +229,21 @@ resource "aws_quicksight_user" %[1]q {
   user_role      = "READER"
 }
 `, rName, email)
+}
+
+func testAccUserWithNamespaceConfig(rName, namespace string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_quicksight_user" %[1]q {
+  aws_account_id = data.aws_caller_identity.current.account_id
+  user_name      = %[1]q
+  email          = %[2]q
+	namespace      = %[3]q
+  identity_type  = "QUICKSIGHT"
+  user_role      = "READER"
+}
+`, rName, acctest.DefaultEmailAddress, namespace)
 }
 
 func testAccUserConfig(rName string) string {
