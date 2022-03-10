@@ -183,10 +183,10 @@ func TestAccRDSGlobalCluster_EngineVersion_aurora(t *testing.T) {
 		CheckDestroy: testAccCheckGlobalClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterEngineVersionConfig(rName, "aurora", "5.6.10a"),
+				Config: testAccGlobalClusterEngineVersionConfig(rName, "aurora"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.6.10a"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
 				),
 			},
 			{
@@ -210,17 +210,17 @@ func TestAccRDSGlobalCluster_engineVersionUpdateMinor(t *testing.T) {
 		CheckDestroy: testAccCheckGlobalClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterWithPrimaryEngineVersionConfig(rName, "aurora-mysql", "5.7.mysql_aurora.2.10.1"),
+				Config: testAccGlobalClusterWithPrimaryEngineVersionConfig(rName, "aurora-postgresql", "13.4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
 				),
 			},
 			{
-				Config: testAccGlobalClusterWithPrimaryEngineVersionConfig(rName, "aurora-mysql", "5.7.mysql_aurora.2.10.2"),
+				Config: testAccGlobalClusterWithPrimaryEngineVersionConfig(rName, "aurora-postgresql", "13.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.7.mysql_aurora.2.10.2"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "13.5"),
 				),
 			},
 			{
@@ -244,18 +244,17 @@ func TestAccRDSGlobalCluster_engineVersionUpdateMajor(t *testing.T) {
 		CheckDestroy: testAccCheckGlobalClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterWithPrimaryEngineVersionConfig(rName, "aurora", "5.7.mysql_aurora.2.10.2"),
+				Config: testAccGlobalClusterWithPrimaryEngineVersionConfig(rName, "aurora", "5.6.mysql_aurora.1.23.4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
 				),
 			},
 			{
-				Config:             testAccGlobalClusterWithPrimaryEngineVersionConfig(rName, "aurora", "8.0.mysql_aurora.3.01.0"),
-				ExpectNonEmptyPlan: true,
+				Config: testAccGlobalClusterWithPrimaryEngineVersionConfig(rName, "aurora-mysql", "5.7.mysql_aurora.2.10.2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "8.0.mysql_aurora.3.01.0"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.7.mysql_aurora.2.10.2"),
 				),
 			},
 			{
@@ -279,10 +278,10 @@ func TestAccRDSGlobalCluster_EngineVersion_auroraMySQL(t *testing.T) {
 		CheckDestroy: testAccCheckGlobalClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterEngineVersionConfig(rName, "aurora-mysql", "5.7.mysql_aurora.2.07.1"),
+				Config: testAccGlobalClusterEngineVersionConfig(rName, "aurora-mysql"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.7.mysql_aurora.2.07.1"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
 				),
 			},
 			{
@@ -306,10 +305,10 @@ func TestAccRDSGlobalCluster_EngineVersion_auroraPostgresql(t *testing.T) {
 		CheckDestroy: testAccCheckGlobalClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterEngineVersionConfig(rName, "aurora-postgresql", "10.11"),
+				Config: testAccGlobalClusterEngineVersionConfig(rName, "aurora-postgresql"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "10.11"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
 				),
 			},
 			{
@@ -564,35 +563,47 @@ resource "aws_rds_global_cluster" "test" {
 `, engine, rName)
 }
 
-func testAccGlobalClusterEngineVersionConfig(rName, engine, engineVersion string) string {
+func testAccGlobalClusterEngineVersionConfig(rName, engine string) string {
 	return fmt.Sprintf(`
-resource "aws_rds_global_cluster" "test" {
-  engine                    = %[1]q
-  engine_version            = %[2]q
-  global_cluster_identifier = %[3]q
+data "aws_rds_engine_version" "default" {
+  engine = %[1]q
 }
-`, engine, engineVersion, rName)
+
+resource "aws_rds_global_cluster" "test" {
+  engine                    = data.aws_rds_engine_version.default.engine
+  engine_version            = data.aws_rds_engine_version.default.version
+  global_cluster_identifier = %[2]q
+}
+`, engine, rName)
 }
 
 func testAccGlobalClusterWithPrimaryEngineVersionConfig(rName, engine, engineVersion string) string {
 	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_version             = %[2]q
+  preferred_instance_classes = ["db.r5.large", "db.r5.xlarge", "db.r6g.large"] # Aurora global db may be limited to rx
+}
+
 resource "aws_rds_global_cluster" "test" {
-  engine                    = %[1]q
-  engine_version            = %[2]q
+  engine                    = data.aws_rds_orderable_db_instance.test.engine
+  engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
   global_cluster_identifier = %[3]q
 }
+
+// checkout the newly working global cluster stuff in cluster
 
 resource "aws_rds_cluster" "test" {
   apply_immediately           = true
   allow_major_version_upgrade = true
   cluster_identifier          = %[3]q
-  engine                      = %[1]q
-  engine_version              = %[2]q
+  engine                      = data.aws_rds_orderable_db_instance.test.engine
+  engine_version              = data.aws_rds_orderable_db_instance.test.engine_version
   master_password             = "mustbeeightcharacters"
   master_username             = "test"
   skip_final_snapshot         = true
 
-  global_cluster_identifier = aws_rds_global_cluster.test.global_cluster_identifier
+  global_cluster_identifier = aws_rds_global_cluster.test.id
 
   lifecycle {
     ignore_changes = [global_cluster_identifier]
@@ -602,10 +613,10 @@ resource "aws_rds_cluster" "test" {
 resource "aws_rds_cluster_instance" "test" {
   apply_immediately  = true
   cluster_identifier = aws_rds_cluster.test.id
-  engine             = %[1]q
-  engine_version     = %[2]q
+  engine             = data.aws_rds_orderable_db_instance.test.engine
+  engine_version     = data.aws_rds_orderable_db_instance.test.engine_version
   identifier         = %[3]q
-  instance_class     = "db.r3.large"
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 
   lifecycle {
     ignore_changes = [engine_version]
@@ -616,10 +627,14 @@ resource "aws_rds_cluster_instance" "test" {
 
 func testAccGlobalClusterSourceClusterIdentifierConfig(rName string) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "aurora-postgresql"
+}
+
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
-  engine              = "aurora-postgresql"
-  engine_version      = "10.11" # Minimum supported version for Global Clusters
+  engine              = data.aws_rds_engine_version.default.engine
+  engine_version      = data.aws_rds_engine_version.default.version
   master_password     = "mustbeeightcharacters"
   master_username     = "test"
   skip_final_snapshot = true
@@ -641,10 +656,14 @@ resource "aws_rds_global_cluster" "test" {
 
 func testAccGlobalClusterSourceClusterIdentifierStorageEncryptedConfig(rName string) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "aurora-postgresql"
+}
+
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
-  engine              = "aurora-postgresql"
-  engine_version      = "10.11" # Minimum supported version for Global Clusters
+  engine              = data.aws_rds_engine_version.default.engine
+  engine_version      = data.aws_rds_engine_version.default.version
   master_password     = "mustbeeightcharacters"
   master_username     = "test"
   skip_final_snapshot = true

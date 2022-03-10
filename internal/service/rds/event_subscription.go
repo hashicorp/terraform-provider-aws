@@ -193,9 +193,7 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 			SubscriptionName: aws.String(d.Id()),
 		}
 
-		if d.HasChange("enabled") {
-			input.Enabled = aws.Bool(d.Get("enabled").(bool))
-		}
+		input.Enabled = aws.Bool(d.Get("enabled").(bool))
 
 		if d.HasChange("event_categories") {
 			input.EventCategories = flex.ExpandStringSet(d.Get("event_categories").(*schema.Set))
