@@ -1390,6 +1390,7 @@ func Provider() *schema.Provider {
 			"aws_gamelift_alias":              gamelift.ResourceAlias(),
 			"aws_gamelift_build":              gamelift.ResourceBuild(),
 			"aws_gamelift_fleet":              gamelift.ResourceFleet(),
+			"aws_gamelift_game_server_group":  gamelift.ResourceGameServerGroup(),
 			"aws_gamelift_game_session_queue": gamelift.ResourceGameSessionQueue(),
 			"aws_gamelift_script":             gamelift.ResourceScript(),
 
