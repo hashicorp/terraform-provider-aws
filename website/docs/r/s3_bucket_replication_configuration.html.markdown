@@ -229,9 +229,9 @@ The `rule` configuration block supports the following arguments:
 * `delete_marker_replication` - (Optional) Whether delete markers are replicated. This argument is only valid with V2 replication configurations (i.e., when `filter` is used)[documented below](#delete_marker_replication).
 * `destination` - (Required) Specifies the destination for the rule [documented below](#destination).
 * `existing_object_replication` - (Optional) Replicate existing objects in the source bucket according to the rule configurations [documented below](#existing_object_replication).
-* `filter` - (Optional, Conflicts with `prefix`) Filter that identifies subset of objects to which the replication rule applies [documented below](#filter).
+* `filter` - (Optional, Conflicts with `prefix`) Filter that identifies subset of objects to which the replication rule applies [documented below](#filter). If not specified, the `rule` will default to using `prefix`.
 * `id` - (Optional) Unique identifier for the rule. Must be less than or equal to 255 characters in length.
-* `prefix` - (Optional, Conflicts with `filter`) Object key name prefix identifying one or more objects to which the rule applies. Must be less than or equal to 1024 characters in length.
+* `prefix` - (Optional, Conflicts with `filter`) Object key name prefix identifying one or more objects to which the rule applies. Must be less than or equal to 1024 characters in length. Defaults to an empty string (`""`) if `filter` is not specified.
 * `priority` - (Optional) The priority associated with the rule. Priority should only be set if `filter` is configured. If not provided, defaults to `0`. Priority must be unique between multiple rules.
 * `source_selection_criteria` - (Optional) Specifies special object selection criteria [documented below](#source_selection_criteria).
 * `status` - (Required) The status of the rule. Either `"Enabled"` or `"Disabled"`. The rule is ignored if status is not "Enabled".
@@ -346,7 +346,8 @@ The `existing_object_replication` configuration block supports the following arg
 
 ### filter
 
-~> **NOTE:** With the `filter` argument, you must specify exactly one of `prefix`, `tag`, or `and`.  Replication configuration V1 supports filtering based on only the `prefix` attribute. For backwards compatibility, Amazon S3 continues to support the V1 configuration.
+~> **NOTE:** The `filter` argument must be specified as either an empty configuration block (`filter {}`) to imply the rule requires no filter or with exactly one of `prefix`, `tag`, or `and`.
+Replication configuration V1 supports filtering based on only the `prefix` attribute. For backwards compatibility, Amazon S3 continues to support the V1 configuration.
 
 The `filter` configuration block supports the following arguments:
 

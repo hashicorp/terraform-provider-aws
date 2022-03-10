@@ -135,24 +135,23 @@ func ExpandExistingObjectReplication(l []interface{}) *s3.ExistingObjectReplicat
 }
 
 func ExpandFilter(l []interface{}) *s3.ReplicationRuleFilter {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	tfMap, ok := l[0].(map[string]interface{})
-
-	if !ok {
+	if len(l) == 0 {
 		return nil
 	}
 
 	result := &s3.ReplicationRuleFilter{}
 
-	if v, ok := tfMap["and"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.And = ExpandReplicationRuleAndOperator(v)
+	// Support the empty filter block in terraform i.e. 'filter {}',
+	// which is also supported by the API even though the docs note that
+	// one of Prefix, Tag, or And is required.
+	if l[0] == nil {
+		return result
 	}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
-		result.Prefix = aws.String(v)
+	tfMap := l[0].(map[string]interface{})
+
+	if v, ok := tfMap["and"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		result.And = ExpandReplicationRuleAndOperator(v)
 	}
 
 	if v, ok := tfMap["tag"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -160,6 +159,15 @@ func ExpandFilter(l []interface{}) *s3.ReplicationRuleFilter {
 		if len(tags) > 0 {
 			result.Tag = tags[0]
 		}
+	}
+
+	// Per AWS S3 API, "A Filter must have exactly one of Prefix, Tag, or And specified";
+	// Specifying more than one of the listed parameters results in a MalformedXML error.
+	// If a filter is specified as filter { prefix = "" } in Terraform, we should send the prefix value
+	// in the API request even if it is an empty value, else Terraform will report non-empty plans.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23487
+	if v, ok := tfMap["prefix"].(string); ok && result.And == nil && result.Tag == nil {
+		result.Prefix = aws.String(v)
 	}
 
 	return result
@@ -606,7 +614,10 @@ func ExpandRules(l []interface{}) []*s3.ReplicationRule {
 			rule.Status = aws.String(v)
 		}
 
-		if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		// Support the empty filter block in terraform i.e. 'filter {}',
+		// which implies the replication rule does not require a specific filter,
+		// by expanding the "filter" array even if the first element is nil.
+		if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
 			// XML schema V2
 			rule.Filter = ExpandFilter(v)
 			rule.Priority = aws.Int64(int64(tfMap["priority"].(int)))
