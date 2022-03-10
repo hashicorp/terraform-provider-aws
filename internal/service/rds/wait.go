@@ -54,12 +54,13 @@ func waitEventSubscriptionDeleted(conn *rds.RDS, id string, timeout time.Duratio
 
 func waitEventSubscriptionUpdated(conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{EventSubscriptionStatusModifying},
-		Target:     []string{EventSubscriptionStatusActive},
-		Refresh:    statusEventSubscription(conn, id),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
+		Pending:                   []string{EventSubscriptionStatusModifying},
+		Target:                    []string{EventSubscriptionStatusActive},
+		Refresh:                   statusEventSubscription(conn, id),
+		Timeout:                   timeout,
+		MinTimeout:                10 * time.Second,
+		Delay:                     30 * time.Second,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

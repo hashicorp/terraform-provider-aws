@@ -563,6 +563,10 @@ func resourceGlobalClusterUpgradeMinorEngineVersion(clusterMembers *schema.Set, 
 						return resource.RetryableError(err)
 					}
 
+					if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid database cluster identifier") {
+						return resource.RetryableError(err)
+					}
+
 					if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "Cannot modify engine version without a primary instance in DB cluster") {
 						return resource.NonRetryableError(err)
 					}

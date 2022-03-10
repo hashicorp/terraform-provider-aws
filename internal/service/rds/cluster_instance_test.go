@@ -656,7 +656,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraMySQL1_defaultKe
 			},
 			{
 				Config:      testAccClusterInstancePerformanceInsightsKMSKeyIdAuroraMySQL1Config(rName, engine),
-				ExpectError: regexp.MustCompile(`InvalidParameterCombination: You cannot change your Performance Insights KMS key`),
+				ExpectError: regexp.MustCompile(`InvalidParameterCombination: You .* change your Performance Insights KMS key`),
 			},
 		},
 	})
@@ -728,7 +728,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraMySQL2_defaultKe
 			},
 			{
 				Config:      testAccClusterInstancePerformanceInsightsKMSKeyIdAuroraMySQL2Config(rName, engine, engineVersion),
-				ExpectError: regexp.MustCompile(`InvalidParameterCombination: You cannot change your Performance Insights KMS key`),
+				ExpectError: regexp.MustCompile(`InvalidParameterCombination: You .* change your Performance Insights KMS key`),
 			},
 		},
 	})
@@ -838,7 +838,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraPostgresql_defau
 			},
 			{
 				Config:      testAccClusterInstancePerformanceInsightsKMSKeyIdAuroraPostgresqlConfig(rName, engine),
-				ExpectError: regexp.MustCompile(`InvalidParameterCombination: You cannot change your Performance Insights KMS key`),
+				ExpectError: regexp.MustCompile(`InvalidParameterCombination: You .* change your Performance Insights KMS key`),
 			},
 		},
 	})

@@ -91,8 +91,8 @@ func TestAccRDSCluster_allowMajorVersionUpgrade(t *testing.T) {
 	// either by having a new data source created or implementing the testing similar
 	// to TestAccAWSDmsReplicationInstance_EngineVersion
 	engine := "aurora-postgresql"
-	engineVersion1 := "10.11"
-	engineVersion2 := "11.7"
+	engineVersion1 := "12.9"
+	engineVersion2 := "13.5"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -144,8 +144,8 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParametersApplyImm(t *t
 	// either by having a new data source created or implementing the testing similar
 	// to TestAccAWSDmsReplicationInstance_EngineVersion
 	engine := "aurora-postgresql"
-	engineVersion1 := "11.9"
-	engineVersion2 := "12.4"
+	engineVersion1 := "12.9"
+	engineVersion2 := "13.5"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -183,8 +183,8 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParameters(t *testing.T
 	// either by having a new data source created or implementing the testing similar
 	// to TestAccAWSDmsReplicationInstance_EngineVersion
 	engine := "aurora-postgresql"
-	engineVersion1 := "10.11"
-	engineVersion2 := "11.7"
+	engineVersion1 := "12.9"
+	engineVersion2 := "13.5"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1242,7 +1242,7 @@ func TestAccRDSCluster_GlobalClusterIdentifier_secondaryClustersWriteForwarding(
 
 func TestAccRDSCluster_port(t *testing.T) {
 	var dbCluster1, dbCluster2 rds.DBCluster
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1252,14 +1252,14 @@ func TestAccRDSCluster_port(t *testing.T) {
 		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_Port(rInt, 5432),
+				Config: testAccClusterConfig_Port(rName, 5432),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "port", "5432"),
 				),
 			},
 			{
-				Config: testAccClusterConfig_Port(rInt, 2345),
+				Config: testAccClusterConfig_Port(rName, 2345),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "port", "2345"),
@@ -2595,7 +2595,7 @@ func testAccClusterConfig_EngineVersion(upgrade bool, rInt int) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine             = "aurora-postgresql"
-  preferred_versions = ["9.6.3", "9.6.6", "9.6.8"]
+  preferred_versions = ["11.6", "11.7", "11.9"]
 }
 
 data "aws_rds_engine_version" "upgrade" {
@@ -2666,19 +2666,19 @@ resource "aws_rds_cluster_instance" "test" {
 `, upgrade, rInt)
 }
 
-func testAccClusterConfig_Port(rInt, port int) string {
+func testAccClusterConfig_Port(rName string, port int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-acc-test-%d"
+  cluster_identifier              = %[1]q
   database_name                   = "mydb"
-  db_cluster_parameter_group_name = "default.aurora-postgresql11"
+  db_cluster_parameter_group_name = "default.aurora-postgresql13"
   engine                          = "aurora-postgresql"
   master_password                 = "mustbeeightcharaters"
   master_username                 = "foo"
-  port                            = %d
+  port                            = %[2]d
   skip_final_snapshot             = true
 }
-`, rInt, port)
+`, rName, port)
 }
 
 func testAccClusterIncludingIAMRolesConfig(n int) string {
@@ -3182,7 +3182,7 @@ func testAccClusterConfig_GlobalClusterIdentifier_EngineMode_Provisioned(rName s
 	return fmt.Sprintf(`
 resource "aws_rds_global_cluster" "test" {
   engine                    = "aurora-postgresql"
-  engine_version            = "10.11"
+  engine_version            = "12.9"
   global_cluster_identifier = %[1]q
 }
 
@@ -3409,10 +3409,20 @@ data "aws_availability_zones" "alternate" {
   }
 }
 
+data "aws_rds_engine_version" "default" {
+  engine = "aurora-postgresql"
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  preferred_instance_classes = ["db.r5.large", "db.r5.xlarge", "db.r6g.large"] # Aurora global db may be limited to rx
+}
+
 resource "aws_rds_global_cluster" "test" {
   global_cluster_identifier = %[1]q
-  engine                    = "aurora-postgresql"
-  engine_version            = "10.11"
+  engine                    = data.aws_rds_engine_version.default.engine
+  engine_version            = data.aws_rds_engine_version.default.version
 }
 
 resource "aws_rds_cluster" "primary" {
@@ -3431,7 +3441,7 @@ resource "aws_rds_cluster_instance" "primary" {
   engine             = aws_rds_cluster.primary.engine
   engine_version     = aws_rds_cluster.primary.engine_version
   identifier         = "%[1]s-primary"
-  instance_class     = "db.r4.large" # only db.r4 or db.r5 are valid for Aurora global db
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 }
 
 resource "aws_vpc" "alternate" {
