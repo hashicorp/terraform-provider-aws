@@ -3766,11 +3766,7 @@ func TestAccEC2Instance_UserData_replaceOnChangeFlag(t *testing.T) {
 				Config: testAccInstanceConfig_UserData_Specified_With_Replace_Flag_On(rName, "TestData1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					func(s *terraform.State) error {
-						instance := s.RootModule().Resources[rName]
-						instanceId = instance.Primary.ID
-						return nil
-					},
+					testResourceIdHasChanged(resourceName, &instanceId),
 				),
 			},
 			{
@@ -3783,14 +3779,7 @@ func TestAccEC2Instance_UserData_replaceOnChangeFlag(t *testing.T) {
 				Config:             testAccInstanceConfig_UserData_Specified_With_Replace_Flag_On(rName, "TestData2"),
 				Check:              resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					func(s *terraform.State) error {
-						instance := s.RootModule().Resources[rName]
-						if(instanceId != instance.Primary.ID){
-							return nil
-						} else {
-							return fmt.Errorf("A new instance should have been created")
-						}
-					},
+					testResourceIdHasChanged(resourceName, &instanceId),
 				),
 				ExpectNonEmptyPlan: true,
 				PlanOnly:           true,
@@ -3816,12 +3805,9 @@ func TestAccEC2Instance_UserDataBase64_replaceOnChangeFlag(t *testing.T) {
 				Config: testAccInstanceConfig_UserData64_Specified_With_Replace_Flag_On(rName, "3dc39dda39be1205215e776bad998da361a5955d"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					func(s *terraform.State) error {
-						instance := s.RootModule().Resources[rName]
-						instanceId = instance.Primary.ID
-						return nil
-					},
+					testResourceIdHasChanged(resourceName, &instanceId),
 				),
+				
 			},
 			{
 				ResourceName:            resourceName,
@@ -3833,14 +3819,7 @@ func TestAccEC2Instance_UserDataBase64_replaceOnChangeFlag(t *testing.T) {
 				Config:             testAccInstanceConfig_UserData64_Specified_With_Replace_Flag_On(rName, "3dc39dda39be1205215e776bad998da361a5955e"),
 				Check:              resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					func(s *terraform.State) error {
-						instance := s.RootModule().Resources[rName]
-						if(instanceId != instance.Primary.ID){
-							return nil
-						} else {
-							return fmt.Errorf("A new instance should have been created")
-						}
-					},
+					testResourceIdHasChanged(resourceName, &instanceId),
 				),
 				ExpectNonEmptyPlan: true,
 				PlanOnly:           true,
@@ -3848,6 +3827,8 @@ func TestAccEC2Instance_UserDataBase64_replaceOnChangeFlag(t *testing.T) {
 		},
 	})
 }
+
+
 
 func TestAccEC2Instance_hibernation(t *testing.T) {
 	var instance1, instance2 ec2.Instance
@@ -4239,6 +4220,21 @@ func testAccCheckInstanceExistsWithProvider(n string, i *ec2.Instance, providerF
 		}
 
 		return fmt.Errorf("Instance not found")
+	}
+}
+
+func testResourceIdHasChanged (resourceName string, instanceId *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		instance := s.RootModule().Resources[resourceName]
+		if(*instanceId == "") {
+			*instanceId = instance.Primary.ID
+			return nil
+		}
+		if(*instanceId != instance.Primary.ID){
+			return nil
+		} else {
+			return fmt.Errorf("A new instance should have been created")
+		}
 	}
 }
 
