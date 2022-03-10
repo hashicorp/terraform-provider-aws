@@ -2068,31 +2068,33 @@ func flattenQuickSightFieldFolders(folders map[string]*quicksight.FieldFolder) [
 
 	var tfList []interface{}
 
-	for _, folder := range folders {
-		if folder == nil {
+	for key, value := range folders {
+		if value == nil {
 			continue
 		}
 
-		tfMap := flattenQuickSightFieldFolder(folder)
+		tfMap := flattenQuickSightFieldFolder(key, value)
 		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
 }
 
-func flattenQuickSightFieldFolder(folder *quicksight.FieldFolder) map[string]interface{} {
-	if folder == nil {
+func flattenQuickSightFieldFolder(fieldFolderId string, fieldFolder *quicksight.FieldFolder) map[string]interface{} {
+	if fieldFolder == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	if folder.Columns != nil {
-		tfMap["columns"] = aws.StringValueSlice(folder.Columns)
+	tfMap["field_folder_id"] = fieldFolderId
+
+	if fieldFolder.Columns != nil {
+		tfMap["columns"] = aws.StringValueSlice(fieldFolder.Columns)
 	}
 
-	if folder.Description != nil {
-		tfMap["description"] = aws.StringValue(folder.Description)
+	if fieldFolder.Description != nil {
+		tfMap["description"] = aws.StringValue(fieldFolder.Description)
 	}
 
 	return tfMap
