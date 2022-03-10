@@ -164,9 +164,9 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"newer_noncurrent_versions": {
-										Type:         schema.TypeInt,
+										Type:         nullable.TypeNullableInt,
 										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
+										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(1),
 									},
 									"noncurrent_days": {
 										Type:         schema.TypeInt,
@@ -182,9 +182,9 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"newer_noncurrent_versions": {
-										Type:         schema.TypeInt,
+										Type:         nullable.TypeNullableInt,
 										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
+										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(1),
 									},
 									"noncurrent_days": {
 										Type:         schema.TypeInt,

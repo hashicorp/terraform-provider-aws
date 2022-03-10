@@ -2,11 +2,13 @@ package s3
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -235,12 +237,12 @@ func ExpandLifecycleRuleFilter(l []interface{}) *s3.LifecycleRuleFilter {
 		result.And = ExpandLifecycleRuleFilterAndOperator(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := m["object_size_greater_than"].(int); ok && v > 0 {
-		result.ObjectSizeGreaterThan = aws.Int64(int64(v))
+	if v, null, _ := nullable.Int(m["object_size_greater_than"].(string)).Value(); !null && v > 0 {
+		result.ObjectSizeGreaterThan = aws.Int64(v)
 	}
 
-	if v, ok := m["object_size_less_than"].(int); ok && v > 0 {
-		result.ObjectSizeLessThan = aws.Int64(int64(v))
+	if v, null, _ := nullable.Int(m["object_size_less_than"].(string)).Value(); !null && v > 0 {
+		result.ObjectSizeLessThan = aws.Int64(v)
 	}
 
 	if v, ok := m["tag"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -249,7 +251,8 @@ func ExpandLifecycleRuleFilter(l []interface{}) *s3.LifecycleRuleFilter {
 
 	// Per AWS S3 API, "A Filter must have exactly one of Prefix, Tag, or And specified";
 	// Specifying more than one of the listed parameters results in a MalformedXML error.
-	if v, ok := m["prefix"].(string); ok && result.And == nil && result.Tag == nil {
+	// In practice, this also includes ObjectSizeGreaterThan and ObjectSizeLessThan.
+	if v, ok := m["prefix"].(string); ok && result.And == nil && result.Tag == nil && result.ObjectSizeGreaterThan == nil && result.ObjectSizeLessThan == nil {
 		result.Prefix = aws.String(v)
 	}
 
@@ -310,8 +313,8 @@ func ExpandLifecycleRuleNoncurrentVersionExpiration(m map[string]interface{}) *s
 
 	result := &s3.NoncurrentVersionExpiration{}
 
-	if v, ok := m["newer_noncurrent_versions"].(int); ok && v > 0 {
-		result.NewerNoncurrentVersions = aws.Int64(int64(v))
+	if v, null, _ := nullable.Int(m["newer_noncurrent_versions"].(string)).Value(); !null && v > 0 {
+		result.NewerNoncurrentVersions = aws.Int64(v)
 	}
 
 	if v, ok := m["noncurrent_days"].(int); ok {
@@ -337,8 +340,8 @@ func ExpandLifecycleRuleNoncurrentVersionTransitions(l []interface{}) []*s3.Nonc
 
 		transition := &s3.NoncurrentVersionTransition{}
 
-		if v, ok := tfMap["newer_noncurrent_versions"].(int); ok && v > 0 {
-			transition.NewerNoncurrentVersions = aws.Int64(int64(v))
+		if v, null, _ := nullable.Int(tfMap["newer_noncurrent_versions"].(string)).Value(); !null && v > 0 {
+			transition.NewerNoncurrentVersions = aws.Int64(v)
 		}
 
 		if v, ok := tfMap["noncurrent_days"].(int); ok {
@@ -917,11 +920,11 @@ func FlattenLifecycleRuleFilter(filter *s3.LifecycleRuleFilter) []interface{} {
 	}
 
 	if filter.ObjectSizeGreaterThan != nil {
-		m["object_size_greater_than"] = int(aws.Int64Value(filter.ObjectSizeGreaterThan))
+		m["object_size_greater_than"] = strconv.FormatInt(aws.Int64Value(filter.ObjectSizeGreaterThan), 10)
 	}
 
 	if filter.ObjectSizeLessThan != nil {
-		m["object_size_less_than"] = int(aws.Int64Value(filter.ObjectSizeLessThan))
+		m["object_size_less_than"] = strconv.FormatInt(aws.Int64Value(filter.ObjectSizeLessThan), 10)
 	}
 
 	if filter.Prefix != nil {
@@ -987,7 +990,7 @@ func FlattenLifecycleRuleNoncurrentVersionExpiration(expiration *s3.NoncurrentVe
 	m := make(map[string]interface{})
 
 	if expiration.NewerNoncurrentVersions != nil {
-		m["newer_noncurrent_versions"] = int(aws.Int64Value(expiration.NewerNoncurrentVersions))
+		m["newer_noncurrent_versions"] = strconv.FormatInt(aws.Int64Value(expiration.NewerNoncurrentVersions), 10)
 	}
 
 	if expiration.NoncurrentDays != nil {
@@ -1012,7 +1015,7 @@ func FlattenLifecycleRuleNoncurrentVersionTransitions(transitions []*s3.Noncurre
 		m := make(map[string]interface{})
 
 		if transition.NewerNoncurrentVersions != nil {
-			m["newer_noncurrent_versions"] = int(aws.Int64Value(transition.NewerNoncurrentVersions))
+			m["newer_noncurrent_versions"] = strconv.FormatInt(aws.Int64Value(transition.NewerNoncurrentVersions), 10)
 		}
 
 		if transition.NoncurrentDays != nil {
