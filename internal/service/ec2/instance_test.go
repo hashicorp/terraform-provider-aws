@@ -3778,9 +3778,59 @@ func TestAccEC2Instance_UserData_replaceOnChangeFlag(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 			},
-			// Switching should show no difference
+			// Switching should force a recreate
 			{
 				Config:             testAccInstanceConfig_UserData_Specified_With_Replace_Flag_On(rName, "TestData2"),
+				Check:              resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					func(s *terraform.State) error {
+						instance := s.RootModule().Resources[rName]
+						if(instanceId != instance.Primary.ID){
+							return nil
+						} else {
+							return fmt.Errorf("A new instance should have been created")
+						}
+					},
+				),
+				ExpectNonEmptyPlan: true,
+				PlanOnly:           true,
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_UserDataBase64_replaceOnChangeFlag(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
+
+	var instanceId string
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_UserData64_Specified_With_Replace_Flag_On(rName, "3dc39dda39be1205215e776bad998da361a5955d"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					func(s *terraform.State) error {
+						instance := s.RootModule().Resources[rName]
+						instanceId = instance.Primary.ID
+						return nil
+					},
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+			},
+			// Switching should force a recreate
+			{
+				Config:             testAccInstanceConfig_UserData64_Specified_With_Replace_Flag_On(rName, "3dc39dda39be1205215e776bad998da361a5955e"),
 				Check:              resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					func(s *terraform.State) error {
