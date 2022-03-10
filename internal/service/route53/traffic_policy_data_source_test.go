@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/datapipeline"
+	"github.com/aws/aws-sdk-go/service/route53"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataPipelinePipelineDataSource_basic(t *testing.T) {
+func TestAccTrafficPolicyDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_route53_traffic_policy.test"
 	resourceName := "aws_route53_traffic_policy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -19,10 +19,10 @@ func TestAccDataPipelinePipelineDataSource_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckTrafficPolicyDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, datapipeline.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataPipelinePipelineDataSourceConfig(rName),
+				Config: testAccTrafficPolicyDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "traffic_policy_id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
@@ -36,7 +36,7 @@ func TestAccDataPipelinePipelineDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDataPipelinePipelineDataSourceConfig(name string) string {
+func testAccTrafficPolicyDataSourceConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_traffic_policy" "test" {
   name     = %[1]q
