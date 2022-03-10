@@ -75,30 +75,26 @@ func ResourceStackSetInstance() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"failure_tolerance_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							// Default:       -1,
+							Type:          schema.TypeInt,
+							Optional:      true,
 							ValidateFunc:  validation.IntAtLeast(0),
 							ConflictsWith: []string{"operation_preferences.failure_tolerance_percentage"},
 						},
 						"failure_tolerance_percentage": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							// Default:       -1,
+							Type:          schema.TypeInt,
+							Optional:      true,
 							ValidateFunc:  validation.IntBetween(0, 100),
 							ConflictsWith: []string{"operation_preferences.failure_tolerance_count"},
 						},
 						"max_concurrent_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							// Default:       -1,
+							Type:          schema.TypeInt,
+							Optional:      true,
 							ValidateFunc:  validation.IntAtLeast(1),
 							ConflictsWith: []string{"operation_preferences.max_concurrent_percentage"},
 						},
 						"max_concurrent_percentage": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							// Default:       -1,
+							Type:          schema.TypeInt,
+							Optional:      true,
 							ValidateFunc:  validation.IntBetween(1, 100),
 							ConflictsWith: []string{"operation_preferences.max_concurrent_count"},
 						},
@@ -304,7 +300,7 @@ func resourceStackSetInstanceRead(d *schema.ResourceData, meta interface{}) erro
 func resourceStackSetInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 
-	if d.HasChanges("deployment_targets", "parameter_overrides") {
+	if d.HasChanges("deployment_targets", "parameter_overrides", "operation_preferences") {
 		stackSetName, accountID, region, err := StackSetInstanceParseResourceID(d.Id())
 
 		if err != nil {
