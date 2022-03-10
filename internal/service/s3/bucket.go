@@ -129,33 +129,39 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"cors_rule": {
-				Type:     schema.TypeList,
-				Optional: true,
+				Type:       schema.TypeList,
+				Optional:   true,
+				Deprecated: "Use the aws_s3_bucket_cors_configuration resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"allowed_headers": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Type:       schema.TypeList,
+							Optional:   true,
+							Elem:       &schema.Schema{Type: schema.TypeString},
+							Deprecated: "Use the aws_s3_bucket_cors_configuration resource instead",
 						},
 						"allowed_methods": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Type:       schema.TypeList,
+							Required:   true,
+							Elem:       &schema.Schema{Type: schema.TypeString},
+							Deprecated: "Use the aws_s3_bucket_cors_configuration resource instead",
 						},
 						"allowed_origins": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Type:       schema.TypeList,
+							Required:   true,
+							Elem:       &schema.Schema{Type: schema.TypeString},
+							Deprecated: "Use the aws_s3_bucket_cors_configuration resource instead",
 						},
 						"expose_headers": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Type:       schema.TypeList,
+							Optional:   true,
+							Elem:       &schema.Schema{Type: schema.TypeString},
+							Deprecated: "Use the aws_s3_bucket_cors_configuration resource instead",
 						},
 						"max_age_seconds": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:       schema.TypeInt,
+							Optional:   true,
+							Deprecated: "Use the aws_s3_bucket_cors_configuration resource instead",
 						},
 					},
 				},
@@ -967,7 +973,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
-	if err != nil && !tfawserr.ErrMessageContains(err, "NoSuchCORSConfiguration", "") {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchCORSConfiguration) {
 		return fmt.Errorf("error getting S3 Bucket CORS configuration: %s", err)
 	}
 

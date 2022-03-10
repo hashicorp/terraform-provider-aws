@@ -1587,6 +1587,7 @@ func Provider() *schema.Provider {
 
 			"aws_s3_bucket":                                   s3.ResourceBucket(),
 			"aws_s3_bucket_analytics_configuration":           s3.ResourceBucketAnalyticsConfiguration(),
+			"aws_s3_bucket_cors_configuration":                s3.ResourceBucketCorsConfiguration(),
 			"aws_s3_bucket_intelligent_tiering_configuration": s3.ResourceBucketIntelligentTieringConfiguration(),
 			"aws_s3_bucket_inventory":                         s3.ResourceBucketInventory(),
 			"aws_s3_bucket_metric":                            s3.ResourceBucketMetric(),
