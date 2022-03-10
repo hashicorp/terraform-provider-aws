@@ -18,6 +18,8 @@ An S3 Lifecycle configuration consists of one or more Lifecycle rules. Each rule
 
 For more information see the Amazon S3 User Guide on [`Lifecycle Configuration Elements`](https://docs.aws.amazon.com/AmazonS3/latest/userguide/intro-lifecycle-rules.html).
 
+~> **NOTE:** S3 Buckets only support a single lifecycle configuration. Declaring multiple `aws_s3_bucket_lifecycle_configuration` resources to the same S3 Bucket will cause a perpetual difference in configuration.
+
 ## Example Usage
 
 ### Specifying an empty filter

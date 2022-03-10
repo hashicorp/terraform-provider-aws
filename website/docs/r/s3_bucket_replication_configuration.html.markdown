@@ -10,6 +10,8 @@ description: |-
 
 Provides an independent configuration resource for S3 bucket [replication configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html).
 
+~> **NOTE:** S3 Buckets only support a single replication configuration. Declaring multiple `aws_s3_bucket_replication_configuration` resources to the same S3 Bucket will cause a perpetual difference in configuration.
+
 ## Example Usage
 
 ### Using replication configuration
