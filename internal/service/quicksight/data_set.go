@@ -170,11 +170,15 @@ func ResourceDataSet() *schema.Resource {
 			},
 
 			"field_folders": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
-				MaxItems: 1,
+				MaxItems: 1000,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"field_folders_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 						"columns": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -516,11 +520,6 @@ func ResourceDataSet() *schema.Resource {
 				},
 			},
 
-			"physical_table_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
 			"physical_table_map": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -799,7 +798,7 @@ func resourceAwsQuickSightDataSetCreate(ctx context.Context, d *schema.ResourceD
 		AwsAccountId:     aws.String(awsAccountId),
 		DataSetId:        aws.String(id),
 		ImportMode:       aws.String(d.Get("import_mode").(string)),
-		PhysicalTableMap: expandQuickSightDataSetPhysicalTableMap(d.Get("physical_table_map").([]interface{}), d.Get("physical_table_id").(string)),
+		PhysicalTableMap: expandQuickSightDataSetPhysicalTableMap(d.Get("physical_table_map").([]interface{})),
 		Name:             aws.String(d.Get("name").(string)),
 	}
 
@@ -997,7 +996,7 @@ func resourceAwsQuickSightDataSetUpdate(ctx context.Context, d *schema.ResourceD
 		}
 
 		if d.HasChange("physical_table_map") {
-			params.PhysicalTableMap = expandQuickSightDataSetPhysicalTableMap(d.Get("physical_table_map").([]interface{}), d.Get("physical_table_id").(string))
+			params.PhysicalTableMap = expandQuickSightDataSetPhysicalTableMap(d.Get("physical_table_map").([]interface{}))
 		}
 
 		if d.HasChange("row_level_permission_data_set") {
@@ -1220,13 +1219,13 @@ func expandQuickSightDataSetUsageConfiguration(tfList []interface{}) *quicksight
 	return usageConfiguration
 }
 
-func expandQuickSightDataSetFieldFolders(tfList []interface{}) map[string]*quicksight.FieldFolder {
-	if len(tfList) == 0 {
+func expandQuickSightDataSetFieldFolders(tfSet []interface{}) map[string]*quicksight.FieldFolder {
+	if len(tfSet) == 0 {
 		return nil
 	}
 
 	fieldFolderMap := make(map[string]*quicksight.FieldFolder)
-	for _, v := range tfList {
+	for _, v := range tfSet {
 
 		tfMap, ok := v.(map[string]interface{})
 		if !ok {
@@ -1235,7 +1234,6 @@ func expandQuickSightDataSetFieldFolders(tfList []interface{}) map[string]*quick
 
 		fieldFolder := &quicksight.FieldFolder{}
 
-		// this feels really weird
 		if v, ok := tfMap["columns"].([]interface{}); ok {
 			var fin []string
 			for _, str := range v {
@@ -1249,7 +1247,8 @@ func expandQuickSightDataSetFieldFolders(tfList []interface{}) map[string]*quick
 			fieldFolder.Description = aws.String(v)
 		}
 
-		fieldFolderMap["uniqueid"] = fieldFolder
+		fieldFolderID := tfMap["field_folders_id"].(string)
+		fieldFolderMap[fieldFolderID] = fieldFolder
 	}
 
 	return fieldFolderMap
@@ -1645,7 +1644,7 @@ func expandQuickSightDataSetUntagColumnOperation(tfMap map[string]interface{}) *
 	return untagColumnOperation
 }
 
-func expandQuickSightDataSetPhysicalTableMap(tfList []interface{}, physicalTableId string) map[string]*quicksight.PhysicalTable {
+func expandQuickSightDataSetPhysicalTableMap(tfList []interface{}) map[string]*quicksight.PhysicalTable {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1678,7 +1677,7 @@ func expandQuickSightDataSetPhysicalTableMap(tfList []interface{}, physicalTable
 			}
 		}
 
-		physicalTableMap[physicalTableId] = physicalTable
+		physicalTableMap["uniqueid"] = physicalTable
 	}
 
 	return physicalTableMap

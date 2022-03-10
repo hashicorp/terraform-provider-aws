@@ -477,7 +477,6 @@ resource "aws_quicksight_data_set" "dset" {
 	data_set_id = %[1]q
 	name        = %[2]q
 	import_mode = "SPICE"
-	physical_table_id = "my-physical-table-id"
 	physical_table_map {
 		s3_source {
 			data_source_arn = aws_quicksight_data_source.dsource.arn
