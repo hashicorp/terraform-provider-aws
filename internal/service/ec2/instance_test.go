@@ -3749,6 +3749,56 @@ func TestAccEC2Instance_UserData_unspecifiedToEmptyString(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_UserData_replaceOnChangeFlag(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
+
+	var instanceId string
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_UserData_Specified_With_Replace_Flag_On(rName, "TestData1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					func(s *terraform.State) error {
+						instance := s.RootModule().Resources[rName]
+						instanceId = instance.Primary.ID
+						return nil
+					},
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+			},
+			// Switching should show no difference
+			{
+				Config:             testAccInstanceConfig_UserData_Specified_With_Replace_Flag_On(rName, "TestData2"),
+				Check:              resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					func(s *terraform.State) error {
+						instance := s.RootModule().Resources[rName]
+						if(instanceId != instance.Primary.ID){
+							return nil
+						} else {
+							return fmt.Errorf("A new instance should have been created")
+						}
+					},
+				),
+				ExpectNonEmptyPlan: true,
+				PlanOnly:           true,
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_hibernation(t *testing.T) {
 	var instance1, instance2 ec2.Instance
 	resourceName := "aws_instance.test"
@@ -6501,34 +6551,34 @@ resource "aws_instance" "test" {
 `)
 }
 
-func testAccInstanceConfig_UserData_Specified_With_Replace_Flag_On(rName string) string {
+func testAccInstanceConfig_UserData_Specified_With_Replace_Flag_On(rName string, userData string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false),
-		`
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami           			  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type 			  = "t2.micro"
-  subnet_id     			  = aws_subnet.test.id
-  user_data     			  = "3dc39dda39be1205215e776bad998da361a5955d"
-  user_data_replace_on_change = true
-}
-`)
+	ami           			  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+	instance_type 			  = "t2.micro"
+	subnet_id     			  = aws_subnet.test.id
+	user_data     			  = "%[1]q"
+	user_data_replace_on_change = true
+	}
+`, userData))
 }
 
-func testAccInstanceConfig_UserData64_Specified_With_Replace_Flag_On(rName string) string {
+func testAccInstanceConfig_UserData64_Specified_With_Replace_Flag_On(rName string, userData string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false),
-		`
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           			  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type 			  = "t2.micro"
   subnet_id     			  = aws_subnet.test.id
-  user_data_base64     		  = base64encode(%[2]q)
+  user_data_base64     		  = base64encode(%[1]q)
   user_data_replace_on_change = true
 }
-`)
+`, userData))
 }
 
 // testAccInstanceVPCConfig returns the configuration for tests that create
