@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccNetworkManageTransitGatewayRegistration_serial(t *testing.T) {
+func TestAccNetworkManagerTransitGatewayRegistration_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":                     testAccNetworkManageTransitGatewayRegistration_basic,
-		"disappears":                testAccNetworkManageTransitGatewayRegistration_disappears,
-		"disappears_TransitGateway": testAccNetworkManageTransitGatewayRegistration_disappears_TransitGateway,
-		"crossRegion":               testAccNetworkManageTransitGatewayRegistration_crossRegion,
+		"basic":                     testAccNetworkManagerTransitGatewayRegistration_basic,
+		"disappears":                testAccNetworkManagerTransitGatewayRegistration_disappears,
+		"disappears_TransitGateway": testAccNetworkManagerTransitGatewayRegistration_disappears_TransitGateway,
+		"crossRegion":               testAccNetworkManagerTransitGatewayRegistration_crossRegion,
 	}
 
 	for name, tc := range testCases {
@@ -33,7 +33,7 @@ func TestAccNetworkManageTransitGatewayRegistration_serial(t *testing.T) {
 	}
 }
 
-func testAccNetworkManageTransitGatewayRegistration_basic(t *testing.T) {
+func testAccNetworkManagerTransitGatewayRegistration_basic(t *testing.T) {
 	resourceName := "aws_networkmanager_transit_gateway_registration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -58,7 +58,7 @@ func testAccNetworkManageTransitGatewayRegistration_basic(t *testing.T) {
 	})
 }
 
-func testAccNetworkManageTransitGatewayRegistration_disappears(t *testing.T) {
+func testAccNetworkManagerTransitGatewayRegistration_disappears(t *testing.T) {
 	resourceName := "aws_networkmanager_transit_gateway_registration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -80,7 +80,7 @@ func testAccNetworkManageTransitGatewayRegistration_disappears(t *testing.T) {
 	})
 }
 
-func testAccNetworkManageTransitGatewayRegistration_disappears_TransitGateway(t *testing.T) {
+func testAccNetworkManagerTransitGatewayRegistration_disappears_TransitGateway(t *testing.T) {
 	resourceName := "aws_networkmanager_transit_gateway_registration.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -103,7 +103,7 @@ func testAccNetworkManageTransitGatewayRegistration_disappears_TransitGateway(t 
 	})
 }
 
-func testAccNetworkManageTransitGatewayRegistration_crossRegion(t *testing.T) {
+func testAccNetworkManagerTransitGatewayRegistration_crossRegion(t *testing.T) {
 	resourceName := "aws_networkmanager_transit_gateway_registration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var providers []*schema.Provider
