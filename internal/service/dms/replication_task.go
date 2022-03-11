@@ -84,6 +84,10 @@ func ResourceReplicationTask() *schema.Resource {
 				Default:  false,
 				Optional: true,
 			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"table_mappings": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -188,6 +192,7 @@ func resourceReplicationTaskRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("source_endpoint_arn", task.SourceEndpointArn)
 	d.Set("table_mappings", task.TableMappings)
 	d.Set("target_endpoint_arn", task.TargetEndpointArn)
+	d.Set("status", task.Status)
 
 	settings, err := dmsReplicationTaskRemoveReadOnlySettings(aws.StringValue(task.ReplicationTaskSettings))
 	if err != nil {
