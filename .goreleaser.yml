@@ -50,9 +50,9 @@ publishers:
       - AWS_ACCESS_KEY_ID={{ .Env.AWS_ACCESS_KEY_ID }}
       - AWS_SECRET_ACCESS_KEY={{ .Env.AWS_SECRET_ACCESS_KEY }}
       - AWS_SESSION_TOKEN={{ .Env.AWS_SESSION_TOKEN }}
-    extra_files:
-      - glob: 'terraform-registry-manifest.json'
-        name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
+#     extra_files:
+#       - glob: 'terraform-registry-manifest.json'
+#         name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
     name: hc-releases
     signature: true
 release:
