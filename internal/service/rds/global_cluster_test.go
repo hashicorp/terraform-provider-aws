@@ -210,12 +210,14 @@ func TestAccRDSGlobalCluster_engineVersionUpdateMinor(t *testing.T) {
 		CheckDestroy: testAccCheckGlobalClusterDestroy,
 		Steps: []resource.TestStep{
 			{
+				//Config: testAccGlobalClusterWithPrimaryEngineVersionConfig(rName, "aurora", "5.6.mysql_aurora.1.22.2"),
 				Config: testAccGlobalClusterWithPrimaryEngineVersionConfig(rName, "aurora-postgresql", "13.4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
 				),
 			},
 			{
+				//Config: testAccGlobalClusterWithPrimaryEngineVersionConfig(rName, "aurora", "5.6.mysql_aurora.1.23.2"),
 				Config: testAccGlobalClusterWithPrimaryEngineVersionConfig(rName, "aurora-postgresql", "13.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster2),
@@ -488,7 +490,7 @@ func testAccCheckGlobalClusterDisappears(globalCluster *rds.GlobalCluster) resou
 			return err
 		}
 
-		return tfrds.WaitForGlobalClusterDeletion(conn, aws.StringValue(globalCluster.GlobalClusterIdentifier))
+		return tfrds.WaitForGlobalClusterDeletion(conn, aws.StringValue(globalCluster.GlobalClusterIdentifier), tfrds.GlobalClusterRemovalTimeout)
 	}
 }
 
