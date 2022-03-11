@@ -153,6 +153,32 @@ func resourceGlobalNetworkUpdate(ctx context.Context, d *schema.ResourceData, me
 func resourceGlobalNetworkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
+	cgwAssociations, err := FindCustomerGatewayAssociations(ctx, conn, &networkmanager.GetCustomerGatewayAssociationsInput{
+		GlobalNetworkId: aws.String(d.Id()),
+	})
+
+	if tfresource.NotFound(err) {
+		err = nil
+	}
+
+	if err != nil {
+		return diag.Errorf("error listing Network Manager Customer Gateway Associations (%s): %s", d.Id(), err)
+	}
+
+	var diags diag.Diagnostics
+
+	for _, v := range cgwAssociations {
+		err := disassociateCustomerGateway(ctx, conn, d.Id(), aws.StringValue(v.CustomerGatewayArn), d.Timeout(schema.TimeoutDelete))
+
+		if err != nil {
+			diags = append(diags, diag.FromErr(err)...)
+		}
+	}
+
+	if diags.HasError() {
+		return diags
+	}
+
 	tgwRegistrations, err := FindTransitGatewayRegistrations(ctx, conn, &networkmanager.GetTransitGatewayRegistrationsInput{
 		GlobalNetworkId: aws.String(d.Id()),
 	})
@@ -162,10 +188,8 @@ func resourceGlobalNetworkDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return diag.Errorf("error listing Transit Gateway Registrations (%s): %s", d.Id(), err)
+		return diag.Errorf("error listing Network Manager Transit Gateway Registrations (%s): %s", d.Id(), err)
 	}
-
-	var diags diag.Diagnostics
 
 	for _, v := range tgwRegistrations {
 		err := deregisterTransitGateway(ctx, conn, d.Id(), aws.StringValue(v.TransitGatewayArn), d.Timeout(schema.TimeoutDelete))

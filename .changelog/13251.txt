@@ -22,6 +22,10 @@ aws_networkmanager_link
 aws_networkmanager_link_association
 ```
 
+```release-note:new-resource
+aws_networkmanager_customer_gateway_association
+```
+
 ```release-note:new-data-source
 aws_networkmanager_global_network
 ```

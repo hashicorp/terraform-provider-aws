@@ -8,6 +8,19 @@ import (
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 )
 
+// resourceNotFoundExceptionResourceIDEquals returns true if the error matches all these conditions:
+//  * err is of type networkmanager.ResourceNotFoundException
+//  * ResourceNotFoundException.ResourceId equals resourceID
+func resourceNotFoundExceptionResourceIDEquals(err error, resourceID string) bool {
+	var resourceNotFoundException *networkmanager.ResourceNotFoundException
+
+	if errors.As(err, &resourceNotFoundException) && aws.StringValue(resourceNotFoundException.ResourceId) == resourceID {
+		return true
+	}
+
+	return false
+}
+
 // validationExceptionMessageContains returns true if the error matches all these conditions:
 //  * err is of type networkmanager.ValidationException
 //  * ValidationException.Reason equals reason
