@@ -93,9 +93,8 @@ func ResourceBucket() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Type:       schema.TypeString,
-							Optional:   true,
-							Deprecated: "Use the aws_s3_bucket_acl resource instead",
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"type": {
 							Type:     schema.TypeString,
@@ -105,12 +104,10 @@ func ResourceBucket() *schema.Resource {
 								s3.TypeCanonicalUser,
 								s3.TypeGroup,
 							}, false),
-							Deprecated: "Use the aws_s3_bucket_acl resource instead",
 						},
 						"uri": {
-							Type:       schema.TypeString,
-							Optional:   true,
-							Deprecated: "Use the aws_s3_bucket_acl resource instead",
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 
 						"permissions": {
@@ -120,7 +117,6 @@ func ResourceBucket() *schema.Resource {
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringInSlice(s3.Permission_Values(), false),
-								Deprecated:   "Use the aws_s3_bucket_acl resource instead",
 							},
 						},
 					},
