@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceCustomerGatewayAssociation() *schema.Resource {
@@ -34,9 +35,10 @@ func ResourceCustomerGatewayAssociation() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"customer_gateway_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"device_id": {
 				Type:     schema.TypeString,
