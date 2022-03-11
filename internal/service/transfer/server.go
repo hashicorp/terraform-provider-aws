@@ -142,6 +142,20 @@ func ResourceServer() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 4096),
 			},
 
+			"pre_display_banner": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				ValidateFunc: validation.StringLenBetween(0, 512),
+			},
+
+			"post_display_banner": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				ValidateFunc: validation.StringLenBetween(0, 512),
+			},
+
 			"host_key_fingerprint": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -241,6 +255,16 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		input.IdentityProviderDetails.Function = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("pre_display_banner"); ok {
+		input.PreAuthenticationLoginBanner = aws.String(v.(string))
+
+	}
+
+	if v, ok := d.GetOk("post_display_banner"); ok {
+		input.PostAuthenticationLoginBanner = aws.String(v.(string))
+
 	}
 
 	if v, ok := d.GetOk("host_key"); ok {
@@ -378,6 +402,8 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("function", "")
 	}
+	d.Set("pre_display_banner", output.PreAuthenticationLoginBanner)
+	d.Set("post_display_banner", output.PostAuthenticationLoginBanner)
 	d.Set("host_key_fingerprint", output.HostKeyFingerprint)
 	d.Set("identity_provider_type", output.IdentityProviderType)
 	if output.IdentityProviderDetails != nil {
@@ -519,6 +545,14 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			// Prevent the following error: InvalidRequestException: Server must be OFFLINE to change EndpointType
 			offlineUpdate = true
+		}
+
+		if d.HasChange("pre_display_banner") {
+			input.PreAuthenticationLoginBanner = aws.String(d.Get("pre_display_banner").(string))
+		}
+
+		if d.HasChange("post_display_banner") {
+			input.PostAuthenticationLoginBanner = aws.String(d.Get("post_display_banner").(string))
 		}
 
 		if d.HasChange("host_key") {
