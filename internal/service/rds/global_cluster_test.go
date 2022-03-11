@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -198,7 +199,7 @@ func TestAccRDSGlobalCluster_EngineVersion_aurora(t *testing.T) {
 	})
 }
 
-func TestAccRDSGlobalCluster_engineVersionUpdateMinor(t *testing.T) {
+func TestAccRDSGlobalCluster_EngineVersion_updateMinor(t *testing.T) {
 	var globalCluster1, globalCluster2 rds.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_global_cluster.test"
@@ -234,7 +235,7 @@ func TestAccRDSGlobalCluster_engineVersionUpdateMinor(t *testing.T) {
 	})
 }
 
-func TestAccRDSGlobalCluster_engineVersionUpdateMajor(t *testing.T) {
+func TestAccRDSGlobalCluster_EngineVersion_updateMajor(t *testing.T) {
 	var globalCluster1, globalCluster2 rds.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_global_cluster.test"
@@ -268,6 +269,36 @@ func TestAccRDSGlobalCluster_engineVersionUpdateMajor(t *testing.T) {
 	})
 }
 
+func TestAccRDSGlobalCluster_EngineVersion_updateMinorMultiRegion(t *testing.T) {
+	var providers []*schema.Provider
+	var globalCluster1, globalCluster2 rds.GlobalCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_global_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckGlobalClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalClusterEngineVersionUpgradeMultiRegionConfig(rName, "aurora", "5.6.mysql_aurora.1.22.2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
+				),
+			},
+			{
+				Config: testAccGlobalClusterEngineVersionUpgradeMultiRegionConfig(rName, "aurora", "5.6.mysql_aurora.1.23.2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalClusterExists(resourceName, &globalCluster2),
+					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.6.mysql_aurora.1.23.2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSGlobalCluster_EngineVersion_auroraMySQL(t *testing.T) {
 	var globalCluster1 rds.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -295,7 +326,7 @@ func TestAccRDSGlobalCluster_EngineVersion_auroraMySQL(t *testing.T) {
 	})
 }
 
-func TestAccRDSGlobalCluster_EngineVersion_auroraPostgresql(t *testing.T) {
+func TestAccRDSGlobalCluster_EngineVersion_auroraPostgreSQL(t *testing.T) {
 	var globalCluster1 rds.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_global_cluster.test"
@@ -625,6 +656,72 @@ resource "aws_rds_cluster_instance" "test" {
   }
 }
 `, engine, engineVersion, rName)
+}
+
+func testAccGlobalClusterEngineVersionUpgradeMultiRegionConfig(rName, engine, engineVersion string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateRegionProvider(),
+		fmt.Sprintf(`
+resource "aws_rds_global_cluster" "test" {
+  engine                    = %[1]q
+  engine_version            = %[2]q
+  global_cluster_identifier = %[3]q
+}
+
+resource "aws_rds_cluster" "test" {
+  allow_major_version_upgrade = true
+  apply_immediately           = true
+  cluster_identifier          = %[3]q
+  database_name               = "totoro"
+  engine                      = aws_rds_global_cluster.test.engine
+  engine_version              = aws_rds_global_cluster.test.engine_version
+  global_cluster_identifier   = aws_rds_global_cluster.test.global_cluster_identifier
+  master_password             = "mustbeeightcharacters"
+  master_username             = "test"
+  skip_final_snapshot         = true
+
+  lifecycle {
+    ignore_changes = [global_cluster_identifier]
+  }
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  apply_immediately  = true
+  cluster_identifier = aws_rds_cluster.test.id
+  engine             = aws_rds_global_cluster.test.engine
+  engine_version     = aws_rds_global_cluster.test.engine_version
+  identifier         = %[3]q
+  instance_class     = "db.r3.large"
+}
+
+resource "aws_rds_cluster" "test2" {
+  provider = "awsalternate"
+
+  allow_major_version_upgrade   = true
+  apply_immediately             = true
+  cluster_identifier            = "%[3]s-2"
+  engine                        = %[1]q
+  engine_version                = %[2]q
+  global_cluster_identifier     = aws_rds_global_cluster.test.global_cluster_identifier
+  replication_source_identifier = aws_rds_cluster.test.arn
+  skip_final_snapshot           = true
+
+  lifecycle {
+    ignore_changes = [global_cluster_identifier]
+  }  
+}
+
+resource "aws_rds_cluster_instance" "test2" {
+  provider = "awsalternate"
+
+  apply_immediately  = true
+  cluster_identifier = aws_rds_cluster.test2.id
+  engine             = %[1]q
+  engine_version     = %[2]q
+  identifier         = "%[3]s-2"
+  instance_class     = "db.r3.large"
+}
+`, engine, engineVersion, rName))
 }
 
 func testAccGlobalClusterSourceClusterIdentifierConfig(rName string) string {
