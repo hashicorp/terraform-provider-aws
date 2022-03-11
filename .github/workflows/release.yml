@@ -62,7 +62,6 @@ jobs:
           run: |
             CHANGELOG_FILE_NAME="CHANGELOG.md"
             PREVIOUS_RELEASE_TAG=$(git describe --abbrev=0 --match='v*.*.*' --tags)
-            TAG=${PREVIOUS_RELEASE_TAG:1}
            
             # Add Release Date
             RELEASE_DATE=`date +%B' '%e', '%Y`
