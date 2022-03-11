@@ -223,7 +223,7 @@ func resourceGlobalClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("engine_version") {
-		if err := globalClusterUpgradeEngineVersion(d, conn); err != nil {
+		if err := globalClusterUpgradeEngineVersion(d, meta); err != nil {
 			return err
 		}
 	}
@@ -530,7 +530,7 @@ func waitForGlobalClusterRemoval(conn *rds.RDS, dbClusterIdentifier string, time
 	return nil
 }
 
-func globalClusterUpgradeMajorEngineVersion(clusterId string, engineVersion string, conn *rds.RDS) error {
+func globalClusterUpgradeMajorEngineVersion(conn *rds.RDS, clusterId string, engineVersion string) error {
 	input := &rds.ModifyGlobalClusterInput{
 		GlobalClusterIdentifier: aws.String(clusterId),
 	}
@@ -557,7 +557,9 @@ func globalClusterUpgradeMajorEngineVersion(clusterId string, engineVersion stri
 	return err
 }
 
-func globalClusterUpgradeMinorEngineVersion(clusterMembers *schema.Set, engineVersion string, conn *rds.RDS) error {
+func globalClusterUpgradeMinorEngineVersion(meta interface{}, clusterMembers *schema.Set, engineVersion string) error {
+	conn := meta.(*conns.AWSClient).RDSConn
+
 	for _, clusterMemberRaw := range clusterMembers.List() {
 		clusterMember := clusterMemberRaw.(map[string]interface{})
 
@@ -569,6 +571,10 @@ func globalClusterUpgradeMinorEngineVersion(clusterMembers *schema.Set, engineVe
 			}
 
 			dbi := ""
+			useConn := conn
+
+			// DBClusterIdentifier supposedly can be either ARN or ID, and both used to work,
+			// but as of now, only ID works
 
 			if parsedARN.Resource != "" {
 				parts := strings.Split(parsedARN.Resource, ":")
@@ -580,6 +586,10 @@ func globalClusterUpgradeMinorEngineVersion(clusterMembers *schema.Set, engineVe
 				dbi = parts[1]
 			}
 
+			if parsedARN.Region != meta.(*conns.AWSClient).Region {
+				useConn = rds.New(meta.(*conns.AWSClient).Session, aws.NewConfig().WithRegion(parsedARN.Region))
+			}
+
 			modInput := &rds.ModifyDBClusterInput{
 				ApplyImmediately:    aws.Bool(true),
 				DBClusterIdentifier: aws.String(dbi),
@@ -587,7 +597,7 @@ func globalClusterUpgradeMinorEngineVersion(clusterMembers *schema.Set, engineVe
 			}
 
 			err = resource.Retry(clusterInitiateUpgradeTimeout, func() *resource.RetryError {
-				_, err := conn.ModifyDBCluster(modInput)
+				_, err := useConn.ModifyDBCluster(modInput)
 				if err != nil {
 					if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 						return resource.RetryableError(err)
@@ -604,12 +614,14 @@ func globalClusterUpgradeMinorEngineVersion(clusterMembers *schema.Set, engineVe
 				}
 				return nil
 			})
+
 			if tfresource.TimedOut(err) {
-				_, err := conn.ModifyDBCluster(modInput)
+				_, err := useConn.ModifyDBCluster(modInput)
 				if err != nil {
 					return err
 				}
 			}
+
 			if err != nil {
 				return fmt.Errorf("failed to update engine_version on RDS Global Cluster member (%s): %s", clusterMemberArn, err)
 			}
@@ -618,11 +630,13 @@ func globalClusterUpgradeMinorEngineVersion(clusterMembers *schema.Set, engineVe
 	return nil
 }
 
-func globalClusterUpgradeEngineVersion(d *schema.ResourceData, conn *rds.RDS) error {
+func globalClusterUpgradeEngineVersion(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).RDSConn
+
 	log.Printf("[DEBUG] Upgrading RDS Global Cluster (%s) engine version: %s", d.Id(), d.Get("engine_version"))
-	err := globalClusterUpgradeMajorEngineVersion(d.Id(), d.Get("engine_version").(string), conn)
+	err := globalClusterUpgradeMajorEngineVersion(conn, d.Id(), d.Get("engine_version").(string))
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "ModifyGlobalCluster only supports Major Version Upgrades. To patch the members of your global cluster to a newer minor version you need to call ModifyDbCluster in each one of them.") {
-		err = globalClusterUpgradeMinorEngineVersion(d.Get("global_cluster_members").(*schema.Set), d.Get("engine_version").(string), conn)
+		err = globalClusterUpgradeMinorEngineVersion(meta, d.Get("global_cluster_members").(*schema.Set), d.Get("engine_version").(string))
 		if err != nil {
 			return err
 		}

@@ -708,7 +708,7 @@ resource "aws_rds_cluster" "test2" {
 
   lifecycle {
     ignore_changes = [global_cluster_identifier]
-  }  
+  }
 }
 
 resource "aws_rds_cluster_instance" "test2" {
