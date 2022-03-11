@@ -51,8 +51,6 @@ func testAccServer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "PUBLIC"),
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "function", ""),
-					resource.TestCheckResourceAttr(resourceName, "pre_display_banner", "Pre DisplayBanner"),
-					resource.TestCheckResourceAttr(resourceName, "post_display_banner", "Post Display Banner"),
 					resource.TestCheckNoResourceAttr(resourceName, "host_key"),
 					resource.TestCheckResourceAttrSet(resourceName, "host_key_fingerprint"),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "SERVICE_MANAGED"),
@@ -83,7 +81,6 @@ func testAccServer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "PUBLIC"),
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "function", ""),
-					resource.TestCheckResourceAttr(resourceName, "display_banners"),
 					resource.TestCheckNoResourceAttr(resourceName, "host_key"),
 					resource.TestCheckResourceAttrSet(resourceName, "host_key_fingerprint"),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "SERVICE_MANAGED"),
@@ -944,6 +941,34 @@ func testAccServer_lambdaFunction(t *testing.T) {
 	})
 }
 
+func TestAccTransferServer_DisplayBanners(t *testing.T) {
+	var conf transfer.DescribedServer
+	resourceName := "aws_transfer_server.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerDisplayBannersConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "pre_display_banner", "This system is for the use of authorized users only"),
+					resource.TestCheckResourceAttr(resourceName, "post_display_banner", "This system is for the use of authorized users only"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
 func testAccCheckServerExists(n string, v *transfer.DescribedServer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1194,6 +1219,15 @@ resource "aws_api_gateway_deployment" "test" {
 func testAccServerBasicConfig() string {
 	return `
 resource "aws_transfer_server" "test" {}
+`
+}
+
+func testAccServerDisplayBannersConfig() string {
+	return `
+resource "aws_transfer_server" "test" {
+	pre_display_banner = "This system is for the use of authorized users only"
+	post_display_banner = "This system is for the use of authorized users only"
+}
 `
 }
 
