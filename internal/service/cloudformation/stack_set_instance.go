@@ -178,13 +178,8 @@ func resourceStackSetInstanceCreate(d *schema.ResourceData, meta interface{}) er
 		input.ParameterOverrides = expandParameters(v.(map[string]interface{}))
 	}
 
-	// if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-	// 	input.OperationPreferences = expandCloudFormationOperationPreferences(v.([]interface{}))
-	// 	return fmt.Errorf("%+v", v)
-	// }
-
 	if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.OperationPreferences = testprefs(d)
+		input.OperationPreferences = expandCloudFormationOperationPreferences(d)
 	}
 
 	log.Printf("[DEBUG] Creating CloudFormation StackSet Instance: %s", input)
@@ -326,7 +321,7 @@ func resourceStackSetInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.OperationPreferences = testprefs(d)
+			input.OperationPreferences = expandCloudFormationOperationPreferences(d)
 		}
 
 		log.Printf("[DEBUG] Updating CloudFormation StackSet Instance: %s", input)
@@ -408,45 +403,7 @@ func expandCloudFormationDeploymentTargets(l []interface{}) *cloudformation.Depl
 	return dt
 }
 
-func expandCloudFormationOperationPreferences(l []interface{}) *cloudformation.StackSetOperationPreferences {
-	if len(l) == 0 {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	operationPreferences := &cloudformation.StackSetOperationPreferences{
-		// FailureToleranceCount: aws.Int64(int64(m["failure_tolerance_count"].(int))),
-		// FailureTolerancePercentage: aws.Int64(int64(m["failure_tolerance_percentage"].(int))),
-		// MaxConcurrentCount: aws.Int64(int64(m["max_concurrent_count"].(int))),
-		// MaxConcurrentPercentage:    aws.Int64(int64(m["max_concurrent_percentage"].(int))),
-		// RegionConcurrencyType: aws.String(m["region_concurrency_type"].(string)),
-	}
-
-	if v, ok := m["failure_tolerance_count"]; ok && v != -1 {
-		operationPreferences.FailureToleranceCount = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := m["failure_tolerance_percentage"]; ok && v != -1 {
-		operationPreferences.FailureTolerancePercentage = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := m["max_concurrent_count"]; ok && v != -1 {
-		operationPreferences.MaxConcurrentCount = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := m["max_concurrent_percentage"]; ok && v != -1 {
-		operationPreferences.MaxConcurrentPercentage = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := m["region_order"].(*schema.Set); ok && v.Len() > 0 {
-		operationPreferences.RegionOrder = flex.ExpandStringSet(v)
-	}
-
-	return operationPreferences
-}
-
-func testprefs(d *schema.ResourceData) *cloudformation.StackSetOperationPreferences {
+func expandCloudFormationOperationPreferences(d *schema.ResourceData) *cloudformation.StackSetOperationPreferences {
 
 	operationPreferences := &cloudformation.StackSetOperationPreferences{}
 
