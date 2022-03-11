@@ -624,8 +624,6 @@ resource "aws_rds_global_cluster" "test" {
   global_cluster_identifier = %[3]q
 }
 
-// checkout the newly working global cluster stuff in cluster
-
 resource "aws_rds_cluster" "test" {
   apply_immediately           = true
   allow_major_version_upgrade = true
