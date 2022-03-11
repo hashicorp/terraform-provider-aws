@@ -3,7 +3,7 @@
 // removing the `needs-triage` label from new Issues and Pull Requests
 //
 resource "github_actions_secret" "maintainer_list" {
-  repository      = "github-actions-test"
+  repository      = "terraform-provider-aws"
   secret_name     = "MAINTAINER_LIST"
   plaintext_value = "['anGie44', 'breathingdust', 'ewbankkit', 'gdavison', 'johnsonaj', 'justinretzolk', 'maryelizbeth', 'YakDriver', 'zhelding']"
 }
