@@ -1,5 +1,5 @@
 ## 4.6.0 (Unreleased)
-## 4.5.0 (Unreleased)
+## 4.5.0 (March 11, 2022)
 
 ENHANCEMENTS:
 
