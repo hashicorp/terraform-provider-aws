@@ -81,6 +81,7 @@ func ResourceBucket() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"grant"},
 				ValidateFunc:  validation.StringInSlice(BucketCannedACL_Values(), false),
+				Deprecated:    "Use the aws_s3_bucket_acl resource instead",
 			},
 
 			"grant": {
@@ -88,11 +89,13 @@ func ResourceBucket() *schema.Resource {
 				Optional:      true,
 				Set:           grantHash,
 				ConflictsWith: []string{"acl"},
+				Deprecated:    "Use the aws_s3_bucket_acl resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:       schema.TypeString,
+							Optional:   true,
+							Deprecated: "Use the aws_s3_bucket_acl resource instead",
 						},
 						"type": {
 							Type:     schema.TypeString,
@@ -102,10 +105,12 @@ func ResourceBucket() *schema.Resource {
 								s3.TypeCanonicalUser,
 								s3.TypeGroup,
 							}, false),
+							Deprecated: "Use the aws_s3_bucket_acl resource instead",
 						},
 						"uri": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:       schema.TypeString,
+							Optional:   true,
+							Deprecated: "Use the aws_s3_bucket_acl resource instead",
 						},
 
 						"permissions": {
@@ -115,6 +120,7 @@ func ResourceBucket() *schema.Resource {
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringInSlice(s3.Permission_Values(), false),
+								Deprecated:   "Use the aws_s3_bucket_acl resource instead",
 							},
 						},
 					},
