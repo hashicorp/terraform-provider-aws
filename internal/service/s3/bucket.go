@@ -243,17 +243,20 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"logging": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Deprecated: "Use the aws_s3_bucket_logging resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"target_bucket": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:       schema.TypeString,
+							Required:   true,
+							Deprecated: "Use the aws_s3_bucket_logging resource instead",
 						},
 						"target_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:       schema.TypeString,
+							Optional:   true,
+							Deprecated: "Use the aws_s3_bucket_logging resource instead",
 						},
 					},
 				},
@@ -806,7 +809,7 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("logging") {
-		if err := resourceBucketLoggingUpdate(conn, d); err != nil {
+		if err := resourceBucketInternalLoggingUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -1868,7 +1871,7 @@ func resourceBucketVersioningUpdate(conn *s3.S3, bucket string, versioningConfig
 	return nil
 }
 
-func resourceBucketLoggingUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketInternalLoggingUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	logging := d.Get("logging").(*schema.Set).List()
 	bucket := d.Get("bucket").(string)
 	loggingStatus := &s3.BucketLoggingStatus{}

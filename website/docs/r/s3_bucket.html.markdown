@@ -12,6 +12,10 @@ Provides a S3 bucket resource.
 
 -> This functionality is for managing S3 in an AWS Partition. To manage [S3 on Outposts](https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html), see the [`aws_s3control_bucket`](/docs/providers/aws/r/s3control_bucket.html) resource.
 
+~> **NOTE on S3 Bucket Logging Configuration:** S3 Bucket logging can be configured in either the standalone resource [`aws_s3_bucket_logging`](s3_bucket_logging.html.markdown)
+or with the deprecated parameter `logging` in the resource `aws_s3_bucket`.
+Configuring with both will cause inconsistencies and may overwrite configuration.
+
 ## Example Usage
 
 ### Private Bucket w/ Tags
@@ -85,6 +89,9 @@ resource "aws_s3_bucket" "b" {
 ```
 
 ### Enable Logging
+
+-> **NOTE:** The parameter `logging` is deprecated.
+Use the resource [`aws_s3_bucket_logging`](s3_bucket_logging.html.markdown) instead.
 
 ```terraform
 resource "aws_s3_bucket" "log_bucket" {
@@ -362,7 +369,7 @@ The following arguments are supported:
 * `website` - (Optional) A website object (documented below).
 * `cors_rule` - (Optional) A rule of [Cross-Origin Resource Sharing](https://docs.aws.amazon.com/AmazonS3/latest/dev/cors.html) (documented below).
 * `versioning` - (Optional) A state of [versioning](https://docs.aws.amazon.com/AmazonS3/latest/dev/Versioning.html) (documented below)
-* `logging` - (Optional) A settings of [bucket logging](https://docs.aws.amazon.com/AmazonS3/latest/UG/ManagingBucketLogging.html) (documented below).
+* `logging` - (Optional, **Deprecated**) A settings of [bucket logging](https://docs.aws.amazon.com/AmazonS3/latest/UG/ManagingBucketLogging.html) (documented below). Use the resource [`aws_s3_bucket_logging`](s3_bucket_logging.html.markdown) instead.
 * `lifecycle_rule` - (Optional) A configuration of [object lifecycle management](http://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html) (documented below).
 * `acceleration_status` - (Optional) Sets the accelerate configuration of an existing bucket. Can be `Enabled` or `Suspended`.
 * `request_payer` - (Optional) Specifies who should bear the cost of Amazon S3 data transfer.
