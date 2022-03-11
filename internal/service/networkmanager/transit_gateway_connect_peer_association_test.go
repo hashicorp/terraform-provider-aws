@@ -248,8 +248,8 @@ resource "aws_networkmanager_transit_gateway_registration" "test" {
 }
 
 resource "aws_networkmanager_transit_gateway_connect_peer_association" "test" {
-  global_network_id    = aws_networkmanager_global_network.test.id
-  device_id            = aws_networkmanager_device.test.id
+  global_network_id = aws_networkmanager_global_network.test.id
+  device_id         = aws_networkmanager_device.test.id
 
   transit_gateway_connect_peer_arn = aws_ec2_transit_gateway_connect_peer.test.arn
 
