@@ -39,9 +39,9 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"token": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 			"rule": {
 				Type:     schema.TypeSet,
@@ -314,7 +314,10 @@ func resourceBucketReplicationConfigurationCreate(d *schema.ResourceData, meta i
 	input := &s3.PutBucketReplicationInput{
 		Bucket:                   aws.String(bucket),
 		ReplicationConfiguration: rc,
-		Token:                    aws.String(d.Get("token").(string)),
+	}
+
+	if v, ok := d.GetOk("token"); ok {
+		input.Token = aws.String(v.(string))
 	}
 
 	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
@@ -391,7 +394,10 @@ func resourceBucketReplicationConfigurationUpdate(d *schema.ResourceData, meta i
 	input := &s3.PutBucketReplicationInput{
 		Bucket:                   aws.String(d.Id()),
 		ReplicationConfiguration: rc,
-		Token:                    aws.String(d.Get("token").(string)),
+	}
+
+	if v, ok := d.GetOk("token"); ok {
+		input.Token = aws.String(v.(string))
 	}
 
 	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
