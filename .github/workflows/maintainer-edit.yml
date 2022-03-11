@@ -7,7 +7,7 @@ jobs:
   PermissionsCheck:
     env:
       MAINTAINER_CAN_MODIFY: ${{ github.event.pull_request.maintainer_can_modify }}
-      ALLOW_LISTED: ${{ contains(fromJSON('["anGie44", "breathingdust", "ewbankkit", "gdavison", "johnsonaj", "justinretzolk", "maryelizbeth", "YakDriver", "zhelding"]'), github.actor) }}
+      ALLOW_LISTED: ${{ contains( secrets.MAINTAINER_LIST, github.actor) }}
     runs-on: ubuntu-latest
     steps:
       - name: Comment if maintainers cannot edit
