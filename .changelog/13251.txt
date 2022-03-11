@@ -57,3 +57,7 @@ aws_networkmanager_link
 ```release-note:new-data-source
 aws_networkmanager_links
 ```
+
+```release-note:enhancement
+resource/aws_ec2_transit_gateway_connect_peer: Add `arn` attribute
+```
