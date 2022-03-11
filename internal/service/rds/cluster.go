@@ -990,7 +990,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[INFO] Waiting for RDS Cluster (%s) to be available", d.Id())
-		err = waitForRDSClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+		err = waitForClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 		if err != nil {
 			return fmt.Errorf("error waiting for RDS Cluster (%s) to be available: %s", d.Id(), err)
 		}
@@ -1288,7 +1288,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[INFO] Waiting for RDS Cluster (%s) to be available", d.Id())
-		err = waitForRDSClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		err = waitForClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for RDS Cluster (%s) to be available: %s", d.Id(), err)
 		}
@@ -1506,7 +1506,7 @@ var resourceClusterUpdatePendingStates = []string{
 	"upgrading",
 }
 
-func waitForRDSClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) error {
+func waitForClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceClusterUpdatePendingStates,
 		Target:     []string{"available"},

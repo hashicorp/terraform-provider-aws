@@ -187,6 +187,15 @@ In addition to all arguments above, the following attributes are exported:
 * `global_cluster_resource_id` - AWS Region-unique, immutable identifier for the global database cluster. This identifier is found in AWS CloudTrail log entries whenever the AWS KMS key for the DB cluster is accessed
 * `id` - RDS Global Cluster identifier
 
+## Timeouts
+
+`aws_rds_global_cluster` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `30 minutes`)
+- `update` - (Default `30 minutes`)
+- `delete` - (Default `30 minutes`)
+
 ## Import
 
 `aws_rds_global_cluster` can be imported by using the RDS Global Cluster identifier, e.g.,

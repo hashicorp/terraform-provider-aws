@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	rdsClusterInitiateUpgradeTimeout = 5 * time.Minute
+	clusterInitiateUpgradeTimeout = 5 * time.Minute
 
 	dbClusterRoleAssociationCreatedTimeout = 5 * time.Minute
 	dbClusterRoleAssociationDeletedTimeout = 5 * time.Minute
