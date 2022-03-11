@@ -79,6 +79,11 @@ func ResourceReplicationTask() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"start_replication_task": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
 			"table_mappings": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -143,6 +148,12 @@ func resourceReplicationTaskCreate(d *schema.ResourceData, meta interface{}) err
 
 	if err := waitReplicationTaskReady(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for DMS Replication Task (%s) to become available: %w", d.Id(), err)
+	}
+
+	if d.Get("start_replication_task").(bool) {
+		if err := dmsStartReplicationTask(d.Id(), conn); err != nil {
+			return err
+		}
 	}
 
 	return resourceReplicationTaskRead(d, meta)
@@ -314,4 +325,33 @@ func dmsReplicationTaskRemoveReadOnlySettings(settings string) (*string, error) 
 
 	cleanedSettingsString := string(cleanedSettings)
 	return &cleanedSettingsString, nil
+}
+
+func dmsStartReplicationTask(id string, conn *dms.DatabaseMigrationService) error {
+	log.Printf("[DEBUG] Starting DMS Replication Task: (%s)", id)
+
+	task, err := FindReplicationTaskByID(conn, id)
+	if err != nil {
+		return fmt.Errorf("error reading DMS Replication Task (%s): %w", id, err)
+	}
+
+	if task == nil {
+		return fmt.Errorf("error reading DMS Replication Task (%s): empty output", id)
+	}
+
+	_, err = conn.StartReplicationTask(&dms.StartReplicationTaskInput{
+		ReplicationTaskArn:       task.ReplicationTaskArn,
+		StartReplicationTaskType: aws.String(dms.StartReplicationTaskTypeValueStartReplication),
+	})
+
+	if err != nil {
+		return fmt.Errorf("error starting DMS Replication Task (%s): %w", id, err)
+	}
+
+	err = waitReplicationTaskRunning(conn, id)
+	if err != nil {
+		return fmt.Errorf("error wating for DMS Replication Task (%s) start: %w", id, err)
+	}
+
+	return nil
 }
