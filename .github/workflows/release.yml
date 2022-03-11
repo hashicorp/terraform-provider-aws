@@ -57,7 +57,9 @@ jobs:
           with:
             fetch-depth: 0
             ref: main
-        - run: |
+        - name: Update Changelog Header
+          id: changelog
+          run: |
             CHANGELOG_FILE_NAME="CHANGELOG.md"
             PREVIOUS_RELEASE_TAG=$(git describe --abbrev=0 --match='v*.*.*' --tags)
             echo Previous release is: $PREVIOUS_RELEASE_TAG
@@ -71,9 +73,11 @@ jobs:
             echo New minor version is: v$NEW_RELEASE_LINE
 
             echo -e "## $NEW_RELEASE_LINE (Unreleased)\n$(cat $CHANGELOG_FILE_NAME)" > $CHANGELOG_FILE_NAME
+            
+            echo ::set-output name=prev_release_tag::$PREVIOUS_RELEASE_TAG
         - run: |
               git config --local user.email changelogbot@hashicorp.com
               git config --local user.name changelogbot
               git add CHANGELOG.md
-              git commit -m "Update CHANGELOG.md after ${{ github.event.release.tag_name }}" 
+              git commit -m "Update CHANGELOG.md after ${{ steps.changelog.outputs.prev_release_tag }}" 
               git push
