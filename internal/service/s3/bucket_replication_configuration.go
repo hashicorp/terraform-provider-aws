@@ -38,6 +38,11 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"token": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+			},
 			"rule": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -311,6 +316,10 @@ func resourceBucketReplicationConfigurationCreate(d *schema.ResourceData, meta i
 		ReplicationConfiguration: rc,
 	}
 
+	if v, ok := d.GetOk("token"); ok {
+		input.Token = aws.String(v.(string))
+	}
+
 	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutBucketReplication(input)
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, "InvalidRequest", "Versioning must be 'Enabled' on the bucket") {
@@ -385,6 +394,10 @@ func resourceBucketReplicationConfigurationUpdate(d *schema.ResourceData, meta i
 	input := &s3.PutBucketReplicationInput{
 		Bucket:                   aws.String(d.Id()),
 		ReplicationConfiguration: rc,
+	}
+
+	if v, ok := d.GetOk("token"); ok {
+		input.Token = aws.String(v.(string))
 	}
 
 	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
