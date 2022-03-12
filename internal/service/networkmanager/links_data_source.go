@@ -66,7 +66,7 @@ func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta inter
 	output, err := FindLinks(ctx, conn, input)
 
 	if err != nil {
-		return diag.Errorf("error listing Network Manager Sites: %s", err)
+		return diag.Errorf("error listing Network Manager Links: %s", err)
 	}
 
 	var linkIDs []string
