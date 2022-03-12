@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_redshift_cluster: Add `availability_zone_relocation` and `availability_zone_relocation_status` attributes.
+```
+
+```release-note:enhancement
+data_source/aws_redshift_cluster: Add `availability_zone_relocation` and `availability_zone_relocation_status` attributes.
+```
