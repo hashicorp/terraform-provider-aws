@@ -1415,9 +1415,9 @@ resource "aws_redshift_cluster" "test" {
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
 
-  publicly_accessible          = false
+  publicly_accessible                  = false
   availability_zone_relocation_enabled = true
-  availability_zone            = data.aws_availability_zones.available.names[%[2]d]
+  availability_zone                    = data.aws_availability_zones.available.names[%[2]d]
 }
 `, rName, regionIndex))
 }
@@ -1436,9 +1436,9 @@ resource "aws_redshift_cluster" "test" {
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
 
-  publicly_accessible          = false
+  publicly_accessible                  = false
   availability_zone_relocation_enabled = false
-  availability_zone            = data.aws_availability_zones.available.names[%[2]d]
+  availability_zone                    = data.aws_availability_zones.available.names[%[2]d]
 }
 `, rName, regionIndex))
 }
@@ -1458,7 +1458,7 @@ resource "aws_redshift_cluster" "test" {
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
 
-  publicly_accessible          = false
+  publicly_accessible                  = false
   availability_zone_relocation_enabled = %[2]t
 }
 `, rName, enabled))
@@ -1477,7 +1477,7 @@ resource "aws_redshift_cluster" "test" {
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
 
-  publicly_accessible          = true
+  publicly_accessible                  = true
   availability_zone_relocation_enabled = true
 }
 `, rName))

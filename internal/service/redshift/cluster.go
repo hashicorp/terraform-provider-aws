@@ -65,10 +65,6 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"availability_zone_relocation_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"cluster_identifier": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -591,7 +587,6 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	d.Set("automated_snapshot_retention_period", rsc.AutomatedSnapshotRetentionPeriod)
 	d.Set("availability_zone", rsc.AvailabilityZone)
-	d.Set("availability_zone_relocation_status", rsc.AvailabilityZoneRelocationStatus)
 	azr, err := clusterAvailabilityZoneRelocationStatus(rsc)
 	if err != nil {
 		return fmt.Errorf("error reading Redshift Cluster (%s): %w", d.Id(), err)

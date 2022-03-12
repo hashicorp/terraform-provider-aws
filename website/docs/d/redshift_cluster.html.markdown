@@ -55,7 +55,6 @@ In addition to all arguments above, the following attributes are exported:
 * `automated_snapshot_retention_period` - The backup retention period
 * `availability_zone` - The availability zone of the cluster
 * `availability_zone_relocation_enabled` - Indicates whether the cluster is able to be relocated to another availability zone.
-* `availability_zone_relocation_status` - The status of the Availability Zone relocation operation (enabled, disabled, pending_enabling, pending_disabling)
 * `bucket_name` - The name of the S3 bucket where the log files are to be stored
 * `cluster_identifier` - The cluster identifier
 * `cluster_parameter_group_name` - The name of the parameter group to be associated with this cluster
