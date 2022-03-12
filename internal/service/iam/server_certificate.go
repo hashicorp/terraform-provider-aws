@@ -13,7 +13,7 @@ import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -121,7 +121,10 @@ func resourceServerCertificateCreate(d *schema.ResourceData, meta interface{}) e
 		CertificateBody:       aws.String(d.Get("certificate_body").(string)),
 		PrivateKey:            aws.String(d.Get("private_key").(string)),
 		ServerCertificateName: aws.String(sslCertName),
-		Tags:                  Tags(tags.IgnoreAWS()),
+	}
+
+	if len(tags) > 0 {
+		createOpts.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("certificate_chain"); ok {
@@ -134,12 +137,36 @@ func resourceServerCertificateCreate(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[DEBUG] Creating IAM Server Certificate with opts: %s", createOpts)
 	resp, err := conn.UploadServerCertificate(createOpts)
+
+	// Some partitions (i.e., ISO) may not support tag-on-create
+	if createOpts.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] failed creating IAM Server Certificate (%s) with tags: %s. Trying create without tags.", sslCertName, err)
+		createOpts.Tags = nil
+
+		resp, err = conn.UploadServerCertificate(createOpts)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error uploading server certificate: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.ServerCertificateMetadata.ServerCertificateId))
 	d.Set("name", sslCertName)
+
+	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
+	if createOpts.Tags == nil && len(tags) > 0 {
+		err := serverCertificateUpdateTags(conn, d.Get("name").(string), nil, tags)
+
+		// If default tags only, log and continue. Otherwise, error.
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] failed adding tags after create for IAM Server Certificate (%s): %s", d.Id(), err)
+			return resourceServerCertificateRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed adding tags after create for IAM Server Certificate (%s): %w", d.Id(), err)
+		}
+	}
 
 	return resourceServerCertificateRead(d, meta)
 }
@@ -153,7 +180,7 @@ func resourceServerCertificateRead(d *schema.ResourceData, meta interface{}) err
 		ServerCertificateName: aws.String(d.Get("name").(string)),
 	})
 
-	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		log.Printf("[WARN] IAM Server Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -203,8 +230,16 @@ func resourceServerCertificateUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := serverCertificateUpdateTags(conn, d.Get("name").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags for IAM Server Certificate (%s): %w", d.Get("name").(string), err)
+		err := serverCertificateUpdateTags(conn, d.Get("name").(string), o, n)
+
+		// Some partitions (i.e., ISO) may not support tagging, giving error
+		if verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] failed updating tags for IAM Server Certificate (%s): %s", d.Id(), err)
+			return resourceServerCertificateRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed updating tags for IAM Server Certificate (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -260,7 +295,7 @@ func currentlyInUseBy(awsErr string, conn *elb.ELB) {
 			LoadBalancerNames: []*string{aws.String(lbName)},
 		}
 		if _, err := conn.DescribeLoadBalancers(describeElbOpts); err != nil {
-			if tfawserr.ErrMessageContains(err, "LoadBalancerNotFound", "") {
+			if tfawserr.ErrCodeEquals(err, "LoadBalancerNotFound") {
 				log.Printf("[WARN] Load Balancer (%s) causing delete conflict not found", lbName)
 			}
 		}

@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -43,7 +43,7 @@ func sweepEventSubscriptions(region string) error {
 			_, err = conn.DeleteEventSubscription(&neptune.DeleteEventSubscriptionInput{
 				SubscriptionName: aws.String(name),
 			})
-			if tfawserr.ErrMessageContains(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeSubscriptionNotFoundFault) {
 				continue
 			}
 			if err != nil {
@@ -54,7 +54,7 @@ func sweepEventSubscriptions(region string) error {
 			}
 
 			_, err = WaitEventSubscriptionDeleted(conn, name)
-			if tfawserr.ErrMessageContains(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeSubscriptionNotFoundFault) {
 				continue
 			}
 			if err != nil {

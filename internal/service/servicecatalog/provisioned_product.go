@@ -7,13 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -31,6 +30,7 @@ func ResourceProvisionedProduct() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(ProvisionedProductReadyTimeout),
+			Read:   schema.DefaultTimeout(ProvisionedProductReadTimeout),
 			Update: schema.DefaultTimeout(ProvisionedProductUpdateTimeout),
 			Delete: schema.DefaultTimeout(ProvisionedProductDeleteTimeout),
 		},
@@ -86,6 +86,26 @@ func ResourceProvisionedProduct() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"outputs": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"key": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"path_id": {
 				Type:     schema.TypeString,
@@ -276,11 +296,11 @@ func resourceProvisionedProductCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("provisioning_parameters"); ok && len(v.([]interface{})) > 0 {
-		input.ProvisioningParameters = expandServiceCatalogProvisioningParameters(v.([]interface{}))
+		input.ProvisioningParameters = expandProvisioningParameters(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("stack_set_provisioning_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ProvisioningPreferences = expandServiceCatalogProvisioningPreferences(v.([]interface{})[0].(map[string]interface{}))
+		input.ProvisioningPreferences = expandProvisioningPreferences(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -289,7 +309,7 @@ func resourceProvisionedProductCreate(d *schema.ResourceData, meta interface{}) 
 
 	var output *servicecatalog.ProvisionProductOutput
 
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		var err error
 
 		output, err = conn.ProvisionProduct(input)
@@ -348,7 +368,7 @@ func resourceProvisionedProductRead(d *schema.ResourceData, meta interface{}) er
 		acceptLanguage = v.(string)
 	}
 
-	output, err := WaitProvisionedProductReady(conn, acceptLanguage, d.Id(), "")
+	output, err := WaitProvisionedProductReady(conn, acceptLanguage, d.Id(), "", d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Provisioned Product (%s) not found, removing from state", d.Id())
@@ -367,7 +387,7 @@ func resourceProvisionedProductRead(d *schema.ResourceData, meta interface{}) er
 	detail := output.ProvisionedProductDetail
 
 	d.Set("arn", detail.Arn)
-	d.Set("cloudwatch_dashboard_names", aws.StringValueSlice(flattenServiceCatalogCloudWatchDashboards(output.CloudWatchDashboards)))
+	d.Set("cloudwatch_dashboard_names", aws.StringValueSlice(flattenCloudWatchDashboards(output.CloudWatchDashboards)))
 
 	if detail.CreatedTime != nil {
 		d.Set("created_time", detail.CreatedTime.Format(time.RFC3339))
@@ -388,7 +408,7 @@ func resourceProvisionedProductRead(d *schema.ResourceData, meta interface{}) er
 
 	// tags are only available from the record tied to the provisioned product
 
-	recordOutput, err := WaitRecordReady(conn, acceptLanguage, aws.StringValue(detail.LastProvisioningRecordId))
+	recordOutput, err := WaitRecordReady(conn, acceptLanguage, aws.StringValue(detail.LastProvisioningRecordId), RecordReadyTimeout)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Provisioned Product (%s) Record (%s) not found, unable to set tags", d.Id(), aws.StringValue(detail.LastProvisioningRecordId))
@@ -401,6 +421,10 @@ func resourceProvisionedProductRead(d *schema.ResourceData, meta interface{}) er
 
 	if recordOutput == nil || recordOutput.RecordDetail == nil {
 		return fmt.Errorf("error getting Service Catalog Provisioned Product (%s) Record (%s): empty response", d.Id(), aws.StringValue(detail.LastProvisioningRecordId))
+	}
+
+	if err := d.Set("outputs", flattenRecordOutputs(recordOutput.RecordOutputs)); err != nil {
+		return fmt.Errorf("error setting outputs: %w", err)
 	}
 
 	d.Set("path_id", recordOutput.RecordDetail.PathId)
@@ -450,11 +474,11 @@ func resourceProvisionedProductUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("provisioning_parameters"); ok && len(v.([]interface{})) > 0 {
-		input.ProvisioningParameters = expandServiceCatalogUpdateProvisioningParameters(v.([]interface{}))
+		input.ProvisioningParameters = expandUpdateProvisioningParameters(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("stack_set_provisioning_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ProvisioningPreferences = expandServiceCatalogUpdateProvisioningPreferences(v.([]interface{})[0].(map[string]interface{}))
+		input.ProvisioningPreferences = expandUpdateProvisioningPreferences(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if d.HasChanges("tags", "tags_all") {
@@ -468,7 +492,7 @@ func resourceProvisionedProductUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 		_, err := conn.UpdateProvisionedProduct(input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
@@ -523,7 +547,7 @@ func resourceProvisionedProductDelete(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error terminating Service Catalog Provisioned Product (%s): %w", d.Id(), err)
 	}
 
-	err = WaitProvisionedProductTerminated(conn, d.Get("accept_language").(string), d.Id(), "")
+	err = WaitProvisionedProductTerminated(conn, d.Get("accept_language").(string), d.Id(), "", d.Timeout(schema.TimeoutDelete))
 
 	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		return nil
@@ -536,7 +560,7 @@ func resourceProvisionedProductDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func expandServiceCatalogProvisioningParameter(tfMap map[string]interface{}) *servicecatalog.ProvisioningParameter {
+func expandProvisioningParameter(tfMap map[string]interface{}) *servicecatalog.ProvisioningParameter {
 	if tfMap == nil {
 		return nil
 	}
@@ -554,7 +578,7 @@ func expandServiceCatalogProvisioningParameter(tfMap map[string]interface{}) *se
 	return apiObject
 }
 
-func expandServiceCatalogProvisioningParameters(tfList []interface{}) []*servicecatalog.ProvisioningParameter {
+func expandProvisioningParameters(tfList []interface{}) []*servicecatalog.ProvisioningParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -568,7 +592,7 @@ func expandServiceCatalogProvisioningParameters(tfList []interface{}) []*service
 			continue
 		}
 
-		apiObject := expandServiceCatalogProvisioningParameter(tfMap)
+		apiObject := expandProvisioningParameter(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -580,7 +604,7 @@ func expandServiceCatalogProvisioningParameters(tfList []interface{}) []*service
 	return apiObjects
 }
 
-func expandServiceCatalogProvisioningPreferences(tfMap map[string]interface{}) *servicecatalog.ProvisioningPreferences {
+func expandProvisioningPreferences(tfMap map[string]interface{}) *servicecatalog.ProvisioningPreferences {
 	if tfMap == nil {
 		return nil
 	}
@@ -614,7 +638,7 @@ func expandServiceCatalogProvisioningPreferences(tfMap map[string]interface{}) *
 	return apiObject
 }
 
-func expandServiceCatalogUpdateProvisioningParameter(tfMap map[string]interface{}) *servicecatalog.UpdateProvisioningParameter {
+func expandUpdateProvisioningParameter(tfMap map[string]interface{}) *servicecatalog.UpdateProvisioningParameter {
 	if tfMap == nil {
 		return nil
 	}
@@ -636,7 +660,7 @@ func expandServiceCatalogUpdateProvisioningParameter(tfMap map[string]interface{
 	return apiObject
 }
 
-func expandServiceCatalogUpdateProvisioningParameters(tfList []interface{}) []*servicecatalog.UpdateProvisioningParameter {
+func expandUpdateProvisioningParameters(tfList []interface{}) []*servicecatalog.UpdateProvisioningParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -650,7 +674,7 @@ func expandServiceCatalogUpdateProvisioningParameters(tfList []interface{}) []*s
 			continue
 		}
 
-		apiObject := expandServiceCatalogUpdateProvisioningParameter(tfMap)
+		apiObject := expandUpdateProvisioningParameter(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -662,7 +686,7 @@ func expandServiceCatalogUpdateProvisioningParameters(tfList []interface{}) []*s
 	return apiObjects
 }
 
-func expandServiceCatalogUpdateProvisioningPreferences(tfMap map[string]interface{}) *servicecatalog.UpdateProvisioningPreferences {
+func expandUpdateProvisioningPreferences(tfMap map[string]interface{}) *servicecatalog.UpdateProvisioningPreferences {
 	if tfMap == nil {
 		return nil
 	}
@@ -696,7 +720,7 @@ func expandServiceCatalogUpdateProvisioningPreferences(tfMap map[string]interfac
 	return apiObject
 }
 
-func flattenServiceCatalogCloudWatchDashboards(apiObjects []*servicecatalog.CloudWatchDashboard) []*string {
+func flattenCloudWatchDashboards(apiObjects []*servicecatalog.CloudWatchDashboard) []*string {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -709,6 +733,38 @@ func flattenServiceCatalogCloudWatchDashboards(apiObjects []*servicecatalog.Clou
 		}
 
 		tfList = append(tfList, apiObject.Name)
+	}
+
+	return tfList
+}
+
+func flattenRecordOutputs(apiObjects []*servicecatalog.RecordOutput) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		m := make(map[string]interface{})
+
+		if apiObject.Description != nil {
+			m["description"] = aws.StringValue(apiObject.Description)
+		}
+
+		if apiObject.OutputKey != nil {
+			m["key"] = aws.StringValue(apiObject.OutputKey)
+		}
+
+		if apiObject.OutputValue != nil {
+			m["value"] = aws.StringValue(apiObject.OutputValue)
+		}
+
+		tfList = append(tfList, m)
 	}
 
 	return tfList

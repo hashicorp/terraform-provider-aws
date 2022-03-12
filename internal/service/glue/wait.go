@@ -196,12 +196,12 @@ func waitGlueDevEndpointDeleted(conn *glue.Glue, name string) (*glue.DevEndpoint
 	return nil, err
 }
 
-func waitGluePartitionIndexCreated(conn *glue.Glue, id string) (*glue.PartitionIndexDescriptor, error) {
+func waitGluePartitionIndexCreated(conn *glue.Glue, id string, timeout time.Duration) (*glue.PartitionIndexDescriptor, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{glue.PartitionIndexStatusCreating},
 		Target:  []string{glue.PartitionIndexStatusActive},
 		Refresh: statusGluePartitionIndex(conn, id),
-		Timeout: 2 * time.Minute,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -213,12 +213,12 @@ func waitGluePartitionIndexCreated(conn *glue.Glue, id string) (*glue.PartitionI
 	return nil, err
 }
 
-func waitGluePartitionIndexDeleted(conn *glue.Glue, id string) (*glue.PartitionIndexDescriptor, error) {
+func waitGluePartitionIndexDeleted(conn *glue.Glue, id string, timeout time.Duration) (*glue.PartitionIndexDescriptor, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{glue.PartitionIndexStatusDeleting},
 		Target:  []string{},
 		Refresh: statusGluePartitionIndex(conn, id),
-		Timeout: 2 * time.Minute,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

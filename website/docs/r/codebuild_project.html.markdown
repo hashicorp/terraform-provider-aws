@@ -15,6 +15,10 @@ Provides a CodeBuild Project resource. See also the [`aws_codebuild_webhook` res
 ```terraform
 resource "aws_s3_bucket" "example" {
   bucket = "example"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.example.id
   acl    = "private"
 }
 
@@ -225,6 +229,7 @@ The following arguments are required:
 * `artifacts` - (Required) Configuration block. Detailed below.
 * `environment` - (Required) Configuration block. Detailed below.
 * `name` - (Required) Project's name.
+* `service_role` - (Required) Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role that enables AWS CodeBuild to interact with dependent AWS services on behalf of the AWS account.
 * `source` - (Required) Configuration block. Detailed below.
 
 The following arguments are optional:
@@ -238,10 +243,12 @@ The following arguments are optional:
 * `file_system_locations` - (Optional) A set of file system locations to to mount inside the build. File system locations are documented below.
 * `encryption_key` - (Optional) AWS Key Management Service (AWS KMS) customer master key (CMK) to be used for encrypting the build project's build output artifacts.
 * `logs_config` - (Optional) Configuration block. Detailed below.
+* `project_visibility` - (Optional) Specifies the visibility of the project's builds. Possible values are: `PUBLIC_READ` and `PRIVATE`. Default value is `PRIVATE`.
+* `resource_access_role` - The ARN of the IAM role that enables CodeBuild to access the CloudWatch Logs and Amazon S3 artifacts for the project's builds.
 * `queued_timeout` - (Optional) Number of minutes, from 5 to 480 (8 hours), a build is allowed to be queued before it times out. The default is 8 hours.
 * `secondary_artifacts` - (Optional) Configuration block. Detailed below.
 * `secondary_sources` - (Optional) Configuration block. Detailed below.
-* `service_role` - (Required) Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role that enables AWS CodeBuild to interact with dependent AWS services on behalf of the AWS account.
+* `secondary_source_version` - (Optional) Configuration block. Detailed below.
 * `source_version` - (Optional) Version of the build input to be built for this project. If not specified, the latest version is used.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_config` - (Optional) Configuration block. Detailed below.
@@ -249,6 +256,7 @@ The following arguments are optional:
 ### artifacts
 
 * `artifact_identifier` - (Optional) Artifact identifier. Must be the same specified inside the AWS CodeBuild build specification.
+* `bucket_owner_access` - (Optional) Specifies the bucket owner's access for objects that another account uploads to their Amazon S3 bucket. By default, only the account that uploads the objects to the bucket has access to these objects. This property allows you to give the bucket owner access to these objects. Valid values are `NONE`, `READ_ONLY`, and `FULL`. your CodeBuild service role must have the `s3:PutBucketAcl` permission. This permission allows CodeBuild to modify the access control list for the bucket.
 * `encryption_disabled` - (Optional) Whether to disable encrypting output artifacts. If `type` is set to `NO_ARTIFACTS`, this value is ignored. Defaults to `false`.
 * `location` - (Optional) Information about the build output artifact location. If `type` is set to `CODEPIPELINE` or `NO_ARTIFACTS`, this value is ignored. If `type` is set to `S3`, this is the name of the output bucket.
 * `name` - (Optional) Name of the project. If `type` is set to `S3`, this is the name of the output artifact object
@@ -316,10 +324,12 @@ Credentials for access to a private Docker registry.
 * `encryption_disabled` - (Optional) Whether to disable encrypting S3 logs. Defaults to `false`.
 * `location` - (Optional) Name of the S3 bucket and the path prefix for S3 logs. Must be set if status is `ENABLED`, otherwise it must be empty.
 * `status` - (Optional) Current status of logs in S3 for a build project. Valid values: `ENABLED`, `DISABLED`. Defaults to `DISABLED`.
+* `bucket_owner_access` - (Optional) Specifies the bucket owner's access for objects that another account uploads to their Amazon S3 bucket. By default, only the account that uploads the objects to the bucket has access to these objects. This property allows you to give the bucket owner access to these objects. Valid values are `NONE`, `READ_ONLY`, and `FULL`. your CodeBuild service role must have the `s3:PutBucketAcl` permission. This permission allows CodeBuild to modify the access control list for the bucket.
 
 ### secondary_artifacts
 
 * `artifact_identifier` - (Required) Artifact identifier. Must be the same specified inside the AWS CodeBuild build specification.
+* `bucket_owner_access` - (Optional) Specifies the bucket owner's access for objects that another account uploads to their Amazon S3 bucket. By default, only the account that uploads the objects to the bucket has access to these objects. This property allows you to give the bucket owner access to these objects. Valid values are `NONE`, `READ_ONLY`, and `FULL`. your CodeBuild service role must have the `s3:PutBucketAcl` permission. This permission allows CodeBuild to modify the access control list for the bucket.
 * `encryption_disabled` - (Optional) Whether to disable encrypting output artifacts. If `type` is set to `NO_ARTIFACTS`, this value is ignored. Defaults to `false`.
 * `location` - (Optional) Information about the build output artifact location. If `type` is set to `CODEPIPELINE` or `NO_ARTIFACTS`, this value is ignored. If `type` is set to `S3`, this is the name of the output bucket. If `path` is not also specified, then `location` can also specify the path of the output artifact in the output bucket.
 * `name` - (Optional) Name of the project. If `type` is set to `S3`, this is the name of the output artifact object
@@ -357,6 +367,11 @@ This block is only valid when the `type` is `CODECOMMIT`, `GITHUB` or `GITHUB_EN
 
 * `context` - (Optional) Specifies the context of the build status CodeBuild sends to the source provider. The usage of this parameter depends on the source provider.
 * `target_url` - (Optional) Specifies the target url of the build status CodeBuild sends to the source provider. The usage of this parameter depends on the source provider.
+
+### secondary_source_version
+
+* `source_identifier` - (Required) An identifier for a source in the build project.
+* `source_version` - (Required) The source version for the corresponding source identifier. See [AWS docs](https://docs.aws.amazon.com/codebuild/latest/APIReference/API_ProjectSourceVersion.html#CodeBuild-Type-ProjectSourceVersion-sourceVersion) for more details.
 
 ### source
 
@@ -403,6 +418,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - ARN of the CodeBuild project.
 * `badge_url` - URL of the build badge when `badge_enabled` is enabled.
 * `id` - Name (if imported via `name`) or ARN (if created via Terraform or imported via ARN) of the CodeBuild project.
+* `public_project_alias` - The project identifier used with the public build APIs.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import

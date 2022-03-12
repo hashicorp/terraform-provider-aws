@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -133,7 +133,17 @@ func ResourceDomain() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
 												},
+												"lifecycle_config_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
 												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -162,7 +172,17 @@ func ResourceDomain() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
 												},
+												"lifecycle_config_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
 												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -199,7 +219,17 @@ func ResourceDomain() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
 												},
+												"lifecycle_config_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
 												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -328,7 +358,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 
 	domain, err := FindDomainByName(conn, d.Id())
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker domain (%s), removing from state", d.Id())
 			return nil
@@ -418,13 +448,13 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := conn.DeleteDomain(input); err != nil {
-		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			return fmt.Errorf("error deleting SageMaker domain (%s): %w", d.Id(), err)
 		}
 	}
 
 	if _, err := WaitDomainDeleted(conn, d.Id()); err != nil {
-		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			return fmt.Errorf("error waiting for SageMaker domain (%s) to delete: %w", d.Id(), err)
 		}
 	}
@@ -556,8 +586,16 @@ func expandSagemakerDomainDefaultResourceSpec(l []interface{}) *sagemaker.Resour
 		config.InstanceType = aws.String(v)
 	}
 
+	if v, ok := m["lifecycle_config_arn"].(string); ok && v != "" {
+		config.LifecycleConfigArn = aws.String(v)
+	}
+
 	if v, ok := m["sagemaker_image_arn"].(string); ok && v != "" {
 		config.SageMakerImageArn = aws.String(v)
+	}
+
+	if v, ok := m["sagemaker_image_version_arn"].(string); ok && v != "" {
+		config.SageMakerImageVersionArn = aws.String(v)
 	}
 
 	return config
@@ -651,8 +689,16 @@ func flattenSagemakerDomainDefaultResourceSpec(config *sagemaker.ResourceSpec) [
 		m["instance_type"] = aws.StringValue(config.InstanceType)
 	}
 
+	if config.LifecycleConfigArn != nil {
+		m["lifecycle_config_arn"] = aws.StringValue(config.LifecycleConfigArn)
+	}
+
 	if config.SageMakerImageArn != nil {
 		m["sagemaker_image_arn"] = aws.StringValue(config.SageMakerImageArn)
+	}
+
+	if config.SageMakerImageVersionArn != nil {
+		m["sagemaker_image_version_arn"] = aws.StringValue(config.SageMakerImageVersionArn)
 	}
 
 	return []map[string]interface{}{m}

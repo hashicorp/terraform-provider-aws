@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -173,8 +173,8 @@ func resourceRepositoryPolicyDelete(d *schema.ResourceData, meta interface{}) er
 		RegistryId:     aws.String(d.Get("registry_id").(string)),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") ||
-			tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryPolicyNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) ||
+			tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryPolicyNotFoundException) {
 			return nil
 		}
 		return err

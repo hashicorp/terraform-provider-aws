@@ -17,7 +17,7 @@ func TestAccS3ObjectCopy_basic(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
-	sourceName := "aws_s3_bucket_object.source"
+	sourceName := "aws_s3_object.source"
 	key := "HundBegraven"
 	sourceKey := "WshngtnNtnls"
 
@@ -112,7 +112,7 @@ func testAccCheckObjectCopyExists(n string) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No S3 Bucket Object ID is set")
+			return fmt.Errorf("No S3 Object ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
@@ -123,7 +123,7 @@ func testAccCheckObjectCopyExists(n string) resource.TestCheckFunc {
 				IfMatch: aws.String(rs.Primary.Attributes["etag"]),
 			})
 		if err != nil {
-			return fmt.Errorf("S3Bucket Object error: %s", err)
+			return fmt.Errorf("S3 Object error: %s", err)
 		}
 
 		return nil
@@ -136,7 +136,7 @@ resource "aws_s3_bucket" "source" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "source" {
+resource "aws_s3_object" "source" {
   bucket  = aws_s3_bucket.source.bucket
   key     = %[2]q
   content = "Ingen ko på isen"
@@ -149,7 +149,7 @@ resource "aws_s3_bucket" "target" {
 resource "aws_s3_object_copy" "test" {
   bucket = aws_s3_bucket.target.bucket
   key    = %[4]q
-  source = "${aws_s3_bucket.source.bucket}/${aws_s3_bucket_object.source.key}"
+  source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
 
   grant {
     uri         = "http://acs.amazonaws.com/groups/global/AllUsers"
@@ -163,7 +163,7 @@ resource "aws_s3_object_copy" "test" {
 func testAccObjectCopyConfig_BucketKeyEnabled_Bucket(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "Encrypts test bucket objects"
+  description             = "Encrypts test objects"
   deletion_window_in_days = 7
 }
 
@@ -171,7 +171,7 @@ resource "aws_s3_bucket" "source" {
   bucket = "%[1]s-source"
 }
 
-resource "aws_s3_bucket_object" "source" {
+resource "aws_s3_object" "source" {
   bucket  = aws_s3_bucket.source.bucket
   content = "Ingen ko på isen"
   key     = "test"
@@ -179,22 +179,27 @@ resource "aws_s3_bucket_object" "source" {
 
 resource "aws_s3_bucket" "target" {
   bucket = "%[1]s-target"
+}
 
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        kms_master_key_id = aws_kms_key.test.arn
-        sse_algorithm     = "aws:kms"
-      }
-      bucket_key_enabled = true
+resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
+  bucket = aws_s3_bucket.target.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.test.arn
+      sse_algorithm     = "aws:kms"
     }
+    bucket_key_enabled = true
   }
 }
 
 resource "aws_s3_object_copy" "test" {
+  # Must have bucket SSE enabled first
+  depends_on = [aws_s3_bucket_server_side_encryption_configuration.test]
+
   bucket = aws_s3_bucket.target.bucket
   key    = "test"
-  source = "${aws_s3_bucket.source.bucket}/${aws_s3_bucket_object.source.key}"
+  source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
 }
 `, rName)
 }
@@ -202,7 +207,7 @@ resource "aws_s3_object_copy" "test" {
 func testAccObjectCopyConfig_BucketKeyEnabled_Object(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "Encrypts test bucket objects"
+  description             = "Encrypts test objects"
   deletion_window_in_days = 7
 }
 
@@ -210,7 +215,7 @@ resource "aws_s3_bucket" "source" {
   bucket = "%[1]s-source"
 }
 
-resource "aws_s3_bucket_object" "source" {
+resource "aws_s3_object" "source" {
   bucket  = aws_s3_bucket.source.bucket
   content = "Ingen ko på isen"
   key     = "test"
@@ -225,7 +230,7 @@ resource "aws_s3_object_copy" "test" {
   bucket_key_enabled = true
   key                = "test"
   kms_key_id         = aws_kms_key.test.arn
-  source             = "${aws_s3_bucket.source.bucket}/${aws_s3_bucket_object.source.key}"
+  source             = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
 }
 `, rName)
 }

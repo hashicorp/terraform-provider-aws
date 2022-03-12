@@ -3,12 +3,14 @@ subcategory: "S3"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_object"
 description: |-
-  Provides a S3 bucket object resource.
+  Provides an S3 object resource.
 ---
 
 # Resource: aws_s3_bucket_object
 
-Provides a S3 bucket object resource.
+~> **NOTE:** The `aws_s3_bucket_object` resource is DEPRECATED and will be removed in a future version! Use `aws_s3_object` instead, where new features and fixes will be added. When replacing `aws_s3_bucket_object` with `aws_s3_object` in your configuration, on the next apply, Terraform will recreate the object. If you prefer to not have Terraform recreate the object, import the object using `aws_s3_object`.
+
+Provides an S3 object resource.
 
 ## Example Usage
 
@@ -37,10 +39,14 @@ resource "aws_kms_key" "examplekms" {
 
 resource "aws_s3_bucket" "examplebucket" {
   bucket = "examplebuckettftest"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
   acl    = "private"
 }
 
-resource "aws_s3_bucket_object" "examplebucket_object" {
+resource "aws_s3_bucket_object" "example" {
   key        = "someobject"
   bucket     = aws_s3_bucket.examplebucket.id
   source     = "index.html"
@@ -53,10 +59,14 @@ resource "aws_s3_bucket_object" "examplebucket_object" {
 ```terraform
 resource "aws_s3_bucket" "examplebucket" {
   bucket = "examplebuckettftest"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
   acl    = "private"
 }
 
-resource "aws_s3_bucket_object" "examplebucket_object" {
+resource "aws_s3_bucket_object" "example" {
   key                    = "someobject"
   bucket                 = aws_s3_bucket.examplebucket.id
   source                 = "index.html"
@@ -69,10 +79,14 @@ resource "aws_s3_bucket_object" "examplebucket_object" {
 ```terraform
 resource "aws_s3_bucket" "examplebucket" {
   bucket = "examplebuckettftest"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
   acl    = "private"
 }
 
-resource "aws_s3_bucket_object" "examplebucket_object" {
+resource "aws_s3_bucket_object" "example" {
   key                    = "someobject"
   bucket                 = aws_s3_bucket.examplebucket.id
   source                 = "index.html"
@@ -85,18 +99,26 @@ resource "aws_s3_bucket_object" "examplebucket_object" {
 ```terraform
 resource "aws_s3_bucket" "examplebucket" {
   bucket = "examplebuckettftest"
+
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
   acl    = "private"
+}
 
-  versioning {
-    enabled = true
-  }
-
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
+resource "aws_s3_bucket_versioning" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
-resource "aws_s3_bucket_object" "examplebucket_object" {
+resource "aws_s3_bucket_object" "example" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.example]
+
   key    = "someobject"
   bucket = aws_s3_bucket.examplebucket.id
   source = "important.txt"

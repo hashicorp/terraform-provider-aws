@@ -1,14 +1,19 @@
+name: Issue triage
+
 on:
   issues:
     types: [opened]
-name: Issue triage
+
+env:
+  IN_MAINTAINER_LIST: ${{ contains(secrets.MAINTAINER_LIST, github.actor) }}
+
 jobs:
   markIssuesForTriage:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Apply Issue needs-triage Label
-      if: github.event.action == 'opened' && !contains(fromJSON('["anGie44", "bflad", "breathingdust", "DrFaust92", "ewbankkit", "gdavison", "justinretzolk", "maryelizbeth", "YakDriver", "zhelding"]'), github.actor)
+      if: github.event.action == 'opened' && env.IN_MAINTAINER_LIST == 'false'
       uses: github/issue-labeler@v2.4
       with:
         repo-token: "${{ secrets.GITHUB_TOKEN }}"

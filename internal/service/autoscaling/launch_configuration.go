@@ -13,7 +13,7 @@ import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -644,11 +644,11 @@ func resourceLaunchConfigurationDelete(d *schema.ResourceData, meta interface{})
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := autoscalingconn.DeleteLaunchConfiguration(input)
 
-		if tfawserr.ErrMessageContains(err, autoscaling.ErrCodeResourceInUseFault, "") {
+		if tfawserr.ErrCodeEquals(err, autoscaling.ErrCodeResourceInUseFault) {
 			return resource.RetryableError(err)
 		}
 
-		if tfawserr.ErrMessageContains(err, "InvalidConfiguration.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidConfiguration.NotFound") {
 			return nil
 		}
 

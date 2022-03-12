@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -442,7 +442,7 @@ func testAccPreCheckSESReceiptRule(t *testing.T) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
-	if tfawserr.ErrMessageContains(err, "RuleSetDoesNotExist", "") {
+	if tfawserr.ErrCodeEquals(err, "RuleSetDoesNotExist") {
 		return
 	}
 
@@ -476,8 +476,12 @@ resource "aws_ses_receipt_rule_set" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "public-read-write"
   force_destroy = "true"
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "public-read-write"
 }
 
 resource "aws_ses_receipt_rule" "test" {
@@ -489,7 +493,7 @@ resource "aws_ses_receipt_rule" "test" {
   tls_policy    = "Require"
 
   s3_action {
-    bucket_name = aws_s3_bucket.test.id
+    bucket_name = aws_s3_bucket_acl.test.bucket
     position    = 1
   }
 }

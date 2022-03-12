@@ -6,11 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -21,6 +20,12 @@ func ResourceBudgetResourceAssociation() *schema.Resource {
 		Delete: resourceBudgetResourceAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(BudgetResourceAssociationReadyTimeout),
+			Read:   schema.DefaultTimeout(BudgetResourceAssociationReadTimeout),
+			Delete: schema.DefaultTimeout(BudgetResourceAssociationDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -47,7 +52,7 @@ func resourceBudgetResourceAssociationCreate(d *schema.ResourceData, meta interf
 	}
 
 	var output *servicecatalog.AssociateBudgetWithResourceOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		var err error
 
 		output, err = conn.AssociateBudgetWithResource(input)
@@ -89,7 +94,7 @@ func resourceBudgetResourceAssociationRead(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("could not parse ID (%s): %w", d.Id(), err)
 	}
 
-	output, err := WaitBudgetResourceAssociationReady(conn, budgetName, resourceID)
+	output, err := WaitBudgetResourceAssociationReady(conn, budgetName, resourceID, d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Budget Resource Association (%s) not found, removing from state", d.Id())
@@ -135,7 +140,7 @@ func resourceBudgetResourceAssociationDelete(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error disassociating Service Catalog Budget from Resource (%s): %w", d.Id(), err)
 	}
 
-	err = WaitBudgetResourceAssociationDeleted(conn, budgetName, resourceID)
+	err = WaitBudgetResourceAssociationDeleted(conn, budgetName, resourceID, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil && !tfresource.NotFound(err) {
 		return fmt.Errorf("error waiting for Service Catalog Budget Resource Disassociation (%s): %w", d.Id(), err)

@@ -36,14 +36,15 @@ output "password" {
 The following arguments are supported:
 
 * `user` - (Required) The IAM user's name.
-* `pgp_key` - (Required) Either a base-64 encoded PGP public key, or a keybase username in the form `keybase:username`. Only applies on resource creation. Drift detection is not possible with this argument.
-* `password_length` - (Optional, default 20) The length of the generated password on resource creation. Only applies on resource creation. Drift detection is not possible with this argument.
-* `password_reset_required` - (Optional, default "true") Whether the user should be forced to reset the generated password on resource creation. Only applies on resource creation. Drift detection is not possible with this argument.
+* `pgp_key` - (Optional) Either a base-64 encoded PGP public key, or a keybase username in the form `keybase:username`. Only applies on resource creation. Drift detection is not possible with this argument.
+* `password_length` - (Optional) The length of the generated password on resource creation. Only applies on resource creation. Drift detection is not possible with this argument. Default value is `20`.
+* `password_reset_required` - (Optional) Whether the user should be forced to reset the generated password on resource creation. Only applies on resource creation.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
+* `password` - The plain text password, only available when `pgp_key` is not provided.
 * `key_fingerprint` - The fingerprint of the PGP key used to encrypt the password. Only available if password was handled on Terraform resource creation, not import.
 * `encrypted_password` - The encrypted password, base64 encoded. Only available if password was handled on Terraform resource creation, not import.
 

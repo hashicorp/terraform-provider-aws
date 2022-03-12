@@ -78,11 +78,27 @@ The following arguments are supported:
 
 * `api_id` - (Required) The ID of the associated AppSync API.
 * `data_source` - (Required) The Function DataSource name.
+* `max_batch_size` - (Optional) The maximum batching size for a resolver. Valid values are between `0` and `2000`.
 * `name` - (Required) The Function name. The function name does not have to be unique.
 * `request_mapping_template` - (Required) The Function request mapping template. Functions support only the 2018-05-29 version of the request mapping template.
 * `response_mapping_template` - (Required) The Function response mapping template.
 * `description` - (Optional) The Function description.
+* `sync_config` - (Optional) Describes a Sync configuration for a resolver. See [Sync Config](#sync-config).
 * `function_version` - (Optional) The version of the request mapping template. Currently the supported value is `2018-05-29`.
+
+### Sync Config
+
+The following arguments are supported:
+
+* `conflict_detection` - (Optional) The Conflict Detection strategy to use. Valid values are `NONE` and `VERSION`.
+* `conflict_handler` - (Optional) The Conflict Resolution strategy to perform in the event of a conflict. Valid values are `NONE`, `OPTIMISTIC_CONCURRENCY`, `AUTOMERGE`, and `LAMBDA`.
+* `lambda_conflict_handler_config` - (Optional) The Lambda Conflict Handler Config when configuring `LAMBDA` as the Conflict Handler. See [Lambda Conflict Handler Config](#lambda-conflict-handler-config).
+
+#### Lambda Conflict Handler Config
+
+The following arguments are supported:
+
+* `lambda_conflict_handler_arn` - (Optional) The Amazon Resource Name (ARN) for the Lambda function to use as the Conflict Handler.
 
 ## Attributes Reference
 

@@ -94,6 +94,10 @@ In addition to all arguments above, the following attributes are exported:
 * `last_record_id` - Record identifier of the last request performed on this provisioned product.
 * `last_successful_provisioning_record_id` - Record identifier of the last successful request performed on this provisioned product of the following types: `ProvisionedProduct`, `UpdateProvisionedProduct`, `ExecuteProvisionedProductPlan`, `TerminateProvisionedProduct`.
 * `launch_role_arn` - ARN of the launch role associated with the provisioned product.
+* `outputs` - The set of outputs for the product created.
+    * `description` -  The description of the output.
+    * `key` - The output key.
+    * `value` - The output value.
 * `status` - Current status of the provisioned product. See meanings below.
 * `status_message` - Current status message of the provisioned product.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
@@ -107,6 +111,16 @@ valid results. Wait for an `AVAILABLE` status before performing operations.
 * `TAINTED` - Stable state, ready to perform any operation. The stack has completed the requested operation but is not exactly what was requested. For example, a request to update to a new version failed and the stack rolled back to the current version.
 * `ERROR` - An unexpected error occurred. The provisioned product exists but the stack is not running. For example, CloudFormation received a parameter value that was not valid and could not launch the stack.
 * `PLAN_IN_PROGRESS` - Transitive state. The plan operations were performed to provision a new product, but resources have not yet been created. After reviewing the list of resources to be created, execute the plan. Wait for an `AVAILABLE` status before performing operations.
+
+## Timeouts
+
+`aws_servicecatalog_provisioned_product` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `30 minutes`)
+- `read` - (Default `10 minutes`)
+- `update` - (Default `30 minutes`)
+- `delete` - (Default `30 minutes`)
 
 ## Import
 

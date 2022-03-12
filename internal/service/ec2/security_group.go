@@ -2,7 +2,6 @@ package ec2
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"log"
 	"sort"
@@ -13,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -31,6 +30,7 @@ func ResourceSecurityGroup() *schema.Resource {
 		Read:   resourceSecurityGroupRead,
 		Update: resourceSecurityGroupUpdate,
 		Delete: resourceSecurityGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -246,49 +246,46 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	securityGroupOpts := &ec2.CreateSecurityGroupInput{}
-
-	if v, ok := d.GetOk("vpc_id"); ok {
-		securityGroupOpts.VpcId = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		securityGroupOpts.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSecurityGroup)
+	groupName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	input := &ec2.CreateSecurityGroupInput{
+		GroupName: aws.String(groupName),
 	}
 
 	if v := d.Get("description"); v != nil {
-		securityGroupOpts.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 
-	groupName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
-	securityGroupOpts.GroupName = aws.String(groupName)
+	if len(tags) > 0 {
+		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSecurityGroup)
+	}
 
-	var err error
-	log.Printf("[DEBUG] Security Group create configuration: %s", securityGroupOpts)
-	createResp, err := conn.CreateSecurityGroup(securityGroupOpts)
+	if v, ok := d.GetOk("vpc_id"); ok {
+		input.VpcId = aws.String(v.(string))
+	}
+
+	log.Printf("[DEBUG] Creating Security Group: %s", input)
+	output, err := conn.CreateSecurityGroup(input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating Security Group: %w", err)
+		return fmt.Errorf("error creating Security Group (%s): %w", groupName, err)
 	}
 
-	d.SetId(aws.StringValue(createResp.GroupId))
-
-	log.Printf("[INFO] Security Group ID: %s", d.Id())
+	d.SetId(aws.StringValue(output.GroupId))
 
 	// Wait for the security group to truly exist
 	group, err := WaitSecurityGroupCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+
 	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for Security Group (%s) to become available: %w",
-			d.Id(), err)
+		return fmt.Errorf("error waiting for Security Group (%s) create: %w", d.Id(), err)
 	}
 
 	// AWS defaults all Security Groups to have an ALLOW ALL egress rule. Here we
 	// revoke that rule, so users don't unknowingly have/use it.
-	if group.VpcId != nil && *group.VpcId != "" {
+	if aws.StringValue(group.VpcId) != "" {
 		log.Printf("[DEBUG] Revoking default egress rule for Security Group for %s", d.Id())
 
-		req := &ec2.RevokeSecurityGroupEgressInput{
-			GroupId: createResp.GroupId,
+		input := &ec2.RevokeSecurityGroupEgressInput{
+			GroupId: output.GroupId,
 			IpPermissions: []*ec2.IpPermission{
 				{
 					FromPort: aws.Int64(0),
@@ -303,13 +300,13 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 			},
 		}
 
-		if _, err = conn.RevokeSecurityGroupEgress(req); err != nil {
+		if _, err = conn.RevokeSecurityGroupEgress(input); err != nil {
 			return fmt.Errorf("Error revoking default egress rule for Security Group (%s): %w", d.Id(), err)
 		}
 
 		log.Printf("[DEBUG] Revoking default IPv6 egress rule for Security Group for %s", d.Id())
-		req = &ec2.RevokeSecurityGroupEgressInput{
-			GroupId: createResp.GroupId,
+		input = &ec2.RevokeSecurityGroupEgressInput{
+			GroupId: output.GroupId,
 			IpPermissions: []*ec2.IpPermission{
 				{
 					FromPort: aws.Int64(0),
@@ -324,7 +321,7 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 			},
 		}
 
-		_, err = conn.RevokeSecurityGroupEgress(req)
+		_, err = conn.RevokeSecurityGroupEgress(input)
 		if err != nil {
 			//If we have a NotFound or InvalidParameterValue, then we are trying to remove the default IPv6 egress of a non-IPv6
 			//enabled SG
@@ -344,12 +341,13 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	sg, err := FindSecurityGroupByID(conn, d.Id())
-	var nfe *resource.NotFoundError
-	if !d.IsNewResource() && errors.As(err, &nfe) {
-		log.Printf("[WARN] Security group (%s) not found, removing from state", d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Security Group %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
 		return fmt.Errorf("error reading Security Group (%s): %w", d.Id(), err)
 	}
@@ -477,7 +475,7 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteSecurityGroup(input)
-		if tfawserr.ErrMessageContains(err, "InvalidGroup.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidGroup.NotFound") {
 			return nil
 		}
 	}
@@ -1353,7 +1351,7 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, tim
 		timeout = minimumTimeout
 	}
 
-	resp, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
+	networkInterfaces, err := FindNetworkInterfaces(conn, &ec2.DescribeNetworkInterfacesInput{
 		Filters: BuildAttributeFilterList(map[string]string{
 			filterName:    resourceId,
 			"description": "AWS Lambda VPC ENI*",
@@ -1361,38 +1359,38 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, tim
 	})
 
 	if err != nil {
-		return fmt.Errorf("error describing ENIs: %w", err)
+		return fmt.Errorf("error listing EC2 Network Interfaces: %w", err)
 	}
 
-	for _, eni := range resp.NetworkInterfaces {
-		eniId := aws.StringValue(eni.NetworkInterfaceId)
+	for _, v := range networkInterfaces {
+		networkInterfaceID := aws.StringValue(v.NetworkInterfaceId)
 
-		if eni.Attachment != nil && aws.StringValue(eni.Attachment.InstanceOwnerId) == "amazon-aws" {
-			networkInterface, err := WaitNetworkInterfaceAvailableAfterUse(conn, eniId, timeout)
+		if v.Attachment != nil && aws.StringValue(v.Attachment.InstanceOwnerId) == "amazon-aws" {
+			networkInterface, err := WaitNetworkInterfaceAvailableAfterUse(conn, networkInterfaceID, timeout)
 
 			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error waiting for Lambda V2N ENI (%s) to become available for detachment: %w", eniId, err)
+				return fmt.Errorf("error waiting for Lambda ENI (%s) to become available for detachment: %w", networkInterfaceID, err)
 			}
 
-			eni = networkInterface
+			v = networkInterface
 		}
 
-		if eni.Attachment != nil {
-			err = DetachNetworkInterface(conn, eniId, aws.StringValue(eni.Attachment.AttachmentId), timeout)
+		if v.Attachment != nil {
+			err = DetachNetworkInterface(conn, networkInterfaceID, aws.StringValue(v.Attachment.AttachmentId), timeout)
 
 			if err != nil {
-				return fmt.Errorf("error detaching Lambda ENI (%s): %w", eniId, err)
+				return fmt.Errorf("error detaching Lambda ENI (%s): %w", networkInterfaceID, err)
 			}
 		}
 
-		err = DeleteNetworkInterface(conn, eniId)
+		err = DeleteNetworkInterface(conn, networkInterfaceID)
 
 		if err != nil {
-			return fmt.Errorf("error deleting Lambda ENI (%s): %w", eniId, err)
+			return fmt.Errorf("error deleting Lambda ENI (%s): %w", networkInterfaceID, err)
 		}
 	}
 

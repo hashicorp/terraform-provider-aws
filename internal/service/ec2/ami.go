@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -61,6 +61,12 @@ func ResourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"boot_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.BootModeValues_Values(), false),
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -97,6 +103,12 @@ func ResourceAMI() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ForceNew: true,
+						},
+						"outpost_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 						"snapshot_id": {
 							Type:     schema.TypeString,
@@ -276,6 +288,10 @@ func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 		req.RamdiskId = aws.String(ramdiskId)
 	}
 
+	if v := d.Get("boot_mode").(string); v != "" {
+		req.BootMode = aws.String(v)
+	}
+
 	if v, ok := d.GetOk("ebs_block_device"); ok && v.(*schema.Set).Len() > 0 {
 		for _, tfMapRaw := range v.(*schema.Set).List() {
 			tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -346,7 +362,7 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		res, err = client.DescribeImages(req)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidAMIID.NotFound", "") {
+			if tfawserr.ErrCodeEquals(err, "InvalidAMIID.NotFound") {
 				if d.IsNewResource() {
 					return resource.RetryableError(err)
 				}
@@ -407,6 +423,7 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("architecture", image.Architecture)
+	d.Set("boot_mode", image.BootMode)
 	d.Set("description", image.Description)
 	d.Set("ena_support", image.EnaSupport)
 	d.Set("hypervisor", image.Hypervisor)
@@ -486,13 +503,13 @@ func resourceAMIUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAMIDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).EC2Conn
 
-	req := &ec2.DeregisterImageInput{
+	log.Printf("[INFO] Deleting AMI: %s", d.Id())
+	_, err := client.DeregisterImage(&ec2.DeregisterImageInput{
 		ImageId: aws.String(d.Id()),
-	}
+	})
 
-	_, err := client.DeregisterImage(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("error deregistering AMI (%s): %w", d.Id(), err)
 	}
 
 	// If we're managing the EBS snapshots then we need to delete those too.
@@ -524,7 +541,7 @@ func resourceAMIDelete(d *schema.ResourceData, meta interface{}) error {
 
 	// Verify that the image is actually removed, if not we need to wait for it to be removed
 	if err := AMIWaitForDestroy(d.Timeout(schema.TimeoutDelete), d.Id(), client); err != nil {
-		return err
+		return fmt.Errorf("error waiting for AMI (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
@@ -536,7 +553,7 @@ func AMIStateRefreshFunc(client *ec2.EC2, id string) resource.StateRefreshFunc {
 
 		resp, err := client.DescribeImages(&ec2.DescribeImagesInput{ImageIds: []*string{aws.String(id)}})
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidAMIID.NotFound", "") {
+			if tfawserr.ErrCodeEquals(err, "InvalidAMIID.NotFound") {
 				return emptyResp, "destroyed", nil
 			} else if resp != nil && len(resp.Images) == 0 {
 				return emptyResp, "destroyed", nil
@@ -633,6 +650,10 @@ func expandEc2BlockDeviceMappingForAmiEbsBlockDevice(tfMap map[string]interface{
 		apiObject.Ebs.VolumeType = aws.String(v)
 	}
 
+	if v, ok := tfMap["outpost_arn"].(string); ok && v != "" {
+		apiObject.Ebs.OutpostArn = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -703,6 +724,10 @@ func flattenEc2BlockDeviceMappingForAmiEbsBlockDevice(apiObject *ec2.BlockDevice
 
 	if v := apiObject.Ebs.VolumeType; v != nil {
 		tfMap["volume_type"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Ebs.OutpostArn; v != nil {
+		tfMap["outpost_arn"] = aws.StringValue(v)
 	}
 
 	return tfMap

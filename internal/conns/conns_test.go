@@ -5,7 +5,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	awsbase "github.com/hashicorp/aws-sdk-go-base"
+	mockdatav1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/mockdata"
+	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
 )
 
 func TestAWSClientPartitionHostname(t *testing.T) {
@@ -83,21 +84,21 @@ func TestAWSClientRegionalHostname(t *testing.T) {
 }
 
 func TestGetSupportedEC2Platforms(t *testing.T) {
-	ec2Endpoints := []*awsbase.MockEndpoint{
+	ec2Endpoints := []*servicemocks.MockEndpoint{
 		{
-			Request: &awsbase.MockRequest{
+			Request: &servicemocks.MockRequest{
 				Method: "POST",
 				Uri:    "/",
 				Body:   "Action=DescribeAccountAttributes&AttributeName.1=supported-platforms&Version=2016-11-15",
 			},
-			Response: &awsbase.MockResponse{
+			Response: &servicemocks.MockResponse{
 				StatusCode:  200,
 				Body:        test_ec2_describeAccountAttributes_response,
 				ContentType: "text/xml",
 			},
 		},
 	}
-	closeFunc, sess, err := awsbase.GetMockedAwsApiSession("EC2", ec2Endpoints)
+	closeFunc, sess, err := mockdatav1.GetMockedAwsApiSession("EC2", ec2Endpoints)
 	if err != nil {
 		t.Fatal(err)
 	}

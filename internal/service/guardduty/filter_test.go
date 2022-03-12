@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -427,7 +427,7 @@ func testAccCheckACMPCACertificateAuthorityDestroy(s *terraform.State) error {
 		output, err := conn.DescribeCertificateAuthority(input)
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, acmpca.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 			return err

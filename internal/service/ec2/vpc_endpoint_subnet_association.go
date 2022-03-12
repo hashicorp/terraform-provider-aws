@@ -3,11 +3,12 @@ package ec2
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,7 +21,7 @@ func ResourceVPCEndpointSubnetAssociation() *schema.Resource {
 		Read:   resourceVPCEndpointSubnetAssociationRead,
 		Delete: resourceVPCEndpointSubnetAssociationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceVPCEndpointSubnetAssociationImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -130,7 +131,7 @@ func resourceVPCEndpointSubnetAssociationDelete(d *schema.ResourceData, meta int
 	log.Printf("[DEBUG] Deleting VPC Endpoint Subnet Association: %s", id)
 	_, err := conn.ModifyVpcEndpoint(input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVPCEndpointIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeInvalidSubnetIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeInvalidParameter) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcEndpointIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeInvalidSubnetIdNotFound) || tfawserr.ErrCodeEquals(err, ErrCodeInvalidParameter) {
 		return nil
 	}
 
@@ -145,4 +146,21 @@ func resourceVPCEndpointSubnetAssociationDelete(d *schema.ResourceData, meta int
 	}
 
 	return nil
+}
+
+func resourceVPCEndpointSubnetAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	parts := strings.Split(d.Id(), "/")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("Wrong format of resource: %s. Please follow 'vpc-endpoint-id/subnet-id'", d.Id())
+	}
+
+	endpointID := parts[0]
+	subnetID := parts[1]
+	log.Printf("[DEBUG] Importing VPC Endpoint (%s) Subnet (%s) Association", endpointID, subnetID)
+
+	d.SetId(VPCEndpointSubnetAssociationCreateID(endpointID, subnetID))
+	d.Set("vpc_endpoint_id", endpointID)
+	d.Set("subnet_id", subnetID)
+
+	return []*schema.ResourceData{d}, nil
 }

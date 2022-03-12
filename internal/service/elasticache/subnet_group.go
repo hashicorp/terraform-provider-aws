@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -158,7 +158,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
-	if err != nil && !tfawserr.ErrMessageContains(err, "UnknownOperationException", "") {
+	if err != nil && !tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
 		return fmt.Errorf("error listing tags for ElastiCache SubnetGroup (%s): %w", d.Id(), err)
 	}
 
@@ -239,7 +239,7 @@ func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 		})
 	}
 
-	if tfawserr.ErrMessageContains(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault) {
 		return nil
 	}
 

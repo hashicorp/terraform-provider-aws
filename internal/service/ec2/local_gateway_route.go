@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -101,7 +101,7 @@ func resourceLocalGatewayRouteRead(d *schema.ResourceData, meta interface{}) err
 		localGatewayRoute, err = GetLocalGatewayRoute(conn, localGatewayRouteTableID, destination)
 	}
 
-	if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidRouteTableID.NotFound") {
 		log.Printf("[WARN] EC2 Local Gateway Route Table (%s) not found, removing from state", localGatewayRouteTableID)
 		d.SetId("")
 		return nil
@@ -153,7 +153,7 @@ func resourceLocalGatewayRouteDelete(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG] Deleting EC2 Local Gateway Route (%s): %s", d.Id(), input)
 	_, err = conn.DeleteLocalGatewayRoute(input)
 
-	if tfawserr.ErrMessageContains(err, "InvalidRoute.NotFound", "") || tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidRoute.NotFound") || tfawserr.ErrCodeEquals(err, "InvalidRouteTableID.NotFound") {
 		return nil
 	}
 
