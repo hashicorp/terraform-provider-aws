@@ -41,7 +41,7 @@ func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "port"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "preferred_maintenance_window"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "publicly_accessible"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone_relocation", resourceName, "availability_zone_relocation"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone_relocation_enabled", resourceName, "availability_zone_relocation_enabled"),
 				),
 			},
 		},
@@ -106,7 +106,7 @@ func TestAccRedshiftClusterDataSource_availabilityZoneRelocationEnabled(t *testi
 			{
 				Config: testAccClusterDataSourceConfig_availabilityZoneRelocationEnabled(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone_relocation", resourceName, "availability_zone_relocation"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone_relocation_enabled", resourceName, "availability_zone_relocation_enabled"),
 				),
 			},
 		},
@@ -270,7 +270,7 @@ resource "aws_redshift_cluster" "test" {
   skip_final_snapshot = true
   publicly_accessible = false
 
-  availability_zone_relocation = true
+  availability_zone_relocation_enabled = true
 }
 
 data "aws_redshift_cluster" "test" {

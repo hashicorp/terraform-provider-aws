@@ -46,7 +46,7 @@ The following arguments are supported:
 * `vpc_security_group_ids` - (Optional) A list of Virtual Private Cloud (VPC) security groups to be associated with the cluster.
 * `cluster_subnet_group_name` - (Optional) The name of a cluster subnet group to be associated with this cluster. If this parameter is not provided the resulting cluster will be deployed outside virtual private cloud (VPC).
 * `availability_zone` - (Optional) The EC2 Availability Zone (AZ) in which you want Amazon Redshift to provision the cluster. For example, if you have several EC2 instances running in a specific Availability Zone, then you might want the cluster to be provisioned in the same zone in order to decrease network latency.
-* `availability_zone_relocation` - (Optional) Enable relocation for an Amazon Redshift cluster between Availability Zones. Default is false. Available for use on clusters from the RA3 instance family.
+* `availability_zone_relocation_enabled` - (Optional) If true, the cluster can be relocated to another availabity zone, either automatically by AWS or when requested. Default is `false`. Available for use on clusters from the RA3 instance family.
 * `preferred_maintenance_window` - (Optional) The weekly time range (in UTC) during which automated cluster maintenance can occur.
   Format: ddd:hh24:mi-ddd:hh24:mi
 * `cluster_parameter_group_name` - (Optional) The name of the parameter group to be associated with this cluster.

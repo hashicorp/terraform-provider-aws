@@ -54,7 +54,7 @@ In addition to all arguments above, the following attributes are exported:
 * `allow_version_upgrade` - Whether major version upgrades can be applied during maintenance period
 * `automated_snapshot_retention_period` - The backup retention period
 * `availability_zone` - The availability zone of the cluster
-* `availability_zone_relocation` - Relocation for an Amazon Redshift cluster between Availability Zones.
+* `availability_zone_relocation_enabled` - Indicates whether the cluster is able to be relocated to another availability zone.
 * `availability_zone_relocation_status` - The status of the Availability Zone relocation operation (enabled, disabled, pending_enabling, pending_disabling)
 * `bucket_name` - The name of the S3 bucket where the log files are to be stored
 * `cluster_identifier` - The cluster identifier

@@ -61,10 +61,9 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"availability_zone_relocation": {
+			"availability_zone_relocation_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"availability_zone_relocation_status": {
 				Type:     schema.TypeString,
@@ -327,8 +326,8 @@ func ResourceCluster() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if diff.Get("availability_zone_relocation").(bool) && diff.Get("publicly_accessible").(bool) {
-					return errors.New("availability_zone_relocation can not be true when publicly_accessible is true")
+				if diff.Get("availability_zone_relocation_enabled").(bool) && diff.Get("publicly_accessible").(bool) {
+					return errors.New("availability_zone_relocation_enabled can not be true when publicly_accessible is true")
 				}
 				return nil
 			},
@@ -336,12 +335,12 @@ func ResourceCluster() *schema.Resource {
 				if diff.Id() == "" {
 					return nil
 				}
-				if diff.Get("availability_zone_relocation").(bool) {
+				if diff.Get("availability_zone_relocation_enabled").(bool) {
 					return nil
 				}
 				o, n := diff.GetChange("availability_zone")
 				if o.(string) != n.(string) {
-					return fmt.Errorf("cannot change availability_zone if availability_zone_relocation is not true")
+					return fmt.Errorf("cannot change availability_zone if availability_zone_relocation_enabled is not true")
 				}
 				return nil
 			},
@@ -386,7 +385,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			restoreOpts.AvailabilityZone = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("availability_zone_relocation"); ok {
+		if v, ok := d.GetOk("availability_zone_relocation_enabled"); ok {
 			restoreOpts.AvailabilityZoneRelocation = aws.Bool(v.(bool))
 		}
 
@@ -481,7 +480,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			createOpts.AvailabilityZone = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("availability_zone_relocation"); ok {
+		if v, ok := d.GetOk("availability_zone_relocation_enabled"); ok {
 			createOpts.AvailabilityZoneRelocation = aws.Bool(v.(bool))
 		}
 
@@ -597,7 +596,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error reading Redshift Cluster (%s): %w", d.Id(), err)
 	}
-	d.Set("availability_zone_relocation", azr)
+	d.Set("availability_zone_relocation_enabled", azr)
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
 	if err := d.Set("cluster_nodes", flattenRedshiftClusterNodes(rsc.ClusterNodes)); err != nil {
 		return fmt.Errorf("error setting cluster_nodes: %w", err)
@@ -709,8 +708,8 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		requestUpdate = true
 	}
 
-	if d.HasChange("availability_zone_relocation") {
-		req.AvailabilityZoneRelocation = aws.Bool(d.Get("availability_zone_relocation").(bool))
+	if d.HasChange("availability_zone_relocation_enabled") {
+		req.AvailabilityZoneRelocation = aws.Bool(d.Get("availability_zone_relocation_enabled").(bool))
 		requestUpdate = true
 	}
 

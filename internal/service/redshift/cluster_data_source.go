@@ -37,7 +37,7 @@ func DataSourceCluster() *schema.Resource {
 				Computed: true,
 			},
 
-			"availability_zone_relocation": {
+			"availability_zone_relocation_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -211,7 +211,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error reading Redshift Cluster (%s): %w", d.Id(), err)
 	}
-	d.Set("availability_zone_relocation", azr)
+	d.Set("availability_zone_relocation_enabled", azr)
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
 
 	if len(rsc.ClusterParameterGroups) > 0 {
