@@ -1,4 +1,10 @@
 ## 4.6.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data_source/aws_redshift_cluster: Add `availability_zone_relocation_enabled` attribute. ([#20812](https://github.com/hashicorp/terraform-provider-aws/issues/20812))
+* resource/aws_redshift_cluster: Add `availability_zone_relocation_enabled` attribute and allow `availability_zone` to be changed in-place. ([#20812](https://github.com/hashicorp/terraform-provider-aws/issues/20812))
+
 ## 4.5.0 (March 11, 2022)
 
 ENHANCEMENTS:
