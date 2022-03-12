@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_db_instance: Add source_db_instance_automated_backups_arn to restore_to_point_in_time
+```
