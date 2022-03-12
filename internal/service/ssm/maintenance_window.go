@@ -187,7 +187,7 @@ func resourceMaintenanceWindowUpdate(d *schema.ResourceData, meta interface{}) e
 
 	_, err := conn.UpdateMaintenanceWindow(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
+		if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 			log.Printf("[WARN] Maintenance Window %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -217,7 +217,7 @@ func resourceMaintenanceWindowRead(d *schema.ResourceData, meta interface{}) err
 
 	resp, err := conn.GetMaintenanceWindow(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
+		if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 			log.Printf("[WARN] Maintenance Window %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

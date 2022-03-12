@@ -71,7 +71,7 @@ func ResourceProtectionHealthCheckAssociationRead(d *schema.ResourceData, meta i
 
 	resp, err := conn.DescribeProtection(input)
 
-	if tfawserr.ErrMessageContains(err, shield.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, shield.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Shield Protection itself (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

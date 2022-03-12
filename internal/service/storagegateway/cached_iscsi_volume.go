@@ -177,7 +177,7 @@ func resourceCachediSCSIVolumeRead(d *schema.ResourceData, meta interface{}) err
 	output, err := conn.DescribeCachediSCSIVolumes(input)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, storagegateway.ErrorCodeVolumeNotFound, "") || tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
+		if tfawserr.ErrCodeEquals(err, storagegateway.ErrorCodeVolumeNotFound) || tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
 			log.Printf("[WARN] Storage Gateway cached iSCSI volume %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -252,7 +252,7 @@ func resourceCachediSCSIVolumeDelete(d *schema.ResourceData, meta interface{}) e
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteVolume(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, storagegateway.ErrorCodeVolumeNotFound, "") {
+			if tfawserr.ErrCodeEquals(err, storagegateway.ErrorCodeVolumeNotFound) {
 				return nil
 			}
 			// InvalidGatewayRequestException: The specified gateway is not connected.

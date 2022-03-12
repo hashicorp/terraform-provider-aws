@@ -147,7 +147,7 @@ func resourceVPCIpamPoolCidrDelete(d *schema.ResourceData, meta interface{}) err
 
 		if err != nil {
 			// IncorrectState err can mean: State = "deprovisioned" || State = "pending-deprovision"
-			if tfawserr.ErrMessageContains(err, "IncorrectState", "") {
+			if tfawserr.ErrCodeEquals(err, "IncorrectState") {
 				output, err := WaitIpamPoolCidrDeleted(conn, d.Id(), IpamPoolCidrDeleteTimeout)
 				if err != nil {
 					// State = failed-deprovision

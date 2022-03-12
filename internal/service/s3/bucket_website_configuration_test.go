@@ -357,6 +357,10 @@ func testAccBucketWebsiteConfigurationBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "public-read"
 }
 
@@ -373,8 +377,13 @@ func testAccBucketWebsiteConfigurationUpdateConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "public-read"
 }
+
 
 resource "aws_s3_bucket_website_configuration" "test" {
   bucket = aws_s3_bucket.test.id
@@ -394,8 +403,13 @@ func testAccBucketWebsiteConfigurationConfig_Redirect(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "public-read"
 }
+
 
 resource "aws_s3_bucket_website_configuration" "test" {
   bucket = aws_s3_bucket.test.id
@@ -410,8 +424,13 @@ func testAccBucketWebsiteConfigurationConfig_RoutingRules_OptionalRedirection(rN
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "public-read"
 }
+
 
 resource "aws_s3_bucket_website_configuration" "test" {
   bucket = aws_s3_bucket.test.id
@@ -442,8 +461,13 @@ func testAccBucketWebsiteConfigurationConfig_RoutingRules_RedirectErrors(rName s
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "public-read"
 }
+
 
 resource "aws_s3_bucket_website_configuration" "test" {
   bucket = aws_s3_bucket.test.id
@@ -472,8 +496,13 @@ func testAccBucketWebsiteConfigurationConfig_RoutingRules_RedirectToPage(rName s
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "public-read"
 }
+
 
 resource "aws_s3_bucket_website_configuration" "test" {
   bucket = aws_s3_bucket.test.id
@@ -502,6 +531,10 @@ func testAccBucketWebsiteConfigurationConfig_RoutingRules_RedirectOnly(rName str
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "public-read"
 }
 
@@ -530,6 +563,10 @@ func testAccBucketWebsiteConfigurationConfig_RoutingRules_MultipleRules(rName st
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "public-read"
 }
 

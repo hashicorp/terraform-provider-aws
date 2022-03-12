@@ -45,7 +45,7 @@ func sweepGateways(region string) error {
 
 			_, err := conn.DeleteGateway(input)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, storagegateway.ErrorCodeGatewayNotFound, "") {
+				if tfawserr.ErrCodeEquals(err, storagegateway.ErrorCodeGatewayNotFound) {
 					continue
 				}
 				log.Printf("[ERROR] Failed to delete Storage Gateway Gateway (%s): %s", name, err)

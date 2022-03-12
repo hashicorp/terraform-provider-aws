@@ -125,7 +125,7 @@ func testAccCheckGlobalTableDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeGlobalTable(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeGlobalTableNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeGlobalTableNotFoundException) {
 				return nil
 			}
 			return err

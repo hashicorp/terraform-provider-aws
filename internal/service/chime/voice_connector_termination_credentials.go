@@ -83,7 +83,7 @@ func resourceVoiceConnectorTerminationCredentialsRead(ctx context.Context, d *sc
 	}
 
 	_, err := conn.ListVoiceConnectorTerminationCredentialsWithContext(ctx, input)
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 		log.Printf("[WARN] Chime Voice Connector (%s) termination credentials not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -127,7 +127,7 @@ func resourceVoiceConnectorTerminationCredentialsDelete(ctx context.Context, d *
 
 	_, err := conn.DeleteVoiceConnectorTerminationCredentialsWithContext(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 		return nil
 	}
 

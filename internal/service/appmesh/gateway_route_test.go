@@ -374,7 +374,7 @@ func testAccCheckAppmeshGatewayRouteDestroy(s *terraform.State) error {
 		}
 
 		_, err := tfappmesh.FindGatewayRoute(conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["virtual_gateway_name"], rs.Primary.Attributes["name"], rs.Primary.Attributes["mesh_owner"])
-		if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 			continue
 		}
 		if err != nil {

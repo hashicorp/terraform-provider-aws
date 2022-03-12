@@ -164,7 +164,7 @@ func testAccCheckQuickSightGroupDestroy(s *terraform.State) error {
 			Namespace:    aws.String(namespace),
 			GroupName:    aws.String(groupName),
 		})
-		if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 			continue
 		}
 

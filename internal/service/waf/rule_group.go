@@ -131,7 +131,7 @@ func resourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetRuleGroup(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, waf.ErrCodeNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
 			log.Printf("[WARN] WAF Rule Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

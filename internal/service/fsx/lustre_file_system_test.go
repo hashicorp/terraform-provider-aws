@@ -954,8 +954,12 @@ resource "aws_subnet" "test1" {
 func testAccLustreFileSystemExportPathConfig(rName, exportPrefix string) string {
 	return acctest.ConfigCompose(testAccLustreFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  acl    = "private"
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_fsx_lustre_file_system" "test" {
@@ -971,8 +975,12 @@ resource "aws_fsx_lustre_file_system" "test" {
 func testAccLustreFileSystemImportPathConfig(rName, importPrefix string) string {
 	return acctest.ConfigCompose(testAccLustreFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  acl    = "private"
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_fsx_lustre_file_system" "test" {
@@ -987,8 +995,12 @@ resource "aws_fsx_lustre_file_system" "test" {
 func testAccLustreFileSystemImportedFileChunkSizeConfig(rName string, importedFileChunkSize int) string {
 	return acctest.ConfigCompose(testAccLustreFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  acl    = "private"
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_fsx_lustre_file_system" "test" {
@@ -1291,8 +1303,12 @@ resource "aws_fsx_lustre_file_system" "test" {
 func testAccLustreFileSystemAutoImportPolicyConfig(rName, exportPrefix, policy string) string {
 	return acctest.ConfigCompose(testAccLustreFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  acl    = "private"
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_fsx_lustre_file_system" "test" {

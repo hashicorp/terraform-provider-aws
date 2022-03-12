@@ -384,7 +384,7 @@ func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 					RouteKey:  aws.String(routeKey),
 					StageName: aws.String(d.Id()),
 				})
-				if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+				if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 					continue
 				}
 				if err != nil {
@@ -433,7 +433,7 @@ func resourceStageDelete(d *schema.ResourceData, meta interface{}) error {
 		ApiId:     aws.String(d.Get("api_id").(string)),
 		StageName: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {

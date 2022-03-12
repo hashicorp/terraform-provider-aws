@@ -1357,7 +1357,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			createdDBInstanceOutput, err = conn.CreateDBInstance(&opts)
 		}
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "") {
+			if tfawserr.ErrCodeEquals(err, "InvalidParameterValue") {
 				opts.MasterUserPassword = aws.String("********")
 				return fmt.Errorf("Error creating DB Instance: %w, %+v", err, opts)
 			}
@@ -1885,7 +1885,7 @@ func resourceInstanceRetrieve(id string, conn *rds.RDS) (*rds.DBInstance, error)
 
 	resp, err := conn.DescribeDBInstances(&opts)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("Error retrieving DB Instances: %w", err)

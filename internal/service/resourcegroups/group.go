@@ -114,7 +114,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, resourcegroups.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeNotFoundException) {
 			log.Printf("[WARN] Resource Groups Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

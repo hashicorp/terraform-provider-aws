@@ -2,19 +2,38 @@
 package fms
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// ListTags lists fms service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ListTags(conn *fms.FMS, identifier string) (tftags.KeyValueTags, error) {
+	input := &fms.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return tftags.New(nil), err
+	}
+
+	return KeyValueTags(output.TagList), nil
+}
+
 // []*SERVICE.Tag handling
 
 // Tags returns fms service tags.
-func Tags(tags tftags.KeyValueTags) []*fms.ResourceTag {
-	result := make([]*fms.ResourceTag, 0, len(tags))
+func Tags(tags tftags.KeyValueTags) []*fms.Tag {
+	result := make([]*fms.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &fms.ResourceTag{
+		tag := &fms.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -26,7 +45,7 @@ func Tags(tags tftags.KeyValueTags) []*fms.ResourceTag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from fms service tags.
-func KeyValueTags(tags []*fms.ResourceTag) tftags.KeyValueTags {
+func KeyValueTags(tags []*fms.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -34,4 +53,40 @@ func KeyValueTags(tags []*fms.ResourceTag) tftags.KeyValueTags {
 	}
 
 	return tftags.New(m)
+}
+
+// UpdateTags updates fms service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func UpdateTags(conn *fms.FMS, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := tftags.New(oldTagsMap)
+	newTags := tftags.New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &fms.UntagResourceInput{
+			ResourceArn: aws.String(identifier),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+		}
+
+		_, err := conn.UntagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &fms.TagResourceInput{
+			ResourceArn: aws.String(identifier),
+			TagList:     Tags(updatedTags.IgnoreAWS()),
+		}
+
+		_, err := conn.TagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
 }

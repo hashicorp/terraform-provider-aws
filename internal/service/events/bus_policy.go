@@ -169,7 +169,7 @@ func resourceBusPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Update EventBridge Bus policy: %s", input)
 	_, err = conn.PutPermission(&input)
-	if tfawserr.ErrMessageContains(err, eventbridge.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] EventBridge Bus %q not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -194,7 +194,7 @@ func resourceBusPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Delete EventBridge Bus Policy: %s", input)
 	_, err := conn.RemovePermission(&input)
-	if tfawserr.ErrMessageContains(err, eventbridge.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 	if err != nil {

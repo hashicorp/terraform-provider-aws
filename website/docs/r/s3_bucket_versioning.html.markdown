@@ -34,6 +34,34 @@ resource "aws_s3_bucket_versioning" "versioning_example" {
 }
 ```
 
+### Object Dependency On Versioning
+
+When you create an object whose `version_id` you need and an `aws_s3_bucket_versioning` resource in the same configuration, you are more likely to have success by ensuring the `s3_object` depends either implicitly (see below) or explicitly (i.e., using `depends_on = [aws_s3_bucket_versioning.example]`) on the `aws_s3_bucket_versioning` resource.
+
+~> **NOTE:** For critical and/or production S3 objects, do not create a bucket, enable versioning, and create an object in the bucket within the same configuration. Doing so will not allow the AWS-recommended 15 minutes between enabling versioning and writing to the bucket.
+
+This example shows the `aws_s3_object.example` depending implicitly on the versioning resource through the reference to `aws_s3_bucket_versioning.example.bucket` to define `bucket`:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yotto"
+}
+
+resource "aws_s3_bucket_versioning" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "example" {
+  bucket = aws_s3_bucket_versioning.example.bucket
+  key    = "droeloe"
+  source = "example.txt"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -58,13 +86,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-S3 bucket versioning can be imported using the `bucket`, e.g.
+S3 bucket versioning can be imported in one of two ways.
+
+If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider,
+the S3 bucket versioning resource should be imported using the `bucket` e.g.,
 
 ```
 $ terraform import aws_s3_bucket_versioning.example bucket-name
 ```
 
-In addition, S3 bucket versioning can be imported using the `bucket` and `expected_bucket_owner` separated by a comma (`,`), e.g.
+If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider,
+the S3 bucket versioning resource should be imported using the `bucket` and `expected_bucket_owner` separated by a comma (`,`) e.g.,
 
 ```
 $ terraform import aws_s3_bucket_versioning.example bucket-name,123456789012

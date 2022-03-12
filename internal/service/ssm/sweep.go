@@ -61,7 +61,7 @@ func sweepMaintenanceWindows(region string) error {
 
 			_, err := conn.DeleteMaintenanceWindow(input)
 
-			if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
+			if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 				continue
 			}
 

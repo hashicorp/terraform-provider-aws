@@ -109,7 +109,7 @@ resource "aws_budgets_budget" "ri_utilization" {
   }
 
   # RI Utilization plans require a service cost filter to be set
-  cost_filter = {
+  cost_filter {
     name = "Service"
     values = [
       "Amazon Relational Database Service",

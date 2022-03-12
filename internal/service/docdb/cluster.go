@@ -522,7 +522,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Describing DocDB Cluster: %s", input)
 	resp, err := conn.DescribeDBClusters(input)
 
-	if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBClusterNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterNotFoundFault) {
 		log.Printf("[WARN] DocDB Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -806,7 +806,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 			if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidDBClusterStateFault, "cluster is a part of a global cluster") {
 				return resource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBClusterNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterNotFoundFault) {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -844,7 +844,7 @@ func resourceClusterStateRefreshFunc(conn *docdb.DocDB, dbClusterIdentifier stri
 			DBClusterIdentifier: aws.String(dbClusterIdentifier),
 		})
 
-		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBClusterNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterNotFoundFault) {
 			return 42, "destroyed", nil
 		}
 

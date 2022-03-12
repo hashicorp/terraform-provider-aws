@@ -1687,7 +1687,8 @@ resource "aws_s3_bucket_versioning" "object_bucket_3" {
 }
 
 resource "aws_s3_object" "object" {
-  bucket = aws_s3_bucket.object_bucket_3.bucket
+  # Must have bucket versioning enabled first
+  bucket = aws_s3_bucket_versioning.object_bucket_3.bucket
   key    = "updateable-key"
   source = %[3]q
   etag   = filemd5(%[3]q)
@@ -1709,7 +1710,8 @@ resource "aws_s3_bucket_versioning" "test" {
 }
 
 resource "aws_s3_access_point" "test" {
-  bucket = aws_s3_bucket.test.bucket
+  # Must have bucket versioning enabled first
+  bucket = aws_s3_bucket_versioning.test.bucket
   name   = %[1]q
 }
 
@@ -1768,7 +1770,8 @@ resource "aws_s3_bucket_versioning" "test" {
 }
 
 resource "aws_s3_object" "object" {
-  bucket  = aws_s3_bucket.test.bucket
+  # Must have bucket versioning enabled first
+  bucket  = aws_s3_bucket_versioning.test.bucket
   key     = "test-key"
   content = %[2]q
   acl     = %[3]q
@@ -1805,7 +1808,8 @@ resource "aws_s3_bucket_versioning" "test" {
 }
 
 resource "aws_s3_object" "object" {
-  bucket  = aws_s3_bucket.test.bucket
+  # Must have bucket versioning enabled first
+  bucket  = aws_s3_bucket_versioning.test.bucket
   key     = %[2]q
   content = %[3]q
 
@@ -1832,7 +1836,8 @@ resource "aws_s3_bucket_versioning" "test" {
 }
 
 resource "aws_s3_object" "object" {
-  bucket  = aws_s3_bucket.test.bucket
+  # Must have bucket versioning enabled first
+  bucket  = aws_s3_bucket_versioning.test.bucket
   key     = %[2]q
   content = %[3]q
 
@@ -1860,7 +1865,8 @@ resource "aws_s3_bucket_versioning" "test" {
 }
 
 resource "aws_s3_object" "object" {
-  bucket  = aws_s3_bucket.test.bucket
+  # Must have bucket versioning enabled first
+  bucket  = aws_s3_bucket_versioning.test.bucket
   key     = %[2]q
   content = %[3]q
 }
@@ -1890,9 +1896,7 @@ func testAccObjectConfig_noObjectLockLegalHold(rName string, content string) str
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 }
 
 resource "aws_s3_bucket_versioning" "test" {
@@ -1903,7 +1907,8 @@ resource "aws_s3_bucket_versioning" "test" {
 }
 
 resource "aws_s3_object" "object" {
-  bucket        = aws_s3_bucket.test.bucket
+  # Must have bucket versioning enabled first
+  bucket        = aws_s3_bucket_versioning.test.bucket
   key           = "test-key"
   content       = %[2]q
   force_destroy = true
@@ -1916,9 +1921,7 @@ func testAccObjectConfig_withObjectLockLegalHold(rName string, content, legalHol
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 }
 
 resource "aws_s3_bucket_versioning" "test" {
@@ -1929,7 +1932,8 @@ resource "aws_s3_bucket_versioning" "test" {
 }
 
 resource "aws_s3_object" "object" {
-  bucket                        = aws_s3_bucket.test.bucket
+  # Must have bucket versioning enabled first
+  bucket                        = aws_s3_bucket_versioning.test.bucket
   key                           = "test-key"
   content                       = %[2]q
   object_lock_legal_hold_status = %[3]q
@@ -1943,9 +1947,7 @@ func testAccObjectConfig_noObjectLockRetention(rName string, content string) str
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 }
 
 resource "aws_s3_bucket_versioning" "test" {
@@ -1956,7 +1958,8 @@ resource "aws_s3_bucket_versioning" "test" {
 }
 
 resource "aws_s3_object" "object" {
-  bucket        = aws_s3_bucket.test.bucket
+  # Must have bucket versioning enabled first
+  bucket        = aws_s3_bucket_versioning.test.bucket
   key           = "test-key"
   content       = %[2]q
   force_destroy = true
@@ -1969,9 +1972,7 @@ func testAccObjectConfig_withObjectLockRetention(rName string, content, retainUn
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 }
 
 resource "aws_s3_bucket_versioning" "test" {
@@ -1982,7 +1983,8 @@ resource "aws_s3_bucket_versioning" "test" {
 }
 
 resource "aws_s3_object" "object" {
-  bucket                        = aws_s3_bucket.test.bucket
+  # Must have bucket versioning enabled first
+  bucket                        = aws_s3_bucket_versioning.test.bucket
   key                           = "test-key"
   content                       = %[2]q
   force_destroy                 = true

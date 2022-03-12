@@ -55,6 +55,16 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Provisioning Artifact identifier and product identifier separated by a colon.
 * `status` - Status of the provisioning artifact.
 
+## Timeouts
+
+`aws_servicecatalog_provisioning_artifact` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `3 minutes`)
+- `read` - (Default `10 minutes`)
+- `update` - (Default `3 minutes`)
+- `delete` - (Default `3 minutes`)
+
 ## Import
 
 `aws_servicecatalog_provisioning_artifact` can be imported using the provisioning artifact ID and product ID separated by a colon, e.g.,

@@ -621,9 +621,7 @@ func testAccObjectDataSourceConfig_objectLockLegalHoldOff(randInt int) string {
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%[1]d"
 
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 }
 
 resource "aws_s3_bucket_versioning" "object_bucket" {
@@ -634,7 +632,8 @@ resource "aws_s3_bucket_versioning" "object_bucket" {
 }
 
 resource "aws_s3_object" "object" {
-  bucket                        = aws_s3_bucket.object_bucket.bucket
+  # Must have bucket versioning enabled first
+  bucket                        = aws_s3_bucket_versioning.object_bucket.bucket
   key                           = "tf-testing-obj-%[1]d"
   content                       = "Hello World"
   object_lock_legal_hold_status = "OFF"
@@ -652,9 +651,7 @@ func testAccObjectDataSourceConfig_objectLockLegalHoldOn(randInt int, retainUnti
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%[1]d"
 
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 }
 
 resource "aws_s3_bucket_versioning" "object_bucket" {
@@ -665,7 +662,8 @@ resource "aws_s3_bucket_versioning" "object_bucket" {
 }
 
 resource "aws_s3_object" "object" {
-  bucket                        = aws_s3_bucket.object_bucket.bucket
+  # Must have bucket versioning enabled first
+  bucket                        = aws_s3_bucket_versioning.object_bucket.bucket
   key                           = "tf-testing-obj-%[1]d"
   content                       = "Hello World"
   force_destroy                 = true
