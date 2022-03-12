@@ -430,8 +430,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 		resp, err := conn.RestoreFromClusterSnapshot(restoreOpts)
 		if err != nil {
-			log.Printf("[ERROR] Error Restoring Redshift Cluster from Snapshot: %s", err)
-			return err
+			return fmt.Errorf("error restoring Redshift Cluster from snapshot: %w", err)
 		}
 
 		d.SetId(aws.StringValue(resp.Cluster.ClusterIdentifier))
@@ -517,8 +516,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Redshift Cluster create options: %s", createOpts)
 		resp, err := conn.CreateCluster(createOpts)
 		if err != nil {
-			log.Printf("[ERROR] Error creating Redshift Cluster: %s", err)
-			return err
+			return fmt.Errorf("error creating Redshift Cluster: %w", err)
 		}
 
 		log.Printf("[DEBUG]: Cluster create response: %s", resp)
@@ -532,10 +530,14 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 	}
-
 	_, err := stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("Error waiting for Redshift Cluster state to be \"available\": %s", err)
+		return fmt.Errorf("Error waiting for Redshift Cluster state to be \"available\": %w", err)
+	}
+
+	_, err = waitClusterRelocationStatusResolved(conn, d.Id())
+	if err != nil {
+		return fmt.Errorf("error waiting for Redshift Cluster Availability Zone Relocation Status to resolve: %w", err)
 	}
 
 	if v, ok := d.GetOk("snapshot_copy"); ok {
@@ -547,7 +549,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if _, ok := d.GetOk("logging.0.enable"); ok {
 		if err := enableRedshiftClusterLogging(d, conn); err != nil {
-			return fmt.Errorf("error enabling Redshift Cluster (%s) logging: %s", d.Id(), err)
+			return fmt.Errorf("error enabling Redshift Cluster (%s) logging: %w", d.Id(), err)
 		}
 	}
 
@@ -816,10 +818,14 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 		}
-
 		_, err := stateConf.WaitForState()
 		if err != nil {
 			return fmt.Errorf("Error waiting for Redshift Cluster modification (%s): %w", d.Id(), err)
+		}
+
+		_, err = waitClusterRelocationStatusResolved(conn, d.Id())
+		if err != nil {
+			return fmt.Errorf("error waiting for Redshift Cluster Availability Zone Relocation Status to resolve: %w", err)
 		}
 	}
 
@@ -842,7 +848,6 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 		}
-
 		_, err = stateConf.WaitForState()
 		if err != nil {
 			return fmt.Errorf("Error waiting for Redshift Cluster relocation (%s): %w", d.Id(), err)
@@ -1066,9 +1071,9 @@ func flattenRedshiftClusterNodes(apiObjects []*redshift.ClusterNode) []interface
 func clusterAvailabilityZoneRelocationStatus(cluster *redshift.Cluster) (bool, error) {
 	// AvailabilityZoneRelocation is not returned by the API, and AvailabilityZoneRelocationStatus is not implemented as Const at this time.
 	switch availabilityZoneRelocationStatus := aws.StringValue(cluster.AvailabilityZoneRelocationStatus); availabilityZoneRelocationStatus {
-	case "enabled", "pending_enabling":
+	case "enabled":
 		return true, nil
-	case "disabled", "pending_disabling":
+	case "disabled":
 		return false, nil
 	default:
 		return false, fmt.Errorf("unexpected AvailabilityZoneRelocationStatus value %q returned by API", availabilityZoneRelocationStatus)
