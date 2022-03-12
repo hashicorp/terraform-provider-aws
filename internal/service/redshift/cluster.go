@@ -1,6 +1,8 @@
 package redshift
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -11,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -56,7 +59,6 @@ func ResourceCluster() *schema.Resource {
 			"availability_zone": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Computed: true,
 			},
 			"availability_zone_relocation": {
@@ -322,7 +324,28 @@ func ResourceCluster() *schema.Resource {
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			verify.SetTagsDiff,
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				if diff.Get("availability_zone_relocation").(bool) && diff.Get("publicly_accessible").(bool) {
+					return errors.New("availability_zone_relocation can not be true when publicly_accessible is true")
+				}
+				return nil
+			},
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				if diff.Id() == "" {
+					return nil
+				}
+				if diff.Get("availability_zone_relocation").(bool) {
+					return nil
+				}
+				o, n := diff.GetChange("availability_zone")
+				if o.(string) != n.(string) {
+					return fmt.Errorf("cannot change availability_zone if availability_zone_relocation is not true")
+				}
+				return nil
+			},
+		),
 	}
 }
 
@@ -568,7 +591,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("automated_snapshot_retention_period", rsc.AutomatedSnapshotRetentionPeriod)
 	d.Set("availability_zone", rsc.AvailabilityZone)
 	d.Set("availability_zone_relocation_status", rsc.AvailabilityZoneRelocationStatus)
-	azr, err := availabilityZoneRelocationStatus(rsc)
+	azr, err := clusterAvailabilityZoneRelocationStatus(rsc)
 	if err != nil {
 		return fmt.Errorf("error reading Redshift Cluster (%s): %w", d.Id(), err)
 	}
@@ -750,11 +773,10 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if requestUpdate {
-		log.Printf("[INFO] Modifying Redshift Cluster: %s", d.Id())
-		log.Printf("[DEBUG] Redshift Cluster Modify options: %s", req)
+		log.Printf("[DEBUG] Modifying Redshift Cluster: %s", d.Id())
 		_, err := conn.ModifyCluster(req)
 		if err != nil {
-			return fmt.Errorf("Error modifying Redshift Cluster (%s): %s", d.Id(), err)
+			return fmt.Errorf("Error modifying Redshift Cluster (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -773,23 +795,20 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		removeIams := os.Difference(ns)
 		addIams := ns.Difference(os)
 
-		log.Printf("[INFO] Building Redshift Modify Cluster IAM Role Options")
 		req := &redshift.ModifyClusterIamRolesInput{
 			ClusterIdentifier: aws.String(d.Id()),
 			AddIamRoles:       flex.ExpandStringSet(addIams),
 			RemoveIamRoles:    flex.ExpandStringSet(removeIams),
 		}
 
-		log.Printf("[INFO] Modifying Redshift Cluster IAM Roles: %s", d.Id())
-		log.Printf("[DEBUG] Redshift Cluster Modify IAM Role options: %s", req)
+		log.Printf("[DEBUG] Modifying Redshift Cluster IAM Roles: %s", d.Id())
 		_, err := conn.ModifyClusterIamRoles(req)
 		if err != nil {
-			return fmt.Errorf("Error modifying Redshift Cluster IAM Roles (%s): %s", d.Id(), err)
+			return fmt.Errorf("Error modifying Redshift Cluster IAM Roles (%s): %w", d.Id(), err)
 		}
 	}
 
 	if requestUpdate || d.HasChange("iam_roles") {
-
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{"creating", "deleting", "rebooting", "resizing", "renaming", "modifying", "available, prep-for-resize"},
 			Target:     []string{"available"},
@@ -798,10 +817,35 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			MinTimeout: 10 * time.Second,
 		}
 
-		// Wait, catching any errors
 		_, err := stateConf.WaitForState()
 		if err != nil {
-			return fmt.Errorf("Error Modifying Redshift Cluster (%s): %s", d.Id(), err)
+			return fmt.Errorf("Error waiting for Redshift Cluster modification (%s): %w", d.Id(), err)
+		}
+	}
+
+	// Availability Zone cannot be changed at the same time as other settings
+	if d.HasChange("availability_zone") {
+		req := &redshift.ModifyClusterInput{
+			ClusterIdentifier: aws.String(d.Id()),
+			AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
+		}
+		log.Printf("[DEBUG] Relocating Redshift Cluster: %s", d.Id())
+		_, err := conn.ModifyCluster(req)
+		if err != nil {
+			return fmt.Errorf("Error relocating Redshift Cluster (%s): %w", d.Id(), err)
+		}
+
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{"creating", "deleting", "rebooting", "resizing", "renaming", "modifying", "available, prep-for-resize", "recovering"},
+			Target:     []string{"available"},
+			Refresh:    resourceClusterStateRefreshFunc(d.Id(), conn),
+			Timeout:    d.Timeout(schema.TimeoutUpdate),
+			MinTimeout: 10 * time.Second,
+		}
+
+		_, err = stateConf.WaitForState()
+		if err != nil {
+			return fmt.Errorf("Error waiting for Redshift Cluster relocation (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -816,7 +860,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 				ClusterIdentifier: aws.String(d.Id()),
 			})
 			if err != nil {
-				return fmt.Errorf("Failed to disable snapshot copy: %s", err)
+				return fmt.Errorf("Failed to disable snapshot copy: %w", err)
 			}
 		}
 	}
@@ -896,7 +940,7 @@ func enableRedshiftSnapshotCopy(id string, scList []interface{}, conn *redshift.
 
 	_, err := conn.EnableSnapshotCopy(&input)
 	if err != nil {
-		return fmt.Errorf("Failed to enable snapshot copy: %s", err)
+		return fmt.Errorf("Failed to enable snapshot copy: %w", err)
 	}
 	return nil
 }
@@ -1017,4 +1061,16 @@ func flattenRedshiftClusterNodes(apiObjects []*redshift.ClusterNode) []interface
 	}
 
 	return tfList
+}
+
+func clusterAvailabilityZoneRelocationStatus(cluster *redshift.Cluster) (bool, error) {
+	// AvailabilityZoneRelocation is not returned by the API, and AvailabilityZoneRelocationStatus is not implemented as Const at this time.
+	switch availabilityZoneRelocationStatus := aws.StringValue(cluster.AvailabilityZoneRelocationStatus); availabilityZoneRelocationStatus {
+	case "enabled", "pending_enabling":
+		return true, nil
+	case "disabled", "pending_disabling":
+		return false, nil
+	default:
+		return false, fmt.Errorf("unexpected AvailabilityZoneRelocationStatus value %q returned by API", availabilityZoneRelocationStatus)
+	}
 }
