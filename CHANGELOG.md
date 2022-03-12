@@ -1,5 +1,13 @@
 ## 3.74.4 (Unreleased)
 
+NOTES:
+
+* resource/aws_s3_bucket: The `acl` and `grant` arguments have been deprecated. Use the `aws_s3_bucket_acl` resource instead. ([#23419](https://github.com/hashicorp/terraform-provider-aws/issues/23419))
+
+FEATURES:
+
+* **New Resource:** `aws_s3_bucket_acl` ([#23419](https://github.com/hashicorp/terraform-provider-aws/issues/23419))
+
 ## 3.74.3 (February 17, 2022)
 
 BUG FIXES:
