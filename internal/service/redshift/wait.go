@@ -38,7 +38,7 @@ func waitClusterDeleted(conn *redshift.Redshift, id string, timeout time.Duratio
 	return nil, err
 }
 
-func waitClusterRelocationStatusResolved(conn *redshift.Redshift, id string) (*redshift.Cluster, error) {
+func waitClusterRelocationStatusResolved(conn *redshift.Redshift, id string) (*redshift.Cluster, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: clusterAvailabilityZoneRelocationStatus_PendingValues(),
 		Target:  clusterAvailabilityZoneRelocationStatus_TerminalValues(),
