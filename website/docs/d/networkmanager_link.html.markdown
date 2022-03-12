@@ -6,9 +6,9 @@ description: |-
   Retrieve information about a link.
 ---
 
-# Data Source:  aws_networkmanager_site
+# Data Source:  aws_networkmanager_link
 
-Retrieve information about a site.
+Retrieve information about a link.
 
 ## Example Usage
 
