@@ -86,6 +86,7 @@ func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set("description", link.Description)
 	d.Set("global_network_id", link.GlobalNetworkId)
+	d.Set("link_id", link.LinkId)
 	d.Set("provider_name", link.Provider)
 	d.Set("site_id", link.SiteId)
 	d.Set("type", link.Type)
