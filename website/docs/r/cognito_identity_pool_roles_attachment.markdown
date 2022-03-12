@@ -119,7 +119,9 @@ The Cognito Identity Pool Roles Attachment argument layout is a structure compos
 
 ## Attributes Reference
 
-No additional attributes are exported.
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - The identity pool ID.
 
 ## Import
 
