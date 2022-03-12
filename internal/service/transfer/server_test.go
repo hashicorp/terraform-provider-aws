@@ -1225,8 +1225,8 @@ resource "aws_transfer_server" "test" {}
 func testAccServerDisplayBannersConfig() string {
 	return `
 resource "aws_transfer_server" "test" {
-	pre_display_banner = "This system is for the use of authorized users only"
-	post_display_banner = "This system is for the use of authorized users only"
+  pre_display_banner  = "This system is for the use of authorized users only"
+  post_display_banner = "This system is for the use of authorized users only"
 }
 `
 }
