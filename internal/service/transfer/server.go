@@ -1,6 +1,6 @@
 package transfer
 
-import (
+import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"context"
 	"fmt"
 	"log"
@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/transfer"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -129,6 +129,12 @@ func ResourceServer() *schema.Resource {
 				Default:  false,
 			},
 
+			"function": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+
 			"host_key": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -227,6 +233,14 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("endpoint_type"); ok {
 		input.EndpointType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("function"); ok {
+		if input.IdentityProviderDetails == nil {
+			input.IdentityProviderDetails = &transfer.IdentityProviderDetails{}
+		}
+
+		input.IdentityProviderDetails.Function = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("host_key"); ok {
@@ -359,6 +373,11 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("endpoint_details", nil)
 	}
 	d.Set("endpoint_type", output.EndpointType)
+	if output.IdentityProviderDetails != nil {
+		d.Set("function", output.IdentityProviderDetails.Function)
+	} else {
+		d.Set("function", "")
+	}
 	d.Set("host_key_fingerprint", output.HostKeyFingerprint)
 	d.Set("identity_provider_type", output.IdentityProviderType)
 	if output.IdentityProviderDetails != nil {
@@ -508,11 +527,15 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		if d.HasChanges("directory_id", "invocation_role", "url") {
+		if d.HasChanges("directory_id", "function", "invocation_role", "url") {
 			identityProviderDetails := &transfer.IdentityProviderDetails{}
 
 			if attr, ok := d.GetOk("directory_id"); ok {
 				identityProviderDetails.DirectoryId = aws.String(attr.(string))
+			}
+
+			if attr, ok := d.GetOk("function"); ok {
+				identityProviderDetails.Function = aws.String(attr.(string))
 			}
 
 			if attr, ok := d.GetOk("invocation_role"); ok {

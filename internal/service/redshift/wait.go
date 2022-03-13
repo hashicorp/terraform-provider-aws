@@ -9,6 +9,8 @@ import (
 
 const (
 	clusterInvalidClusterStateFaultTimeout = 15 * time.Minute
+
+	clusterRelocationStatusResolvedTimeout = 1 * time.Minute
 )
 
 func waitClusterDeleted(conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
@@ -25,6 +27,23 @@ func waitClusterDeleted(conn *redshift.Redshift, id string, timeout time.Duratio
 		Target:  []string{},
 		Refresh: statusCluster(conn, id),
 		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*redshift.Cluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitClusterRelocationStatusResolved(conn *redshift.Redshift, id string) (*redshift.Cluster, error) { //nolint:unparam
+	stateConf := &resource.StateChangeConf{
+		Pending: clusterAvailabilityZoneRelocationStatus_PendingValues(),
+		Target:  clusterAvailabilityZoneRelocationStatus_TerminalValues(),
+		Refresh: statusClusterAvailabilityZoneRelocation(conn, id),
+		Timeout: clusterRelocationStatusResolvedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

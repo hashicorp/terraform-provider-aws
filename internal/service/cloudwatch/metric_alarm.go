@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -111,7 +111,11 @@ func ResourceMetricAlarm() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.Any(
 											validation.StringInSlice(cloudwatch.Statistic_Values(), false),
-											validation.StringMatch(regexp.MustCompile(`p(\d{1,2}(\.\d{0,2})?|100)`), "must specify a value between p0.0 and p100"),
+											validation.StringMatch(
+												// doesn't catch: PR with %-values provided, TM/WM/PR/TC/TS with no values provided
+												regexp.MustCompile(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`),
+												"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
+											),
 										),
 									},
 									"unit": {
@@ -235,7 +239,11 @@ func ResourceMetricAlarm() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"statistic", "metric_query"},
-				ValidateFunc:  validation.StringMatch(regexp.MustCompile(`p(\d{1,2}(\.\d{0,2})?|100)`), "must specify a value between p0.0 and p100"),
+				ValidateFunc: validation.StringMatch(
+					// doesn't catch: PR with %-values provided, TM/WM/PR/TC/TS with no values provided
+					regexp.MustCompile(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`),
+					"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
+				),
 			},
 			"treat_missing_data": {
 				Type:         schema.TypeString,
@@ -294,11 +302,45 @@ func resourceMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Creating CloudWatch Metric Alarm: %#v", params)
 	_, err = conn.PutMetricAlarm(&params)
-	if err != nil {
-		return fmt.Errorf("Creating metric alarm failed: %w", err)
+
+	// Some partitions (i.e., ISO) may not support tag-on-create
+	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] failed creating CloudWatch Metric Alarm (%s) with tags: %s. Trying create without tags.", d.Get("alarm_name").(string), err)
+		params.Tags = nil
+
+		_, err = conn.PutMetricAlarm(&params)
 	}
+
+	if err != nil {
+		return fmt.Errorf("failed creating CloudWatch Metric Alarm (%s): %w", d.Get("alarm_name").(string), err)
+	}
+
 	d.SetId(d.Get("alarm_name").(string))
 	log.Println("[INFO] CloudWatch Metric Alarm created")
+
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
+	if params.Tags == nil && len(tags) > 0 {
+		resp, err := FindMetricAlarmByName(conn, d.Id())
+
+		if err != nil {
+			return fmt.Errorf("while finding metric alarm (%s): %w", d.Id(), err)
+		}
+
+		err = UpdateTags(conn, aws.StringValue(resp.AlarmArn), nil, tags)
+
+		// If default tags only, log and continue. Otherwise, error.
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] failed adding tags after create for CloudWatch Metric Alarm (%s): %s", d.Id(), err)
+			return resourceMetricAlarmRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed adding tags after create for CloudWatch Metric Alarm (%s): %w", d.Id(), err)
+		}
+	}
 
 	return resourceMetricAlarmRead(d, meta)
 }
@@ -372,6 +414,12 @@ func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
+	// Some partitions (i.e., ISO) may not support tagging, giving error
+	if verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] failed listing tags for CloudWatch Metric Alarm (%s): %s", d.Id(), err)
+		return nil
+	}
+
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
@@ -399,8 +447,16 @@ func resourceMetricAlarmUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating CloudWatch Metric Alarm (%s) tags: %w", arn, err)
+		err := UpdateTags(conn, arn, o, n)
+
+		// Some partitions (i.e., ISO) may not support tagging, giving error
+		if verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] failed updating tags for CloudWatch Metric Alarm (%s): %s", d.Id(), err)
+			return resourceMetricAlarmRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed updating tags for CloudWatch Metric Alarm (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -416,7 +472,7 @@ func resourceMetricAlarmDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Deleting CloudWatch Metric Alarm: %s", d.Id())
 
 	if _, err := conn.DeleteAlarms(&params); err != nil {
-		if tfawserr.ErrMessageContains(err, cloudwatch.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting CloudWatch Metric Alarm: %w", err)
@@ -435,7 +491,10 @@ func getPutMetricAlarmInput(d *schema.ResourceData, meta interface{}) cloudwatch
 		ComparisonOperator: aws.String(d.Get("comparison_operator").(string)),
 		EvaluationPeriods:  aws.Int64(int64(d.Get("evaluation_periods").(int))),
 		TreatMissingData:   aws.String(d.Get("treat_missing_data").(string)),
-		Tags:               Tags(tags.IgnoreAWS()),
+	}
+
+	if len(tags) > 0 {
+		params.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v := d.Get("actions_enabled"); v != nil {

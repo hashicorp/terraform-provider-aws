@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -85,7 +85,7 @@ func resourceGeoMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetGeoMatchSet(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, waf.ErrCodeNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
 			log.Printf("[WARN] WAF GeoMatchSet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -95,7 +95,7 @@ func resourceGeoMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("name", resp.GeoMatchSet.Name)
-	d.Set("geo_match_constraint", flattenWafGeoMatchConstraint(resp.GeoMatchSet.GeoMatchConstraints))
+	d.Set("geo_match_constraint", FlattenGeoMatchConstraint(resp.GeoMatchSet.GeoMatchConstraints))
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -158,7 +158,7 @@ func updateGeoMatchSetResource(id string, oldT, newT []interface{}, conn *waf.WA
 		req := &waf.UpdateGeoMatchSetInput{
 			ChangeToken:   token,
 			GeoMatchSetId: aws.String(id),
-			Updates:       diffWafGeoMatchSetConstraints(oldT, newT),
+			Updates:       DiffGeoMatchSetConstraints(oldT, newT),
 		}
 
 		log.Printf("[INFO] Updating GeoMatchSet constraints: %s", req)

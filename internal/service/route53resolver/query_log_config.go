@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -101,7 +101,7 @@ func resourceQueryLogConfigRead(d *schema.ResourceData, meta interface{}) error 
 
 	queryLogConfig, err := FindResolverQueryLogConfigByID(conn, d.Id())
 
-	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Route53 Resolver Query Log Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -164,7 +164,7 @@ func resourceQueryLogConfigDelete(d *schema.ResourceData, meta interface{}) erro
 		ResolverQueryLogConfigId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 

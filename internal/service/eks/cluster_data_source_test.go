@@ -1,14 +1,12 @@
 package eks_test
 
 import (
-	"fmt"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/eks"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -38,6 +36,7 @@ func TestAccEKSClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "identity.0.oidc.#", dataSourceResourceName, "identity.0.oidc.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "identity.0.oidc.0.issuer", dataSourceResourceName, "identity.0.oidc.0.issuer"),
 					resource.TestCheckResourceAttrPair(resourceName, "kubernetes_network_config.#", dataSourceResourceName, "kubernetes_network_config.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "kubernetes_network_config.0.ip_family", dataSourceResourceName, "kubernetes_network_config.0.ip_family"),
 					resource.TestCheckResourceAttrPair(resourceName, "kubernetes_network_config.0.service_ipv4_cidr", dataSourceResourceName, "kubernetes_network_config.0.service_ipv4_cidr"),
 					resource.TestMatchResourceAttr(dataSourceResourceName, "platform_version", regexp.MustCompile(`^eks\.\d+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", dataSourceResourceName, "role_arn"),
@@ -64,34 +63,4 @@ data "aws_eks_cluster" "test" {
   name = aws_eks_cluster.test.name
 }
 `)
-}
-
-func testCheckResourceAttrGreaterThanValue(name, key, value string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		ms := s.RootModule()
-		rs, ok := ms.Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s in %s", name, ms.Path)
-		}
-
-		is := rs.Primary
-		if is == nil {
-			return fmt.Errorf("No primary instance: %s in %s", name, ms.Path)
-		}
-
-		if v, ok := is.Attributes[key]; !ok || !(v > value) {
-			if !ok {
-				return fmt.Errorf("%s: Attribute '%s' not found", name, key)
-			}
-
-			return fmt.Errorf(
-				"%s: Attribute '%s' is not greater than %#v, got %#v",
-				name,
-				key,
-				value,
-				v)
-		}
-		return nil
-
-	}
 }

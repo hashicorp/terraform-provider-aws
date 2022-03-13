@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -973,7 +973,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("iam_roles"); ok {
 		for _, role := range v.(*schema.Set).List() {
-			err := setIamRoleToRdsCluster(d.Id(), role.(string), conn)
+			err := setIAMRoleToCluster(d.Id(), role.(string), conn)
 			if err != nil {
 				return err
 			}
@@ -1011,7 +1011,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Describing RDS Cluster: %s", input)
 	resp, err := conn.DescribeDBClusters(input)
 
-	if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
 		log.Printf("[WARN] RDS Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -1273,7 +1273,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 					return resource.NonRetryableError(err)
 				}
 
-				if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "") {
+				if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidDBClusterStateFault) {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -1335,14 +1335,14 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		enableRoles := ns.Difference(os)
 
 		for _, role := range enableRoles.List() {
-			err := setIamRoleToRdsCluster(d.Id(), role.(string), conn)
+			err := setIAMRoleToCluster(d.Id(), role.(string), conn)
 			if err != nil {
 				return err
 			}
 		}
 
 		for _, role := range removeRoles.List() {
-			err := removeIamRoleFromRdsCluster(d.Id(), role.(string), conn)
+			err := removeIAMRoleFromCluster(d.Id(), role.(string), conn)
 			if err != nil {
 				return err
 			}
@@ -1406,7 +1406,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "cluster is a part of a global cluster") {
 				return resource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -1435,7 +1435,7 @@ func resourceClusterStateRefreshFunc(conn *rds.RDS, dbClusterIdentifier string) 
 			DBClusterIdentifier: aws.String(dbClusterIdentifier),
 		})
 
-		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
 			return 42, "destroyed", nil
 		}
 
@@ -1463,7 +1463,7 @@ func resourceClusterStateRefreshFunc(conn *rds.RDS, dbClusterIdentifier string) 
 	}
 }
 
-func setIamRoleToRdsCluster(clusterIdentifier string, roleArn string, conn *rds.RDS) error {
+func setIAMRoleToCluster(clusterIdentifier string, roleArn string, conn *rds.RDS) error {
 	params := &rds.AddRoleToDBClusterInput{
 		DBClusterIdentifier: aws.String(clusterIdentifier),
 		RoleArn:             aws.String(roleArn),
@@ -1472,7 +1472,7 @@ func setIamRoleToRdsCluster(clusterIdentifier string, roleArn string, conn *rds.
 	return err
 }
 
-func removeIamRoleFromRdsCluster(clusterIdentifier string, roleArn string, conn *rds.RDS) error {
+func removeIAMRoleFromCluster(clusterIdentifier string, roleArn string, conn *rds.RDS) error {
 	params := &rds.RemoveRoleFromDBClusterInput{
 		DBClusterIdentifier: aws.String(clusterIdentifier),
 		RoleArn:             aws.String(roleArn),
@@ -1541,8 +1541,15 @@ func rdsClusterSetResourceDataEngineVersionFromCluster(d *schema.ResourceData, c
 }
 
 func compareActualEngineVersion(d *schema.ResourceData, oldVersion string, newVersion string) {
-	if oldVersion != newVersion && string(append([]byte(oldVersion), []byte(".")...)) != string([]byte(newVersion)[0:len(oldVersion)+1]) {
+	newVersionSubstr := newVersion
+
+	if len(newVersion) > len(oldVersion) {
+		newVersionSubstr = string([]byte(newVersion)[0 : len(oldVersion)+1])
+	}
+
+	if oldVersion != newVersion && string(append([]byte(oldVersion), []byte(".")...)) != newVersionSubstr {
 		d.Set("engine_version", newVersion)
 	}
+
 	d.Set("engine_version_actual", newVersion)
 }

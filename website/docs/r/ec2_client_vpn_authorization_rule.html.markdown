@@ -35,6 +35,13 @@ The following arguments are supported:
 
 No additional attributes are exported.
 
+## Timeouts
+
+`aws_ec2_client_vpn_authorization_rule` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for rule authorization
+- `delete` - (Default `10 minutes`) Used for rule revocation
+
 ## Import
 
 AWS Client VPN authorization rules can be imported using the endpoint ID and target network CIDR. If there is a specific group name that is included as well. All values are separated by a `,`.

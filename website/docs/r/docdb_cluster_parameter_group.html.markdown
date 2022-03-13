@@ -38,6 +38,8 @@ The following arguments are supported:
 
 Parameter blocks support the following:
 
+~> **NOTE:** These arguments take a `string` representation of their values.
+
 * `name` - (Required) The name of the documentDB parameter.
 * `value` - (Required) The value of the documentDB parameter.
 * `apply_method` - (Optional) Valid values are `immediate` and `pending-reboot`. Defaults to `pending-reboot`.

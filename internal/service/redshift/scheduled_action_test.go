@@ -228,7 +228,7 @@ func TestAccRedshiftScheduledAction_resizeClusterWithOptions(t *testing.T) {
 		CheckDestroy: testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduledActionResizeClusterWithFullOptionsConfig(rName, "cron(00 23 * * ? *)", true, "multi-node", "dc1.large", 2),
+				Config: testAccScheduledActionResizeClusterWithFullOptionsConfig(rName, "cron(00 23 * * ? *)", true, "multi-node", "dc2.large", 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -244,7 +244,7 @@ func TestAccRedshiftScheduledAction_resizeClusterWithOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.classic", "true"),
 					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.cluster_identifier", "tf-test-identifier"),
 					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.cluster_type", "multi-node"),
-					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.node_type", "dc1.large"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.node_type", "dc2.large"),
 					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.number_of_nodes", "2"),
 				),
 			},

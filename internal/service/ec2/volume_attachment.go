@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -174,7 +174,7 @@ func resourceVolumeAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 
 	vols, err := conn.DescribeVolumes(request)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidVolume.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidVolume.NotFound") {
 			d.SetId("")
 			return nil
 		}

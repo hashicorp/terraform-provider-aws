@@ -188,7 +188,7 @@ func TestAccLambdaPermission_basic(t *testing.T) {
 			{
 				Config: testAccPermissionConfig(funcName, roleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLambdaPermissionExists(resourceName, &statement),
+					testAccCheckPermissionExists(resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunction"),
 					resource.TestCheckResourceAttr(resourceName, "principal", "events.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionFromCloudWatch"),
@@ -225,6 +225,10 @@ func TestAccLambdaPermission_StatementID_duplicate(t *testing.T) {
 }
 
 func TestAccLambdaPermission_withRawFunctionName(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var statement tflambda.PolicyStatement
 
 	rString := sdkacctest.RandString(8)
@@ -243,7 +247,7 @@ func TestAccLambdaPermission_withRawFunctionName(t *testing.T) {
 			{
 				Config: testAccPermissionConfig_withRawFunctionName(funcName, roleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLambdaPermissionExists(resourceName, &statement),
+					testAccCheckPermissionExists(resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunction"),
 					resource.TestCheckResourceAttr(resourceName, "principal", "events.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionWithRawFuncName"),
@@ -278,7 +282,7 @@ func TestAccLambdaPermission_withStatementIdPrefix(t *testing.T) {
 			{
 				Config: testAccPermissionConfig_withStatementIdPrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLambdaPermissionExists(resourceName, &statement),
+					testAccCheckPermissionExists(resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunction"),
 					resource.TestCheckResourceAttr(resourceName, "principal", "events.amazonaws.com"),
 					resource.TestMatchResourceAttr(resourceName, "statement_id", startsWithPrefix),
@@ -316,7 +320,7 @@ func TestAccLambdaPermission_withQualifier(t *testing.T) {
 			{
 				Config: testAccPermissionConfig_withQualifier(aliasName, funcName, roleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLambdaPermissionExists(resourceName, &statement),
+					testAccCheckPermissionExists(resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunction"),
 					resource.TestCheckResourceAttr(resourceName, "principal", "events.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionWithQualifier"),
@@ -387,13 +391,13 @@ func TestAccLambdaPermission_multiplePerms(t *testing.T) {
 				Config: testAccPermissionConfig_multiplePerms(funcName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					// 1st
-					testAccCheckLambdaPermissionExists(resourceNameFirst, &firstStatement),
+					testAccCheckPermissionExists(resourceNameFirst, &firstStatement),
 					resource.TestCheckResourceAttr(resourceNameFirst, "action", "lambda:InvokeFunction"),
 					resource.TestCheckResourceAttr(resourceNameFirst, "principal", "events.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceNameFirst, "statement_id", "AllowExecutionFirst"),
 					resource.TestCheckResourceAttrPair(resourceNameFirst, "function_name", functionResourceName, "arn"),
 					// 2nd
-					testAccCheckLambdaPermissionExists(resourceNameSecond, &firstStatementModified),
+					testAccCheckPermissionExists(resourceNameSecond, &firstStatementModified),
 					resource.TestCheckResourceAttr(resourceNameSecond, "action", "lambda:*"),
 					resource.TestCheckResourceAttr(resourceNameSecond, "principal", "events.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceNameSecond, "statement_id", "AllowExecutionSecond"),
@@ -404,19 +408,19 @@ func TestAccLambdaPermission_multiplePerms(t *testing.T) {
 				Config: testAccPermissionConfig_multiplePermsModified(funcName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					// 1st
-					testAccCheckLambdaPermissionExists(resourceNameFirst, &secondStatement),
+					testAccCheckPermissionExists(resourceNameFirst, &secondStatement),
 					resource.TestCheckResourceAttr(resourceNameFirst, "action", "lambda:InvokeFunction"),
 					resource.TestCheckResourceAttr(resourceNameFirst, "principal", "events.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceNameFirst, "statement_id", "AllowExecutionFirst"),
 					resource.TestCheckResourceAttrPair(resourceNameFirst, "function_name", functionResourceName, "arn"),
 					// 2nd
-					testAccCheckLambdaPermissionExists(resourceNameSecondModified, &secondStatementModified),
+					testAccCheckPermissionExists(resourceNameSecondModified, &secondStatementModified),
 					resource.TestCheckResourceAttr(resourceNameSecondModified, "action", "lambda:*"),
 					resource.TestCheckResourceAttr(resourceNameSecondModified, "principal", "events.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceNameSecondModified, "statement_id", "AllowExecutionSec0nd"),
 					resource.TestCheckResourceAttrPair(resourceNameSecondModified, "function_name", functionResourceName, "arn"),
 					// 3rd
-					testAccCheckLambdaPermissionExists(resourceNameThird, &thirdStatement),
+					testAccCheckPermissionExists(resourceNameThird, &thirdStatement),
 					resource.TestCheckResourceAttr(resourceNameThird, "action", "lambda:*"),
 					resource.TestCheckResourceAttr(resourceNameThird, "principal", "events.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceNameThird, "statement_id", "AllowExecutionThird"),
@@ -460,7 +464,7 @@ func TestAccLambdaPermission_withS3(t *testing.T) {
 			{
 				Config: testAccPermissionConfig_withS3(bucketName, funcName, roleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLambdaPermissionExists(resourceName, &statement),
+					testAccCheckPermissionExists(resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunction"),
 					resource.TestCheckResourceAttr(resourceName, "principal", "s3.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionFromS3"),
@@ -499,7 +503,7 @@ func TestAccLambdaPermission_withSNS(t *testing.T) {
 			{
 				Config: testAccPermissionConfig_withSNS(topicName, funcName, roleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLambdaPermissionExists(resourceName, &statement),
+					testAccCheckPermissionExists(resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunction"),
 					resource.TestCheckResourceAttr(resourceName, "principal", "sns.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionFromSNS"),
@@ -537,7 +541,7 @@ func TestAccLambdaPermission_withIAMRole(t *testing.T) {
 			{
 				Config: testAccPermissionConfig_withIAMRole(funcName, roleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLambdaPermissionExists(resourceName, &statement),
+					testAccCheckPermissionExists(resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunction"),
 					resource.TestCheckResourceAttrPair(resourceName, "principal", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionFromIAMRole"),
@@ -589,7 +593,7 @@ func testAccPermissionDisappears(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckLambdaPermissionExists(n string, statement *tflambda.PolicyStatement) resource.TestCheckFunc {
+func testAccCheckPermissionExists(n string, statement *tflambda.PolicyStatement) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -637,7 +641,7 @@ func testAccCheckPermissionDestroy(s *terraform.State) error {
 
 		// IAM is eventually consistent
 		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-			err := isLambdaPermissionGone(rs, conn)
+			err := isPermissionGone(rs, conn)
 			if err != nil {
 				if !strings.HasPrefix(err.Error(), "Error unmarshalling Lambda policy") {
 					return resource.RetryableError(err)
@@ -654,7 +658,7 @@ func testAccCheckPermissionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func isLambdaPermissionGone(rs *terraform.ResourceState, conn *lambda.Lambda) error {
+func isPermissionGone(rs *terraform.ResourceState, conn *lambda.Lambda) error {
 	params := &lambda.GetPolicyInput{
 		FunctionName: aws.String(rs.Primary.Attributes["function_name"]),
 	}
@@ -1026,6 +1030,10 @@ resource "aws_lambda_permission" "with_s3" {
 
 resource "aws_s3_bucket" "default" {
   bucket = "%s"
+}
+
+resource "aws_s3_bucket_acl" "default" {
+  bucket = aws_s3_bucket.default.id
   acl    = "private"
 }
 

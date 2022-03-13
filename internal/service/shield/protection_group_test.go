@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/shield"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -325,12 +325,12 @@ resource "aws_shield_protection_group" "test" {
 func testAccShieldProtectionGroupConfig_members(rName string) string {
 	return acctest.ConfigCompose(testAccShieldProtectionElasticIPAddressConfig(rName), fmt.Sprintf(`
 resource "aws_shield_protection_group" "test" {
-  depends_on = [aws_shield_protection.acctest]
+  depends_on = [aws_shield_protection.test]
 
   protection_group_id = "%[1]s"
   aggregation         = "MAX"
   pattern             = "ARBITRARY"
-  members             = ["arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.sdkacctest.id}"]
+  members             = ["arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.test.id}"]
 }
 `, rName))
 }

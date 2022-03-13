@@ -278,7 +278,7 @@ func testAccCheckGrantDisappears(name string) resource.TestCheckFunc {
 func testAccGrantBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "Terraform acc test key %[1]s"
+  description             = %[1]q
   deletion_window_in_days = 7
 }
 
@@ -303,20 +303,20 @@ resource "aws_iam_role" "test" {
 }
 
 func testAccGrant_Basic(rName string, operations string) string {
-	return testAccGrantBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGrantBaseConfig(rName), fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
   name              = %[1]q
   key_id            = aws_kms_key.test.key_id
   grantee_principal = aws_iam_role.test.arn
   operations        = [%[2]s]
 }
-`, rName, operations)
+`, rName, operations))
 }
 
 func testAccGrant_withConstraints(rName string, constraintName string, encryptionContext string) string {
-	return testAccGrantBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGrantBaseConfig(rName), fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
-  name              = "%[1]s"
+  name              = %[1]q
   key_id            = aws_kms_key.test.key_id
   grantee_principal = aws_iam_role.test.arn
   operations        = ["RetireGrant", "DescribeKey"]
@@ -327,53 +327,53 @@ resource "aws_kms_grant" "test" {
     }
   }
 }
-`, rName, constraintName, encryptionContext)
+`, rName, constraintName, encryptionContext))
 }
 
 func testAccGrant_withRetiringPrincipal(rName string) string {
-	return testAccGrantBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGrantBaseConfig(rName), fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
-  name               = "%[1]s"
+  name               = %[1]q
   key_id             = aws_kms_key.test.key_id
   grantee_principal  = aws_iam_role.test.arn
   operations         = ["ReEncryptTo", "CreateGrant"]
   retiring_principal = aws_iam_role.test.arn
 }
-`, rName)
+`, rName))
 }
 
 func testAccGrant_bare(rName string) string {
-	return testAccGrantBaseConfig(rName) + `
+	return acctest.ConfigCompose(testAccGrantBaseConfig(rName), `
 resource "aws_kms_grant" "test" {
   key_id            = aws_kms_key.test.key_id
   grantee_principal = aws_iam_role.test.arn
   operations        = ["ReEncryptTo", "CreateGrant"]
 }
-`
+`)
 }
 
 func testAccGrant_ARN(rName string, operations string) string {
-	return testAccGrantBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGrantBaseConfig(rName), fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
-  name              = "%[1]s"
+  name              = %[1]q
   key_id            = aws_kms_key.test.arn
   grantee_principal = aws_iam_role.test.arn
   operations        = [%[2]s]
 }
-`, rName, operations)
+`, rName, operations))
 }
 
 func testAccGrant_AsymmetricKey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
-  name              = "%[1]s"
+  name              = %[1]q
   key_id            = aws_kms_key.test.key_id
   grantee_principal = aws_iam_role.test.arn
   operations        = ["GetPublicKey", "Sign", "Verify"]
 }
 
 resource "aws_kms_key" "test" {
-  description             = "Terraform acc test key %[1]s"
+  description             = %[1]q
   deletion_window_in_days = 7
 
   key_usage                = "SIGN_VERIFY"

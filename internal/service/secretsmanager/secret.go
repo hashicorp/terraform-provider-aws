@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -71,6 +71,10 @@ func ResourceSecret() *schema.Resource {
 				Computed:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"recovery_window_in_days": {
 				Type:     schema.TypeInt,
@@ -205,13 +209,19 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.ARN))
 
-	if v, ok := d.GetOk("policy"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("policy"); ok && v.(string) != "" && v.(string) != "{}" {
+		policy, err := structure.NormalizeJsonString(v.(string))
+
+		if err != nil {
+			return fmt.Errorf("policy (%s) is invalid JSON: %w", v.(string), err)
+		}
+
 		input := &secretsmanager.PutResourcePolicyInput{
-			ResourcePolicy: aws.String(v.(string)),
+			ResourcePolicy: aws.String(policy),
 			SecretId:       aws.String(d.Id()),
 		}
 
-		err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.PutResourcePolicy(input)
 			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
 				"This resource policy contains an unsupported principal") {
@@ -242,7 +252,7 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 			_, err := conn.RotateSecret(input)
 			if err != nil {
 				// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-				if tfawserr.ErrMessageContains(err, "AccessDeniedException", "") {
+				if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -269,27 +279,9 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 		SecretId: aws.String(d.Id()),
 	}
 
-	var output *secretsmanager.DescribeSecretOutput
-
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
-		var err error
-
-		output, err = conn.DescribeSecret(input)
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
+	outputRaw, err := tfresource.RetryWhenNotFound(PropagationTimeout, func() (interface{}, error) {
+		return conn.DescribeSecret(input)
 	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.DescribeSecret(input)
-	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Secrets Manager Secret (%s) not found, removing from state", d.Id())
@@ -300,6 +292,8 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error reading Secrets Manager Secret (%s): %w", d.Id(), err)
 	}
+
+	output := outputRaw.(*secretsmanager.DescribeSecretOutput)
 
 	if output == nil {
 		return fmt.Errorf("error reading Secrets Manager Secret (%s): empty response", d.Id())
@@ -324,11 +318,15 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if pOut.ResourcePolicy != nil {
-		policy, err := structure.NormalizeJsonString(aws.StringValue(pOut.ResourcePolicy))
+		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(pOut.ResourcePolicy))
+
 		if err != nil {
-			return fmt.Errorf("policy contains an invalid JSON: %w", err)
+			return err
 		}
-		d.Set("policy", policy)
+
+		d.Set("policy", policyToSet)
+	} else {
+		d.Set("policy", "")
 	}
 
 	d.Set("rotation_enabled", output.RotationEnabled)
@@ -397,7 +395,7 @@ func resourceSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("policy") {
-		if v, ok := d.GetOk("policy"); ok && v.(string) != "" {
+		if v, ok := d.GetOk("policy"); ok && v.(string) != "" && v.(string) != "{}" {
 			policy, err := structure.NormalizeJsonString(v.(string))
 			if err != nil {
 				return fmt.Errorf("policy contains an invalid JSON: %w", err)
@@ -451,7 +449,7 @@ func resourceSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 				_, err := conn.RotateSecret(input)
 				if err != nil {
 					// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-					if tfawserr.ErrMessageContains(err, "AccessDeniedException", "") {
+					if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
 						return resource.RetryableError(err)
 					}
 					return resource.NonRetryableError(err)
@@ -512,7 +510,7 @@ func resourceSecretDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deleting Secrets Manager Secret: %s", input)
 	_, err := conn.DeleteSecret(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error deleting Secrets Manager Secret: %w", err)
@@ -549,7 +547,7 @@ func removeSecretsManagerSecretReplicas(conn *secretsmanager.SecretsManager, id 
 	_, err := conn.RemoveRegionsFromReplication(input)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 

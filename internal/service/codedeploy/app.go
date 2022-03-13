@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -137,7 +137,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 		ApplicationName: aws.String(application),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeApplicationDoesNotExistException, "") {
+		if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeApplicationDoesNotExistException) {
 			d.SetId("")
 			log.Printf("[WARN] CodeDeploy Application (%s) not found, removing from state", d.Id())
 			return nil
@@ -223,7 +223,7 @@ func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 		ApplicationName: aws.String(d.Get("name").(string)),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeApplicationDoesNotExistException, "") {
+		if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeApplicationDoesNotExistException) {
 			return nil
 		}
 
