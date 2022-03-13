@@ -140,7 +140,6 @@ func ResourceSecurityGroup() *schema.Resource {
 						"description": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      "",
 							ValidateFunc: validSecurityGroupRuleDescription,
 						},
 					},
@@ -211,7 +210,6 @@ func ResourceSecurityGroup() *schema.Resource {
 						"description": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      "",
 							ValidateFunc: validSecurityGroupRuleDescription,
 						},
 					},
