@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -105,7 +105,7 @@ func resourceFunctionEventInvokeConfigCreate(d *schema.ResourceData, meta interf
 	}
 
 	input := &lambda.PutFunctionEventInvokeConfigInput{
-		DestinationConfig:    expandLambdaFunctionEventInvokeConfigDestinationConfig(d.Get("destination_config").([]interface{})),
+		DestinationConfig:    expandFunctionEventInvokeConfigDestinationConfig(d.Get("destination_config").([]interface{})),
 		FunctionName:         aws.String(functionName),
 		MaximumRetryAttempts: aws.Int64(int64(d.Get("maximum_retry_attempts").(int))),
 	}
@@ -171,7 +171,7 @@ func resourceFunctionEventInvokeConfigRead(d *schema.ResourceData, meta interfac
 
 	output, err := conn.GetFunctionEventInvokeConfig(input)
 
-	if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Lambda Function Event Invoke Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -181,7 +181,7 @@ func resourceFunctionEventInvokeConfigRead(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error getting Lambda Function Event Invoke Config (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("destination_config", flattenLambdaFunctionEventInvokeConfigDestinationConfig(output.DestinationConfig)); err != nil {
+	if err := d.Set("destination_config", flattenFunctionEventInvokeConfigDestinationConfig(output.DestinationConfig)); err != nil {
 		return fmt.Errorf("error setting destination_config: %s", err)
 	}
 
@@ -203,7 +203,7 @@ func resourceFunctionEventInvokeConfigUpdate(d *schema.ResourceData, meta interf
 	}
 
 	input := &lambda.PutFunctionEventInvokeConfigInput{
-		DestinationConfig:    expandLambdaFunctionEventInvokeConfigDestinationConfig(d.Get("destination_config").([]interface{})),
+		DestinationConfig:    expandFunctionEventInvokeConfigDestinationConfig(d.Get("destination_config").([]interface{})),
 		FunctionName:         aws.String(functionName),
 		MaximumRetryAttempts: aws.Int64(int64(d.Get("maximum_retry_attempts").(int))),
 	}
@@ -267,7 +267,7 @@ func resourceFunctionEventInvokeConfigDelete(d *schema.ResourceData, meta interf
 
 	_, err = conn.DeleteFunctionEventInvokeConfig(input)
 
-	if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
@@ -319,7 +319,7 @@ func FunctionEventInvokeConfigParseID(id string) (string, string, error) {
 	return idParts[0], idParts[1], nil
 }
 
-func expandLambdaFunctionEventInvokeConfigDestinationConfig(l []interface{}) *lambda.DestinationConfig {
+func expandFunctionEventInvokeConfigDestinationConfig(l []interface{}) *lambda.DestinationConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -329,17 +329,17 @@ func expandLambdaFunctionEventInvokeConfigDestinationConfig(l []interface{}) *la
 	destinationConfig := &lambda.DestinationConfig{}
 
 	if v, ok := m["on_failure"].([]interface{}); ok {
-		destinationConfig.OnFailure = expandLambdaFunctionEventInvokeConfigDestinationConfigOnFailure(v)
+		destinationConfig.OnFailure = expandFunctionEventInvokeConfigDestinationConfigOnFailure(v)
 	}
 
 	if v, ok := m["on_success"].([]interface{}); ok {
-		destinationConfig.OnSuccess = expandLambdaFunctionEventInvokeConfigDestinationConfigOnSuccess(v)
+		destinationConfig.OnSuccess = expandFunctionEventInvokeConfigDestinationConfigOnSuccess(v)
 	}
 
 	return destinationConfig
 }
 
-func expandLambdaFunctionEventInvokeConfigDestinationConfigOnFailure(l []interface{}) *lambda.OnFailure {
+func expandFunctionEventInvokeConfigDestinationConfigOnFailure(l []interface{}) *lambda.OnFailure {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -355,7 +355,7 @@ func expandLambdaFunctionEventInvokeConfigDestinationConfigOnFailure(l []interfa
 	return onFailure
 }
 
-func expandLambdaFunctionEventInvokeConfigDestinationConfigOnSuccess(l []interface{}) *lambda.OnSuccess {
+func expandFunctionEventInvokeConfigDestinationConfigOnSuccess(l []interface{}) *lambda.OnSuccess {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -371,7 +371,7 @@ func expandLambdaFunctionEventInvokeConfigDestinationConfigOnSuccess(l []interfa
 	return onSuccess
 }
 
-func flattenLambdaFunctionEventInvokeConfigDestinationConfig(destinationConfig *lambda.DestinationConfig) []interface{} {
+func flattenFunctionEventInvokeConfigDestinationConfig(destinationConfig *lambda.DestinationConfig) []interface{} {
 	// The API will respond with empty OnFailure and OnSuccess destinations when unconfigured:
 	// "DestinationConfig":{"OnFailure":{"Destination":null},"OnSuccess":{"Destination":null}}
 	// Return no destination configuration to prevent Terraform state difference
@@ -389,14 +389,14 @@ func flattenLambdaFunctionEventInvokeConfigDestinationConfig(destinationConfig *
 	}
 
 	m := map[string]interface{}{
-		"on_failure": flattenLambdaFunctionEventInvokeConfigDestinationConfigOnFailure(destinationConfig.OnFailure),
-		"on_success": flattenLambdaFunctionEventInvokeConfigDestinationConfigOnSuccess(destinationConfig.OnSuccess),
+		"on_failure": flattenFunctionEventInvokeConfigDestinationConfigOnFailure(destinationConfig.OnFailure),
+		"on_success": flattenFunctionEventInvokeConfigDestinationConfigOnSuccess(destinationConfig.OnSuccess),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenLambdaFunctionEventInvokeConfigDestinationConfigOnFailure(onFailure *lambda.OnFailure) []interface{} {
+func flattenFunctionEventInvokeConfigDestinationConfigOnFailure(onFailure *lambda.OnFailure) []interface{} {
 	// The API will respond with empty OnFailure destination when unconfigured:
 	// "DestinationConfig":{"OnFailure":{"Destination":null},"OnSuccess":{"Destination":null}}
 	// Return no on failure configuration to prevent Terraform state difference
@@ -412,7 +412,7 @@ func flattenLambdaFunctionEventInvokeConfigDestinationConfigOnFailure(onFailure 
 	return []interface{}{m}
 }
 
-func flattenLambdaFunctionEventInvokeConfigDestinationConfigOnSuccess(onSuccess *lambda.OnSuccess) []interface{} {
+func flattenFunctionEventInvokeConfigDestinationConfigOnSuccess(onSuccess *lambda.OnSuccess) []interface{} {
 	// The API will respond with empty OnSuccess destination when unconfigured:
 	// "DestinationConfig":{"OnFailure":{"Destination":null},"OnSuccess":{"Destination":null}}
 	// Return no on success configuration to prevent Terraform state difference

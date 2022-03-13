@@ -119,8 +119,8 @@ data "aws_iam_policy_document" "source" {
   }
 }
 
-data "aws_iam_policy_document" "source_json_example" {
-  source_json = data.aws_iam_policy_document.source.json
+data "aws_iam_policy_document" "source_document_example" {
+  source_policy_documents = [data.aws_iam_policy_document.source.json]
 
   statement {
     sid = "SidToOverride"
@@ -135,7 +135,7 @@ data "aws_iam_policy_document" "source_json_example" {
 }
 ```
 
-`data.aws_iam_policy_document.source_json_example.json` will evaluate to:
+`data.aws_iam_policy_document.source_document_example.json` will evaluate to:
 
 ```json
 {
@@ -172,8 +172,8 @@ data "aws_iam_policy_document" "override" {
   }
 }
 
-data "aws_iam_policy_document" "override_json_example" {
-  override_json = data.aws_iam_policy_document.override.json
+data "aws_iam_policy_document" "override_policy_document_example" {
+  override_policy_documents = [data.aws_iam_policy_document.override.json]
 
   statement {
     actions   = ["ec2:*"]
@@ -193,7 +193,7 @@ data "aws_iam_policy_document" "override_json_example" {
 }
 ```
 
-`data.aws_iam_policy_document.override_json_example.json` will evaluate to:
+`data.aws_iam_policy_document.override_policy_document_example.json` will evaluate to:
 
 ```json
 {
@@ -217,7 +217,7 @@ data "aws_iam_policy_document" "override_json_example" {
 
 ### Example with Both Source and Override Documents
 
-You can also combine `source_json` and `override_json` in the same document.
+You can also combine `source_policy_documents` and `override_policy_documents` in the same document.
 
 ```terraform
 data "aws_iam_policy_document" "source" {
@@ -237,8 +237,8 @@ data "aws_iam_policy_document" "override" {
 }
 
 data "aws_iam_policy_document" "politik" {
-  source_json   = data.aws_iam_policy_document.source.json
-  override_json = data.aws_iam_policy_document.override.json
+  source_policy_documents   = [data.aws_iam_policy_document.source.json]
+  override_policy_documents = [data.aws_iam_policy_document.override.json]
 }
 ```
 
@@ -421,13 +421,13 @@ data "aws_iam_policy_document" "combined" {
 
 The following arguments are optional:
 
-* `override_json` (Optional) - IAM policy document whose statements with non-blank `sid`s will override statements with the same `sid` from documents assigned to the `source_json`, `source_policy_documents`, and `override_policy_documents` arguments. Non-overriding statements will be added to the exported document.
+* `override_json` (Optional, **Deprecated** use the `override_policy_documents` attribute instead) - IAM policy document whose statements with non-blank `sid`s will override statements with the same `sid` from documents assigned to the `source_json`, `source_policy_documents`, and `override_policy_documents` arguments. Non-overriding statements will be added to the exported document.
 
 ~> **NOTE:** Statements without a `sid` cannot be overridden. In other words, a statement without a `sid` from documents assigned to the `source_json` or `source_policy_documents` arguments cannot be overridden by statements from documents assigned to the `override_json` or `override_policy_documents` arguments.
 
 * `override_policy_documents` (Optional) - List of IAM policy documents that are merged together into the exported document. In merging, statements with non-blank `sid`s will override statements with the same `sid` from earlier documents in the list. Statements with non-blank `sid`s will also override statements with the same `sid` from documents provided in the `source_json` and `source_policy_documents` arguments.  Non-overriding statements will be added to the exported document.
 * `policy_id` (Optional) - ID for the policy document.
-* `source_json` (Optional) - IAM policy document used as a base for the exported policy document. Statements with the same `sid` from documents assigned to the `override_json` and `override_policy_documents` arguments will override source statements.
+* `source_json` (Optional, **Deprecated** use the `source_policy_documents` attribute instead) - IAM policy document used as a base for the exported policy document. Statements with the same `sid` from documents assigned to the `override_json` and `override_policy_documents` arguments will override source statements.
 * `source_policy_documents` (Optional) - List of IAM policy documents that are merged together into the exported document. Statements defined in `source_policy_documents` or `source_json` must have unique `sid`s. Statements with the same `sid` from documents assigned to the `override_json` and `override_policy_documents` arguments will override source statements.
 * `statement` (Optional) - Configuration block for a policy statement. Detailed below.
 * `version` (Optional) - IAM policy document version. Valid values are `2008-10-17` and `2012-10-17`. Defaults to `2012-10-17`. For more information, see the [AWS IAM User Guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_version.html).
@@ -441,9 +441,9 @@ The following arguments are optional:
 * `effect` (Optional) - Whether this statement allows or denies the given actions. Valid values are `Allow` and `Deny`. Defaults to `Allow`.
 * `not_actions` (Optional) - List of actions that this statement does *not* apply to. Use to apply a policy statement to all actions *except* those listed.
 * `not_principals` (Optional) - Like `principals` except these are principals that the statement does *not* apply to.
-* `not_resources` (Optional) - List of resource ARNs that this statement does *not* apply to. Use to apply a policy statement to all resources *except* those listed.
+* `not_resources` (Optional) - List of resource ARNs that this statement does *not* apply to. Use to apply a policy statement to all resources *except* those listed. Conflicts with `resources`.
 * `principals` (Optional) - Configuration block for principals. Detailed below.
-* `resources` (Optional) - List of resource ARNs that this statement applies to. This is required by AWS if used for an IAM policy.
+* `resources` (Optional) - List of resource ARNs that this statement applies to. This is required by AWS if used for an IAM policy. Conflicts with `not_resources`.
 * `sid` (Optional) - Sid (statement ID) is an identifier for a policy statement.
 
 ### `condition`

@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -142,7 +142,7 @@ func resourceLocalGatewayRouteTableVPCAssociationDelete(d *schema.ResourceData, 
 
 	_, err := conn.DeleteLocalGatewayRouteTableVpcAssociation(input)
 
-	if tfawserr.ErrMessageContains(err, "InvalidLocalGatewayRouteTableVpcAssociationID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidLocalGatewayRouteTableVpcAssociationID.NotFound") {
 		return nil
 	}
 

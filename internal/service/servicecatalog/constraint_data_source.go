@@ -13,6 +13,10 @@ func DataSourceConstraint() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceConstraintRead,
 
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(ConstraintReadTimeout),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"accept_language": {
 				Type:         schema.TypeString,
@@ -60,7 +64,7 @@ func DataSourceConstraint() *schema.Resource {
 func dataSourceConstraintRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	output, err := WaitConstraintReady(conn, d.Get("accept_language").(string), d.Get("id").(string))
+	output, err := WaitConstraintReady(conn, d.Get("accept_language").(string), d.Get("id").(string), d.Timeout(schema.TimeoutRead))
 
 	if err != nil {
 		return fmt.Errorf("error describing Service Catalog Constraint: %w", err)

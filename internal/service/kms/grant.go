@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -160,9 +160,9 @@ func resourceGrantCreate(d *schema.ResourceData, meta interface{}) error {
 			// Error Codes: https://docs.aws.amazon.com/sdk-for-go/api/service/kms/#KMS.CreateGrant
 			// Under some circumstances a newly created IAM Role doesn't show up and causes
 			// an InvalidArnException to be thrown.
-			if tfawserr.ErrMessageContains(err, kms.ErrCodeDependencyTimeoutException, "") ||
-				tfawserr.ErrMessageContains(err, kms.ErrCodeInternalException, "") ||
-				tfawserr.ErrMessageContains(err, kms.ErrCodeInvalidArnException, "") {
+			if tfawserr.ErrCodeEquals(err, kms.ErrCodeDependencyTimeoutException) ||
+				tfawserr.ErrCodeEquals(err, kms.ErrCodeInternalException) ||
+				tfawserr.ErrCodeEquals(err, kms.ErrCodeInvalidArnException) {
 				return resource.RetryableError(
 					fmt.Errorf("error creating KMS Grant for Key (%s), retrying: %w", keyId, err))
 			}
@@ -275,7 +275,7 @@ func resourceGrantDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, kms.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
 			return nil
 		}
 		return err
@@ -289,7 +289,7 @@ func resourceGrantDelete(d *schema.ResourceData, meta interface{}) error {
 
 func getKmsGrantById(grants []*kms.GrantListEntry, grantIdentifier string) *kms.GrantListEntry {
 	for _, grant := range grants {
-		if *grant.GrantId == grantIdentifier {
+		if aws.StringValue(grant.GrantId) == grantIdentifier {
 			return grant
 		}
 	}
@@ -376,9 +376,9 @@ func findKmsGrantById(conn *kms.KMS, keyId string, grantId string, marker *strin
 		out, err = conn.ListGrants(&input)
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, kms.ErrCodeDependencyTimeoutException, "") ||
-				tfawserr.ErrMessageContains(err, kms.ErrCodeInternalException, "") ||
-				tfawserr.ErrMessageContains(err, kms.ErrCodeInvalidArnException, "") {
+			if tfawserr.ErrCodeEquals(err, kms.ErrCodeDependencyTimeoutException) ||
+				tfawserr.ErrCodeEquals(err, kms.ErrCodeInternalException) ||
+				tfawserr.ErrCodeEquals(err, kms.ErrCodeInvalidArnException) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -506,12 +506,12 @@ func flattenKmsGrantConstraints(constraint *kms.GrantConstraints) *schema.Set {
 	m := make(map[string]interface{})
 	if constraint.EncryptionContextEquals != nil {
 		if len(constraint.EncryptionContextEquals) > 0 {
-			m["encryption_context_equals"] = verify.PointersMapToStringList(constraint.EncryptionContextEquals)
+			m["encryption_context_equals"] = flex.PointersMapToStringList(constraint.EncryptionContextEquals)
 		}
 	}
 	if constraint.EncryptionContextSubset != nil {
 		if len(constraint.EncryptionContextSubset) > 0 {
-			m["encryption_context_subset"] = verify.PointersMapToStringList(constraint.EncryptionContextSubset)
+			m["encryption_context_subset"] = flex.PointersMapToStringList(constraint.EncryptionContextSubset)
 		}
 	}
 	constraints.Add(m)

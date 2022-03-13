@@ -6,12 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -22,6 +21,12 @@ func ResourceProductPortfolioAssociation() *schema.Resource {
 		Delete: resourceProductPortfolioAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(ProductPortfolioAssociationReadyTimeout),
+			Read:   schema.DefaultTimeout(ProductPortfolioAssociationReadTimeout),
+			Delete: schema.DefaultTimeout(ProductPortfolioAssociationDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -68,7 +73,7 @@ func resourceProductPortfolioAssociationCreate(d *schema.ResourceData, meta inte
 	}
 
 	var output *servicecatalog.AssociateProductWithPortfolioOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		var err error
 
 		output, err = conn.AssociateProductWithPortfolio(input)
@@ -110,7 +115,7 @@ func resourceProductPortfolioAssociationRead(d *schema.ResourceData, meta interf
 		return fmt.Errorf("could not parse ID (%s): %w", d.Id(), err)
 	}
 
-	output, err := WaitProductPortfolioAssociationReady(conn, acceptLanguage, portfolioID, productID)
+	output, err := WaitProductPortfolioAssociationReady(conn, acceptLanguage, portfolioID, productID, d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Product Portfolio Association (%s) not found, removing from state", d.Id())
@@ -162,7 +167,7 @@ func resourceProductPortfolioAssociationDelete(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error disassociating Service Catalog Product from Portfolio (%s): %w", d.Id(), err)
 	}
 
-	err = WaitProductPortfolioAssociationDeleted(conn, acceptLanguage, portfolioID, productID)
+	err = WaitProductPortfolioAssociationDeleted(conn, acceptLanguage, portfolioID, productID, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil && !tfresource.NotFound(err) {
 		return fmt.Errorf("error waiting for Service Catalog Product Portfolio Disassociation (%s): %w", d.Id(), err)

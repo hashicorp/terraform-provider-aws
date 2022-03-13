@@ -224,6 +224,68 @@ func TestRetryWhenNotFound(t *testing.T) {
 	}
 }
 
+func TestRetryUntilNotFound(t *testing.T) {
+	var retryCount int32
+
+	testCases := []struct {
+		Name        string
+		F           func() (interface{}, error)
+		ExpectError bool
+	}{
+		{
+			Name: "no error",
+			F: func() (interface{}, error) {
+				return nil, nil
+			},
+			ExpectError: true,
+		},
+		{
+			Name: "other error",
+			F: func() (interface{}, error) {
+				return nil, errors.New("TestCode")
+			},
+			ExpectError: true,
+		},
+		{
+			Name: "AWS error",
+			F: func() (interface{}, error) {
+				return nil, awserr.New("Testing", "Testing", nil)
+			},
+			ExpectError: true,
+		},
+		{
+			Name: "NotFoundError",
+			F: func() (interface{}, error) {
+				return nil, &resource.NotFoundError{}
+			},
+		},
+		{
+			Name: "retryable NotFoundError",
+			F: func() (interface{}, error) {
+				if atomic.CompareAndSwapInt32(&retryCount, 0, 1) {
+					return nil, nil
+				}
+
+				return nil, &resource.NotFoundError{}
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			retryCount = 0
+
+			_, err := tfresource.RetryUntilNotFound(5*time.Second, testCase.F)
+
+			if testCase.ExpectError && err == nil {
+				t.Fatal("expected error")
+			} else if !testCase.ExpectError && err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+		})
+	}
+}
+
 func TestRetryConfigContext_error(t *testing.T) {
 	t.Parallel()
 

@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -112,7 +112,7 @@ func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
-	authorizer, err := AuthorizerByName(conn, d.Id())
+	authorizer, err := FindAuthorizerByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IoT Authorizer (%s) not found, removing from state", d.Id())

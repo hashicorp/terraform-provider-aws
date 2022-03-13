@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/appstream"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -166,6 +166,36 @@ func TestAccAppStreamImageBuilder_tags(t *testing.T) {
 	})
 }
 
+func TestAccAppStreamImageBuilder_imageARN(t *testing.T) {
+	resourceName := "aws_appstream_image_builder.test"
+	// imageName selected from the available AWS Managed AppStream 2.0 Base Images
+	// Reference: https://docs.aws.amazon.com/appstream2/latest/developerguide/base-image-version-history.html
+	imageName := "AppStream-WinServer2012R2-07-19-2021"
+	instanceType := "stream.standard.small"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckImageBuilderDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageBuilderByImageARNConfig(rName, imageName, instanceType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageBuilderExists(resourceName),
+					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, "image_arn", "appstream", fmt.Sprintf("image/%s", imageName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckImageBuilderExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -279,4 +309,16 @@ resource "aws_appstream_image_builder" "test" {
   }
 }
 `, instanceType, name, key1, value1, key2, value2)
+}
+
+func testAccImageBuilderByImageARNConfig(rName, imageName, instanceType string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_appstream_image_builder" "test" {
+  image_arn     = "arn:${data.aws_partition.current.partition}:appstream:%[1]s::image/%[2]s"
+  instance_type = %[3]q
+  name          = %[4]q
+}
+`, acctest.Region(), imageName, instanceType, rName)
 }

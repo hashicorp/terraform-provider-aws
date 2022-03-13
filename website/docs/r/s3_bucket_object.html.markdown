@@ -3,12 +3,14 @@ subcategory: "S3"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_object"
 description: |-
-  Provides a S3 bucket object resource.
+  Provides an S3 object resource.
 ---
 
 # Resource: aws_s3_bucket_object
 
-Provides a S3 bucket object resource.
+~> **NOTE:** The `aws_s3_bucket_object` resource is DEPRECATED and will be removed in a future version! Use `aws_s3_object` instead, where new features and fixes will be added. When replacing `aws_s3_bucket_object` with `aws_s3_object` in your configuration, on the next apply, Terraform will recreate the object. If you prefer to not have Terraform recreate the object, import the object using `aws_s3_object`.
+
+Provides an S3 object resource.
 
 ## Example Usage
 
@@ -37,10 +39,14 @@ resource "aws_kms_key" "examplekms" {
 
 resource "aws_s3_bucket" "examplebucket" {
   bucket = "examplebuckettftest"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
   acl    = "private"
 }
 
-resource "aws_s3_bucket_object" "examplebucket_object" {
+resource "aws_s3_bucket_object" "example" {
   key        = "someobject"
   bucket     = aws_s3_bucket.examplebucket.id
   source     = "index.html"
@@ -53,10 +59,14 @@ resource "aws_s3_bucket_object" "examplebucket_object" {
 ```terraform
 resource "aws_s3_bucket" "examplebucket" {
   bucket = "examplebuckettftest"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
   acl    = "private"
 }
 
-resource "aws_s3_bucket_object" "examplebucket_object" {
+resource "aws_s3_bucket_object" "example" {
   key                    = "someobject"
   bucket                 = aws_s3_bucket.examplebucket.id
   source                 = "index.html"
@@ -69,10 +79,14 @@ resource "aws_s3_bucket_object" "examplebucket_object" {
 ```terraform
 resource "aws_s3_bucket" "examplebucket" {
   bucket = "examplebuckettftest"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
   acl    = "private"
 }
 
-resource "aws_s3_bucket_object" "examplebucket_object" {
+resource "aws_s3_bucket_object" "example" {
   key                    = "someobject"
   bucket                 = aws_s3_bucket.examplebucket.id
   source                 = "index.html"
@@ -85,18 +99,26 @@ resource "aws_s3_bucket_object" "examplebucket_object" {
 ```terraform
 resource "aws_s3_bucket" "examplebucket" {
   bucket = "examplebuckettftest"
+
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
   acl    = "private"
+}
 
-  versioning {
-    enabled = true
-  }
-
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
+resource "aws_s3_bucket_versioning" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
-resource "aws_s3_bucket_object" "examplebucket_object" {
+resource "aws_s3_bucket_object" "example" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.example]
+
   key    = "someobject"
   bucket = aws_s3_bucket.examplebucket.id
   source = "important.txt"
@@ -139,7 +161,7 @@ The following arguments are optional:
 * `server_side_encryption` - (Optional) Server-side encryption of the object in S3. Valid values are "`AES256`" and "`aws:kms`".
 * `source_hash` - (Optional) Triggers updates like `etag` but useful to address `etag` encryption limitations. Set using `filemd5("path/to/source")` (Terraform 0.11.12 or later). (The value is only stored in state and not saved by AWS.)
 * `source` - (Optional, conflicts with `content` and `content_base64`) Path to a file that will be read and uploaded as raw bytes for the object content.
-* `storage_class` - (Optional) [Storage Class](http://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html) for the object. Can be either "`STANDARD`", "`REDUCED_REDUNDANCY`", "`ONEZONE_IA`", "`INTELLIGENT_TIERING`", "`GLACIER`", "`DEEP_ARCHIVE`", or "`STANDARD_IA`". Defaults to "`STANDARD`".
+* `storage_class` - (Optional) [Storage Class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html#AmazonS3-PutObject-request-header-StorageClass) for the object. Defaults to "`STANDARD`".
 * `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `website_redirect` - (Optional) Target URL for [website redirect](http://docs.aws.amazon.com/AmazonS3/latest/dev/how-to-page-redirect.html).
 

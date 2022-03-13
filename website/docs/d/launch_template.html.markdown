@@ -77,6 +77,7 @@ In addition to all arguments above, the following attributes are exported:
     * `http_tokens` - If session tokens are required: `optional`, `required`.
     * `http_put_response_hop_limit` - The desired HTTP PUT response hop limit for instance metadata requests.
     * `http_protocol_ipv6` - The state of IPv6 endpoint for the instance metadata service: `enabled`, `disabled`.
+    * `instance_metadata_tags` - If access to instance tags is allowed from the metadata service: `enabled`, `disabled`.
 * `monitoring` - The monitoring option for the instance.
 * `network_interfaces` - Customize network interfaces to be attached at instance boot time. See [Network
   Interfaces](#network-interfaces) below for more details.

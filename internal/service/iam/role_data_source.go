@@ -86,7 +86,6 @@ func dataSourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("permissions_boundary", output.Role.PermissionsBoundary.PermissionsBoundaryArn)
 	}
 	d.Set("unique_id", output.Role.RoleId)
-	d.Set("tags", KeyValueTags(output.Role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	assumRolePolicy, err := url.QueryUnescape(aws.StringValue(output.Role.AssumeRolePolicyDocument))
 	if err != nil {
@@ -94,6 +93,13 @@ func dataSourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	if err := d.Set("assume_role_policy", assumRolePolicy); err != nil {
 		return fmt.Errorf("error setting assume_role_policy: %w", err)
+	}
+
+	tags := KeyValueTags(output.Role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	d.SetId(name)

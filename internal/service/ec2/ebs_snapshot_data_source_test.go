@@ -33,6 +33,7 @@ func TestAccEC2EBSSnapshotDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "volume_id", resourceName, "volume_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "volume_size", resourceName, "volume_size"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "storage_tier", resourceName, "storage_tier"),
 				),
 			},
 		},

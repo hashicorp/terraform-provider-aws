@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -605,7 +605,7 @@ func testAccCheckIntegrationDestroy(s *terraform.State) error {
 			ApiId:         aws.String(rs.Primary.Attributes["api_id"]),
 			IntegrationId: aws.String(rs.Primary.ID),
 		})
-		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 			continue
 		}
 		if err != nil {
@@ -731,7 +731,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "index.handler"
-  runtime       = "nodejs10.x"
+  runtime       = "nodejs14.x"
 
   depends_on = [aws_iam_role_policy.test]
 }

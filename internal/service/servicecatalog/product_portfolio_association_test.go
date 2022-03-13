@@ -83,7 +83,7 @@ func testAccCheckProductPortfolioAssociationDestroy(s *terraform.State) error {
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		err = tfservicecatalog.WaitProductPortfolioAssociationDeleted(conn, acceptLanguage, portfolioID, productID)
+		err = tfservicecatalog.WaitProductPortfolioAssociationDeleted(conn, acceptLanguage, portfolioID, productID, tfservicecatalog.ProductPortfolioAssociationDeleteTimeout)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -113,7 +113,7 @@ func testAccCheckProductPortfolioAssociationExists(resourceName string) resource
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
-		_, err = tfservicecatalog.WaitProductPortfolioAssociationReady(conn, acceptLanguage, portfolioID, productID)
+		_, err = tfservicecatalog.WaitProductPortfolioAssociationReady(conn, acceptLanguage, portfolioID, productID, tfservicecatalog.ProductPortfolioAssociationReadyTimeout)
 
 		if err != nil {
 			return fmt.Errorf("waiting for Service Catalog Product Portfolio Association existence (%s): %w", rs.Primary.ID, err)

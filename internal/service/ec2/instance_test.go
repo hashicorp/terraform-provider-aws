@@ -1,6 +1,8 @@
 package ec2_test
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -13,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -181,7 +183,7 @@ func TestAccEC2Instance_basic(t *testing.T) {
 		// No subnet_id specified requires default VPC with default subnets or EC2-Classic.
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets(t)
+			testAccPreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
@@ -305,6 +307,33 @@ func TestAccEC2Instance_EBSBlockDevice_invalidThroughputForVolumeType(t *testing
 	})
 }
 
+// TestAccEC2Instance_EBSBlockDevice_RootBlockDevice_removed verifies block device mappings
+// removed outside terraform no longer result in a panic.
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/20821
+func TestAccEC2Instance_EBSBlockDevice_RootBlockDevice_removed(t *testing.T) {
+	var instance ec2.Instance
+	resourceName := "aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigEBSAndRootBlockDevice,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance),
+					// Instance must be stopped before detaching a root block device
+					testAccCheckStopInstance(&instance),
+					testAccCheckDetachVolumes(&instance),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_RootBlockDevice_kmsKeyARN(t *testing.T) {
 	var instance ec2.Instance
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -347,10 +376,113 @@ func TestAccEC2Instance_userDataBase64(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigWithUserDataBase64(rName),
+				Config: testAccInstanceConfigWithUserDataBase64(rName, "hello world"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "aGVsbG8gd29ybGQ="),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data"},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_userDataBase64_updateWithBashFile(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigWithUserDataBase64(rName, "hello world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "aGVsbG8gd29ybGQ="),
+				),
+			},
+			{
+				Config: testAccInstanceConfigWithUserDataBase64_Base64EncodedFile(rName, "test-fixtures/userdata-test.sh"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data"},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_userDataBase64_updateWithZipFile(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigWithUserDataBase64(rName, "hello world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "aGVsbG8gd29ybGQ="),
+				),
+			},
+			{
+				Config: testAccInstanceConfigWithUserDataBase64_Base64EncodedFile(rName, "test-fixtures/userdata-test.zip"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data"},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_userDataBase64_update(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigWithUserDataBase64(rName, "hello world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "aGVsbG8gd29ybGQ="),
+				),
+			},
+			{
+				Config: testAccInstanceConfigWithUserDataBase64(rName, "new world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "bmV3IHdvcmxk"),
 				),
 			},
 			{
@@ -1582,6 +1714,85 @@ func TestAccEC2Instance_changeInstanceType(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_changeInstanceTypeAndUserData(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	hash := sha1.Sum([]byte("hello world"))
+	expectedUserData := hex.EncodeToString(hash[:])
+	hash2 := sha1.Sum([]byte("new world"))
+	expectedUserDataUpdated := hex.EncodeToString(hash2[:])
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigInstanceTypeAndUserData(rName, "t2.medium", "hello world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.medium"),
+					resource.TestCheckResourceAttr(resourceName, "user_data", expectedUserData),
+				),
+			},
+			{
+				Config: testAccInstanceConfigInstanceTypeAndUserData(rName, "t2.large", "new world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.large"),
+					resource.TestCheckResourceAttr(resourceName, "user_data", expectedUserDataUpdated),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data"},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_changeInstanceTypeAndUserDataBase64(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigInstanceTypeAndUserDataBase64(rName, "t2.medium", "hello world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.medium"),
+					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "aGVsbG8gd29ybGQ="),
+				),
+			},
+			{
+				Config: testAccInstanceConfigInstanceTypeAndUserDataBase64(rName, "t2.large", "new world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.large"),
+					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "bmV3IHdvcmxk"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data"},
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_EBSRootDevice_basic(t *testing.T) {
 	var instance ec2.Instance
 	resourceName := "aws_instance.test"
@@ -2258,7 +2469,7 @@ func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPs
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigPrivateIPAndSecondaryIPs(rName, "", secondaryIPs),
+				Config: testAccInstanceConfigPrivateIPAndSecondaryIPsNullPrivate(rName, secondaryIPs),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
@@ -2289,7 +2500,7 @@ func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPs
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigPrivateIPAndSecondaryIPs(rName, "", secondaryIPs),
+				Config: testAccInstanceConfigPrivateIPAndSecondaryIPsNullPrivate(rName, secondaryIPs),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
@@ -2297,7 +2508,7 @@ func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPs
 				),
 			},
 			{
-				Config: testAccInstanceConfigPrivateIPAndSecondaryIPs(rName, "", ""),
+				Config: testAccInstanceConfigPrivateIPAndSecondaryIPsNullPrivate(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
@@ -2305,7 +2516,7 @@ func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPs
 				),
 			},
 			{
-				Config: testAccInstanceConfigPrivateIPAndSecondaryIPs(rName, "", secondaryIP),
+				Config: testAccInstanceConfigPrivateIPAndSecondaryIPsNullPrivate(rName, secondaryIP),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
@@ -3380,6 +3591,99 @@ func TestAccEC2Instance_disappears(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_UserData(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigWithUserData(rName, "hello world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data"},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_UserData_update(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigWithUserData(rName, "hello world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+				),
+			},
+			{
+				Config: testAccInstanceConfigWithUserData(rName, "new world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data"},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_UserData_stringToEncodedString(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigWithUserData(rName, "hello world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+				),
+			},
+			{
+				Config: testAccInstanceConfigWithUserDataBase64Encoded(rName, "new world"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data"},
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_UserData_emptyStringToUnspecified(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -3498,6 +3802,7 @@ func TestAccEC2Instance_metadataOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "disabled"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "optional"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", "disabled"),
 				),
 			},
 			{
@@ -3508,6 +3813,7 @@ func TestAccEC2Instance_metadataOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", "enabled"),
 				),
 			},
 			{
@@ -3790,7 +4096,7 @@ func testAccCheckInstanceDestroyWithProvider(s *terraform.State, provider *schem
 		}
 
 		// Verify the error is what we want
-		if tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
 			continue
 		}
 
@@ -3848,6 +4154,37 @@ func testAccCheckStopInstance(instance *ec2.Instance) resource.TestCheckFunc {
 		}
 
 		return tfec2.WaitForInstanceStopping(conn, *instance.InstanceId, 10*time.Minute)
+	}
+}
+
+func testAccCheckDetachVolumes(instance *ec2.Instance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := acctest.Provider.Meta().(*conns.AWSClient)
+		conn := client.EC2Conn
+
+		for _, bd := range instance.BlockDeviceMappings {
+			if bd.Ebs != nil && bd.Ebs.VolumeId != nil {
+				name := aws.StringValue(bd.DeviceName)
+				volID := aws.StringValue(bd.Ebs.VolumeId)
+				instanceID := aws.StringValue(instance.InstanceId)
+
+				// Make sure in correct state before detaching
+				if err := tfec2.WaitVolumeAttachmentAttached(conn, name, volID, instanceID); err != nil {
+					return err
+				}
+
+				r := tfec2.ResourceVolumeAttachment()
+				d := r.Data(nil)
+				d.Set("device_name", name)
+				d.Set("volume_id", volID)
+				d.Set("instance_id", instanceID)
+
+				if err := r.Delete(d, client); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
 	}
 }
 
@@ -3915,10 +4252,76 @@ func driftTags(instance *ec2.Instance) resource.TestCheckFunc {
 	}
 }
 
+// testAccPreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets checks that the test region has either
+// - The EC2-Classic platform available, or
+// - A default VPC with default subnets.
+// This check is useful to ensure that an instance can be launched without specifying a subnet.
+func testAccPreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets(t *testing.T) {
+	client := acctest.Provider.Meta().(*conns.AWSClient)
+
+	if !conns.HasEC2Classic(client.SupportedPlatforms) && !(hasDefaultVPC(t) && defaultSubnetCount(t) > 0) {
+		t.Skipf("skipping tests; %s does not have EC2-Classic or a default VPC with default subnets", client.Region)
+	}
+}
+
+// defaultVPC returns the ID of the default VPC for the current AWS Region, or "" if none exists.
+func defaultVPC(t *testing.T) string {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
+	output, err := conn.DescribeAccountAttributes(&ec2.DescribeAccountAttributesInput{
+		AttributeNames: aws.StringSlice([]string{ec2.AccountAttributeNameDefaultVpc}),
+	})
+
+	if acctest.PreCheckSkipError(err) {
+		return ""
+	}
+
+	if err != nil {
+		t.Fatalf("error describing EC2 account attributes: %s", err)
+	}
+
+	if len(output.AccountAttributes) > 0 && len(output.AccountAttributes[0].AttributeValues) > 0 {
+		if v := aws.StringValue(output.AccountAttributes[0].AttributeValues[0].AttributeValue); v != "none" {
+			return v
+		}
+	}
+
+	return ""
+}
+
+func hasDefaultVPC(t *testing.T) bool {
+	return defaultVPC(t) != ""
+}
+
+// defaultSubnetCount returns the number of default subnets in the current region's default VPC.
+func defaultSubnetCount(t *testing.T) int {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
+	input := &ec2.DescribeSubnetsInput{
+		Filters: tfec2.BuildAttributeFilterList(
+			map[string]string{
+				"defaultForAz": "true",
+			},
+		),
+	}
+
+	subnets, err := tfec2.FindSubnets(conn, input)
+
+	if acctest.PreCheckSkipError(err) {
+		return 0
+	}
+
+	if err != nil {
+		t.Fatalf("error listing default subnets: %s", err)
+	}
+
+	return len(subnets)
+}
+
 func testAccAvailableAZsWavelengthZonesExcludeConfig(excludeZoneIds ...string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-  exclude_zone_ids = ["%[1]s"]
+  exclude_zone_ids = [%[1]q]
   state            = "available"
 
   filter {
@@ -4016,7 +4419,7 @@ resource "aws_instance" "test" {
 
 func testAccInstanceConfigAtLeastOneOtherEbsVolume(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmInstanceStoreAmi(),
+		testAccLatestAmazonLinuxHVMInstanceStoreAMIConfig(),
 		testAccInstanceVPCConfig(rName, false),
 		fmt.Sprintf(`
 # Ensure that there is at least 1 EBS volume in the current region.
@@ -4047,19 +4450,64 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfigWithUserDataBase64(rName string) string {
+func testAccInstanceConfigWithUserData(rName, userData string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false),
-		`
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami       = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  subnet_id = aws_subnet.test.id
+
+  instance_type = "t2.small"
+  user_data     = %[1]q
+}
+`, userData))
+}
+
+func testAccInstanceConfigWithUserDataBase64Encoded(rName, userData string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami       = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  subnet_id = aws_subnet.test.id
+
+  instance_type = "t2.small"
+  user_data     = base64encode(%[1]q)
+}
+`, userData))
+}
+
+func testAccInstanceConfigWithUserDataBase64(rName, userData string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false),
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami       = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   subnet_id = aws_subnet.test.id
 
   instance_type    = "t2.small"
-  user_data_base64 = base64encode("hello world")
+  user_data_base64 = base64encode(%[1]q)
 }
-`)
+`, userData))
+}
+
+func testAccInstanceConfigWithUserDataBase64_Base64EncodedFile(rName, filename string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami       = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  subnet_id = aws_subnet.test.id
+
+  instance_type    = "t2.small"
+  user_data_base64 = filebase64(%[1]q)
+}
+`, filename))
 }
 
 func testAccInstanceConfigWithSmallInstanceType(rName string) string {
@@ -4098,6 +4546,37 @@ resource "aws_instance" "test" {
 `)
 }
 
+func testAccInstanceConfigInstanceTypeAndUserData(rName, instanceType, userData string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami       = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  subnet_id = aws_subnet.test.id
+
+  instance_type = %[1]q
+  user_data     = %[2]q
+}
+`, instanceType, userData))
+}
+
+func testAccInstanceConfigInstanceTypeAndUserDataBase64(rName, instanceType, userData string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami       = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  subnet_id = aws_subnet.test.id
+
+  instance_type    = %[1]q
+  user_data_base64 = base64encode(%[2]q)
+
+}
+`, instanceType, userData))
+}
+
 func testAccInstanceGP2IopsDevice() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
 resource "aws_instance" "test" {
@@ -4129,7 +4608,7 @@ resource "aws_instance" "test" {
 }
 
 func testAccInstanceConfigRootInstanceStore() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmInstanceStoreAmi(), `
+	return acctest.ConfigCompose(testAccLatestAmazonLinuxHVMInstanceStoreAMIConfig(), `
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-instance-store.id
 
@@ -4943,6 +5422,27 @@ resource "aws_instance" "test" {
 }
 `)
 
+var testAccInstanceConfigEBSAndRootBlockDevice = acctest.ConfigCompose(
+	acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+	`
+resource "aws_instance" "test" {
+  ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+
+  instance_type = "t2.medium"
+
+  root_block_device {
+    volume_type           = "gp2"
+    volume_size           = 9
+    delete_on_termination = true
+  }
+
+  ebs_block_device {
+    device_name = "/dev/sdb"
+    volume_size = 9
+  }
+}
+`)
+
 func testAccInstanceConfigBlockDeviceTagsVolumeTags() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
 resource "aws_instance" "test" {
@@ -5187,7 +5687,7 @@ resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.test.id
-  private_ip    = ""
+  private_ip    = null
 }
 `)
 }
@@ -5596,8 +6096,8 @@ func testAccInstanceConfigPublicAndPrivateSecondaryIPs(rName string, isPublic bo
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   vpc_id      = aws_vpc.test.id
-  description = "%[1]s"
-  name        = "%[1]s"
+  description = %[1]q
+  name        = %[1]q
 }
 
 resource "aws_instance" "test" {
@@ -5627,8 +6127,8 @@ func testAccInstanceConfigPrivateIPAndSecondaryIPs(rName, privateIP, secondaryIP
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   vpc_id      = aws_vpc.test.id
-  description = "%[1]s"
-  name        = "%[1]s"
+  description = %[1]q
+  name        = %[1]q
 }
 
 resource "aws_instance" "test" {
@@ -5636,7 +6136,7 @@ resource "aws_instance" "test" {
   instance_type = "t3.small"
   subnet_id     = aws_subnet.test.id
 
-  private_ip            = "%[2]s"
+  private_ip            = %[2]q
   secondary_private_ips = [%[3]s]
 
   vpc_security_group_ids = [
@@ -5648,6 +6148,36 @@ resource "aws_instance" "test" {
   }
 }
 `, rName, privateIP, secondaryIPs))
+}
+
+func testAccInstanceConfigPrivateIPAndSecondaryIPsNullPrivate(rName, secondaryIPs string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  vpc_id      = aws_vpc.test.id
+  description = %[1]q
+  name        = %[1]q
+}
+
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t3.small"
+  subnet_id     = aws_subnet.test.id
+
+  private_ip            = null
+  secondary_private_ips = [%[2]s]
+
+  vpc_security_group_ids = [
+    aws_security_group.test.id
+  ]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, secondaryIPs))
 }
 
 func testAccInstanceConfig_associatePublic_defaultPrivate(rName string) string {
@@ -5756,8 +6286,25 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
+// testAccLatestWindowsServer2016CoreAMIConfig returns the configuration for a data source that
+// describes the latest Microsoft Windows Server 2016 Core AMI.
+// The data source is named 'win2016core-ami'.
+func testAccLatestWindowsServer2016CoreAMIConfig() string {
+	return `
+data "aws_ami" "win2016core-ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["Windows_Server-2016-English-Core-Base-*"]
+  }
+}
+`
+}
+
 func testAccInstanceConfig_getPasswordData(rName, publicKey string, val bool) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestWindowsServer2016CoreAmi(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLatestWindowsServer2016CoreAMIConfig(), fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = %[2]q
@@ -6146,6 +6693,7 @@ resource "aws_instance" "test" {
     http_endpoint               = "enabled"
     http_tokens                 = "required"
     http_put_response_hop_limit = 2
+    instance_metadata_tags      = "enabled"
   }
 }
 `, rName))
@@ -6174,8 +6722,30 @@ resource "aws_instance" "test" {
 `, name, enabled))
 }
 
+// testAccLatestAmazonLinuxPVEBSAMIConfig returns the configuration for a data source that
+// describes the latest Amazon Linux AMI using PV virtualization and an EBS root device.
+// The data source is named 'amzn-ami-minimal-pv-ebs'.
+func testAccLatestAmazonLinuxPVEBSAMIConfig() string {
+	return `
+data "aws_ami" "amzn-ami-minimal-pv-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-pv-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+`
+}
+
 func testAccInstanceDynamicEBSBlockDevicesConfig() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxPvEbsAmi(), `
+	return acctest.ConfigCompose(testAccLatestAmazonLinuxPVEBSAMIConfig(), `
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-pv-ebs.id
   # tflint-ignore: aws_instance_previous_type

@@ -29,7 +29,7 @@ func TestAccBudgetsBudget_basic(t *testing.T) {
 		CheckDestroy: testAccBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBudgetConfig(rName),
+				Config: testAccBudgetConfigDeprecated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetExists(resourceName, &budget),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
@@ -151,7 +151,7 @@ func TestAccBudgetsBudget_disappears(t *testing.T) {
 		CheckDestroy: testAccBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBudgetConfig(rName),
+				Config: testAccBudgetConfigDeprecated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetExists(resourceName, &budget),
 					acctest.CheckResourceDisappears(acctest.Provider, tfbudgets.ResourceBudget(), resourceName),
@@ -405,7 +405,7 @@ func testAccBudgetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccBudgetConfig(rName string) string {
+func testAccBudgetConfigDeprecated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_budgets_budget" "test" {
   name         = %[1]q

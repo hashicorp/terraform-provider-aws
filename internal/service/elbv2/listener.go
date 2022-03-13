@@ -12,7 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -432,37 +432,35 @@ func resourceListenerCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	var output *elbv2.CreateListenerOutput
+	output, err := retryListenerCreate(conn, params)
 
-	err := resource.Retry(loadBalancerListenerCreateTimeout, func() *resource.RetryError {
-		var err error
-
-		output, err = conn.CreateListener(params)
-
-		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateListener(params)
+	// Some partitions may not support tag-on-create
+	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] ELBv2 Listener (%s) create failed (%s) with tags. Trying create without tags.", lbArn, err)
+		params.Tags = nil
+		output, err = retryListenerCreate(conn, params)
 	}
 
 	if err != nil {
 		return fmt.Errorf("error creating ELBv2 Listener (%s): %w", lbArn, err)
 	}
 
-	if output == nil || len(output.Listeners) == 0 {
-		return fmt.Errorf("error creating ELBv2 Listener: no listeners returned in response")
-	}
-
 	d.SetId(aws.StringValue(output.Listeners[0].ListenerArn))
+
+	// Post-create tagging supported in some partitions
+	if params.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(conn, d.Id(), nil, tags)
+
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
+			log.Printf("[WARN] error adding tags after create for ELBv2 Listener (%s): %s", d.Id(), err)
+			return resourceListenerRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error creating ELBv2 Listener (%s) tags: %w", d.Id(), err)
+		}
+	}
 
 	return resourceListenerRead(d, meta)
 }
@@ -535,6 +533,11 @@ func resourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	tags, err := ListTags(conn, d.Id())
+
+	if verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] Unable to list tags for ELBv2 Listener %s: %s", d.Id(), err)
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
@@ -639,6 +642,12 @@ func resourceListenerUpdate(d *schema.ResourceData, meta interface{}) error {
 			err = UpdateTags(conn, d.Id(), o, n)
 		}
 
+		// ISO partitions may not support tagging, giving error
+		if verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] Unable to update tags for ELBv2 Listener %s: %s", d.Id(), err)
+			return resourceListenerRead(d, meta)
+		}
+
 		if err != nil {
 			return fmt.Errorf("error updating LB (%s) tags: %w", d.Id(), err)
 		}
@@ -658,6 +667,40 @@ func resourceListenerDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func retryListenerCreate(conn *elbv2.ELBV2, params *elbv2.CreateListenerInput) (*elbv2.CreateListenerOutput, error) {
+	var output *elbv2.CreateListenerOutput
+
+	err := resource.Retry(loadBalancerListenerCreateTimeout, func() *resource.RetryError {
+		var err error
+
+		output, err = conn.CreateListener(params)
+
+		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		output, err = conn.CreateListener(params)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Listeners) == 0 {
+		return nil, fmt.Errorf("error creating ELBv2 Listener: no listeners returned in response")
+	}
+
+	return output, nil
 }
 
 func expandLbListenerActions(l []interface{}) ([]*elbv2.Action, error) {

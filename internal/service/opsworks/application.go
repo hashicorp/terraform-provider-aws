@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -262,16 +262,18 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		},
 	}
 
-	log.Printf("[DEBUG] Reading OpsWorks app: %s", d.Id())
+	log.Printf("[DEBUG] Reading OpsWorks Application: %s", d.Id())
 
 	resp, err := client.DescribeApps(req)
+
+	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		log.Printf("[DEBUG] OpsWorks Application (%s) not found", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[INFO] App not found: %s", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("describing OpsWorks Application (%s): %w", d.Id(), err)
 	}
 
 	app := resp.Apps[0]
@@ -374,6 +376,12 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deleting OpsWorks application: %s", d.Id())
 
 	_, err := client.DeleteApp(req)
+
+	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		log.Printf("[DEBUG] OpsWorks Application (%s) not found to delete; removed from state", d.Id())
+		return nil
+	}
+
 	return err
 }
 

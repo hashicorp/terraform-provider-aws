@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -100,7 +100,7 @@ func testAccCheckTransitGatewayRouteTablePropagationDestroy(s *terraform.State) 
 
 		propagation, err := tfec2.FindTransitGatewayRouteTablePropagation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidRouteTableID.NotFound") {
 			continue
 		}
 

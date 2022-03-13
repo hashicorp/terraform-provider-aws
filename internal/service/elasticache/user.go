@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -114,7 +114,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := FindElastiCacheUserByID(conn, d.Id())
-	if !d.IsNewResource() && (tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, elasticache.ErrCodeUserNotFoundFault, "")) {
+	if !d.IsNewResource() && (tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserNotFoundFault)) {
 		log.Printf("[WARN] ElastiCache User (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

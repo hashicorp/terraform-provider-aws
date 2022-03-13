@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -44,6 +44,35 @@ func TestAccGlueSchema_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "registry_name", registryResourceName, "registry_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "registry_arn", registryResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccGlueSchema_json(t *testing.T) {
+	var schema glue.GetSchemaOutput
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_schema.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSchemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSchemaJsonConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSchemaExists(resourceName, &schema),
+					resource.TestCheckResourceAttr(resourceName, "data_format", "JSON"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition", "{\"$id\":\"https://example.com/person.schema.json\",\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"title\":\"Person\",\"type\":\"object\",\"properties\":{\"firstName\":{\"type\":\"string\",\"description\":\"The person's first name.\"},\"lastName\":{\"type\":\"string\",\"description\":\"The person's last name.\"},\"age\":{\"description\":\"Age in years which must be equal to or greater than zero.\",\"type\":\"integer\",\"minimum\":0}}}"),
 				),
 			},
 			{
@@ -263,7 +292,7 @@ func testAccPreCheckSchema(t *testing.T) {
 	_, err := conn.ListRegistries(&glue.ListRegistriesInput{})
 
 	// Some endpoints that do not support Glue Schemas return InternalFailure
-	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
+	if acctest.PreCheckSkipError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -311,7 +340,7 @@ func testAccCheckSchemaDestroy(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 		output, err := tfglue.FindSchemaByID(conn, rs.Primary.ID)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				return nil
 			}
 
@@ -368,6 +397,18 @@ resource "aws_glue_schema" "test" {
   data_format       = "AVRO"
   compatibility     = "NONE"
   schema_definition = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"
+}
+`, rName)
+}
+
+func testAccSchemaJsonConfig(rName string) string {
+	return testAccSchemaBase(rName) + fmt.Sprintf(`
+resource "aws_glue_schema" "test" {
+  schema_name       = %[1]q
+  registry_arn      = aws_glue_registry.test.arn
+  data_format       = "JSON"
+  compatibility     = "NONE"
+  schema_definition = "{\"$id\":\"https://example.com/person.schema.json\",\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"title\":\"Person\",\"type\":\"object\",\"properties\":{\"firstName\":{\"type\":\"string\",\"description\":\"The person's first name.\"},\"lastName\":{\"type\":\"string\",\"description\":\"The person's last name.\"},\"age\":{\"description\":\"Age in years which must be equal to or greater than zero.\",\"type\":\"integer\",\"minimum\":0}}}"
 }
 `, rName)
 }

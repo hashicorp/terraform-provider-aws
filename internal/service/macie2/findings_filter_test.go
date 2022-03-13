@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -225,8 +225,7 @@ func testAccFindingsFilter_WithDate(t *testing.T) {
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", "region"),
-					resource.TestCheckResourceAttrPair(resourceName, "finding_criteria.0.criterion.0.eq.0", dataSourceRegion, "name"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "finding_criteria.0.criterion.*.eq.*", dataSourceRegion, "name"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						"field": "region",
 						"eq.#":  "1",
@@ -247,8 +246,7 @@ func testAccFindingsFilter_WithDate(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
 					resource.TestCheckResourceAttr(resourceName, "position", "1"),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", "region"),
-					resource.TestCheckResourceAttrPair(resourceName, "finding_criteria.0.criterion.0.eq.0", dataSourceRegion, "name"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "finding_criteria.0.criterion.*.eq.*", dataSourceRegion, "name"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						"field": "region",
 						"eq.#":  "1",
@@ -259,13 +257,16 @@ func testAccFindingsFilter_WithDate(t *testing.T) {
 						"gte":   startDate,
 						"lt":    endDate,
 					}),
-					acctest.CheckResourceAttrRFC3339(resourceName, "finding_criteria.0.criterion.2.gte"),
-					acctest.CheckResourceAttrRFC3339(resourceName, "finding_criteria.0.criterion.2.lt"),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]*regexp.Regexp{
+						"gte": regexp.MustCompile(acctest.RFC3339RegexPattern),
+					}),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]*regexp.Regexp{
+						"lt": regexp.MustCompile(acctest.RFC3339RegexPattern),
+					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						"field": "sample",
-						"neq.#": "2",
-						"neq.0": "another-sample",
-						"neq.1": "some-sample",
+						"eq.#":  "1",
+						"eq.0":  "true",
 					}),
 				),
 			},
@@ -300,7 +301,7 @@ func testAccFindingsFilter_WithNumber(t *testing.T) {
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
-					resource.TestCheckResourceAttrPair(resourceName, "finding_criteria.0.criterion.0.eq.0", dataSourceRegion, "name"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "finding_criteria.0.criterion.*.eq.*", dataSourceRegion, "name"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "position", "1"),
@@ -335,9 +336,8 @@ func testAccFindingsFilter_WithNumber(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						"field": "sample",
-						"neq.#": "2",
-						"neq.0": "another-sample",
-						"neq.1": "some-sample",
+						"eq.#":  "1",
+						"eq.0":  "true",
 					}),
 				),
 			},
@@ -517,7 +517,7 @@ resource "aws_macie2_findings_filter" "test" {
     }
     criterion {
       field = "sample"
-      neq   = ["some-sample", "another-sample"]
+      eq    = ["true"]
     }
     criterion {
       field = "updatedAt"
@@ -547,7 +547,7 @@ resource "aws_macie2_findings_filter" "test" {
     }
     criterion {
       field = "sample"
-      neq   = ["some-sample", "another-sample"]
+      eq    = ["true"]
     }
     criterion {
       field = "count"

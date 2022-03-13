@@ -33,6 +33,8 @@ func TestAccEC2NetworkInterfaceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "subnet_id", resourceName, "subnet_id"),
 					resource.TestCheckResourceAttr(datasourceName, "outpost_arn", ""),
 					resource.TestCheckResourceAttrSet(datasourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "owner_id", resourceName, "owner_id"),
 				),
 			},
 		},
@@ -156,6 +158,45 @@ func TestAccEC2NetworkInterfaceDataSource_publicIPAssociation(t *testing.T) {
 	})
 }
 
+func TestAccEC2NetworkInterfaceDataSource_attachment(t *testing.T) {
+	datasourceName := "data.aws_network_interface.test"
+	resourceName := "aws_network_interface.test"
+	instanceResourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  acctest.Providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetworkInterfaceAttachmentDataSourceConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceName, "association.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "attachment.#", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "attachment.0.device_index", "1"),
+					resource.TestCheckResourceAttrPair(datasourceName, "attachment.0.instance_id", instanceResourceName, "id"),
+					acctest.CheckResourceAttrAccountID(datasourceName, "attachment.0.instance_owner_id"),
+					resource.TestCheckResourceAttrSet(datasourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttr(datasourceName, "interface_type", "interface"),
+					resource.TestCheckResourceAttr(datasourceName, "ipv6_addresses.#", "0"),
+					resource.TestCheckResourceAttrSet(datasourceName, "mac_address"),
+					resource.TestCheckResourceAttr(datasourceName, "outpost_arn", ""),
+					acctest.CheckResourceAttrAccountID(datasourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_name", resourceName, "private_dns_name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_ip", resourceName, "private_ip"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_ips.#", resourceName, "private_ips.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_ips.0", resourceName, "private_ip"),
+					resource.TestCheckResourceAttrPair(datasourceName, "security_groups.#", resourceName, "security_groups.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "subnet_id", resourceName, "subnet_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+				),
+			},
+		},
+	})
+}
+
 func testAccNetworkInterfaceBaseDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
@@ -181,6 +222,10 @@ resource "aws_subnet" "test" {
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_network_interface" "test" {
@@ -230,6 +275,10 @@ resource "aws_subnet" "test" {
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_network_interface" "test" {
@@ -316,4 +365,32 @@ data "aws_network_interface" "test" {
   }
 }
 `)
+}
+
+func testAccNetworkInterfaceAttachmentDataSourceConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccNetworkInterfaceBaseDataSourceConfig(rName),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface_attachment" "test" {
+  device_index         = 1
+  instance_id          = aws_instance.test.id
+  network_interface_id = aws_network_interface.test.id
+}
+
+data "aws_network_interface" "test" {
+  id = aws_network_interface_attachment.test.network_interface_id
+}
+`, rName))
 }

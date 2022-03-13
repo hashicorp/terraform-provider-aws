@@ -1,6 +1,7 @@
 package ecs_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -290,7 +291,7 @@ func TestAccECSCluster_containerInsights(t *testing.T) {
 	})
 }
 
-func TestAccECSCluster(t *testing.T) {
+func TestAccECSCluster_configuration(t *testing.T) {
 	var cluster1 ecs.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_cluster.test"
@@ -302,7 +303,7 @@ func TestAccECSCluster(t *testing.T) {
 		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusteruationConfig(rName, true),
+				Config: testAccClusterConfigurationConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -321,7 +322,7 @@ func TestAccECSCluster(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusteruationConfig(rName, false),
+				Config: testAccClusterConfigurationConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -345,16 +346,14 @@ func testAccCheckClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		out, err := tfecs.FindClusterByARN(conn, rs.Primary.ID)
+		c, err := tfecs.FindClusterByNameOrARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		for _, c := range out.Clusters {
-			if aws.StringValue(c.ClusterArn) == rs.Primary.ID && aws.StringValue(c.Status) != "INACTIVE" {
-				return fmt.Errorf("ECS cluster still exists:\n%s", c)
-			}
+		if aws.StringValue(c.ClusterArn) == rs.Primary.ID && aws.StringValue(c.Status) != "INACTIVE" {
+			return fmt.Errorf("ECS cluster still exists:\n%s", c)
 		}
 	}
 
@@ -369,17 +368,15 @@ func testAccCheckClusterExists(resourceName string, cluster *ecs.Cluster) resour
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
-		output, err := tfecs.FindClusterByARN(conn, rs.Primary.ID)
+		c, err := tfecs.FindClusterByNameOrARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error reading ECS Cluster (%s): %w", rs.Primary.ID, err)
 		}
 
-		for _, c := range output.Clusters {
-			if aws.StringValue(c.ClusterArn) == rs.Primary.ID && aws.StringValue(c.Status) != "INACTIVE" {
-				*cluster = *c
-				return nil
-			}
+		if aws.StringValue(c.ClusterArn) == rs.Primary.ID && aws.StringValue(c.Status) != "INACTIVE" {
+			*cluster = *c
+			return nil
 		}
 
 		return fmt.Errorf("ECS Cluster (%s) not found", rs.Primary.ID)
@@ -569,7 +566,7 @@ resource "aws_ecs_cluster" "test" {
 `, rName, value)
 }
 
-func testAccClusteruationConfig(rName string, enable bool) string {
+func testAccClusterConfigurationConfig(rName string, enable bool) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q

@@ -28,15 +28,16 @@ resource "aws_imagebuilder_image_pipeline" "example" {
 
 The following arguments are required:
 
-* `image_recipe_arn` - (Required) Amazon Resource Name (ARN) of the Image Builder Infrastructure Recipe.
 * `infrastructure_configuration_arn` - (Required) Amazon Resource Name (ARN) of the Image Builder Infrastructure Configuration.
 * `name` - (Required) Name of the image pipeline.
 
 The following arguments are optional:
 
+* `container_recipe_arn` - (Optional) Amazon Resource Name (ARN) of the container recipe.
 * `description` - (Optional) Description of the image pipeline.
 * `distribution_configuration_arn` - (Optional) Amazon Resource Name (ARN) of the Image Builder Distribution Configuration.
 * `enhanced_image_metadata_enabled` - (Optional) Whether additional information about the image being created is collected. Defaults to `true`.
+* `image_recipe_arn` - (Optional) Amazon Resource Name (ARN) of the image recipe.
 * `image_tests_configuration` - (Optional) Configuration block with image tests configuration. Detailed below.
 * `schedule` - (Optional) Configuration block with schedule settings. Detailed below.
 * `status` - (Optional) Status of the image pipeline. Valid values are `DISABLED` and `ENABLED`. Defaults to `ENABLED`.
@@ -58,6 +59,8 @@ The following arguments are required:
 The following arguments are optional:
 
 * `pipeline_execution_start_condition` - (Optional) Condition when the pipeline should trigger a new image build. Valid values are `EXPRESSION_MATCH_AND_DEPENDENCY_UPDATES_AVAILABLE` and `EXPRESSION_MATCH_ONLY`. Defaults to `EXPRESSION_MATCH_AND_DEPENDENCY_UPDATES_AVAILABLE`.
+
+* `timezone` - (Optional) The timezone that applies to the scheduling expression. For example, "Etc/UTC", "America/Los_Angeles" in the [IANA timezone format](https://www.joda.org/joda-time/timezones.html). If not specified this defaults to UTC.
 
 ## Attributes Reference
 

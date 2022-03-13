@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -98,29 +98,28 @@ func TestAccElastiCacheUserGroup_tags(t *testing.T) {
 		CheckDestroy: testAccCheckUserGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserGroupTagsConfig(rName, "tagKey", "tagVal"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserGroupExists(resourceName, &userGroup),
-					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tagKey", "tagVal"),
-				),
-			},
-			{
-				Config: testAccUserGroupTagsConfig(rName, "tagKey", "tagVal2"),
+				Config: testAccUserGroupConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(resourceName, &userGroup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tagKey", "tagVal2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				Config: testAccUserGroupBasicConfig(rName),
+				Config: testAccUserGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(resourceName, &userGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccUserGroupConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserGroupExists(resourceName, &userGroup),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -164,7 +163,7 @@ func testAccCheckUserGroupDestroyWithProvider(s *terraform.State, provider *sche
 
 		_, err := tfelasticache.FindElastiCacheUserGroupByID(conn, rs.Primary.ID)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, elasticache.ErrCodeUserGroupNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserGroupNotFoundFault) {
 				return nil
 			}
 		}
@@ -255,24 +254,43 @@ resource "aws_elasticache_user_group" "test" {
 `, rName))
 }
 
-func testAccUserGroupTagsConfig(rName, tagKey, tagValue string) string {
+func testAccUserGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_elasticache_user" "test" {
-  user_id       = %[1]q
+resource "aws_elasticache_user" "test1" {
+  user_id       = "%[1]s-1"
   user_name     = "default"
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
   engine        = "REDIS"
   passwords     = ["password123456789"]
 }
-
 resource "aws_elasticache_user_group" "test" {
   user_group_id = %[1]q
   engine        = "REDIS"
-  user_ids      = [aws_elasticache_user.test.user_id]
-
+  user_ids      = [aws_elasticache_user.test1.user_id]
   tags = {
     %[2]s = %[3]q
   }
 }
-`, rName, tagKey, tagValue))
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccUserGroupConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_elasticache_user" "test1" {
+  user_id       = "%[1]s-1"
+  user_name     = "default"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
+}
+resource "aws_elasticache_user_group" "test" {
+  user_group_id = %[1]q
+  engine        = "REDIS"
+  user_ids      = [aws_elasticache_user.test1.user_id]
+  tags = {
+    %[2]s = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

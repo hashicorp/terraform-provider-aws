@@ -7,9 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
 func ResourceGeoMatchSet() *schema.Resource {
@@ -82,7 +83,7 @@ func resourceGeoMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetGeoMatchSet(params)
 
-	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 		log.Printf("[WARN] WAF WAF Regional Geo Match Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -92,7 +93,7 @@ func resourceGeoMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("name", resp.GeoMatchSet.Name)
-	d.Set("geo_match_constraint", flattenWafGeoMatchConstraint(resp.GeoMatchSet.GeoMatchConstraints))
+	d.Set("geo_match_constraint", tfwaf.FlattenGeoMatchConstraint(resp.GeoMatchSet.GeoMatchConstraints))
 
 	return nil
 }
@@ -106,7 +107,7 @@ func resourceGeoMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
 		oldConstraints, newConstraints := o.(*schema.Set).List(), n.(*schema.Set).List()
 
 		err := updateGeoMatchSetResourceWR(d.Id(), oldConstraints, newConstraints, conn, region)
-		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			log.Printf("[WARN] WAF WAF Regional Geo Match Set (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -141,7 +142,7 @@ func resourceGeoMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
 
 		return conn.DeleteGeoMatchSet(req)
 	})
-	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 		return nil
 	}
 	if err != nil {
@@ -157,7 +158,7 @@ func updateGeoMatchSetResourceWR(id string, oldConstraints, newConstraints []int
 		req := &waf.UpdateGeoMatchSetInput{
 			ChangeToken:   token,
 			GeoMatchSetId: aws.String(id),
-			Updates:       diffWafGeoMatchSetConstraints(oldConstraints, newConstraints),
+			Updates:       tfwaf.DiffGeoMatchSetConstraints(oldConstraints, newConstraints),
 		}
 
 		log.Printf("[INFO] Updating WAF Regional Geo Match Set constraints: %s", req)

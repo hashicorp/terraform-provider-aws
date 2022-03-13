@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -78,7 +78,7 @@ func resourceDestinationPut(d *schema.ResourceData, meta interface{}) error {
 	err = resource.Retry(3*time.Minute, func() *resource.RetryError {
 		_, err = conn.PutDestination(params)
 
-		if tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeInvalidParameterException, "") {
+		if tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeInvalidParameterException) {
 			return resource.RetryableError(err)
 		}
 		if err != nil {

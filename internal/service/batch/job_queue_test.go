@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -129,6 +129,44 @@ func TestAccBatchJobQueue_priority(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccBatchJobQueue_schedulingPolicy(t *testing.T) {
+	var jobQueue1, jobQueue2 batch.JobQueueDetail
+	resourceName := "aws_batch_job_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	schedulingPolicyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	schedulingPolicyName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBatchJobQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				// last variable selects the scheduling policy's arn. In this case, the first scheduling policy's arn.
+				Config: testAccBatchJobQueueConfigSchedulingPolicy(rName, schedulingPolicyName1, schedulingPolicyName2, "first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBatchJobQueueExists(resourceName, &jobQueue1),
+					resource.TestCheckResourceAttrSet(resourceName, "scheduling_policy_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// test switching the scheduling_policy_arn by changing the last variable to select the second scheduling policy's arn.
+				Config: testAccBatchJobQueueConfigSchedulingPolicy(rName, schedulingPolicyName1, schedulingPolicyName2, "second"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBatchJobQueueExists(resourceName, &jobQueue2),
+					resource.TestCheckResourceAttrSet(resourceName, "scheduling_policy_arn"),
+				),
 			},
 		},
 	})
@@ -416,6 +454,57 @@ resource "aws_batch_job_queue" "test" {
 `, rName, priority))
 }
 
+func testAccBatchJobQueueSchedulingPolicy(rName string, rName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_scheduling_policy" "test1" {
+  name = %[1]q
+
+  fair_share_policy {
+    compute_reservation = 1
+    share_decay_seconds = 3600
+
+    share_distribution {
+      share_identifier = "A1*"
+      weight_factor    = 0.1
+    }
+  }
+}
+
+resource "aws_batch_scheduling_policy" "test2" {
+  name = %[2]q
+
+  fair_share_policy {
+    compute_reservation = 1
+    share_decay_seconds = 3600
+
+    share_distribution {
+      share_identifier = "A2"
+      weight_factor    = 0.2
+    }
+  }
+}
+`, rName, rName2)
+}
+
+func testAccBatchJobQueueConfigSchedulingPolicy(rName string, schedulingPolicyName1 string, schedulingPolicyName2 string, selectSchedulingPolicy string) string {
+	return acctest.ConfigCompose(
+		testAccBatchJobQueueConfigBase(rName),
+		testAccBatchJobQueueSchedulingPolicy(schedulingPolicyName1, schedulingPolicyName2),
+		fmt.Sprintf(`
+locals {
+  select_scheduling_policy = %[2]q
+}
+
+resource "aws_batch_job_queue" "test" {
+  compute_environments  = [aws_batch_compute_environment.test.arn]
+  name                  = %[1]q
+  priority              = 1
+  scheduling_policy_arn = local.select_scheduling_policy == "first" ? aws_batch_scheduling_policy.test1.arn : aws_batch_scheduling_policy.test2.arn
+  state                 = "ENABLED"
+}
+`, rName, selectSchedulingPolicy))
+}
+
 func testAccBatchJobQueueConfigState(rName string, state string) string {
 	return acctest.ConfigCompose(
 		testAccBatchJobQueueConfigBase(rName),
@@ -482,7 +571,7 @@ func testAccCheckLaunchTemplateDestroy(s *terraform.State) error {
 			}
 		}
 
-		if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateId.NotFound") {
 			log.Printf("[WARN] launch template (%s) not found.", rs.Primary.ID)
 			continue
 		}

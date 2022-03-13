@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -242,7 +242,7 @@ func testAccCheckDocumentationPartDestroy(s *terraform.State) error {
 		}
 		_, err = conn.GetDocumentationPart(req)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 				return nil
 			}
 			return err
