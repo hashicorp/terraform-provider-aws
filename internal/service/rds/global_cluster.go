@@ -432,7 +432,7 @@ func globalClusterRefreshFunc(conn *rds.RDS, globalClusterID string) resource.St
 	}
 }
 
-func globalClusterVersionRefreshFunc(conn *rds.RDS, globalClusterID string) resource.StateRefreshFunc {
+func globalClusterVersionRefreshFunc(conn *rds.RDS, globalClusterID, engineVersion string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		globalCluster, err := DescribeGlobalCluster(conn, globalClusterID)
 
@@ -450,7 +450,7 @@ func globalClusterVersionRefreshFunc(conn *rds.RDS, globalClusterID string) reso
 
 		status := aws.StringValue(globalCluster.Status)
 
-		if status == rds.CustomEngineVersionStatusAvailable {
+		if status == rds.CustomEngineVersionStatusAvailable && aws.StringValue(globalCluster.EngineVersion) == engineVersion {
 			status = aws.StringValue(globalCluster.EngineVersion)
 		}
 
@@ -491,7 +491,7 @@ func waitForGlobalClusterVersionUpdate(conn *rds.RDS, globalClusterID, version s
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"modifying", "upgrading"},
 		Target:  []string{version},
-		Refresh: globalClusterVersionRefreshFunc(conn, globalClusterID),
+		Refresh: globalClusterVersionRefreshFunc(conn, globalClusterID, version),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
