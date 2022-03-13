@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	clusterInitiateUpgradeTimeout = 5 * time.Minute
+	clusterInitiateUpgradeTimeout = 30 * time.Minute
 
 	dbClusterRoleAssociationCreatedTimeout = 5 * time.Minute
 	dbClusterRoleAssociationDeletedTimeout = 5 * time.Minute

@@ -139,6 +139,7 @@ func ResourceCluster() *schema.Resource {
 			"global_cluster_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 
 			"enable_global_write_forwarding": {
@@ -953,8 +954,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] RDS Cluster ID: %s", d.Id())
 
-	log.Println(
-		"[INFO] Waiting for RDS Cluster to be available")
+	log.Println("[INFO] Waiting for RDS Cluster to be available")
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceClusterCreatePendingStates,
@@ -1515,6 +1515,7 @@ func waitForClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) error
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
+
 	_, err := stateConf.WaitForState()
 	return err
 }
