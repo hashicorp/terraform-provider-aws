@@ -12,7 +12,7 @@ Provides a resource to accept a pending GuardDuty invite on creation, ensure the
 
 ## Example Usage
 
-```hcl
+```terraform
 provider "aws" {
   alias = "primary"
 }
@@ -61,14 +61,14 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_guardduty_invite_accepter` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
+`aws_guardduty_invite_accepter` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
 configuration options:
 
 - `create` - (Default `1m`) How long to wait for an invite to accept.
 
 ## Import
 
-`aws_guardduty_invite_accepter` can be imported using the the member GuardDuty detector ID, e.g.
+`aws_guardduty_invite_accepter` can be imported using the the member GuardDuty detector ID, e.g.,
 
 ```
 $ terraform import aws_guardduty_invite_accepter.member 00b00fd5aecc0ab60a708659477e9617

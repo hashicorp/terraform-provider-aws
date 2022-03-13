@@ -15,7 +15,7 @@ instances to be requested on the Spot market.
 
 ### Using launch specifications
 
-```hcl
+```terraform
 # Request a Spot fleet
 resource "aws_spot_fleet_request" "cheap_compute" {
   iam_fleet_role      = "arn:aws:iam::12345678:role/spot-fleet"
@@ -56,7 +56,7 @@ resource "aws_spot_fleet_request" "cheap_compute" {
 
 ### Using launch templates
 
-```hcl
+```terraform
 resource "aws_launch_template" "foo" {
   name          = "launch-template"
   image_id      = "ami-516b9131"
@@ -86,7 +86,7 @@ launch configuration block. If you want to specify multiple values, then separat
 
 ### Using multiple launch specifications
 
-```hcl
+```terraform
 resource "aws_spot_fleet_request" "foo" {
   iam_fleet_role  = "arn:aws:iam::12345678:role/spot-fleet"
   spot_price      = "0.005"
@@ -109,10 +109,48 @@ resource "aws_spot_fleet_request" "foo" {
 }
 ```
 
+-> In this example, we use a [`dynamic` block](https://www.terraform.io/language/expressions/dynamic-blocks) to define zero or more `launch_specification` blocks, producing one for each element in the list of subnet ids.
+
+```terraform
+resource "aws_spot_fleet_request" "example" {
+  iam_fleet_role                      = "arn:aws:iam::12345678:role/spot-fleet"
+  target_capacity                     = 3
+  valid_until                         = "2019-11-04T20:44:20Z"
+  allocation_strategy                 = "lowestPrice"
+  fleet_type                          = "request"
+  wait_for_fulfillment                = "true"
+  terminate_instances_with_expiration = "true"
+
+
+  dynamic "launch_specification" {
+
+    for_each = [for s in var.subnets : {
+      subnet_id = s[1]
+    }]
+    content {
+      ami                    = "ami-1234"
+      instance_type          = "m4.4xlarge"
+      subnet_id              = launch_specification.value.subnet_id
+      vpc_security_group_ids = "sg-123456"
+
+      root_block_device {
+        volume_size           = "8"
+        volume_type           = "gp2"
+        delete_on_termination = "true"
+      }
+
+      tags = {
+        Name        = "Spot Node"
+        tag_builder = "builder"
+      }
+    }
+  }
+}
+```
 
 ### Using multiple launch configurations
 
-```hcl
+```terraform
 data "aws_subnet_ids" "example" {
   vpc_id = var.vpc_id
 }
@@ -171,6 +209,7 @@ across different markets and instance types. Conflicts with `launch_template_con
     a additional parameter `iam_instance_profile_arn` takes `aws_iam_instance_profile` attribute `arn` as input.
 
 * `launch_template_config` - (Optional) Launch template configuration block. See [Launch Template Configs](#launch-template-configs) below for more details. Conflicts with `launch_specification`. At least one of `launch_specification` or `launch_template_config` is required.
+* `spot_maintenance_strategies` - (Optional) Nested argument containing maintenance strategies for managing your Spot Instances that are at an elevated risk of being interrupted. Defined below.
 * `spot_price` - (Optional; Default: On-demand price) The maximum bid price per unit hour.
 * `wait_for_fulfillment` - (Optional; Default: false) If set, Terraform will
   wait for the Spot Request to be fulfilled, and will throw an error if the
@@ -200,7 +239,10 @@ across different markets and instance types. Conflicts with `launch_template_con
 * `valid_from` - (Optional) The start date and time of the request, in UTC [RFC3339](https://tools.ietf.org/html/rfc3339#section-5.8) format(for example, YYYY-MM-DDTHH:MM:SSZ). The default is to start fulfilling the request immediately.
 * `load_balancers` (Optional) A list of elastic load balancer names to add to the Spot fleet.
 * `target_group_arns` (Optional) A list of `aws_alb_target_group` ARNs, for use with Application Load Balancing.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `on_demand_allocation_strategy` - The order of the launch template overrides to use in fulfilling On-Demand capacity. the possible values are: `lowestPrice` and `prioritized`. the default is `lowestPrice`.
+* `on_demand_max_total_price` - The maximum amount per hour for On-Demand Instances that you're willing to pay. When the maximum amount you're willing to pay is reached, the fleet stops launching instances even if it hasn’t met the target capacity.
+* `on_demand_target_capacity` - The number of On-Demand units to request. If the request type is `maintain`, you can specify a target capacity of 0 and add capacity later.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Launch Template Configs
 
@@ -213,11 +255,20 @@ The `launch_template_config` block supports the following:
 
 * `id` - The ID of the launch template. Conflicts with `name`.
 * `name` - The name of the launch template. Conflicts with `id`.
-* `version` - (Optional) Template version. Unlike the autoscaling equivalent, does not support `$Latest` or `$Default`, so use the launch_template resource's attribute, e.g. `"${aws_launch_template.foo.latest_version}"`. It will use the default version if omitted.
+* `version` - (Optional) Template version. Unlike the autoscaling equivalent, does not support `$Latest` or `$Default`, so use the launch_template resource's attribute, e.g., `"${aws_launch_template.foo.latest_version}"`. It will use the default version if omitted.
 
     **Note:** The specified launch template can specify only a subset of the
     inputs of [`aws_launch_template`](launch_template.html).  There are limitations on
     what you can specify as spot fleet does not support all the attributes that are supported by autoscaling groups. [AWS documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html#launch-templates-spot-fleet) is currently sparse, but at least `instance_initiated_shutdown_behavior` is confirmed unsupported.
+
+### spot_maintenance_strategies
+
+* `capacity_rebalance` - (Optional) Nested argument containing the capacity rebalance for your fleet request. Defined below.
+
+### capacity_rebalance
+
+* `replacement_strategy` - (Optional) The replacement strategy to use. Only available for spot fleets with `fleet_type` set to `maintain`. Valid values: `launch`.
+
 
 ### Overrides
 
@@ -230,7 +281,7 @@ The `launch_template_config` block supports the following:
 
 ### Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 10 mins) Used when requesting the spot instance (only valid if `wait_for_fulfillment = true`)
 * `delete` - (Defaults to 15 mins) Used when destroying the spot instance
@@ -241,10 +292,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Spot fleet request ID
 * `spot_request_state` - The state of the Spot fleet request.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-Spot Fleet Requests can be imported using `id`, e.g.
+Spot Fleet Requests can be imported using `id`, e.g.,
 
 ```
 $ terraform import aws_spot_fleet_request.fleet sfr-005e9ec8-5546-4c31-b317-31a62325411e
