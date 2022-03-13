@@ -44,6 +44,139 @@ func ResourceSecurityGroup() *schema.Resource {
 		MigrateState:  SecurityGroupMigrateState,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      "Managed by Terraform",
+				ValidateFunc: validation.StringLenBetween(0, 255),
+			},
+			"egress": {
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cidr_blocks": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: verify.ValidCIDRNetworkAddress,
+							},
+						},
+						"description": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validSecurityGroupRuleDescription,
+						},
+						"from_port": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+						"ipv6_cidr_blocks": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: verify.ValidCIDRNetworkAddress,
+							},
+						},
+						"prefix_list_ids": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"protocol": {
+							Type:      schema.TypeString,
+							Required:  true,
+							StateFunc: ProtocolStateFunc,
+						},
+						"security_groups": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      schema.HashString,
+						},
+						"self": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"to_port": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+					},
+				},
+				Set: SecurityGroupRuleHash,
+			},
+			"ingress": {
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cidr_blocks": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: verify.ValidCIDRNetworkAddress,
+							},
+						},
+						"description": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validSecurityGroupRuleDescription,
+						},
+						"from_port": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+						"ipv6_cidr_blocks": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: verify.ValidCIDRNetworkAddress,
+							},
+						},
+						"prefix_list_ids": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"protocol": {
+							Type:      schema.TypeString,
+							Required:  true,
+							StateFunc: ProtocolStateFunc,
+						},
+						"security_groups": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      schema.HashString,
+						},
+						"self": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"to_port": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+					},
+				},
+				Set: SecurityGroupRuleHash,
+			},
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -52,7 +185,6 @@ func ResourceSecurityGroup() *schema.Resource {
 				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validation.StringLenBetween(0, 255),
 			},
-
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -61,179 +193,22 @@ func ResourceSecurityGroup() *schema.Resource {
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validation.StringLenBetween(0, 100),
 			},
-
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      "Managed by Terraform",
-				ValidateFunc: validation.StringLenBetween(0, 255),
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
-
+			"revoke_rules_on_delete": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
-			},
-
-			"ingress": {
-				Type:       schema.TypeSet,
-				Optional:   true,
-				Computed:   true,
-				ConfigMode: schema.SchemaConfigModeAttr,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"from_port": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-
-						"to_port": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-
-						"protocol": {
-							Type:      schema.TypeString,
-							Required:  true,
-							StateFunc: ProtocolStateFunc,
-						},
-
-						"cidr_blocks": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidCIDRNetworkAddress,
-							},
-						},
-
-						"ipv6_cidr_blocks": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidCIDRNetworkAddress,
-							},
-						},
-
-						"prefix_list_ids": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-
-						"security_groups": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-
-						"self": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-
-						"description": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validSecurityGroupRuleDescription,
-						},
-					},
-				},
-				Set: SecurityGroupRuleHash,
-			},
-
-			"egress": {
-				Type:       schema.TypeSet,
-				Optional:   true,
-				Computed:   true,
-				ConfigMode: schema.SchemaConfigModeAttr,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"from_port": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-
-						"to_port": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-
-						"protocol": {
-							Type:      schema.TypeString,
-							Required:  true,
-							StateFunc: ProtocolStateFunc,
-						},
-
-						"cidr_blocks": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidCIDRNetworkAddress,
-							},
-						},
-
-						"ipv6_cidr_blocks": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidCIDRNetworkAddress,
-							},
-						},
-
-						"prefix_list_ids": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-
-						"security_groups": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-
-						"self": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-
-						"description": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validSecurityGroupRuleDescription,
-						},
-					},
-				},
-				Set: SecurityGroupRuleHash,
-			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-
-			"revoke_rules_on_delete": {
-				Type:     schema.TypeBool,
-				Default:  false,
-				Optional: true,
 			},
 		},
 
