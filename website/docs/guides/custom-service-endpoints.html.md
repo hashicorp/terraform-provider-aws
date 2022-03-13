@@ -206,6 +206,7 @@ provider "aws" {
   <li><code>kafka</code></li>
   <li><code>kafkaconnect</code></li>
   <li><code>kendra</code></li>
+  <li><code>keyspaces</code></li>
   <li><code>kinesis</code></li>
   <li><code>kinesisanalytics</code></li>
   <li><code>kinesisanalyticsv2</code></li>
