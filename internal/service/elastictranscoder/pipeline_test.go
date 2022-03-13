@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -264,7 +264,7 @@ func testAccCheckElasticTranscoderPipelineDestroy(s *terraform.State) error {
 		out, err := conn.ReadPipeline(&elastictranscoder.ReadPipelineInput{
 			Id: aws.String(rs.Primary.ID),
 		})
-		if tfawserr.ErrMessageContains(err, elastictranscoder.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, elastictranscoder.ErrCodeResourceNotFoundException) {
 			continue
 		}
 		if err != nil {
@@ -325,6 +325,10 @@ EOF
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 `, rName)
@@ -383,6 +387,10 @@ EOF
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 `, rName)
@@ -428,16 +436,28 @@ EOF
 
 resource "aws_s3_bucket" "content_bucket" {
   bucket = "%[1]s-content"
+}
+
+resource "aws_s3_bucket_acl" "content_bucket_acl" {
+  bucket = aws_s3_bucket.content_bucket.id
   acl    = "private"
 }
 
 resource "aws_s3_bucket" "input_bucket" {
   bucket = "%[1]s-input"
+}
+
+resource "aws_s3_bucket_acl" "input_bucket_acl" {
+  bucket = aws_s3_bucket.input_bucket.id
   acl    = "private"
 }
 
 resource "aws_s3_bucket" "thumb_bucket" {
   bucket = "%[1]s-thumb"
+}
+
+resource "aws_s3_bucket_acl" "thumb_bucket_acl" {
+  bucket = aws_s3_bucket.thumb_bucket.id
   acl    = "private"
 }
 `, rName)
@@ -483,16 +503,28 @@ EOF
 
 resource "aws_s3_bucket" "content_bucket" {
   bucket = "%[1]s-content"
+}
+
+resource "aws_s3_bucket_acl" "content_bucket_acl" {
+  bucket = aws_s3_bucket.content_bucket.id
   acl    = "private"
 }
 
 resource "aws_s3_bucket" "input_bucket" {
   bucket = "%[1]s-input"
+}
+
+resource "aws_s3_bucket_acl" "input_bucket_acl" {
+  bucket = aws_s3_bucket.input_bucket.id
   acl    = "private"
 }
 
 resource "aws_s3_bucket" "thumb_bucket" {
   bucket = "%[1]s-thumb"
+}
+
+resource "aws_s3_bucket_acl" "thumb_bucket_acl" {
+  bucket = aws_s3_bucket.thumb_bucket.id
   acl    = "private"
 }
 `, rName)
@@ -550,6 +582,10 @@ EOF
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 `, rName)
@@ -591,6 +627,10 @@ EOF
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 
@@ -651,6 +691,10 @@ EOF
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 

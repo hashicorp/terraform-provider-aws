@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -111,7 +111,7 @@ func resourceMemberRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, securityhub.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] Security Hub member (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -146,7 +146,7 @@ func resourceMemberDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.DisassociateMembers(&securityhub.DisassociateMembersInput{
 		AccountIds: []*string{aws.String(d.Id())},
 	})
-	if tfawserr.ErrMessageContains(err, securityhub.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 	if err != nil {
@@ -157,7 +157,7 @@ func resourceMemberDelete(d *schema.ResourceData, meta interface{}) error {
 		AccountIds: []*string{aws.String(d.Id())},
 	})
 
-	if tfawserr.ErrMessageContains(err, securityhub.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 	if err != nil {

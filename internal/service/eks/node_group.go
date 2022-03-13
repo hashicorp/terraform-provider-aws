@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -75,7 +75,7 @@ func ResourceNodeGroup() *schema.Resource {
 				Optional: true,
 			},
 			"instance_types": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
@@ -313,8 +313,8 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.DiskSize = aws.Int64(int64(v.(int)))
 	}
 
-	if v := d.Get("instance_types").(*schema.Set); v.Len() > 0 {
-		input.InstanceTypes = flex.ExpandStringSet(v)
+	if v, ok := d.GetOk("instance_types"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.InstanceTypes = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v := d.Get("labels").(map[string]interface{}); len(v) > 0 {

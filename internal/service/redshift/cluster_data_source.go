@@ -37,6 +37,11 @@ func DataSourceCluster() *schema.Resource {
 				Computed: true,
 			},
 
+			"availability_zone_relocation_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+
 			"bucket_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -196,6 +201,11 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("allow_version_upgrade", rsc.AllowVersionUpgrade)
 	d.Set("automated_snapshot_retention_period", rsc.AutomatedSnapshotRetentionPeriod)
 	d.Set("availability_zone", rsc.AvailabilityZone)
+	azr, err := clusterAvailabilityZoneRelocationStatus(rsc)
+	if err != nil {
+		return fmt.Errorf("error reading Redshift Cluster (%s): %w", d.Id(), err)
+	}
+	d.Set("availability_zone_relocation_enabled", azr)
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
 
 	if len(rsc.ClusterParameterGroups) > 0 {

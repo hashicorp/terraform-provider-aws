@@ -157,7 +157,7 @@ func testAccCheckAuthorizerExists(n string, v *iot.AuthorizerDescription) resour
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 
-		output, err := tfiot.AuthorizerByName(conn, rs.Primary.ID)
+		output, err := tfiot.FindAuthorizerByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -177,7 +177,7 @@ func testAccCheckAuthorizerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfiot.AuthorizerByName(conn, rs.Primary.ID)
+		_, err := tfiot.FindAuthorizerByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datapipeline"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -80,7 +80,7 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	v, err := PipelineRetrieve(d.Id(), conn)
-	if tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineNotFoundException, "") || tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineDeletedException, "") || v == nil {
+	if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineNotFoundException) || tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) || v == nil {
 		log.Printf("[WARN] DataPipeline (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -127,7 +127,7 @@ func resourcePipelineDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	_, err := conn.DeletePipeline(&opts)
-	if tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineNotFoundException, "") || tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineDeletedException, "") {
+	if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineNotFoundException) || tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) {
 		return nil
 	}
 	if err != nil {
@@ -169,7 +169,7 @@ func WaitForDeletion(conn *datapipeline.DataPipeline, pipelineID string) error {
 	}
 	return resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribePipelines(params)
-		if tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineNotFoundException, "") || tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineDeletedException, "") {
+		if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineNotFoundException) || tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) {
 			return nil
 		}
 		if err != nil {

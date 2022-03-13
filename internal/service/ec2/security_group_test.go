@@ -66,6 +66,18 @@ func TestProtocolStateFunc(t *testing.T) {
 			input:    1,
 			expected: "",
 		},
+		{
+			input:    "icmpv6",
+			expected: "icmpv6",
+		},
+		{
+			input:    "58",
+			expected: "icmpv6",
+		},
+		{
+			input:    58,
+			expected: "",
+		},
 	}
 	for _, c := range cases {
 		result := tfec2.ProtocolStateFunc(c.input)
@@ -131,6 +143,14 @@ func TestProtocolForValue(t *testing.T) {
 		{
 			input:    "1",
 			expected: "icmp",
+		},
+		{
+			input:    "icMpv6",
+			expected: "icmpv6",
+		},
+		{
+			input:    "58",
+			expected: "icmpv6",
 		},
 	}
 
@@ -618,6 +638,28 @@ func TestAccEC2SecurityGroup_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+			},
+		},
+	})
+}
+
+func TestAccEC2SecurityGroup_disappears(t *testing.T) {
+	var group ec2.SecurityGroup
+	resourceName := "aws_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecurityGroupConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupExists(resourceName, &group),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSecurityGroup(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

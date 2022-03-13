@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -66,6 +66,12 @@ func ResourceStackSet() *schema.Resource {
 						},
 					},
 				},
+			},
+			"call_as": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(cloudformation.CallAs_Values(), false),
+				Default:      cloudformation.CallAsSelf,
 			},
 			"capabilities": {
 				Type:     schema.TypeSet,
@@ -169,6 +175,10 @@ func resourceStackSetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("permission_model"); ok {
 		input.PermissionModel = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("call_as"); ok {
+		input.CallAs = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
@@ -284,6 +294,10 @@ func resourceStackSetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("permission_model"); ok {
 		input.PermissionModel = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("call_as"); ok {
+		input.CallAs = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {

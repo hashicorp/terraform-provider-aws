@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -263,7 +263,7 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.DeleteResolverRule(&route53resolver.DeleteResolverRuleInput{
 		ResolverRuleId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 	if err != nil {
@@ -299,7 +299,7 @@ func route53ResolverRuleRefresh(conn *route53resolver.Route53Resolver, ruleId st
 		resp, err := conn.GetResolverRule(&route53resolver.GetResolverRuleInput{
 			ResolverRuleId: aws.String(ruleId),
 		})
-		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 			return "", RuleStatusDeleted, nil
 		}
 		if err != nil {

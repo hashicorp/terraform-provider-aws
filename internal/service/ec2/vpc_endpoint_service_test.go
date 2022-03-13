@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -226,10 +226,10 @@ func TestAccEC2VPCEndpointService_PrivateDNS_name(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVpcEndpointServiceConfigPrivateDnsName(rName1, rName2, "changed.com"),
+				Config: testAccVpcEndpointServiceConfigPrivateDnsName(rName1, rName2, "changed.example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name", "changed.com"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name", "changed.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.0.type", "TXT"),
 				),
@@ -251,7 +251,7 @@ func testAccCheckVpcEndpointServiceDestroy(s *terraform.State) error {
 		})
 		if err != nil {
 			// Verify the error is what we want
-			if tfawserr.ErrMessageContains(err, "InvalidVpcEndpointServiceId.NotFound", "") {
+			if tfawserr.ErrCodeEquals(err, "InvalidVpcEndpointServiceId.NotFound") {
 				continue
 			}
 			return err

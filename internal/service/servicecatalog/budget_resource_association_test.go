@@ -79,7 +79,7 @@ func testAccCheckBudgetResourceAssociationDestroy(s *terraform.State) error {
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		err = tfservicecatalog.WaitBudgetResourceAssociationDeleted(conn, budgetName, resourceID)
+		err = tfservicecatalog.WaitBudgetResourceAssociationDeleted(conn, budgetName, resourceID, tfservicecatalog.BudgetResourceAssociationDeleteTimeout)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -109,7 +109,7 @@ func testAccCheckBudgetResourceAssociationExists(resourceName string) resource.T
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
-		_, err = tfservicecatalog.WaitBudgetResourceAssociationReady(conn, budgetName, resourceID)
+		_, err = tfservicecatalog.WaitBudgetResourceAssociationReady(conn, budgetName, resourceID, tfservicecatalog.BudgetResourceAssociationReadyTimeout)
 
 		if err != nil {
 			return fmt.Errorf("waiting for Service Catalog Budget Resource Association existence (%s): %w", rs.Primary.ID, err)

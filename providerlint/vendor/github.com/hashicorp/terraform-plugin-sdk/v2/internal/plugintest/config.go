@@ -7,7 +7,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/hashicorp/terraform-exec/tfinstall"
+	"github.com/hashicorp/go-version"
+	install "github.com/hashicorp/hc-install"
+	"github.com/hashicorp/hc-install/checkpoint"
+	"github.com/hashicorp/hc-install/fs"
+	"github.com/hashicorp/hc-install/product"
+	"github.com/hashicorp/hc-install/releases"
+	"github.com/hashicorp/hc-install/src"
 )
 
 // Config is used to configure the test helper. In most normal test programs
@@ -33,16 +39,36 @@ func DiscoverConfig(sourceDir string) (*Config, error) {
 		return nil, fmt.Errorf("failed to create temp dir: %w", err)
 	}
 
-	finders := []tfinstall.ExecPathFinder{}
+	var sources []src.Source
 	switch {
 	case tfPath != "":
-		finders = append(finders, tfinstall.ExactPath(tfPath))
+		sources = append(sources, &fs.AnyVersion{
+			ExactBinPath: tfPath,
+		})
 	case tfVersion != "":
-		finders = append(finders, tfinstall.ExactVersion(tfVersion, tfDir))
+		tfVersion, err := version.NewVersion(tfVersion)
+
+		if err != nil {
+			return nil, fmt.Errorf("invalid Terraform version: %w", err)
+		}
+
+		sources = append(sources, &releases.ExactVersion{
+			InstallDir: tfDir,
+			Product:    product.Terraform,
+			Version:    tfVersion,
+		})
 	default:
-		finders = append(finders, tfinstall.LookPath(), tfinstall.LatestVersion(tfDir, true))
+		sources = append(sources, &fs.AnyVersion{
+			Product: &product.Terraform,
+		})
+		sources = append(sources, &checkpoint.LatestVersion{
+			InstallDir: tfDir,
+			Product:    product.Terraform,
+		})
 	}
-	tfExec, err := tfinstall.Find(context.Background(), finders...)
+
+	installer := install.NewInstaller()
+	tfExec, err := installer.Ensure(context.Background(), sources)
 	if err != nil {
 		return nil, err
 	}

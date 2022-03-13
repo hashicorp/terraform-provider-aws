@@ -4,30 +4,6 @@ import (
 	"testing"
 )
 
-func TestNormalizeJSONOrYAMLString(t *testing.T) {
-	var err error
-	var actual string
-
-	validNormalizedJson := `{"abc":"1"}`
-	actual, err = NormalizeJSONOrYAMLString(validNormalizedJson)
-	if err != nil {
-		t.Fatalf("Expected not to throw an error while parsing template, but got: %s", err)
-	}
-	if actual != validNormalizedJson {
-		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, validNormalizedJson)
-	}
-
-	validNormalizedYaml := `abc: 1
-`
-	actual, err = NormalizeJSONOrYAMLString(validNormalizedYaml)
-	if err != nil {
-		t.Fatalf("Expected not to throw an error while parsing template, but got: %s", err)
-	}
-	if actual != validNormalizedYaml {
-		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, validNormalizedYaml)
-	}
-}
-
 func TestCheckYAMLString(t *testing.T) {
 	var err error
 	var actual string

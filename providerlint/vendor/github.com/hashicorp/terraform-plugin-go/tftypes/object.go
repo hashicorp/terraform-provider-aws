@@ -183,7 +183,7 @@ func valueFromObject(types map[string]Type, optionalAttrs map[string]struct{}, i
 				if v.Type() == nil {
 					return Value{}, NewAttributePath().WithAttributeName(k).NewErrorf("missing value type")
 				}
-				if v.Type().Is(DynamicPseudoType) && v.IsKnown() {
+				if v.Type().Is(DynamicPseudoType) && v.IsKnown() && !v.IsNull() {
 					return Value{}, NewAttributePath().WithAttributeName(k).NewErrorf("invalid value %s for %s", v, v.Type())
 				} else if !v.Type().Is(DynamicPseudoType) && !v.Type().UsableAs(typ) {
 					return Value{}, NewAttributePath().WithAttributeName(k).NewErrorf("can't use %s as %s", v.Type(), typ)

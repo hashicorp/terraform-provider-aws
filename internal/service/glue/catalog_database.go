@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -45,6 +45,37 @@ func ResourceCatalogDatabase() *schema.Resource {
 					validation.StringLenBetween(1, 255),
 					validation.StringDoesNotMatch(regexp.MustCompile(`[A-Z]`), "uppercase characters cannot be used"),
 				),
+			},
+			"create_table_default_permission": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"permissions": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(glue.Permission_Values(), false),
+							},
+						},
+						"principal": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"data_lake_principal_identifier": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(1, 255),
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -108,6 +139,10 @@ func resourceCatalogDatabaseCreate(d *schema.ResourceData, meta interface{}) err
 		dbInput.TargetDatabase = expandGlueDatabaseTargetDatabase(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("create_table_default_permission"); ok && len(v.([]interface{})) > 0 {
+		dbInput.CreateTableDefaultPermissions = expandGlueDatabasePrincipalPermissions(v.([]interface{}))
+	}
+
 	input := &glue.CreateDatabaseInput{
 		CatalogId:     aws.String(catalogID),
 		DatabaseInput: dbInput,
@@ -152,12 +187,14 @@ func resourceCatalogDatabaseUpdate(d *schema.ResourceData, meta interface{}) err
 		dbInput.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("create_table_default_permission"); ok && len(v.([]interface{})) > 0 {
+		dbInput.CreateTableDefaultPermissions = expandGlueDatabasePrincipalPermissions(v.([]interface{}))
+	}
+
 	dbUpdateInput.DatabaseInput = dbInput
 
-	if d.HasChanges("description", "location_uri", "parameters") {
-		if _, err := conn.UpdateDatabase(dbUpdateInput); err != nil {
-			return err
-		}
+	if _, err := conn.UpdateDatabase(dbUpdateInput); err != nil {
+		return err
 	}
 
 	return resourceCatalogDatabaseRead(d, meta)
@@ -179,7 +216,7 @@ func resourceCatalogDatabaseRead(d *schema.ResourceData, meta interface{}) error
 	out, err := conn.GetDatabase(input)
 	if err != nil {
 
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue Catalog Database (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -209,6 +246,10 @@ func resourceCatalogDatabaseRead(d *schema.ResourceData, meta interface{}) error
 		}
 	} else {
 		d.Set("target_database", nil)
+	}
+
+	if err := d.Set("create_table_default_permission", flattenGlueDatabasePrincipalPermissions(database.CreateTableDefaultPermissions)); err != nil {
+		return fmt.Errorf("error setting create_table_default_permission: %w", err)
 	}
 
 	return nil
@@ -276,6 +317,114 @@ func flattenGlueDatabaseTargetDatabase(apiObject *glue.DatabaseIdentifier) map[s
 
 	if v := apiObject.DatabaseName; v != nil {
 		tfMap["database_name"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func expandGlueDatabasePrincipalPermissions(tfList []interface{}) []*glue.PrincipalPermissions {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*glue.PrincipalPermissions
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandGlueDatabasePrincipalPermission(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandGlueDatabasePrincipalPermission(tfMap map[string]interface{}) *glue.PrincipalPermissions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &glue.PrincipalPermissions{}
+
+	if v, ok := tfMap["permissions"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Permissions = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["principal"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Principal = expandGlueDatabasePrincipal(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandGlueDatabasePrincipal(tfMap map[string]interface{}) *glue.DataLakePrincipal {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &glue.DataLakePrincipal{}
+
+	if v, ok := tfMap["data_lake_principal_identifier"].(string); ok && v != "" {
+		apiObject.DataLakePrincipalIdentifier = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenGlueDatabasePrincipalPermissions(apiObjects []*glue.PrincipalPermissions) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenGlueDatabasePrincipalPermission(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenGlueDatabasePrincipalPermission(apiObject *glue.PrincipalPermissions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Permissions; v != nil {
+		tfMap["permissions"] = flex.FlattenStringSet(v)
+	}
+
+	if v := apiObject.Principal; v != nil {
+		tfMap["principal"] = []interface{}{flattenGlueDatabasePrincipal(v)}
+	}
+
+	return tfMap
+}
+
+func flattenGlueDatabasePrincipal(apiObject *glue.DataLakePrincipal) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DataLakePrincipalIdentifier; v != nil {
+		tfMap["data_lake_principal_identifier"] = aws.StringValue(v)
 	}
 
 	return tfMap

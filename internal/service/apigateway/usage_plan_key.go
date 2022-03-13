@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -94,12 +94,12 @@ func resourceUsagePlanKeyRead(d *schema.ResourceData, meta interface{}) error {
 		KeyId:       aws.String(d.Get("key_id").(string)),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 			log.Printf("[WARN] API Gateway Usage Plan Key (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("error reading API Gateway Usage Plan Key (%s): %w", d.Id(), err)
 	}
 
 	d.Set("name", up.Name)
@@ -117,7 +117,7 @@ func resourceUsagePlanKeyDelete(d *schema.ResourceData, meta interface{}) error 
 		UsagePlanId: aws.String(d.Get("usage_plan_id").(string)),
 		KeyId:       aws.String(d.Get("key_id").(string)),
 	})
-	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {

@@ -11,7 +11,7 @@ import (
 const (
 	kinesisStreamingDestinationActiveTimeout   = 5 * time.Minute
 	kinesisStreamingDestinationDisabledTimeout = 5 * time.Minute
-	createTableTimeout                         = 20 * time.Minute
+	createTableTimeout                         = 30 * time.Minute
 	updateTableTimeoutTotal                    = 60 * time.Minute
 	replicaUpdateTimeout                       = 30 * time.Minute
 	updateTableTimeout                         = 20 * time.Minute
@@ -47,7 +47,7 @@ func waitDynamoDBKinesisStreamingDestinationDisabled(ctx context.Context, conn *
 	return err
 }
 
-func waitDynamoDBTableActive(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TableDescription, error) {
+func waitDynamoDBTableActive(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TableDescription, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			dynamodb.TableStatusCreating,
@@ -134,7 +134,7 @@ func waitDynamoDBReplicaDeleted(conn *dynamodb.DynamoDB, tableName, region strin
 	return nil, err
 }
 
-func waitDynamoDBGSIActive(conn *dynamodb.DynamoDB, tableName, indexName string) (*dynamodb.GlobalSecondaryIndexDescription, error) {
+func waitDynamoDBGSIActive(conn *dynamodb.DynamoDB, tableName, indexName string) (*dynamodb.GlobalSecondaryIndexDescription, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			dynamodb.IndexStatusCreating,

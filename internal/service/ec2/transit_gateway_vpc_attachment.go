@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -117,7 +117,7 @@ func resourceTransitGatewayVPCAttachmentCreate(d *schema.ResourceData, meta inte
 
 	d.SetId(aws.StringValue(output.TransitGatewayVpcAttachment.TransitGatewayAttachmentId))
 
-	if err := waitForTransitGatewayVPCAttachmentCreation(conn, d.Id()); err != nil {
+	if err := waitForTransitGatewayAttachmentCreation(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway VPC Attachment (%s) availability: %s", d.Id(), err)
 	}
 
@@ -151,7 +151,7 @@ func resourceTransitGatewayVPCAttachmentRead(d *schema.ResourceData, meta interf
 
 	transitGatewayVpcAttachment, err := DescribeTransitGatewayVPCAttachment(conn, d.Id())
 
-	if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
 		log.Printf("[WARN] EC2 Transit Gateway VPC Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -262,7 +262,7 @@ func resourceTransitGatewayVPCAttachmentUpdate(d *schema.ResourceData, meta inte
 			return fmt.Errorf("error modifying EC2 Transit Gateway VPC Attachment (%s): %s", d.Id(), err)
 		}
 
-		if err := waitForTransitGatewayVPCAttachmentUpdate(conn, d.Id()); err != nil {
+		if err := waitForTransitGatewayAttachmentUpdate(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for EC2 Transit Gateway VPC Attachment (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -313,7 +313,7 @@ func resourceTransitGatewayVPCAttachmentDelete(d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway VPC Attachment (%s): %s", d.Id(), input)
 	_, err := conn.DeleteTransitGatewayVpcAttachment(input)
 
-	if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
 		return nil
 	}
 
@@ -321,7 +321,7 @@ func resourceTransitGatewayVPCAttachmentDelete(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error deleting EC2 Transit Gateway VPC Attachment: %s", err)
 	}
 
-	if err := WaitForTransitGatewayVPCAttachmentDeletion(conn, d.Id()); err != nil {
+	if err := WaitForTransitGatewayAttachmentDeletion(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway VPC Attachment (%s) deletion: %s", d.Id(), err)
 	}
 

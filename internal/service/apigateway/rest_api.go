@@ -9,7 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -54,6 +55,10 @@ func ResourceRestAPI() *schema.Resource {
 				Computed:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 
 			"binary_media_types": {
@@ -176,7 +181,13 @@ func resourceRestAPICreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("policy"); ok {
-		params.Policy = aws.String(v.(string))
+		policy, err := structure.NormalizeJsonString(v.(string))
+
+		if err != nil {
+			return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+		}
+
+		params.Policy = aws.String(policy)
 	}
 
 	if len(tags) > 0 {
@@ -308,12 +319,16 @@ func resourceRestAPICreate(d *schema.ResourceData, meta interface{}) error {
 			})
 		}
 
-		if v, ok := d.GetOk("policy"); ok && v.(string) != aws.StringValue(output.Policy) {
-			updateInput.PatchOperations = append(updateInput.PatchOperations, &apigateway.PatchOperation{
-				Op:    aws.String(apigateway.OpReplace),
-				Path:  aws.String("/policy"),
-				Value: aws.String(v.(string)),
-			})
+		if v, ok := d.GetOk("policy"); ok {
+			if equivalent, err := awspolicy.PoliciesAreEquivalent(v.(string), aws.StringValue(output.Policy)); err != nil || !equivalent {
+				policy, _ := structure.NormalizeJsonString(v.(string)) // validation covers error
+
+				updateInput.PatchOperations = append(updateInput.PatchOperations, &apigateway.PatchOperation{
+					Op:    aws.String(apigateway.OpReplace),
+					Path:  aws.String("/policy"),
+					Value: aws.String(policy),
+				})
+			}
 		}
 
 		if len(updateInput.PatchOperations) > 0 {
@@ -338,7 +353,7 @@ func resourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 	api, err := conn.GetRestApi(&apigateway.GetRestApiInput{
 		RestApiId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		log.Printf("[WARN] API Gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -378,11 +393,19 @@ func resourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error normalizing policy JSON: %w", err)
 	}
+
 	policy, err := strconv.Unquote(normalized_policy)
 	if err != nil {
 		return fmt.Errorf("error unescaping policy: %s", err)
 	}
-	d.Set("policy", policy)
+
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), policy)
+
+	if err != nil {
+		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+	}
+
+	d.Set("policy", policyToSet)
 
 	d.Set("binary_media_types", api.BinaryMediaTypes)
 
@@ -467,10 +490,12 @@ func resourceRestAPIUpdateOperations(d *schema.ResourceData) []*apigateway.Patch
 	}
 
 	if d.HasChange("policy") {
+		policy, _ := structure.NormalizeJsonString(d.Get("policy").(string)) // validation covers error
+
 		operations = append(operations, &apigateway.PatchOperation{
 			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/policy"),
-			Value: aws.String(d.Get("policy").(string)),
+			Value: aws.String(policy),
 		})
 	}
 
@@ -675,12 +700,16 @@ func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 				})
 			}
 
-			if v, ok := d.GetOk("policy"); ok && v.(string) != aws.StringValue(output.Policy) {
-				updateInput.PatchOperations = append(updateInput.PatchOperations, &apigateway.PatchOperation{
-					Op:    aws.String(apigateway.OpReplace),
-					Path:  aws.String("/policy"),
-					Value: aws.String(v.(string)),
-				})
+			if v, ok := d.GetOk("policy"); ok {
+				if equivalent, err := awspolicy.PoliciesAreEquivalent(v.(string), aws.StringValue(output.Policy)); err != nil || !equivalent {
+					policy, _ := structure.NormalizeJsonString(v.(string)) // validation covers error
+
+					updateInput.PatchOperations = append(updateInput.PatchOperations, &apigateway.PatchOperation{
+						Op:    aws.String(apigateway.OpReplace),
+						Path:  aws.String("/policy"),
+						Value: aws.String(policy),
+					})
+				}
 			}
 
 			if len(updateInput.PatchOperations) > 0 {
@@ -717,7 +746,7 @@ func resourceRestAPIDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deleting API Gateway: %s", input)
 	_, err := conn.DeleteRestApi(input)
 
-	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		return nil
 	}
 

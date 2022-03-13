@@ -17,13 +17,13 @@ func TestTrimLogGroupARNWildcardSuffix(t *testing.T) {
 		},
 		{
 			TestName:    "No suffix",
-			InputARN:    "arn:aws-us-gov:logs:us-gov-west-1:123456789012:log-group:tf-acc-test-6899758375212691725/1",
-			ExpectedARN: "arn:aws-us-gov:logs:us-gov-west-1:123456789012:log-group:tf-acc-test-6899758375212691725/1",
+			InputARN:    "arn:aws-us-gov:logs:us-gov-west-1:123456789012:log-group:tf-acc-test-6899758375212691725/1", //lintignore:AWSAT003,AWSAT005
+			ExpectedARN: "arn:aws-us-gov:logs:us-gov-west-1:123456789012:log-group:tf-acc-test-6899758375212691725/1", //lintignore:AWSAT003,AWSAT005
 		},
 		{
 			TestName:    "With suffix",
-			InputARN:    "arn:aws-us-gov:logs:us-gov-west-1:123456789012:log-group:tf-acc-test-6899758375212691725/1:*",
-			ExpectedARN: "arn:aws-us-gov:logs:us-gov-west-1:123456789012:log-group:tf-acc-test-6899758375212691725/1",
+			InputARN:    "arn:aws-us-gov:logs:us-gov-west-1:123456789012:log-group:tf-acc-test-6899758375212691725/1:*", //lintignore:AWSAT003,AWSAT005
+			ExpectedARN: "arn:aws-us-gov:logs:us-gov-west-1:123456789012:log-group:tf-acc-test-6899758375212691725/1",   //lintignore:AWSAT003,AWSAT005
 		},
 	}
 

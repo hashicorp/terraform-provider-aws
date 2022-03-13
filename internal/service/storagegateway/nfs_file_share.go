@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -36,6 +36,11 @@ func ResourceNFSFileShare() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"audit_destination_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -228,6 +233,10 @@ func resourceNFSFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 		Tags:                 Tags(tags.IgnoreAWS()),
 	}
 
+	if v, ok := d.GetOk("audit_destination_arn"); ok {
+		input.AuditDestinationARN = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("kms_key_arn"); ok {
 		input.KMSKey = aws.String(v.(string))
 	}
@@ -294,6 +303,7 @@ func resourceNFSFileShareRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting client_list: %w", err)
 	}
 
+	d.Set("audit_destination_arn", fileshare.AuditDestinationARN)
 	d.Set("default_storage_class", fileshare.DefaultStorageClass)
 	d.Set("fileshare_id", fileshare.FileShareId)
 	d.Set("gateway_arn", fileshare.GatewayARN)
@@ -343,10 +353,7 @@ func resourceNFSFileShareUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	if d.HasChanges("client_list", "default_storage_class", "guess_mime_type_enabled", "kms_encrypted",
-		"nfs_file_share_defaults", "object_acl", "read_only", "requester_pays", "squash", "kms_key_arn",
-		"cache_attributes", "file_share_name", "notification_policy") {
-
+	if d.HasChangesExcept("tags_all", "tags") {
 		fileShareDefaults, err := expandStorageGatewayNfsFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
 		if err != nil {
 			return err
@@ -363,6 +370,10 @@ func resourceNFSFileShareUpdate(d *schema.ResourceData, meta interface{}) error 
 			ReadOnly:             aws.Bool(d.Get("read_only").(bool)),
 			RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
 			Squash:               aws.String(d.Get("squash").(string)),
+		}
+
+		if v, ok := d.GetOk("audit_destination_arn"); ok {
+			input.AuditDestinationARN = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("kms_key_arn"); ok {

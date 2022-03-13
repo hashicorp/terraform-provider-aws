@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -125,7 +125,7 @@ func resourceTransitGatewayRouteTablePropagationDelete(d *schema.ResourceData, m
 	log.Printf("[DEBUG] Disabling EC2 Transit Gateway Route Table (%s) Propagation (%s): %s", transitGatewayRouteTableID, transitGatewayAttachmentID, input)
 	_, err = conn.DisableTransitGatewayRouteTablePropagation(input)
 
-	if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidRouteTableID.NotFound") {
 		return nil
 	}
 

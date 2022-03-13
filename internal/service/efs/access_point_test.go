@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -250,7 +250,7 @@ func testAccCheckEfsAccessPointDestroy(s *terraform.State) error {
 			AccessPointId: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, efs.ErrCodeAccessPointNotFound, "") {
+			if tfawserr.ErrCodeEquals(err, efs.ErrCodeAccessPointNotFound) {
 				continue
 			}
 			return fmt.Errorf("Error describing EFS access point in tests: %s", err)

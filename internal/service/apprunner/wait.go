@@ -17,6 +17,9 @@ const (
 	CustomDomainAssociationCreateTimeout = 5 * time.Minute
 	CustomDomainAssociationDeleteTimeout = 5 * time.Minute
 
+	VpcConnectorCreateTimeout = 2 * time.Minute
+	VpcConnectorDeleteTimeout = 2 * time.Minute
+
 	ServiceCreateTimeout = 20 * time.Minute
 	ServiceDeleteTimeout = 20 * time.Minute
 	ServiceUpdateTimeout = 20 * time.Minute
@@ -64,7 +67,7 @@ func WaitConnectionDeleted(ctx context.Context, conn *apprunner.AppRunner, name 
 func WaitCustomDomainAssociationCreated(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{CustomDomainAssociationStatusCreating},
-		Target:  []string{CustomDomainAssociationStatusPendingCertificateDNSValidation},
+		Target:  []string{CustomDomainAssociationStatusPendingCertificateDNSValidation, CustomDomainAssociationStatusBindingCertificate},
 		Refresh: StatusCustomDomain(ctx, conn, domainName, serviceArn),
 		Timeout: CustomDomainAssociationCreateTimeout,
 	}
@@ -119,6 +122,32 @@ func WaitServiceDeleted(ctx context.Context, conn *apprunner.AppRunner, serviceA
 		Target:  []string{apprunner.ServiceStatusDeleted},
 		Refresh: StatusService(ctx, conn, serviceArn),
 		Timeout: ServiceDeleteTimeout,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func WaitVpcConnectorActive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{},
+		Target:  []string{VpcConnectorStatusActive},
+		Refresh: StatusVpcConnector(ctx, conn, arn),
+		Timeout: VpcConnectorCreateTimeout,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func WaitVpcConnectorInactive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{VpcConnectorStatusActive},
+		Target:  []string{VpcConnectorStatusInactive},
+		Refresh: StatusVpcConnector(ctx, conn, arn),
+		Timeout: VpcConnectorDeleteTimeout,
 	}
 
 	_, err := stateConf.WaitForState()
