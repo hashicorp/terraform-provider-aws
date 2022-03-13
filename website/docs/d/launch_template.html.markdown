@@ -12,7 +12,7 @@ Provides information about a Launch Template.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_launch_template" "default" {
   name = "my-launch-template"
 }
@@ -20,7 +20,7 @@ data "aws_launch_template" "default" {
 
 ### Filter
 
-```hcl
+```terraform
 data "aws_launch_template" "test" {
   filter {
     name   = "launch-template-name"
@@ -34,6 +34,7 @@ data "aws_launch_template" "test" {
 The following arguments are supported:
 
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
+* `id` - (Optional) The ID of the specific launch template to retrieve.
 * `name` - (Optional) The name of the launch template.
 * `tags` - (Optional) A map of tags, each pair of which must exactly match a pair on the desired Launch Template.
 
@@ -75,6 +76,8 @@ In addition to all arguments above, the following attributes are exported:
     * `http_endpoint` - The state of the metadata service: `enabled`, `disabled`.
     * `http_tokens` - If session tokens are required: `optional`, `required`.
     * `http_put_response_hop_limit` - The desired HTTP PUT response hop limit for instance metadata requests.
+    * `http_protocol_ipv6` - The state of IPv6 endpoint for the instance metadata service: `enabled`, `disabled`.
+    * `instance_metadata_tags` - If access to instance tags is allowed from the metadata service: `enabled`, `disabled`.
 * `monitoring` - The monitoring option for the instance.
 * `network_interfaces` - Customize network interfaces to be attached at instance boot time. See [Network
   Interfaces](#network-interfaces) below for more details.
@@ -87,4 +90,6 @@ In addition to all arguments above, the following attributes are exported:
 * `tags` - (Optional) A map of tags to assign to the launch template.
 * `user_data` - The Base64-encoded user data to provide when launching the instance.
 * `hibernation_options` - The hibernation options for the instance.
+* `enclave_options` - The enclave options of the Instance.
+    * `enabled` - Whether Nitro Enclaves are enabled.
 

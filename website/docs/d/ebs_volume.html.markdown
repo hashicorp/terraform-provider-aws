@@ -13,7 +13,7 @@ resources.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ebs_volume" "ebs_volume" {
   most_recent = true
 
@@ -44,9 +44,9 @@ several valid keys, for a full reference, check out
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The volume ID (e.g. vol-59fcb34e).
-* `volume_id` - The volume ID (e.g. vol-59fcb34e).
-* `arn` - The volume ARN (e.g. arn:aws:ec2:us-east-1:0123456789012:volume/vol-59fcb34e).
+* `id` - The volume ID (e.g., vol-59fcb34e).
+* `volume_id` - The volume ID (e.g., vol-59fcb34e).
+* `arn` - The volume ARN (e.g., arn:aws:ec2:us-east-1:0123456789012:volume/vol-59fcb34e).
 * `availability_zone` - The AZ where the EBS volume exists.
 * `encrypted` - Whether the disk is encrypted.
 * `iops` - The amount of IOPS for the disk.
@@ -57,5 +57,6 @@ In addition to all arguments above, the following attributes are exported:
 * `volume_type` - The type of EBS volume.
 * `kms_key_id` - The ARN for the KMS encryption key.
 * `tags` - A map of tags for the resource.
+* `throughput` - The throughput that the volume supports, in MiB/s.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-volumes.html
