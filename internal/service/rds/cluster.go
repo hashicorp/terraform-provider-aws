@@ -139,7 +139,6 @@ func ResourceCluster() *schema.Resource {
 			"global_cluster_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 
 			"enable_global_write_forwarding": {
