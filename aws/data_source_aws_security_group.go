@@ -59,13 +59,10 @@ func dataSourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) er
 		req.GroupIds = []*string{aws.String(id.(string))}
 	}
 
-	group_name := d.Get("name").(string)
-	vpc_id := d.Get("vpc_id").(string)
-
 	req.Filters = buildEC2AttributeFilterList(
 		map[string]string{
-			"group-name": group_name,
-			"vpc-id":     vpc_id,
+			"group-name": d.Get("name").(string),
+			"vpc-id":     d.Get("vpc_id").(string),
 		},
 	)
 	req.Filters = append(req.Filters, buildEC2TagFilterList(
@@ -85,14 +82,7 @@ func dataSourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 	if resp == nil || len(resp.SecurityGroups) == 0 {
-
-		err_msg := ""
-		if group_name != "" && vpc_id != "" {
-			err_msg = fmt.Sprintf(": %s/%s", vpc_id, group_name)
-		} else if group_name != "" {
-			err_msg = fmt.Sprintf(": %s", group_name)
-		}
-		return fmt.Errorf("no matching SecurityGroup found%s", err_msg)
+		return fmt.Errorf("no matching SecurityGroup found")
 	}
 	if len(resp.SecurityGroups) > 1 {
 		return fmt.Errorf("multiple Security Groups matched; use additional constraints to reduce matches to a single Security Group")
