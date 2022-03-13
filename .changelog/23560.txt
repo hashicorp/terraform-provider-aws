@@ -7,7 +7,7 @@ resource/aws_db_instance: Fix issues where configured update timeout was not res
 ```
 
 ```release-note:bug
-resource/aws_rds_global_cluster: Fix in-place DB Cluster minor version upgrade error: "Invalid database cluster identifier"
+resource/aws_rds_global_cluster: Fix ability to perform DB Cluster minor version upgrades of clusters in distinct regions, including error: "Invalid database cluster identifier"
 ```
 
 ```release-note:enhancement
