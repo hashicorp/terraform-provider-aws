@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -159,25 +158,6 @@ func ResourceBucket() *schema.Resource {
 							Optional: true,
 						},
 					},
-				},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if k == "cors_rule.#" && old == "0" {
-						size, err := strconv.Atoi(new)
-						if err != nil {
-							return false
-						}
-						suppress := true
-						for i := 0; i < size; i++ {
-							if allowedMethods, ok := d.GetOk(fmt.Sprintf("cors_rule.%d.allowed_methods.#", i)); ok {
-								if allowedMethodsInt, ok := allowedMethods.(int); ok && allowedMethodsInt > 0 {
-									suppress = false
-									break
-								}
-							}
-						}
-						return suppress
-					}
-					return false
 				},
 			},
 
@@ -1599,18 +1579,7 @@ func resourceBucketCorsUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
 	rawCors := d.Get("cors_rule").([]interface{})
 
-	corsMaps := make([]map[string]interface{}, 0)
-	for _, cors := range rawCors {
-		if corsMap, ok := cors.(map[string]interface{}); ok {
-			if allowedMethods, ok := corsMap["allowed_methods"]; ok {
-				if allowedMethodsSlice, ok := allowedMethods.([]interface{}); ok && len(allowedMethodsSlice) > 0 {
-					corsMaps = append(corsMaps, corsMap)
-				}
-			}
-		}
-	}
-
-	if len(corsMaps) == 0 {
+	if len(rawCors) == 0 {
 		// Delete CORS
 		log.Printf("[DEBUG] S3 bucket: %s, delete CORS", bucket)
 
@@ -1625,7 +1594,13 @@ func resourceBucketCorsUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	} else {
 		// Put CORS
 		rules := make([]*s3.CORSRule, 0, len(rawCors))
-		for _, corsMap := range corsMaps {
+		for _, cors := range rawCors {
+			// Prevent panic
+			// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7546
+			corsMap, ok := cors.(map[string]interface{})
+			if !ok {
+				continue
+			}
 			r := &s3.CORSRule{}
 			for k, v := range corsMap {
 				log.Printf("[DEBUG] S3 bucket: %s, put CORS: %#v, %#v", bucket, k, v)

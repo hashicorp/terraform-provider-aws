@@ -385,10 +385,10 @@ describing redirect behavior and when redirects are applied.
 
 The `CORS` object supports the following:
 
-* `allowed_headers` (Optional) Specifies which headers are allowed.
-* `allowed_methods` (Required) Specifies which methods are allowed. Can be `GET`, `PUT`, `POST`, `DELETE` or `HEAD`.
-* `allowed_origins` (Required) Specifies which origins are allowed.
-* `expose_headers` (Optional) Specifies expose header in the response.
+* `allowed_headers` (Optional) List of headers allowed.
+* `allowed_methods` (Required) One or more HTTP methods that you allow the origin to execute. Can be `GET`, `PUT`, `POST`, `DELETE` or `HEAD`.
+* `allowed_origins` (Required) One or more origins you want customers to be able to access the bucket from.
+* `expose_headers` (Optional) One or more headers in the response that you want customers to be able to access from their applications (for example, from a JavaScript `XMLHttpRequest` object).
 * `max_age_seconds` (Optional) Specifies time in seconds that browser can cache the response for a preflight request.
 
 The `versioning` object supports the following:
