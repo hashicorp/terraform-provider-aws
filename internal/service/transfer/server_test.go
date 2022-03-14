@@ -943,7 +943,7 @@ func testAccServer_lambdaFunction(t *testing.T) {
 	})
 }
 
-func TestAccTransferServer_AuthenticationLoginBanners(t *testing.T) {
+func testAccTransferServer_AuthenticationLoginBanners(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
 
