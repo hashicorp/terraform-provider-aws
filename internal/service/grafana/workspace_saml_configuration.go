@@ -14,9 +14,9 @@ import (
 
 func ResourceWorkspaceSamlConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWorkspaceSamlConfigurationCreate,
+		Create: resourceWorkspaceSamlConfigurationUpsert,
 		Read:   resourceWorkspaceSamlConfigurationRead,
-		Update: resourceWorkspaceSamlConfigurationUpdate,
+		Update: resourceWorkspaceSamlConfigurationUpsert,
 		Delete: resourceWorkspaceSamlConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -88,14 +88,14 @@ func ResourceWorkspaceSamlConfiguration() *schema.Resource {
 	}
 }
 
-func resourceWorkspaceSamlConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkspaceSamlConfigurationUpsert(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
 
 	d.SetId(d.Get("workspace_id").(string))
 	workspace, err := FindWorkspaceByID(conn, d.Id())
 
 	if tfresource.NotFound(err) && !d.IsNewResource() {
-		log.Printf("[WARN] Grafana License Association (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Grafana Workspace Saml Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -258,10 +258,27 @@ func resourceWorkspaceSamlConfigurationRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceWorkspaceSamlConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceWorkspaceRead(d, meta)
-}
-
 func resourceWorkspaceSamlConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	return resourceWorkspaceRead(d, meta)
+	conn := meta.(*conns.AWSClient).GrafanaConn
+	workspace, err := FindWorkspaceByID(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error deleting Grafana Workspace Saml Configuration (%s): %w", d.Id(), err)
+	}
+
+	log.Printf("[DEBUG] Deleting Grafana Workspace Saml Configuration: %s", d.Id())
+	_, err = conn.UpdateWorkspaceAuthentication(&managedgrafana.UpdateWorkspaceAuthenticationInput{
+		AuthenticationProviders: workspace.Authentication.Providers,
+		WorkspaceId:             aws.String(d.Id()),
+	})
+
+	if err != nil {
+		return fmt.Errorf("error deleting Grafana Workspace Saml Configuration (%s): %w", d.Id(), err)
+	}
+
+	if _, err := waitWorkspaceSamlConfigurationDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for Grafana Workspace Saml Configuration (%s) delete: %w", d.Id(), err)
+	}
+
+	return nil
 }
