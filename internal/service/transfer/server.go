@@ -50,18 +50,15 @@ func ResourceServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"certificate": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"directory_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"domain": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -69,12 +66,10 @@ func ResourceServer() *schema.Resource {
 				Default:      transfer.DomainS3,
 				ValidateFunc: validation.StringInSlice(transfer.Domain_Values(), false),
 			},
-
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"endpoint_details": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -115,38 +110,32 @@ func ResourceServer() *schema.Resource {
 					},
 				},
 			},
-
 			"endpoint_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      transfer.EndpointTypePublic,
 				ValidateFunc: validation.StringInSlice(transfer.EndpointType_Values(), false),
 			},
-
 			"force_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
 			"function": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"host_key": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(0, 4096),
 			},
-
 			"host_key_fingerprint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"identity_provider_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -154,19 +143,16 @@ func ResourceServer() *schema.Resource {
 				Default:      transfer.IdentityProviderTypeServiceManaged,
 				ValidateFunc: validation.StringInSlice(transfer.IdentityProviderType_Values(), false),
 			},
-
 			"invocation_role": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"logging_role": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"post_authentication_login_banner": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -179,7 +165,6 @@ func ResourceServer() *schema.Resource {
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
-
 			"protocols": {
 				Type:     schema.TypeSet,
 				MinItems: 1,
@@ -191,17 +176,14 @@ func ResourceServer() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(transfer.Protocol_Values(), false),
 				},
 			},
-
 			"security_policy_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      SecurityPolicyName2018_11,
 				ValidateFunc: validation.StringInSlice(SecurityPolicyName_Values(), false),
 			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-
 			"url": {
 				Type:     schema.TypeString,
 				Optional: true,
