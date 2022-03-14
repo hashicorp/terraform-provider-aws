@@ -17,7 +17,7 @@ func ResourceWorkspaceSamlConfiguration() *schema.Resource {
 		Create: resourceWorkspaceSamlConfigurationCreate,
 		Read:   resourceWorkspaceSamlConfigurationRead,
 		Update: resourceWorkspaceSamlConfigurationUpdate,
-		Delete: schema.Noop,
+		Delete: resourceWorkspaceSamlConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -79,6 +79,10 @@ func ResourceWorkspaceSamlConfiguration() *schema.Resource {
 			"role_assertion": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -220,8 +224,44 @@ func resourceWorkspaceSamlConfigurationRead(d *schema.ResourceData, meta interfa
 	if saml.Configuration.AssertionAttributes.Groups != nil {
 		d.Set("groups_assertion", saml.Configuration.AssertionAttributes.Groups)
 	}
+
+	if saml.Configuration.IdpMetadata.Url != nil {
+		d.Set("idp_metadata_url", saml.Configuration.IdpMetadata.Url)
+	}
+
+	if saml.Configuration.IdpMetadata.Xml != nil {
+		d.Set("idp_metadata_xml", saml.Configuration.IdpMetadata.Xml)
+	}
+
+	if saml.Configuration.AssertionAttributes.Login != nil {
+		d.Set("login_assertion", saml.Configuration.AssertionAttributes.Login)
+	}
+
+	if saml.Configuration.LoginValidityDuration != nil {
+		d.Set("login_validity_duration", saml.Configuration.LoginValidityDuration)
+	}
+
+	if saml.Configuration.AssertionAttributes.Name != nil {
+		d.Set("name_assertion", saml.Configuration.AssertionAttributes.Name)
+	}
+
+	if saml.Configuration.AssertionAttributes.Org != nil {
+		d.Set("org_assertion", saml.Configuration.AssertionAttributes.Org)
+	}
+
+	if saml.Configuration.AssertionAttributes.Role != nil {
+		d.Set("role_assertion", saml.Configuration.AssertionAttributes.Role)
+	}
+
+	d.Set("status", saml.Status)
+
+	return nil
 }
 
 func resourceWorkspaceSamlConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
+	return resourceWorkspaceRead(d, meta)
+}
 
+func resourceWorkspaceSamlConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
+	return resourceWorkspaceRead(d, meta)
 }
