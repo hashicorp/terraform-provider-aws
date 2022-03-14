@@ -3,7 +3,6 @@ package ecrpublic
 import (
 	"encoding/base64"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -27,14 +26,14 @@ func DataSourceAuthorizationToken() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"user_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"password": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
+			},
+			"user_name": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -43,24 +42,26 @@ func DataSourceAuthorizationToken() *schema.Resource {
 func dataSourceAuthorizationTokenRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRPublicConn
 	params := &ecrpublic.GetAuthorizationTokenInput{}
-	log.Printf("[DEBUG] Getting Public ECR authorization token")
+
 	out, err := conn.GetAuthorizationToken(params)
+
 	if err != nil {
 		return fmt.Errorf("error getting Public ECR authorization token: %w", err)
 	}
-	log.Printf("[DEBUG] Received Public ECR AuthorizationData %v", out.AuthorizationData)
+
 	authorizationData := out.AuthorizationData
 	authorizationToken := aws.StringValue(authorizationData.AuthorizationToken)
 	expiresAt := aws.TimeValue(authorizationData.ExpiresAt).Format(time.RFC3339)
 	authBytes, err := base64.URLEncoding.DecodeString(authorizationToken)
 	if err != nil {
-		d.SetId("")
 		return fmt.Errorf("error decoding Public ECR authorization token: %w", err)
 	}
+
 	basicAuthorization := strings.Split(string(authBytes), ":")
 	if len(basicAuthorization) != 2 {
 		return fmt.Errorf("unknown Public ECR authorization token format")
 	}
+
 	userName := basicAuthorization[0]
 	password := basicAuthorization[1]
 	d.SetId(meta.(*conns.AWSClient).Region)
@@ -68,5 +69,6 @@ func dataSourceAuthorizationTokenRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("expires_at", expiresAt)
 	d.Set("user_name", userName)
 	d.Set("password", password)
+
 	return nil
 }
