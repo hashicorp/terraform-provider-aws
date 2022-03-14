@@ -1,9 +1,11 @@
 package quicksight
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -521,11 +524,15 @@ func ResourceDataSet() *schema.Resource {
 			},
 
 			"physical_table_map": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Required: true,
-				MaxItems: 1,
+				MaxItems: 32,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"physical_table_map_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 						"custom_sql": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -798,7 +805,7 @@ func resourceAwsQuickSightDataSetCreate(ctx context.Context, d *schema.ResourceD
 		AwsAccountId:     aws.String(awsAccountId),
 		DataSetId:        aws.String(id),
 		ImportMode:       aws.String(d.Get("import_mode").(string)),
-		PhysicalTableMap: expandQuickSightDataSetPhysicalTableMap(d.Get("physical_table_map").([]interface{})),
+		PhysicalTableMap: expandQuickSightDataSetPhysicalTableMap(d.Get("physical_table_map").(*schema.Set)),
 		Name:             aws.String(d.Get("name").(string)),
 	}
 
@@ -996,7 +1003,7 @@ func resourceAwsQuickSightDataSetUpdate(ctx context.Context, d *schema.ResourceD
 		}
 
 		if d.HasChange("physical_table_map") {
-			params.PhysicalTableMap = expandQuickSightDataSetPhysicalTableMap(d.Get("physical_table_map").([]interface{}))
+			params.PhysicalTableMap = expandQuickSightDataSetPhysicalTableMap(d.Get("physical_table_map").(*schema.Set))
 		}
 
 		if d.HasChange("row_level_permission_data_set") {
@@ -1219,13 +1226,13 @@ func expandQuickSightDataSetUsageConfiguration(tfList []interface{}) *quicksight
 	return usageConfiguration
 }
 
-func expandQuickSightDataSetFieldFolders(tfSet []interface{}) map[string]*quicksight.FieldFolder {
-	if len(tfSet) == 0 {
+func expandQuickSightDataSetFieldFolders(tfList []interface{}) map[string]*quicksight.FieldFolder {
+	if len(tfList) == 0 {
 		return nil
 	}
 
 	fieldFolderMap := make(map[string]*quicksight.FieldFolder)
-	for _, v := range tfSet {
+	for _, v := range tfList {
 
 		tfMap, ok := v.(map[string]interface{})
 		if !ok {
@@ -1644,13 +1651,13 @@ func expandQuickSightDataSetUntagColumnOperation(tfMap map[string]interface{}) *
 	return untagColumnOperation
 }
 
-func expandQuickSightDataSetPhysicalTableMap(tfList []interface{}) map[string]*quicksight.PhysicalTable {
-	if len(tfList) == 0 {
+func expandQuickSightDataSetPhysicalTableMap(tfSet *schema.Set) map[string]*quicksight.PhysicalTable {
+	if tfSet.Len() == 0 {
 		return nil
 	}
 
 	physicalTableMap := make(map[string]*quicksight.PhysicalTable)
-	for _, v := range tfList {
+	for _, v := range tfSet.List() {
 
 		vMap, ok := v.(map[string]interface{})
 		if !ok {
@@ -1659,28 +1666,45 @@ func expandQuickSightDataSetPhysicalTableMap(tfList []interface{}) map[string]*q
 
 		physicalTable := &quicksight.PhysicalTable{}
 
-		if tfList, ok := vMap["custom_sql"].([]interface{}); ok {
-			for _, v := range tfList {
+		physicalTableMapID := vMap["physical_table_map_id"].(string)
+
+		if customSqlList, ok := vMap["custom_sql"].([]interface{}); ok {
+			for _, v := range customSqlList {
 				physicalTable.CustomSql = expandQuickSightDataSetCustomSql(v.(map[string]interface{}))
 			}
 		}
 
-		if tfList, ok := vMap["relational_table"].([]interface{}); ok {
-			for _, v := range tfList {
+		if relationalTableList, ok := vMap["relational_table"].([]interface{}); ok {
+			for _, v := range relationalTableList {
 				physicalTable.RelationalTable = expandQuickSightDataSetRelationalTable(v.(map[string]interface{}))
 			}
 		}
 
-		if tfList, ok := vMap["s3_source"].([]interface{}); ok {
-			for _, v := range tfList {
+		if s3SourceList, ok := vMap["s3_source"].([]interface{}); ok {
+			for _, v := range s3SourceList {
 				physicalTable.S3Source = expandQuickSightDataSetS3Source(v.(map[string]interface{}))
 			}
 		}
 
-		physicalTableMap["uniqueid"] = physicalTable
+		physicalTableMap[physicalTableMapID] = physicalTable
+	}
+	// for k := range physicalTableMap {
+	// 	WriteToFile("result.txt", k)
+	// }
+	return physicalTableMap
+}
+
+func WriteToFile(filename string, text string) {
+	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		panic(err)
 	}
 
-	return physicalTableMap
+	defer f.Close()
+
+	if _, err = f.WriteString(text); err != nil {
+		panic(err)
+	}
 }
 
 func expandQuickSightDataSetCustomSql(tfMap map[string]interface{}) *quicksight.CustomSql {
@@ -2475,44 +2499,57 @@ func flattenQuickSightJoinKeyProperties(prop *quicksight.JoinKeyProperties) map[
 	return tfMap
 }
 
-func flattenQuickSightPhysicalTableMap(maps map[string]*quicksight.PhysicalTable) []interface{} {
+func flattenQuickSightPhysicalTableMap(maps map[string]*quicksight.PhysicalTable) *schema.Set {
 	if len(maps) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	tfSet := schema.NewSet(physicalTableMapHash, []interface{}{})
 
-	for _, table := range maps {
-		if table == nil {
+	for k, v := range maps {
+		if v == nil {
 			continue
 		}
 
-		tfMap := flattenQuickSightPhysicalTable(table)
-		tfList = append(tfList, tfMap)
+		tfMap := flattenQuickSightPhysicalTable(k, v)
+		tfSet.Add(tfMap)
 	}
 
-	return tfList
+	return tfSet
 }
 
-func flattenQuickSightPhysicalTable(table *quicksight.PhysicalTable) map[string]interface{} {
+func physicalTableMapHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%s", m["custom_sql"].(string)))
+	buf.WriteString(fmt.Sprintf("%s", m["relational_table"].(string)))
+	buf.WriteString(fmt.Sprintf("%s", m["s3_source"].(string)))
+	return create.StringHashcode(buf.String())
+}
+
+func flattenQuickSightPhysicalTable(key string, table *quicksight.PhysicalTable) map[string]interface{} {
 	if table == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
+	WriteToFile("result.txt", "1")
+	tfMap["physical_table_map_id"] = key
+
 	if table.CustomSql != nil {
 		tfMap["custom_sql"] = flattenQuickSightCustomSql(table.CustomSql)
 	}
 
 	if table.RelationalTable != nil {
-		tfMap["relational_tabel"] = flattenQuickSightRelationalTable(table.RelationalTable)
+		tfMap["relational_table"] = flattenQuickSightRelationalTable(table.RelationalTable)
 	}
 
 	if table.S3Source != nil {
 		tfMap["s3_source"] = flattenQuickSightS3Source(table.S3Source)
 	}
 
+	WriteToFile("result.txt", "2")
 	return tfMap
 }
 

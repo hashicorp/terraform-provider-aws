@@ -478,6 +478,7 @@ resource "aws_quicksight_data_set" "dset" {
 	name        = %[2]q
 	import_mode = "SPICE"
 	physical_table_map {
+		physical_table_map_id = %[1]q
 		s3_source {
 			data_source_arn = aws_quicksight_data_source.dsource.arn
 			input_columns {
@@ -500,6 +501,7 @@ resource "aws_quicksight_data_set" "dset" {
 	name        = %[2]q
 	import_mode = "SPICE"
 	physical_table_map {
+		physical_table_map_id = "unique_id"
 		s3_source {
 			data_source_arn = aws_quicksight_data_source.dsource.arn
 			input_columns {
@@ -529,6 +531,7 @@ resource "aws_quicksight_data_set" "dset" {
 	name        = %[2]q
 	import_mode = "SPICE"
 	physical_table_map {
+		physical_table_map_id = "unique_id"
 		s3_source {
 			data_source_arn = aws_quicksight_data_source.dsource.arn
 			input_columns {
@@ -554,6 +557,7 @@ resource "aws_quicksight_data_set" "dset" {
 	name        = %[2]q
 	import_mode = "SPICE"
 	physical_table_map {
+		physical_table_map_id = "unique_id"
 		s3_source {
 			data_source_arn = aws_quicksight_data_source.dsource.arn
 			input_columns {
@@ -580,6 +584,7 @@ resource "aws_quicksight_data_set" "dset" {
 	name        = %[2]q
 	import_mode = "SPICE"
 	physical_table_map {
+		physical_table_map_id = "unique_id"
 		s3_source {
 			data_source_arn = aws_quicksight_data_source.dsource.arn
 			input_columns {
@@ -589,6 +594,7 @@ resource "aws_quicksight_data_set" "dset" {
 		}
 	}
 	field_folders {
+		field_folders_id = "my-unique-id"
 		columns = ["ColumnId-1"]
 		description = "test"
 	}
@@ -606,6 +612,7 @@ resource "aws_quicksight_data_set" "dset" {
 	name        = %[2]q
 	import_mode = "SPICE"
 	physical_table_map {
+		physical_table_map_id = "unique_id"
 		s3_source {
 			data_source_arn = aws_quicksight_data_source.dsource.arn
 			input_columns {
@@ -634,6 +641,7 @@ resource "aws_quicksight_data_set" "test" {
 	name        = %[2]q
 	import_mode = "SPICE"
 	physical_table_map {
+		physical_table_map_id = "unique_id"
 		s3_source {
 			data_source_arn = aws_quicksight_data_source.dsource.arn
 			input_columns {
@@ -665,6 +673,7 @@ resource "aws_quicksight_data_set" "test" {
   name        = %[2]q
   import_mode = "SPICE"
   physical_table_map {
+	physical_table_map_id = "unique_id"
 	  s3_source {
 		  data_source_arn = aws_quicksight_data_source.dsource.arn
 		  input_columns {
@@ -700,6 +709,7 @@ resource "aws_quicksight_data_set" "dset" {
 	name        = %[2]q
 	import_mode = "SPICE"
 	physical_table_map {
+		physical_table_map_id = "unique_id"
 		s3_source {
 			data_source_arn = aws_quicksight_data_source.dsource.arn
 			input_columns {
@@ -729,6 +739,7 @@ resource "aws_quicksight_data_set" "dset" {
 	name        = %[2]q
 	import_mode = "SPICE"
 	physical_table_map {
+		physical_table_map_id = "unique_id"
 		s3_source {
 			data_source_arn = aws_quicksight_data_source.dsource.arn
 			input_columns {
@@ -759,6 +770,7 @@ resource "aws_quicksight_data_set" "dset" {
 	name        = %[2]q
 	import_mode = "SPICE"
 	physical_table_map {
+		physical_table_map_id = "unique_id"
 		s3_source {
 			data_source_arn = aws_quicksight_data_source.dsource.arn
 			input_columns {
