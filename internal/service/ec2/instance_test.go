@@ -6693,11 +6693,11 @@ func testAccInstanceConfig_UserData_Specified_With_Replace_Flag(rName string, us
 		testAccInstanceVPCConfig(rName, false),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
-	ami           			  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-	instance_type 			  = "t2.micro"
-	subnet_id     			  = aws_subnet.test.id
-	user_data     			  = %[1]q
-	user_data_replace_on_change = %[2]q
+  ami           			  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type 			  = "t2.micro"
+  subnet_id     			  = aws_subnet.test.id
+  user_data     			  = %[1]q
+  user_data_replace_on_change = %[2]q
 }
 `, userData, replaceOnChange))
 }
