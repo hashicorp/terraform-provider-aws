@@ -24,12 +24,12 @@ import (
 )
 
 func ResourceSecurityGroup() *schema.Resource {
-	securityGroupRuleSetSchema := &schema.Schema{
+	securityGroupRuleSetNestedBlock := &schema.Schema{
 		Type:       schema.TypeSet,
 		Optional:   true,
 		Computed:   true,
 		ConfigMode: schema.SchemaConfigModeAttr,
-		Elem:       securityGroupRuleResource,
+		Elem:       securityGroupRuleNestedBlock,
 		Set:        SecurityGroupRuleHash,
 	}
 
@@ -64,8 +64,8 @@ func ResourceSecurityGroup() *schema.Resource {
 				Default:      "Managed by Terraform",
 				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
-			"egress":  securityGroupRuleSetSchema,
-			"ingress": securityGroupRuleSetSchema,
+			"egress":  securityGroupRuleSetNestedBlock,
+			"ingress": securityGroupRuleSetNestedBlock,
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -105,9 +105,9 @@ func ResourceSecurityGroup() *schema.Resource {
 	}
 }
 
-// Security Group rule Resource definition.
+// Security Group rule nested block definition.
 // Used in aws_security_group and aws_default_security_group ingress and egress rule sets.
-var securityGroupRuleResource = &schema.Resource{
+var securityGroupRuleNestedBlock = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"cidr_blocks": {
 			Type:     schema.TypeList,
