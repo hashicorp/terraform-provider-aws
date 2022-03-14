@@ -21,12 +21,12 @@ import (
 )
 
 func ResourceNetworkACL() *schema.Resource {
-	networkACLRuleSetSchema := &schema.Schema{
+	networkACLRuleSetNestedBlock := &schema.Schema{
 		Type:       schema.TypeSet,
 		Optional:   true,
 		Computed:   true,
 		ConfigMode: schema.SchemaConfigModeAttr,
-		Elem:       networkACLRuleResource,
+		Elem:       networkACLRuleNestedBlock,
 		Set:        networkACLRuleHash,
 	}
 
@@ -61,8 +61,8 @@ func ResourceNetworkACL() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"egress":  networkACLRuleSetSchema,
-			"ingress": networkACLRuleSetSchema,
+			"egress":  networkACLRuleSetNestedBlock,
+			"ingress": networkACLRuleSetNestedBlock,
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -86,9 +86,9 @@ func ResourceNetworkACL() *schema.Resource {
 	}
 }
 
-// NACL rule Resource definition.
+// NACL rule nested block definition.
 // Used in aws_network_acl and aws_default_network_acl ingress and egress rule sets.
-var networkACLRuleResource = &schema.Resource{
+var networkACLRuleNestedBlock = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"action": {
 			Type:     schema.TypeString,
