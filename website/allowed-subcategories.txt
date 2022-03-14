@@ -106,6 +106,7 @@ MemoryDB
 Managed Workflows for Apache Airflow (MWAA)
 Neptune
 Network Firewall
+Network Manager
 OpsWorks
 Organizations
 Outposts
@@ -147,7 +148,6 @@ Storage Gateway
 Synthetics
 Timestream Write
 Transfer
-Transit Gateway Network Manager
 VPC
 WAF Regional
 WAF

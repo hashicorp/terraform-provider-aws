@@ -24,6 +24,7 @@ func testAccTransitGatewayConnectPeerDataSource_Filter(t *testing.T) {
 			{
 				Config: testAccTransitGatewayConnectPeerFilterDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bgp_asn", resourceName, "bgp_asn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "inside_cidr_blocks.#", resourceName, "inside_cidr_blocks.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "peer_address", resourceName, "peer_address"),
@@ -51,6 +52,7 @@ func testAccTransitGatewayConnectPeerDataSource_ID(t *testing.T) {
 			{
 				Config: testAccTransitGatewayConnectPeerIDDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bgp_asn", resourceName, "bgp_asn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "inside_cidr_blocks.#", resourceName, "inside_cidr_blocks.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "peer_address", resourceName, "peer_address"),
