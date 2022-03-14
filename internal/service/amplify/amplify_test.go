@@ -55,7 +55,7 @@ func TestAccAmplify_serial(t *testing.T) {
 				t.Run(name, func(t *testing.T) {
 					tc(t)
 					// Explicitly sleep between tests.
-					time.Sleep(15 * time.Second)
+					time.Sleep(5 * time.Second)
 				})
 			}
 		})
