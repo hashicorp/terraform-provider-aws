@@ -3749,7 +3749,7 @@ func TestAccEC2Instance_UserData_unspecifiedToEmptyString(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_UserData_replaceOnChangeFlag(t *testing.T) {
+func TestAccEC2Instance_UserDataReplaceOnChange_On(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -3763,32 +3763,31 @@ func TestAccEC2Instance_UserData_replaceOnChangeFlag(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_UserData_Specified_With_Replace_Flag_On(rName, "TestData1"),
+				Config: testAccInstanceConfig_UserData_Specified_With_Replace_Flag(rName, "TestData1", "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					testResourceIdHasChanged(resourceName, &instanceId),
+					testResourceIdHasChanged(resourceName, &instanceId, t),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
 			},
 			// Switching should force a recreate
 			{
-				Config: testAccInstanceConfig_UserData_Specified_With_Replace_Flag_On(rName, "TestData2"),
+				Config: testAccInstanceConfig_UserData_Specified_With_Replace_Flag(rName, "TestData2", "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					testResourceIdHasChanged(resourceName, &instanceId),
+					testResourceIdHasChanged(resourceName, &instanceId, t),
 				),
-				ExpectNonEmptyPlan: true,
-				PlanOnly:           true,
 			},
 		},
 	})
 }
 
-func TestAccEC2Instance_UserDataBase64_replaceOnChangeFlag(t *testing.T) {
+func TestAccEC2Instance_UserDataReplaceOnChange_On_Base64(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
@@ -3802,26 +3801,101 @@ func TestAccEC2Instance_UserDataBase64_replaceOnChangeFlag(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_UserData64_Specified_With_Replace_Flag_On(rName, "3dc39dda39be1205215e776bad998da361a5955d"),
+				Config: testAccInstanceConfig_UserData64_Specified_With_Replace_Flag(rName, "3dc39dda39be1205215e776bad998da361a5955d", "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					testResourceIdHasChanged(resourceName, &instanceId),
+					testResourceIdHasChanged(resourceName, &instanceId, t),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", "user_data"},
 			},
 			// Switching should force a recreate
 			{
-				Config: testAccInstanceConfig_UserData64_Specified_With_Replace_Flag_On(rName, "3dc39dda39be1205215e776bad998da361a5955e"),
+				Config: testAccInstanceConfig_UserData64_Specified_With_Replace_Flag(rName, "3dc39dda39be1205215e776bad998da361a5955e", "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					testResourceIdHasChanged(resourceName, &instanceId),
+					testResourceIdHasChanged(resourceName, &instanceId, t),
 				),
-				ExpectNonEmptyPlan: true,
-				PlanOnly:           true,
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_UserDataReplaceOnChange_Off(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
+
+	var instanceId string
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_UserData_Specified_With_Replace_Flag(rName, "TestData1", "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					testResourceIdHasNotChanged(resourceName, &instanceId, t),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			// Switching should not force a recreate
+			{
+				Config: testAccInstanceConfig_UserData_Specified_With_Replace_Flag(rName, "TestData2", "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					testResourceIdHasNotChanged(resourceName, &instanceId, t),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_UserDataReplaceOnChange_Off_Base64(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
+
+	var instanceId string
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_UserData64_Specified_With_Replace_Flag(rName, "3dc39dda39be1205215e776bad998da361a5955d", "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					testResourceIdHasNotChanged(resourceName, &instanceId, t),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", "user_data"},
+			},
+			// Switching should not force a recreate
+			{
+				Config: testAccInstanceConfig_UserData64_Specified_With_Replace_Flag(rName, "3dc39dda39be1205215e776bad998da361a5955e", "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					testResourceIdHasNotChanged(resourceName, &instanceId, t),
+				),
 			},
 		},
 	})
@@ -4220,17 +4294,36 @@ func testAccCheckInstanceExistsWithProvider(n string, i *ec2.Instance, providerF
 	}
 }
 
-func testResourceIdHasChanged(resourceName string, instanceId *string) resource.TestCheckFunc {
+func testResourceIdHasChanged(resourceName string, instanceId *string, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		instance := s.RootModule().Resources[resourceName]
 		if *instanceId == "" {
 			*instanceId = instance.Primary.ID
+			t.Logf("First instanceId set to %s", *instanceId)
 			return nil
 		}
 		if *instanceId != instance.Primary.ID {
+			t.Logf("Second instanceId set to %s", instance.Primary.ID)
 			return nil
 		} else {
 			return fmt.Errorf("A new instance should have been created")
+		}
+	}
+}
+
+func testResourceIdHasNotChanged(resourceName string, instanceId *string, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		instance := s.RootModule().Resources[resourceName]
+		if *instanceId == "" {
+			*instanceId = instance.Primary.ID
+			t.Logf("First instanceId set to %s", *instanceId)
+			return nil
+		}
+		if *instanceId == instance.Primary.ID {
+			t.Logf("Second instanceId set to %s", instance.Primary.ID)
+			return nil
+		} else {
+			return fmt.Errorf("A new instance should not have been created")
 		}
 	}
 }
@@ -6594,7 +6687,7 @@ resource "aws_instance" "test" {
 `)
 }
 
-func testAccInstanceConfig_UserData_Specified_With_Replace_Flag_On(rName string, userData string) string {
+func testAccInstanceConfig_UserData_Specified_With_Replace_Flag(rName string, userData string, replaceOnChange string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false),
@@ -6604,12 +6697,12 @@ resource "aws_instance" "test" {
 	instance_type 			  = "t2.micro"
 	subnet_id     			  = aws_subnet.test.id
 	user_data     			  = %[1]q
-	user_data_replace_on_change = true
-	}
-`, userData))
+	user_data_replace_on_change = %[2]q
+}
+`, userData, replaceOnChange))
 }
 
-func testAccInstanceConfig_UserData64_Specified_With_Replace_Flag_On(rName string, userData string) string {
+func testAccInstanceConfig_UserData64_Specified_With_Replace_Flag(rName string, userData string, replaceOnChange string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false),
@@ -6619,9 +6712,9 @@ resource "aws_instance" "test" {
   instance_type 			  = "t2.micro"
   subnet_id     			  = aws_subnet.test.id
   user_data_base64     		  = base64encode(%[1]q)
-  user_data_replace_on_change = true
+  user_data_replace_on_change = %[2]q
 }
-`, userData))
+`, userData, replaceOnChange))
 }
 
 // testAccInstanceVPCConfig returns the configuration for tests that create
