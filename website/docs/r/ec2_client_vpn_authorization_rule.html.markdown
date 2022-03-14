@@ -13,7 +13,7 @@ Provides authorization rules for AWS Client VPN endpoints. For more information 
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ec2_client_vpn_authorization_rule" "example" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.example.id
   target_network_cidr    = aws_subnet.example.cidr_block
@@ -30,6 +30,17 @@ The following arguments are supported:
 * `access_group_id` - (Optional) The ID of the group to which the authorization rule grants access. One of `access_group_id` or `authorize_all_groups` must be set.
 * `authorize_all_groups` - (Optional) Indicates whether the authorization rule grants access to all clients. One of `access_group_id` or `authorize_all_groups` must be set.
 * `description` - (Optional) A brief description of the authorization rule.
+
+## Attributes Reference
+
+No additional attributes are exported.
+
+## Timeouts
+
+`aws_ec2_client_vpn_authorization_rule` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for rule authorization
+- `delete` - (Default `10 minutes`) Used for rule revocation
 
 ## Import
 

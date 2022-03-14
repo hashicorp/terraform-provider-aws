@@ -12,7 +12,7 @@ Provides an IoT policy.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iot_policy" "pubsub" {
   name = "PubSubToAnyTopic"
 
@@ -51,7 +51,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IoT policies can be imported using the `name`, e.g.
+IoT policies can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_iot_policy.pubsub PubSubToAnyTopic

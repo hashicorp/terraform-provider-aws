@@ -12,7 +12,7 @@ Provides an AWS Backup vault policy resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_backup_vault" "example" {
   name = "example"
 }
@@ -65,7 +65,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Backup vault policy can be imported using the `name`, e.g.
+Backup vault policy can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_backup_vault_policy.test TestVault

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_fsx_lustre_file_system: Add `file_system_type_version` argument
+```
+
+```release-note:new-resource
+aws_fsx_data_repository_association
+```

@@ -14,7 +14,7 @@ Provides an IAM managed policy for a Single Sign-On (SSO) Permission Set resourc
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ssoadmin_instances" "example" {}
 
 resource "aws_ssoadmin_permission_set" "example" {
@@ -23,7 +23,7 @@ resource "aws_ssoadmin_permission_set" "example" {
 }
 
 resource "aws_ssoadmin_managed_policy_attachment" "example" {
-  instance_arn       = aws_ssoadmin_permission_set.example.instance_arn
+  instance_arn       = tolist(data.aws_ssoadmin_instances.example.arns)[0]
   managed_policy_arn = "arn:aws:iam::aws:policy/AlexaForBusinessDeviceSetup"
   permission_set_arn = aws_ssoadmin_permission_set.example.arn
 }
@@ -37,7 +37,7 @@ The following arguments are supported:
 * `managed_policy_arn` - (Required, Forces new resource) The IAM managed policy Amazon Resource Name (ARN) to be attached to the Permission Set.
 * `permission_set_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the Permission Set.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
@@ -46,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SSO Managed Policy Attachments can be imported using the `managed_policy_arn`, `permission_set_arn`, and `instance_arn` separated by a comma (`,`) e.g.
+SSO Managed Policy Attachments can be imported using the `managed_policy_arn`, `permission_set_arn`, and `instance_arn` separated by a comma (`,`) e.g.,
 
 ```
 $ terraform import aws_ssoadmin_managed_policy_attachment.example arn:aws:iam::aws:policy/AlexaForBusinessDeviceSetup,arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72

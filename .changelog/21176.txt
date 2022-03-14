@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_s3_bucket: Add `metrics` and `replication_time` arguments to `replication_configuration.rules` configuration block to support Amazon S3 Replication Time Control
+```
