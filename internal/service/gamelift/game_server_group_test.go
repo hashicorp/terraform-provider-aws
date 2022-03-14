@@ -628,9 +628,24 @@ resource "aws_iam_role_policy_attachment" %[2]q {
 
 func testAccGameliftGameServerGroupLaunchTemplateConfig(rName string) string {
 	return fmt.Sprintf(`
+data "aws_vpc" "test" {
+  default = true
+}
+
+data "aws_subnets" "test" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.test.id]
+  }
+}
+
 resource "aws_launch_template" "test" {
   image_id = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   name     = %[1]q
+
+  network_interfaces {
+    subnet_id = data.aws_subnets.test.ids[0]
+  }
 }
 `, rName)
 }
@@ -669,6 +684,8 @@ resource "aws_gamelift_game_server_group" "test" {
   min_size = 1
   role_arn = aws_iam_role.test.arn
 
+  vpc_subnets = [data.aws_subnets.test.ids[0]]
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
@@ -701,6 +718,8 @@ resource "aws_gamelift_game_server_group" "test" {
   max_size = 1
   min_size = 1
   role_arn = aws_iam_role.test.arn
+
+  vpc_subnets = [data.aws_subnets.test.ids[0]]
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
@@ -736,6 +755,8 @@ resource "aws_gamelift_game_server_group" "test" {
   min_size = 1
   role_arn = aws_iam_role.test.arn
 
+  vpc_subnets = [data.aws_subnets.test.ids[0]]
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
@@ -765,6 +786,8 @@ resource "aws_gamelift_game_server_group" "test" {
   min_size = 1
   role_arn = aws_iam_role.test.arn
 
+  vpc_subnets = [data.aws_subnets.test.ids[0]]
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, balancingStrategy))
@@ -793,6 +816,8 @@ resource "aws_gamelift_game_server_group" "test" {
   min_size = 1
   role_arn = aws_iam_role.test.arn
 
+  vpc_subnets = [data.aws_subnets.test.ids[0]]
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, gameServerGroupName))
@@ -820,6 +845,8 @@ resource "aws_gamelift_game_server_group" "test" {
   max_size = 1
   min_size = 1
   role_arn = aws_iam_role.test.arn
+
+  vpc_subnets = [data.aws_subnets.test.ids[0]]
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
@@ -850,6 +877,8 @@ resource "aws_gamelift_game_server_group" "test" {
   min_size = 1
   role_arn = aws_iam_role.test.arn
 
+  vpc_subnets = [data.aws_subnets.test.ids[0]]
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, weightedCapacity))
@@ -878,6 +907,8 @@ resource "aws_gamelift_game_server_group" "test" {
   min_size = 1
   role_arn = aws_iam_role.test.arn
 
+  vpc_subnets = [data.aws_subnets.test.ids[0]]
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
@@ -905,6 +936,8 @@ resource "aws_gamelift_game_server_group" "test" {
   max_size = 1
   min_size = 1
   role_arn = aws_iam_role.test.arn
+
+  vpc_subnets = [data.aws_subnets.test.ids[0]]
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
@@ -935,6 +968,8 @@ resource "aws_gamelift_game_server_group" "test" {
   min_size = 1
   role_arn = aws_iam_role.test.arn
 
+  vpc_subnets = [data.aws_subnets.test.ids[0]]
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
@@ -963,6 +998,8 @@ resource "aws_gamelift_game_server_group" "test" {
   min_size = 1
   role_arn = aws_iam_role.test.arn
 
+  vpc_subnets = [data.aws_subnets.test.ids[0]]
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, maxSize))
@@ -990,6 +1027,8 @@ resource "aws_gamelift_game_server_group" "test" {
   max_size = 2
   min_size = %[2]s
   role_arn = aws_iam_role.test.arn
+
+  vpc_subnets = [data.aws_subnets.test.ids[0]]
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
@@ -1052,6 +1091,8 @@ resource "aws_gamelift_game_server_group" "test" {
   min_size = 1
   role_arn = aws_iam_role.test.arn
 
+  vpc_subnets = [data.aws_subnets.test.ids[0]]
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, gameServerProtectionPolicy))
@@ -1080,6 +1121,8 @@ resource "aws_gamelift_game_server_group" "test" {
   min_size = 1
   role_arn = aws_iam_role.%[2]s.arn
 
+  vpc_subnets = [data.aws_subnets.test.ids[0]]
+
   depends_on = [aws_iam_role_policy_attachment.%[2]s]
 }
 `, rName, roleArn))
@@ -1092,14 +1135,6 @@ func testAccGameliftGameServerGroupConfigVpcSubnets(rName string, count int) str
 		testAccGameliftGameServerGroupInstanceTypeOfferingsConfig(),
 		testAccGameliftGameServerGroupLaunchTemplateConfig(rName),
 		fmt.Sprintf(`
-data "aws_vpc" "test" {
-  default = true
-}
-
-data "aws_subnet_ids" "test" {
-  vpc_id = data.aws_vpc.test.id
-}
-
 resource "aws_gamelift_game_server_group" "test" {
   game_server_group_name = %[1]q
   dynamic "instance_definition" {
@@ -1115,7 +1150,7 @@ resource "aws_gamelift_game_server_group" "test" {
   max_size    = 1
   min_size    = 1
   role_arn    = aws_iam_role.test.arn
-  vpc_subnets = slice(tolist(data.aws_subnet_ids.test.ids), 0, %[2]d)
+  vpc_subnets = slice(data.aws_subnets.test.ids, 0, %[2]d)
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
