@@ -581,6 +581,8 @@ func Provider() *schema.Provider {
 			"aws_ecr_image":               ecr.DataSourceImage(),
 			"aws_ecr_repository":          ecr.DataSourceRepository(),
 
+			"aws_ecrpublic_authorization_token": ecrpublic.DataSourceAuthorizationToken(),
+
 			"aws_ecs_cluster":              ecs.DataSourceCluster(),
 			"aws_ecs_container_definition": ecs.DataSourceContainerDefinition(),
 			"aws_ecs_service":              ecs.DataSourceService(),
