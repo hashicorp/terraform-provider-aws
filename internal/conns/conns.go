@@ -1524,6 +1524,8 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		Route53DomainsConn: route53domains.NewFromConfig(cfg, func(o *route53domains.Options) {
 			if endpoint := c.Endpoints[Route53Domains]; endpoint != "" {
 				o.EndpointResolver = route53domains.EndpointResolverFromURL(endpoint)
+			} else {
+				o.Region = endpoints.UsEast1RegionID
 			}
 		}),
 		Route53RecoveryControlConfigConn: route53recoverycontrolconfig.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Route53RecoveryControlConfig])})),
