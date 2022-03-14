@@ -37,21 +37,21 @@ func TestClusterIDRegionFromARN(t *testing.T) {
 			TestName:       "normal ARN",
 			Input:          "arn:aws:rds:us-west-2:012345678901:cluster:tf-acc-test-1467354933239945971", // lintignore:AWSAT003,AWSAT005
 			ExpectedID:     "tf-acc-test-1467354933239945971",
-			ExpectedRegion: "us-west-2",
+			ExpectedRegion: "us-west-2", // lintignore:AWSAT003
 			ExpectedErr:    false,
 		},
 		{
 			TestName:       "another good ARN",
 			Input:          "arn:aws:rds:us-east-1:012345678901:cluster:tf-acc-test-1467354933239945971", // lintignore:AWSAT003,AWSAT005
 			ExpectedID:     "tf-acc-test-1467354933239945971",
-			ExpectedRegion: "us-east-1",
+			ExpectedRegion: "us-east-1", // lintignore:AWSAT003
 			ExpectedErr:    false,
 		},
 		{
 			TestName:       "no account",
 			Input:          "arn:aws:rds:us-east-2::cluster:tf-acc-test-1467354933239945971", // lintignore:AWSAT003,AWSAT005
 			ExpectedID:     "tf-acc-test-1467354933239945971",
-			ExpectedRegion: "us-east-2",
+			ExpectedRegion: "us-east-2", // lintignore:AWSAT003
 			ExpectedErr:    false,
 		},
 		{
