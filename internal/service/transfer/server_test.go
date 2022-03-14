@@ -56,6 +56,8 @@ func testAccServer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "SERVICE_MANAGED"),
 					resource.TestCheckResourceAttr(resourceName, "invocation_role", ""),
 					resource.TestCheckResourceAttr(resourceName, "logging_role", ""),
+					resource.TestCheckResourceAttr(resourceName, "post_authentication_login_banner", ""),
+					resource.TestCheckResourceAttr(resourceName, "pre_authentication_login_banner", ""),
 					resource.TestCheckResourceAttr(resourceName, "protocols.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "protocols.*", "SFTP"),
 					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-2018-11"),
@@ -941,7 +943,7 @@ func testAccServer_lambdaFunction(t *testing.T) {
 	})
 }
 
-func TestAccTransferServer_DisplayBanners(t *testing.T) {
+func TestAccTransferServer_AuthenticationLoginBanners(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
 
@@ -955,8 +957,8 @@ func TestAccTransferServer_DisplayBanners(t *testing.T) {
 				Config: testAccServerDisplayBannersConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "pre_display_banner", "This system is for the use of authorized users only"),
-					resource.TestCheckResourceAttr(resourceName, "post_display_banner", "This system is for the use of authorized users only"),
+					resource.TestCheckResourceAttr(resourceName, "post_authentication_login_banner", "This system is for the use of authorized users only - post"),
+					resource.TestCheckResourceAttr(resourceName, "pre_authentication_login_banner", "This system is for the use of authorized users only - pre"),
 				),
 			},
 			{
@@ -1225,8 +1227,8 @@ resource "aws_transfer_server" "test" {}
 func testAccServerDisplayBannersConfig() string {
 	return `
 resource "aws_transfer_server" "test" {
-  pre_display_banner  = "This system is for the use of authorized users only"
-  post_display_banner = "This system is for the use of authorized users only"
+  pre_authentication_login_banner  = "This system is for the use of authorized users only - pre"
+  post_authentication_login_banner = "This system is for the use of authorized users only - post"
 }
 `
 }

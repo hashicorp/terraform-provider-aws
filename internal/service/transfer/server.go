@@ -142,20 +142,6 @@ func ResourceServer() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 4096),
 			},
 
-			"pre_display_banner": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-
-			"post_display_banner": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-
 			"host_key_fingerprint": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -179,6 +165,19 @@ func ResourceServer() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
+			},
+
+			"post_authentication_login_banner": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				ValidateFunc: validation.StringLenBetween(0, 512),
+			},
+			"pre_authentication_login_banner": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
 
 			"protocols": {
@@ -257,16 +256,6 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 		input.IdentityProviderDetails.Function = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("pre_display_banner"); ok {
-		input.PreAuthenticationLoginBanner = aws.String(v.(string))
-
-	}
-
-	if v, ok := d.GetOk("post_display_banner"); ok {
-		input.PostAuthenticationLoginBanner = aws.String(v.(string))
-
-	}
-
 	if v, ok := d.GetOk("host_key"); ok {
 		input.HostKey = aws.String(v.(string))
 	}
@@ -285,6 +274,14 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("logging_role"); ok {
 		input.LoggingRole = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("post_authentication_login_banner"); ok {
+		input.PostAuthenticationLoginBanner = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("pre_authentication_login_banner"); ok {
+		input.PreAuthenticationLoginBanner = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("protocols"); ok && v.(*schema.Set).Len() > 0 {
@@ -402,8 +399,6 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("function", "")
 	}
-	d.Set("pre_display_banner", output.PreAuthenticationLoginBanner)
-	d.Set("post_display_banner", output.PostAuthenticationLoginBanner)
 	d.Set("host_key_fingerprint", output.HostKeyFingerprint)
 	d.Set("identity_provider_type", output.IdentityProviderType)
 	if output.IdentityProviderDetails != nil {
@@ -412,6 +407,8 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("invocation_role", "")
 	}
 	d.Set("logging_role", output.LoggingRole)
+	d.Set("post_authentication_login_banner", output.PostAuthenticationLoginBanner)
+	d.Set("pre_authentication_login_banner", output.PreAuthenticationLoginBanner)
 	d.Set("protocols", aws.StringValueSlice(output.Protocols))
 	d.Set("security_policy_name", output.SecurityPolicyName)
 	if output.IdentityProviderDetails != nil {
@@ -547,14 +544,6 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 			offlineUpdate = true
 		}
 
-		if d.HasChange("pre_display_banner") {
-			input.PreAuthenticationLoginBanner = aws.String(d.Get("pre_display_banner").(string))
-		}
-
-		if d.HasChange("post_display_banner") {
-			input.PostAuthenticationLoginBanner = aws.String(d.Get("post_display_banner").(string))
-		}
-
 		if d.HasChange("host_key") {
 			if attr, ok := d.GetOk("host_key"); ok {
 				input.HostKey = aws.String(attr.(string))
@@ -585,6 +574,14 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChange("logging_role") {
 			input.LoggingRole = aws.String(d.Get("logging_role").(string))
+		}
+
+		if d.HasChange("post_authentication_login_banner") {
+			input.PostAuthenticationLoginBanner = aws.String(d.Get("post_authentication_login_banner").(string))
+		}
+
+		if d.HasChange("pre_authentication_login_banner") {
+			input.PreAuthenticationLoginBanner = aws.String(d.Get("pre_authentication_login_banner").(string))
 		}
 
 		if d.HasChange("protocols") {
