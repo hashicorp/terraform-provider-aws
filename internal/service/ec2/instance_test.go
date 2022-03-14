@@ -6603,7 +6603,7 @@ resource "aws_instance" "test" {
 	ami           			  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 	instance_type 			  = "t2.micro"
 	subnet_id     			  = aws_subnet.test.id
-	user_data     			  = "%[1]q"
+	user_data     			  = %[1]q
 	user_data_replace_on_change = true
 	}
 `, userData))
