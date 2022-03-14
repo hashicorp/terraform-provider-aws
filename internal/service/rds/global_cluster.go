@@ -432,32 +432,6 @@ func globalClusterRefreshFunc(conn *rds.RDS, globalClusterID string) resource.St
 	}
 }
 
-func globalClusterVersionRefreshFunc(conn *rds.RDS, globalClusterID, engineVersion string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		globalCluster, err := DescribeGlobalCluster(conn, globalClusterID)
-
-		if tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) {
-			return nil, "deleted", nil
-		}
-
-		if err != nil {
-			return nil, "", fmt.Errorf("error reading RDS Global Cluster (%s): %s", globalClusterID, err)
-		}
-
-		if globalCluster == nil {
-			return nil, "deleted", nil
-		}
-
-		status := aws.StringValue(globalCluster.Status)
-
-		if status == rds.CustomEngineVersionStatusAvailable && aws.StringValue(globalCluster.EngineVersion) == engineVersion {
-			status = aws.StringValue(globalCluster.EngineVersion)
-		}
-
-		return globalCluster, status, nil
-	}
-}
-
 func waitForGlobalClusterCreation(conn *rds.RDS, globalClusterID string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"creating"},
@@ -482,21 +456,6 @@ func waitForGlobalClusterUpdate(conn *rds.RDS, globalClusterID string, timeout t
 	}
 
 	log.Printf("[DEBUG] Waiting for RDS Global Cluster (%s) availability", globalClusterID)
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForGlobalClusterVersionUpdate(conn *rds.RDS, globalClusterID, version string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"modifying", "upgrading", "available"},
-		Target:  []string{version},
-		Refresh: globalClusterVersionRefreshFunc(conn, globalClusterID, version),
-		Timeout: timeout,
-		Delay:   30 * time.Second,
-	}
-
-	log.Printf("[DEBUG] Waiting for RDS Global Cluster (%s) version sync", globalClusterID)
 	_, err := stateConf.WaitForState()
 
 	return err
