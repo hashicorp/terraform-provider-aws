@@ -1586,6 +1586,7 @@ func Provider() *schema.Provider {
 			"aws_route53_resolver_rule_association":                route53resolver.ResourceRuleAssociation(),
 
 			"aws_s3_bucket":                                   s3.ResourceBucket(),
+			"aws_s3_bucket_acl":                               s3.ResourceBucketAcl(),
 			"aws_s3_bucket_analytics_configuration":           s3.ResourceBucketAnalyticsConfiguration(),
 			"aws_s3_bucket_cors_configuration":                s3.ResourceBucketCorsConfiguration(),
 			"aws_s3_bucket_intelligent_tiering_configuration": s3.ResourceBucketIntelligentTieringConfiguration(),
@@ -1597,6 +1598,7 @@ func Provider() *schema.Provider {
 			"aws_s3_bucket_policy":                            s3.ResourceBucketPolicy(),
 			"aws_s3_bucket_public_access_block":               s3.ResourceBucketPublicAccessBlock(),
 			"aws_s3_bucket_replication_configuration":         s3.ResourceBucketReplicationConfiguration(),
+			"aws_s3_bucket_website_configuration":             s3.ResourceBucketWebsiteConfiguration(),
 			"aws_s3_object_copy":                              s3.ResourceObjectCopy(),
 
 			"aws_s3_access_point":                             s3control.ResourceAccessPoint(),
