@@ -1187,6 +1187,8 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 			tfMap["return"] = aws.BoolValue(v)
 		}
 
+		tfMap["search"] = true
+
 		if v := options.SortEnabled; v != nil {
 			tfMap["sort"] = aws.BoolValue(v)
 		}
@@ -1209,6 +1211,8 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 		if v := options.ReturnEnabled; v != nil {
 			tfMap["return"] = aws.BoolValue(v)
 		}
+
+		tfMap["search"] = true
 
 	default:
 		return nil, fmt.Errorf("unsupported index_field type: %s", fieldType)
