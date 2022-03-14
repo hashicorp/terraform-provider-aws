@@ -1,8 +1,44 @@
-## 4.5.0 (Unreleased)
+## 4.6.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_networkmanager_connection` ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
+* **New Data Source:** `aws_networkmanager_connections` ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
+* **New Data Source:** `aws_networkmanager_device` ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
+* **New Data Source:** `aws_networkmanager_devices` ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
+* **New Data Source:** `aws_networkmanager_global_network` ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
+* **New Data Source:** `aws_networkmanager_global_networks` ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
+* **New Data Source:** `aws_networkmanager_link` ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
+* **New Data Source:** `aws_networkmanager_links` ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
+* **New Data Source:** `aws_networkmanager_site` ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
+* **New Data Source:** `aws_networkmanager_sites` ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
+* **New Resource:** `aws_networkmanager_connection` ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
+* **New Resource:** `aws_networkmanager_customer_gateway_association` ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
+* **New Resource:** `aws_networkmanager_device` ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
+* **New Resource:** `aws_networkmanager_global_network` ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
+* **New Resource:** `aws_networkmanager_link` ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
+* **New Resource:** `aws_networkmanager_link_association` ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
+* **New Resource:** `aws_networkmanager_site` ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
+* **New Resource:** `aws_networkmanager_transit_gateway_connect_peer_association` ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
+* **New Resource:** `aws_networkmanager_transit_gateway_registration` ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
+
+ENHANCEMENTS:
+
+* data-source/aws_ec2_transit_gateway_connect_peer: Add `arn` attribute ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
+* data_source/aws_redshift_cluster: Add `availability_zone_relocation_enabled` attribute. ([#20812](https://github.com/hashicorp/terraform-provider-aws/issues/20812))
+* resource/aws_ec2_transit_gateway_connect_peer: Add `arn` attribute ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
+* resource/aws_redshift_cluster: Add `availability_zone_relocation_enabled` attribute and allow `availability_zone` to be changed in-place. ([#20812](https://github.com/hashicorp/terraform-provider-aws/issues/20812))
+
+## 4.5.0 (March 11, 2022)
 
 ENHANCEMENTS:
 
 * resource/aws_account_alternate_contact: Add configurable timeouts ([#23516](https://github.com/hashicorp/terraform-provider-aws/issues/23516))
+* resource/aws_s3_bucket: Add error handling for `NotImplemented` errors when reading `object_lock_enabled` and `object_lock_configuration` into terraform state. ([#13366](https://github.com/hashicorp/terraform-provider-aws/issues/13366))
+* resource/aws_s3_bucket: Add top-level `object_lock_enabled` parameter ([#23556](https://github.com/hashicorp/terraform-provider-aws/issues/23556))
+* resource/aws_s3_bucket_replication_configuration: Add `token` field to specify
+x-amz-bucket-object-lock-token for enabling replication on object lock enabled
+buckets or enabling object lock on an existing bucket. ([#23624](https://github.com/hashicorp/terraform-provider-aws/issues/23624))
 * resource/aws_servicecatalog_budget_resource_association: Add configurable timeouts ([#23518](https://github.com/hashicorp/terraform-provider-aws/issues/23518))
 * resource/aws_servicecatalog_constraint: Add configurable timeouts ([#23518](https://github.com/hashicorp/terraform-provider-aws/issues/23518))
 * resource/aws_servicecatalog_organizations_access: Add configurable timeouts ([#23518](https://github.com/hashicorp/terraform-provider-aws/issues/23518))
@@ -16,10 +52,21 @@ ENHANCEMENTS:
 * resource/aws_servicecatalog_service_action: Add configurable timeouts ([#23518](https://github.com/hashicorp/terraform-provider-aws/issues/23518))
 * resource/aws_servicecatalog_tag_option: Add configurable timeouts ([#23518](https://github.com/hashicorp/terraform-provider-aws/issues/23518))
 * resource/aws_servicecatalog_tag_option_resource_association: Add configurable timeouts ([#23518](https://github.com/hashicorp/terraform-provider-aws/issues/23518))
+* resource/aws_synthetics_canary: Add optional `environment_variables` to `run_config`. ([#23574](https://github.com/hashicorp/terraform-provider-aws/issues/23574))
 
 BUG FIXES:
 
 * resource/aws_account_alternate_contact: Improve eventual consistency handling to avoid "no resource found" on updates ([#23516](https://github.com/hashicorp/terraform-provider-aws/issues/23516))
+* resource/aws_image_builder_image_recipe: Fix regression in 4.3.0 whereby Windows-based images wouldn't build because of the newly introduced `systems_manager_agent.uninstall_after_build` argument. ([#23580](https://github.com/hashicorp/terraform-provider-aws/issues/23580))
+* resource/aws_kms_external_key: Increase `tags` eventual consistency timeout from 5 minutes to 10 minutes ([#23593](https://github.com/hashicorp/terraform-provider-aws/issues/23593))
+* resource/aws_kms_key: Increase `description` and `tags` eventual consistency timeouts from 5 minutes to 10 minutes ([#23593](https://github.com/hashicorp/terraform-provider-aws/issues/23593))
+* resource/aws_kms_replica_external_key: Increase `tags` eventual consistency timeout from 5 minutes to 10 minutes ([#23593](https://github.com/hashicorp/terraform-provider-aws/issues/23593))
+* resource/aws_kms_replica_key: Increase `tags` eventual consistency timeout from 5 minutes to 10 minutes ([#23593](https://github.com/hashicorp/terraform-provider-aws/issues/23593))
+* resource/aws_s3_bucket_lifecycle_configuration: Correctly configure `rule.filter.object_size_greater_than` and `rule.filter.object_size_less_than` in API requests and terraform state ([#23441](https://github.com/hashicorp/terraform-provider-aws/issues/23441))
+* resource/aws_s3_bucket_lifecycle_configuration: Prevent drift when `rule.noncurrent_version_expiration.newer_noncurrent_versions` or `rule.noncurrent_version_transition.newer_noncurrent_versions` is not specified ([#23441](https://github.com/hashicorp/terraform-provider-aws/issues/23441))
+* resource/aws_s3_bucket_replication_configuration: Correctly configure empty `rule.filter` configuration block in API requests ([#23586](https://github.com/hashicorp/terraform-provider-aws/issues/23586))
+* resource/aws_s3_bucket_replication_configuration: Ensure both `key` and `value` arguments of the `rule.filter.tag` configuration block are correctly populated in the outgoing API request and terraform state. ([#23579](https://github.com/hashicorp/terraform-provider-aws/issues/23579))
+* resource/aws_s3_bucket_replication_configuration: Prevent inconsistent final plan when `rule.filter.prefix` is an empty string ([#23586](https://github.com/hashicorp/terraform-provider-aws/issues/23586))
 
 ## 4.4.0 (March 04, 2022)
 

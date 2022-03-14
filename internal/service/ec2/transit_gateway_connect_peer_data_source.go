@@ -2,9 +2,11 @@ package ec2
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -71,6 +73,15 @@ func dataSourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Reso
 	}
 
 	d.SetId(aws.StringValue(transitGatewayConnectPeer.TransitGatewayConnectPeerId))
+
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("transit-gateway-connect-peer/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 	d.Set("bgp_asn", strconv.FormatInt(aws.Int64Value(transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations[0].PeerAsn), 10))
 	d.Set("inside_cidr_blocks", aws.StringValueSlice(transitGatewayConnectPeer.ConnectPeerConfiguration.InsideCidrBlocks))
 	d.Set("peer_address", transitGatewayConnectPeer.ConnectPeerConfiguration.PeerAddress)
