@@ -43,9 +43,10 @@ func TestAccGameliftGameServerGroup_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vpc_subnets"},
 			},
 		},
 	})
@@ -74,9 +75,10 @@ func TestAccGameliftGameServerGroup_AutoScalingPolicy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vpc_subnets"},
 			},
 		},
 	})
@@ -105,9 +107,10 @@ func TestAccGameliftGameServerGroup_AutoScalingPolicy_EstimatedInstanceWarmup(t 
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vpc_subnets"},
 			},
 		},
 	})
@@ -135,9 +138,10 @@ func TestAccGameliftGameServerGroup_BalancingStrategy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vpc_subnets"},
 			},
 		},
 	})
@@ -165,9 +169,10 @@ func TestAccGameliftGameServerGroup_GameServerGroupName(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vpc_subnets"},
 			},
 			{
 				Config: testAccGameliftGameServerGroupConfigGameServerGroupName(rName, rName+"-new"),
@@ -202,9 +207,10 @@ func TestAccGameliftGameServerGroup_InstanceDefinition(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vpc_subnets"},
 			},
 			{
 				Config: testAccGameliftGameServerGroupConfigInstanceDefinition(rName, 3),
@@ -241,9 +247,10 @@ func TestAccGameliftGameServerGroup_InstanceDefinition_WeightedCapacity(t *testi
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vpc_subnets"},
 			},
 			{
 				Config: testAccGameliftGameServerGroupConfigInstanceDefinitionWeightedCapacity(rName, "2"),
@@ -282,9 +289,10 @@ func TestAccGameliftGameServerGroup_LaunchTemplate_Id(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vpc_subnets"},
 			},
 		},
 	})
@@ -314,9 +322,10 @@ func TestAccGameliftGameServerGroup_LaunchTemplate_Name(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vpc_subnets"},
 			},
 		},
 	})
@@ -346,9 +355,10 @@ func TestAccGameliftGameServerGroup_LaunchTemplate_Version(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vpc_subnets"},
 			},
 		},
 	})
@@ -376,9 +386,10 @@ func TestAccGameliftGameServerGroup_GameServerProtectionPolicy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vpc_subnets"},
 			},
 		},
 	})
@@ -406,9 +417,10 @@ func TestAccGameliftGameServerGroup_MaxSize(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vpc_subnets"},
 			},
 			{
 				Config: testAccGameliftGameServerGroupConfigMaxSize(rName, "2"),
@@ -443,9 +455,10 @@ func TestAccGameliftGameServerGroup_MinSize(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vpc_subnets"},
 			},
 			{
 				Config: testAccGameliftGameServerGroupConfigMinSize(rName, "2"),
@@ -481,9 +494,10 @@ func TestAccGameliftGameServerGroup_RoleArn(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vpc_subnets"},
 			},
 			{
 				Config: testAccGameliftGameServerGroupConfigRoleArn(rName, "test2"),
