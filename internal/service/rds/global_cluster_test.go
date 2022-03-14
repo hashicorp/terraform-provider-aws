@@ -35,35 +35,35 @@ func TestClusterIDRegionFromARN(t *testing.T) {
 		},
 		{
 			TestName:       "normal ARN",
-			Input:          "arn:aws:rds:us-west-2:012345678901:cluster:tf-acc-test-1467354933239945971",
+			Input:          "arn:aws:rds:us-west-2:012345678901:cluster:tf-acc-test-1467354933239945971", // lintignore:AWSAT003,AWSAT005
 			ExpectedID:     "tf-acc-test-1467354933239945971",
 			ExpectedRegion: "us-west-2",
 			ExpectedErr:    false,
 		},
 		{
 			TestName:       "another good ARN",
-			Input:          "arn:aws:rds:us-east-1:012345678901:cluster:tf-acc-test-1467354933239945971",
+			Input:          "arn:aws:rds:us-east-1:012345678901:cluster:tf-acc-test-1467354933239945971", // lintignore:AWSAT003,AWSAT005
 			ExpectedID:     "tf-acc-test-1467354933239945971",
 			ExpectedRegion: "us-east-1",
 			ExpectedErr:    false,
 		},
 		{
 			TestName:       "no account",
-			Input:          "arn:aws:rds:us-east-2::cluster:tf-acc-test-1467354933239945971",
+			Input:          "arn:aws:rds:us-east-2::cluster:tf-acc-test-1467354933239945971", // lintignore:AWSAT003,AWSAT005
 			ExpectedID:     "tf-acc-test-1467354933239945971",
 			ExpectedRegion: "us-east-2",
 			ExpectedErr:    false,
 		},
 		{
 			TestName:       "wrong service",
-			Input:          "arn:aws:connect:us-west-2:012345678901:instance/1032bdc4-d72c-5490-a9fa-3c9b4dba67bb",
+			Input:          "arn:aws:connect:us-west-2:012345678901:instance/1032bdc4-d72c-5490-a9fa-3c9b4dba67bb", // lintignore:AWSAT003,AWSAT005
 			ExpectedID:     "",
 			ExpectedRegion: "",
 			ExpectedErr:    true,
 		},
 		{
 			TestName:       "wrong resource",
-			Input:          "arn:aws:rds:us-east-2::notacluster:tf-acc-test-1467354933239945971",
+			Input:          "arn:aws:rds:us-east-2::notacluster:tf-acc-test-1467354933239945971", // lintignore:AWSAT003,AWSAT005
 			ExpectedID:     "",
 			ExpectedRegion: "",
 			ExpectedErr:    true,
@@ -837,14 +837,14 @@ resource "aws_db_subnet_group" "alternate" {
 }
 
 resource "aws_rds_cluster" "secondary" {
-  provider                      = "awsalternate"
-  allow_major_version_upgrade   = true
-  apply_immediately             = true
-  cluster_identifier            = %[5]q
-  engine                        = aws_rds_global_cluster.test.engine
-  engine_version                = aws_rds_global_cluster.test.engine_version
-  global_cluster_identifier     = aws_rds_global_cluster.test.id
-  skip_final_snapshot           = true
+  provider                    = "awsalternate"
+  allow_major_version_upgrade = true
+  apply_immediately           = true
+  cluster_identifier          = %[5]q
+  engine                      = aws_rds_global_cluster.test.engine
+  engine_version              = aws_rds_global_cluster.test.engine_version
+  global_cluster_identifier   = aws_rds_global_cluster.test.id
+  skip_final_snapshot         = true
 
   lifecycle {
     ignore_changes = [
