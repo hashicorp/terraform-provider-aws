@@ -8,6 +8,11 @@ FEATURES:
 
 * **New Resource:** `aws_s3_bucket_acl` ([#23419](https://github.com/hashicorp/terraform-provider-aws/issues/23419))
 
+ENHANCEMENTS:
+
+* resource/aws_lambda_function: Add support for `dotnet6` `runtime` value ([#23670](https://github.com/hashicorp/terraform-provider-aws/issues/23670))
+* resource/aws_lambda_layer_version: Add support for `dotnet6` `compatible_runtimes` value ([#23670](https://github.com/hashicorp/terraform-provider-aws/issues/23670))
+
 ## 3.74.3 (February 17, 2022)
 
 BUG FIXES:
