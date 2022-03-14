@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_s3_bucket_website_configuration
+```
+
+```release-note:note
+resource/aws_s3_bucket: The `website`, `website_domain`, and `website_endpoint` arguments have been deprecated. Use the `aws_s3_bucket_website_configuration` resource instead.
+```

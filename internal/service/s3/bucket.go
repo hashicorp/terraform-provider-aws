@@ -81,6 +81,7 @@ func ResourceBucket() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"grant"},
 				ValidateFunc:  validation.StringInSlice(BucketCannedACL_Values(), false),
+				Deprecated:    "Use the aws_s3_bucket_acl resource instead",
 			},
 
 			"grant": {
@@ -88,6 +89,7 @@ func ResourceBucket() *schema.Resource {
 				Optional:      true,
 				Set:           grantHash,
 				ConflictsWith: []string{"acl"},
+				Deprecated:    "Use the aws_s3_bucket_acl resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -129,8 +131,9 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"cors_rule": {
-				Type:     schema.TypeList,
-				Optional: true,
+				Type:       schema.TypeList,
+				Optional:   true,
+				Deprecated: "Use the aws_s3_bucket_cors_configuration resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"allowed_headers": {
@@ -162,9 +165,10 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"website": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:       schema.TypeList,
+				Optional:   true,
+				MaxItems:   1,
+				Deprecated: "Use the aws_s3_bucket_website_configuration resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"index_document": {
@@ -211,14 +215,16 @@ func ResourceBucket() *schema.Resource {
 				Computed: true,
 			},
 			"website_endpoint": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "Use the aws_s3_bucket_website_configuration resource instead",
 			},
 			"website_domain": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "Use the aws_s3_bucket_website_configuration resource instead",
 			},
 
 			"versioning": {
@@ -970,7 +976,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
-	if err != nil && !tfawserr.ErrMessageContains(err, "NoSuchCORSConfiguration", "") {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchCORSConfiguration) {
 		return fmt.Errorf("error getting S3 Bucket CORS configuration: %s", err)
 	}
 
