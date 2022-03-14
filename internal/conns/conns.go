@@ -148,6 +148,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
 	"github.com/aws/aws-sdk-go/service/kendra"
+	"github.com/aws/aws-sdk-go/service/keyspaces"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
@@ -433,6 +434,7 @@ const (
 	Kafka                         = "kafka"
 	KafkaConnect                  = "kafkaconnect"
 	Kendra                        = "kendra"
+	Keyspaces                     = "keyspaces"
 	Kinesis                       = "kinesis"
 	KinesisAnalytics              = "kinesisanalytics"
 	KinesisAnalyticsV2            = "kinesisanalyticsv2"
@@ -729,6 +731,7 @@ func init() {
 	serviceData[Kafka] = &ServiceDatum{AWSClientName: "Kafka", AWSServiceName: kafka.ServiceName, AWSEndpointsID: kafka.EndpointsID, AWSServiceID: kafka.ServiceID, ProviderNameUpper: "Kafka", HCLKeys: []string{"kafka"}}
 	serviceData[KafkaConnect] = &ServiceDatum{AWSClientName: "KafkaConnect", AWSServiceName: kafkaconnect.ServiceName, AWSEndpointsID: kafkaconnect.EndpointsID, AWSServiceID: kafkaconnect.ServiceID, ProviderNameUpper: "KafkaConnect", HCLKeys: []string{"kafkaconnect"}}
 	serviceData[Kendra] = &ServiceDatum{AWSClientName: "Kendra", AWSServiceName: kendra.ServiceName, AWSEndpointsID: kendra.EndpointsID, AWSServiceID: kendra.ServiceID, ProviderNameUpper: "Kendra", HCLKeys: []string{"kendra"}}
+	serviceData[Keyspaces] = &ServiceDatum{AWSClientName: "Keyspaces", AWSServiceName: keyspaces.ServiceName, AWSEndpointsID: keyspaces.EndpointsID, AWSServiceID: keyspaces.ServiceID, ProviderNameUpper: "Keyspaces", HCLKeys: []string{"keyspaces"}}
 	serviceData[Kinesis] = &ServiceDatum{AWSClientName: "Kinesis", AWSServiceName: kinesis.ServiceName, AWSEndpointsID: kinesis.EndpointsID, AWSServiceID: kinesis.ServiceID, ProviderNameUpper: "Kinesis", HCLKeys: []string{"kinesis"}}
 	serviceData[KinesisAnalytics] = &ServiceDatum{AWSClientName: "KinesisAnalytics", AWSServiceName: kinesisanalytics.ServiceName, AWSEndpointsID: kinesisanalytics.EndpointsID, AWSServiceID: kinesisanalytics.ServiceID, ProviderNameUpper: "KinesisAnalytics", HCLKeys: []string{"kinesisanalytics"}}
 	serviceData[KinesisAnalyticsV2] = &ServiceDatum{AWSClientName: "KinesisAnalyticsV2", AWSServiceName: kinesisanalyticsv2.ServiceName, AWSEndpointsID: kinesisanalyticsv2.EndpointsID, AWSServiceID: kinesisanalyticsv2.ServiceID, ProviderNameUpper: "KinesisAnalyticsV2", HCLKeys: []string{"kinesisanalyticsv2"}}
@@ -1040,6 +1043,7 @@ type AWSClient struct {
 	KafkaConn                         *kafka.Kafka
 	KafkaConnectConn                  *kafkaconnect.KafkaConnect
 	KendraConn                        *kendra.Kendra
+	KeyspacesConn                     *keyspaces.Keyspaces
 	KinesisAnalyticsConn              *kinesisanalytics.KinesisAnalytics
 	KinesisAnalyticsV2Conn            *kinesisanalyticsv2.KinesisAnalyticsV2
 	KinesisConn                       *kinesis.Kinesis
@@ -1438,6 +1442,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		KafkaConn:                         kafka.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Kafka])})),
 		KafkaConnectConn:                  kafkaconnect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[KafkaConnect])})),
 		KendraConn:                        kendra.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Kendra])})),
+		KeyspacesConn:                     keyspaces.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Keyspaces])})),
 		KinesisAnalyticsConn:              kinesisanalytics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[KinesisAnalytics])})),
 		KinesisAnalyticsV2Conn:            kinesisanalyticsv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[KinesisAnalyticsV2])})),
 		KinesisConn:                       kinesis.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Kinesis])})),

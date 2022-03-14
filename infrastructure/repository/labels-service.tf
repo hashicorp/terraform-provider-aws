@@ -121,6 +121,7 @@ variable "service_labels" {
     "kafka",
     "kafkaconnect",
     "kendra",
+    "keyspaces",
     "kinesis",
     "kinesisanalytics",
     "kinesisanalyticsv2",

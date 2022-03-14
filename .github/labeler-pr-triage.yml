@@ -376,6 +376,9 @@ service/kafka:
 service/kafkaconnect:
   - 'internal/service/kafkaconnect/**/*'
   - 'website/**/mskconnect_*'
+service/keyspaces:
+  - 'internal/service/keyspaces/**/*'
+  - 'website/**/keyspaces_*'
 service/kinesis:
   - 'internal/service/kinesis/**/*'
   - '*_aws_kinesis_stream*'
