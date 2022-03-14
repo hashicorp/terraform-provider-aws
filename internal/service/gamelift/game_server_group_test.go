@@ -583,6 +583,7 @@ func testAccCheckGameliftGameServerGroupExists(resourceName string) resource.Tes
 func testAccGameliftGameServerGroupIamConfig(rName string, name string) string {
 	return fmt.Sprintf(`
 data "aws_partition" %[2]q {}
+
 resource "aws_iam_role" %[2]q {
   assume_role_policy = <<-EOF
     {
@@ -603,9 +604,10 @@ resource "aws_iam_role" %[2]q {
   EOF
   name = "%[1]s-%[2]s"
 }
+
 resource "aws_iam_role_policy_attachment" %[2]q {
   policy_arn = "arn:${data.aws_partition.%[2]s.partition}:iam::aws:policy/GameLiftGameServerGroupPolicy"
-  role = aws_iam_role.%[2]s.name
+  role       = aws_iam_role.%[2]s.name
 }
 `, rName, name)
 }
@@ -648,9 +650,11 @@ resource "aws_gamelift_game_server_group" "test" {
   launch_template {
     id = aws_launch_template.test.id
   }
+
   max_size = 1
   min_size = 1
   role_arn = aws_iam_role.test.arn
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
@@ -679,9 +683,11 @@ resource "aws_gamelift_game_server_group" "test" {
   launch_template {
     id = aws_launch_template.test.id
   }
+
   max_size = 1
   min_size = 1
   role_arn = aws_iam_role.test.arn
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
@@ -711,9 +717,11 @@ resource "aws_gamelift_game_server_group" "test" {
   launch_template {
     id = aws_launch_template.test.id
   }
+
   max_size = 1
   min_size = 1
   role_arn = aws_iam_role.test.arn
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
@@ -738,9 +746,11 @@ resource "aws_gamelift_game_server_group" "test" {
   launch_template {
     id = aws_launch_template.test.id
   }
+
   max_size = 1
   min_size = 1
   role_arn = aws_iam_role.test.arn
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, balancingStrategy))
@@ -764,9 +774,11 @@ resource "aws_gamelift_game_server_group" "test" {
   launch_template {
     id = aws_launch_template.test.id
   }
+
   max_size = 1
   min_size = 1
   role_arn = aws_iam_role.test.arn
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, gameServerGroupName))
@@ -790,9 +802,11 @@ resource "aws_gamelift_game_server_group" "test" {
   launch_template {
     id = aws_launch_template.test.id
   }
+
   max_size = 1
   min_size = 1
   role_arn = aws_iam_role.test.arn
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, count))
@@ -817,9 +831,11 @@ resource "aws_gamelift_game_server_group" "test" {
   launch_template {
     id = aws_launch_template.test.id
   }
+
   max_size = 1
   min_size = 1
   role_arn = aws_iam_role.test.arn
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, weightedCapacity))
@@ -843,9 +859,11 @@ resource "aws_gamelift_game_server_group" "test" {
   launch_template {
     id = aws_launch_template.test.id
   }
+
   max_size = 1
   min_size = 1
   role_arn = aws_iam_role.test.arn
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
@@ -869,9 +887,11 @@ resource "aws_gamelift_game_server_group" "test" {
   launch_template {
     name = aws_launch_template.test.name
   }
+
   max_size = 1
   min_size = 1
   role_arn = aws_iam_role.test.arn
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
@@ -896,9 +916,11 @@ resource "aws_gamelift_game_server_group" "test" {
     id      = aws_launch_template.test.id
     version = 1
   }
+
   max_size = 1
   min_size = 1
   role_arn = aws_iam_role.test.arn
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
@@ -922,9 +944,11 @@ resource "aws_gamelift_game_server_group" "test" {
   launch_template {
     id = aws_launch_template.test.id
   }
+
   max_size = %[2]s
   min_size = 1
   role_arn = aws_iam_role.test.arn
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, maxSize))
@@ -948,9 +972,11 @@ resource "aws_gamelift_game_server_group" "test" {
   launch_template {
     id = aws_launch_template.test.id
   }
+
   max_size = 2
   min_size = %[2]s
   role_arn = aws_iam_role.test.arn
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, minSize))
@@ -974,12 +1000,15 @@ resource "aws_gamelift_game_server_group" "test" {
   launch_template {
     id = aws_launch_template.test.id
   }
+
   max_size = 1
   min_size = 1
   role_arn = aws_iam_role.test.arn
+
   tags = {
     %[2]s = %[3]q
   }
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, key, value))
@@ -1004,9 +1033,11 @@ resource "aws_gamelift_game_server_group" "test" {
   launch_template {
     id = aws_launch_template.test.id
   }
+
   max_size = 1
   min_size = 1
   role_arn = aws_iam_role.test.arn
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, gameServerProtectionPolicy))
@@ -1030,9 +1061,11 @@ resource "aws_gamelift_game_server_group" "test" {
   launch_template {
     id = aws_launch_template.test.id
   }
+
   max_size = 1
   min_size = 1
   role_arn = aws_iam_role.%[2]s.arn
+
   depends_on = [aws_iam_role_policy_attachment.%[2]s]
 }
 `, rName, roleArn))
@@ -1048,9 +1081,11 @@ func testAccGameliftGameServerGroupConfigVpcSubnets(rName string, count int) str
 data "aws_vpc" "test" {
   default = true
 }
+
 data "aws_subnet_ids" "test" {
   vpc_id = data.aws_vpc.test.id
 }
+
 resource "aws_gamelift_game_server_group" "test" {
   game_server_group_name = %[1]q
   dynamic "instance_definition" {
@@ -1062,10 +1097,12 @@ resource "aws_gamelift_game_server_group" "test" {
   launch_template {
     id = aws_launch_template.test.id
   }
+
   max_size    = 1
   min_size    = 1
   role_arn    = aws_iam_role.test.arn
   vpc_subnets = slice(tolist(data.aws_subnet_ids.test.ids), 0, %[2]d)
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, count))
