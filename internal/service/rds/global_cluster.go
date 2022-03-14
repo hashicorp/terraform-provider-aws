@@ -21,7 +21,7 @@ import (
 const (
 	GlobalClusterRemovalTimeout = 30 * time.Minute
 	globalClusterCreateTimeout  = 30 * time.Minute
-	globalClusterUpdateTimeout  = 60 * time.Minute
+	globalClusterUpdateTimeout  = 90 * time.Minute
 )
 
 func ResourceGlobalCluster() *schema.Resource {
