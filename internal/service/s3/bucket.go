@@ -171,15 +171,13 @@ func ResourceBucket() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"index_document": {
-							Type:       schema.TypeString,
-							Optional:   true,
-							Deprecated: "Use the aws_s3_bucket_website_configuration resource instead",
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 
 						"error_document": {
-							Type:       schema.TypeString,
-							Optional:   true,
-							Deprecated: "Use the aws_s3_bucket_website_configuration resource instead",
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 
 						"redirect_all_requests_to": {
@@ -189,14 +187,12 @@ func ResourceBucket() *schema.Resource {
 								"website.0.error_document",
 								"website.0.routing_rules",
 							},
-							Optional:   true,
-							Deprecated: "Use the aws_s3_bucket_website_configuration resource instead",
+							Optional: true,
 						},
 
 						"routing_rules": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Deprecated:   "Use the aws_s3_bucket_website_configuration resource instead",
 							ValidateFunc: validation.StringIsJSON,
 							StateFunc: func(v interface{}) string {
 								json, _ := structure.NormalizeJsonString(v)
