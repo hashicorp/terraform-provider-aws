@@ -1035,38 +1035,6 @@ resource "aws_gamelift_game_server_group" "test" {
 `, rName, minSize))
 }
 
-func testAccGameliftGameServerGroupConfigTags(rName string, key string, value string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		testAccGameliftGameServerGroupIamConfig(rName, "test"),
-		testAccGameliftGameServerGroupInstanceTypeOfferingsConfig(),
-		testAccGameliftGameServerGroupLaunchTemplateConfig(rName),
-		fmt.Sprintf(`
-resource "aws_gamelift_game_server_group" "test" {
-  game_server_group_name = %[1]q
-  dynamic "instance_definition" {
-    for_each = data.aws_ec2_instance_type_offerings.available.instance_types
-    content {
-      instance_type = instance_definition.value
-    }
-  }
-  launch_template {
-    id = aws_launch_template.test.id
-  }
-
-  max_size = 1
-  min_size = 1
-  role_arn = aws_iam_role.test.arn
-
-  tags = {
-    %[2]s = %[3]q
-  }
-
-  depends_on = [aws_iam_role_policy_attachment.test]
-}
-`, rName, key, value))
-}
-
 func testAccGameliftGameServerGroupConfigGameServerProtectionPolicy(rName string, gameServerProtectionPolicy string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
