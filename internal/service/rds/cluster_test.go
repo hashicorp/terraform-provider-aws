@@ -84,6 +84,10 @@ func TestAccRDSCluster_basic(t *testing.T) {
 }
 
 func TestAccRDSCluster_allowMajorVersionUpgrade(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster1, dbCluster2 rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -137,6 +141,10 @@ func TestAccRDSCluster_allowMajorVersionUpgrade(t *testing.T) {
 }
 
 func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParametersApplyImm(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster1, dbCluster2 rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -176,6 +184,10 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParametersApplyImm(t *t
 }
 
 func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParameters(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster1, dbCluster2 rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -229,6 +241,10 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParameters(t *testing.T
 }
 
 func TestAccRDSCluster_onlyMajorVersion(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster1 rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -364,6 +380,10 @@ func TestAccRDSCluster_dbSubnetGroupName(t *testing.T) {
 }
 
 func TestAccRDSCluster_s3Restore(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBCluster
 	resourceName := "aws_rds_cluster.test"
 	bucket := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -388,6 +408,10 @@ func TestAccRDSCluster_s3Restore(t *testing.T) {
 }
 
 func TestAccRDSCluster_pointInTimeRestore(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBCluster
 	var c rds.DBCluster
 
@@ -414,6 +438,10 @@ func TestAccRDSCluster_pointInTimeRestore(t *testing.T) {
 }
 
 func TestAccRDSCluster_PointInTimeRestore_enabledCloudWatchLogsExports(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBCluster
 	var c rds.DBCluster
 
@@ -725,6 +753,10 @@ func TestAccRDSCluster_copyTagsToSnapshot(t *testing.T) {
 }
 
 func TestAccRDSCluster_ReplicationSourceIdentifier_kmsKeyID(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var primaryCluster rds.DBCluster
 	var replicaCluster rds.DBCluster
 	resourceName := "aws_rds_cluster.test"
@@ -846,6 +878,10 @@ func TestAccRDSCluster_deletionProtection(t *testing.T) {
 }
 
 func TestAccRDSCluster_engineMode(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster1, dbCluster2 rds.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -948,6 +984,10 @@ func TestAccRDSCluster_EngineMode_parallelQuery(t *testing.T) {
 }
 
 func TestAccRDSCluster_engineVersion(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster rds.DBCluster
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_rds_cluster.test"
@@ -976,6 +1016,10 @@ func TestAccRDSCluster_engineVersion(t *testing.T) {
 }
 
 func TestAccRDSCluster_engineVersionWithPrimaryInstance(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster rds.DBCluster
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_rds_cluster.test"
@@ -1145,6 +1189,10 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineMode_provisioned(t *testing.
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13126
 func TestAccRDSCluster_GlobalClusterIdentifier_primarySecondaryClusters(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var providers []*schema.Provider
 	var primaryDbCluster, secondaryDbCluster rds.DBCluster
 
@@ -1178,6 +1226,10 @@ func TestAccRDSCluster_GlobalClusterIdentifier_primarySecondaryClusters(t *testi
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13715
 func TestAccRDSCluster_GlobalClusterIdentifier_replicationSourceIdentifier(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var providers []*schema.Provider
 	var primaryDbCluster, secondaryDbCluster rds.DBCluster
 
@@ -1208,6 +1260,10 @@ func TestAccRDSCluster_GlobalClusterIdentifier_replicationSourceIdentifier(t *te
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14457
 func TestAccRDSCluster_GlobalClusterIdentifier_secondaryClustersWriteForwarding(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var providers []*schema.Provider
 	var primaryDbCluster, secondaryDbCluster rds.DBCluster
 
@@ -1270,6 +1326,10 @@ func TestAccRDSCluster_port(t *testing.T) {
 }
 
 func TestAccRDSCluster_scaling(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster rds.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1339,6 +1399,10 @@ func TestAccRDSCluster_Scaling_defaultMinCapacity(t *testing.T) {
 }
 
 func TestAccRDSCluster_snapshotIdentifier(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster, sourceDbCluster rds.DBCluster
 	var dbClusterSnapshot rds.DBClusterSnapshot
 
@@ -1366,6 +1430,10 @@ func TestAccRDSCluster_snapshotIdentifier(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_deletionProtection(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster, sourceDbCluster rds.DBCluster
 	var dbClusterSnapshot rds.DBClusterSnapshot
 
@@ -1404,6 +1472,10 @@ func TestAccRDSCluster_SnapshotIdentifier_deletionProtection(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifierEngineMode_parallelQuery(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster, sourceDbCluster rds.DBCluster
 	var dbClusterSnapshot rds.DBClusterSnapshot
 
@@ -1432,6 +1504,10 @@ func TestAccRDSCluster_SnapshotIdentifierEngineMode_parallelQuery(t *testing.T) 
 }
 
 func TestAccRDSCluster_SnapshotIdentifierEngineMode_provisioned(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster, sourceDbCluster rds.DBCluster
 	var dbClusterSnapshot rds.DBClusterSnapshot
 
@@ -1493,6 +1569,10 @@ func TestAccRDSCluster_SnapshotIdentifierEngineMode_serverless(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6157
 func TestAccRDSCluster_SnapshotIdentifierEngineVersion_different(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster, sourceDbCluster rds.DBCluster
 	var dbClusterSnapshot rds.DBClusterSnapshot
 
@@ -1523,6 +1603,10 @@ func TestAccRDSCluster_SnapshotIdentifierEngineVersion_different(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6157
 func TestAccRDSCluster_SnapshotIdentifierEngineVersion_equal(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster, sourceDbCluster rds.DBCluster
 	var dbClusterSnapshot rds.DBClusterSnapshot
 
@@ -1552,6 +1636,10 @@ func TestAccRDSCluster_SnapshotIdentifierEngineVersion_equal(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_kmsKeyID(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster, sourceDbCluster rds.DBCluster
 	var dbClusterSnapshot rds.DBClusterSnapshot
 
@@ -1581,6 +1669,10 @@ func TestAccRDSCluster_SnapshotIdentifier_kmsKeyID(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_masterPassword(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster, sourceDbCluster rds.DBCluster
 	var dbClusterSnapshot rds.DBClusterSnapshot
 
@@ -1609,6 +1701,10 @@ func TestAccRDSCluster_SnapshotIdentifier_masterPassword(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_masterUsername(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster, sourceDbCluster rds.DBCluster
 	var dbClusterSnapshot rds.DBClusterSnapshot
 
@@ -1639,6 +1735,10 @@ func TestAccRDSCluster_SnapshotIdentifier_masterUsername(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_preferredBackupWindow(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster, sourceDbCluster rds.DBCluster
 	var dbClusterSnapshot rds.DBClusterSnapshot
 
@@ -1667,6 +1767,10 @@ func TestAccRDSCluster_SnapshotIdentifier_preferredBackupWindow(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_preferredMaintenanceWindow(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster, sourceDbCluster rds.DBCluster
 	var dbClusterSnapshot rds.DBClusterSnapshot
 
@@ -1695,6 +1799,10 @@ func TestAccRDSCluster_SnapshotIdentifier_preferredMaintenanceWindow(t *testing.
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster, sourceDbCluster rds.DBCluster
 	var dbClusterSnapshot rds.DBClusterSnapshot
 
@@ -1724,6 +1832,10 @@ func TestAccRDSCluster_SnapshotIdentifier_tags(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_vpcSecurityGroupIDs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster, sourceDbCluster rds.DBCluster
 	var dbClusterSnapshot rds.DBClusterSnapshot
 
@@ -1755,6 +1867,10 @@ func TestAccRDSCluster_SnapshotIdentifier_vpcSecurityGroupIDs(t *testing.T) {
 // vpc_security_group_ids is set (which triggered the resource update function),
 // and tags is set which was missing its ARN used for tagging
 func TestAccRDSCluster_SnapshotIdentifierVPCSecurityGroupIDs_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster, sourceDbCluster rds.DBCluster
 	var dbClusterSnapshot rds.DBClusterSnapshot
 
@@ -1784,6 +1900,10 @@ func TestAccRDSCluster_SnapshotIdentifierVPCSecurityGroupIDs_tags(t *testing.T) 
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_encryptedRestore(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster, sourceDbCluster rds.DBCluster
 	var dbClusterSnapshot rds.DBClusterSnapshot
 
@@ -1814,6 +1934,10 @@ func TestAccRDSCluster_SnapshotIdentifier_encryptedRestore(t *testing.T) {
 }
 
 func TestAccRDSCluster_enableHTTPEndpoint(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbCluster rds.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

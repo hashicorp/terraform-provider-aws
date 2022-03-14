@@ -11,6 +11,10 @@ import (
 )
 
 func TestAccRDSInstanceDataSource_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_db_instance.test"
 
@@ -46,6 +50,10 @@ func TestAccRDSInstanceDataSource_basic(t *testing.T) {
 }
 
 func TestAccRDSInstanceDataSource_ec2Classic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_db_instance.test"
 

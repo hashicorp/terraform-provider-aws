@@ -271,6 +271,10 @@ func TestAccRDSGlobalCluster_EngineVersion_aurora(t *testing.T) {
 }
 
 func TestAccRDSGlobalCluster_EngineVersion_updateMinor(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var globalCluster1, globalCluster2 rds.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_global_cluster.test"
@@ -307,6 +311,10 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMinor(t *testing.T) {
 }
 
 func TestAccRDSGlobalCluster_EngineVersion_updateMajor(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var globalCluster1, globalCluster2 rds.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_global_cluster.test"
@@ -341,6 +349,10 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMajor(t *testing.T) {
 }
 
 func TestAccRDSGlobalCluster_EngineVersion_updateMinorMultiRegion(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var providers []*schema.Provider
 	var globalCluster1, globalCluster2 rds.GlobalCluster
 	rNameGlobal := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) // don't need to be unique but makes debugging easier
@@ -373,6 +385,10 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMinorMultiRegion(t *testing.T) 
 }
 
 func TestAccRDSGlobalCluster_EngineVersion_updateMajorMultiRegion(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var providers []*schema.Provider
 	var globalCluster1, globalCluster2 rds.GlobalCluster
 	rNameGlobal := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) // don't need to be unique but makes debugging easier

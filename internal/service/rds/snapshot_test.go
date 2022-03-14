@@ -16,6 +16,10 @@ import (
 )
 
 func TestAccRDSSnapshot_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBSnapshot
 	resourceName := "aws_db_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -44,6 +48,10 @@ func TestAccRDSSnapshot_basic(t *testing.T) {
 }
 
 func TestAccRDSSnapshot_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBSnapshot
 	resourceName := "aws_db_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -89,6 +97,10 @@ func TestAccRDSSnapshot_tags(t *testing.T) {
 }
 
 func TestAccRDSSnapshot_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBSnapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_snapshot.test"

@@ -12,6 +12,10 @@ import (
 )
 
 func TestAccRDSSnapshotDataSource_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rInt := sdkacctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },

@@ -158,6 +158,10 @@ func TestAccRDSOptionGroup_optionGroupDescription(t *testing.T) {
 }
 
 func TestAccRDSOptionGroup_basicDestroyWithInstance(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_option_group.test"
 

@@ -23,6 +23,10 @@ import (
 )
 
 func TestAccRDSInstance_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance1 rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -92,6 +96,10 @@ func TestAccRDSInstance_basic(t *testing.T) {
 }
 
 func TestAccRDSInstance_NameDeprecated_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance1 rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -162,6 +170,10 @@ func TestAccRDSInstance_NameDeprecated_basic(t *testing.T) {
 }
 
 func TestAccRDSInstance_onlyMajorVersion(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance1 rds.DBInstance
 	resourceName := "aws_db_instance.test"
 	engine := "mysql"
@@ -195,6 +207,10 @@ func TestAccRDSInstance_onlyMajorVersion(t *testing.T) {
 }
 
 func TestAccRDSInstance_namePrefix(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBInstance
 
 	const identifierPrefix = "tf-acc-test-prefix-"
@@ -227,6 +243,10 @@ func TestAccRDSInstance_namePrefix(t *testing.T) {
 }
 
 func TestAccRDSInstance_nameGenerated(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBInstance
 
 	const resourceName = "aws_db_instance.test"
@@ -258,6 +278,10 @@ func TestAccRDSInstance_nameGenerated(t *testing.T) {
 }
 
 func TestAccRDSInstance_kmsKey(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBInstance
 	kmsKeyResourceName := "aws_kms_key.foo"
 	resourceName := "aws_db_instance.bar"
@@ -294,6 +318,10 @@ func TestAccRDSInstance_kmsKey(t *testing.T) {
 }
 
 func TestAccRDSInstance_subnetGroup(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
@@ -323,6 +351,10 @@ func TestAccRDSInstance_subnetGroup(t *testing.T) {
 }
 
 func TestAccRDSInstance_optionGroup(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -347,6 +379,10 @@ func TestAccRDSInstance_optionGroup(t *testing.T) {
 }
 
 func TestAccRDSInstance_iamAuth(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -370,6 +406,10 @@ func TestAccRDSInstance_iamAuth(t *testing.T) {
 }
 
 func TestAccRDSInstance_allowMajorVersionUpgrade(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance1 rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -412,6 +452,10 @@ func TestAccRDSInstance_allowMajorVersionUpgrade(t *testing.T) {
 }
 
 func TestAccRDSInstance_dbSubnetGroupName(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 	var dbSubnetGroup rds.DBSubnetGroup
 
@@ -469,6 +513,10 @@ func TestAccRDSInstance_DBSubnetGroupName_ramShared(t *testing.T) {
 }
 
 func TestAccRDSInstance_DBSubnetGroupName_vpcSecurityGroupIDs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 	var dbSubnetGroup rds.DBSubnetGroup
 
@@ -495,6 +543,10 @@ func TestAccRDSInstance_DBSubnetGroupName_vpcSecurityGroupIDs(t *testing.T) {
 }
 
 func TestAccRDSInstance_deletionProtection(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -537,6 +589,10 @@ func TestAccRDSInstance_deletionProtection(t *testing.T) {
 }
 
 func TestAccRDSInstance_finalSnapshotIdentifier(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var snap rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -559,6 +615,10 @@ func TestAccRDSInstance_finalSnapshotIdentifier(t *testing.T) {
 }
 
 func TestAccRDSInstance_FinalSnapshotIdentifier_skipFinalSnapshot(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var snap rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -579,6 +639,10 @@ func TestAccRDSInstance_FinalSnapshotIdentifier_skipFinalSnapshot(t *testing.T) 
 }
 
 func TestAccRDSInstance_isAlreadyBeingDeleted(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -617,6 +681,10 @@ func TestAccRDSInstance_isAlreadyBeingDeleted(t *testing.T) {
 }
 
 func TestAccRDSInstance_maxAllocatedStorage(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -661,6 +729,10 @@ func TestAccRDSInstance_maxAllocatedStorage(t *testing.T) {
 }
 
 func TestAccRDSInstance_password(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -700,6 +772,10 @@ func TestAccRDSInstance_password(t *testing.T) {
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -737,6 +813,10 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_namePrefix(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBInstance
 
 	sourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -770,6 +850,10 @@ func TestAccRDSInstance_ReplicateSourceDB_namePrefix(t *testing.T) {
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_nameGenerated(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBInstance
 
 	sourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -802,6 +886,10 @@ func TestAccRDSInstance_ReplicateSourceDB_nameGenerated(t *testing.T) {
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_addLater(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -833,6 +921,10 @@ func TestAccRDSInstance_ReplicateSourceDB_addLater(t *testing.T) {
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_allocatedStorage(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -859,6 +951,10 @@ func TestAccRDSInstance_ReplicateSourceDB_allocatedStorage(t *testing.T) {
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_iops(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -885,6 +981,10 @@ func TestAccRDSInstance_ReplicateSourceDB_iops(t *testing.T) {
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_allocatedStorageAndIops(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -912,6 +1012,10 @@ func TestAccRDSInstance_ReplicateSourceDB_allocatedStorageAndIops(t *testing.T) 
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_allowMajorVersionUpgrade(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -938,6 +1042,10 @@ func TestAccRDSInstance_ReplicateSourceDB_allowMajorVersionUpgrade(t *testing.T)
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_autoMinorVersionUpgrade(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -964,6 +1072,10 @@ func TestAccRDSInstance_ReplicateSourceDB_autoMinorVersionUpgrade(t *testing.T) 
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_availabilityZone(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -989,6 +1101,10 @@ func TestAccRDSInstance_ReplicateSourceDB_availabilityZone(t *testing.T) {
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_backupRetentionPeriod(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1015,6 +1131,10 @@ func TestAccRDSInstance_ReplicateSourceDB_backupRetentionPeriod(t *testing.T) {
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_backupWindow(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1041,6 +1161,10 @@ func TestAccRDSInstance_ReplicateSourceDB_backupWindow(t *testing.T) {
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 	var dbSubnetGroup rds.DBSubnetGroup
 	var providers []*schema.Provider
@@ -1071,6 +1195,10 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName(t *testing.T) {
 }
 
 func TestAccRDSInstance_ReplicateSourceDBDBSubnetGroupName_ramShared(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 	var dbSubnetGroup rds.DBSubnetGroup
 	var providers []*schema.Provider
@@ -1103,6 +1231,10 @@ func TestAccRDSInstance_ReplicateSourceDBDBSubnetGroupName_ramShared(t *testing.
 }
 
 func TestAccRDSInstance_ReplicateSourceDBDBSubnetGroupName_vpcSecurityGroupIDs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 	var dbSubnetGroup rds.DBSubnetGroup
 	var providers []*schema.Provider
@@ -1181,6 +1313,10 @@ func TestAccRDSInstance_ReplicateSourceDB_deletionProtection(t *testing.T) {
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_iamDatabaseAuthenticationEnabled(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1207,6 +1343,10 @@ func TestAccRDSInstance_ReplicateSourceDB_iamDatabaseAuthenticationEnabled(t *te
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_maintenanceWindow(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1233,6 +1373,10 @@ func TestAccRDSInstance_ReplicateSourceDB_maintenanceWindow(t *testing.T) {
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_maxAllocatedStorage(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1259,6 +1403,10 @@ func TestAccRDSInstance_ReplicateSourceDB_maxAllocatedStorage(t *testing.T) {
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_monitoring(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1285,6 +1433,10 @@ func TestAccRDSInstance_ReplicateSourceDB_monitoring(t *testing.T) {
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_multiAZ(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1311,6 +1463,10 @@ func TestAccRDSInstance_ReplicateSourceDB_multiAZ(t *testing.T) {
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameSameSetOnBoth(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1340,6 +1496,10 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameSameSetOnBoth(t *tes
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameDifferentSetOnBoth(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1369,6 +1529,10 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameDifferentSetOnBoth(t
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameReplicaCopiesValue(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1397,6 +1561,10 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameReplicaCopiesValue(t
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameSetOnReplica(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1424,6 +1592,10 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameSetOnReplica(t *test
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_port(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1450,6 +1622,10 @@ func TestAccRDSInstance_ReplicateSourceDB_port(t *testing.T) {
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_vpcSecurityGroupIDs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1476,6 +1652,10 @@ func TestAccRDSInstance_ReplicateSourceDB_vpcSecurityGroupIDs(t *testing.T) {
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_caCertificateIdentifier(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1504,6 +1684,10 @@ func TestAccRDSInstance_ReplicateSourceDB_caCertificateIdentifier(t *testing.T) 
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_replicaMode(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1535,6 +1719,10 @@ func TestAccRDSInstance_ReplicateSourceDB_replicaMode(t *testing.T) {
 // InvalidDBInstanceState: Instance cannot currently reboot due to an in-progress management operation
 // https://github.com/hashicorp/terraform-provider-aws/issues/11905
 func TestAccRDSInstance_ReplicateSourceDB_parameterGroupTwoStep(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1706,6 +1894,10 @@ func TestAccRDSInstance_S3Import_nameGenerated(t *testing.T) {
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -1745,6 +1937,10 @@ func TestAccRDSInstance_SnapshotIdentifier_basic(t *testing.T) {
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_namePrefix(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBInstance
 
 	sourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1779,6 +1975,10 @@ func TestAccRDSInstance_SnapshotIdentifier_namePrefix(t *testing.T) {
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_nameGenerated(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBInstance
 
 	sourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1812,6 +2012,10 @@ func TestAccRDSInstance_SnapshotIdentifier_nameGenerated(t *testing.T) {
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_AssociationRemoved(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance1, dbInstance2 rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1845,6 +2049,10 @@ func TestAccRDSInstance_SnapshotIdentifier_AssociationRemoved(t *testing.T) {
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_allocatedStorage(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -1873,6 +2081,10 @@ func TestAccRDSInstance_SnapshotIdentifier_allocatedStorage(t *testing.T) {
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_io1Storage(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -1901,6 +2113,10 @@ func TestAccRDSInstance_SnapshotIdentifier_io1Storage(t *testing.T) {
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_allowMajorVersionUpgrade(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -1929,6 +2145,10 @@ func TestAccRDSInstance_SnapshotIdentifier_allowMajorVersionUpgrade(t *testing.T
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_autoMinorVersionUpgrade(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -1957,6 +2177,10 @@ func TestAccRDSInstance_SnapshotIdentifier_autoMinorVersionUpgrade(t *testing.T)
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_availabilityZone(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -1984,6 +2208,10 @@ func TestAccRDSInstance_SnapshotIdentifier_availabilityZone(t *testing.T) {
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriodOverride(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -2012,6 +2240,10 @@ func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriodOverride(t *test
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriodUnset(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -2040,6 +2272,10 @@ func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriodUnset(t *testing
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_backupWindow(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -2068,6 +2304,10 @@ func TestAccRDSInstance_SnapshotIdentifier_backupWindow(t *testing.T) {
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupName(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 	var dbSubnetGroup rds.DBSubnetGroup
@@ -2099,6 +2339,10 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupName(t *testing.T) {
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameRAMShared(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 	var dbSubnetGroup rds.DBSubnetGroup
@@ -2135,6 +2379,10 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameRAMShared(t *testing
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameVPCSecurityGroupIDs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 	var dbSubnetGroup rds.DBSubnetGroup
@@ -2166,6 +2414,10 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameVPCSecurityGroupIDs(
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_deletionProtection(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -2204,6 +2456,10 @@ func TestAccRDSInstance_SnapshotIdentifier_deletionProtection(t *testing.T) {
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_iamDatabaseAuthenticationEnabled(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -2232,6 +2488,10 @@ func TestAccRDSInstance_SnapshotIdentifier_iamDatabaseAuthenticationEnabled(t *t
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_maintenanceWindow(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -2260,6 +2520,10 @@ func TestAccRDSInstance_SnapshotIdentifier_maintenanceWindow(t *testing.T) {
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_maxAllocatedStorage(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -2288,6 +2552,10 @@ func TestAccRDSInstance_SnapshotIdentifier_maxAllocatedStorage(t *testing.T) {
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_monitoring(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -2316,6 +2584,10 @@ func TestAccRDSInstance_SnapshotIdentifier_monitoring(t *testing.T) {
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_multiAZ(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -2344,6 +2616,10 @@ func TestAccRDSInstance_SnapshotIdentifier_multiAZ(t *testing.T) {
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_multiAZSQLServer(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -2372,6 +2648,10 @@ func TestAccRDSInstance_SnapshotIdentifier_multiAZSQLServer(t *testing.T) {
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_parameterGroupName(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -2401,6 +2681,10 @@ func TestAccRDSInstance_SnapshotIdentifier_parameterGroupName(t *testing.T) {
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_port(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -2429,6 +2713,10 @@ func TestAccRDSInstance_SnapshotIdentifier_port(t *testing.T) {
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -2490,6 +2778,10 @@ func TestAccRDSInstance_SnapshotIdentifier_tagsRemove(t *testing.T) {
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_vpcSecurityGroupIDs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -2521,6 +2813,10 @@ func TestAccRDSInstance_SnapshotIdentifier_vpcSecurityGroupIDs(t *testing.T) {
 // vpc_security_group_ids is set (which triggered the resource update function),
 // and tags is set which was missing its ARN used for tagging
 func TestAccRDSInstance_SnapshotIdentifier_vpcSecurityGroupIDsTags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -2550,6 +2846,10 @@ func TestAccRDSInstance_SnapshotIdentifier_vpcSecurityGroupIDsTags(t *testing.T)
 }
 
 func TestAccRDSInstance_monitoringInterval(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 	resourceName := "aws_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2604,6 +2904,10 @@ func TestAccRDSInstance_monitoringInterval(t *testing.T) {
 }
 
 func TestAccRDSInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_db_instance.test"
@@ -2645,6 +2949,10 @@ func TestAccRDSInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T) {
 }
 
 func TestAccRDSInstance_MonitoringRoleARN_enabledToRemoved(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_db_instance.test"
@@ -2685,6 +2993,10 @@ func TestAccRDSInstance_MonitoringRoleARN_enabledToRemoved(t *testing.T) {
 }
 
 func TestAccRDSInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_db_instance.test"
@@ -2728,6 +3040,10 @@ func TestAccRDSInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) {
 // We apply a plan, then change just the iops. If the apply succeeds, we
 // consider this a pass, as before in 3760 the request would fail
 func TestAccRDSInstance_separateIopsUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2758,6 +3074,10 @@ func TestAccRDSInstance_separateIopsUpdate(t *testing.T) {
 }
 
 func TestAccRDSInstance_portUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2789,6 +3109,10 @@ func TestAccRDSInstance_portUpdate(t *testing.T) {
 }
 
 func TestAccRDSInstance_MSSQL_tz(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
@@ -2823,6 +3147,10 @@ func TestAccRDSInstance_MSSQL_tz(t *testing.T) {
 }
 
 func TestAccRDSInstance_MSSQL_domain(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var vBefore, vAfter rds.DBInstance
 	resourceName := "aws_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2860,6 +3188,14 @@ func TestAccRDSInstance_MSSQL_domain(t *testing.T) {
 }
 
 func TestAccRDSInstance_MSSQL_domainSnapshotRestore(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v, vRestoredInstance rds.DBInstance
 	resourceName := "aws_db_instance.test"
 	originResourceName := "aws_db_instance.origin"
@@ -2888,6 +3224,10 @@ func TestAccRDSInstance_MSSQL_domainSnapshotRestore(t *testing.T) {
 }
 
 func TestAccRDSInstance_MySQL_snapshotRestoreWithEngineVersion(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v, vRestoredInstance rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
@@ -2914,6 +3254,10 @@ func TestAccRDSInstance_MySQL_snapshotRestoreWithEngineVersion(t *testing.T) {
 }
 
 func TestAccRDSInstance_minorVersion(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2955,6 +3299,10 @@ func TestAccRDSInstance_ec2Classic(t *testing.T) {
 }
 
 func TestAccRDSInstance_cloudWatchLogsExport(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2988,6 +3336,10 @@ func TestAccRDSInstance_cloudWatchLogsExport(t *testing.T) {
 }
 
 func TestAccRDSInstance_EnabledCloudWatchLogsExports_mySQL(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBInstance
 	resourceName := "aws_db_instance.bar"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3039,6 +3391,10 @@ func TestAccRDSInstance_EnabledCloudWatchLogsExports_mySQL(t *testing.T) {
 }
 
 func TestAccRDSInstance_EnabledCloudWatchLogsExports_msSQL(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3073,6 +3429,10 @@ func TestAccRDSInstance_EnabledCloudWatchLogsExports_msSQL(t *testing.T) {
 }
 
 func TestAccRDSInstance_EnabledCloudWatchLogsExports_oracle(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3108,6 +3468,10 @@ func TestAccRDSInstance_EnabledCloudWatchLogsExports_oracle(t *testing.T) {
 }
 
 func TestAccRDSInstance_EnabledCloudWatchLogsExports_postgresql(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3143,6 +3507,10 @@ func TestAccRDSInstance_EnabledCloudWatchLogsExports_postgresql(t *testing.T) {
 }
 
 func TestAccRDSInstance_noDeleteAutomatedBackups(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3495,6 +3863,10 @@ func testAccCheckInstanceEC2ClassicExists(resourceName string, v *rds.DBInstance
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8792
 func TestAccRDSInstance_PerformanceInsightsEnabled_disabledToEnabled(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
@@ -3534,6 +3906,10 @@ func TestAccRDSInstance_PerformanceInsightsEnabled_disabledToEnabled(t *testing.
 }
 
 func TestAccRDSInstance_PerformanceInsightsEnabled_enabledToDisabled(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
@@ -3573,6 +3949,10 @@ func TestAccRDSInstance_PerformanceInsightsEnabled_enabledToDisabled(t *testing.
 }
 
 func TestAccRDSInstance_performanceInsightsKMSKeyID(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -3623,6 +4003,10 @@ func TestAccRDSInstance_performanceInsightsKMSKeyID(t *testing.T) {
 }
 
 func TestAccRDSInstance_performanceInsightsRetentionPeriod(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
@@ -3664,6 +4048,10 @@ func TestAccRDSInstance_performanceInsightsRetentionPeriod(t *testing.T) {
 }
 
 func TestAccRDSInstance_ReplicateSourceDB_performanceInsightsEnabled(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3693,6 +4081,10 @@ func TestAccRDSInstance_ReplicateSourceDB_performanceInsightsEnabled(t *testing.
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_performanceInsightsEnabled(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
 
@@ -3724,6 +4116,10 @@ func TestAccRDSInstance_SnapshotIdentifier_performanceInsightsEnabled(t *testing
 }
 
 func TestAccRDSInstance_caCertificateIdentifier(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 
 	resourceName := "aws_db_instance.bar"
@@ -3747,6 +4143,10 @@ func TestAccRDSInstance_caCertificateIdentifier(t *testing.T) {
 }
 
 func TestAccRDSInstance_RestoreToPointInTime_sourceIdentifier(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	sourceName := "aws_db_instance.test"
 	resourceName := "aws_db_instance.restore"
@@ -3784,6 +4184,10 @@ func TestAccRDSInstance_RestoreToPointInTime_sourceIdentifier(t *testing.T) {
 }
 
 func TestAccRDSInstance_RestoreToPointInTime_sourceResourceID(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance, sourceDbInstance rds.DBInstance
 	sourceName := "aws_db_instance.test"
 	resourceName := "aws_db_instance.restore"
@@ -3821,6 +4225,10 @@ func TestAccRDSInstance_RestoreToPointInTime_sourceResourceID(t *testing.T) {
 }
 
 func TestAccRDSInstance_NationalCharacterSet_oracle(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3856,6 +4264,10 @@ func TestAccRDSInstance_NationalCharacterSet_oracle(t *testing.T) {
 }
 
 func TestAccRDSInstance_NoNationalCharacterSet_oracle(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance rds.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -4059,6 +4471,10 @@ func TestAccRDSInstance_CoIPEnabled_snapshotIdentifier(t *testing.T) {
 }
 
 func TestAccRDSInstance_license(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance1 rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"

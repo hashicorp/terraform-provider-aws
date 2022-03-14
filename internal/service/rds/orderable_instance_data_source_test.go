@@ -38,6 +38,10 @@ func TestAccRDSOrderableInstanceDataSource_basic(t *testing.T) {
 }
 
 func TestAccRDSOrderableInstanceDataSource_preferredClass(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 	preferredClass := "db.t3.micro"
 
@@ -58,6 +62,10 @@ func TestAccRDSOrderableInstanceDataSource_preferredClass(t *testing.T) {
 }
 
 func TestAccRDSOrderableInstanceDataSource_preferredVersion(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -77,6 +85,10 @@ func TestAccRDSOrderableInstanceDataSource_preferredVersion(t *testing.T) {
 }
 
 func TestAccRDSOrderableInstanceDataSource_preferredClassAndVersion(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -97,6 +109,10 @@ func TestAccRDSOrderableInstanceDataSource_preferredClassAndVersion(t *testing.T
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsEnhancedMonitoring(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -116,6 +132,10 @@ func TestAccRDSOrderableInstanceDataSource_supportsEnhancedMonitoring(t *testing
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsIAMDatabaseAuthentication(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -135,6 +155,10 @@ func TestAccRDSOrderableInstanceDataSource_supportsIAMDatabaseAuthentication(t *
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsIops(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -154,6 +178,10 @@ func TestAccRDSOrderableInstanceDataSource_supportsIops(t *testing.T) {
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsKerberosAuthentication(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -173,6 +201,10 @@ func TestAccRDSOrderableInstanceDataSource_supportsKerberosAuthentication(t *tes
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsPerformanceInsights(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -196,6 +228,10 @@ func TestAccRDSOrderableInstanceDataSource_supportsPerformanceInsights(t *testin
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsStorageAutoScaling(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -215,6 +251,10 @@ func TestAccRDSOrderableInstanceDataSource_supportsStorageAutoScaling(t *testing
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsStorageEncryption(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{

@@ -18,6 +18,10 @@ import (
 )
 
 func TestAccRDSClusterEndpoint_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rInt := sdkacctest.RandInt()
 	var customReaderEndpoint rds.DBClusterEndpoint
 	var customEndpoint rds.DBClusterEndpoint
@@ -61,6 +65,10 @@ func TestAccRDSClusterEndpoint_basic(t *testing.T) {
 }
 
 func TestAccRDSClusterEndpoint_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rInt := sdkacctest.RandInt()
 	var customReaderEndpoint rds.DBClusterEndpoint
 	resourceName := "aws_rds_cluster_endpoint.reader"
