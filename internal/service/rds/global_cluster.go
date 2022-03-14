@@ -21,7 +21,7 @@ import (
 const (
 	GlobalClusterRemovalTimeout = 30 * time.Minute
 	globalClusterCreateTimeout  = 30 * time.Minute
-	globalClusterUpdateTimeout  = 30 * time.Minute
+	globalClusterUpdateTimeout  = 60 * time.Minute
 )
 
 func ResourceGlobalCluster() *schema.Resource {
@@ -489,7 +489,7 @@ func waitForGlobalClusterUpdate(conn *rds.RDS, globalClusterID string, timeout t
 
 func waitForGlobalClusterVersionUpdate(conn *rds.RDS, globalClusterID, version string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"modifying", "upgrading"},
+		Pending: []string{"modifying", "upgrading", "available"},
 		Target:  []string{version},
 		Refresh: globalClusterVersionRefreshFunc(conn, globalClusterID, version),
 		Timeout: timeout,
@@ -559,11 +559,11 @@ func waitForGlobalClusterRemoval(conn *rds.RDS, dbClusterIdentifier string, time
 	return nil
 }
 
-func globalClusterUpgradeMajorEngineVersion(meta interface{}, clusterId string, engineVersion string) error {
+func globalClusterUpgradeMajorEngineVersion(meta interface{}, clusterID string, engineVersion string) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	input := &rds.ModifyGlobalClusterInput{
-		GlobalClusterIdentifier: aws.String(clusterId),
+		GlobalClusterIdentifier: aws.String(clusterID),
 	}
 
 	input.AllowMajorVersionUpgrade = aws.Bool(true)
@@ -592,13 +592,13 @@ func globalClusterUpgradeMajorEngineVersion(meta interface{}, clusterId string, 
 	}
 
 	if err != nil {
-		return fmt.Errorf("while upgrading major version of RDS Global Cluster (%s): %w", clusterId, err)
+		return fmt.Errorf("while upgrading major version of RDS Global Cluster (%s): %w", clusterID, err)
 	}
 
-	globalCluster, err := DescribeGlobalCluster(conn, clusterId)
+	globalCluster, err := DescribeGlobalCluster(conn, clusterID)
 
 	if err != nil {
-		return fmt.Errorf("while upgrading major version of RDS Global Cluster (%s): %w", clusterId, err)
+		return fmt.Errorf("while upgrading major version of RDS Global Cluster (%s): %w", clusterID, err)
 	}
 
 	for _, clusterMember := range globalCluster.GlobalClusterMembers {
@@ -661,6 +661,8 @@ func ClusterIDRegionFromARN(arnID string) (string, string, error) {
 func globalClusterUpgradeMinorEngineVersion(meta interface{}, clusterMembers *schema.Set, clusterID, engineVersion string) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
+	log.Printf("[INFO] Performing RDS Global Cluster (%s) minor version (%s) upgrade", clusterID, engineVersion)
+
 	for _, clusterMemberRaw := range clusterMembers.List() {
 		clusterMember := clusterMemberRaw.(map[string]interface{})
 
@@ -693,6 +695,8 @@ func globalClusterUpgradeMinorEngineVersion(meta interface{}, clusterMembers *sc
 			DBClusterIdentifier: aws.String(dbi),
 			EngineVersion:       aws.String(engineVersion),
 		}
+
+		log.Printf("[INFO] Performing RDS Global Cluster (%s) Cluster (%s) minor version (%s) upgrade", clusterID, dbi, engineVersion)
 
 		err = resource.Retry(clusterInitiateUpgradeTimeout, func() *resource.RetryError {
 			_, err := useConn.ModifyDBCluster(modInput)
@@ -727,13 +731,29 @@ func globalClusterUpgradeMinorEngineVersion(meta interface{}, clusterMembers *sc
 			return fmt.Errorf("failed to update engine_version on RDS Global Cluster Cluster (%s): %s", dbi, err)
 		}
 
+		log.Printf("[INFO] Waiting for RDS Global Cluster (%s) Cluster (%s) minor version (%s) upgrade", clusterID, dbi, engineVersion)
 		if err := waitForClusterUpdate(useConn, dbi, clusterInitiateUpgradeTimeout); err != nil {
 			return fmt.Errorf("failed to update engine_version, waiting for RDS Global Cluster Cluster (%s) to update: %s", dbi, err)
 		}
 	}
 
-	if err := waitForGlobalClusterVersionUpdate(conn, clusterID, engineVersion, clusterInitiateUpgradeTimeout); err != nil {
-		return fmt.Errorf("failed to update engine_version, waiting for RDS Global Cluster (%s) to update: %s", clusterID, err)
+	globalCluster, err := DescribeGlobalCluster(conn, clusterID)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) {
+		return fmt.Errorf("after upgrading engine_version, could not find RDS Global Cluster (%s): %s", clusterID, err)
+	}
+
+	if err != nil {
+		return fmt.Errorf("after minor engine_version upgrade to RDS Global Cluster (%s): %s", clusterID, err)
+	}
+
+	if globalCluster == nil {
+		return fmt.Errorf("after minor engine_version upgrade to RDS Global Cluster (%s): empty response", clusterID)
+	}
+
+	if aws.StringValue(globalCluster.EngineVersion) != engineVersion {
+		log.Printf("[DEBUG] RDS Global Cluster (%s) upgrade did not take effect, trying again", clusterID)
+		return globalClusterUpgradeMinorEngineVersion(meta, clusterMembers, clusterID, engineVersion)
 	}
 
 	return nil

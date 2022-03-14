@@ -164,7 +164,7 @@ resource "aws_rds_global_cluster" "example" {
 
 ### Upgrading Engine Versions
 
-When you upgrade the version of an `aws_rds_global_cluster`, Terraform will attempt to in-place upgrade the engine versions of all associated clusters. Since the `aws_rds_cluster` resource is being updated through the `aws_rds_global_cluster`, you are likely to get an error (`Provider produced inconsistent final plan`). To avoid this, use the `lifecycle` `ignore_changes` meta argument as shown below.
+When you upgrade the version of an `aws_rds_global_cluster`, Terraform will attempt to in-place upgrade the engine versions of all associated clusters. Since the `aws_rds_cluster` resource is being updated through the `aws_rds_global_cluster`, you are likely to get an error (`Provider produced inconsistent final plan`). To avoid this, use the `lifecycle` `ignore_changes` meta argument as shown below on the `aws_rds_cluster`.
 
 ```terraform
 resource "aws_rds_global_cluster" "example" {
