@@ -24,13 +24,11 @@ func ResourceConfiguration() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
 		CustomizeDiff: customdiff.Sequence(
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if diff.HasChange("server_properties") {
-					return diff.SetNewComputed("latest_revision")
-				}
-				return nil
-			},
+			customdiff.ComputedIf("latest_revision", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("server_properties")
+			}),
 		),
 
 		Schema: map[string]*schema.Schema{
