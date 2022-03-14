@@ -46,3 +46,28 @@ func FindWorkspaceByID(conn *managedgrafana.ManagedGrafana, id string) (*managed
 
 	return output.Workspace, nil
 }
+
+func FindSamlConfigurationByID(conn *managedgrafana.ManagedGrafana, id string) (*managedgrafana.SamlAuthentication, error) {
+	input := &managedgrafana.DescribeWorkspaceAuthenticationInput{
+		WorkspaceId: aws.String(id),
+	}
+
+	output, err := conn.DescribeWorkspaceAuthentication(input)
+
+	if tfawserr.ErrCodeEquals(err, managedgrafana.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Authentication == nil || output.Authentication.Saml == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Authentication.Saml, nil
+}

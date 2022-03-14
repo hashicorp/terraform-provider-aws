@@ -54,11 +54,11 @@ func ResourceWorkspaceSamlConfiguration() *schema.Resource {
 			},
 			"idp_metadata_url": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"idp_metadata_xml": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"login_assertion": {
 				Type:     schema.TypeString,
@@ -175,15 +175,51 @@ func resourceWorkspaceSamlConfigurationCreate(d *schema.ResourceData, meta inter
 		WorkspaceId:             aws.String(d.Id()),
 	}
 
-	output, err := conn.UpdateWorkspaceAuthentication(input)
+	_, err = conn.UpdateWorkspaceAuthentication(input)
 
 	if err != nil {
 		return fmt.Errorf("error creating Grafana Saml Configuration: %w", err)
 	}
+
+	if _, err := waitWorkspaceSamlConfigurationCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for Grafana Workspace Saml Configuration (%s) create: %w", d.Id(), err)
+	}
+
+	return resourceWorkspaceSamlConfigurationRead(d, meta)
 }
 
 func resourceWorkspaceSamlConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).GrafanaConn
 
+	saml, err := FindSamlConfigurationByID(conn, d.Id())
+
+	if tfresource.NotFound(err) && !d.IsNewResource() {
+		log.Printf("[WARN] Grafana Workspace Saml Configuration (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading Grafana Workspace Saml Configuration (%s): %w", d.Id(), err)
+	}
+
+	if saml.Configuration.RoleValues.Admin != nil {
+		d.Set("admin_role_values", saml.Configuration.RoleValues.Admin)
+	}
+
+	if saml.Configuration.AllowedOrganizations != nil {
+		d.Set("allowed_organizations", saml.Configuration.AllowedOrganizations)
+	}
+
+	d.Set("editor_role_values", saml.Configuration.RoleValues.Editor)
+
+	if saml.Configuration.AssertionAttributes.Email != nil {
+		d.Set("email_assertion", saml.Configuration.AssertionAttributes.Email)
+	}
+
+	if saml.Configuration.AssertionAttributes.Groups != nil {
+		d.Set("groups_assertion", saml.Configuration.AssertionAttributes.Groups)
+	}
 }
 
 func resourceWorkspaceSamlConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
