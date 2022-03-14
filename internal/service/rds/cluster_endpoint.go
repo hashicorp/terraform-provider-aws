@@ -18,9 +18,9 @@ import (
 )
 
 const (
-	AWSRDSClusterEndpointCreateTimeout = 30 * time.Minute
-	AWSRDSClusterEndpointRetryDelay    = 5 * time.Second
-	ClusterEndpointRetryMinTimeout     = 3 * time.Second
+	clusterEndpointCreateTimeout   = 30 * time.Minute
+	clusterEndpointRetryDelay      = 5 * time.Second
+	ClusterEndpointRetryMinTimeout = 3 * time.Second
 )
 
 func ResourceClusterEndpoint() *schema.Resource {
@@ -114,7 +114,7 @@ func resourceClusterEndpointCreate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(endpointId)
 
-	err = resourceClusterEndpointWaitForAvailable(AWSRDSClusterEndpointCreateTimeout, d.Id(), conn)
+	err = resourceClusterEndpointWaitForAvailable(clusterEndpointCreateTimeout, d.Id(), conn)
 	if err != nil {
 		return err
 	}
@@ -252,7 +252,7 @@ func resourceClusterEndpointWaitForDestroy(timeout time.Duration, id string, con
 		Target:     []string{"destroyed"},
 		Refresh:    DBClusterEndpointStateRefreshFunc(conn, id),
 		Timeout:    timeout,
-		Delay:      AWSRDSClusterEndpointRetryDelay,
+		Delay:      clusterEndpointRetryDelay,
 		MinTimeout: ClusterEndpointRetryMinTimeout,
 	}
 	_, err := stateConf.WaitForState()
@@ -270,7 +270,7 @@ func resourceClusterEndpointWaitForAvailable(timeout time.Duration, id string, c
 		Target:     []string{"available"},
 		Refresh:    DBClusterEndpointStateRefreshFunc(conn, id),
 		Timeout:    timeout,
-		Delay:      AWSRDSClusterEndpointRetryDelay,
+		Delay:      clusterEndpointRetryDelay,
 		MinTimeout: ClusterEndpointRetryMinTimeout,
 	}
 

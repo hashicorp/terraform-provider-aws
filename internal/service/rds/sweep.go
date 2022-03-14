@@ -346,7 +346,7 @@ func sweepGlobalClusters(region string) error {
 				continue
 			}
 
-			if err := WaitForGlobalClusterDeletion(conn, id); err != nil {
+			if err := WaitForGlobalClusterDeletion(conn, id, 30*time.Minute); err != nil {
 				log.Printf("[ERROR] Failure while waiting for RDS Global Cluster (%s) to be deleted: %s", id, err)
 			}
 		}

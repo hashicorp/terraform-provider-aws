@@ -1145,6 +1145,7 @@ type AWSClient struct {
 	ServiceDiscoveryConn              *servicediscovery.ServiceDiscovery
 	ServiceQuotasConn                 *servicequotas.ServiceQuotas
 	SESConn                           *ses.SES
+	Session                           *session.Session
 	SESV2Conn                         *sesv2.SESV2
 	SFNConn                           *sfn.SFN
 	ShieldConn                        *shield.Shield
@@ -1545,6 +1546,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		ServiceQuotasConn:                servicequotas.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ServiceQuotas])})),
 		SESConn:                          ses.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SES])})),
 		SESV2Conn:                        sesv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SESV2])})),
+		Session:                          sess,
 		SFNConn:                          sfn.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SFN])})),
 		SignerConn:                       signer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Signer])})),
 		SimpleDBConn:                     simpledb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SimpleDB])})),
