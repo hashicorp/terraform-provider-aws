@@ -280,7 +280,7 @@ func TestAccCloudFormationStackSetInstance_operationPreferences(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "1"),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "10"),
 				),
 			},
 			{
@@ -715,9 +715,9 @@ func testAccStackSetInstanceOperationPreferencesConfig(rName string) string {
 resource "aws_cloudformation_stack_set_instance" "test" {
   depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
 
-  operational_preferences {
+  operation_preferences {
     failure_tolerance_count = 1
-		max_concurrent_count = 2
+		max_concurrent_count = 10
   }
 
   stack_set_name = aws_cloudformation_stack_set.test.name
