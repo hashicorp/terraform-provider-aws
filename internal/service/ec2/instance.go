@@ -601,9 +601,9 @@ func ResourceInstance() *schema.Resource {
 				},
 			},
 			"user_data_replace_on_change": {
-				Type:	 schema.TypeBool,
+				Type:     schema.TypeBool,
 				Optional: true,
-				Default: false,
+				Default:  false,
 			},
 			"volume_tags": tftags.TagsSchema(),
 			"vpc_security_group_ids": {

@@ -3770,14 +3770,14 @@ func TestAccEC2Instance_UserData_replaceOnChangeFlag(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			// Switching should force a recreate
 			{
-				Config:             testAccInstanceConfig_UserData_Specified_With_Replace_Flag_On(rName, "TestData2"),
-				Check:              resource.ComposeTestCheckFunc(
+				Config: testAccInstanceConfig_UserData_Specified_With_Replace_Flag_On(rName, "TestData2"),
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					testResourceIdHasChanged(resourceName, &instanceId),
 				),
@@ -3807,17 +3807,16 @@ func TestAccEC2Instance_UserDataBase64_replaceOnChangeFlag(t *testing.T) {
 					testAccCheckInstanceExists(resourceName, &v),
 					testResourceIdHasChanged(resourceName, &instanceId),
 				),
-				
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			// Switching should force a recreate
 			{
-				Config:             testAccInstanceConfig_UserData64_Specified_With_Replace_Flag_On(rName, "3dc39dda39be1205215e776bad998da361a5955e"),
-				Check:              resource.ComposeTestCheckFunc(
+				Config: testAccInstanceConfig_UserData64_Specified_With_Replace_Flag_On(rName, "3dc39dda39be1205215e776bad998da361a5955e"),
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					testResourceIdHasChanged(resourceName, &instanceId),
 				),
@@ -3827,8 +3826,6 @@ func TestAccEC2Instance_UserDataBase64_replaceOnChangeFlag(t *testing.T) {
 		},
 	})
 }
-
-
 
 func TestAccEC2Instance_hibernation(t *testing.T) {
 	var instance1, instance2 ec2.Instance
@@ -4223,14 +4220,14 @@ func testAccCheckInstanceExistsWithProvider(n string, i *ec2.Instance, providerF
 	}
 }
 
-func testResourceIdHasChanged (resourceName string, instanceId *string) resource.TestCheckFunc {
+func testResourceIdHasChanged(resourceName string, instanceId *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		instance := s.RootModule().Resources[resourceName]
-		if(*instanceId == "") {
+		if *instanceId == "" {
 			*instanceId = instance.Primary.ID
 			return nil
 		}
-		if(*instanceId != instance.Primary.ID){
+		if *instanceId != instance.Primary.ID {
 			return nil
 		} else {
 			return fmt.Errorf("A new instance should have been created")
