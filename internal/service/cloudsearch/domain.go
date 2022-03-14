@@ -1000,6 +1000,10 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 			tfMap["sort"] = aws.BoolValue(v)
 		}
 
+		// Defaults not returned via the API.
+		tfMap["analysis_scheme"] = ""
+		tfMap["highlight"] = false
+
 	case cloudsearch.IndexFieldTypeDateArray:
 		options := field.DateArrayOptions
 
@@ -1018,6 +1022,11 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 		if v := options.SearchEnabled; v != nil {
 			tfMap["search"] = aws.BoolValue(v)
 		}
+
+		// Defaults not returned via the API.
+		tfMap["analysis_scheme"] = ""
+		tfMap["highlight"] = false
+		tfMap["sort"] = false
 
 	case cloudsearch.IndexFieldTypeDouble:
 		options := field.DoubleOptions
@@ -1042,6 +1051,10 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 			tfMap["sort"] = aws.BoolValue(v)
 		}
 
+		// Defaults not returned via the API.
+		tfMap["analysis_scheme"] = ""
+		tfMap["highlight"] = false
+
 	case cloudsearch.IndexFieldTypeDoubleArray:
 		options := field.DoubleArrayOptions
 
@@ -1060,6 +1073,11 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 		if v := options.SearchEnabled; v != nil {
 			tfMap["search"] = aws.BoolValue(v)
 		}
+
+		// Defaults not returned via the API.
+		tfMap["analysis_scheme"] = ""
+		tfMap["highlight"] = false
+		tfMap["sort"] = false
 
 	case cloudsearch.IndexFieldTypeInt:
 		options := field.IntOptions
@@ -1084,6 +1102,10 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 			tfMap["sort"] = aws.BoolValue(v)
 		}
 
+		// Defaults not returned via the API.
+		tfMap["analysis_scheme"] = ""
+		tfMap["highlight"] = false
+
 	case cloudsearch.IndexFieldTypeIntArray:
 		options := field.IntArrayOptions
 
@@ -1102,6 +1124,11 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 		if v := options.SearchEnabled; v != nil {
 			tfMap["search"] = aws.BoolValue(v)
 		}
+
+		// Defaults not returned via the API.
+		tfMap["analysis_scheme"] = ""
+		tfMap["highlight"] = false
+		tfMap["sort"] = false
 
 	case cloudsearch.IndexFieldTypeLatlon:
 		options := field.LatLonOptions
@@ -1126,6 +1153,10 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 			tfMap["sort"] = aws.BoolValue(v)
 		}
 
+		// Defaults not returned via the API.
+		tfMap["analysis_scheme"] = ""
+		tfMap["highlight"] = false
+
 	case cloudsearch.IndexFieldTypeLiteral:
 		options := field.LiteralOptions
 
@@ -1149,6 +1180,10 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 			tfMap["sort"] = aws.BoolValue(v)
 		}
 
+		// Defaults not returned via the API.
+		tfMap["analysis_scheme"] = ""
+		tfMap["highlight"] = false
+
 	case cloudsearch.IndexFieldTypeLiteralArray:
 		options := field.LiteralArrayOptions
 
@@ -1167,6 +1202,11 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 		if v := options.SearchEnabled; v != nil {
 			tfMap["search"] = aws.BoolValue(v)
 		}
+
+		// Defaults not returned via the API.
+		tfMap["analysis_scheme"] = ""
+		tfMap["highlight"] = false
+		tfMap["sort"] = false
 
 	case cloudsearch.IndexFieldTypeText:
 		options := field.TextOptions
@@ -1187,11 +1227,13 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 			tfMap["return"] = aws.BoolValue(v)
 		}
 
-		tfMap["search"] = true
-
 		if v := options.SortEnabled; v != nil {
 			tfMap["sort"] = aws.BoolValue(v)
 		}
+
+		// Defaults not returned via the API.
+		tfMap["facet"] = false
+		tfMap["search"] = true
 
 	case cloudsearch.IndexFieldTypeTextArray:
 		options := field.TextArrayOptions
@@ -1212,7 +1254,10 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 			tfMap["return"] = aws.BoolValue(v)
 		}
 
+		// Defaults not returned via the API.
+		tfMap["facet"] = false
 		tfMap["search"] = true
+		tfMap["sort"] = false
 
 	default:
 		return nil, fmt.Errorf("unsupported index_field type: %s", fieldType)
