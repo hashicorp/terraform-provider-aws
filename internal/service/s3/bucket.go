@@ -1601,7 +1601,12 @@ func resourceBucketCorsUpdate(conn *s3.S3, d *schema.ResourceData) error {
 		// Put CORS
 		rules := make([]*s3.CORSRule, 0, len(rawCors))
 		for _, cors := range rawCors {
-			corsMap := cors.(map[string]interface{})
+			// Prevent panic
+			// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7546
+			corsMap, ok := cors.(map[string]interface{})
+			if !ok {
+				continue
+			}
 			r := &s3.CORSRule{}
 			for k, v := range corsMap {
 				log.Printf("[DEBUG] S3 bucket: %s, put CORS: %#v, %#v", bucket, k, v)
