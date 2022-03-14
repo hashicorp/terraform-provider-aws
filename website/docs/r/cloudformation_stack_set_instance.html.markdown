@@ -89,6 +89,7 @@ The following arguments are supported:
 * `parameter_overrides` - (Optional) Key-value map of input parameters to override from the StackSet for this Instance.
 * `region` - (Optional) Target AWS Region to create a Stack based on the StackSet. Defaults to current region.
 * `retain_stack` - (Optional) During Terraform resource destroy, remove Instance from StackSet while keeping the Stack and its associated resources. Must be enabled in Terraform state _before_ destroy operation to take effect. You cannot reassociate a retained Stack or add an existing, saved Stack to a new StackSet. Defaults to `false`.
+* `operation_preferences` - (Optional) Preferences for how AWS CloudFormation performs a stack set operation
 
 ### `deployment_targets` Argument Reference
 
