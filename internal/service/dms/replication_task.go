@@ -303,6 +303,12 @@ func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) err
 func resourceReplicationTaskDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 
+	if status := d.Get("status").(string); status == replicationTaskStatusRunning {
+		if err := dmsStopReplicationTask(d.Id(), conn); err != nil {
+			return err
+		}
+	}
+
 	input := &dms.DeleteReplicationTaskInput{
 		ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
 	}
