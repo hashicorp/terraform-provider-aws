@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfgrafana "github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func testAccGrafanaWorkspaceSamlConfiguration_basic(t *testing.T) {
@@ -22,7 +21,7 @@ func testAccGrafanaWorkspaceSamlConfiguration_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy: testAccCheckWorkspaceSamlConfigurationDestroy,
+		CheckDestroy: nil,
 		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
@@ -33,6 +32,7 @@ func testAccGrafanaWorkspaceSamlConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "admin_role_values.0", "admin"),
 					resource.TestCheckResourceAttr(resourceName, "editor_role_values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "editor_role_values.0", "editor"),
+					resource.TestCheckResourceAttrSet(resourceName, "idp_metadata_xml"),
 					resource.TestCheckResourceAttr(resourceName, "status", managedgrafana.SamlConfigurationStatusConfigured),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
 				),
@@ -49,7 +49,7 @@ func testAccGrafanaWorkspaceSamlConfiguration_loginValidity(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy: testAccCheckWorkspaceSamlConfigurationDestroy,
+		CheckDestroy: nil,
 		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
@@ -60,8 +60,9 @@ func testAccGrafanaWorkspaceSamlConfiguration_loginValidity(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "admin_role_values.0", "admin"),
 					resource.TestCheckResourceAttr(resourceName, "editor_role_values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "editor_role_values.0", "editor"),
+					resource.TestCheckResourceAttrSet(resourceName, "idp_metadata_xml"),
 					resource.TestCheckResourceAttr(resourceName, "status", managedgrafana.SamlConfigurationStatusConfigured),
-					resource.TestCheckResourceAttr(resourceName, "login_validity_duration", "100"),
+					resource.TestCheckResourceAttr(resourceName, "login_validity_duration", "1440"),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
 				),
 			},
@@ -77,7 +78,7 @@ func testAccGrafanaWorkspaceSamlConfiguration_assertions(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy: testAccCheckWorkspaceSamlConfigurationDestroy,
+		CheckDestroy: nil,
 		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
@@ -88,7 +89,15 @@ func testAccGrafanaWorkspaceSamlConfiguration_assertions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "admin_role_values.0", "admin"),
 					resource.TestCheckResourceAttr(resourceName, "editor_role_values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "editor_role_values.0", "editor"),
+					resource.TestCheckResourceAttrSet(resourceName, "idp_metadata_xml"),
 					resource.TestCheckResourceAttr(resourceName, "status", managedgrafana.SamlConfigurationStatusConfigured),
+					resource.TestCheckResourceAttr(resourceName, "email_assertion", "mail"),
+					resource.TestCheckResourceAttrSet(resourceName, "idp_metadata_xml"),
+					resource.TestCheckResourceAttr(resourceName, "groups_assertion", "groups"),
+					resource.TestCheckResourceAttr(resourceName, "login_assertion", "mail"),
+					resource.TestCheckResourceAttr(resourceName, "name_assertion", "displayName"),
+					resource.TestCheckResourceAttr(resourceName, "org_assertion", "org"),
+					resource.TestCheckResourceAttr(resourceName, "role_assertion", "role"),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
 				),
 			},
@@ -113,7 +122,7 @@ resource "aws_grafana_workspace_saml_configuration" "test" {
   admin_role_values       = ["admin"]
   editor_role_values      = ["editor"]
   idp_metadata_xml        = file("test-fixtures/idp_metadata.xml")
-  login_validity_duration = 100
+  login_validity_duration = 1440
   workspace_id            = aws_grafana_workspace.test.id
 }
 `))
@@ -124,10 +133,10 @@ func testAccWorkspaceSamlConfigurationConfigProvider_assertions(rName string) st
 resource "aws_grafana_workspace_saml_configuration" "test" {
   admin_role_values  = ["admin"]
   editor_role_values = ["editor"]
-  email_assertion    = "email"
+  email_assertion    = "mail"
   groups_assertion   = "groups"
-  login_assertion    = "login"
-  name_assertion     = "name"
+  login_assertion    = "mail"
+  name_assertion     = "displayName"
   org_assertion      = "org"
   role_assertion     = "role"
   idp_metadata_xml   = file("test-fixtures/idp_metadata.xml")
@@ -157,27 +166,4 @@ func testAccCheckWorkspaceSamlConfigurationExists(name string) resource.TestChec
 
 		return nil
 	}
-}
-
-func testAccCheckWorkspaceSamlConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_grafana_workspace_saml_configuration" {
-			continue
-		}
-
-		_, err := tfgrafana.FindSamlConfigurationByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Grafana Workspace Saml Configuration %s still exists", rs.Primary.ID)
-	}
-	return nil
 }

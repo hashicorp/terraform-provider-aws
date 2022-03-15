@@ -18,7 +18,7 @@ func ResourceWorkspaceSamlConfiguration() *schema.Resource {
 		Create: resourceWorkspaceSamlConfigurationUpsert,
 		Read:   resourceWorkspaceSamlConfigurationRead,
 		Update: resourceWorkspaceSamlConfigurationUpsert,
-		Delete: resourceWorkspaceSamlConfigurationDelete,
+		Delete: schema.Noop,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -85,6 +85,11 @@ func ResourceWorkspaceSamlConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"workspace_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -120,6 +125,10 @@ func resourceWorkspaceSamlConfigurationUpsert(d *schema.ResourceData, meta inter
 
 	if v, ok := d.GetOk("allowed_organizations"); ok {
 		samlConfiguration.AllowedOrganizations = flex.ExpandStringList(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("login_validity_duration"); ok {
+		samlConfiguration.LoginValidityDuration = aws.Int64(int64(v.(int)))
 	}
 
 	var assertionAttributes *managedgrafana.AssertionAttributes
@@ -173,6 +182,22 @@ func resourceWorkspaceSamlConfigurationUpsert(d *schema.ResourceData, meta inter
 	if assertionAttributes != nil {
 		samlConfiguration.AssertionAttributes = assertionAttributes
 	}
+
+	var idpMetadata *managedgrafana.IdpMetadata
+
+	if v, ok := d.GetOk("idp_metadata_url"); ok {
+		idpMetadata = &managedgrafana.IdpMetadata{
+			Url: aws.String(v.(string)),
+		}
+	}
+
+	if v, ok := d.GetOk("idp_metadata_xml"); ok {
+		idpMetadata = &managedgrafana.IdpMetadata{
+			Xml: aws.String(v.(string)),
+		}
+	}
+
+	samlConfiguration.IdpMetadata = idpMetadata
 
 	input := &managedgrafana.UpdateWorkspaceAuthenticationInput{
 		AuthenticationProviders: authenticationProviders,
@@ -271,6 +296,7 @@ func resourceWorkspaceSamlConfigurationDelete(d *schema.ResourceData, meta inter
 	_, err = conn.UpdateWorkspaceAuthentication(&managedgrafana.UpdateWorkspaceAuthenticationInput{
 		AuthenticationProviders: workspace.Authentication.Providers,
 		WorkspaceId:             aws.String(d.Id()),
+		SamlConfiguration:       nil,
 	})
 
 	if err != nil {

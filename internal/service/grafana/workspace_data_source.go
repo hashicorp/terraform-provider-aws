@@ -79,10 +79,6 @@ func DataSourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"saml_configuration_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"stack_set_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -133,7 +129,6 @@ func dataSourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("organizational_units", workspace.OrganizationalUnits)
 	d.Set("permission_type", workspace.PermissionType)
 	d.Set("role_arn", workspace.WorkspaceRoleArn)
-	d.Set("saml_configuration_status", workspace.Authentication.SamlConfigurationStatus)
 	d.Set("stack_set_name", workspace.StackSetName)
 	d.Set("status", workspace.Status)
 

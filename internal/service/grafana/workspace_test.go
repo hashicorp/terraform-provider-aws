@@ -17,24 +17,25 @@ import (
 
 func TestAccGrafana_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
-		"Workspace": {
-			"saml":                     testAccGrafanaWorkspace_saml,
-			"sso":                      testAccGrafanaWorkspace_sso,
-			"disappears":               testAccGrafanaWorkspace_disappears,
-			"organization":             testAccGrafanaWorkspace_organization,
-			"dataSources":              testAccGrafanaWorkspace_dataSources,
-			"permissionType":           testAccGrafanaWorkspace_permissionType,
-			"notificationDestinations": testAccGrafanaWorkspace_notificationDestinations,
-		},
-		"DataSource": {
-			"basic": testAccGrafanaWorkspaceDataSource_basic,
-		},
-		"LicenseAssociation": {
-			"enterpriseFreeTrial": testAccGrafanaLicenseAssociation_freeTrial,
-		},
+		/*		"Workspace": {
+					"saml":                     testAccGrafanaWorkspace_saml,
+					"sso":                      testAccGrafanaWorkspace_sso,
+					"disappears":               testAccGrafanaWorkspace_disappears,
+					"organization":             testAccGrafanaWorkspace_organization,
+					"dataSources":              testAccGrafanaWorkspace_dataSources,
+					"permissionType":           testAccGrafanaWorkspace_permissionType,
+					"notificationDestinations": testAccGrafanaWorkspace_notificationDestinations,
+				},
+				"DataSource": {
+					"basic": testAccGrafanaWorkspaceDataSource_basic,
+				},
+				"LicenseAssociation": {
+					"enterpriseFreeTrial": testAccGrafanaLicenseAssociation_freeTrial,
+				},*/
 		"SamlConfiguration": {
 			"basic":         testAccGrafanaWorkspaceSamlConfiguration_basic,
 			"loginValidity": testAccGrafanaWorkspaceSamlConfiguration_loginValidity,
+			"assertions":    testAccGrafanaWorkspaceSamlConfiguration_assertions,
 		},
 	}
 

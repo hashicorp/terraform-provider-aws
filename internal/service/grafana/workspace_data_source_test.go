@@ -39,7 +39,6 @@ func testAccGrafanaWorkspaceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "organizational_units.#", dataSourceName, "organizational_units.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "permission_type", dataSourceName, "permission_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", dataSourceName, "role_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "saml_configuration_status", dataSourceName, "saml_configuration_status"),
 					resource.TestCheckResourceAttrPair(resourceName, "stack_set_name", dataSourceName, "stack_set_name"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "status"),
 				),
