@@ -24,6 +24,10 @@ Configuring with both will cause inconsistencies and may overwrite configuration
 or with the deprecated parameter `cors_rule` in the resource `aws_s3_bucket`.
 Configuring with both will cause inconsistencies and may overwrite configuration.
 
+~> **NOTE on S3 Bucket Logging Configuration:** S3 Bucket logging can be configured in either the standalone resource [`aws_s3_bucket_logging`](s3_bucket_logging.html.markdown)
+or with the deprecated parameter `logging` in the resource `aws_s3_bucket`.
+Configuring with both will cause inconsistencies and may overwrite configuration.
+
 ~> **NOTE on S3 Bucket Versioning Configuration:** S3 Bucket versioning can be configured in either the standalone resource [`aws_s3_bucket_versioning`](s3_bucket_versioning.html.markdown)
 or with the deprecated parameter `versioning` in the resource `aws_s3_bucket`.
 Configuring with both will cause inconsistencies and may overwrite configuration.
@@ -114,6 +118,9 @@ resource "aws_s3_bucket" "b" {
 ```
 
 ### Enable Logging
+
+-> **NOTE:** The parameter `logging` is deprecated.
+Use the resource [`aws_s3_bucket_logging`](s3_bucket_logging.html.markdown) instead.
 
 ```terraform
 resource "aws_s3_bucket" "log_bucket" {
@@ -394,7 +401,7 @@ The following arguments are supported:
 * `website` - (Optional, **Deprecated**) A website object (documented below). Use the resource [`aws_s3_bucket_website_configuration`](s3_bucket_website_configuration.html.markdown) instead.
 * `cors_rule` - (Optional, **Deprecated**) A rule of [Cross-Origin Resource Sharing](https://docs.aws.amazon.com/AmazonS3/latest/dev/cors.html) (documented below). Use the resource [`aws_s3_bucket_cors_configuration`](s3_bucket_cors_configuration.html.markdown) instead.
 * `versioning` - (Optional, **Deprecated**) A state of [versioning](https://docs.aws.amazon.com/AmazonS3/latest/dev/Versioning.html) (documented below). Use the resource [`aws_s3_bucket_versioning`](s3_bucket_versioning.html.markdown) instead.
-* `logging` - (Optional) A settings of [bucket logging](https://docs.aws.amazon.com/AmazonS3/latest/UG/ManagingBucketLogging.html) (documented below).
+* `logging` - (Optional, **Deprecated**) A settings of [bucket logging](https://docs.aws.amazon.com/AmazonS3/latest/UG/ManagingBucketLogging.html) (documented below). Use the resource [`aws_s3_bucket_logging`](s3_bucket_logging.html.markdown) instead.
 * `lifecycle_rule` - (Optional) A configuration of [object lifecycle management](http://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html) (documented below).
 * `acceleration_status` - (Optional) Sets the accelerate configuration of an existing bucket. Can be `Enabled` or `Suspended`.
 * `request_payer` - (Optional) Specifies who should bear the cost of Amazon S3 data transfer.
