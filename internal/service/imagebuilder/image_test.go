@@ -599,7 +599,8 @@ resource "aws_iam_instance_profile" "test" {
   role = aws_iam_role.test.name
 
   depends_on = [
-    aws_iam_role_policy_attachment.EC2InstanceProfileForImageBuilderECRContainerBuilds,
+	aws_iam_role_policy_attachment.AmazonSSMManagedInstanceCore,
+    aws_iam_role_policy_attachment.EC2InstanceProfileForImageBuilderECRContainerBuilds
   ]
 }
 
