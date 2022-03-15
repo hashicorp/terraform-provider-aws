@@ -156,7 +156,7 @@ func TestAccS3BucketVersioning_migrate_versioningEnabledNoChange(t *testing.T) {
 			{
 				Config: testAccBucketVersioning_Migrate_VersioningEnabledConfig(bucketName, s3.BucketVersioningStatusEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAclExists(resourceName),
+					testAccCheckBucketVersioningExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", s3.BucketVersioningStatusEnabled),
 				),
@@ -187,7 +187,7 @@ func TestAccS3BucketVersioning_migrate_versioningEnabledWithChange(t *testing.T)
 			{
 				Config: testAccBucketVersioning_Migrate_VersioningEnabledConfig(bucketName, s3.BucketVersioningStatusSuspended),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAclExists(resourceName),
+					testAccCheckBucketVersioningExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", s3.BucketVersioningStatusSuspended),
 				),
@@ -220,7 +220,7 @@ func TestAccS3BucketVersioning_migrate_mfaDeleteNoChange(t *testing.T) {
 			{
 				Config: testAccBucketVersioning_Migrate_MfaDeleteConfig(bucketName, s3.MFADeleteDisabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAclExists(resourceName),
+					testAccCheckBucketVersioningExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.mfa_delete", s3.MFADeleteDisabled),
 				),

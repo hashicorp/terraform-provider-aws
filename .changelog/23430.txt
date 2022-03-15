@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_s3_bucket_logging
+```
+
+```release-note:note
+resource/aws_s3_bucket: The `logging` argument has been deprecated. Use the `aws_s3_bucket_logging` resource instead.
+```

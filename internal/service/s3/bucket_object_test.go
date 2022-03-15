@@ -1876,9 +1876,7 @@ resource "aws_s3_bucket" "test" {
     enabled = true
   }
 
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 }
 
 resource "aws_s3_bucket_object" "object" {
@@ -1899,9 +1897,7 @@ resource "aws_s3_bucket" "test" {
     enabled = true
   }
 
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 }
 
 resource "aws_s3_bucket_object" "object" {
@@ -1923,9 +1919,7 @@ resource "aws_s3_bucket" "test" {
     enabled = true
   }
 
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 }
 
 resource "aws_s3_bucket_object" "object" {
@@ -1946,9 +1940,7 @@ resource "aws_s3_bucket" "test" {
     enabled = true
   }
 
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 }
 
 resource "aws_s3_bucket_object" "object" {

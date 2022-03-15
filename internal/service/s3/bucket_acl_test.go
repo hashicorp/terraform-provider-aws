@@ -133,6 +133,90 @@ func TestBucketACLParseResourceID(t *testing.T) {
 			ExpectedBucket:      "my-example.bucket.4000",
 			ExpectedBucketOwner: "123456789012",
 		},
+		{
+			TestName:            "valid ID with bucket (pre-2018, us-east-1)", //lintignore:AWSAT003
+			InputID:             tfs3.BucketACLCreateResourceID("Example", "", ""),
+			ExpectedACL:         "",
+			ExpectedBucket:      "Example",
+			ExpectedBucketOwner: "",
+		},
+		{
+			TestName:            "valid ID with bucket (pre-2018, us-east-1) that has underscores", //lintignore:AWSAT003
+			InputID:             tfs3.BucketACLCreateResourceID("My_Example_Bucket", "", ""),
+			ExpectedACL:         "",
+			ExpectedBucket:      "My_Example_Bucket",
+			ExpectedBucketOwner: "",
+		},
+		{
+			TestName:            "valid ID with bucket (pre-2018, us-east-1) that has underscore, dot, and hyphens", //lintignore:AWSAT003
+			InputID:             tfs3.BucketACLCreateResourceID("My_Example-Bucket.local", "", ""),
+			ExpectedACL:         "",
+			ExpectedBucket:      "My_Example-Bucket.local",
+			ExpectedBucketOwner: "",
+		},
+		{
+			TestName:            "valid ID with bucket (pre-2018, us-east-1) that has underscore, dots, hyphen, and numbers", //lintignore:AWSAT003
+			InputID:             tfs3.BucketACLCreateResourceID("My_Example-Bucket.4000", "", ""),
+			ExpectedACL:         "",
+			ExpectedBucket:      "My_Example-Bucket.4000",
+			ExpectedBucketOwner: "",
+		},
+		{
+			TestName:            "valid ID with bucket (pre-2018, us-east-1) and acl", //lintignore:AWSAT003
+			InputID:             tfs3.BucketACLCreateResourceID("Example", "", s3.BucketCannedACLPrivate),
+			ExpectedACL:         s3.BucketCannedACLPrivate,
+			ExpectedBucket:      "Example",
+			ExpectedBucketOwner: "",
+		},
+		{
+			TestName:            "valid ID with bucket (pre-2018, us-east-1) and acl that has underscores", //lintignore:AWSAT003
+			InputID:             tfs3.BucketACLCreateResourceID("My_Example_Bucket", "", s3.BucketCannedACLPublicReadWrite),
+			ExpectedACL:         s3.BucketCannedACLPublicReadWrite,
+			ExpectedBucket:      "My_Example_Bucket",
+			ExpectedBucketOwner: "",
+		},
+		{
+			TestName:            "valid ID with bucket (pre-2018, us-east-1) that has underscore, dot, hyphen, and number and acl that has hyphens", //lintignore:AWSAT003
+			InputID:             tfs3.BucketACLCreateResourceID("My_Example-Bucket.4000", "", s3.BucketCannedACLPublicReadWrite),
+			ExpectedACL:         s3.BucketCannedACLPublicReadWrite,
+			ExpectedBucket:      "My_Example-Bucket.4000",
+			ExpectedBucketOwner: "",
+		},
+		{
+			TestName:            "valid ID with bucket (pre-2018, us-east-1) and bucket owner", //lintignore:AWSAT003
+			InputID:             tfs3.BucketACLCreateResourceID("Example", "123456789012", ""),
+			ExpectedACL:         "",
+			ExpectedBucket:      "Example",
+			ExpectedBucketOwner: "123456789012",
+		},
+		{
+			TestName:            "valid ID with bucket (pre-2018, us-east-1) that has underscore, dot, hyphen, and number and bucket owner", //lintignore:AWSAT003
+			InputID:             tfs3.BucketACLCreateResourceID("My_Example-Bucket.4000", "123456789012", ""),
+			ExpectedACL:         "",
+			ExpectedBucket:      "My_Example-Bucket.4000",
+			ExpectedBucketOwner: "123456789012",
+		},
+		{
+			TestName:            "valid ID with bucket (pre-2018, us-east-1), bucket owner, and acl", //lintignore:AWSAT003
+			InputID:             tfs3.BucketACLCreateResourceID("Example", "123456789012", s3.BucketCannedACLPrivate),
+			ExpectedACL:         s3.BucketCannedACLPrivate,
+			ExpectedBucket:      "Example",
+			ExpectedBucketOwner: "123456789012",
+		},
+		{
+			TestName:            "valid ID with bucket (pre-2018, us-east-1), bucket owner, and acl that has hyphens", //lintignore:AWSAT003
+			InputID:             tfs3.BucketACLCreateResourceID("Example", "123456789012", s3.BucketCannedACLPublicReadWrite),
+			ExpectedACL:         s3.BucketCannedACLPublicReadWrite,
+			ExpectedBucket:      "Example",
+			ExpectedBucketOwner: "123456789012",
+		},
+		{
+			TestName:            "valid ID with bucket (pre-2018, us-east-1) that has underscore, dot, hyphen, and numbers, bucket owner, and acl that has hyphens", //lintignore:AWSAT003
+			InputID:             tfs3.BucketACLCreateResourceID("My_Example-bucket.4000", "123456789012", s3.BucketCannedACLPublicReadWrite),
+			ExpectedACL:         s3.BucketCannedACLPublicReadWrite,
+			ExpectedBucket:      "My_Example-bucket.4000",
+			ExpectedBucketOwner: "123456789012",
+		},
 	}
 
 	for _, testCase := range testCases {

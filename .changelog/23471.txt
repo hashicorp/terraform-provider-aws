@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_s3_bucket_accelerate_configuration
+```
+
+```release-note:note
+resource/aws_s3_bucket: The `acceleration_status` argument has been deprecated. Use the `aws_s3_bucket_accelerate_configuration` resource instead.
+```
