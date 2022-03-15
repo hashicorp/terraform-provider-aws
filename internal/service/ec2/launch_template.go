@@ -386,7 +386,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 						"http_endpoint": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Computed:     true,
+							Default:      ec2.LaunchTemplateInstanceMetadataEndpointStateEnabled,
 							ValidateFunc: validation.StringInSlice(ec2.LaunchTemplateInstanceMetadataEndpointState_Values(), false),
 						},
 						"http_protocol_ipv6": {
@@ -398,13 +398,13 @@ func ResourceLaunchTemplate() *schema.Resource {
 						"http_tokens": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Computed:     true,
+							Default:      ec2.LaunchTemplateHttpTokensStateOptional,
 							ValidateFunc: validation.StringInSlice(ec2.LaunchTemplateHttpTokensState_Values(), false),
 						},
 						"http_put_response_hop_limit": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Computed:     true,
+							Default:      "1",
 							ValidateFunc: validation.IntBetween(1, 64),
 						},
 						"instance_metadata_tags": {
