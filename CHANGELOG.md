@@ -4,6 +4,7 @@ NOTES:
 
 * resource/aws_s3_bucket: The `acl` and `grant` arguments have been deprecated. Use the `aws_s3_bucket_acl` resource instead. ([#23419](https://github.com/hashicorp/terraform-provider-aws/issues/23419))
 * resource/aws_s3_bucket: The `cors_rule` argument has been deprecated. Use the `aws_s3_bucket_cors_configuration` resource instead. ([#23434](https://github.com/hashicorp/terraform-provider-aws/issues/23434))
+* resource/aws_s3_bucket: The `logging` argument has been deprecated. Use the `aws_s3_bucket_logging` resource instead. ([#23430](https://github.com/hashicorp/terraform-provider-aws/issues/23430))
 * resource/aws_s3_bucket: The `versioning` argument has been deprecated. Use the `aws_s3_bucket_versioning` resource instead. ([#23432](https://github.com/hashicorp/terraform-provider-aws/issues/23432))
 * resource/aws_s3_bucket: The `website`, `website_domain`, and `website_endpoint` arguments have been deprecated. Use the `aws_s3_bucket_website_configuration` resource instead. ([#23435](https://github.com/hashicorp/terraform-provider-aws/issues/23435))
 
@@ -11,6 +12,7 @@ FEATURES:
 
 * **New Resource:** `aws_s3_bucket_acl` ([#23419](https://github.com/hashicorp/terraform-provider-aws/issues/23419))
 * **New Resource:** `aws_s3_bucket_cors_configuration` ([#23434](https://github.com/hashicorp/terraform-provider-aws/issues/23434))
+* **New Resource:** `aws_s3_bucket_logging` ([#23430](https://github.com/hashicorp/terraform-provider-aws/issues/23430))
 * **New Resource:** `aws_s3_bucket_versioning` ([#23432](https://github.com/hashicorp/terraform-provider-aws/issues/23432))
 * **New Resource:** `aws_s3_bucket_website_configuration` ([#23435](https://github.com/hashicorp/terraform-provider-aws/issues/23435))
 
