@@ -1,7 +1,6 @@
 package cloudsearch
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"regexp"
@@ -15,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -120,7 +118,6 @@ func ResourceDomain() *schema.Resource {
 						},
 					},
 				},
-				Set: domainIndexFieldHash,
 			},
 			"multi_az": {
 				Type:     schema.TypeBool,
@@ -1337,78 +1334,4 @@ func flattenScalingParameters(apiObject *cloudsearch.ScalingParameters) map[stri
 	}
 
 	return tfMap
-}
-
-func domainIndexFieldHash(v interface{}) int {
-	var buf bytes.Buffer
-
-	tfMap := v.(map[string]interface{})
-	fieldType := tfMap["type"].(string)
-
-	buf.WriteString(fmt.Sprintf("%s-", tfMap["name"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", fieldType))
-	if v, ok := tfMap["default_value"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-
-	switch fieldType {
-	case cloudsearch.IndexFieldTypeDate,
-		cloudsearch.IndexFieldTypeDouble,
-		cloudsearch.IndexFieldTypeInt,
-		cloudsearch.IndexFieldTypeLatlon,
-		cloudsearch.IndexFieldTypeLiteral:
-		if v, ok := tfMap["facet"]; ok {
-			buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
-		}
-		if v, ok := tfMap["return"]; ok {
-			buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
-		}
-		if v, ok := tfMap["search"]; ok {
-			buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
-		}
-		if v, ok := tfMap["sort"]; ok {
-			buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
-		}
-
-	case cloudsearch.IndexFieldTypeDateArray,
-		cloudsearch.IndexFieldTypeDoubleArray,
-		cloudsearch.IndexFieldTypeIntArray,
-		cloudsearch.IndexFieldTypeLiteralArray:
-		if v, ok := tfMap["facet"]; ok {
-			buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
-		}
-		if v, ok := tfMap["return"]; ok {
-			buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
-		}
-		if v, ok := tfMap["search"]; ok {
-			buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
-		}
-
-	case cloudsearch.IndexFieldTypeText:
-		if v, ok := tfMap["analysis_scheme"]; ok {
-			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-		}
-		if v, ok := tfMap["highlight"]; ok {
-			buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
-		}
-		if v, ok := tfMap["return"]; ok {
-			buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
-		}
-		if v, ok := tfMap["sort"]; ok {
-			buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
-		}
-
-	case cloudsearch.IndexFieldTypeTextArray:
-		if v, ok := tfMap["analysis_scheme"]; ok {
-			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-		}
-		if v, ok := tfMap["highlight"]; ok {
-			buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
-		}
-		if v, ok := tfMap["return"]; ok {
-			buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
-		}
-	}
-
-	return create.StringHashcode(buf.String())
 }
