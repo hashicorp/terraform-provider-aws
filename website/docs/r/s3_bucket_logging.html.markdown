@@ -22,6 +22,7 @@ resource "aws_s3_bucket" "example" {
 
   lifecycle {
     ignore_changes = [
+      grant,
       logging
     ]
   }
@@ -34,6 +35,12 @@ resource "aws_s3_bucket_acl" "example" {
 
 resource "aws_s3_bucket" "log_bucket" {
   bucket = "my-tf-log-bucket"
+
+  lifecycle {
+    ignore_changes = [
+      grant
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "log_bucket_acl" {
