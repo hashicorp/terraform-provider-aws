@@ -140,13 +140,13 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EIPs in a VPC can be imported using their Allocation ID, e.g.
+EIPs in a VPC can be imported using their Allocation ID, e.g.,
 
 ```
 $ terraform import aws_eip.bar eipalloc-00a10e96
 ```
 
-EIPs in EC2 Classic can be imported using their Public IP, e.g.
+EIPs in EC2 Classic can be imported using their Public IP, e.g.,
 
 ```
 $ terraform import aws_eip.bar 52.0.0.0

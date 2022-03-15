@@ -42,7 +42,7 @@ resource "aws_imagebuilder_component" "example" {
 resource "aws_imagebuilder_component" "example" {
   name     = "example"
   platform = "Linux"
-  uri      = "s3://${aws_s3_bucket_object.example.bucket}/${aws_s3_bucket_object.example.key}"
+  uri      = "s3://${aws_s3_object.example.bucket}/${aws_s3_object.example.key}"
   version  = "1.0.0"
 }
 ```
@@ -78,7 +78,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_imagebuilder_components` resources can be imported by using the Amazon Resource Name (ARN), e.g.
+`aws_imagebuilder_components` resources can be imported by using the Amazon Resource Name (ARN), e.g.,
 
 ```
 $ terraform import aws_imagebuilder_component.example arn:aws:imagebuilder:us-east-1:123456789012:component/example/1.0.0/1

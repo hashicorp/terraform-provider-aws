@@ -15,9 +15,9 @@ For information about CloudFront distributions, see the
 CloudFront web distributions, see the [POST Distribution][2] page in the Amazon
 CloudFront API Reference.
 
-~> **NOTE:** CloudFront distributions take about 15 minutes to a deployed state
-after creation or modification. During this time, deletes to resources will be
-blocked. If you need to delete a distribution that is enabled and you do not
+~> **NOTE:** CloudFront distributions take about 15 minutes to reach a deployed
+state after creation or modification. During this time, deletes to resources will
+be blocked. If you need to delete a distribution that is enabled and you do not
 want to wait, you need to use the `retain_on_delete` flag.
 
 ## Example Usage
@@ -27,11 +27,15 @@ The following example below creates a CloudFront distribution with an S3 origin.
 ```terraform
 resource "aws_s3_bucket" "b" {
   bucket = "mybucket"
-  acl    = "private"
 
   tags = {
     Name = "My bucket"
   }
+}
+
+resource "aws_s3_bucket_acl" "b_acl" {
+  bucket = aws_s3_bucket.b.id
+  acl    = "private"
 }
 
 locals {
@@ -290,6 +294,9 @@ of several sub-resources - these resources are laid out below.
 * `lambda_function_association` (Optional) - A [config block](#lambda-function-association) that triggers a lambda
     function with specific actions (maximum 4).
 
+* `function_association` (Optional) - A [config block](#function-association) that triggers a cloudfront
+    function with specific actions (maximum 2).
+
 * `max_ttl` (Optional) - The maximum amount of time (in seconds) that an
     object is in a CloudFront cache before CloudFront forwards another request
     to your origin to determine whether the object has been updated. Only
@@ -303,11 +310,13 @@ of several sub-resources - these resources are laid out below.
 * `origin_request_policy_id` (Optional) - The unique identifier of the origin request policy
     that is attached to the behavior.
 
-* `path_pattern` (Required) - The pattern (for example, `images/*.jpg)` that
+* `path_pattern` (Required) - The pattern (for example, `images/*.jpg`) that
     specifies which requests you want this cache behavior to apply to.
 
 * `realtime_log_config_arn` (Optional) - The ARN of the [real-time log configuration](cloudfront_realtime_log_config.html)
     that is attached to this cache behavior.
+  
+* `response_headers_policy_id` (Optional) - The identifier for a response headers policy.
 
 * `smooth_streaming` (Optional) - Indicates whether you want to distribute
     media files in Microsoft Smooth Streaming format using the origin that is
@@ -377,6 +386,33 @@ resource "aws_cloudfront_distribution" "example" {
 * `lambda_arn` (Required) - ARN of the Lambda function.
 * `include_body` (Optional) - When set to true it exposes the request body to the lambda function. Defaults to false. Valid values: `true`, `false`.
 
+##### Function Association
+
+With CloudFront Functions in Amazon CloudFront, you can write lightweight functions in JavaScript for high-scale, latency-sensitive CDN customizations. You can associate a single function per event type. See [Cloudfront Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-functions.html)
+for more information.
+
+Example configuration:
+
+```terraform
+resource "aws_cloudfront_distribution" "example" {
+  # ... other configuration ...
+
+  # function_association is also supported by default_cache_behavior
+  ordered_cache_behavior {
+    # ... other configuration ...
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.example.arn
+    }
+  }
+}
+```
+
+* `event_type` (Required) - The specific event to trigger this function.
+  Valid values: `viewer-request` or `viewer-response`
+* `function_arn` (Required) - ARN of the Cloudfront function.
+
 ##### Cookies Arguments
 
 * `forward` (Required) - Specifies whether you want CloudFront to forward
@@ -422,6 +458,10 @@ argument should not be specified.
 
 #### Origin Arguments
 
+* `connection_attempts` (Optional) - The number of times that CloudFront attempts to connect to the origin. Must be between 1-3. Defaults to 3.
+
+* `connection_timeout` (Optional) - The number of seconds that CloudFront waits when trying to establish a connection to the origin. Must be between 1-10. Defaults to 10.
+
 * `custom_origin_config` - The [CloudFront custom
     origin](#custom-origin-config-arguments) configuration information. If an S3
     origin is required, use `s3_origin_config` instead.
@@ -438,6 +478,9 @@ argument should not be specified.
 * `origin_path` (Optional) - An optional element that causes CloudFront to
     request your content from a directory in your Amazon S3 bucket or your
     custom origin.
+
+* `origin_shield` - The [CloudFront Origin Shield](#origin-shield-arguments)
+    configuration information. Using Origin Shield can help reduce the load on your origin. For more information, see [Using Origin Shield](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/origin-shield.html) in the Amazon CloudFront Developer Guide.
 
 * `s3_origin_config` - The [CloudFront S3 origin](#s3-origin-config-arguments)
     configuration information. If a custom origin is required, use
@@ -459,6 +502,12 @@ argument should not be specified.
 * `origin_keepalive_timeout` - (Optional) The Custom KeepAlive timeout, in seconds. By default, AWS enforces a limit of `60`. But you can request an [increase](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorCustomOrigin.html#request-custom-request-timeout).
 
 * `origin_read_timeout` - (Optional) The Custom Read timeout, in seconds. By default, AWS enforces a limit of `60`. But you can request an [increase](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorCustomOrigin.html#request-custom-request-timeout).
+
+##### Origin Shield Arguments
+
+* `enabled` (Required) - A flag that specifies whether Origin Shield is enabled.
+
+* `origin_shield_region` (Required) - The AWS Region for Origin Shield. To specify a region, use the region code, not the region name. For example, specify the US East (Ohio) region as us-east-2.
 
 ##### S3 Origin Config Arguments
 
@@ -513,8 +562,10 @@ The arguments of `geo_restriction` are:
 
 * `minimum_protocol_version` - The minimum version of the SSL protocol that
     you want CloudFront to use for HTTPS connections. Can only be set if
-    `cloudfront_default_certificate = false`. One of `SSLv3`, `TLSv1`,
-    `TLSv1_2016`, `TLSv1.1_2016`, `TLSv1.2_2018` or `TLSv1.2_2019`. Default: `TLSv1`. **NOTE**:
+    `cloudfront_default_certificate = false`. See all possible values in
+    [this](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/secure-connections-supported-viewer-protocols-ciphers.html)
+    table under "Security policy." Some examples include: `TLSv1.2_2019` and
+    `TLSv1.2_2021`. Default: `TLSv1`. **NOTE**:
     If you are using a custom certificate (specified with `acm_certificate_arn`
     or `iam_certificate_id`), and have specified `sni-only` in
     `ssl_support_method`, `TLSv1` or later must be specified. If you have
@@ -581,7 +632,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cloudfront Distributions can be imported using the `id`, e.g.
+Cloudfront Distributions can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE
