@@ -81,6 +81,7 @@ func ResourceBucket() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"grant"},
 				ValidateFunc:  validation.StringInSlice(BucketCannedACL_Values(), false),
+				Deprecated:    "Use the aws_s3_bucket_acl resource instead",
 			},
 
 			"grant": {
@@ -88,6 +89,7 @@ func ResourceBucket() *schema.Resource {
 				Optional:      true,
 				Set:           grantHash,
 				ConflictsWith: []string{"acl"},
+				Deprecated:    "Use the aws_s3_bucket_acl resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -129,8 +131,9 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"cors_rule": {
-				Type:     schema.TypeList,
-				Optional: true,
+				Type:       schema.TypeList,
+				Optional:   true,
+				Deprecated: "Use the aws_s3_bucket_cors_configuration resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"allowed_headers": {
@@ -162,9 +165,10 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"website": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:       schema.TypeList,
+				Optional:   true,
+				MaxItems:   1,
+				Deprecated: "Use the aws_s3_bucket_website_configuration resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"index_document": {
@@ -211,21 +215,24 @@ func ResourceBucket() *schema.Resource {
 				Computed: true,
 			},
 			"website_endpoint": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "Use the aws_s3_bucket_website_configuration resource instead",
 			},
 			"website_domain": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "Use the aws_s3_bucket_website_configuration resource instead",
 			},
 
 			"versioning": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
+				Type:       schema.TypeList,
+				Optional:   true,
+				Computed:   true,
+				MaxItems:   1,
+				Deprecated: "Use the aws_s3_bucket_versioning resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enabled": {
@@ -782,13 +789,13 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.IsNewResource() {
 			if versioning := expandVersioningWhenIsNewResource(v); versioning != nil {
-				err := resourceBucketVersioningUpdate(conn, d.Id(), versioning)
+				err := resourceBucketInternalVersioningUpdate(conn, d.Id(), versioning)
 				if err != nil {
 					return err
 				}
 			}
 		} else {
-			if err := resourceBucketVersioningUpdate(conn, d.Id(), expandVersioning(v)); err != nil {
+			if err := resourceBucketInternalVersioningUpdate(conn, d.Id(), expandVersioning(v)); err != nil {
 				return err
 			}
 		}
@@ -968,7 +975,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
-	if err != nil && !tfawserr.ErrMessageContains(err, "NoSuchCORSConfiguration", "") {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchCORSConfiguration) {
 		return fmt.Errorf("error getting S3 Bucket CORS configuration: %s", err)
 	}
 
@@ -1596,7 +1603,12 @@ func resourceBucketCorsUpdate(conn *s3.S3, d *schema.ResourceData) error {
 		// Put CORS
 		rules := make([]*s3.CORSRule, 0, len(rawCors))
 		for _, cors := range rawCors {
-			corsMap := cors.(map[string]interface{})
+			// Prevent panic
+			// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7546
+			corsMap, ok := cors.(map[string]interface{})
+			if !ok {
+				continue
+			}
 			r := &s3.CORSRule{}
 			for k, v := range corsMap {
 				log.Printf("[DEBUG] S3 bucket: %s, put CORS: %#v, %#v", bucket, k, v)
@@ -1852,7 +1864,7 @@ func resourceBucketACLUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	return nil
 }
 
-func resourceBucketVersioningUpdate(conn *s3.S3, bucket string, versioningConfig *s3.VersioningConfiguration) error {
+func resourceBucketInternalVersioningUpdate(conn *s3.S3, bucket string, versioningConfig *s3.VersioningConfiguration) error {
 	input := &s3.PutBucketVersioningInput{
 		Bucket:                  aws.String(bucket),
 		VersioningConfiguration: versioningConfig,

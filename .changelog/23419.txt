@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_s3_bucket_acl
+```
+
+```release-note:note
+resource/aws_s3_bucket: The `acl` and `grant` arguments have been deprecated. Use the `aws_s3_bucket_acl` resource instead.
+```
