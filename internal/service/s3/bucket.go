@@ -256,14 +256,12 @@ func ResourceBucket() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"target_bucket": {
-							Type:       schema.TypeString,
-							Required:   true,
-							Deprecated: "Use the aws_s3_bucket_logging resource instead",
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"target_prefix": {
-							Type:       schema.TypeString,
-							Optional:   true,
-							Deprecated: "Use the aws_s3_bucket_logging resource instead",
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 					},
 				},
