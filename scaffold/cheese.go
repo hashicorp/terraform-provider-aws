@@ -34,28 +34,40 @@ import (
 )
 
 func ResourceCheese() *schema.Resource {
-	// In the schema, list each of the arguments and attributes in snake case
-	// (e.g., delete_automated_backups).
-	// 
-	// Arguments can be assigned a value in the configuration while attributes
-	// can be read as output. You will typically find arguments in the Input
-	// struct for the create operation.
-	Use "Computed: true," when you need to read information
-	// from AWS or detect drift. "ValidateFunc" is helpful to catch errors
-	// before anything is sent to AWS. With long-running configurations
-	// especially, this is very helpful.
-	return &schema.Resource{
+	return &schema.Resource{// Tip: These 4 functions handle CRUD responsibilities below.
 		CreateWithoutTimeout: resourceCheeseCreate,
 		ReadWithoutTimeout:   resourceCheeseRead,
 		UpdateWithoutTimeout: resourceCheeseUpdate,
 		DeleteWithoutTimeout: resourceCheeseDelete,
-
+		// Tip: Users can configure timeout lengths (if you use the times they
+		// provide). These are the defaults if they don't configure timeouts.
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
-
+		// Tip: In the schema, list each of the arguments and attributes in
+		// snake case (e.g., delete_automated_backups). Please alphabetize
+		// arguments to make it easier not to find them.
+		// 
+		// Users can configure argument values while attribute values cannot be
+		// configured and are read as output. Arguments have either:
+		// Required: true,
+		// Optional: true,
+		// 
+		// All attributes will be computed and some arguments. If users will
+		// want to read updated information or detect drift for an argument,
+		// it should be computed:
+		// Computed: true,
+		//
+		// You will typically find arguments in the input struct 
+		// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
+		// they are only in the input struct (e.g., ModifyDBInstanceInput) for
+		// the modify operation.
+		
+		// from AWS or detect drift. "ValidateFunc" is helpful to catch errors
+		// before anything is sent to AWS. With long-running configurations
+		// especially, this is very helpful.
 		Schema: map[string]*schema.Schema{
 			"abuse_contact_email": {
 				Type:     schema.TypeString,
