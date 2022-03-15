@@ -218,6 +218,8 @@ service/kafka:
   - '((\*|-) ?`?|(data|resource) "?)aws_msk_'
 service/kafkaconnect:
   - '((\*|-) ?`?|(data|resource) "?)aws_mskconnect_'
+service/keyspaces:
+  - '((\*|-) ?`?|(data|resource) "?)aws_keyspaces_'
 service/kinesis:
   - '((\*|-) ?`?|(data|resource) "?)aws_kinesis_stream'
 service/kinesisanalytics:
