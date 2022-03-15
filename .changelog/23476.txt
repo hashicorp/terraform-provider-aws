@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_s3_bucket_server_side_encryption_configuration
+```
+
+```release-note:note
+resource/aws_s3_bucket: The `server_side_encryption_configuration` argument has been deprecated. Use the `aws_s3_bucket_server_side_encryption_configuration` resource instead.
+```
