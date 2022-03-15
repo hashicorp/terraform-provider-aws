@@ -97,6 +97,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/keyspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalytics"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
@@ -1504,6 +1505,8 @@ func Provider() *schema.Provider {
 
 			"aws_mskconnect_custom_plugin":        kafkaconnect.ResourceCustomPlugin(),
 			"aws_mskconnect_worker_configuration": kafkaconnect.ResourceWorkerConfiguration(),
+
+			"aws_keyspaces_keyspace": keyspaces.ResourceKeyspace(),
 
 			"aws_kinesis_stream":          kinesis.ResourceStream(),
 			"aws_kinesis_stream_consumer": kinesis.ResourceStreamConsumer(),
