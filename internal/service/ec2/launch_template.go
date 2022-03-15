@@ -646,7 +646,7 @@ func resourceLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	launchTemplateOpts := &ec2.CreateLaunchTemplateInput{
+	input := &ec2.CreateLaunchTemplateInput{
 		ClientToken:        aws.String(resource.UniqueId()),
 		LaunchTemplateName: aws.String(ltName),
 		LaunchTemplateData: launchTemplateData,
@@ -654,19 +654,17 @@ func resourceLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		launchTemplateOpts.VersionDescription = aws.String(v.(string))
+		input.VersionDescription = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreateLaunchTemplate(launchTemplateOpts)
+	log.Printf("[DEBUG] Creating EC2 Launch Template: %s", input)
+	output, err := conn.CreateLaunchTemplate(input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating EC2 Launch Template: %w", err)
 	}
 
-	launchTemplate := resp.LaunchTemplate
-	d.SetId(aws.StringValue(launchTemplate.LaunchTemplateId))
-
-	log.Printf("[DEBUG] Launch Template created: %q (version %d)",
-		*launchTemplate.LaunchTemplateId, *launchTemplate.LatestVersionNumber)
+	d.SetId(aws.StringValue(output.LaunchTemplate.LaunchTemplateId))
 
 	return resourceLaunchTemplateRead(d, meta)
 }
