@@ -367,7 +367,7 @@ func TestAccRDSCluster_iops(t *testing.T) {
 				Config: testAccClusterConfig_Iops(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "iops", "300"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "1000"),
 				),
 			},
 		},
