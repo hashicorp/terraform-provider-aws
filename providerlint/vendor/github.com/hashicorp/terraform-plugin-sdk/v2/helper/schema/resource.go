@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/logging"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -436,7 +437,10 @@ func (r *Resource) Apply(
 	if d.Destroy || d.RequiresNew() {
 		if s.ID != "" {
 			// Destroy the resource since it is created
+			logging.HelperSchemaTrace(ctx, "Calling downstream")
 			diags = append(diags, r.delete(ctx, data, meta)...)
+			logging.HelperSchemaTrace(ctx, "Called downstream")
+
 			if diags.HasError() {
 				return r.recordCurrentSchemaVersion(data.State()), diags
 			}
@@ -464,7 +468,9 @@ func (r *Resource) Apply(
 	if data.Id() == "" {
 		// We're creating, it is a new resource.
 		data.MarkNewResource()
+		logging.HelperSchemaTrace(ctx, "Calling downstream")
 		diags = append(diags, r.create(ctx, data, meta)...)
+		logging.HelperSchemaTrace(ctx, "Called downstream")
 	} else {
 		if !r.updateFuncSet() {
 			return s, append(diags, diag.Diagnostic{
@@ -472,7 +478,9 @@ func (r *Resource) Apply(
 				Summary:  "doesn't support update",
 			})
 		}
+		logging.HelperSchemaTrace(ctx, "Calling downstream")
 		diags = append(diags, r.update(ctx, data, meta)...)
+		logging.HelperSchemaTrace(ctx, "Called downstream")
 	}
 
 	return r.recordCurrentSchemaVersion(data.State()), diags
@@ -566,7 +574,10 @@ func (r *Resource) ReadDataApply(
 		return nil, diag.FromErr(err)
 	}
 
+	logging.HelperSchemaTrace(ctx, "Calling downstream")
 	diags := r.read(ctx, data, meta)
+	logging.HelperSchemaTrace(ctx, "Called downstream")
+
 	state := data.State()
 	if state != nil && state.ID == "" {
 		// Data sources can set an ID if they want, but they aren't
@@ -612,7 +623,10 @@ func (r *Resource) RefreshWithoutUpgrade(
 			data.providerMeta = s.ProviderMeta
 		}
 
+		logging.HelperSchemaTrace(ctx, "Calling downstream")
 		exists, err := r.Exists(data, meta)
+		logging.HelperSchemaTrace(ctx, "Called downstream")
+
 		if err != nil {
 			return s, diag.FromErr(err)
 		}
@@ -632,12 +646,16 @@ func (r *Resource) RefreshWithoutUpgrade(
 		data.providerMeta = s.ProviderMeta
 	}
 
+	logging.HelperSchemaTrace(ctx, "Calling downstream")
 	diags := r.read(ctx, data, meta)
+	logging.HelperSchemaTrace(ctx, "Called downstream")
+
 	state := data.State()
 	if state != nil && state.ID == "" {
 		state = nil
 	}
 
+	schemaMap(r.Schema).handleDiffSuppressOnRefresh(ctx, s, state)
 	return r.recordCurrentSchemaVersion(state), diags
 }
 
@@ -737,8 +755,8 @@ func (r *Resource) InternalValidate(topSchemaMap schemaMap, writable bool) error
 			}
 		}
 
-		for k, f := range tsm {
-			if isReservedResourceFieldName(k, f) {
+		for k := range tsm {
+			if isReservedResourceFieldName(k) {
 				return fmt.Errorf("%s is a reserved field name", k)
 			}
 		}
@@ -844,13 +862,13 @@ func validateResourceID(s *Schema) error {
 
 	// ID should at least be computed. If unspecified it will be set to Computed and Optional,
 	// but Optional is unnecessary if undesired.
-	if s.Computed != true {
+	if !s.Computed {
 		return fmt.Errorf(`the "id" attribute must be marked Computed`)
 	}
 	return nil
 }
 
-func isReservedResourceFieldName(name string, s *Schema) bool {
+func isReservedResourceFieldName(name string) bool {
 	for _, reservedName := range ReservedResourceFields {
 		if name == reservedName {
 			return true

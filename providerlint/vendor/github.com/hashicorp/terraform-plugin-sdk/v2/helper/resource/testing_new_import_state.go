@@ -1,17 +1,20 @@
 package resource
 
 import (
+	"context"
+	"fmt"
 	"reflect"
 	"strings"
 
 	"github.com/davecgh/go-spew/spew"
 	testing "github.com/mitchellh/go-testing-interface"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/logging"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/plugintest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func testStepNewImportState(t testing.T, c TestCase, helper *plugintest.Helper, wd *plugintest.WorkingDir, step TestStep, cfg string) error {
+func testStepNewImportState(ctx context.Context, t testing.T, c TestCase, helper *plugintest.Helper, wd *plugintest.WorkingDir, step TestStep, cfg string) error {
 	t.Helper()
 
 	spewConf := spew.NewDefaultConfig()
@@ -24,8 +27,8 @@ func testStepNewImportState(t testing.T, c TestCase, helper *plugintest.Helper, 
 	// get state from check sequence
 	var state *terraform.State
 	var err error
-	err = runProviderCommand(t, func() error {
-		state, err = getState(t, wd)
+	err = runProviderCommand(ctx, t, func() error {
+		state, err = getState(ctx, t, wd)
 		if err != nil {
 			return err
 		}
@@ -42,38 +45,61 @@ func testStepNewImportState(t testing.T, c TestCase, helper *plugintest.Helper, 
 	var importId string
 	switch {
 	case step.ImportStateIdFunc != nil:
+		logging.HelperResourceTrace(ctx, "Using TestStep ImportStateIdFunc for import identifier")
+
 		var err error
+
+		logging.HelperResourceDebug(ctx, "Calling TestStep ImportStateIdFunc")
+
 		importId, err = step.ImportStateIdFunc(state)
+
 		if err != nil {
 			t.Fatal(err)
 		}
+
+		logging.HelperResourceDebug(ctx, "Called TestStep ImportStateIdFunc")
 	case step.ImportStateId != "":
+		logging.HelperResourceTrace(ctx, "Using TestStep ImportStateId for import identifier")
+
 		importId = step.ImportStateId
 	default:
+		logging.HelperResourceTrace(ctx, "Using resource identifier for import identifier")
+
 		resource, err := testResource(step, state)
 		if err != nil {
 			t.Fatal(err)
 		}
 		importId = resource.Primary.ID
 	}
-	importId = step.ImportStateIdPrefix + importId
+
+	if step.ImportStateIdPrefix != "" {
+		logging.HelperResourceTrace(ctx, "Prepending TestStep ImportStateIdPrefix for import identifier")
+
+		importId = step.ImportStateIdPrefix + importId
+	}
+
+	logging.HelperResourceTrace(ctx, fmt.Sprintf("Using import identifier: %s", importId))
 
 	// Create working directory for import tests
 	if step.Config == "" {
+		logging.HelperResourceTrace(ctx, "Using prior TestStep Config for import")
+
 		step.Config = cfg
 		if step.Config == "" {
 			t.Fatal("Cannot import state with no specified config")
 		}
 	}
-	importWd := helper.RequireNewWorkingDir(t)
+	importWd := helper.RequireNewWorkingDir(ctx, t)
 	defer importWd.Close()
-	err = importWd.SetConfig(step.Config)
+	err = importWd.SetConfig(ctx, step.Config)
 	if err != nil {
 		t.Fatalf("Error setting test config: %s", err)
 	}
 
-	err = runProviderCommand(t, func() error {
-		return importWd.Init()
+	logging.HelperResourceDebug(ctx, "Running Terraform CLI init and import")
+
+	err = runProviderCommand(ctx, t, func() error {
+		return importWd.Init(ctx)
 	}, importWd, providerFactories{
 		legacy:  c.ProviderFactories,
 		protov5: c.ProtoV5ProviderFactories,
@@ -82,8 +108,8 @@ func testStepNewImportState(t testing.T, c TestCase, helper *plugintest.Helper, 
 		t.Fatalf("Error running init: %s", err)
 	}
 
-	err = runProviderCommand(t, func() error {
-		return importWd.Import(step.ResourceName, importId)
+	err = runProviderCommand(ctx, t, func() error {
+		return importWd.Import(ctx, step.ResourceName, importId)
 	}, importWd, providerFactories{
 		legacy:  c.ProviderFactories,
 		protov5: c.ProtoV5ProviderFactories,
@@ -93,8 +119,8 @@ func testStepNewImportState(t testing.T, c TestCase, helper *plugintest.Helper, 
 	}
 
 	var importState *terraform.State
-	err = runProviderCommand(t, func() error {
-		importState, err = getState(t, importWd)
+	err = runProviderCommand(ctx, t, func() error {
+		importState, err = getState(ctx, t, importWd)
 		if err != nil {
 			return err
 		}
@@ -109,6 +135,8 @@ func testStepNewImportState(t testing.T, c TestCase, helper *plugintest.Helper, 
 
 	// Go through the imported state and verify
 	if step.ImportStateCheck != nil {
+		logging.HelperResourceTrace(ctx, "Using TestStep ImportStateCheck")
+
 		var states []*terraform.InstanceState
 		for _, r := range importState.RootModule().Resources {
 			if r.Primary != nil {
@@ -117,20 +145,27 @@ func testStepNewImportState(t testing.T, c TestCase, helper *plugintest.Helper, 
 				states = append(states, is)
 			}
 		}
+
+		logging.HelperResourceDebug(ctx, "Calling TestStep ImportStateCheck")
+
 		if err := step.ImportStateCheck(states); err != nil {
 			t.Fatal(err)
 		}
+
+		logging.HelperResourceDebug(ctx, "Called TestStep ImportStateCheck")
 	}
 
 	// Verify that all the states match
 	if step.ImportStateVerify {
-		new := importState.RootModule().Resources
-		old := state.RootModule().Resources
+		logging.HelperResourceTrace(ctx, "Using TestStep ImportStateVerify")
 
-		for _, r := range new {
+		newResources := importState.RootModule().Resources
+		oldResources := state.RootModule().Resources
+
+		for _, r := range newResources {
 			// Find the existing resource
 			var oldR *terraform.ResourceState
-			for r2Key, r2 := range old {
+			for r2Key, r2 := range oldResources {
 				// Ensure that we do not match against data sources as they
 				// cannot be imported and are not what we want to verify.
 				// Mode is not present in ResourceState so we use the
@@ -144,7 +179,7 @@ func testStepNewImportState(t testing.T, c TestCase, helper *plugintest.Helper, 
 					break
 				}
 			}
-			if oldR == nil {
+			if oldR == nil || oldR.Primary == nil {
 				t.Fatalf(
 					"Failed state verification, resource with ID %s not found",
 					r.Primary.ID)

@@ -24,6 +24,12 @@ type Object struct {
 	// are considered part of the type signature, and their absence means a
 	// value is no longer of that type.
 	//
+	// OptionalAttributes is only valid when declaring a type constraint
+	// (e.g. Schema) and should not be used as part of a Type when creating
+	// a Value (e.g. NewValue()). When creating a Value, all OptionalAttributes
+	// must still be defined in the Object by setting each attribute to a null
+	// or known value for its attribute type.
+	//
 	// The key of OptionalAttributes should be the name of the attribute
 	// that is optional. The value should be an empty struct, used only to
 	// indicate presence.
@@ -183,9 +189,7 @@ func valueFromObject(types map[string]Type, optionalAttrs map[string]struct{}, i
 				if v.Type() == nil {
 					return Value{}, NewAttributePath().WithAttributeName(k).NewErrorf("missing value type")
 				}
-				if v.Type().Is(DynamicPseudoType) && v.IsKnown() && !v.IsNull() {
-					return Value{}, NewAttributePath().WithAttributeName(k).NewErrorf("invalid value %s for %s", v, v.Type())
-				} else if !v.Type().Is(DynamicPseudoType) && !v.Type().UsableAs(typ) {
+				if !v.Type().UsableAs(typ) {
 					return Value{}, NewAttributePath().WithAttributeName(k).NewErrorf("can't use %s as %s", v.Type(), typ)
 				}
 			}

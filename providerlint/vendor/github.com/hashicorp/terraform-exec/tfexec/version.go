@@ -14,7 +14,12 @@ import (
 )
 
 var (
+	tf0_4_1  = version.Must(version.NewVersion("0.4.1"))
+	tf0_5_0  = version.Must(version.NewVersion("0.5.0"))
+	tf0_6_13 = version.Must(version.NewVersion("0.6.13"))
 	tf0_7_7  = version.Must(version.NewVersion("0.7.7"))
+	tf0_8_0  = version.Must(version.NewVersion("0.8.0"))
+	tf0_10_0 = version.Must(version.NewVersion("0.10.0"))
 	tf0_12_0 = version.Must(version.NewVersion("0.12.0"))
 	tf0_13_0 = version.Must(version.NewVersion("0.13.0"))
 	tf0_14_0 = version.Must(version.NewVersion("0.14.0"))

@@ -93,13 +93,13 @@ func AttributePathToPath(ap *tftypes.AttributePath) cty.Path {
 		return p
 	}
 	for _, step := range ap.Steps() {
-		switch step.(type) {
+		switch step := step.(type) {
 		case tftypes.AttributeName:
-			p = p.GetAttr(string(step.(tftypes.AttributeName)))
+			p = p.GetAttr(string(step))
 		case tftypes.ElementKeyString:
-			p = p.Index(cty.StringVal(string(step.(tftypes.ElementKeyString))))
+			p = p.Index(cty.StringVal(string(step)))
 		case tftypes.ElementKeyInt:
-			p = p.Index(cty.NumberIntVal(int64(step.(tftypes.ElementKeyInt))))
+			p = p.Index(cty.NumberIntVal(int64(step)))
 		}
 	}
 	return p

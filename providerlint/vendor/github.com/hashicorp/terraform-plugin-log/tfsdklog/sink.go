@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"sync"
 	"syscall"
 
 	"github.com/hashicorp/go-hclog"
@@ -52,6 +53,9 @@ const (
 // ValidLevels are the string representations of levels that can be set for
 // loggers.
 var ValidLevels = []string{"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "OFF"}
+
+// Only show invalid log level message once across any number of level lookups.
+var invalidLogLevelMessage sync.Once
 
 func getSink(ctx context.Context) hclog.Logger {
 	logger := ctx.Value(logging.SinkKey)
@@ -120,8 +124,14 @@ func newSink(t testing.T) hclog.Logger {
 	} else if isValidLogLevel(envLevel) {
 		logLevel = hclog.LevelFromString(envLevel)
 	} else {
-		fmt.Fprintf(os.Stderr, "[WARN] Invalid log level: %q. Defaulting to level: OFF. Valid levels are: %+v",
-			envLevel, ValidLevels)
+		invalidLogLevelMessage.Do(func() {
+			fmt.Fprintf(
+				os.Stderr,
+				"[WARN] Invalid log level: %q. Defaulting to level: OFF. Valid levels are: %+v\n",
+				envLevel,
+				ValidLevels,
+			)
+		})
 	}
 
 	return hclog.New(&hclog.LoggerOptions{
@@ -133,8 +143,8 @@ func newSink(t testing.T) hclog.Logger {
 }
 
 func isValidLogLevel(level string) bool {
-	for _, l := range ValidLevels {
-		if level == string(l) {
+	for _, validLevel := range ValidLevels {
+		if level == validLevel {
 			return true
 		}
 	}
