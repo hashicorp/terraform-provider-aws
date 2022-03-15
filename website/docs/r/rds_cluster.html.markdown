@@ -99,6 +99,8 @@ resource "aws_rds_cluster" "example" {
 
 -> More information about RDS Multi-AZ Clusters can be found in the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/multi-az-db-clusters-concepts.html).
 
+To create a Multi-AZ RDS cluster, you must additionally specify the `engine`, `storage_type`, `allocated_storage`, `iops` and `db_cluster_instance_class` attributes.
+
 ```terraform
 resource "aws_rds_cluster" "example" {
   cluster_identifier        = "example"
