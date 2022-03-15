@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -674,55 +675,16 @@ func resourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	log.Printf("[DEBUG] Reading launch template %s", d.Id())
+	lt, err := FindLaunchTemplateByID(conn, d.Id())
 
-	dlt, err := conn.DescribeLaunchTemplates(&ec2.DescribeLaunchTemplatesInput{
-		LaunchTemplateIds: []*string{aws.String(d.Id())},
-	})
-
-	if tfawserr.ErrCodeEquals(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist) {
-		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	// AWS SDK constant above is currently incorrect
-	if tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateId.NotFound") {
-		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Launch Template %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error getting launch template: %s", err)
-	}
-
-	if dlt == nil || len(dlt.LaunchTemplates) == 0 {
-		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if *dlt.LaunchTemplates[0].LaunchTemplateId != d.Id() {
-		return fmt.Errorf("Unable to find launch template: %#v", dlt.LaunchTemplates)
-	}
-
-	log.Printf("[DEBUG] Found launch template %s", d.Id())
-
-	lt := dlt.LaunchTemplates[0]
-	d.Set("name", lt.LaunchTemplateName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lt.LaunchTemplateName)))
-	d.Set("latest_version", lt.LatestVersionNumber)
-	d.Set("default_version", lt.DefaultVersionNumber)
-	tags := KeyValueTags(lt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("error reading EC2 Launch Template (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -733,6 +695,21 @@ func resourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error 
 		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
+	d.Set("default_version", lt.DefaultVersionNumber)
+	d.Set("latest_version", lt.LatestVersionNumber)
+	d.Set("name", lt.LaunchTemplateName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lt.LaunchTemplateName)))
+
+	tags := KeyValueTags(lt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
 
 	version := strconv.Itoa(int(*lt.LatestVersionNumber))
 	dltv, err := conn.DescribeLaunchTemplateVersions(&ec2.DescribeLaunchTemplateVersionsInput{

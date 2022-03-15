@@ -35,6 +35,7 @@ const (
 	ErrCodeInvalidInstanceIDNotFound                      = "InvalidInstanceID.NotFound"
 	ErrCodeInvalidInternetGatewayIDNotFound               = "InvalidInternetGatewayID.NotFound"
 	ErrCodeInvalidKeyPairNotFound                         = "InvalidKeyPair.NotFound"
+	ErrCodeInvalidLaunchTemplateIdNotFound                = "InvalidLaunchTemplateId.NotFound"
 	ErrCodeInvalidNetworkAclEntryNotFound                 = "InvalidNetworkAclEntry.NotFound"
 	ErrCodeInvalidNetworkAclIDNotFound                    = "InvalidNetworkAclID.NotFound"
 	ErrCodeInvalidNetworkInterfaceIDNotFound              = "InvalidNetworkInterfaceID.NotFound"

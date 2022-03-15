@@ -2,14 +2,12 @@ package ec2_test
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -17,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEC2LaunchTemplate_basic(t *testing.T) {
@@ -1379,7 +1378,7 @@ func TestAccEC2LaunchTemplate_updateDefaultVersion(t *testing.T) {
 	})
 }
 
-func testAccCheckLaunchTemplateExists(n string, t *ec2.LaunchTemplate) resource.TestCheckFunc {
+func testAccCheckLaunchTemplateExists(n string, v *ec2.LaunchTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1387,23 +1386,18 @@ func testAccCheckLaunchTemplateExists(n string, t *ec2.LaunchTemplate) resource.
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Launch Template ID is set")
+			return fmt.Errorf("No EC2 Launch Template ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		resp, err := conn.DescribeLaunchTemplates(&ec2.DescribeLaunchTemplatesInput{
-			LaunchTemplateIds: []*string{aws.String(rs.Primary.ID)},
-		})
+		output, err := tfec2.FindLaunchTemplateByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if len(resp.LaunchTemplates) != 1 || *resp.LaunchTemplates[0].LaunchTemplateId != rs.Primary.ID {
-			return fmt.Errorf("Launch Template not found")
-		}
-
-		*t = *resp.LaunchTemplates[0]
+		*v = *output
 
 		return nil
 	}
@@ -1417,21 +1411,17 @@ func testAccCheckLaunchTemplateDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, err := conn.DescribeLaunchTemplates(&ec2.DescribeLaunchTemplatesInput{
-			LaunchTemplateIds: []*string{aws.String(rs.Primary.ID)},
-		})
+		_, err := tfec2.FindLaunchTemplateByID(conn, rs.Primary.ID)
 
-		if err == nil {
-			if len(resp.LaunchTemplates) != 0 && *resp.LaunchTemplates[0].LaunchTemplateId == rs.Primary.ID {
-				return fmt.Errorf("Launch Template still exists")
-			}
-		}
-
-		if tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateId.NotFound") {
-			log.Printf("[WARN] launch template (%s) not found.", rs.Primary.ID)
+		if tfresource.NotFound(err) {
 			continue
 		}
-		return err
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("EC2 Launch Template %s still exists", rs.Primary.ID)
 	}
 
 	return nil
