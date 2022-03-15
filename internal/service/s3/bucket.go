@@ -236,16 +236,14 @@ func ResourceBucket() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enabled": {
-							Type:       schema.TypeBool,
-							Optional:   true,
-							Default:    false,
-							Deprecated: "Use the aws_s3_bucket_versioning resource instead",
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 						"mfa_delete": {
-							Type:       schema.TypeBool,
-							Optional:   true,
-							Default:    false,
-							Deprecated: "Use the aws_s3_bucket_versioning resource instead",
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 					},
 				},
