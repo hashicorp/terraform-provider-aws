@@ -687,6 +687,15 @@ func resourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error reading EC2 Launch Template (%s): %w", d.Id(), err)
 	}
 
+	version := strconv.FormatInt(aws.Int64Value(lt.LatestVersionNumber), 10)
+	ltv, err := FindLaunchTemplateVersionByTwoPartKey(conn, d.Id(), version)
+
+	if err != nil {
+		return fmt.Errorf("error reading EC2 Launch Template (%s) Version (%s): %w", d.Id(), version, err)
+	}
+
+	ltd := ltv.LaunchTemplateData
+
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ec2.ServiceName,
@@ -695,10 +704,76 @@ func resourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error 
 		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
+	if err := d.Set("block_device_mappings", getBlockDeviceMappings(ltd.BlockDeviceMappings)); err != nil {
+		return fmt.Errorf("error setting block_device_mappings: %w", err)
+	}
+	if err := d.Set("capacity_reservation_specification", getCapacityReservationSpecification(ltd.CapacityReservationSpecification)); err != nil {
+		return fmt.Errorf("error setting capacity_reservation_specification: %w", err)
+	}
+	if err := d.Set("cpu_options", getCpuOptions(ltd.CpuOptions)); err != nil {
+		return fmt.Errorf("error setting cpu_options: %w", err)
+	}
+	if strings.HasPrefix(aws.StringValue(ltd.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(ltd.InstanceType), "t3") {
+		if err := d.Set("credit_specification", getCreditSpecification(ltd.CreditSpecification)); err != nil {
+			return fmt.Errorf("error setting credit_specification: %w", err)
+		}
+	}
 	d.Set("default_version", lt.DefaultVersionNumber)
+	d.Set("description", ltv.VersionDescription)
+	d.Set("disable_api_termination", ltd.DisableApiTermination)
+	if ltd.EbsOptimized != nil {
+		d.Set("ebs_optimized", strconv.FormatBool(aws.BoolValue(ltd.EbsOptimized)))
+	} else {
+		d.Set("ebs_optimized", "")
+	}
+	if err := d.Set("elastic_gpu_specifications", getElasticGpuSpecifications(ltd.ElasticGpuSpecifications)); err != nil {
+		return fmt.Errorf("error setting elastic_gpu_specifications: %w", err)
+	}
+	if err := d.Set("elastic_inference_accelerator", flattenEc2LaunchTemplateElasticInferenceAcceleratorResponse(ltd.ElasticInferenceAccelerators)); err != nil {
+		return fmt.Errorf("error setting elastic_inference_accelerator: %w", err)
+	}
+	if err := d.Set("enclave_options", getEnclaveOptions(ltd.EnclaveOptions)); err != nil {
+		return fmt.Errorf("error setting enclave_options: %w", err)
+	}
+	if err := d.Set("hibernation_options", flattenLaunchTemplateHibernationOptions(ltd.HibernationOptions)); err != nil {
+		return fmt.Errorf("error setting hibernation_options: %w", err)
+	}
+	if err := d.Set("iam_instance_profile", getIamInstanceProfile(ltd.IamInstanceProfile)); err != nil {
+		return fmt.Errorf("error setting iam_instance_profile: %w", err)
+	}
+	d.Set("image_id", ltd.ImageId)
+	d.Set("instance_initiated_shutdown_behavior", ltd.InstanceInitiatedShutdownBehavior)
+	if err := d.Set("instance_market_options", getInstanceMarketOptions(ltd.InstanceMarketOptions)); err != nil {
+		return fmt.Errorf("error setting instance_market_options: %w", err)
+	}
+	d.Set("instance_type", ltd.InstanceType)
+	d.Set("kernel_id", ltd.KernelId)
+	d.Set("key_name", ltd.KeyName)
 	d.Set("latest_version", lt.LatestVersionNumber)
+	if err := d.Set("license_specification", getLicenseSpecifications(ltd.LicenseSpecifications)); err != nil {
+		return fmt.Errorf("error setting license_specification: %w", err)
+	}
+	if err := d.Set("metadata_options", flattenLaunchTemplateInstanceMetadataOptions(ltd.MetadataOptions)); err != nil {
+		return fmt.Errorf("error setting metadata_options: %w", err)
+	}
+	if err := d.Set("monitoring", getMonitoring(ltd.Monitoring)); err != nil {
+		return fmt.Errorf("error setting monitoring: %w", err)
+	}
 	d.Set("name", lt.LaunchTemplateName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lt.LaunchTemplateName)))
+	if err := d.Set("network_interfaces", getNetworkInterfaces(ltd.NetworkInterfaces)); err != nil {
+		return fmt.Errorf("error setting network_interfaces: %w", err)
+	}
+	if err := d.Set("placement", getPlacement(ltd.Placement)); err != nil {
+		return fmt.Errorf("error setting placement: %w", err)
+	}
+	d.Set("ram_disk_id", ltd.RamDiskId)
+	d.Set("security_group_names", aws.StringValueSlice(ltd.SecurityGroups))
+	if err := d.Set("tag_specifications", getTagSpecifications(ltd.TagSpecifications)); err != nil {
+		return fmt.Errorf("error setting tag_specifications: %w", err)
+	}
+	d.Set("user_data", ltd.UserData)
+	d.Set("vpc_security_group_ids", aws.StringValueSlice(ltd.SecurityGroupIds))
 
 	tags := KeyValueTags(lt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -709,99 +784,6 @@ func resourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error 
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	version := strconv.FormatInt(aws.Int64Value(lt.LatestVersionNumber), 10)
-	ltv, err := FindLaunchTemplateVersionByTwoPartKey(conn, d.Id(), version)
-
-	if err != nil {
-		return fmt.Errorf("error reading EC2 Launch Template (%s) Version (%s): %w", d.Id(), version, err)
-	}
-
-	d.Set("description", ltv.VersionDescription)
-
-	ltData := ltv.LaunchTemplateData
-
-	d.Set("disable_api_termination", ltData.DisableApiTermination)
-	d.Set("image_id", ltData.ImageId)
-	d.Set("instance_initiated_shutdown_behavior", ltData.InstanceInitiatedShutdownBehavior)
-	d.Set("instance_type", ltData.InstanceType)
-	d.Set("kernel_id", ltData.KernelId)
-	d.Set("key_name", ltData.KeyName)
-	d.Set("ram_disk_id", ltData.RamDiskId)
-	d.Set("security_group_names", aws.StringValueSlice(ltData.SecurityGroups))
-	d.Set("user_data", ltData.UserData)
-	d.Set("vpc_security_group_ids", aws.StringValueSlice(ltData.SecurityGroupIds))
-	d.Set("ebs_optimized", "")
-
-	if ltData.EbsOptimized != nil {
-		d.Set("ebs_optimized", strconv.FormatBool(aws.BoolValue(ltData.EbsOptimized)))
-	}
-
-	if err := d.Set("block_device_mappings", getBlockDeviceMappings(ltData.BlockDeviceMappings)); err != nil {
-		return fmt.Errorf("error setting block_device_mappings: %s", err)
-	}
-
-	if err := d.Set("capacity_reservation_specification", getCapacityReservationSpecification(ltData.CapacityReservationSpecification)); err != nil {
-		return fmt.Errorf("error setting capacity_reservation_specification: %s", err)
-	}
-
-	if err := d.Set("cpu_options", getCpuOptions(ltData.CpuOptions)); err != nil {
-		return err
-	}
-
-	if strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t3") {
-		if err := d.Set("credit_specification", getCreditSpecification(ltData.CreditSpecification)); err != nil {
-			return fmt.Errorf("error setting credit_specification: %s", err)
-		}
-	}
-
-	if err := d.Set("elastic_gpu_specifications", getElasticGpuSpecifications(ltData.ElasticGpuSpecifications)); err != nil {
-		return fmt.Errorf("error setting elastic_gpu_specifications: %s", err)
-	}
-
-	if err := d.Set("elastic_inference_accelerator", flattenEc2LaunchTemplateElasticInferenceAcceleratorResponse(ltData.ElasticInferenceAccelerators)); err != nil {
-		return fmt.Errorf("error setting elastic_inference_accelerator: %s", err)
-	}
-
-	if err := d.Set("iam_instance_profile", getIamInstanceProfile(ltData.IamInstanceProfile)); err != nil {
-		return fmt.Errorf("error setting iam_instance_profile: %s", err)
-	}
-
-	if err := d.Set("instance_market_options", getInstanceMarketOptions(ltData.InstanceMarketOptions)); err != nil {
-		return fmt.Errorf("error setting instance_market_options: %s", err)
-	}
-
-	if err := d.Set("license_specification", getLicenseSpecifications(ltData.LicenseSpecifications)); err != nil {
-		return fmt.Errorf("error setting license_specification: %s", err)
-	}
-
-	if err := d.Set("metadata_options", flattenLaunchTemplateInstanceMetadataOptions(ltData.MetadataOptions)); err != nil {
-		return fmt.Errorf("error setting metadata_options: %s", err)
-	}
-
-	if err := d.Set("enclave_options", getEnclaveOptions(ltData.EnclaveOptions)); err != nil {
-		return fmt.Errorf("error setting enclave_options: %s", err)
-	}
-
-	if err := d.Set("monitoring", getMonitoring(ltData.Monitoring)); err != nil {
-		return fmt.Errorf("error setting monitoring: %s", err)
-	}
-
-	if err := d.Set("network_interfaces", getNetworkInterfaces(ltData.NetworkInterfaces)); err != nil {
-		return fmt.Errorf("error setting network_interfaces: %s", err)
-	}
-
-	if err := d.Set("placement", getPlacement(ltData.Placement)); err != nil {
-		return fmt.Errorf("error setting placement: %s", err)
-	}
-
-	if err := d.Set("hibernation_options", flattenLaunchTemplateHibernationOptions(ltData.HibernationOptions)); err != nil {
-		return fmt.Errorf("error setting hibernation_options: %s", err)
-	}
-
-	if err := d.Set("tag_specifications", getTagSpecifications(ltData.TagSpecifications)); err != nil {
-		return fmt.Errorf("error setting tag_specifications: %s", err)
 	}
 
 	return nil
