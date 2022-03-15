@@ -1266,7 +1266,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		return nil, diag.Errorf("error creating AWS SDK v1 session: %s", err)
 	}
 
-	accountID, Partition, err := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
+	accountID, partition, err := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
 	if err != nil {
 		return nil, diag.Errorf("error retrieving account details: %s", err)
 	}
@@ -1497,7 +1497,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		OpsWorksConn:                      opsworks.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[OpsWorks])})),
 		OrganizationsConn:                 organizations.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Organizations])})),
 		OutpostsConn:                      outposts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Outposts])})),
-		Partition:                         Partition,
+		Partition:                         partition,
 		PersonalizeConn:                   personalize.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Personalize])})),
 		PersonalizeEventsConn:             personalizeevents.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[PersonalizeEvents])})),
 		PersonalizeRuntimeConn:            personalizeruntime.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[PersonalizeRuntime])})),
@@ -1525,6 +1525,9 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		Route53DomainsConn: route53domains.NewFromConfig(cfg, func(o *route53domains.Options) {
 			if endpoint := c.Endpoints[Route53Domains]; endpoint != "" {
 				o.EndpointResolver = route53domains.EndpointResolverFromURL(endpoint)
+			} else if partition == endpoints.AwsPartitionID {
+				// Route 53 Domains is only available in AWS Commercial us-east-1 Region.
+				o.Region = endpoints.UsEast1RegionID
 			}
 		}),
 		Route53RecoveryControlConfigConn: route53recoverycontrolconfig.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Route53RecoveryControlConfig])})),
@@ -1624,7 +1627,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	client.S3ConnURICleaningDisabled = s3.New(sess.Copy(s3Config))
 
 	// Force "global" services to correct regions
-	switch Partition {
+	switch partition {
 	case endpoints.AwsPartitionID:
 		globalAcceleratorConfig.Region = aws.String(endpoints.UsWest2RegionID)
 		route53Config.Region = aws.String(endpoints.UsEast1RegionID)
