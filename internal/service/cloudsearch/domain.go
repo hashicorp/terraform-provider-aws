@@ -86,10 +86,12 @@ func ResourceDomain() *schema.Resource {
 						"facet": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Default:  false,
 						},
 						"highlight": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Default:  false,
 						},
 						"name": {
 							Type:         schema.TypeString,
@@ -99,14 +101,17 @@ func ResourceDomain() *schema.Resource {
 						"return": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Default:  false,
 						},
 						"search": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Default:  false,
 						},
 						"sort": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Default:  false,
 						},
 						"type": {
 							Type:         schema.TypeString,
