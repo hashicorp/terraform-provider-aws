@@ -872,23 +872,19 @@ func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 func resourceLaunchTemplateDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	log.Printf("[DEBUG] Launch Template destroy: %v", d.Id())
+	log.Printf("[DEBUG] Deleting EC2 Launch Template: %s", d.Id())
 	_, err := conn.DeleteLaunchTemplate(&ec2.DeleteLaunchTemplateInput{
 		LaunchTemplateId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidLaunchTemplateIdNotFound) {
 		return nil
-	}
-	// AWS SDK constant above is currently incorrect
-	if tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateId.NotFound") {
-		return nil
-	}
-	if err != nil {
-		return err
 	}
 
-	log.Printf("[DEBUG] Launch Template deleted: %v", d.Id())
+	if err != nil {
+		return fmt.Errorf("error deleting Launch Template (%s): %w", d.Id(), err)
+	}
+
 	return nil
 }
 
