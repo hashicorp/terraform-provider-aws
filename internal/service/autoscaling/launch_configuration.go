@@ -1,7 +1,7 @@
 package autoscaling
 
 import ( // nosemgrep: aws-sdk-go-multiple-service-imports
-	"bytes"
+
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/hex"
@@ -128,23 +128,19 @@ func ResourceLaunchConfiguration() *schema.Resource {
 						"device_name": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"no_device": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 						},
 						"virtual_name": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
+							ForceNew: true,
 						},
 					},
-				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
-					return create.StringHashcode(buf.String())
 				},
 			},
 			"iam_instance_profile": {
@@ -453,17 +449,17 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			bdm := &autoscaling.BlockDeviceMapping{
-				DeviceName:  aws.String(bd["device_name"].(string)),
-				VirtualName: aws.String(bd["virtual_name"].(string)),
+				DeviceName: aws.String(bd["device_name"].(string)),
 			}
+
 			if v, ok := bd["no_device"].(bool); ok && v {
 				bdm.NoDevice = aws.Bool(true)
-				// When NoDevice is true, just ignore VirtualName since it's not needed
-				bdm.VirtualName = nil
 			}
-			if bdm.NoDevice == nil && aws.StringValue(bdm.VirtualName) == "" {
-				return errors.New("virtual_name cannot be empty when no_device is false or undefined.")
+
+			if v, ok := bd["virtual_name"].(string); ok && v != "" {
+				bdm.VirtualName = aws.String(v)
 			}
+
 			blockDevices = append(blockDevices, bdm)
 		}
 	}
