@@ -40,6 +40,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_amplify_app: Allow `repository` to be updated in-place ([#23517](https://github.com/hashicorp/terraform-provider-aws/issues/23517))
+* resource/aws_cloudsearch_domain: Set correct defaults for `index_field.facet`, `index_field.highlight`, `index_field.return`, `index_field.search` and `index_field.sort`, preventing spurious resource diffs ([#23687](https://github.com/hashicorp/terraform-provider-aws/issues/23687))
 * resource/aws_db_instance: Fix issues where configured update timeout was not respected, and update would fail if instance were in the process of being configured. ([#23560](https://github.com/hashicorp/terraform-provider-aws/issues/23560))
 * resource/aws_rds_event_subscription: Fix issue where `enabled` was sometimes not updated ([#23560](https://github.com/hashicorp/terraform-provider-aws/issues/23560))
 * resource/aws_rds_global_cluster: Fix ability to perform cluster version upgrades, including of clusters in distinct regions, such as previously got error: "Invalid database cluster identifier" ([#23560](https://github.com/hashicorp/terraform-provider-aws/issues/23560))
