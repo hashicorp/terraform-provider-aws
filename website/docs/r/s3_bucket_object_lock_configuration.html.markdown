@@ -23,10 +23,6 @@ resource "aws_s3_bucket" "example" {
   bucket = "mybucket"
 
   object_lock_enabled = true
-
-  lifecycle {
-    ignore_changes = [object_lock_configuration[0].rule]
-  }
 }
 
 resource "aws_s3_bucket_object_lock_configuration" "example" {
@@ -51,10 +47,6 @@ Doing so will generate an "Object Lock token" in the back-end.
    ```terraform
     resource "aws_s3_bucket" "example" {
       bucket = "mybucket"
-
-      lifecycle {
-        ignore_changes = [object_lock_configuration[0].rule]
-      }
     }
 
     resource "aws_s3_bucket_versioning" "example" {
@@ -83,6 +75,20 @@ Doing so will generate an "Object Lock token" in the back-end.
       token = "NG2MKsfoLqV3A+aquXneSG4LOu/ekrlXkRXwIPFVfERT7XOPos+/k444d7RIH0E3W3p5QU6ml2exS2F/eYCFmMWHJ3hFZGk6al1sIJkmNhUMYmsv0jYVQyTTZNLM+DnfooA6SATt39mM1VW1yJh4E+XljMlWzaBwHKbss3/EjlGDjOmVhaSs4Z6427mMCaFD0RLwsYY7zX49gEc31YfOMJGxbXCXSeyNwAhhM/A8UH7gQf38RmjHjjAFbbbLtl8arsxTPW8F1IYohqwmKIr9DnotLLj8Tg44U2SPwujVaqmlKKP9s41rfgb4UbIm7khSafDBng0LGfxC4pMlT9Ny2w=="
     }
     ```
+
+## Usage Notes
+
+~> **NOTE:** To avoid conflicts always add the following lifecycle object to the `aws_s3_bucket` resource of the source bucket if the `object_lock_configuration.object_lock_enabled` parameter is used instead of the top-level `object_lock_enabled` parameter.
+
+This resource implements the same features that are provided by the `object_lock_configuaration` configuration block of the [`aws_s3_bucket` resource](s3_bucket.html.markdown). To avoid conflicts or unexpected apply results, a lifecycle configuration is needed on the `aws_s3_bucket` to ignore changes to the internal `object_lock_configuration.rule` configuration block, if and only if, the `object_lock_configuration.object_lock_enabled` parameter is used instead of the top-level `object_lock_enabled` parameter. Failure to add the `lifecycle` configuration to the `aws_s3_bucket` will result in conflicting state results.
+
+```
+lifecycle {
+  ignore_changes = [
+    object_lock_configuration[0].rule
+  ]
+}
+```
 
 ## Argument Reference
 

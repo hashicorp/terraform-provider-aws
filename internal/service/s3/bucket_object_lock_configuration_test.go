@@ -259,10 +259,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
   object_lock_enabled = true
-
-  lifecycle {
-    ignore_changes = [object_lock_configuration[0].rule]
-  }
 }
 
 resource "aws_s3_bucket_object_lock_configuration" "test" {
@@ -284,10 +280,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
   object_lock_enabled = true
-
-  lifecycle {
-    ignore_changes = [object_lock_configuration[0].rule]
-  }
 }
 
 resource "aws_s3_bucket_object_lock_configuration" "test" {
