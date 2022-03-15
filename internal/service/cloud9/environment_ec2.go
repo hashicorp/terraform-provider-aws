@@ -42,8 +42,8 @@ func ResourceEnvironmentEC2() *schema.Resource {
 			"connection_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
 				ForceNew:     true,
+				Default:      cloud9.ConnectionTypeConnectSsh,
 				ValidateFunc: validation.StringInSlice(cloud9.ConnectionType_Values(), false),
 			},
 			"description": {
