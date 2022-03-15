@@ -2,6 +2,7 @@ package quicksight_test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -80,9 +81,14 @@ func TestAccQuickSightUser_withInvalidFormattedEmailStillWorks(t *testing.T) {
 }
 
 func TestAccQuickSightUser_withNamespace(t *testing.T) {
+	key := "QUICKSIGHT_NAMESPACE"
+	namespace := os.Getenv(key)
+	if namespace == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
 	var user quicksight.User
 	rName := "tfacctest" + sdkacctest.RandString(10)
-	rNamespace := "terraform"
 	resourceName := "aws_quicksight_user." + rName
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -92,10 +98,10 @@ func TestAccQuickSightUser_withNamespace(t *testing.T) {
 		CheckDestroy: testAccCheckQuickSightUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserWithNamespaceConfig(rName, rNamespace),
+				Config: testAccUserWithNamespaceConfig(rName, namespace),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightUserExists(resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "namespace", rNamespace),
+					resource.TestCheckResourceAttr(resourceName, "namespace", namespace),
 				),
 			},
 		},
