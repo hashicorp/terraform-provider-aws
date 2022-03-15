@@ -711,20 +711,16 @@ func resourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	version := strconv.Itoa(int(*lt.LatestVersionNumber))
-	dltv, err := conn.DescribeLaunchTemplateVersions(&ec2.DescribeLaunchTemplateVersionsInput{
-		LaunchTemplateId: aws.String(d.Id()),
-		Versions:         []*string{aws.String(version)},
-	})
+	version := strconv.FormatInt(aws.Int64Value(lt.LatestVersionNumber), 10)
+	ltv, err := FindLaunchTemplateVersionByTwoPartKey(conn, d.Id(), version)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading EC2 Launch Template (%s) Version (%s): %w", d.Id(), version, err)
 	}
 
-	log.Printf("[DEBUG] Received launch template version %q (version %d)", d.Id(), *lt.LatestVersionNumber)
+	d.Set("description", ltv.VersionDescription)
 
-	d.Set("description", dltv.LaunchTemplateVersions[0].VersionDescription)
-
-	ltData := dltv.LaunchTemplateVersions[0].LaunchTemplateData
+	ltData := ltv.LaunchTemplateData
 
 	d.Set("disable_api_termination", ltData.DisableApiTermination)
 	d.Set("image_id", ltData.ImageId)
