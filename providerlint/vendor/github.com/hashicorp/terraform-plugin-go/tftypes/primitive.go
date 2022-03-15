@@ -61,7 +61,7 @@ func (p primitive) UsableAs(t Type) bool {
 }
 
 func (p primitive) String() string {
-	return "tftypes." + string(p.name)
+	return "tftypes." + p.name
 }
 
 func (p primitive) private() {}
@@ -102,7 +102,16 @@ func (p primitive) supportedGoTypes() []string {
 	case Bool.name:
 		return []string{"bool", "*bool"}
 	case DynamicPseudoType.name:
-		return []string{"nil", "UnknownValue"}
+		// List/Set is covered by Tuple, Map is covered by Object
+		possibleTypes := []Type{
+			String, Bool, Number,
+			Tuple{}, Object{},
+		}
+		results := []string{}
+		for _, t := range possibleTypes {
+			results = append(results, t.supportedGoTypes()...)
+		}
+		return results
 	}
 	panic(fmt.Sprintf("unknown primitive type %q", p.name))
 }
@@ -344,5 +353,47 @@ func valueFromNumber(in interface{}) (Value, error) {
 		}, nil
 	default:
 		return Value{}, fmt.Errorf("tftypes.NewValue can't use %T as a tftypes.Number; expected types are: %s", in, formattedSupportedGoTypes(Number))
+	}
+}
+
+func valueFromDynamicPseudoType(val interface{}) (Value, error) {
+	switch val := val.(type) {
+	case string, *string:
+		v, err := valueFromString(val)
+		if err != nil {
+			return Value{}, err
+		}
+		v.typ = DynamicPseudoType
+		return v, nil
+	case *big.Float, float64, *float64, int, *int, int8, *int8, int16, *int16, int32, *int32, int64, *int64, uint, *uint, uint8, *uint8, uint16, *uint16, uint32, *uint32, uint64, *uint64:
+		v, err := valueFromNumber(val)
+		if err != nil {
+			return Value{}, err
+		}
+		v.typ = DynamicPseudoType
+		return v, nil
+	case bool, *bool:
+		v, err := valueFromBool(val)
+		if err != nil {
+			return Value{}, err
+		}
+		v.typ = DynamicPseudoType
+		return v, nil
+	case map[string]Value:
+		v, err := valueFromObject(nil, nil, val)
+		if err != nil {
+			return Value{}, err
+		}
+		v.typ = DynamicPseudoType
+		return v, nil
+	case []Value:
+		v, err := valueFromTuple(nil, val)
+		if err != nil {
+			return Value{}, err
+		}
+		v.typ = DynamicPseudoType
+		return v, nil
+	default:
+		return Value{}, fmt.Errorf("tftypes.NewValue can't use %T as a tftypes.DynamicPseudoType; expected types are: %s", val, formattedSupportedGoTypes(DynamicPseudoType))
 	}
 }

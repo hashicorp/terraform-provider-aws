@@ -98,6 +98,9 @@ type UpgradeResourceStateResponse struct {
 	//
 	// The state should be represented as a tftypes.Object, with each
 	// attribute and nested block getting its own key and value.
+	//
+	// Terraform CLI 0.12 through 0.14 require the Msgpack field to be
+	// populated or an EOF error will be returned.
 	UpgradedState *DynamicValue
 
 	// Diagnostics report errors or warnings related to upgrading the

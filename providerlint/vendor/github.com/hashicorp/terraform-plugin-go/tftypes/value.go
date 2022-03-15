@@ -2,14 +2,13 @@ package tftypes
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"math/big"
 	"sort"
 	"strconv"
 	"strings"
 
-	"github.com/vmihailenco/msgpack"
+	msgpack "github.com/vmihailenco/msgpack/v4"
 )
 
 // ValueConverter is an interface that provider-defined types can implement to
@@ -296,10 +295,6 @@ func newValue(t Type, val interface{}) (Value, error) {
 		}, nil
 	}
 
-	if t.Is(DynamicPseudoType) {
-		return Value{}, errors.New("cannot have DynamicPseudoType with known value, DynamicPseudoType can only contain null or unknown values")
-	}
-
 	if creator, ok := val.(ValueCreator); ok {
 		var err error
 		val, err = creator.ToTerraform5Value()
@@ -353,6 +348,12 @@ func newValue(t Type, val interface{}) (Value, error) {
 		return v, nil
 	case t.Is(Tuple{}):
 		v, err := valueFromTuple(t.(Tuple).ElementTypes, val)
+		if err != nil {
+			return Value{}, err
+		}
+		return v, nil
+	case t.Is(DynamicPseudoType):
+		v, err := valueFromDynamicPseudoType(val)
 		if err != nil {
 			return Value{}, err
 		}
