@@ -31,7 +31,9 @@ ENHANCEMENTS:
 * resource/aws_ecs_service: `enable_ecs_managed_tags`, `load_balancer`, `propagate_tags` and `service_registries` can now be updated in-place ([#23600](https://github.com/hashicorp/terraform-provider-aws/issues/23600))
 * resource/aws_iot_topic_rule: Add `cloudwatch_logs` and `error_action.cloudwatch_logs` arguments ([#23440](https://github.com/hashicorp/terraform-provider-aws/issues/23440))
 * resource/aws_msk_configuration: Correctly set `latest_revision` as Computed when `server_properties` changes ([#23662](https://github.com/hashicorp/terraform-provider-aws/issues/23662))
+* resource/aws_quicksight_user: Allow custom values for `namespace` ([#23607](https://github.com/hashicorp/terraform-provider-aws/issues/23607))
 * resource/aws_rds_global_cluster: Add configurable timeouts ([#23560](https://github.com/hashicorp/terraform-provider-aws/issues/23560))
+* resource/aws_rds_instance: Add `source_db_instance_automated_backup_arn` option within `restore_to_point_in_time` attribute ([#23086](https://github.com/hashicorp/terraform-provider-aws/issues/23086))
 * resource/aws_redshift_cluster: Add `availability_zone_relocation_enabled` attribute and allow `availability_zone` to be changed in-place. ([#20812](https://github.com/hashicorp/terraform-provider-aws/issues/20812))
 * resource/aws_transfer_server: Add `pre_authentication_login_banner` and `post_authentication_login_banner` arguments ([#23631](https://github.com/hashicorp/terraform-provider-aws/issues/23631))
 
@@ -41,6 +43,7 @@ BUG FIXES:
 * resource/aws_db_instance: Fix issues where configured update timeout was not respected, and update would fail if instance were in the process of being configured. ([#23560](https://github.com/hashicorp/terraform-provider-aws/issues/23560))
 * resource/aws_rds_event_subscription: Fix issue where `enabled` was sometimes not updated ([#23560](https://github.com/hashicorp/terraform-provider-aws/issues/23560))
 * resource/aws_rds_global_cluster: Fix ability to perform cluster version upgrades, including of clusters in distinct regions, such as previously got error: "Invalid database cluster identifier" ([#23560](https://github.com/hashicorp/terraform-provider-aws/issues/23560))
+* resource/aws_route53domains_registered_domain: Redirect all Route 53 Domains AWS API calls to the `us-east-1` Region ([#23672](https://github.com/hashicorp/terraform-provider-aws/issues/23672))
 
 ## 4.5.0 (March 11, 2022)
 
