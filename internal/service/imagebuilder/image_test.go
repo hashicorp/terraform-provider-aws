@@ -599,7 +599,7 @@ resource "aws_iam_instance_profile" "test" {
   role = aws_iam_role.test.name
 
   depends_on = [
-	aws_iam_role_policy_attachment.AmazonSSMManagedInstanceCore,
+    aws_iam_role_policy_attachment.AmazonSSMManagedInstanceCore,
     aws_iam_role_policy_attachment.EC2InstanceProfileForImageBuilderECRContainerBuilds
   ]
 }
@@ -635,7 +635,6 @@ EOF
 
 resource "aws_imagebuilder_infrastructure_configuration" "test" {
   instance_profile_name = aws_iam_instance_profile.test.name
-  instance_types        = ["t2.micro"]
   name                  = %[1]q
   security_group_ids    = [aws_default_security_group.test.id]
   subnet_id             = aws_subnet.test.id
