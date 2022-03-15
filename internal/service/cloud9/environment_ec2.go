@@ -29,15 +29,9 @@ func ResourceEnvironmentEC2() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 60),
-			},
-			"instance_type": {
+			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			"automatic_stop_time_minutes": {
 				Type:         schema.TypeInt,
@@ -49,6 +43,16 @@ func ResourceEnvironmentEC2() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 200),
+			},
+			"instance_type": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 60),
 			},
 			"owner_arn": {
 				Type:         schema.TypeString,
@@ -62,16 +66,12 @@ func ResourceEnvironmentEC2() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
