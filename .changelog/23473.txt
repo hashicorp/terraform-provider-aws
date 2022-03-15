@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_s3_bucket_request_payment_configuration
+```
+
+```release-note:note
+resource/aws_s3_bucket: The `request_payer` argument has been deprecated. Use the `aws_s3_bucket_request_payment_configuration` resource instead.
+```
