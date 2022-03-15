@@ -69,8 +69,8 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", "false"),
-					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "request_payer", "BucketOwner"),
+					testAccCheckRequestPayer(resourceName, "BucketOwner"),
 				),
 			},
 			{
@@ -376,7 +376,7 @@ func TestAccS3Bucket_Basic_generatedName(t *testing.T) {
 
 func TestAccS3Bucket_Basic_acceleration(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	resourceName := "aws_s3_bucket.bucket"
+	resourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -413,7 +413,7 @@ func TestAccS3Bucket_Basic_acceleration(t *testing.T) {
 
 func TestAccS3Bucket_Basic_requestPayer(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	resourceName := "aws_s3_bucket.bucket"
+	resourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -857,7 +857,7 @@ func TestAccS3Bucket_Security_enableDefaultEncryptionWhenAES256IsUsed(t *testing
 
 func TestAccS3Bucket_Security_disableDefaultEncryptionWhenDefaultEncryptionIsEnabled(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	resourceName := "aws_s3_bucket.arbitrary"
+	resourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -867,7 +867,7 @@ func TestAccS3Bucket_Security_disableDefaultEncryptionWhenDefaultEncryptionIsEna
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketEnableDefaultEncryptionWithDefaultKey(bucketName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 				),
 			},
@@ -879,7 +879,7 @@ func TestAccS3Bucket_Security_disableDefaultEncryptionWhenDefaultEncryptionIsEna
 			},
 			{
 				Config: testAccBucketDisableDefaultEncryption(bucketName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "0"),
 				),
@@ -3797,7 +3797,7 @@ EOF
 
 func testAccBucketWithAccelerationConfig(bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket              = %[1]q
   acceleration_status = "Enabled"
 }
@@ -3806,7 +3806,7 @@ resource "aws_s3_bucket" "bucket" {
 
 func testAccBucketWithoutAccelerationConfig(bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket              = %[1]q
   acceleration_status = "Suspended"
 }
@@ -3815,7 +3815,7 @@ resource "aws_s3_bucket" "bucket" {
 
 func testAccBucketRequestPayerBucketOwnerConfig(bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   request_payer = "BucketOwner"
 }
@@ -3824,7 +3824,7 @@ resource "aws_s3_bucket" "bucket" {
 
 func testAccBucketRequestPayerRequesterConfig(bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   request_payer = "Requester"
 }
@@ -3913,7 +3913,7 @@ resource "aws_s3_bucket" "arbitrary" {
 
 func testAccBucketEnableDefaultEncryptionWithDefaultKey(bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "arbitrary" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
   server_side_encryption_configuration {
@@ -3929,7 +3929,7 @@ resource "aws_s3_bucket" "arbitrary" {
 
 func testAccBucketDisableDefaultEncryption(bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "arbitrary" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 `, bucketName)
