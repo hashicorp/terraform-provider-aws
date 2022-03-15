@@ -19,6 +19,12 @@ For more information, see [How S3 versioning works](https://docs.aws.amazon.com/
 ```terraform
 resource "aws_s3_bucket" "example" {
   bucket = "example-bucket"
+
+  lifecycle {
+    ignore_changes = [
+      grant
+    ]
+  }
 }
 
 resource "aws_s3_bucket_acl" "example" {
