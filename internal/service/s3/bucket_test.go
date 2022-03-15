@@ -1239,6 +1239,32 @@ func TestAccS3Bucket_Security_corsEmptyOrigin(t *testing.T) {
 	})
 }
 
+func TestAccS3Bucket_Security_corsSingleMethodAndEmptyOrigin(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket.bucket"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketWithCORSSingleMethodAndEmptyOriginConfig(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+			},
+		},
+	})
+}
+
 func TestAccS3Bucket_Security_logging(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.bucket"
@@ -3967,6 +3993,19 @@ resource "aws_s3_bucket" "bucket" {
     allowed_origins = ["https://www.example.com"]
     expose_headers  = ["x-amz-server-side-encryption", "ETag"]
     max_age_seconds = 3000
+  }
+}
+`, bucketName)
+}
+
+func testAccBucketWithCORSSingleMethodAndEmptyOriginConfig(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = %[1]q
+
+  cors_rule {
+    allowed_methods = ["GET"]
+    allowed_origins = [""]
   }
 }
 `, bucketName)
