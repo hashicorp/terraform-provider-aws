@@ -30,6 +30,7 @@ func ResourceLaunchConfiguration() *schema.Resource {
 		Create: resourceLaunchConfigurationCreate,
 		Read:   resourceLaunchConfigurationRead,
 		Delete: resourceLaunchConfigurationDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -39,137 +40,12 @@ func ResourceLaunchConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validation.StringLenBetween(1, 255),
-			},
-
-			"name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name"},
-				ValidateFunc:  validation.StringLenBetween(1, 255-resource.UniqueIDSuffixLength),
-			},
-
-			"image_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"instance_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"iam_instance_profile": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-
-			"key_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-
-			"user_data": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"user_data_base64"},
-				StateFunc: func(v interface{}) string {
-					switch v := v.(type) {
-					case string:
-						return userDataHashSum(v)
-					default:
-						return ""
-					}
-				},
-				ValidateFunc: validation.StringLenBetween(1, 16384),
-			},
-
-			"user_data_base64": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"user_data"},
-				ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
-					s := v.(string)
-					if !verify.IsBase64Encoded([]byte(s)) {
-						errs = append(errs, fmt.Errorf(
-							"%s: must be base64-encoded", name,
-						))
-					}
-					return
-				},
-			},
-
-			"security_groups": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
-			"vpc_classic_link_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-
-			"vpc_classic_link_security_groups": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
 			"associate_public_ip_address": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
 				Default:  false,
 			},
-
-			"spot_price": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-
-			"ebs_optimized": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-
-			"placement_tenancy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-
-			"enable_monitoring": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  true,
-			},
-
 			"ebs_block_device": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -182,54 +58,46 @@ func ResourceLaunchConfiguration() *schema.Resource {
 							Default:  true,
 							ForceNew: true,
 						},
-
 						"device_name": {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-
 						"encrypted": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-
 						"iops": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-
 						"no_device": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							ForceNew: true,
 						},
-
 						"snapshot_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-
 						"throughput": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-
 						"volume_size": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-
 						"volume_type": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -239,7 +107,18 @@ func ResourceLaunchConfiguration() *schema.Resource {
 					},
 				},
 			},
-
+			"ebs_optimized": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
+			"enable_monitoring": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  true,
+			},
 			"ephemeral_block_device": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -268,7 +147,27 @@ func ResourceLaunchConfiguration() *schema.Resource {
 					return create.StringHashcode(buf.String())
 				},
 			},
-
+			"iam_instance_profile": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"image_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"instance_type": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"key_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"metadata_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -284,13 +183,6 @@ func ResourceLaunchConfiguration() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice([]string{autoscaling.InstanceMetadataEndpointStateEnabled, autoscaling.InstanceMetadataEndpointStateDisabled}, false),
 						},
-						"http_tokens": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice([]string{autoscaling.InstanceMetadataHttpTokensStateOptional, autoscaling.InstanceMetadataHttpTokensStateRequired}, false),
-						},
 						"http_put_response_hop_limit": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -298,10 +190,37 @@ func ResourceLaunchConfiguration() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 64),
 						},
+						"http_tokens": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice([]string{autoscaling.InstanceMetadataHttpTokensStateOptional, autoscaling.InstanceMetadataHttpTokensStateRequired}, false),
+						},
 					},
 				},
 			},
-
+			"name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name_prefix"},
+				ValidateFunc:  validation.StringLenBetween(1, 255),
+			},
+			"name_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validation.StringLenBetween(1, 255-resource.UniqueIDSuffixLength),
+			},
+			"placement_tenancy": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"root_block_device": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -318,35 +237,30 @@ func ResourceLaunchConfiguration() *schema.Resource {
 							Default:  true,
 							ForceNew: true,
 						},
-
 						"encrypted": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-
 						"iops": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-
 						"throughput": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-
 						"volume_size": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-
 						"volume_type": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -355,6 +269,59 @@ func ResourceLaunchConfiguration() *schema.Resource {
 						},
 					},
 				},
+			},
+			"security_groups": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"spot_price": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"user_data": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"user_data_base64"},
+				StateFunc: func(v interface{}) string {
+					switch v := v.(type) {
+					case string:
+						return userDataHashSum(v)
+					default:
+						return ""
+					}
+				},
+				ValidateFunc: validation.StringLenBetween(1, 16384),
+			},
+			"user_data_base64": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"user_data"},
+				ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
+					s := v.(string)
+					if !verify.IsBase64Encoded([]byte(s)) {
+						errs = append(errs, fmt.Errorf(
+							"%s: must be base64-encoded", name,
+						))
+					}
+					return
+				},
+			},
+			"vpc_classic_link_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"vpc_classic_link_security_groups": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 			},
 		},
 	}
