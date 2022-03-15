@@ -531,7 +531,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+								ValidateFunc: validation.IsIPv4Address,
 							},
 						},
 						"ipv4_prefix_count": {
@@ -543,7 +543,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
+								ValidateFunc: validation.IsIPv6Address,
 							},
 						},
 						"ipv6_prefix_count": {
