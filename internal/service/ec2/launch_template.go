@@ -526,30 +526,6 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"ipv4_prefixes": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.IsIPv4Address,
-							},
-						},
-						"ipv4_prefix_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"ipv6_prefixes": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.IsIPv6Address,
-							},
-						},
-						"ipv6_prefix_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
 						"interface_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -1232,10 +1208,6 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 			"network_card_index":   aws.Int64Value(v.NetworkCardIndex),
 			"network_interface_id": aws.StringValue(v.NetworkInterfaceId),
 			"private_ip_address":   aws.StringValue(v.PrivateIpAddress),
-			"ipv4_prefixes":        []*ec2.Ipv4PrefixSpecificationResponse(v.Ipv4Prefixes),
-			"ipv4_prefix_count":    aws.Int64Value(v.Ipv4PrefixCount),
-			"ipv6_prefixes":        []*ec2.Ipv6PrefixSpecificationResponse(v.Ipv6Prefixes),
-			"ipv6_prefix_count":    aws.Int64Value(v.Ipv6PrefixCount),
 			"subnet_id":            aws.StringValue(v.SubnetId),
 		}
 

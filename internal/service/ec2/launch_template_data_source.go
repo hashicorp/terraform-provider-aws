@@ -329,24 +329,6 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"ipv4_prefixes": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"ipv4_prefix_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"ipv6_prefixes": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"ipv6_prefix_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
 						"interface_type": {
 							Type:     schema.TypeString,
 							Computed: true,
