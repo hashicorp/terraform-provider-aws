@@ -2341,13 +2341,8 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_StorageType(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
 resource "aws_rds_cluster" "test" {
   apply_immediately   = true
-  availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
   cluster_identifier  = %q
   db_cluster_instance_class = "db.r6gd.xlarge"
   engine              = "mysql"
@@ -2363,13 +2358,8 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_AllocatedStorage(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
 resource "aws_rds_cluster" "test" {
   apply_immediately   = true
-  availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
   cluster_identifier  = %q
   db_cluster_instance_class = "db.r6gd.xlarge"
   engine              = "mysql"
@@ -2385,13 +2375,8 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_Iops(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
 resource "aws_rds_cluster" "test" {
   apply_immediately   = true
-  availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
   cluster_identifier  = %q
   db_cluster_instance_class = "db.r6gd.xlarge"
   engine              = "mysql"
@@ -2407,13 +2392,8 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_DbClusterInstanceClass(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
 resource "aws_rds_cluster" "test" {
   apply_immediately   = true
-  availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
   cluster_identifier  = %q
   db_cluster_instance_class = "db.r6gd.xlarge"
   engine              = "mysql"
