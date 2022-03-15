@@ -2353,7 +2353,7 @@ resource "aws_rds_cluster" "test" {
   engine              = "mysql"
   storage_type        = "io1"
   allocated_storage   = 100
-  iops       		  = 300
+  iops       		  = 1000
   master_password     = "mustbeeightcharaters"
   master_username     = "test"
   skip_final_snapshot = true
@@ -2375,7 +2375,7 @@ resource "aws_rds_cluster" "test" {
   engine              = "mysql"
   storage_type        = "io1"
   allocated_storage   = 100
-  iops       		  = 300
+  iops       		  = 1000
   master_password     = "mustbeeightcharaters"
   master_username     = "test"
   skip_final_snapshot = true
@@ -2397,7 +2397,7 @@ resource "aws_rds_cluster" "test" {
   engine              = "mysql"
   storage_type        = "io1"
   allocated_storage   = 100
-  iops       		  = 300
+  iops       		  = 1000
   master_password     = "mustbeeightcharaters"
   master_username     = "test"
   skip_final_snapshot = true
@@ -2419,7 +2419,7 @@ resource "aws_rds_cluster" "test" {
   engine              = "mysql"
   storage_type        = "io1"
   allocated_storage   = 100
-  iops       		  = 300
+  iops       		  = 1000
   master_password     = "mustbeeightcharaters"
   master_username     = "test"
   skip_final_snapshot = true
