@@ -374,7 +374,7 @@ func TestAccS3Bucket_Basic_generatedName(t *testing.T) {
 
 func TestAccS3Bucket_Basic_acceleration(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	resourceName := "aws_s3_bucket.bucket"
+	resourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -3689,7 +3689,7 @@ EOF
 
 func testAccBucketWithAccelerationConfig(bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket              = %[1]q
   acceleration_status = "Enabled"
 }
@@ -3698,7 +3698,7 @@ resource "aws_s3_bucket" "bucket" {
 
 func testAccBucketWithoutAccelerationConfig(bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket              = %[1]q
   acceleration_status = "Suspended"
 }

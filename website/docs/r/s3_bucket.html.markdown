@@ -12,6 +12,10 @@ Provides a S3 bucket resource.
 
 -> This functionality is for managing S3 in an AWS Partition. To manage [S3 on Outposts](https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html), see the [`aws_s3control_bucket`](/docs/providers/aws/r/s3control_bucket.html) resource.
 
+~> **NOTE on S3 Bucket Accelerate Configuration:** S3 Bucket Accelerate can be configured in either the standalone resource [`aws_s3_bucket_accelerate_configuration`](s3_bucket_accelerate_configuration.html)
+or with the deprecated parameter `acceleration_status` in the resource `aws_s3_bucket`.
+Configuring with both will cause inconsistencies and may overwrite configuration.
+
 ~> **NOTE on S3 Bucket canned ACL Configuration:** S3 Bucket canned ACL can be configured in either the standalone resource [`aws_s3_bucket_acl`](s3_bucket_acl.html.markdown)
 or with the deprecated parameter `acl` in the resource `aws_s3_bucket`.
 Configuring with both will cause inconsistencies and may overwrite configuration.
@@ -403,7 +407,8 @@ The following arguments are supported:
 * `versioning` - (Optional, **Deprecated**) A state of [versioning](https://docs.aws.amazon.com/AmazonS3/latest/dev/Versioning.html) (documented below). Use the resource [`aws_s3_bucket_versioning`](s3_bucket_versioning.html.markdown) instead.
 * `logging` - (Optional, **Deprecated**) A settings of [bucket logging](https://docs.aws.amazon.com/AmazonS3/latest/UG/ManagingBucketLogging.html) (documented below). Use the resource [`aws_s3_bucket_logging`](s3_bucket_logging.html.markdown) instead.
 * `lifecycle_rule` - (Optional) A configuration of [object lifecycle management](http://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html) (documented below).
-* `acceleration_status` - (Optional) Sets the accelerate configuration of an existing bucket. Can be `Enabled` or `Suspended`.
+* `acceleration_status` - (Optional, **Deprecated**) Sets the accelerate configuration of an existing bucket. Can be `Enabled` or `Suspended`.
+  Use the resource [`aws_s3_bucket_accelerate_configuration`](s3_bucket_accelerate_configuration.html) instead.
 * `request_payer` - (Optional) Specifies who should bear the cost of Amazon S3 data transfer.
 Can be either `BucketOwner` or `Requester`. By default, the owner of the S3 bucket would incur
 the costs of any data transfer. See [Requester Pays Buckets](http://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html)
