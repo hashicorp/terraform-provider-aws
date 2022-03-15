@@ -239,6 +239,7 @@ func ResourceCluster() *schema.Resource {
 			"allocated_storage": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 
 			"storage_type": {
