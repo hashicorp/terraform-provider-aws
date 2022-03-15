@@ -20,6 +20,10 @@ func DataSourceTransitGatewayConnectPeer() *schema.Resource {
 		ReadWithoutTimeout: dataSourceTransitGatewayConnectPeerRead,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"bgp_asn": {
 				Type:     schema.TypeString,
 				Computed: true,
