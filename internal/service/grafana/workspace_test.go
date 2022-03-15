@@ -32,6 +32,10 @@ func TestAccGrafana_serial(t *testing.T) {
 		"LicenseAssociation": {
 			"enterpriseFreeTrial": testAccGrafanaLicenseAssociation_freeTrial,
 		},
+		"SamlConfiguration": {
+			"basic":         testAccGrafanaWorkspaceSamlConfiguration_basic,
+			"loginValidity": testAccGrafanaWorkspaceSamlConfiguration_loginValidity,
+		},
 	}
 
 	for group, m := range testCases {
@@ -76,7 +80,6 @@ func testAccGrafanaWorkspace_saml(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "organizational_units.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "permission_type", managedgrafana.PermissionTypeServiceManaged),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "saml_configuration_status", managedgrafana.SamlConfigurationStatusNotConfigured),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_name", ""),
 				),
 			},
@@ -122,7 +125,6 @@ func testAccGrafanaWorkspace_sso(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "organizational_units.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "permission_type", managedgrafana.PermissionTypeServiceManaged),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "saml_configuration_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_name", ""),
 				),
 			},
@@ -224,7 +226,6 @@ func testAccGrafanaWorkspace_dataSources(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "organizational_units.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "permission_type", managedgrafana.PermissionTypeServiceManaged),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "saml_configuration_status", managedgrafana.SamlConfigurationStatusNotConfigured),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_name", ""),
 				),
 			},
