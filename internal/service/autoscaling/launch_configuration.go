@@ -549,28 +549,17 @@ func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) e
 	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn
 	ec2conn := meta.(*conns.AWSClient).EC2Conn
 
-	describeOpts := autoscaling.DescribeLaunchConfigurationsInput{
-		LaunchConfigurationNames: []*string{aws.String(d.Id())},
-	}
+	lc, err := FindLaunchConfigurationByName(autoscalingconn, d.Id())
 
-	log.Printf("[DEBUG] launch configuration describe configuration: %s", describeOpts)
-	describConfs, err := autoscalingconn.DescribeLaunchConfigurations(&describeOpts)
-	if err != nil {
-		return fmt.Errorf("Error retrieving launch configuration: %w", err)
-	}
-	if len(describConfs.LaunchConfigurations) == 0 && !d.IsNewResource() {
-		log.Printf("[WARN] Launch Configuration (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Autoscaling Launch Configuration %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	// Verify AWS returned our launch configuration
-	if aws.StringValue(describConfs.LaunchConfigurations[0].LaunchConfigurationName) != d.Id() {
-		return fmt.Errorf("Unable to find launch configuration: %#v", describConfs.LaunchConfigurations)
+	if err != nil {
+		return fmt.Errorf("error reading Autoscaling Launch Configuration (%s): %w", d.Id(), err)
 	}
-
-	lc := describConfs.LaunchConfigurations[0]
-	log.Printf("[DEBUG] launch configuration output: %s", lc)
 
 	d.Set("key_name", lc.KeyName)
 	d.Set("image_id", lc.ImageId)
@@ -859,4 +848,69 @@ func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
 	}
 
 	return rootDeviceName, nil
+}
+
+func findLaunchConfiguration(conn *autoscaling.AutoScaling, input *autoscaling.DescribeLaunchConfigurationsInput) (*autoscaling.LaunchConfiguration, error) {
+	output, err := findLaunchConfigurations(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func findLaunchConfigurations(conn *autoscaling.AutoScaling, input *autoscaling.DescribeLaunchConfigurationsInput) ([]*autoscaling.LaunchConfiguration, error) {
+	var output []*autoscaling.LaunchConfiguration
+
+	err := conn.DescribeLaunchConfigurationsPages(input, func(page *autoscaling.DescribeLaunchConfigurationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.LaunchConfigurations {
+			if v == nil {
+				continue
+			}
+
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindLaunchConfigurationByName(conn *autoscaling.AutoScaling, name string) (*autoscaling.LaunchConfiguration, error) {
+	input := &autoscaling.DescribeLaunchConfigurationsInput{
+		LaunchConfigurationNames: aws.StringSlice([]string{name}),
+	}
+
+	output, err := findLaunchConfiguration(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.LaunchConfigurationName) != name {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
