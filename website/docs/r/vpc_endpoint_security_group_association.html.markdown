@@ -33,8 +33,7 @@ The following arguments are supported:
 
 * `security_group_id` - (Required) The ID of the security group to be associated with the VPC endpoint.
 * `vpc_endpoint_id` - (Required) The ID of the VPC endpoint with which the security group will be associated.
-* `replace_default_association` - (Optional) Whether this association should replace the association with the VPC's default security group that is created when no security groups are specified during VPC endpoint creation.
-At most 1 association per-VPC endpoint should be configured with `replace_default_association = true`.
+* `replace_default_association` - (Optional) Whether this association should replace the association with the VPC's default security group that is created when no security groups are specified during VPC endpoint creation. At most 1 association per-VPC endpoint should be configured with `replace_default_association = true`.
 
 ## Attributes Reference
 
