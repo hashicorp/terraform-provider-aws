@@ -29,76 +29,21 @@ func ResourceLaunchTemplate() *schema.Resource {
 		Read:   resourceLaunchTemplateRead,
 		Update: resourceLaunchTemplateUpdate,
 		Delete: resourceLaunchTemplateDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  verify.ValidLaunchTemplateName,
-			},
-
-			"name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name"},
-				ValidateFunc:  verify.ValidLaunchTemplateName,
-			},
-
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"default_version": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"update_default_version"},
-				ValidateFunc:  validation.IntAtLeast(1),
-			},
-
-			"update_default_version": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				ConflictsWith: []string{"default_version"},
-			},
-
-			"latest_version": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-
 			"block_device_mappings": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"no_device": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"virtual_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
 						"ebs": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -159,28 +104,21 @@ func ResourceLaunchTemplate() *schema.Resource {
 								},
 							},
 						},
-					},
-				},
-			},
-
-			"cpu_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"core_count": {
-							Type:     schema.TypeInt,
+						"device_name": {
+							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"threads_per_core": {
-							Type:     schema.TypeInt,
+						"no_device": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"virtual_name": {
+							Type:     schema.TypeString,
 							Optional: true,
 						},
 					},
 				},
 			},
-
 			"capacity_reservation_specification": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -208,7 +146,23 @@ func ResourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
-
+			"cpu_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"core_count": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"threads_per_core": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"credit_specification": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -223,12 +177,22 @@ func ResourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
-
+			"default_version": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"update_default_version"},
+				ValidateFunc:  validation.IntAtLeast(1),
+			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 255),
+			},
 			"disable_api_termination": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"ebs_optimized": {
 				// Use TypeString to allow an "unspecified" value,
 				// since TypeBool only has true/false with false default.
@@ -239,7 +203,6 @@ func ResourceLaunchTemplate() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
 				ValidateFunc:     verify.ValidTypeStringNullableBoolean,
 			},
-
 			"elastic_gpu_specifications": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -252,7 +215,6 @@ func ResourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
-
 			"elastic_inference_accelerator": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -266,7 +228,32 @@ func ResourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
-
+			"enclave_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"hibernation_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"configured": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
+			},
 			"iam_instance_profile": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -286,18 +273,15 @@ func ResourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
-
 			"image_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"instance_initiated_shutdown_behavior": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(ec2.ShutdownBehavior_Values(), false),
 			},
-
 			"instance_market_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -346,22 +330,22 @@ func ResourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
-
 			"instance_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"kernel_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"key_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
+			"latest_version": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"license_specification": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -375,7 +359,6 @@ func ResourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
-
 			"metadata_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -395,17 +378,17 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Default:      ec2.LaunchTemplateInstanceMetadataProtocolIpv6Disabled,
 							ValidateFunc: validation.StringInSlice(ec2.LaunchTemplateInstanceMetadataProtocolIpv6_Values(), false),
 						},
-						"http_tokens": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice(ec2.LaunchTemplateHttpTokensState_Values(), false),
-						},
 						"http_put_response_hop_limit": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: validation.IntBetween(1, 64),
+						},
+						"http_tokens": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(ec2.LaunchTemplateHttpTokensState_Values(), false),
 						},
 						"instance_metadata_tags": {
 							Type:         schema.TypeString,
@@ -416,21 +399,6 @@ func ResourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
-
-			"enclave_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-					},
-				},
-			},
-
 			"monitoring": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -444,7 +412,22 @@ func ResourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
-
+			"name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name_prefix"},
+				ValidateFunc:  verify.ValidLaunchTemplateName,
+			},
+			"name_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  verify.ValidLaunchTemplateName,
+			},
 			"network_interfaces": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -480,10 +463,22 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"security_groups": {
+						"interface_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"efa", "interface"}, false),
+						},
+						"ipv4_addresses": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.IsIPv4Address,
+							},
+						},
+						"ipv4_address_count": {
+							Type:     schema.TypeInt,
+							Optional: true,
 						},
 						"ipv6_address_count": {
 							Type:     schema.TypeInt,
@@ -510,31 +505,18 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IsIPv4Address,
 						},
-						"ipv4_addresses": {
+						"security_groups": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.IsIPv4Address,
-							},
-						},
-						"ipv4_address_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"subnet_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"interface_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"efa", "interface"}, false),
-						},
 					},
 				},
 			},
-
 			"placement": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -563,46 +545,32 @@ func ResourceLaunchTemplate() *schema.Resource {
 							ConflictsWith: []string{"placement.0.host_id"},
 							ValidateFunc:  verify.ValidARN,
 						},
+						"partition_number": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
 						"spread_domain": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"tenancy": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								ec2.TenancyDedicated,
-								ec2.TenancyDefault,
-								ec2.TenancyHost,
-							}, false),
-						},
-						"partition_number": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(ec2.Tenancy_Values(), false),
 						},
 					},
 				},
 			},
-
 			"ram_disk_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"security_group_names": {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				ConflictsWith: []string{"vpc_security_group_ids"},
 			},
-
-			"vpc_security_group_ids": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"security_group_names"},
-			},
-
 			"tag_specifications": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -617,25 +585,22 @@ func ResourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
-
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
+			"update_default_version": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				ConflictsWith: []string{"default_version"},
+			},
 			"user_data": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"hibernation_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"configured": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-					},
-				},
+			"vpc_security_group_ids": {
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"security_group_names"},
 			},
 		},
 
