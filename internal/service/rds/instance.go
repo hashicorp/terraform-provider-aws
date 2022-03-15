@@ -400,6 +400,11 @@ func ResourceInstance() *schema.Resource {
 							Optional: true,
 						},
 
+						"source_db_instance_automated_backups_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
 						"source_dbi_resource_id": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -1990,6 +1995,10 @@ func expandRestoreToPointInTime(l []interface{}) *rds.RestoreDBInstanceToPointIn
 
 	if v, ok := tfMap["source_db_instance_identifier"].(string); ok && v != "" {
 		input.SourceDBInstanceIdentifier = aws.String(v)
+	}
+
+	if v, ok := tfMap["source_db_instance_automated_backups_arn"].(string); ok && v != "" {
+		input.SourceDBInstanceAutomatedBackupsArn = aws.String(v)
 	}
 
 	if v, ok := tfMap["source_dbi_resource_id"].(string); ok && v != "" {
