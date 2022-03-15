@@ -128,6 +128,151 @@ func TestAccS3BucketLifecycleConfiguration_filterWithPrefix(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeGreaterThan(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+	currTime := time.Now()
+	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfiguration_filterWithObjectSizeGreaterThanConfig(rName, date, 100),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"expiration.#":                      "1",
+						"expiration.0.date":                 date,
+						"filter.#":                          "1",
+						"filter.0.object_size_greater_than": "100",
+						"id":                                rName,
+						"status":                            tfs3.LifecycleRuleStatusEnabled,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeLessThan(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+	currTime := time.Now()
+	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfiguration_filterWithObjectSizeLessThanConfig(rName, date, 500),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"expiration.#":                   "1",
+						"expiration.0.date":              date,
+						"filter.#":                       "1",
+						"filter.0.object_size_less_than": "500",
+						"id":                             rName,
+						"status":                         tfs3.LifecycleRuleStatusEnabled,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRange(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+	currTime := time.Now()
+	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfiguration_filterWithObjectSizeRangeConfig(rName, date, 500, 64000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"expiration.#":      "1",
+						"expiration.0.date": date,
+						"filter.#":          "1",
+						"filter.0.and.#":    "1",
+						"filter.0.and.0.object_size_greater_than": "500",
+						"filter.0.and.0.object_size_less_than":    "64000",
+						"id":                                      rName,
+						"status":                                  tfs3.LifecycleRuleStatusEnabled,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRangeAndPrefix(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+	currTime := time.Now()
+	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfiguration_filterWithObjectSizeRangeAndPrefixConfig(rName, date, 500, 64000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"expiration.#":      "1",
+						"expiration.0.date": date,
+						"filter.#":          "1",
+						"filter.0.and.#":    "1",
+						"filter.0.and.0.object_size_greater_than": "500",
+						"filter.0.and.0.object_size_less_than":    "64000",
+						"filter.0.and.0.prefix":                   rName,
+						"id":                                      rName,
+						"status":                                  tfs3.LifecycleRuleStatusEnabled,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccS3BucketLifecycleConfiguration_disableRule(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
@@ -867,8 +1012,7 @@ resource "aws_s3_bucket" "test" {
 
   lifecycle {
     ignore_changes = [
-      acl,
-      lifecycle_rule,
+      lifecycle_rule
     ]
   }
 }
@@ -899,8 +1043,7 @@ resource "aws_s3_bucket" "test" {
 
   lifecycle {
     ignore_changes = [
-      acl,
-      lifecycle_rule,
+      lifecycle_rule
     ]
   }
 }
@@ -931,8 +1074,7 @@ resource "aws_s3_bucket" "test" {
 
   lifecycle {
     ignore_changes = [
-      acl,
-      lifecycle_rule,
+      lifecycle_rule
     ]
   }
 }
@@ -968,8 +1110,7 @@ resource "aws_s3_bucket" "test" {
 
   lifecycle {
     ignore_changes = [
-      acl,
-      lifecycle_rule,
+      lifecycle_rule
     ]
   }
 }
@@ -1003,8 +1144,7 @@ resource "aws_s3_bucket" "test" {
 
   lifecycle {
     ignore_changes = [
-      acl,
-      lifecycle_rule,
+      lifecycle_rule
     ]
   }
 }
@@ -1042,8 +1182,7 @@ resource "aws_s3_bucket" "test" {
 
   lifecycle {
     ignore_changes = [
-      acl,
-      lifecycle_rule,
+      lifecycle_rule
     ]
   }
 }
@@ -1075,8 +1214,7 @@ resource "aws_s3_bucket" "test" {
 
   lifecycle {
     ignore_changes = [
-      acl,
-      lifecycle_rule,
+      lifecycle_rule
     ]
   }
 }
@@ -1106,8 +1244,7 @@ resource "aws_s3_bucket" "test" {
 
   lifecycle {
     ignore_changes = [
-      acl,
-      lifecycle_rule,
+      lifecycle_rule
     ]
   }
 }
@@ -1139,8 +1276,7 @@ resource "aws_s3_bucket" "test" {
 
   lifecycle {
     ignore_changes = [
-      acl,
-      lifecycle_rule,
+      lifecycle_rule
     ]
   }
 }
@@ -1208,8 +1344,7 @@ resource "aws_s3_bucket" "test" {
 
   lifecycle {
     ignore_changes = [
-      acl,
-      lifecycle_rule,
+      lifecycle_rule
     ]
   }
 }
@@ -1247,8 +1382,7 @@ resource "aws_s3_bucket" "test" {
 
   lifecycle {
     ignore_changes = [
-      acl,
-      lifecycle_rule,
+      lifecycle_rule
     ]
   }
 }
@@ -1292,8 +1426,7 @@ resource "aws_s3_bucket" "test" {
 
   lifecycle {
     ignore_changes = [
-      acl,
-      lifecycle_rule,
+      lifecycle_rule
     ]
   }
 }
@@ -1335,8 +1468,7 @@ resource "aws_s3_bucket" "test" {
 
   lifecycle {
     ignore_changes = [
-      acl,
-      lifecycle_rule,
+      lifecycle_rule
     ]
   }
 }
@@ -1379,8 +1511,7 @@ resource "aws_s3_bucket" "test" {
 
   lifecycle {
     ignore_changes = [
-      acl,
-      lifecycle_rule,
+      lifecycle_rule
     ]
   }
 }
@@ -1423,8 +1554,7 @@ resource "aws_s3_bucket" "test" {
 
   lifecycle {
     ignore_changes = [
-      acl,
-      lifecycle_rule,
+      lifecycle_rule
     ]
   }
 }
@@ -1458,6 +1588,161 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 `, rName)
 }
 
+func testAccBucketLifecycleConfiguration_filterWithObjectSizeGreaterThanConfig(rName, date string, sizeGreaterThan int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      lifecycle_rule
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  rule {
+    id = %[1]q
+
+    expiration {
+      date = %[2]q
+    }
+
+    filter {
+      object_size_greater_than = %[3]d
+    }
+
+    status = "Enabled"
+  }
+}
+`, rName, date, sizeGreaterThan)
+}
+
+func testAccBucketLifecycleConfiguration_filterWithObjectSizeLessThanConfig(rName, date string, sizeLessThan int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      lifecycle_rule
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  rule {
+    id = %[1]q
+
+    expiration {
+      date = %[2]q
+    }
+
+    filter {
+      object_size_less_than = %[3]d
+    }
+
+    status = "Enabled"
+  }
+}
+`, rName, date, sizeLessThan)
+}
+
+func testAccBucketLifecycleConfiguration_filterWithObjectSizeRangeConfig(rName, date string, sizeGreaterThan, sizeLessThan int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      lifecycle_rule
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  rule {
+    id = %[1]q
+
+    expiration {
+      date = %[2]q
+    }
+
+    filter {
+      and {
+        object_size_greater_than = %[3]d
+        object_size_less_than    = %[4]d
+      }
+    }
+
+    status = "Enabled"
+  }
+}
+`, rName, date, sizeGreaterThan, sizeLessThan)
+}
+
+func testAccBucketLifecycleConfiguration_filterWithObjectSizeRangeAndPrefixConfig(rName, date string, sizeGreaterThan, sizeLessThan int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  lifecycle {
+    ignore_changes = [
+      lifecycle_rule
+    ]
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  rule {
+    id = %[1]q
+
+    expiration {
+      date = %[2]q
+    }
+
+    filter {
+      and {
+        object_size_greater_than = %[3]d
+        object_size_less_than    = %[4]d
+        prefix                   = %[1]q
+      }
+    }
+
+    status = "Enabled"
+  }
+}
+`, rName, date, sizeGreaterThan, sizeLessThan)
+}
+
 func testAccBucketLifecycleConfiguration_Migrate_NoChangeConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
@@ -1465,8 +1750,7 @@ resource "aws_s3_bucket" "bucket" {
 
   lifecycle {
     ignore_changes = [
-      acl,
-      lifecycle_rule,
+      lifecycle_rule
     ]
   }
 }
@@ -1499,8 +1783,7 @@ resource "aws_s3_bucket" "bucket" {
 
   lifecycle {
     ignore_changes = [
-      acl,
-      lifecycle_rule,
+      lifecycle_rule
     ]
   }
 }
@@ -1533,8 +1816,7 @@ resource "aws_s3_bucket" "test" {
 
   lifecycle {
     ignore_changes = [
-      acl,
-      lifecycle_rule,
+      lifecycle_rule
     ]
   }
 }
