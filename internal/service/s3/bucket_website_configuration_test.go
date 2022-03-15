@@ -296,7 +296,7 @@ func TestAccS3BucketWebsiteConfiguration_migrate_websiteWithIndexDocumentNoChang
 			{
 				Config: testAccBucketWebsiteConfigurationConfig_Migrate_WebsiteWithIndexDocumentNoChange(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAclExists(resourceName),
+					testAccCheckBucketWebsiteConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "index_document.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "index_document.0.suffix", "index.html"),
 				),
@@ -327,7 +327,7 @@ func TestAccS3BucketWebsiteConfiguration_migrate_websiteWithIndexDocumentWithCha
 			{
 				Config: testAccBucketWebsiteConfigurationConfig_Migrate_WebsiteWithIndexDocumentWithChange(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAclExists(resourceName),
+					testAccCheckBucketWebsiteConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "index_document.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "index_document.0.suffix", "other.html"),
 				),
@@ -358,7 +358,7 @@ func TestAccS3BucketWebsiteConfiguration_migrate_websiteWithRoutingRulesNoChange
 			{
 				Config: testAccBucketWebsiteConfigurationConfig_Migrate_WebsiteWithRoutingRuleNoChange(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAclExists(resourceName),
+					testAccCheckBucketWebsiteConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
 				),
 			},
@@ -388,7 +388,7 @@ func TestAccS3BucketWebsiteConfiguration_migrate_websiteWithRoutingRulesWithChan
 			{
 				Config: testAccBucketWebsiteConfigurationConfig_Migrate_WebsiteWithRoutingRuleWithChange(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAclExists(resourceName),
+					testAccCheckBucketWebsiteConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "routing_rule.0.redirect.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "routing_rule.0.redirect.0.protocol", s3.ProtocolHttps),
