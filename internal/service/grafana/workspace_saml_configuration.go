@@ -283,29 +283,3 @@ func resourceWorkspaceSamlConfigurationRead(d *schema.ResourceData, meta interfa
 
 	return nil
 }
-
-func resourceWorkspaceSamlConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
-	workspace, err := FindWorkspaceByID(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error deleting Grafana Workspace Saml Configuration (%s): %w", d.Id(), err)
-	}
-
-	log.Printf("[DEBUG] Deleting Grafana Workspace Saml Configuration: %s", d.Id())
-	_, err = conn.UpdateWorkspaceAuthentication(&managedgrafana.UpdateWorkspaceAuthenticationInput{
-		AuthenticationProviders: workspace.Authentication.Providers,
-		WorkspaceId:             aws.String(d.Id()),
-		SamlConfiguration:       nil,
-	})
-
-	if err != nil {
-		return fmt.Errorf("error deleting Grafana Workspace Saml Configuration (%s): %w", d.Id(), err)
-	}
-
-	if _, err := waitWorkspaceSamlConfigurationDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for Grafana Workspace Saml Configuration (%s) delete: %w", d.Id(), err)
-	}
-
-	return nil
-}
