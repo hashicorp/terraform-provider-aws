@@ -5,6 +5,7 @@ package s3
 
 const (
 	ErrCodeInvalidBucketState                        = "InvalidBucketState"
+	ErrCodeMethodNotAllowed                          = "MethodNotAllowed"
 	ErrCodeNoSuchConfiguration                       = "NoSuchConfiguration"
 	ErrCodeNoSuchCORSConfiguration                   = "NoSuchCORSConfiguration"
 	ErrCodeNoSuchPublicAccessBlockConfiguration      = "NoSuchPublicAccessBlockConfiguration"
