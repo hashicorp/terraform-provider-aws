@@ -5,10 +5,12 @@ package s3
 
 const (
 	ErrCodeInvalidBucketState                        = "InvalidBucketState"
+	ErrCodeMethodNotAllowed                          = "MethodNotAllowed"
 	ErrCodeNoSuchConfiguration                       = "NoSuchConfiguration"
 	ErrCodeNoSuchCORSConfiguration                   = "NoSuchCORSConfiguration"
 	ErrCodeNoSuchPublicAccessBlockConfiguration      = "NoSuchPublicAccessBlockConfiguration"
 	ErrCodeNoSuchWebsiteConfiguration                = "NoSuchWebsiteConfiguration"
+	ErrCodeObjectLockConfigurationNotFound           = "ObjectLockConfigurationNotFoundError"
 	ErrCodeOperationAborted                          = "OperationAborted"
 	ErrCodeServerSideEncryptionConfigurationNotFound = "ServerSideEncryptionConfigurationNotFoundError"
 )

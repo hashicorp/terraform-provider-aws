@@ -1,0 +1,15 @@
+```release-note:new-resource
+aws_s3_bucket_object_lock_configuration
+```
+
+```release-note:enhancement
+resource/aws_s3_bucket: Add top-level `object_lock_enabled` parameter
+```
+
+```release-note:note
+resource/aws_s3_bucket: The `object_lock_configuration.object_lock_enabled` argument has been deprecated. Use the top-level argument `object_lock_enabled` instead.
+```
+
+```release-note:note
+resource/aws_s3_bucket: The `object_lock_configuration.rule` argument has been deprecated. Use the `aws_s3_bucket_object_lock_configuration` resource instead.
+```
