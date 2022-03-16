@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -217,9 +216,10 @@ func ResourceDataSet() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(1, 64),
 						},
 						"source": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
+							Type:         schema.TypeList,
+							Required:     true,
+							MaxItems:     1,
+							ExactlyOneOf: []string{"data_set_arn", "join_instruction", "physical_table_id"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"data_set_arn": {
@@ -1688,23 +1688,8 @@ func expandQuickSightDataSetPhysicalTableMap(tfSet *schema.Set) map[string]*quic
 
 		physicalTableMap[physicalTableMapID] = physicalTable
 	}
-	// for k := range physicalTableMap {
-	// 	WriteToFile("result.txt", k)
-	// }
+
 	return physicalTableMap
-}
-
-func WriteToFile(filename string, text string) {
-	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-	if err != nil {
-		panic(err)
-	}
-
-	defer f.Close()
-
-	if _, err = f.WriteString(text); err != nil {
-		panic(err)
-	}
 }
 
 func expandQuickSightDataSetCustomSql(tfMap map[string]interface{}) *quicksight.CustomSql {
@@ -2534,7 +2519,6 @@ func flattenQuickSightPhysicalTable(key string, table *quicksight.PhysicalTable)
 
 	tfMap := map[string]interface{}{}
 
-	WriteToFile("result.txt", "1")
 	tfMap["physical_table_map_id"] = key
 
 	if table.CustomSql != nil {
@@ -2549,7 +2533,6 @@ func flattenQuickSightPhysicalTable(key string, table *quicksight.PhysicalTable)
 		tfMap["s3_source"] = flattenQuickSightS3Source(table.S3Source)
 	}
 
-	WriteToFile("result.txt", "2")
 	return tfMap
 }
 
