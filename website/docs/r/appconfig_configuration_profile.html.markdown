@@ -41,6 +41,7 @@ The following arguments are supported:
 * `retrieval_role_arn` - (Optional) The ARN of an IAM role with permission to access the configuration at the specified `location_uri`. A retrieval role ARN is not required for configurations stored in the AWS AppConfig `hosted` configuration store. It is required for all other sources that store your configuration.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `validator` - (Optional) A set of methods for validating the configuration. Maximum of 2. See [Validator](#validator) below for more details.
+* `type` - (Optional) The type of the configuration profile. This will default to `AWS.Freeform`.
 
 ### Validator
 
