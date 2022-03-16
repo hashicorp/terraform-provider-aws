@@ -209,8 +209,9 @@ func resourceStackSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	callAs := d.Get("call_as").(string)
 
-	stackSet, err := FindStackSetByName(conn, d.Id())
+	stackSet, err := FindStackSetByName(conn, d.Id(), callAs)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFormation StackSet (%s) not found, removing from state", d.Id())
@@ -296,6 +297,7 @@ func resourceStackSetUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.PermissionModel = aws.String(v.(string))
 	}
 
+	callAs := d.Get("call_as").(string)
 	if v, ok := d.GetOk("call_as"); ok {
 		input.CallAs = aws.String(v.(string))
 	}
@@ -327,7 +329,7 @@ func resourceStackSetUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating CloudFormation StackSet (%s): %w", d.Id(), err)
 	}
 
-	if _, err := WaitStackSetOperationSucceeded(conn, d.Id(), aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := WaitStackSetOperationSucceeded(conn, d.Id(), aws.StringValue(output.OperationId), callAs, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return fmt.Errorf("error waiting for CloudFormation StackSet (%s) update: %w", d.Id(), err)
 	}
 
@@ -339,6 +341,10 @@ func resourceStackSetDelete(d *schema.ResourceData, meta interface{}) error {
 
 	input := &cloudformation.DeleteStackSetInput{
 		StackSetName: aws.String(d.Id()),
+	}
+
+	if v, ok := d.GetOk("call_as"); ok {
+		input.CallAs = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Deleting CloudFormation StackSet: %s", d.Id())

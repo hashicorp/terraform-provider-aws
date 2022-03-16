@@ -37,3 +37,24 @@ func clusterType_Values() []string {
 		clusterTypeSingleNode,
 	}
 }
+
+const (
+	clusterAvailabilityZoneRelocationStatusEnabled          = "enabled"
+	clusterAvailabilityZoneRelocationStatusDisabled         = "disabled"
+	clusterAvailabilityZoneRelocationStatusPendingEnabling  = "pending_enabling"
+	clusterAvailabilityZoneRelocationStatusPendingDisabling = "pending_disabling"
+)
+
+func clusterAvailabilityZoneRelocationStatus_TerminalValues() []string {
+	return []string{
+		clusterAvailabilityZoneRelocationStatusEnabled,
+		clusterAvailabilityZoneRelocationStatusDisabled,
+	}
+}
+func clusterAvailabilityZoneRelocationStatus_PendingValues() []string {
+	return []string{
+		clusterAvailabilityZoneRelocationStatusPendingEnabling,
+		clusterAvailabilityZoneRelocationStatusPendingDisabling,
+	}
+
+}

@@ -293,18 +293,20 @@ Between the open and closing delimiters of these sequences, newline sequences
 are ignored as whitespace.
 
 There is a syntax ambiguity between _for expressions_ and collection values
-whose first element is a reference to a variable named `for`. The
-_for expression_ interpretation has priority, so to produce a tuple whose
-first element is the value of a variable named `for`, or an object with a
-key named `for`, use parentheses to disambiguate:
+whose first element starts with an identifier named `for`. The _for expression_
+interpretation has priority, so to write a key literally named `for`
+or an expression derived from a variable named `for` you must use parentheses
+or quotes to disambiguate:
 
 - `[for, foo, baz]` is a syntax error.
 - `[(for), foo, baz]` is a tuple whose first element is the value of variable
   `for`.
-- `{for: 1, baz: 2}` is a syntax error.
-- `{(for): 1, baz: 2}` is an object with an attribute literally named `for`.
-- `{baz: 2, for: 1}` is equivalent to the previous example, and resolves the
+- `{for = 1, baz = 2}` is a syntax error.
+- `{"for" = 1, baz = 2}` is an object with an attribute literally named `for`.
+- `{baz = 2, for = 1}` is equivalent to the previous example, and resolves the
   ambiguity by reordering.
+- `{(for) = 1, baz = 2}` is an object with a key with the same value as the
+  variable `for`.
 
 ### Template Expressions
 
@@ -489,7 +491,7 @@ that were produced against each distinct key.
 - `[for v in ["a", "b"]: v]` returns `["a", "b"]`.
 - `[for i, v in ["a", "b"]: i]` returns `[0, 1]`.
 - `{for i, v in ["a", "b"]: v => i}` returns `{a = 0, b = 1}`.
-- `{for i, v in ["a", "a", "b"]: k => v}` produces an error, because attribute
+- `{for i, v in ["a", "a", "b"]: v => i}` produces an error, because attribute
   `a` is defined twice.
 - `{for i, v in ["a", "a", "b"]: v => i...}` returns `{a = [0, 1], b = [2]}`.
 
@@ -888,7 +890,7 @@ as templates.
 - `hello ${true}` produces the string `"hello true"`
 - `${""}${true}` produces the string `"true"` because there are two
   interpolation sequences, even though one produces an empty result.
-- `%{ for v in [true] }${v}%{ endif }` produces the string `true` because
+- `%{ for v in [true] }${v}%{ endfor }` produces the string `true` because
   the presence of the `for` directive circumvents the unwrapping even though
   the final result is a single value.
 

@@ -50,18 +50,15 @@ func ResourceServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"certificate": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"directory_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"domain": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -69,12 +66,10 @@ func ResourceServer() *schema.Resource {
 				Default:      transfer.DomainS3,
 				ValidateFunc: validation.StringInSlice(transfer.Domain_Values(), false),
 			},
-
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"endpoint_details": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -115,38 +110,32 @@ func ResourceServer() *schema.Resource {
 					},
 				},
 			},
-
 			"endpoint_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      transfer.EndpointTypePublic,
 				ValidateFunc: validation.StringInSlice(transfer.EndpointType_Values(), false),
 			},
-
 			"force_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
 			"function": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"host_key": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(0, 4096),
 			},
-
 			"host_key_fingerprint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"identity_provider_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -154,19 +143,28 @@ func ResourceServer() *schema.Resource {
 				Default:      transfer.IdentityProviderTypeServiceManaged,
 				ValidateFunc: validation.StringInSlice(transfer.IdentityProviderType_Values(), false),
 			},
-
 			"invocation_role": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"logging_role": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
+			"post_authentication_login_banner": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				ValidateFunc: validation.StringLenBetween(0, 512),
+			},
+			"pre_authentication_login_banner": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				ValidateFunc: validation.StringLenBetween(0, 512),
+			},
 			"protocols": {
 				Type:     schema.TypeSet,
 				MinItems: 1,
@@ -178,17 +176,14 @@ func ResourceServer() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(transfer.Protocol_Values(), false),
 				},
 			},
-
 			"security_policy_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      SecurityPolicyName2018_11,
 				ValidateFunc: validation.StringInSlice(SecurityPolicyName_Values(), false),
 			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-
 			"url": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -261,6 +256,14 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("logging_role"); ok {
 		input.LoggingRole = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("post_authentication_login_banner"); ok {
+		input.PostAuthenticationLoginBanner = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("pre_authentication_login_banner"); ok {
+		input.PreAuthenticationLoginBanner = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("protocols"); ok && v.(*schema.Set).Len() > 0 {
@@ -386,6 +389,8 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("invocation_role", "")
 	}
 	d.Set("logging_role", output.LoggingRole)
+	d.Set("post_authentication_login_banner", output.PostAuthenticationLoginBanner)
+	d.Set("pre_authentication_login_banner", output.PreAuthenticationLoginBanner)
 	d.Set("protocols", aws.StringValueSlice(output.Protocols))
 	d.Set("security_policy_name", output.SecurityPolicyName)
 	if output.IdentityProviderDetails != nil {
@@ -551,6 +556,14 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChange("logging_role") {
 			input.LoggingRole = aws.String(d.Get("logging_role").(string))
+		}
+
+		if d.HasChange("post_authentication_login_banner") {
+			input.PostAuthenticationLoginBanner = aws.String(d.Get("post_authentication_login_banner").(string))
+		}
+
+		if d.HasChange("pre_authentication_login_banner") {
+			input.PreAuthenticationLoginBanner = aws.String(d.Get("pre_authentication_login_banner").(string))
 		}
 
 		if d.HasChange("protocols") {

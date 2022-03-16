@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform-exec/tfexec"
 	tfjson "github.com/hashicorp/terraform-json"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/logging"
 )
 
 const (
@@ -64,7 +65,8 @@ func (wd *WorkingDir) Unsetenv(envVar string) {
 	delete(wd.env, envVar)
 }
 
-func (wd *WorkingDir) SetReattachInfo(reattachInfo tfexec.ReattachInfo) {
+func (wd *WorkingDir) SetReattachInfo(ctx context.Context, reattachInfo tfexec.ReattachInfo) {
+	logging.HelperResourceTrace(ctx, "Setting Terraform CLI reattach configuration", map[string]interface{}{"tf_reattach_config": reattachInfo})
 	wd.reattachInfo = reattachInfo
 }
 
@@ -82,7 +84,7 @@ func (wd *WorkingDir) GetHelper() *Helper {
 // This must be called at least once before any call to Init, Plan, Apply, or
 // Destroy to establish the configuration. Any previously-set configuration is
 // discarded and any saved plan is cleared.
-func (wd *WorkingDir) SetConfig(cfg string) error {
+func (wd *WorkingDir) SetConfig(ctx context.Context, cfg string) error {
 	configFilename := filepath.Join(wd.baseDir, ConfigFileName)
 	err := ioutil.WriteFile(configFilename, []byte(cfg), 0700)
 	if err != nil {
@@ -99,12 +101,14 @@ func (wd *WorkingDir) SetConfig(cfg string) error {
 		return err
 	}
 
-	if p := os.Getenv("TF_ACC_LOG_PATH"); p != "" {
-		wd.tf.SetLogPath(p)
+	if p := os.Getenv(EnvTfAccLogPath); p != "" {
+		if err := wd.tf.SetLogPath(p); err != nil {
+			return fmt.Errorf("unable to set log path: %w", err)
+		}
 	}
 
 	// Changing configuration invalidates any saved plan.
-	err = wd.ClearPlan()
+	err = wd.ClearPlan(ctx)
 	if err != nil {
 		return err
 	}
@@ -115,31 +119,59 @@ func (wd *WorkingDir) SetConfig(cfg string) error {
 //
 // Any remote objects tracked by the state are not destroyed first, so this
 // will leave them dangling in the remote system.
-func (wd *WorkingDir) ClearState() error {
+func (wd *WorkingDir) ClearState(ctx context.Context) error {
+	logging.HelperResourceTrace(ctx, "Clearing Terraform state")
+
 	err := os.Remove(filepath.Join(wd.baseDir, "terraform.tfstate"))
+
 	if os.IsNotExist(err) {
+		logging.HelperResourceTrace(ctx, "No Terraform state to clear")
 		return nil
 	}
-	return err
+
+	if err != nil {
+		return err
+	}
+
+	logging.HelperResourceTrace(ctx, "Cleared Terraform state")
+
+	return nil
 }
 
 // ClearPlan deletes any saved plan present in the working directory.
-func (wd *WorkingDir) ClearPlan() error {
+func (wd *WorkingDir) ClearPlan(ctx context.Context) error {
+	logging.HelperResourceTrace(ctx, "Clearing Terraform plan")
+
 	err := os.Remove(wd.planFilename())
+
 	if os.IsNotExist(err) {
+		logging.HelperResourceTrace(ctx, "No Terraform plan to clear")
 		return nil
 	}
-	return err
+
+	if err != nil {
+		return err
+	}
+
+	logging.HelperResourceTrace(ctx, "Cleared Terraform plan")
+
+	return nil
 }
 
 // Init runs "terraform init" for the given working directory, forcing Terraform
 // to use the current version of the plugin under test.
-func (wd *WorkingDir) Init() error {
+func (wd *WorkingDir) Init(ctx context.Context) error {
 	if _, err := os.Stat(wd.configFilename()); err != nil {
 		return fmt.Errorf("must call SetConfig before Init")
 	}
 
-	return wd.tf.Init(context.Background(), tfexec.Reattach(wd.reattachInfo))
+	logging.HelperResourceTrace(ctx, "Calling Terraform CLI init command")
+
+	err := wd.tf.Init(context.Background(), tfexec.Reattach(wd.reattachInfo))
+
+	logging.HelperResourceTrace(ctx, "Called Terraform CLI init command")
+
+	return err
 }
 
 func (wd *WorkingDir) configFilename() string {
@@ -152,15 +184,25 @@ func (wd *WorkingDir) planFilename() string {
 
 // CreatePlan runs "terraform plan" to create a saved plan file, which if successful
 // will then be used for the next call to Apply.
-func (wd *WorkingDir) CreatePlan() error {
+func (wd *WorkingDir) CreatePlan(ctx context.Context) error {
+	logging.HelperResourceTrace(ctx, "Calling Terraform CLI plan command")
+
 	_, err := wd.tf.Plan(context.Background(), tfexec.Reattach(wd.reattachInfo), tfexec.Refresh(false), tfexec.Out(PlanFileName))
+
+	logging.HelperResourceTrace(ctx, "Called Terraform CLI plan command")
+
 	return err
 }
 
 // CreateDestroyPlan runs "terraform plan -destroy" to create a saved plan
 // file, which if successful will then be used for the next call to Apply.
-func (wd *WorkingDir) CreateDestroyPlan() error {
+func (wd *WorkingDir) CreateDestroyPlan(ctx context.Context) error {
+	logging.HelperResourceTrace(ctx, "Calling Terraform CLI plan -destroy command")
+
 	_, err := wd.tf.Plan(context.Background(), tfexec.Reattach(wd.reattachInfo), tfexec.Refresh(false), tfexec.Out(PlanFileName), tfexec.Destroy(true))
+
+	logging.HelperResourceTrace(ctx, "Called Terraform CLI plan -destroy command")
+
 	return err
 }
 
@@ -168,13 +210,19 @@ func (wd *WorkingDir) CreateDestroyPlan() error {
 // successfully and the saved plan has not been cleared in the meantime then
 // this will apply the saved plan. Otherwise, it will implicitly create a new
 // plan and apply it.
-func (wd *WorkingDir) Apply() error {
+func (wd *WorkingDir) Apply(ctx context.Context) error {
 	args := []tfexec.ApplyOption{tfexec.Reattach(wd.reattachInfo), tfexec.Refresh(false)}
 	if wd.HasSavedPlan() {
 		args = append(args, tfexec.DirOrPlan(PlanFileName))
 	}
 
-	return wd.tf.Apply(context.Background(), args...)
+	logging.HelperResourceTrace(ctx, "Calling Terraform CLI apply command")
+
+	err := wd.tf.Apply(context.Background(), args...)
+
+	logging.HelperResourceTrace(ctx, "Called Terraform CLI apply command")
+
+	return err
 }
 
 // Destroy runs "terraform destroy". It does not consider or modify any saved
@@ -182,8 +230,14 @@ func (wd *WorkingDir) Apply() error {
 //
 // If destroy fails then remote objects might still exist, and continue to
 // exist after a particular test is concluded.
-func (wd *WorkingDir) Destroy() error {
-	return wd.tf.Destroy(context.Background(), tfexec.Reattach(wd.reattachInfo), tfexec.Refresh(false))
+func (wd *WorkingDir) Destroy(ctx context.Context) error {
+	logging.HelperResourceTrace(ctx, "Calling Terraform CLI destroy command")
+
+	err := wd.tf.Destroy(context.Background(), tfexec.Reattach(wd.reattachInfo), tfexec.Refresh(false))
+
+	logging.HelperResourceTrace(ctx, "Called Terraform CLI destroy command")
+
+	return err
 }
 
 // HasSavedPlan returns true if there is a saved plan in the working directory. If
@@ -197,19 +251,25 @@ func (wd *WorkingDir) HasSavedPlan() bool {
 //
 // If no plan is saved or if the plan file cannot be read, SavedPlan returns
 // an error.
-func (wd *WorkingDir) SavedPlan() (*tfjson.Plan, error) {
+func (wd *WorkingDir) SavedPlan(ctx context.Context) (*tfjson.Plan, error) {
 	if !wd.HasSavedPlan() {
 		return nil, fmt.Errorf("there is no current saved plan")
 	}
 
-	return wd.tf.ShowPlanFile(context.Background(), wd.planFilename(), tfexec.Reattach(wd.reattachInfo))
+	logging.HelperResourceTrace(ctx, "Calling Terraform CLI apply command")
+
+	plan, err := wd.tf.ShowPlanFile(context.Background(), wd.planFilename(), tfexec.Reattach(wd.reattachInfo))
+
+	logging.HelperResourceTrace(ctx, "Calling Terraform CLI apply command")
+
+	return plan, err
 }
 
 // SavedPlanRawStdout returns a human readable stdout capture of the current saved plan file, if any.
 //
 // If no plan is saved or if the plan file cannot be read, SavedPlanRawStdout returns
 // an error.
-func (wd *WorkingDir) SavedPlanRawStdout() (string, error) {
+func (wd *WorkingDir) SavedPlanRawStdout(ctx context.Context) (string, error) {
 	if !wd.HasSavedPlan() {
 		return "", fmt.Errorf("there is no current saved plan")
 	}
@@ -218,7 +278,13 @@ func (wd *WorkingDir) SavedPlanRawStdout() (string, error) {
 
 	wd.tf.SetStdout(&ret)
 	defer wd.tf.SetStdout(ioutil.Discard)
+
+	logging.HelperResourceTrace(ctx, "Calling Terraform CLI show command")
+
 	_, err := wd.tf.ShowPlanFileRaw(context.Background(), wd.planFilename(), tfexec.Reattach(wd.reattachInfo))
+
+	logging.HelperResourceTrace(ctx, "Called Terraform CLI show command")
+
 	if err != nil {
 		return "", err
 	}
@@ -230,23 +296,47 @@ func (wd *WorkingDir) SavedPlanRawStdout() (string, error) {
 //
 
 // If the state cannot be read, State returns an error.
-func (wd *WorkingDir) State() (*tfjson.State, error) {
-	return wd.tf.Show(context.Background(), tfexec.Reattach(wd.reattachInfo))
+func (wd *WorkingDir) State(ctx context.Context) (*tfjson.State, error) {
+	logging.HelperResourceTrace(ctx, "Calling Terraform CLI show command")
+
+	state, err := wd.tf.Show(context.Background(), tfexec.Reattach(wd.reattachInfo))
+
+	logging.HelperResourceTrace(ctx, "Called Terraform CLI show command")
+
+	return state, err
 }
 
 // Import runs terraform import
-func (wd *WorkingDir) Import(resource, id string) error {
-	return wd.tf.Import(context.Background(), resource, id, tfexec.Config(wd.baseDir), tfexec.Reattach(wd.reattachInfo))
+func (wd *WorkingDir) Import(ctx context.Context, resource, id string) error {
+	logging.HelperResourceTrace(ctx, "Calling Terraform CLI import command")
+
+	err := wd.tf.Import(context.Background(), resource, id, tfexec.Config(wd.baseDir), tfexec.Reattach(wd.reattachInfo))
+
+	logging.HelperResourceTrace(ctx, "Called Terraform CLI import command")
+
+	return err
 }
 
 // Refresh runs terraform refresh
-func (wd *WorkingDir) Refresh() error {
-	return wd.tf.Refresh(context.Background(), tfexec.Reattach(wd.reattachInfo), tfexec.State(filepath.Join(wd.baseDir, "terraform.tfstate")))
+func (wd *WorkingDir) Refresh(ctx context.Context) error {
+	logging.HelperResourceTrace(ctx, "Calling Terraform CLI refresh command")
+
+	err := wd.tf.Refresh(context.Background(), tfexec.Reattach(wd.reattachInfo))
+
+	logging.HelperResourceTrace(ctx, "Called Terraform CLI refresh command")
+
+	return err
 }
 
 // Schemas returns an object describing the provider schemas.
 //
 // If the schemas cannot be read, Schemas returns an error.
-func (wd *WorkingDir) Schemas() (*tfjson.ProviderSchemas, error) {
-	return wd.tf.ProvidersSchema(context.Background())
+func (wd *WorkingDir) Schemas(ctx context.Context) (*tfjson.ProviderSchemas, error) {
+	logging.HelperResourceTrace(ctx, "Calling Terraform CLI providers schema command")
+
+	providerSchemas, err := wd.tf.ProvidersSchema(context.Background())
+
+	logging.HelperResourceTrace(ctx, "Called Terraform CLI providers schema command")
+
+	return providerSchemas, err
 }

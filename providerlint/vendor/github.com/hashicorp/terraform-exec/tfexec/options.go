@@ -14,6 +14,16 @@ func AllowMissingConfig(allowMissingConfig bool) *AllowMissingConfigOption {
 	return &AllowMissingConfigOption{allowMissingConfig}
 }
 
+// AllowMissingOption represents the -allow-missing flag.
+type AllowMissingOption struct {
+	allowMissing bool
+}
+
+// AllowMissing represents the -allow-missing flag.
+func AllowMissing(allowMissing bool) *AllowMissingOption {
+	return &AllowMissingOption{allowMissing}
+}
+
 // BackendOption represents the -backend flag.
 type BackendOption struct {
 	backend bool
@@ -106,6 +116,15 @@ type DestroyFlagOption struct {
 // Destroy represents the -destroy flag.
 func Destroy(destroy bool) *DestroyFlagOption {
 	return &DestroyFlagOption{destroy}
+}
+
+type DrawCyclesOption struct {
+	drawCycles bool
+}
+
+// DrawCycles represents the -draw-cycles flag.
+func DrawCycles(drawCycles bool) *DrawCyclesOption {
+	return &DrawCyclesOption{drawCycles}
 }
 
 type DryRunOption struct {
@@ -210,6 +229,15 @@ type ParallelismOption struct {
 
 func Parallelism(n int) *ParallelismOption {
 	return &ParallelismOption{n}
+}
+
+type GraphPlanOption struct {
+	file string
+}
+
+// GraphPlan represents the -plan flag which is a specified plan file string
+func GraphPlan(file string) *GraphPlanOption {
+	return &GraphPlanOption{file}
 }
 
 type PlatformOption struct {
@@ -334,6 +362,14 @@ func Target(resource string) *TargetOption {
 	return &TargetOption{resource}
 }
 
+type GraphTypeOption struct {
+	graphType string
+}
+
+func GraphType(graphType string) *GraphTypeOption {
+	return &GraphTypeOption{graphType}
+}
+
 type UpdateOption struct {
 	update bool
 }
@@ -372,22 +408,4 @@ type VerifyPluginsOption struct {
 
 func VerifyPlugins(verifyPlugins bool) *VerifyPluginsOption {
 	return &VerifyPluginsOption{verifyPlugins}
-}
-
-// FromStateOption represents the -from-state option of the "terraform add" command.
-type FromStateOption struct {
-	fromState bool
-}
-
-func FromState(fromState bool) *FromStateOption {
-	return &FromStateOption{fromState}
-}
-
-// IncludeOptionalOption represents the -optional option of the "terraform add" command.
-type IncludeOptionalOption struct {
-	includeOptional bool
-}
-
-func IncludeOptional(includeOptional bool) *IncludeOptionalOption {
-	return &IncludeOptionalOption{includeOptional}
 }

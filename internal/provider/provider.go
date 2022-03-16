@@ -118,6 +118,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/outposts"
@@ -485,6 +486,7 @@ func Provider() *schema.Provider {
 			"aws_connect_instance":                    connect.DataSourceInstance(),
 			"aws_connect_lambda_function_association": connect.DataSourceLambdaFunctionAssociation(),
 			"aws_connect_prompt":                      connect.DataSourcePrompt(),
+			"aws_connect_queue":                       connect.DataSourceQueue(),
 			"aws_connect_quick_connect":               connect.DataSourceQuickConnect(),
 
 			"aws_cur_report_definition": cur.DataSourceReportDefinition(),
@@ -531,6 +533,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_local_gateway":                          ec2.DataSourceLocalGateway(),
 			"aws_ec2_local_gateways":                         ec2.DataSourceLocalGateways(),
 			"aws_ec2_managed_prefix_list":                    ec2.DataSourceManagedPrefixList(),
+			"aws_ec2_serial_console_access":                  ec2.DataSourceSerialConsoleAccess(),
 			"aws_ec2_spot_price":                             ec2.DataSourceSpotPrice(),
 			"aws_ec2_transit_gateway":                        ec2.DataSourceTransitGateway(),
 			"aws_ec2_transit_gateway_connect":                ec2.DataSourceTransitGatewayConnect(),
@@ -577,6 +580,8 @@ func Provider() *schema.Provider {
 			"aws_ecr_authorization_token": ecr.DataSourceAuthorizationToken(),
 			"aws_ecr_image":               ecr.DataSourceImage(),
 			"aws_ecr_repository":          ecr.DataSourceRepository(),
+
+			"aws_ecrpublic_authorization_token": ecrpublic.DataSourceAuthorizationToken(),
 
 			"aws_ecs_cluster":              ecs.DataSourceCluster(),
 			"aws_ecs_container_definition": ecs.DataSourceContainerDefinition(),
@@ -711,6 +716,17 @@ func Provider() *schema.Provider {
 
 			"aws_neptune_engine_version":        neptune.DataSourceEngineVersion(),
 			"aws_neptune_orderable_db_instance": neptune.DataSourceOrderableDBInstance(),
+
+			"aws_networkmanager_connection":      networkmanager.DataSourceConnection(),
+			"aws_networkmanager_connections":     networkmanager.DataSourceConnections(),
+			"aws_networkmanager_device":          networkmanager.DataSourceDevice(),
+			"aws_networkmanager_devices":         networkmanager.DataSourceDevices(),
+			"aws_networkmanager_global_network":  networkmanager.DataSourceGlobalNetwork(),
+			"aws_networkmanager_global_networks": networkmanager.DataSourceGlobalNetworks(),
+			"aws_networkmanager_link":            networkmanager.DataSourceLink(),
+			"aws_networkmanager_links":           networkmanager.DataSourceLinks(),
+			"aws_networkmanager_site":            networkmanager.DataSourceSite(),
+			"aws_networkmanager_sites":           networkmanager.DataSourceSites(),
 
 			"aws_organizations_delegated_administrators": organizations.DataSourceDelegatedAdministrators(),
 			"aws_organizations_delegated_services":       organizations.DataSourceDelegatedServices(),
@@ -910,6 +926,7 @@ func Provider() *schema.Provider {
 			"aws_appmesh_virtual_router":  appmesh.ResourceVirtualRouter(),
 			"aws_appmesh_virtual_service": appmesh.ResourceVirtualService(),
 
+			"aws_apprunner_vpc_connector":                      apprunner.ResourceVpcConnector(),
 			"aws_apprunner_auto_scaling_configuration_version": apprunner.ResourceAutoScalingConfigurationVersion(),
 			"aws_apprunner_connection":                         apprunner.ResourceConnection(),
 			"aws_apprunner_custom_domain_association":          apprunner.ResourceCustomDomainAssociation(),
@@ -1090,7 +1107,9 @@ func Provider() *schema.Provider {
 			"aws_connect_lambda_function_association": connect.ResourceLambdaFunctionAssociation(),
 			"aws_connect_queue":                       connect.ResourceQueue(),
 			"aws_connect_quick_connect":               connect.ResourceQuickConnect(),
+			"aws_connect_routing_profile":             connect.ResourceRoutingProfile(),
 			"aws_connect_security_profile":            connect.ResourceSecurityProfile(),
+			"aws_connect_user_hierarchy_structure":    connect.ResourceUserHierarchyStructure(),
 
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
 
@@ -1201,6 +1220,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_managed_prefix_list":                          ec2.ResourceManagedPrefixList(),
 			"aws_ec2_managed_prefix_list_entry":                    ec2.ResourceManagedPrefixListEntry(),
 			"aws_ec2_network_insights_path":                        ec2.ResourceNetworkInsightsPath(),
+			"aws_ec2_serial_console_access":                        ec2.ResourceSerialConsoleAccess(),
 			"aws_ec2_subnet_cidr_reservation":                      ec2.ResourceSubnetCIDRReservation(),
 			"aws_ec2_tag":                                          ec2.ResourceTag(),
 			"aws_ec2_traffic_mirror_filter":                        ec2.ResourceTrafficMirrorFilter(),
@@ -1260,6 +1280,7 @@ func Provider() *schema.Provider {
 			"aws_vpc_endpoint_connection_notification":             ec2.ResourceVPCEndpointConnectionNotification(),
 			"aws_vpc_endpoint_policy":                              ec2.ResourceVPCEndpointPolicy(),
 			"aws_vpc_endpoint_route_table_association":             ec2.ResourceVPCEndpointRouteTableAssociation(),
+			"aws_vpc_endpoint_security_group_association":          ec2.ResourceVPCEndpointSecurityGroupAssociation(),
 			"aws_vpc_endpoint_service":                             ec2.ResourceVPCEndpointService(),
 			"aws_vpc_endpoint_service_allowed_principal":           ec2.ResourceVPCEndpointServiceAllowedPrincipal(),
 			"aws_vpc_endpoint_subnet_association":                  ec2.ResourceVPCEndpointSubnetAssociation(),
@@ -1384,6 +1405,7 @@ func Provider() *schema.Provider {
 			"aws_gamelift_alias":              gamelift.ResourceAlias(),
 			"aws_gamelift_build":              gamelift.ResourceBuild(),
 			"aws_gamelift_fleet":              gamelift.ResourceFleet(),
+			"aws_gamelift_game_server_group":  gamelift.ResourceGameServerGroup(),
 			"aws_gamelift_game_session_queue": gamelift.ResourceGameSessionQueue(),
 			"aws_gamelift_script":             gamelift.ResourceScript(),
 
@@ -1413,8 +1435,9 @@ func Provider() *schema.Provider {
 			"aws_glue_user_defined_function":            glue.ResourceUserDefinedFunction(),
 			"aws_glue_workflow":                         glue.ResourceWorkflow(),
 
-			"aws_grafana_workspace":           grafana.ResourceWorkspace(),
-			"aws_grafana_license_association": grafana.ResourceLicenseAssociation(),
+			"aws_grafana_license_association":          grafana.ResourceLicenseAssociation(),
+			"aws_grafana_workspace":                    grafana.ResourceWorkspace(),
+			"aws_grafana_workspace_saml_configuration": grafana.ResourceWorkspaceSamlConfiguration(),
 
 			"aws_guardduty_detector":                   guardduty.ResourceDetector(),
 			"aws_guardduty_filter":                     guardduty.ResourceFilter(),
@@ -1575,6 +1598,16 @@ func Provider() *schema.Provider {
 			"aws_networkfirewall_logging_configuration": networkfirewall.ResourceLoggingConfiguration(),
 			"aws_networkfirewall_resource_policy":       networkfirewall.ResourceResourcePolicy(),
 			"aws_networkfirewall_rule_group":            networkfirewall.ResourceRuleGroup(),
+
+			"aws_networkmanager_connection":                               networkmanager.ResourceConnection(),
+			"aws_networkmanager_customer_gateway_association":             networkmanager.ResourceCustomerGatewayAssociation(),
+			"aws_networkmanager_device":                                   networkmanager.ResourceDevice(),
+			"aws_networkmanager_global_network":                           networkmanager.ResourceGlobalNetwork(),
+			"aws_networkmanager_link":                                     networkmanager.ResourceLink(),
+			"aws_networkmanager_link_association":                         networkmanager.ResourceLinkAssociation(),
+			"aws_networkmanager_site":                                     networkmanager.ResourceSite(),
+			"aws_networkmanager_transit_gateway_connect_peer_association": networkmanager.ResourceTransitGatewayConnectPeerAssociation(),
+			"aws_networkmanager_transit_gateway_registration":             networkmanager.ResourceTransitGatewayRegistration(),
 
 			"aws_opsworks_application":       opsworks.ResourceApplication(),
 			"aws_opsworks_custom_layer":      opsworks.ResourceCustomLayer(),

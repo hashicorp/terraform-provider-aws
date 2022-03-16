@@ -1,7 +1,6 @@
 package logging
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,7 +10,6 @@ import (
 	"syscall"
 
 	"github.com/hashicorp/logutils"
-	"github.com/hashicorp/terraform-plugin-log/tfsdklog"
 	testing "github.com/mitchellh/go-testing-interface"
 )
 
@@ -125,7 +123,7 @@ func LogLevel() string {
 
 // IsDebugOrHigher returns whether or not the current log level is debug or trace
 func IsDebugOrHigher() bool {
-	level := string(LogLevel())
+	level := LogLevel()
 	return level == "DEBUG" || level == "TRACE"
 }
 
@@ -137,13 +135,4 @@ func isValidLogLevel(level string) bool {
 	}
 
 	return false
-}
-
-// GetTestLogContext creates a context that is registered to the SDK log sink.
-// This function is for internal usage only and is not supported by the project's
-// compatibility promises.
-func GetTestLogContext(t testing.T) context.Context {
-	ctx := context.Background()
-	ctx = tfsdklog.RegisterTestSink(ctx, t)
-	return ctx
 }

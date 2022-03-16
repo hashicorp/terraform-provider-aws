@@ -1796,8 +1796,55 @@ func FindVPCMainRouteTable(conn *ec2.EC2, id string) (*ec2.RouteTable, error) {
 	return FindRouteTable(conn, input)
 }
 
-// FindVPCEndpointByID returns the VPC endpoint corresponding to the specified identifier.
-// Returns NotFoundError if no VPC endpoint is found.
+func FindVPCEndpoint(conn *ec2.EC2, input *ec2.DescribeVpcEndpointsInput) (*ec2.VpcEndpoint, error) {
+	output, err := FindVPCEndpoints(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindVPCEndpoints(conn *ec2.EC2, input *ec2.DescribeVpcEndpointsInput) ([]*ec2.VpcEndpoint, error) {
+	var output []*ec2.VpcEndpoint
+
+	err := conn.DescribeVpcEndpointsPages(input, func(page *ec2.DescribeVpcEndpointsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.VpcEndpoints {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcEndpointIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func FindVPCEndpointByID(conn *ec2.EC2, vpcEndpointID string) (*ec2.VpcEndpoint, error) {
 	input := &ec2.DescribeVpcEndpointsInput{
 		VpcEndpointIds: aws.StringSlice([]string{vpcEndpointID}),
@@ -1826,27 +1873,6 @@ func FindVPCEndpointByID(conn *ec2.EC2, vpcEndpointID string) (*ec2.VpcEndpoint,
 	return output, nil
 }
 
-func FindVPCEndpoint(conn *ec2.EC2, input *ec2.DescribeVpcEndpointsInput) (*ec2.VpcEndpoint, error) {
-	output, err := conn.DescribeVpcEndpoints(input)
-
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcEndpointIdNotFound) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.VpcEndpoints) == 0 || output.VpcEndpoints[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.VpcEndpoints[0], nil
-}
-
 // FindVPCEndpointRouteTableAssociationExists returns NotFoundError if no association for the specified VPC endpoint and route table IDs is found.
 func FindVPCEndpointRouteTableAssociationExists(conn *ec2.EC2, vpcEndpointID string, routeTableID string) error {
 	vpcEndpoint, err := FindVPCEndpointByID(conn, vpcEndpointID)
@@ -1862,7 +1888,26 @@ func FindVPCEndpointRouteTableAssociationExists(conn *ec2.EC2, vpcEndpointID str
 	}
 
 	return &resource.NotFoundError{
-		LastError: fmt.Errorf("VPC Endpoint Route Table Association (%s/%s) not found", vpcEndpointID, routeTableID),
+		LastError: fmt.Errorf("VPC Endpoint (%s) Route Table (%s) Association not found", vpcEndpointID, routeTableID),
+	}
+}
+
+// FindVPCEndpointSecurityGroupAssociationExists returns NotFoundError if no association for the specified VPC endpoint and security group IDs is found.
+func FindVPCEndpointSecurityGroupAssociationExists(conn *ec2.EC2, vpcEndpointID, securityGroupID string) error {
+	vpcEndpoint, err := FindVPCEndpointByID(conn, vpcEndpointID)
+
+	if err != nil {
+		return err
+	}
+
+	for _, group := range vpcEndpoint.Groups {
+		if aws.StringValue(group.GroupId) == securityGroupID {
+			return nil
+		}
+	}
+
+	return &resource.NotFoundError{
+		LastError: fmt.Errorf("VPC Endpoint (%s) Security Group (%s) Association not found", vpcEndpointID, securityGroupID),
 	}
 }
 
