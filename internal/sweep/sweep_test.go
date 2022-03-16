@@ -69,6 +69,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/keyspaces"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalytics"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
