@@ -63,6 +63,12 @@ func ResourceConfigurationProfile() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "AWS.Freeform",
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z\.]+`), ""),
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"validator": {
@@ -119,6 +125,10 @@ func resourceConfigurationProfileCreate(d *schema.ResourceData, meta interface{}
 
 	if v, ok := d.GetOk("validator"); ok && v.(*schema.Set).Len() > 0 {
 		input.Validators = expandAppconfigValidators(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("type"); ok {
+		input.Type = aws.String(v.(string))
 	}
 
 	profile, err := conn.CreateConfigurationProfile(input)
