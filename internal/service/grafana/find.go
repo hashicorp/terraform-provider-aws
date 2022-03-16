@@ -54,7 +54,7 @@ func FindSamlConfigurationByID(conn *managedgrafana.ManagedGrafana, id string) (
 
 	output, err := conn.DescribeWorkspaceAuthentication(input)
 
-	if tfawserr.ErrCodeEquals(err, managedgrafana.ErrCodeResourceNotFoundException) || *output.Authentication.Saml.Status == managedgrafana.SamlConfigurationStatusNotConfigured {
+	if tfawserr.ErrCodeEquals(err, managedgrafana.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -67,6 +67,13 @@ func FindSamlConfigurationByID(conn *managedgrafana.ManagedGrafana, id string) (
 
 	if output == nil || output.Authentication == nil || output.Authentication.Saml == nil {
 		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if status := aws.StringValue(output.Authentication.Saml.Status); status == managedgrafana.SamlConfigurationStatusNotConfigured {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
 	}
 
 	return output.Authentication.Saml, nil
