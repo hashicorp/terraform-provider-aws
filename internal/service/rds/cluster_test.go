@@ -2342,16 +2342,16 @@ resource "aws_rds_cluster" "test" {
 func testAccClusterConfig_StorageType(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-	apply_immediately         = true
-	cluster_identifier        = %q
-	db_cluster_instance_class = "db.r6gd.xlarge"
-	engine                    = "mysql"
-	storage_type              = "io1"
-	allocated_storage         = 100
-	iops                      = 1000
-	master_password           = "mustbeeightcharaters"
-	master_username           = "test"
-	skip_final_snapshot       = true
+  apply_immediately         = true
+  cluster_identifier        = %[1]q
+  db_cluster_instance_class = "db.r6gd.xlarge"
+  engine                    = "mysql"
+  storage_type              = "io1"
+  allocated_storage         = 100
+  iops                      = 1000
+  master_password           = "mustbeeightcharaters"
+  master_username           = "test"
+  skip_final_snapshot       = true
 }
 `, rName)
 }
@@ -2359,16 +2359,16 @@ resource "aws_rds_cluster" "test" {
 func testAccClusterConfig_AllocatedStorage(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-	apply_immediately         = true
-	cluster_identifier        = %q
-	db_cluster_instance_class = "db.r6gd.xlarge"
-	engine                    = "mysql"
-	storage_type              = "io1"
-	allocated_storage         = 100
-	iops                      = 1000
-	master_password           = "mustbeeightcharaters"
-	master_username           = "test"
-	skip_final_snapshot       = true
+  apply_immediately         = true
+  cluster_identifier        = %[1]q
+  db_cluster_instance_class = "db.r6gd.xlarge"
+  engine                    = "mysql"
+  storage_type              = "io1"
+  allocated_storage         = 100
+  iops                      = 1000
+  master_password           = "mustbeeightcharaters"
+  master_username           = "test"
+  skip_final_snapshot       = true
 }
 `, rName)
 }
@@ -2376,16 +2376,16 @@ resource "aws_rds_cluster" "test" {
 func testAccClusterConfig_Iops(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-	apply_immediately         = true
-	cluster_identifier        = %q
-	db_cluster_instance_class = "db.r6gd.xlarge"
-	engine                    = "mysql"
-	storage_type              = "io1"
-	allocated_storage         = 100
-	iops                      = 1000
-	master_password           = "mustbeeightcharaters"
-	master_username           = "test"
-	skip_final_snapshot       = true
+  apply_immediately         = true
+  cluster_identifier        = %[1]q
+  db_cluster_instance_class = "db.r6gd.xlarge"
+  engine                    = "mysql"
+  storage_type              = "io1"
+  allocated_storage         = 100
+  iops                      = 1000
+  master_password           = "mustbeeightcharaters"
+  master_username           = "test"
+  skip_final_snapshot       = true
 }
 `, rName)
 }
@@ -2393,16 +2393,16 @@ resource "aws_rds_cluster" "test" {
 func testAccClusterConfig_DbClusterInstanceClass(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-	apply_immediately         = true
-	cluster_identifier        = %q
-	db_cluster_instance_class = "db.r6gd.xlarge"
-	engine                    = "mysql"
-	storage_type              = "io1"
-	allocated_storage         = 100
-	iops                      = 1000
-	master_password           = "mustbeeightcharaters"
-	master_username           = "test"
-	skip_final_snapshot       = true
+  apply_immediately         = true
+  cluster_identifier        = %[1]q
+  db_cluster_instance_class = "db.r6gd.xlarge"
+  engine                    = "mysql"
+  storage_type              = "io1"
+  allocated_storage         = 100
+  iops                      = 1000
+  master_password           = "mustbeeightcharaters"
+  master_username           = "test"
+  skip_final_snapshot       = true
 }
 `, rName)
 }
