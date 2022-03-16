@@ -364,12 +364,12 @@ resource "aws_rds_cluster" "test1" {
 }
 
 resource "aws_rds_cluster_instance" "test1" {
- identifier           = "%[1]s-test1-primary"
- cluster_identifier   = aws_rds_cluster.test1.id
- instance_class       = "db.t2.small"
- engine               = aws_rds_cluster.test1.engine
- engine_version       = aws_rds_cluster.test1.engine_version
- db_subnet_group_name = aws_db_subnet_group.test.name
+  identifier           = "%[1]s-test1-primary"
+  cluster_identifier   = aws_rds_cluster.test1.id
+  instance_class       = "db.t2.small"
+  engine               = aws_rds_cluster.test1.engine
+  engine_version       = aws_rds_cluster.test1.engine_version
+  db_subnet_group_name = aws_db_subnet_group.test.name
 }
 
 resource "aws_rds_cluster" "test2" {
@@ -385,12 +385,12 @@ resource "aws_rds_cluster" "test2" {
 }
 
 resource "aws_rds_cluster_instance" "test2" {
- identifier           = "%[1]s-test2-primary"
- cluster_identifier   = aws_rds_cluster.test2.id
- instance_class       = "db.t2.small"
- engine               = aws_rds_cluster.test2.engine
- engine_version       = aws_rds_cluster.test2.engine_version
- db_subnet_group_name = aws_db_subnet_group.test.name
+  identifier           = "%[1]s-test2-primary"
+  cluster_identifier   = aws_rds_cluster.test2.id
+  instance_class       = "db.t2.small"
+  engine               = aws_rds_cluster.test2.engine
+  engine_version       = aws_rds_cluster.test2.engine_version
+  db_subnet_group_name = aws_db_subnet_group.test.name
 }
 
 resource "aws_dms_endpoint" "source" {
@@ -448,7 +448,7 @@ resource "aws_dms_replication_task" "test" {
 
   target_endpoint_arn = aws_dms_endpoint.target.endpoint_arn
 
-  depends_on = [aws_rds_cluster.test1, aws_rds_cluster.test2]
+  depends_on = [aws_rds_cluster_instance.test1, aws_rds_cluster_instance.test2]
 }
 `, rName, startTask))
 }
