@@ -8,9 +8,11 @@ const (
 	ErrCodeMethodNotAllowed                          = "MethodNotAllowed"
 	ErrCodeNoSuchConfiguration                       = "NoSuchConfiguration"
 	ErrCodeNoSuchCORSConfiguration                   = "NoSuchCORSConfiguration"
+	ErrCodeNoSuchLifecycleConfiguration              = "NoSuchLifecycleConfiguration"
 	ErrCodeNoSuchPublicAccessBlockConfiguration      = "NoSuchPublicAccessBlockConfiguration"
 	ErrCodeNoSuchWebsiteConfiguration                = "NoSuchWebsiteConfiguration"
 	ErrCodeObjectLockConfigurationNotFound           = "ObjectLockConfigurationNotFoundError"
 	ErrCodeOperationAborted                          = "OperationAborted"
+	ErrCodeReplicationConfigurationNotFound          = "ReplicationConfigurationNotFoundError"
 	ErrCodeServerSideEncryptionConfigurationNotFound = "ServerSideEncryptionConfigurationNotFoundError"
 )
