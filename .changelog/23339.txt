@@ -1,5 +1,5 @@
 ```release-note:bug
-resource/aws_cloudformation_stack_set: Fix `call_as` argument
+resource/aws_cloudformation_stack_set: Use `call_as` attribute when reading stack sets, fixing an error raised when using a delegated admistrator account
 ```
 
 ```release-note:enhancement
