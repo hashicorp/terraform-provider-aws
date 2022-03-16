@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_s3_bucket_replication_configuration: Set `rule.id` as Computed to prevent drift when the value is not configured
+```
+
+```release-note:bug
+resource/aws_s3_bucket_replication_configuration: Change `rule` configuration block to list instead of set
+```
