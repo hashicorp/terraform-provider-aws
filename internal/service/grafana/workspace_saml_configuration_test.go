@@ -106,18 +106,18 @@ func testAccGrafanaWorkspaceSamlConfiguration_assertions(t *testing.T) {
 }
 
 func testAccWorkspaceSamlConfigurationConfigProvider_basic(rName string) string {
-	return acctest.ConfigCompose(testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"), `
 resource "aws_grafana_workspace_saml_configuration" "test" {
   admin_role_values  = ["admin"]
   editor_role_values = ["editor"]
   idp_metadata_xml   = file("test-fixtures/idp_metadata.xml")
   workspace_id       = aws_grafana_workspace.test.id
 }
-`))
+`)
 }
 
 func testAccWorkspaceSamlConfigurationConfigProvider_loginValidity(rName string) string {
-	return acctest.ConfigCompose(testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"), `
 resource "aws_grafana_workspace_saml_configuration" "test" {
   admin_role_values       = ["admin"]
   editor_role_values      = ["editor"]
@@ -125,11 +125,11 @@ resource "aws_grafana_workspace_saml_configuration" "test" {
   login_validity_duration = 1440
   workspace_id            = aws_grafana_workspace.test.id
 }
-`))
+`)
 }
 
 func testAccWorkspaceSamlConfigurationConfigProvider_assertions(rName string) string {
-	return acctest.ConfigCompose(testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"), `
 resource "aws_grafana_workspace_saml_configuration" "test" {
   admin_role_values  = ["admin"]
   editor_role_values = ["editor"]
@@ -142,7 +142,7 @@ resource "aws_grafana_workspace_saml_configuration" "test" {
   idp_metadata_xml   = file("test-fixtures/idp_metadata.xml")
   workspace_id       = aws_grafana_workspace.test.id
 }
-`))
+`)
 }
 
 func testAccCheckWorkspaceSamlConfigurationExists(name string) resource.TestCheckFunc {
