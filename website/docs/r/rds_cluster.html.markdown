@@ -109,7 +109,7 @@ resource "aws_rds_cluster" "example" {
   db_cluster_instance_class = "db.r6gd.xlarge"
   storage_type              = "io1"
   allocated_storage         = 100
-  iops       		            = 1000
+  iops                      = 1000
   master_username           = "test"
   master_password           = "mustbeeightcharaters"
 }
