@@ -1435,8 +1435,9 @@ func Provider() *schema.Provider {
 			"aws_glue_user_defined_function":            glue.ResourceUserDefinedFunction(),
 			"aws_glue_workflow":                         glue.ResourceWorkflow(),
 
-			"aws_grafana_workspace":           grafana.ResourceWorkspace(),
-			"aws_grafana_license_association": grafana.ResourceLicenseAssociation(),
+			"aws_grafana_license_association":          grafana.ResourceLicenseAssociation(),
+			"aws_grafana_workspace":                    grafana.ResourceWorkspace(),
+			"aws_grafana_workspace_saml_configuration": grafana.ResourceWorkspaceSamlConfiguration(),
 
 			"aws_guardduty_detector":                   guardduty.ResourceDetector(),
 			"aws_guardduty_filter":                     guardduty.ResourceFilter(),
