@@ -391,7 +391,7 @@ func dmsStartReplicationTask(id string, conn *dms.DatabaseMigrationService) erro
 }
 
 func dmsStopReplicationTask(id string, conn *dms.DatabaseMigrationService) error {
-	log.Printf("[DEBUG] Starting DMS Replication Task: (%s)", id)
+	log.Printf("[DEBUG] Stopping DMS Replication Task: (%s)", id)
 
 	task, err := FindReplicationTaskByID(conn, id)
 	if err != nil {
