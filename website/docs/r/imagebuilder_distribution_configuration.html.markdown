@@ -81,6 +81,8 @@ The following arguments are optional:
 
 * `user_groups` - (Optional) Set of EC2 launch permission user groups to assign. Use `all` to distribute a public AMI.
 * `user_ids` - (Optional) Set of AWS Account identifiers to assign.
+* `organization_arns` - (Optional) Set of AWS Organization ARNs to assign.
+* `organizational_unit_arns` - (Optional) Set of AWS Organizational Unit ARNs to assign.
 
 ### container_distribution_configuration
 

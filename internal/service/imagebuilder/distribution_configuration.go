@@ -89,6 +89,22 @@ func ResourceDistributionConfiguration() *schema.Resource {
 														ValidateFunc: verify.ValidAccountID,
 													},
 												},
+												"organization_arns": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
+												"organizational_unit_arns": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
 											},
 										},
 									},
@@ -503,6 +519,14 @@ func expandLaunchPermissionConfiguration(tfMap map[string]interface{}) *imagebui
 		apiObject.UserGroups = flex.ExpandStringSet(v)
 	}
 
+	if v, ok := tfMap["organization_arns"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.OrganizationArns = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["organizational_unit_arns"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.OrganizationalUnitArns = flex.ExpandStringSet(v)
+	}
+
 	return apiObject
 }
 
@@ -677,6 +701,14 @@ func flattenLaunchPermissionConfiguration(apiObject *imagebuilder.LaunchPermissi
 
 	if v := apiObject.UserIds; v != nil {
 		tfMap["user_ids"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.OrganizationArns; v != nil {
+		tfMap["organization_arns"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.OrganizationalUnitArns; v != nil {
+		tfMap["organizational_unit_arns"] = aws.StringValueSlice(v)
 	}
 
 	return tfMap
