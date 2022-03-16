@@ -27,9 +27,12 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_ec2_transit_gateway_connect_peer: Add `arn` attribute ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
+* data-source/aws_imagebuilder_image: Add `container_recipe_arn` attribute ([#23647](https://github.com/hashicorp/terraform-provider-aws/issues/23647))
 * data_source/aws_redshift_cluster: Add `availability_zone_relocation_enabled` attribute. ([#20812](https://github.com/hashicorp/terraform-provider-aws/issues/20812))
+* resource/aws_cloud9_environment_ec2: Add `connection_type` and `image_id` arguments ([#19195](https://github.com/hashicorp/terraform-provider-aws/issues/19195))
 * resource/aws_ec2_transit_gateway_connect_peer: Add `arn` attribute ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
 * resource/aws_ecs_service: `enable_ecs_managed_tags`, `load_balancer`, `propagate_tags` and `service_registries` can now be updated in-place ([#23600](https://github.com/hashicorp/terraform-provider-aws/issues/23600))
+* resource/aws_imagebuilder_image: Add `container_recipe_arn` argument ([#23647](https://github.com/hashicorp/terraform-provider-aws/issues/23647))
 * resource/aws_iot_certificate: Add `ca_pem` argument, enabling the use of existing IoT certificates ([#23126](https://github.com/hashicorp/terraform-provider-aws/issues/23126))
 * resource/aws_iot_topic_rule: Add `cloudwatch_logs` and `error_action.cloudwatch_logs` arguments ([#23440](https://github.com/hashicorp/terraform-provider-aws/issues/23440))
 * resource/aws_launch_configuration: Add `ephemeral_block_device.no_device` argument ([#23152](https://github.com/hashicorp/terraform-provider-aws/issues/23152))
@@ -44,6 +47,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_amplify_app: Allow `repository` to be updated in-place ([#23517](https://github.com/hashicorp/terraform-provider-aws/issues/23517))
+* resource/aws_api_gateway_stage: Fixed issue with providing `cache_cluster_size` without `cache_cluster_enabled` resulted in waiter error ([#23091](https://github.com/hashicorp/terraform-provider-aws/issues/23091))
 * resource/aws_cloudsearch_domain: Set correct defaults for `index_field.facet`, `index_field.highlight`, `index_field.return`, `index_field.search` and `index_field.sort`, preventing spurious resource diffs ([#23687](https://github.com/hashicorp/terraform-provider-aws/issues/23687))
 * resource/aws_db_instance: Fix issues where configured update timeout was not respected, and update would fail if instance were in the process of being configured. ([#23560](https://github.com/hashicorp/terraform-provider-aws/issues/23560))
 * resource/aws_rds_event_subscription: Fix issue where `enabled` was sometimes not updated ([#23560](https://github.com/hashicorp/terraform-provider-aws/issues/23560))
