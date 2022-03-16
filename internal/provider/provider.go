@@ -118,6 +118,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/outposts"
@@ -580,6 +581,8 @@ func Provider() *schema.Provider {
 			"aws_ecr_image":               ecr.DataSourceImage(),
 			"aws_ecr_repository":          ecr.DataSourceRepository(),
 
+			"aws_ecrpublic_authorization_token": ecrpublic.DataSourceAuthorizationToken(),
+
 			"aws_ecs_cluster":              ecs.DataSourceCluster(),
 			"aws_ecs_container_definition": ecs.DataSourceContainerDefinition(),
 			"aws_ecs_service":              ecs.DataSourceService(),
@@ -713,6 +716,17 @@ func Provider() *schema.Provider {
 
 			"aws_neptune_engine_version":        neptune.DataSourceEngineVersion(),
 			"aws_neptune_orderable_db_instance": neptune.DataSourceOrderableDBInstance(),
+
+			"aws_networkmanager_connection":      networkmanager.DataSourceConnection(),
+			"aws_networkmanager_connections":     networkmanager.DataSourceConnections(),
+			"aws_networkmanager_device":          networkmanager.DataSourceDevice(),
+			"aws_networkmanager_devices":         networkmanager.DataSourceDevices(),
+			"aws_networkmanager_global_network":  networkmanager.DataSourceGlobalNetwork(),
+			"aws_networkmanager_global_networks": networkmanager.DataSourceGlobalNetworks(),
+			"aws_networkmanager_link":            networkmanager.DataSourceLink(),
+			"aws_networkmanager_links":           networkmanager.DataSourceLinks(),
+			"aws_networkmanager_site":            networkmanager.DataSourceSite(),
+			"aws_networkmanager_sites":           networkmanager.DataSourceSites(),
 
 			"aws_organizations_delegated_administrators": organizations.DataSourceDelegatedAdministrators(),
 			"aws_organizations_delegated_services":       organizations.DataSourceDelegatedServices(),
@@ -1390,6 +1404,7 @@ func Provider() *schema.Provider {
 			"aws_gamelift_alias":              gamelift.ResourceAlias(),
 			"aws_gamelift_build":              gamelift.ResourceBuild(),
 			"aws_gamelift_fleet":              gamelift.ResourceFleet(),
+			"aws_gamelift_game_server_group":  gamelift.ResourceGameServerGroup(),
 			"aws_gamelift_game_session_queue": gamelift.ResourceGameSessionQueue(),
 			"aws_gamelift_script":             gamelift.ResourceScript(),
 
@@ -1582,6 +1597,16 @@ func Provider() *schema.Provider {
 			"aws_networkfirewall_logging_configuration": networkfirewall.ResourceLoggingConfiguration(),
 			"aws_networkfirewall_resource_policy":       networkfirewall.ResourceResourcePolicy(),
 			"aws_networkfirewall_rule_group":            networkfirewall.ResourceRuleGroup(),
+
+			"aws_networkmanager_connection":                               networkmanager.ResourceConnection(),
+			"aws_networkmanager_customer_gateway_association":             networkmanager.ResourceCustomerGatewayAssociation(),
+			"aws_networkmanager_device":                                   networkmanager.ResourceDevice(),
+			"aws_networkmanager_global_network":                           networkmanager.ResourceGlobalNetwork(),
+			"aws_networkmanager_link":                                     networkmanager.ResourceLink(),
+			"aws_networkmanager_link_association":                         networkmanager.ResourceLinkAssociation(),
+			"aws_networkmanager_site":                                     networkmanager.ResourceSite(),
+			"aws_networkmanager_transit_gateway_connect_peer_association": networkmanager.ResourceTransitGatewayConnectPeerAssociation(),
+			"aws_networkmanager_transit_gateway_registration":             networkmanager.ResourceTransitGatewayRegistration(),
 
 			"aws_opsworks_application":       opsworks.ResourceApplication(),
 			"aws_opsworks_custom_layer":      opsworks.ResourceCustomLayer(),

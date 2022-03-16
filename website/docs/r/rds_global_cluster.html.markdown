@@ -162,16 +162,53 @@ resource "aws_rds_global_cluster" "example" {
 }
 ```
 
+### Upgrading Engine Versions
+
+When you upgrade the version of an `aws_rds_global_cluster`, Terraform will attempt to in-place upgrade the engine versions of all associated clusters. Since the `aws_rds_cluster` resource is being updated through the `aws_rds_global_cluster`, you are likely to get an error (`Provider produced inconsistent final plan`). To avoid this, use the `lifecycle` `ignore_changes` meta argument as shown below on the `aws_rds_cluster`.
+
+```terraform
+resource "aws_rds_global_cluster" "example" {
+  global_cluster_identifier = "kyivkharkiv"
+  engine                    = "aurora-mysql"
+  engine_version            = "5.7.mysql_aurora.2.07.5"
+}
+
+resource "aws_rds_cluster" "primary" {
+  allow_major_version_upgrade = true
+  apply_immediately           = true
+  cluster_identifier          = "odessadnipro"
+  database_name               = "totoro"
+  engine                      = aws_rds_global_cluster.example.engine
+  engine_version              = aws_rds_global_cluster.example.engine_version
+  global_cluster_identifier   = aws_rds_global_cluster.example.id
+  master_password             = "satsukimae"
+  master_username             = "maesatsuki"
+  skip_final_snapshot         = true
+
+  lifecycle {
+    ignore_changes = [engine_version]
+  }
+}
+
+resource "aws_rds_cluster_instance" "primary" {
+  apply_immediately  = true
+  cluster_identifier = aws_rds_cluster.primary.id
+  engine             = aws_rds_cluster.primary.engine
+  engine_version     = aws_rds_cluster.primary.engine_version
+  identifier         = "donetsklviv"
+  instance_class     = "db.r4.large"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
-* `global_cluster_identifier` - (Required, Forces new resources) The global cluster identifier.
+* `global_cluster_identifier` - (Required, Forces new resources) Global cluster identifier.
 * `database_name` - (Optional, Forces new resources) Name for an automatically created database on cluster creation.
 * `deletion_protection` - (Optional) If the Global Cluster should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
 * `engine` - (Optional, Forces new resources) Name of the database engine to be used for this DB cluster. Terraform will only perform drift detection if a configuration value is provided. Valid values: `aurora`, `aurora-mysql`, `aurora-postgresql`. Defaults to `aurora`. Conflicts with `source_db_cluster_identifier`.
-* `engine_version` - (Optional) Engine version of the Aurora global database. Upgrading the engine version will result in all cluster members being immediately updated.
-    * **NOTE:** When the engine is set to `aurora-mysql`, an engine version compatible with global database is required. The earliest available version is `5.7.mysql_aurora.2.06.0`.
+* `engine_version` - (Optional) Engine version of the Aurora global database. The `engine`, `engine_version`, and `instance_class` (on the `aws_rds_cluster_instance`) must together support global databases. See [Using Amazon Aurora global databases](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database.html) for more information. By upgrading the engine version, Terraform will upgrade cluster members. **NOTE:** To avoid an `inconsistent final plan` error while upgrading, use the `lifecycle` `ignore_changes` for `engine_version` meta argument on the associated `aws_rds_cluster` resource as shown above in [Upgrading Engine Versions](#upgrading-engine-versions) example.
 * `force_destroy` - (Optional) Enable to remove DB Cluster members from Global Cluster on destroy. Required with `source_db_cluster_identifier`.
 * `source_db_cluster_identifier` - (Optional) Amazon Resource Name (ARN) to use as the primary DB Cluster of the Global Cluster on creation. Terraform cannot perform drift detection of this value.
 * `storage_encrypted` - (Optional, Forces new resources) Specifies whether the DB cluster is encrypted. The default is `false` unless `source_db_cluster_identifier` is specified and encrypted. Terraform will only perform drift detection if a configuration value is provided.
@@ -186,6 +223,15 @@ In addition to all arguments above, the following attributes are exported:
     * `is_writer` - Whether the member is the primary DB Cluster
 * `global_cluster_resource_id` - AWS Region-unique, immutable identifier for the global database cluster. This identifier is found in AWS CloudTrail log entries whenever the AWS KMS key for the DB cluster is accessed
 * `id` - RDS Global Cluster identifier
+
+## Timeouts
+
+`aws_rds_global_cluster` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `30 minutes`)
+- `update` - (Default `90 minutes`)
+- `delete` - (Default `30 minutes`)
 
 ## Import
 
