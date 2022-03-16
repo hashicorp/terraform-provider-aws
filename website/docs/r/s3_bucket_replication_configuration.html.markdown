@@ -116,6 +116,8 @@ resource "aws_s3_bucket" "source" {
 }
 
 resource "aws_s3_bucket_acl" "source_bucket_acl" {
+  provider = aws.central
+
   bucket = aws_s3_bucket.source.id
   acl    = "private"
 }
@@ -130,6 +132,8 @@ resource "aws_s3_bucket_versioning" "source" {
 }
 
 resource "aws_s3_bucket_replication_configuration" "replication" {
+  provider = aws.central
+
   # Must have bucket versioning enabled first
   depends_on = [aws_s3_bucket_versioning.source]
 
@@ -172,7 +176,7 @@ resource "aws_s3_bucket_versioning" "east" {
 }
 
 resource "aws_s3_bucket" "west" {
-  provider = west
+  provider = aws.west
   bucket   = "tf-test-bucket-west-12345"
 
   lifecycle {
@@ -183,7 +187,7 @@ resource "aws_s3_bucket" "west" {
 }
 
 resource "aws_s3_bucket_versioning" "west" {
-  provider = west
+  provider = aws.west
 
   bucket = aws_s3_bucket.west.id
   versioning_configuration {
@@ -211,6 +215,8 @@ resource "aws_s3_bucket_replication_configuration" "east_to_west" {
 }
 
 resource "aws_s3_bucket_replication_configuration" "west_to_east" {
+  provider = aws.west
+
   # Must have bucket versioning enabled first
   depends_on = [aws_s3_bucket_versioning.west]
 
