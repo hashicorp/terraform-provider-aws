@@ -792,32 +792,59 @@ func resourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error 
 func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
+	updateKeys := []string{
+		"block_device_mappings",
+		"capacity_reservation_specification",
+		"cpu_options",
+		"credit_specification",
+		"description",
+		"disable_api_termination",
+		"ebs_optimized",
+		"elastic_gpu_specifications",
+		"elastic_inference_accelerator",
+		"enclave_options",
+		"hibernation_options",
+		"iam_instance_profile",
+		"image_id",
+		"instance_initiated_shutdown_behavior",
+		"instance_market_options",
+		"instance_type",
+		"kernel_id",
+		"key_name",
+		"license_specification",
+		"metadata_options",
+		"monitoring",
+		"network_interfaces",
+		"placement",
+		"ram_disk_id",
+		"security_group_names",
+		"tag_specifications",
+		"user_data",
+		"vpc_security_group_ids",
+	}
 	latestVersion := int64(d.Get("latest_version").(int))
-	defaultVersion := d.Get("default_version").(int)
 
 	if d.HasChanges(updateKeys...) {
 		launchTemplateData, err := buildLaunchTemplateData(d)
+
 		if err != nil {
 			return err
 		}
 
-		launchTemplateVersionOpts := &ec2.CreateLaunchTemplateVersionInput{
+		input := &ec2.CreateLaunchTemplateVersionInput{
 			ClientToken:        aws.String(resource.UniqueId()),
-			LaunchTemplateId:   aws.String(d.Id()),
 			LaunchTemplateData: launchTemplateData,
+			LaunchTemplateId:   aws.String(d.Id()),
 		}
 
 		if v, ok := d.GetOk("description"); ok {
-			launchTemplateVersionOpts.VersionDescription = aws.String(v.(string))
+			input.VersionDescription = aws.String(v.(string))
 		}
 
-		output, err := conn.CreateLaunchTemplateVersion(launchTemplateVersionOpts)
+		output, err := conn.CreateLaunchTemplateVersion(input)
+
 		if err != nil {
-			return fmt.Errorf("error creating Launch Template (%s) Version: %w", d.Id(), err)
-		}
-
-		if output == nil || output.LaunchTemplateVersion == nil || output.LaunchTemplateVersion.VersionNumber == nil {
-			return fmt.Errorf("error creating Launch Template (%s) Version: empty output", d.Id())
+			return fmt.Errorf("error creating EC2 Launch Template (%s) Version: %w", d.Id(), err)
 		}
 
 		latestVersion = aws.Int64Value(output.LaunchTemplateVersion.VersionNumber)
@@ -825,18 +852,20 @@ func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if d.Get("update_default_version").(bool) || d.HasChange("default_version") {
-		modifyLaunchTemplateOpts := &ec2.ModifyLaunchTemplateInput{
+		input := &ec2.ModifyLaunchTemplateInput{
 			LaunchTemplateId: aws.String(d.Id()),
 		}
+
 		if d.Get("update_default_version").(bool) {
-			modifyLaunchTemplateOpts.DefaultVersion = aws.String(strconv.FormatInt(latestVersion, 10))
+			input.DefaultVersion = aws.String(strconv.FormatInt(latestVersion, 10))
 		} else if d.HasChange("default_version") {
-			modifyLaunchTemplateOpts.DefaultVersion = aws.String(strconv.Itoa(defaultVersion))
+			input.DefaultVersion = aws.String(strconv.Itoa(d.Get("default_version").(int)))
 		}
 
-		_, err := conn.ModifyLaunchTemplate(modifyLaunchTemplateOpts)
+		_, err := conn.ModifyLaunchTemplate(input)
+
 		if err != nil {
-			return fmt.Errorf("error modifying Launch Template (%s): %w", d.Id(), err)
+			return fmt.Errorf("error updating EC2 Launch Template (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -844,7 +873,7 @@ func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating EC2 Launch Template (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -1807,35 +1836,4 @@ func readPlacementFromConfig(p map[string]interface{}) *ec2.LaunchTemplatePlacem
 	}
 
 	return placement
-}
-
-var updateKeys = []string{
-	"block_device_mappings",
-	"capacity_reservation_specification",
-	"cpu_options",
-	"credit_specification",
-	"description",
-	"disable_api_termination",
-	"ebs_optimized",
-	"elastic_gpu_specifications",
-	"elastic_inference_accelerator",
-	"enclave_options",
-	"hibernation_options",
-	"iam_instance_profile",
-	"image_id",
-	"instance_initiated_shutdown_behavior",
-	"instance_market_options",
-	"instance_type",
-	"kernel_id",
-	"key_name",
-	"license_specification",
-	"metadata_options",
-	"monitoring",
-	"network_interfaces",
-	"placement",
-	"ram_disk_id",
-	"security_group_names",
-	"tag_specifications",
-	"user_data",
-	"vpc_security_group_ids",
 }
