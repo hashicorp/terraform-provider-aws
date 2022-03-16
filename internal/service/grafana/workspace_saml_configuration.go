@@ -100,12 +100,6 @@ func resourceWorkspaceSamlConfigurationUpsert(d *schema.ResourceData, meta inter
 	d.SetId(d.Get("workspace_id").(string))
 	workspace, err := FindWorkspaceByID(conn, d.Id())
 
-	if tfresource.NotFound(err) && !d.IsNewResource() {
-		log.Printf("[WARN] Grafana Workspace Saml Configuration (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
 	if err != nil {
 		return fmt.Errorf("error reading Grafana Workspace (%s): %w", d.Id(), err)
 	}
