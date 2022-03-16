@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -24,7 +23,7 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -56,7 +55,7 @@ func TestAccEC2LaunchTemplate_Name_generated(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -83,7 +82,7 @@ func TestAccEC2LaunchTemplate_Name_prefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -111,7 +110,7 @@ func TestAccEC2LaunchTemplate_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -134,7 +133,7 @@ func TestAccEC2LaunchTemplate_BlockDeviceMappings_ebs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -165,7 +164,7 @@ func TestAccEC2LaunchTemplate_BlockDeviceMappingsEBS_deleteOnTermination(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -207,7 +206,7 @@ func TestAccEC2LaunchTemplate_BlockDeviceMappingsEBS_gp3(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -240,7 +239,7 @@ func TestAccEC2LaunchTemplate_ebsOptimized(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -295,7 +294,7 @@ func TestAccEC2LaunchTemplate_elasticInferenceAccelerator(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -331,7 +330,7 @@ func TestAccEC2LaunchTemplate_NetworkInterfaces_deleteOnTermination(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -387,7 +386,7 @@ func TestAccEC2LaunchTemplate_data(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -432,7 +431,7 @@ func TestAccEC2LaunchTemplate_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -467,7 +466,7 @@ func TestAccEC2LaunchTemplate_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -507,7 +506,7 @@ func TestAccEC2LaunchTemplate_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -552,7 +551,7 @@ func TestAccEC2LaunchTemplate_CapacityReservation_preference(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -578,7 +577,7 @@ func TestAccEC2LaunchTemplate_CapacityReservation_target(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -604,7 +603,7 @@ func TestAccEC2LaunchTemplate_cpuOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -625,7 +624,7 @@ func TestAccEC2LaunchTemplate_CreditSpecification_nonBurstable(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -652,7 +651,7 @@ func TestAccEC2LaunchTemplate_CreditSpecification_t2(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -680,7 +679,7 @@ func TestAccEC2LaunchTemplate_CreditSpecification_t3(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -709,7 +708,7 @@ func TestAccEC2LaunchTemplate_IAMInstanceProfile_emptyBlock(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -731,7 +730,7 @@ func TestAccEC2LaunchTemplate_networkInterface(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -762,7 +761,7 @@ func TestAccEC2LaunchTemplate_networkInterfaceAddresses(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -792,7 +791,7 @@ func TestAccEC2LaunchTemplate_networkInterfaceType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -820,7 +819,7 @@ func TestAccEC2LaunchTemplate_networkInterfaceCardIndex(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -849,7 +848,7 @@ func TestAccEC2LaunchTemplate_associatePublicIPAddress(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -899,7 +898,7 @@ func TestAccEC2LaunchTemplate_associateCarrierIPAddress(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -976,7 +975,7 @@ func TestAccEC2LaunchTemplate_Placement_partitionNum(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -1010,7 +1009,7 @@ func TestAccEC2LaunchTemplate_NetworkInterface_ipv6Addresses(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -1038,7 +1037,7 @@ func TestAccEC2LaunchTemplate_NetworkInterface_ipv6AddressCount(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -1067,7 +1066,7 @@ func TestAccEC2LaunchTemplate_instanceMarketOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -1107,7 +1106,7 @@ func TestAccEC2LaunchTemplate_licenseSpecification(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -1134,7 +1133,7 @@ func TestAccEC2LaunchTemplate_metadataOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -1195,7 +1194,7 @@ func TestAccEC2LaunchTemplate_enclaveOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -1236,7 +1235,7 @@ func TestAccEC2LaunchTemplate_hibernation(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -1278,7 +1277,7 @@ func TestAccEC2LaunchTemplate_defaultVersion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -1324,7 +1323,7 @@ func TestAccEC2LaunchTemplate_updateDefaultVersion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
