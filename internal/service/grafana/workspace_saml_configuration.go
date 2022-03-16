@@ -48,6 +48,7 @@ func ResourceWorkspaceSamlConfiguration() *schema.Resource {
 			"email_assertion": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"groups_assertion": {
 				Type:     schema.TypeString,
@@ -64,14 +65,17 @@ func ResourceWorkspaceSamlConfiguration() *schema.Resource {
 			"login_assertion": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"login_validity_duration": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"name_assertion": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"org_assertion": {
 				Type:     schema.TypeString,
