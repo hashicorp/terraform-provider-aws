@@ -692,10 +692,10 @@ resource "aws_api_gateway_stage" "test" {
 func testAccStageConfigCacheSizeCacheDisabled(rName, size string) string {
 	return testAccStageConfig_base(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_stage" "test" {
-  rest_api_id           = aws_api_gateway_rest_api.test.id
-  stage_name            = "prod"
-  deployment_id         = aws_api_gateway_deployment.dev.id
-  cache_cluster_size    = %[1]q
+  rest_api_id        = aws_api_gateway_rest_api.test.id
+  stage_name         = "prod"
+  deployment_id      = aws_api_gateway_deployment.dev.id
+  cache_cluster_size = %[1]q
 }
 `, size)
 }
