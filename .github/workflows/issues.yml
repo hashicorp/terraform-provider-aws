@@ -6,7 +6,7 @@ on:
 
 env:
   IN_MAINTAINER_LIST: ${{ contains(secrets.MAINTAINER_LIST, github.actor) }}
-  
+
 jobs:
   AddLabelsForIssueTriage:
     runs-on: ubuntu-latest

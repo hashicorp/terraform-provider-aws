@@ -18,7 +18,8 @@ jobs:
         if: env.IN_MAINTAINER_LIST == 'true'
         uses: actions-ecosystem/action-remove-labels@v1
         with:
-          labels: needs-triage
+          labels: |
+            needs-triage
 
   RemoveTriagingLabelsFromClosedIssueOrPR:
     if: github.event.action == 'closed'
