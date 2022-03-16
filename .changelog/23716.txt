@@ -1,0 +1,21 @@
+```release-note:bug
+resource/aws_s3_bucket_replication_configuration: Ensure both `key` and `value` arguments of the `rule.filter.tag` configuration block are correctly populated in the outgoing API request and terraform state.
+```
+
+```release-note:bug
+resource/aws_s3_bucket_replication_configuration: Prevent inconsistent final plan when `rule.filter.prefix` is an empty string
+```
+
+```release-note:bug
+resource/aws_s3_bucket_replication_configuration: Correctly configure empty `rule.filter` configuration block in API requests
+```
+
+```release-note:enhancement
+resource/aws_s3_bucket_replication_configuration: Add `token` field to specify
+x-amz-bucket-object-lock-token for enabling replication on object lock enabled
+buckets or enabling object lock on an existing bucket.
+```
+
+```release-note:note
+resource/aws_s3_bucket: The `replication_configuration` argument has been deprecated. Use the `aws_s3_bucket_replication_configuration` resource instead.
+```
