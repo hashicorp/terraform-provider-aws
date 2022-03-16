@@ -44,9 +44,8 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 				Sensitive: true,
 			},
 			"rule": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
-				Set:      rulesHash,
 				MaxItems: 1000,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -241,6 +240,7 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 						"id": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringLenBetween(0, 255),
 						},
 						"prefix": {
@@ -308,7 +308,7 @@ func resourceBucketReplicationConfigurationCreate(d *schema.ResourceData, meta i
 
 	rc := &s3.ReplicationConfiguration{
 		Role:  aws.String(d.Get("role").(string)),
-		Rules: ExpandReplicationRules(d.Get("rule").(*schema.Set).List()),
+		Rules: ExpandReplicationRules(d.Get("rule").([]interface{})),
 	}
 
 	input := &s3.PutBucketReplicationInput{
@@ -376,7 +376,7 @@ func resourceBucketReplicationConfigurationRead(d *schema.ResourceData, meta int
 
 	d.Set("bucket", d.Id())
 	d.Set("role", r.Role)
-	if err := d.Set("rule", schema.NewSet(rulesHash, FlattenReplicationRules(r.Rules))); err != nil {
+	if err := d.Set("rule", FlattenReplicationRules(r.Rules)); err != nil {
 		return fmt.Errorf("error setting rule: %w", err)
 	}
 
@@ -388,7 +388,7 @@ func resourceBucketReplicationConfigurationUpdate(d *schema.ResourceData, meta i
 
 	rc := &s3.ReplicationConfiguration{
 		Role:  aws.String(d.Get("role").(string)),
-		Rules: ExpandReplicationRules(d.Get("rule").(*schema.Set).List()),
+		Rules: ExpandReplicationRules(d.Get("rule").([]interface{})),
 	}
 
 	input := &s3.PutBucketReplicationInput{

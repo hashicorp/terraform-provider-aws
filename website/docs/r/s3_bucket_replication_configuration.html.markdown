@@ -218,7 +218,7 @@ The following arguments are supported:
 
 * `bucket` - (Required) The name of the source S3 bucket you want Amazon S3 to monitor.
 * `role` - (Required) The ARN of the IAM role for Amazon S3 to assume when replicating the objects.
-* `rule` - (Required) Set of configuration blocks describing the rules managing the replication [documented below](#rule).
+* `rule` - (Required) List of configuration blocks describing the rules managing the replication [documented below](#rule).
 * `token` - (Optional) A token to allow replication to be enabled on an Object Lock-enabled bucket. You must contact AWS support for the bucket's "Object Lock token".
 For more details, see [Using S3 Object Lock with replication](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock-managing.html#object-lock-managing-replication).
 
