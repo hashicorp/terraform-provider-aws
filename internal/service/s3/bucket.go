@@ -406,9 +406,10 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"replication_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:       schema.TypeList,
+				Optional:   true,
+				MaxItems:   1,
+				Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"role": {

@@ -40,6 +40,10 @@ Configuring with both will cause inconsistencies and may overwrite configuration
 or with the deprecated parameter `object_lock_configuration` in the resource `aws_s3_bucket`.
 Configuring with both will cause inconsistencies and may overwrite configuration.
 
+~> **NOTE on S3 Bucket Replication Configuration:** S3 Bucket Replication can be configured in either the standalone resource [`aws_s3_bucket_replicaton_configuration`](s3_bucket_replication_configuration.html)
+or with the deprecated parameter `replication_configuration` in the resource `aws_s3_bucket`.
+Configuring with both will cause inconsistencies and may overwrite configuration.
+
 ~> **NOTE on S3 Bucket Request Payment Configuration:** S3 Bucket Request Payment can be configured in either the standalone resource [`aws_s3_bucket_request_payment_configuration`](s3_bucket_request_payment_configuration.html)
 or with the deprecated parameter `request_payer` in the resource `aws_s3_bucket`.
 Configuring with both will cause inconsistencies and may overwrite configuration.
@@ -237,7 +241,8 @@ resource "aws_s3_bucket" "versioning_bucket" {
 
 ### Using replication configuration
 
-~> **NOTE:** See the [`aws_s3_bucket_replication_configuration` resource](/docs/providers/aws/r/s3_bucket_replication_configuration.html) to support bi-directional replication configuration and additional features.
+-> **NOTE:** The parameter `replication_configuration` is deprecated.
+Use the resource [`aws_s3_bucket_replication_configuration`](s3_bucket_replication_configuration.html) instead.
 
 ```terraform
 provider "aws" {
@@ -436,7 +441,8 @@ The following arguments are supported:
   Can be either `BucketOwner` or `Requester`. By default, the owner of the S3 bucket would incur the costs of any data transfer.
   See [Requester Pays Buckets](http://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html) developer guide for more information.
   Use the resource [`aws_s3_bucket_request_payment_configuration`](s3_bucket_request_payment_configuration.html) instead.
-* `replication_configuration` - (Optional) A configuration of [replication configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html) (documented below).
+* `replication_configuration` - (Optional, **Deprecated**) A configuration of [replication configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html) (documented below).
+  Use the resource [`aws_s3_bucket_replication_configuration`](s3_bucket_replication_configuration.html) instead.
 * `server_side_encryption_configuration` - (Optional, **Deprecated**) A configuration of [server-side encryption configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html) (documented below).
   Use the resource [`aws_s3_bucket_server_side_encryption_configuration`](s3_bucket_server_side_encryption_configuration.html) instead.
 * `object_lock_enabled` - (Optional, Default:`false`, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled.
