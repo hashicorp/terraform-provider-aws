@@ -230,7 +230,7 @@ The `log_delivery_configuration` block allows the streaming of Redis [SLOWLOG](h
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the created ElastiCache Replication Group.
-* `engine_version_actual` - Because ElastiCache pulls the latest minor or patch for a version this attribute returns the running version of the cache engine.
+* `engine_version_actual` - Because ElastiCache pulls the latest minor or patch for a version, this attribute returns the running version of the cache engine.
 * `cluster_enabled` - Indicates if cluster mode is enabled.
 * `configuration_endpoint_address` - Address of the replication group configuration endpoint when cluster mode is enabled.
 * `id` - ID of the ElastiCache Replication Group.

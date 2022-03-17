@@ -140,7 +140,7 @@ The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the created ElastiCache Cluster.
-* `engine_version_actual` - Because ElastiCache pulls the latest minor or patch for a version this attribute returns the running version of the cache engine.
+* `engine_version_actual` - Because ElastiCache pulls the latest minor or patch for a version, this attribute returns the running version of the cache engine.
 * `cache_nodes` - List of node objects including `id`, `address`, `port` and `availability_zone`.
 * `cluster_address` - (Memcached only) DNS name of the cache cluster without the port appended.
 * `configuration_endpoint` - (Memcached only) Configuration endpoint to allow host discovery.
