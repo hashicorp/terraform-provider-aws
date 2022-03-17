@@ -15,16 +15,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceDataSet() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsQuickSightDataSetCreate,
-		ReadWithoutTimeout:   resourceAwsQuickSightDataSetRead,
-		UpdateWithoutTimeout: resourceAwsQuickSightDataSetUpdate,
-		DeleteWithoutTimeout: resourceAwsQuickSightDataSetDelete,
+		CreateContext: resourceDataSetCreate,
+		ReadContext:   resourceDataSetRead,
+		UpdateContext: resourceDataSetUpdate,
+		DeleteContext: resourceDataSetDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -771,7 +772,7 @@ func ResourceDataSet() *schema.Resource {
 									"tag_multi_value_delimiter": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 10),
+										ValidateFunc: validation.StringLenBetween(1, 10),
 									},
 								},
 							},
@@ -792,13 +793,15 @@ func ResourceDataSet() *schema.Resource {
 	}
 }
 
-func resourceAwsQuickSightDataSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	id := d.Get("data_set_id").(string)
+
+	d.SetId(fmt.Sprintf("%s/%s", awsAccountId, id))
 
 	if v, ok := d.GetOk("aws_account_id"); ok {
 		awsAccountId = v.(string)
@@ -851,14 +854,13 @@ func resourceAwsQuickSightDataSetCreate(ctx context.Context, d *schema.ResourceD
 	if err != nil {
 		return diag.Errorf("error creating QuickSight Data Set: %s", err)
 	}
-	d.SetId(fmt.Sprintf("%s/%s", awsAccountId, id))
 
 	// confirm dataset has been created? having troubles due to a lack of output status and error handling.
 
-	return resourceAwsQuickSightDataSetRead(ctx, d, meta)
+	return resourceDataSetRead(ctx, d, meta)
 }
 
-func resourceAwsQuickSightDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -965,7 +967,7 @@ func resourceAwsQuickSightDataSetRead(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func resourceAwsQuickSightDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	if d.HasChangesExcept("permissions", "tags", "tags_all") {
@@ -1068,10 +1070,10 @@ func resourceAwsQuickSightDataSetUpdate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
-	return resourceAwsQuickSightDataSetRead(ctx, d, meta)
+	return resourceDataSetRead(ctx, d, meta)
 }
 
-func resourceAwsQuickSightDataSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
@@ -1142,21 +1144,15 @@ func expandQuickSightDataSetGeoSpatialColumnGroup(tfMap map[string]interface{}) 
 
 	geoSpatialColumnGroup := &quicksight.GeoSpatialColumnGroup{}
 
-	// this feels really weird
 	if v, ok := tfMap["columns"].([]interface{}); ok {
-		var fin []string
-		for _, str := range v {
-			fin = append(fin, str.(string))
-		}
-
-		geoSpatialColumnGroup.Columns = aws.StringSlice(fin)
+		geoSpatialColumnGroup.Columns = flex.ExpandStringList(v)
 	}
 
-	if v, ok := tfMap["country_code"].(string); ok {
+	if v, ok := tfMap["country_code"].(string); ok && v != "" {
 		geoSpatialColumnGroup.CountryCode = aws.String(v)
 	}
 
-	if v, ok := tfMap["name"].(string); ok {
+	if v, ok := tfMap["name"].(string); ok && v != "" {
 		geoSpatialColumnGroup.Name = aws.String(v)
 	}
 
@@ -1176,33 +1172,18 @@ func expandQuickSightDataSetColumnLevelPermissionRules(tfList []interface{}) []*
 			continue
 		}
 
-		columnLevelPermissionRule := expandQuickSightDataSetColumnLevelPermissionRule(tfMap)
-		if columnLevelPermissionRule == nil {
-			continue
+		var columnLevelPermissionRule *quicksight.ColumnLevelPermissionRule
+
+		if v, ok := tfMap["column_names"].([]interface{}); ok {
+			columnLevelPermissionRule.ColumnNames = flex.ExpandStringList(v)
 		}
 
-		columnLevelPermissionRules = append(columnLevelPermissionRules, columnLevelPermissionRule)
+		if v, ok := tfMap["principals"].([]interface{}); ok {
+			columnLevelPermissionRule.ColumnNames = flex.ExpandStringList(v)
+		}
 	}
 
 	return columnLevelPermissionRules
-}
-
-func expandQuickSightDataSetColumnLevelPermissionRule(tfMap map[string]interface{}) *quicksight.ColumnLevelPermissionRule {
-	if len(tfMap) == 0 {
-		return nil
-	}
-
-	columnLevelPermissionRule := &quicksight.ColumnLevelPermissionRule{}
-
-	if v, ok := tfMap["column_name"].([]string); ok {
-		columnLevelPermissionRule.ColumnNames = aws.StringSlice(v)
-	}
-
-	if v, ok := tfMap["permission_policy"].([]string); ok {
-		columnLevelPermissionRule.Principals = aws.StringSlice(v)
-	}
-
-	return columnLevelPermissionRule
 }
 
 func expandQuickSightDataSetUsageConfiguration(tfList []interface{}) *quicksight.DataSetUsageConfiguration {
