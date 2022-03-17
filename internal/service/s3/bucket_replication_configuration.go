@@ -247,6 +247,7 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
+							Deprecated:   "Use filter instead",
 						},
 						"priority": {
 							Type:     schema.TypeInt,
