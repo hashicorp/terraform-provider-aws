@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// IsDayOfTheWeek id a SchemaValidateFunc which tests if the provided value is of type string and a valid english day of the week
+// IsDayOfTheWeek is a SchemaValidateFunc which tests if the provided value is of type string and a valid english day of the week
 func IsDayOfTheWeek(ignoreCase bool) schema.SchemaValidateFunc {
 	return StringInSlice([]string{
 		"Monday",
@@ -20,7 +20,7 @@ func IsDayOfTheWeek(ignoreCase bool) schema.SchemaValidateFunc {
 	}, ignoreCase)
 }
 
-// IsMonth id a SchemaValidateFunc which tests if the provided value is of type string and a valid english month
+// IsMonth is a SchemaValidateFunc which tests if the provided value is of type string and a valid english month
 func IsMonth(ignoreCase bool) schema.SchemaValidateFunc {
 	return StringInSlice([]string{
 		"January",

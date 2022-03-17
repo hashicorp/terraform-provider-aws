@@ -60,7 +60,7 @@ See the [`aws_s3_bucket_lifecycle_configuration` resource](s3_bucket_lifecycle_c
 ### Using object lock configuration
 
 The `object_lock_configuration.rule` argument is read-only as of version 4.0 of the Terraform AWS Provider.
-To **enable** Object Lock on a **new** bucket, use the `object_lock_configuration.object_lock_enabled` argument in **this** resource. See [Object Lock Configuration](#object-lock-configuration) below for details.
+To **enable** Object Lock on a **new** bucket, use the `object_lock_enabled` argument in **this** resource. See [Object Lock Configuration](#object-lock-configuration) below for details.
 To configure the default retention rule of the Object Lock configuration, see the [`aws_s3_bucket_object_lock_configuration` resource](s3_bucket_object_lock_configuration.html.markdown) for configuration details.
 To **enable** Object Lock on an **existing** bucket, please contact AWS Support and refer to the [Object lock configuration for an existing bucket](s3_bucket_object_lock_configuration.html.markdown#object-lock-configuration-for-an-existing-bucket) example for more details.
 
@@ -86,6 +86,7 @@ The following arguments are supported:
 * `bucket` - (Optional, Forces new resource) The name of the bucket. If omitted, Terraform will assign a random, unique name. Must be lowercase and less than or equal to 63 characters in length. A full list of bucket naming rules [may be found here](https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html).
 * `bucket_prefix` - (Optional, Forces new resource) Creates a unique bucket name beginning with the specified prefix. Conflicts with `bucket`. Must be lowercase and less than or equal to 37 characters in length. A full list of bucket naming rules [may be found here](https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html).
 * `force_destroy` - (Optional, Default:`false`) A boolean that indicates all objects (including any [locked objects](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html)) should be deleted from the bucket so that the bucket can be destroyed without error. These objects are *not* recoverable.
+* `object_lock_enabled` - (Optional, Default:`false`, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled.
 * `object_lock_configuration` - (Optional) A configuration of [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html). See [Object Lock Configuration](#object-lock-configuration) below.
 * `tags` - (Optional) A map of tags to assign to the bucket. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -98,7 +99,7 @@ To configure the default retention rule of the Object Lock configuration, see th
 
 The `object_lock_configuration` configuration block supports the following argument:
 
-* `object_lock_enabled` - (Required) Indicates whether this bucket has an Object Lock configuration enabled. Valid value is `Enabled`.
+* `object_lock_enabled` - (Optional, **Deprecated**) Indicates whether this bucket has an Object Lock configuration enabled. Valid value is `Enabled`. Use the top-level argument `object_lock_enabled` instead.
 
 ## Attributes Reference
 

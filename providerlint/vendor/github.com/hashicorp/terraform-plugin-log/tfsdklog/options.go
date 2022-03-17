@@ -13,6 +13,14 @@ import (
 // them.
 type Options []logging.Option
 
+// WithAdditionalLocationOffset returns an option that allowing implementations
+// to fix location information when implementing helper functions. The default
+// offset of 1 is automatically added to the provided value to account for the
+// tfsdklog logging functions.
+func WithAdditionalLocationOffset(additionalLocationOffset int) logging.Option {
+	return logging.WithAdditionalLocationOffset(additionalLocationOffset)
+}
+
 // WithLogName returns an option that will set the logger name explicitly to
 // `name`. This has no effect when used with NewSubsystem.
 func WithLogName(name string) logging.Option {

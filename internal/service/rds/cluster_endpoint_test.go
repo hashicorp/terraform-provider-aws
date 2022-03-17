@@ -18,6 +18,10 @@ import (
 )
 
 func TestAccRDSClusterEndpoint_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rInt := sdkacctest.RandInt()
 	var customReaderEndpoint rds.DBClusterEndpoint
 	var customEndpoint rds.DBClusterEndpoint
@@ -61,6 +65,10 @@ func TestAccRDSClusterEndpoint_basic(t *testing.T) {
 }
 
 func TestAccRDSClusterEndpoint_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rInt := sdkacctest.RandInt()
 	var customReaderEndpoint rds.DBClusterEndpoint
 	resourceName := "aws_rds_cluster_endpoint.reader"
@@ -211,7 +219,9 @@ func testAccCheckClusterEndpointExistsWithProvider(resourceName string, endpoint
 }
 
 func testAccClusterEndpointBaseConfig(n int) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = aws_rds_cluster.default.engine
   engine_version             = aws_rds_cluster.default.engine_version
@@ -249,7 +259,9 @@ resource "aws_rds_cluster_instance" "test2" {
 }
 
 func testAccClusterEndpointConfig(n int) string {
-	return testAccClusterEndpointBaseConfig(n) + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccClusterEndpointBaseConfig(n),
+		fmt.Sprintf(`
 resource "aws_rds_cluster_endpoint" "reader" {
   cluster_identifier          = aws_rds_cluster.default.id
   cluster_endpoint_identifier = "reader-%[1]d"
@@ -265,11 +277,13 @@ resource "aws_rds_cluster_endpoint" "default" {
 
   excluded_members = [aws_rds_cluster_instance.test2.id]
 }
-`, n)
+`, n))
 }
 
 func testAccClusterEndpointTags1Config(n int, tagKey1, tagValue1 string) string {
-	return testAccClusterEndpointBaseConfig(n) + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccClusterEndpointBaseConfig(n),
+		fmt.Sprintf(`
 resource "aws_rds_cluster_endpoint" "reader" {
   cluster_identifier          = aws_rds_cluster.default.id
   cluster_endpoint_identifier = "reader-%[1]d"
@@ -281,11 +295,13 @@ resource "aws_rds_cluster_endpoint" "reader" {
     %[2]q = %[3]q
   }
 }
-`, n, tagKey1, tagValue1)
+`, n, tagKey1, tagValue1))
 }
 
 func testAccClusterEndpointTags2Config(n int, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccClusterEndpointBaseConfig(n) + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccClusterEndpointBaseConfig(n),
+		fmt.Sprintf(`
 resource "aws_rds_cluster_endpoint" "reader" {
   cluster_identifier          = aws_rds_cluster.default.id
   cluster_endpoint_identifier = "reader-%[1]d"
@@ -298,5 +314,5 @@ resource "aws_rds_cluster_endpoint" "reader" {
     %[4]q = %[5]q
   }
 }
-`, n, tagKey1, tagValue1, tagKey2, tagValue2)
+`, n, tagKey1, tagValue1, tagKey2, tagValue2))
 }

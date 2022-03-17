@@ -89,9 +89,7 @@ func valueFromMap(typ Type, in interface{}) (Value, error) {
 		var elType Type
 		for _, k := range keys {
 			v := value[k]
-			if v.Type().Is(DynamicPseudoType) && v.IsKnown() {
-				return Value{}, NewAttributePath().WithElementKeyString(k).NewErrorf("invalid value %s for %s", v, v.Type())
-			} else if !v.Type().Is(DynamicPseudoType) && !v.Type().UsableAs(typ) {
+			if !v.Type().UsableAs(typ) {
 				return Value{}, NewAttributePath().WithElementKeyString(k).NewErrorf("can't use %s as %s", v.Type(), typ)
 			}
 			if elType == nil {
