@@ -878,6 +878,10 @@ func TestAccS3BucketReplicationConfiguration_filter_emptyPrefix(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				// The "rule" parameter as a TypeList will have a nil value
+				// if prefix was specified as an empty string, which was used as workaround
+				// when the parameter was a TypeSet
+				ImportStateVerifyIgnore: []string{"rule.0.filter.0.prefix"},
 			},
 		},
 	})
