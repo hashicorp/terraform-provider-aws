@@ -37,6 +37,7 @@ ENHANCEMENTS:
 * resource/aws_s3_bucket_replication_configuration: Add `token` field to specify
 x-amz-bucket-object-lock-token for enabling replication on object lock enabled
 buckets or enabling object lock on an existing bucket. ([#23716](https://github.com/hashicorp/terraform-provider-aws/issues/23716))
+* resource/aws_s3_bucket_versioning: Add missing support for `Disabled` bucket versioning ([#23731](https://github.com/hashicorp/terraform-provider-aws/issues/23731))
 
 BUG FIXES:
 
