@@ -339,6 +339,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"network_interfaces": {
 				Type:     schema.TypeList,
@@ -378,6 +379,15 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"ipv4_prefix_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"ipv4_prefixes": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"ipv6_address_count": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -387,9 +397,18 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"ipv6_prefix_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"ipv6_prefixes": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"network_card_index": {
 							Type:     schema.TypeInt,
-							Optional: true,
+							Computed: true,
 						},
 						"network_interface_id": {
 							Type:     schema.TypeString,

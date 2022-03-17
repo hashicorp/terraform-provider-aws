@@ -481,6 +481,18 @@ func ResourceLaunchTemplate() *schema.Resource {
 								ValidateFunc: validation.IsIPv4Address,
 							},
 						},
+						"ipv4_prefix_count": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"ipv4_prefixes": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+							},
+						},
 						"ipv6_address_count": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -491,6 +503,18 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.IsIPv6Address,
+							},
+						},
+						"ipv6_prefix_count": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"ipv6_prefixes": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
 							},
 						},
 						"network_card_index": {
@@ -1395,6 +1419,14 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 		}
 	}
 
+	if v, ok := tfMap["ipv4_prefix_count"].(int); ok && v != 0 {
+		apiObject.Ipv4PrefixCount = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["ipv4_prefixes"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Ipv4Prefixes = expandIPv4PrefixSpecificationRequests(v.List())
+	}
+
 	if v, ok := tfMap["ipv6_address_count"].(int); ok && v != 0 {
 		apiObject.Ipv6AddressCount = aws.Int64(int64(v))
 	}
@@ -1405,6 +1437,14 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 				Ipv6Address: aws.String(v.(string)),
 			})
 		}
+	}
+
+	if v, ok := tfMap["ipv6_prefix_count"].(int); ok && v != 0 {
+		apiObject.Ipv6PrefixCount = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["ipv6_prefixes"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Ipv6Prefixes = expandIPv6PrefixSpecificationRequests(v.List())
 	}
 
 	if v, ok := tfMap["network_card_index"].(int); ok && v != 0 {
@@ -2050,6 +2090,20 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject *ec2.L
 		tfMap["ipv4_addresses"] = ipv4Addresses
 	}
 
+	if v := apiObject.Ipv4PrefixCount; v != nil {
+		tfMap["ipv4_prefix_count"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.Ipv4Prefixes; v != nil {
+		var ipv4Prefixes []string
+
+		for _, v := range v {
+			ipv4Prefixes = append(ipv4Prefixes, aws.StringValue(v.Ipv4Prefix))
+		}
+
+		tfMap["ipv4_prefixes"] = ipv4Prefixes
+	}
+
 	if v := apiObject.Ipv6AddressCount; v != nil {
 		tfMap["ipv6_address_count"] = aws.Int64Value(v)
 	}
@@ -2062,6 +2116,20 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject *ec2.L
 		}
 
 		tfMap["ipv6_addresses"] = ipv6Addresses
+	}
+
+	if v := apiObject.Ipv6PrefixCount; v != nil {
+		tfMap["ipv6_prefix_count"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.Ipv6Prefixes; v != nil {
+		var ipv6Prefixes []string
+
+		for _, v := range v {
+			ipv6Prefixes = append(ipv6Prefixes, aws.StringValue(v.Ipv6Prefix))
+		}
+
+		tfMap["ipv6_prefixes"] = ipv6Prefixes
 	}
 
 	if v := apiObject.NetworkCardIndex; v != nil {
