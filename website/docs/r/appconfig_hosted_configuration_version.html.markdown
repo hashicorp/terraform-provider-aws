@@ -10,7 +10,9 @@ description: |-
 
 Provides an AppConfig Hosted Configuration Version resource.
 
-## Example Usage Freeform
+## Example Usage
+
+### Freeform
 
 ```terraform
 resource "aws_appconfig_hosted_configuration_version" "example" {
@@ -27,7 +29,7 @@ resource "aws_appconfig_hosted_configuration_version" "example" {
 }
 ```
 
-## Example Usage Feature Flag
+### Feature Flags
 
 ```terraform
 resource "aws_appconfig_hosted_configuration_version" "example" {
