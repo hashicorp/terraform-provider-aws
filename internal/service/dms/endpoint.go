@@ -553,6 +553,7 @@ func ResourceEndpoint() *schema.Resource {
 			},
 			"secrets_manager_arn": {
 				Type:          schema.TypeString,
+				ForceNew:      true,
 				Optional:      true,
 				ValidateFunc:  verify.ValidARN,
 				RequiredWith:  []string{"secrets_manager_access_role_arn"},
@@ -681,7 +682,7 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 			request.Port = aws.Int64(int64(d.Get("port").(int)))
 			request.DatabaseName = aws.String(d.Get("database_name").(string))
 		}
-	case engineNamePostgres:
+	case engineNamePostgres, engineNameAuroraPostgresql:
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
 			request.PostgreSQLSettings = &dms.PostgreSQLSettings{
 				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
@@ -706,6 +707,29 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	case engineNameS3:
 		request.S3Settings = expandS3Settings(d.Get("s3_settings").([]interface{})[0].(map[string]interface{}))
+	case engineNameMySQL, engineNameAurora:
+		if _, ok := d.GetOk("secrets_manager_arn"); ok {
+			request.MySQLSettings = &dms.MySQLSettings{
+				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
+				SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
+				DatabaseName:                aws.String(d.Get("database_name").(string)),
+			}
+		} else {
+			request.MySQLSettings = &dms.MySQLSettings{
+				Username:     aws.String(d.Get("username").(string)),
+				Password:     aws.String(d.Get("password").(string)),
+				ServerName:   aws.String(d.Get("server_name").(string)),
+				Port:         aws.Int64(int64(d.Get("port").(int))),
+				DatabaseName: aws.String(d.Get("database_name").(string)),
+			}
+
+			// Set connection info in top-level namespace as well
+			request.Username = aws.String(d.Get("username").(string))
+			request.Password = aws.String(d.Get("password").(string))
+			request.ServerName = aws.String(d.Get("server_name").(string))
+			request.Port = aws.Int64(int64(d.Get("port").(int)))
+			request.DatabaseName = aws.String(d.Get("database_name").(string))
+		}
 	default:
 		request.Password = aws.String(d.Get("password").(string))
 		request.Port = aws.Int64(int64(d.Get("port").(int)))
@@ -934,7 +958,7 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			hasChanges = true
 		}
-	case engineNamePostgres:
+	case engineNamePostgres, engineNameAuroraPostgresql:
 		if d.HasChanges(
 			"username", "password", "server_name", "port", "database_name", "secrets_manager_access_role_arn",
 			"secrets_manager_arn") {
@@ -967,6 +991,33 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 		if d.HasChanges("s3_settings") {
 			request.S3Settings = expandS3Settings(d.Get("s3_settings").([]interface{})[0].(map[string]interface{}))
 			request.EngineName = aws.String(engineName)
+			hasChanges = true
+		}
+	case engineNameMySQL, engineNameAurora:
+		if d.HasChanges("secrets_manager_access_role_arn", "secrets_manager_arn", "database_name", "username", "password", "server_name", "port") {
+			if _, ok := d.GetOk("secrets_manager_arn"); ok {
+				request.MySQLSettings = &dms.MySQLSettings{
+					SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
+					SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
+					DatabaseName:                aws.String(d.Get("database_name").(string)),
+				}
+			} else {
+				request.MySQLSettings = &dms.MySQLSettings{
+					Username:     aws.String(d.Get("username").(string)),
+					Password:     aws.String(d.Get("password").(string)),
+					ServerName:   aws.String(d.Get("server_name").(string)),
+					Port:         aws.Int64(int64(d.Get("port").(int))),
+					DatabaseName: aws.String(d.Get("database_name").(string)),
+				}
+
+				// Update connection info in top-level namespace as well
+				request.Username = aws.String(d.Get("username").(string))
+				request.Password = aws.String(d.Get("password").(string))
+				request.ServerName = aws.String(d.Get("server_name").(string))
+				request.Port = aws.Int64(int64(d.Get("port").(int)))
+				request.DatabaseName = aws.String(d.Get("database_name").(string))
+			}
+
 			hasChanges = true
 		}
 	default:
