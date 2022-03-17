@@ -155,7 +155,7 @@ func resourceReplicationTaskCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if d.Get("start_replication_task").(bool) {
-		if err := dmsStartReplicationTask(d.Id(), conn); err != nil {
+		if err := startReplicationTask(d.Id(), conn); err != nil {
 			return err
 		}
 	}
@@ -265,7 +265,7 @@ func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		if d.Get("start_replication_task").(bool) {
-			if err := dmsStartReplicationTask(d.Id(), conn); err != nil {
+			if err := startReplicationTask(d.Id(), conn); err != nil {
 				return err
 			}
 		}
@@ -275,13 +275,13 @@ func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) err
 		status := d.Get("status").(string)
 		if d.Get("start_replication_task").(bool) {
 			if status != replicationTaskStatusRunning {
-				if err := dmsStartReplicationTask(d.Id(), conn); err != nil {
+				if err := startReplicationTask(d.Id(), conn); err != nil {
 					return err
 				}
 			}
 		} else {
 			if status == replicationTaskStatusRunning {
-				if err := dmsStopReplicationTask(d.Id(), conn); err != nil {
+				if err := stopReplicationTask(d.Id(), conn); err != nil {
 					return err
 				}
 			}
@@ -304,7 +304,7 @@ func resourceReplicationTaskDelete(d *schema.ResourceData, meta interface{}) err
 	conn := meta.(*conns.AWSClient).DMSConn
 
 	if status := d.Get("status").(string); status == replicationTaskStatusRunning {
-		if err := dmsStopReplicationTask(d.Id(), conn); err != nil {
+		if err := stopReplicationTask(d.Id(), conn); err != nil {
 			return err
 		}
 	}
@@ -361,7 +361,7 @@ func dmsReplicationTaskRemoveReadOnlySettings(settings string) (*string, error) 
 	return &cleanedSettingsString, nil
 }
 
-func dmsStartReplicationTask(id string, conn *dms.DatabaseMigrationService) error {
+func startReplicationTask(id string, conn *dms.DatabaseMigrationService) error {
 	log.Printf("[DEBUG] Starting DMS Replication Task: (%s)", id)
 
 	task, err := FindReplicationTaskByID(conn, id)
@@ -390,7 +390,7 @@ func dmsStartReplicationTask(id string, conn *dms.DatabaseMigrationService) erro
 	return nil
 }
 
-func dmsStopReplicationTask(id string, conn *dms.DatabaseMigrationService) error {
+func stopReplicationTask(id string, conn *dms.DatabaseMigrationService) error {
 	log.Printf("[DEBUG] Stopping DMS Replication Task: (%s)", id)
 
 	task, err := FindReplicationTaskByID(conn, id)
