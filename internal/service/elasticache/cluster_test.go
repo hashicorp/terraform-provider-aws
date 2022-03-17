@@ -599,7 +599,7 @@ func TestAccElastiCacheCluster_EngineVersion_redis(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v1, v2, v3, v4, v5 elasticache.CacheCluster
+	var v1, v2, v3, v4, v5, v6 elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
 
@@ -647,8 +647,8 @@ func TestAccElastiCacheCluster_EngineVersion_redis(t *testing.T) {
 			{
 				Config: testAccClusterConfig_EngineVersion_Redis(rName, "6.x"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v4),
-					testAccCheckClusterNotRecreated(&v3, &v4),
+					testAccCheckClusterExists(resourceName, &v5),
+					testAccCheckClusterNotRecreated(&v4, &v5),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
 				),
@@ -656,8 +656,8 @@ func TestAccElastiCacheCluster_EngineVersion_redis(t *testing.T) {
 			{
 				Config: testAccClusterConfig_EngineVersion_Redis(rName, "5.0.6"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v5),
-					testAccCheckClusterRecreated(&v4, &v5),
+					testAccCheckClusterExists(resourceName, &v6),
+					testAccCheckClusterRecreated(&v5, &v6),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.6"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "5.0.6"),
 				),
