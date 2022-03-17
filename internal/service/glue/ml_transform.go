@@ -236,7 +236,7 @@ func resourceMLTransformRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading Glue ML Transform: %s", input)
 	output, err := conn.GetMLTransform(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue ML Transform (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -372,14 +372,14 @@ func resourceMLTransformDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.DeleteMLTransform(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error deleting Glue ML Transform (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waitMLTransformDeleted(conn, d.Id()); err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error waiting for Glue ML Transform (%s) to be Deleted: %w", d.Id(), err)

@@ -430,7 +430,7 @@ func resourceStageDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 	_, err := conn.DeleteStage(&input)
 
-	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		return nil
 	}
 

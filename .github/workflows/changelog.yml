@@ -11,15 +11,18 @@ on:
       - CHANGELOG.md
   pull_request_target:
 
+env:
+  IN_MAINTAINER_LIST: ${{ contains(secrets.MAINTAINER_LIST, github.actor) }}
+
 jobs:
   changes:
-    if: github.event_name == 'pull_request_target' && !contains(fromJSON('["anGie44", "breathingdust", "ewbankkit", "gdavison", "justinretzolk", "maryelizbeth", "YakDriver", "zhelding", "johnsonaj"]'), github.actor)
     name: Filter Changes
     runs-on: ubuntu-latest
     outputs:
       changed: ${{ steps.filter.outputs.changed }}
     steps:
       - uses: dorny/paths-filter@v2
+        if: github.event_name == 'pull_request_target' && env.IN_MAINTAINER_LIST == 'false'
         id: filter
         with:
           filters: |
@@ -55,7 +58,7 @@ jobs:
   misspell:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       # See also: https://github.com/actions/setup-go/pull/62
       - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
       - uses: actions/setup-go@v2

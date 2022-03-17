@@ -171,7 +171,7 @@ func resourceGroupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := conn.DeleteGroupPolicy(request); err != nil {
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting IAM group policy %s: %s", d.Id(), err)

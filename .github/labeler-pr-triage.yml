@@ -153,6 +153,9 @@ service/cloudwatchlogs:
   - 'internal/service/cloudwatchlogs/**/*'
   - 'website/**/cloudwatch_log_*'
   - 'website/**/cloudwatch_query_definition*'
+service/cloudwatchrum:
+  - 'internal/service/cloudwatchrum/**/*'
+  - 'website/**/cloudwatchrum_*'
 service/codeartifact:
   - 'internal/service/codeartifact/**/*'
   - 'website/**/codeartifact_*'
@@ -373,6 +376,9 @@ service/kafka:
 service/kafkaconnect:
   - 'internal/service/kafkaconnect/**/*'
   - 'website/**/mskconnect_*'
+service/keyspaces:
+  - 'internal/service/keyspaces/**/*'
+  - 'website/**/keyspaces_*'
 service/kinesis:
   - 'internal/service/kinesis/**/*'
   - '*_aws_kinesis_stream*'

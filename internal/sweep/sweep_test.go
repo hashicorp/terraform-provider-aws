@@ -82,6 +82,8 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"

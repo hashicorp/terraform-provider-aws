@@ -442,7 +442,7 @@ func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 			TrailName: aws.String(d.Id()),
 		})
 		if err != nil {
-			if !tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeInsightNotEnabledException, "") {
+			if !tfawserr.ErrCodeEquals(err, cloudtrail.ErrCodeInsightNotEnabledException) {
 				return fmt.Errorf("error getting Cloud Trail (%s) Insight Selectors: %w", d.Id(), err)
 			}
 		}

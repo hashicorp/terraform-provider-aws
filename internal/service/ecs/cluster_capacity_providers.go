@@ -170,10 +170,10 @@ func retryClusterCapacityProvidersPut(ctx context.Context, conn *ecs.ECS, input 
 			if tfawserr.ErrMessageContains(err, ecs.ErrCodeClientException, "Cluster was not ACTIVE") {
 				return resource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, ecs.ErrCodeResourceInUseException, "") {
+			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeResourceInUseException) {
 				return resource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, ecs.ErrCodeUpdateInProgressException, "") {
+			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeUpdateInProgressException) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)

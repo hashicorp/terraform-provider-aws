@@ -184,7 +184,7 @@ func instanceProfileRemoveRole(conn *iam.IAM, profileName, roleName string) erro
 	}
 
 	_, err := conn.RemoveRoleFromInstanceProfile(request)
-	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		return nil
 	}
 	return err
@@ -249,7 +249,7 @@ func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	result, err := conn.GetInstanceProfile(request)
-	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		log.Printf("[WARN] IAM Instance Profile %s is already gone", d.Id())
 		d.SetId("")
 		return nil
@@ -267,7 +267,7 @@ func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error
 
 		_, err := conn.GetRole(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 				err := instanceProfileRemoveRole(conn, d.Id(), roleName)
 				if err != nil {
 					return fmt.Errorf("removing role %s to IAM instance profile %s: %w", roleName, d.Id(), err)
@@ -292,7 +292,7 @@ func resourceInstanceProfileDelete(d *schema.ResourceData, meta interface{}) err
 	}
 	_, err := conn.DeleteInstanceProfile(request)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return nil
 		}
 		return fmt.Errorf("deleting IAM instance profile %s: %w", d.Id(), err)

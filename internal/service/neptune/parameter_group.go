@@ -124,7 +124,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 
 	describeResp, err := conn.DescribeDBParameterGroups(&describeOpts)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
 			log.Printf("[WARN] Neptune Parameter Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -281,10 +281,10 @@ func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) erro
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteDBParameterGroup(&deleteOpts)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
 				return nil
 			}
-			if tfawserr.ErrMessageContains(err, neptune.ErrCodeInvalidDBParameterGroupStateFault, "") {
+			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeInvalidDBParameterGroupStateFault) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -296,7 +296,7 @@ func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) erro
 		_, err = conn.DeleteDBParameterGroup(&deleteOpts)
 	}
 
-	if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
 		return nil
 	}
 

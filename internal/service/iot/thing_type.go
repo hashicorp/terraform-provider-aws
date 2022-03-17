@@ -141,7 +141,7 @@ func resourceThingTypeRead(d *schema.ResourceData, meta interface{}) error {
 	out, err := conn.DescribeThingType(params)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] IoT Thing Type %q not found, removing from state", d.Id())
 			d.SetId("")
 		}
@@ -235,7 +235,7 @@ func resourceThingTypeDelete(d *schema.ResourceData, meta interface{}) error {
 
 			// As the delay post-deprecation is about 5 minutes, it may have been
 			// deleted in between, thus getting a Not Found Exception.
-			if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 
@@ -246,7 +246,7 @@ func resourceThingTypeDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteThingType(deleteParams)
-		if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 	}

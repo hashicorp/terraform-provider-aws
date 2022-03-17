@@ -210,7 +210,7 @@ func resourceLayerVersionRead(d *schema.ResourceData, meta interface{}) error {
 		VersionNumber: aws.Int64(version),
 	})
 
-	if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Lambda Layer Version (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

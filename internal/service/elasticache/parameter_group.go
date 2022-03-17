@@ -311,7 +311,7 @@ func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) erro
 	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteCacheParameterGroup(&deleteOpts)
 	}
-	if tfawserr.ErrMessageContains(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
 		return nil
 	}
 

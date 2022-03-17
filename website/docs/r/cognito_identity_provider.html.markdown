@@ -57,5 +57,5 @@ No additional attributes are exported.
 `aws_cognito_identity_provider` resources can be imported using their User Pool ID and Provider Name, e.g.,
 
 ```
-$ terraform import aws_cognito_identity_provider.example xxx_yyyyy:example
+$ terraform import aws_cognito_identity_provider.example us-west-2_abc123:CorpAD
 ```

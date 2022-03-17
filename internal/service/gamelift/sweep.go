@@ -42,6 +42,11 @@ func init() {
 		F: sweepFleets,
 	})
 
+	resource.AddTestSweepers("aws_gamelift_game_server_group", &resource.Sweeper{
+		Name: "aws_gamelift_game_server_group",
+		F:    sweepGameServerGroups,
+	})
+
 	resource.AddTestSweepers("aws_gamelift_game_session_queue", &resource.Sweeper{
 		Name: "aws_gamelift_game_session_queue",
 		F:    sweepGameSessionQueue,
@@ -208,6 +213,60 @@ func sweepFleets(region string) error {
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping GameLift Fleet sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
+func sweepGameServerGroups(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).GameLiftConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+
+	input := &gamelift.ListGameServerGroupsInput{}
+
+	for {
+		output, err := conn.ListGameServerGroups(input)
+
+		for _, gameServerGroup := range output.GameServerGroups {
+			r := ResourceGameServerGroup()
+			d := r.Data(nil)
+
+			id := aws.StringValue(gameServerGroup.GameServerGroupName)
+			d.SetId(id)
+
+			if err != nil {
+				err := fmt.Errorf("error reading GameLift Game Server Group (%s): %w", id, err)
+				log.Printf("[ERROR] %s", err)
+				errs = multierror.Append(errs, err)
+				continue
+			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing GameLift Game Server Group for %s: %w", region, err))
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping GameLift Game Server Group for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping GameLift Game Server Group sweep for %s: %s", region, errs)
 		return nil
 	}
 

@@ -65,7 +65,7 @@ func resourceReceiptRuleSetRead(d *schema.ResourceData, meta interface{}) error 
 
 	resp, err := conn.DescribeReceiptRuleSet(input)
 
-	if tfawserr.ErrMessageContains(err, ses.ErrCodeRuleSetDoesNotExistException, "") {
+	if tfawserr.ErrCodeEquals(err, ses.ErrCodeRuleSetDoesNotExistException) {
 		log.Printf("[WARN] SES Receipt Rule Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

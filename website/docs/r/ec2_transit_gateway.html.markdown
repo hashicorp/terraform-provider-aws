@@ -29,6 +29,7 @@ The following arguments are supported:
 * `description` - (Optional) Description of the EC2 Transit Gateway.
 * `dns_support` - (Optional) Whether DNS support is enabled. Valid values: `disable`, `enable`. Default value: `enable`.
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `transit_gateway_cidr_blocks` - (Optional) One or more IPv4 or IPv6 CIDR blocks for the transit gateway. Must be a size /24 CIDR block or larger for IPv4, or a size /64 CIDR block or larger for IPv6.
 * `vpn_ecmp_support` - (Optional) Whether VPN Equal Cost Multipath Protocol support is enabled. Valid values: `disable`, `enable`. Default value: `enable`.
 
 ## Attributes Reference
@@ -41,6 +42,14 @@ In addition to all arguments above, the following attributes are exported:
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 * `owner_id` - Identifier of the AWS account that owns the EC2 Transit Gateway
 * `propagation_default_route_table_id` - Identifier of the default propagation route table
+
+## Timeouts
+
+`aws_ec2_transit_gateway` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for EC2 Transit Gateway creation
+- `update` - (Default `10 minutes`) Used for EC2 Transit Gateway updates
+- `delete` - (Default `10 minutes`) Used for EC2 Transit Gateway deletion
 
 ## Import
 

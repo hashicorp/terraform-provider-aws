@@ -58,7 +58,7 @@ provider "aws" {
 }
 ```
 
-<!-- markdownlint-disable MD033 -->
+<!-- markdownlint-disable no-inline-html -->
 <!--
     The division splits this long list into multiple columns without manually
     maintaining a table. The terraform.io Markdown parser previously allowed
@@ -110,6 +110,7 @@ provider "aws" {
   <li><code>cloudtrail</code></li>
   <li><code>cloudwatch</code></li>
   <li><code>cloudwatchlogs</code></li>
+  <li><code>cloudwatchrum</code></li>
   <li><code>codeartifact</code></li>
   <li><code>codebuild</code></li>
   <li><code>codecommit</code></li>
@@ -205,6 +206,7 @@ provider "aws" {
   <li><code>kafka</code></li>
   <li><code>kafkaconnect</code></li>
   <li><code>kendra</code></li>
+  <li><code>keyspaces</code></li>
   <li><code>kinesis</code></li>
   <li><code>kinesisanalytics</code></li>
   <li><code>kinesisanalyticsv2</code></li>
@@ -340,7 +342,7 @@ provider "aws" {
   <li><code>xray</code></li>
 </ul>
 </div>
-<!-- markdownlint-enable MD033 -->
+<!-- markdownlint-enable no-inline-html -->
 
 As a convenience, for compatibility with the [Terraform S3 Backend](https://www.terraform.io/language/settings/backends/s3),
 the following service endpoints can be configured using environment variables:

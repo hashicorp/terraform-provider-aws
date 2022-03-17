@@ -300,8 +300,12 @@ Each `network_interfaces` block supports the following:
 * `description` - Description of the network interface.
 * `device_index` - The integer index of the network interface attachment.
 * `interface_type` - The type of network interface. To create an Elastic Fabric Adapter (EFA), specify `efa`.
+* `ipv4_prefix_count` - The number of IPv4 prefixes to be automatically assigned to the network interface. Conflicts with `ipv4_prefixes`
+* `ipv4_prefixes` - One or more IPv4 prefixes to be assigned to the network interface. Conflicts with `ipv4_prefix_count`
 * `ipv6_addresses` - One or more specific IPv6 addresses from the IPv6 CIDR block range of your subnet. Conflicts with `ipv6_address_count`
 * `ipv6_address_count` - The number of IPv6 addresses to assign to a network interface. Conflicts with `ipv6_addresses`
+* `ipv6_prefix_count` - The number of IPv6 prefixes to be automatically assigned to the network interface. Conflicts with `ipv6_prefixes`
+* `ipv6_prefixes` - One or more IPv6 prefixes to be assigned to the network interface. Conflicts with `ipv6_prefix_count`
 * `network_interface_id` - The ID of the network interface to attach.
 * `network_card_index` - The index of the network card. Some instance types support multiple network cards. The primary network interface must be assigned to network card index 0. The default is network card index 0.
 * `private_ip_address` - The primary private IPv4 address.

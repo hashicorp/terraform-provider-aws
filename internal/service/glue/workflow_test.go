@@ -227,7 +227,7 @@ func testAccPreCheckWorkflow(t *testing.T) {
 	_, err := conn.ListWorkflows(&glue.ListWorkflowsInput{})
 
 	// Some endpoints that do not support Glue Workflows return InternalFailure
-	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
+	if acctest.PreCheckSkipError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -282,7 +282,7 @@ func testAccCheckWorkflowDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				return nil
 			}
 

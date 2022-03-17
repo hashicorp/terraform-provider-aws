@@ -23,9 +23,9 @@ import (
 )
 
 const (
-	rdsClusterScalingConfiguration_DefaultMinCapacity = 1
-	rdsClusterScalingConfiguration_DefaultMaxCapacity = 16
-	rdsClusterTimeoutDelete                           = 2 * time.Minute
+	clusterScalingConfiguration_DefaultMinCapacity = 1
+	clusterScalingConfiguration_DefaultMaxCapacity = 16
+	clusterTimeoutDelete                           = 2 * time.Minute
 )
 
 func ResourceCluster() *schema.Resource {
@@ -205,12 +205,12 @@ func ResourceCluster() *schema.Resource {
 						"max_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  rdsClusterScalingConfiguration_DefaultMaxCapacity,
+							Default:  clusterScalingConfiguration_DefaultMaxCapacity,
 						},
 						"min_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  rdsClusterScalingConfiguration_DefaultMinCapacity,
+							Default:  clusterScalingConfiguration_DefaultMinCapacity,
 						},
 						"seconds_until_auto_pause": {
 							Type:         schema.TypeInt,
@@ -953,8 +953,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] RDS Cluster ID: %s", d.Id())
 
-	log.Println(
-		"[INFO] Waiting for RDS Cluster to be available")
+	log.Println("[INFO] Waiting for RDS Cluster to be available")
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceClusterCreatePendingStates,
@@ -990,7 +989,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[INFO] Waiting for RDS Cluster (%s) to be available", d.Id())
-		err = waitForRDSClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+		err = waitForClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 		if err != nil {
 			return fmt.Errorf("error waiting for RDS Cluster (%s) to be available: %s", d.Id(), err)
 		}
@@ -1011,7 +1010,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Describing RDS Cluster: %s", input)
 	resp, err := conn.DescribeDBClusters(input)
 
-	if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
 		log.Printf("[WARN] RDS Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -1081,7 +1080,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("hosted_zone_id", dbc.HostedZoneId)
 	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
 
-	rdsClusterSetResourceDataEngineVersionFromCluster(d, dbc)
+	clusterSetResourceDataEngineVersionFromCluster(d, dbc)
 
 	var roles []string
 	for _, r := range dbc.AssociatedRoles {
@@ -1273,7 +1272,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 					return resource.NonRetryableError(err)
 				}
 
-				if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "") {
+				if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidDBClusterStateFault) {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -1288,7 +1287,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[INFO] Waiting for RDS Cluster (%s) to be available", d.Id())
-		err = waitForRDSClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		err = waitForClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for RDS Cluster (%s) to be available: %s", d.Id(), err)
 		}
@@ -1397,7 +1396,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] RDS Cluster delete options: %s", deleteOpts)
 
-	err := resource.Retry(rdsClusterTimeoutDelete, func() *resource.RetryError {
+	err := resource.Retry(clusterTimeoutDelete, func() *resource.RetryError {
 		_, err := conn.DeleteDBCluster(&deleteOpts)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
@@ -1406,7 +1405,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "cluster is a part of a global cluster") {
 				return resource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -1435,7 +1434,7 @@ func resourceClusterStateRefreshFunc(conn *rds.RDS, dbClusterIdentifier string) 
 			DBClusterIdentifier: aws.String(dbClusterIdentifier),
 		})
 
-		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
 			return 42, "destroyed", nil
 		}
 
@@ -1506,7 +1505,7 @@ var resourceClusterUpdatePendingStates = []string{
 	"upgrading",
 }
 
-func waitForRDSClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) error {
+func waitForClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceClusterUpdatePendingStates,
 		Target:     []string{"available"},
@@ -1515,6 +1514,7 @@ func waitForRDSClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) er
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
+
 	_, err := stateConf.WaitForState()
 	return err
 }
@@ -1534,22 +1534,8 @@ func WaitForClusterDeletion(conn *rds.RDS, id string, timeout time.Duration) err
 	return err
 }
 
-func rdsClusterSetResourceDataEngineVersionFromCluster(d *schema.ResourceData, c *rds.DBCluster) {
+func clusterSetResourceDataEngineVersionFromCluster(d *schema.ResourceData, c *rds.DBCluster) {
 	oldVersion := d.Get("engine_version").(string)
 	newVersion := aws.StringValue(c.EngineVersion)
 	compareActualEngineVersion(d, oldVersion, newVersion)
-}
-
-func compareActualEngineVersion(d *schema.ResourceData, oldVersion string, newVersion string) {
-	newVersionSubstr := newVersion
-
-	if len(newVersion) > len(oldVersion) {
-		newVersionSubstr = string([]byte(newVersion)[0 : len(oldVersion)+1])
-	}
-
-	if oldVersion != newVersion && string(append([]byte(oldVersion), []byte(".")...)) != newVersionSubstr {
-		d.Set("engine_version", newVersion)
-	}
-
-	d.Set("engine_version_actual", newVersion)
 }

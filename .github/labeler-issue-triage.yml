@@ -100,6 +100,8 @@ service/cloudwatch:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_(?!(event_|log_|query_))'
 service/cloudwatchlogs:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_(log_|query_)'
+service/cloudwatchrum:
+  - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatchrum_'
 service/codeartifact:
   - '((\*|-) ?`?|(data|resource) "?)aws_codeartifact_'
 service/codebuild:
@@ -216,6 +218,8 @@ service/kafka:
   - '((\*|-) ?`?|(data|resource) "?)aws_msk_'
 service/kafkaconnect:
   - '((\*|-) ?`?|(data|resource) "?)aws_mskconnect_'
+service/keyspaces:
+  - '((\*|-) ?`?|(data|resource) "?)aws_keyspaces_'
 service/kinesis:
   - '((\*|-) ?`?|(data|resource) "?)aws_kinesis_stream'
 service/kinesisanalytics:

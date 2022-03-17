@@ -163,7 +163,7 @@ func testAccCheckUserGroupDestroyWithProvider(s *terraform.State, provider *sche
 
 		_, err := tfelasticache.FindElastiCacheUserGroupByID(conn, rs.Primary.ID)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, elasticache.ErrCodeUserGroupNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserGroupNotFoundFault) {
 				return nil
 			}
 		}

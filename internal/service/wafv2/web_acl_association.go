@@ -66,7 +66,7 @@ func resourceWebACLAssociationCreate(d *schema.ResourceData, meta interface{}) e
 	err := resource.Retry(Wafv2WebACLAssociationCreateTimeout, func() *resource.RetryError {
 		_, err := conn.AssociateWebACL(params)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFUnavailableEntityException) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -96,7 +96,7 @@ func resourceWebACLAssociationRead(d *schema.ResourceData, meta interface{}) err
 
 	resp, err := conn.GetWebACLForResource(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
 			log.Printf("[WARN] WAFv2 Web ACL (%s) not found, removing from state", webAclArn)
 			d.SetId("")
 			return nil

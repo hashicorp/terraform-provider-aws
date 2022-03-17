@@ -102,7 +102,7 @@ func resourceEmailChannelRead(d *schema.ResourceData, meta interface{}) error {
 		ApplicationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
 			log.Printf("[WARN] Pinpoint Email Channel for application %s not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
@@ -131,7 +131,7 @@ func resourceEmailChannelDelete(d *schema.ResourceData, meta interface{}) error 
 		ApplicationId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
 		return nil
 	}
 
