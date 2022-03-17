@@ -184,8 +184,9 @@ The following arguments are optional:
 * `data_tiering_enabled` - (Optional) Enables data tiering. Data tiering is only supported for replication groups using the r6gd node type. This parameter must be set to `true` when using r6gd nodes.
 * `engine` - (Optional) Name of the cache engine to be used for the clusters in this replication group. The only valid value is `redis`.
 * `engine_version` - (Optional) Version number of the cache engine to be used for the cache clusters in this replication group.
-  If the version is 6 or higher, only the major version can be set, e.g., `6.x`,
-  otherwise, specify the full version desired, e.g., `6.0`, `5.0.6`.
+  If the version is 6 or higher, only the major version can be set, e.g., `6.x`.
+  ElastiCache will use the latest minor version of the major version of Redis.
+  Otherwise, specify the full version desired, e.g., `6.0`, `5.0.6`.
   The actual engine version used is returned in the attribute `engine_version_actual`, [defined below](#engine_version_actual).
 * `final_snapshot_identifier` - (Optional) The name of your final node group (shard) snapshot. ElastiCache creates the snapshot from the primary node in the cluster. If omitted, no final snapshot will be made.
 * `global_replication_group_id` - (Optional) The ID of the global replication group to which this replication group should belong. If this parameter is specified, the replication group is added to the specified global replication group as a secondary replication group; otherwise, the replication group is not part of any global replication group. If `global_replication_group_id` is set, the `num_node_groups` parameter (or the `num_node_groups` parameter of the deprecated `cluster_mode` block) cannot be set.

@@ -114,8 +114,9 @@ The following arguments are optional:
 * `engine_version` – (Optional) Version number of the cache engine to be used.
   If not set, defaults to the latest version.
   See [Describe Cache Engine Versions](https://docs.aws.amazon.com/cli/latest/reference/elasticache/describe-cache-engine-versions.html) in the AWS Documentation for supported versions.
-  When `engine` is `redis` and the version is 6 or higher, only the major version can be set, e.g., `6.x`,
-  otherwise, specify the full version desired, e.g., `6.0`, `5.0.6`.
+  When `engine` is `redis` and the version is 6 or higher, only the major version can be set, e.g., `6.x`.
+  ElastiCache will use the latest minor version of the major version of Redis.
+  Otherwise, specify the full version desired, e.g., `6.0`, `5.0.6`.
   The actual engine version used is returned in the attribute `engine_version_actual`, [defined below](#engine_version_actual).
 * `final_snapshot_identifier` - (Optional, Redis only) Name of your final cluster snapshot. If omitted, no final snapshot will be made.
 * `log_delivery_configuration` - (Optional, Redis only) Specifies the destination and format of Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log). See the documentation on [Amazon ElastiCache](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html). See [Log Delivery Configuration](#log-delivery-configuration) below for more details.
