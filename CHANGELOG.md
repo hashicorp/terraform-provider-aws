@@ -31,6 +31,7 @@ ENHANCEMENTS:
 * data_source/aws_redshift_cluster: Add `availability_zone_relocation_enabled` attribute. ([#20812](https://github.com/hashicorp/terraform-provider-aws/issues/20812))
 * resource/aws_cloud9_environment_ec2: Add `connection_type` and `image_id` arguments ([#19195](https://github.com/hashicorp/terraform-provider-aws/issues/19195))
 * resource/aws_cloudformation_stack_set:_instance: Add `call_as` argument ([#23339](https://github.com/hashicorp/terraform-provider-aws/issues/23339))
+* resource/aws_dms_replication_task: Add optional `start_replication_task` and `status` argument ([#23692](https://github.com/hashicorp/terraform-provider-aws/issues/23692))
 * resource/aws_ec2_transit_gateway_connect_peer: Add `arn` attribute ([#13251](https://github.com/hashicorp/terraform-provider-aws/issues/13251))
 * resource/aws_ecs_service: `enable_ecs_managed_tags`, `load_balancer`, `propagate_tags` and `service_registries` can now be updated in-place ([#23600](https://github.com/hashicorp/terraform-provider-aws/issues/23600))
 * resource/aws_imagebuilder_image: Add `container_recipe_arn` argument ([#23647](https://github.com/hashicorp/terraform-provider-aws/issues/23647))
@@ -39,6 +40,7 @@ ENHANCEMENTS:
 * resource/aws_launch_configuration: Add `ephemeral_block_device.no_device` argument ([#23152](https://github.com/hashicorp/terraform-provider-aws/issues/23152))
 * resource/aws_msk_configuration: Correctly set `latest_revision` as Computed when `server_properties` changes ([#23662](https://github.com/hashicorp/terraform-provider-aws/issues/23662))
 * resource/aws_quicksight_user: Allow custom values for `namespace` ([#23607](https://github.com/hashicorp/terraform-provider-aws/issues/23607))
+* resource/aws_rds_cluster: Add `db_cluster_instance_class`, `allocated_storage`, `storage_type`, and `iops` arguments to support [Multi-AZ deployments for MySQL & PostgreSQL](https://aws.amazon.com/blogs/aws/amazon-rds-multi-az-db-cluster/) ([#23684](https://github.com/hashicorp/terraform-provider-aws/issues/23684))
 * resource/aws_rds_global_cluster: Add configurable timeouts ([#23560](https://github.com/hashicorp/terraform-provider-aws/issues/23560))
 * resource/aws_rds_instance: Add `source_db_instance_automated_backup_arn` option within `restore_to_point_in_time` attribute ([#23086](https://github.com/hashicorp/terraform-provider-aws/issues/23086))
 * resource/aws_redshift_cluster: Add `availability_zone_relocation_enabled` attribute and allow `availability_zone` to be changed in-place. ([#20812](https://github.com/hashicorp/terraform-provider-aws/issues/20812))
@@ -56,6 +58,7 @@ BUG FIXES:
 * resource/aws_rds_global_cluster: Fix ability to perform cluster version upgrades, including of clusters in distinct regions, such as previously got error: "Invalid database cluster identifier" ([#23560](https://github.com/hashicorp/terraform-provider-aws/issues/23560))
 * resource/aws_route53domains_registered_domain: Redirect all Route 53 Domains AWS API calls to the `us-east-1` Region ([#23672](https://github.com/hashicorp/terraform-provider-aws/issues/23672))
 * resource/aws_s3_bucket_acl: Fix resource import for S3 bucket names consisting of uppercase letters, underscores, and a maximum of 255 characters ([#23678](https://github.com/hashicorp/terraform-provider-aws/issues/23678))
+* resource/aws_s3_bucket_versioning: Add missing support for `Disabled` bucket versioning ([#23723](https://github.com/hashicorp/terraform-provider-aws/issues/23723))
 
 ## 4.5.0 (March 11, 2022)
 
