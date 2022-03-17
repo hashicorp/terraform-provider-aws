@@ -173,8 +173,8 @@ resource "aws_launch_template" "test" {
   disable_api_termination = true
   ebs_optimized           = false
 
-  kernel_id     = "aki-a12bc3de"
-  key_name      = "test"
+  kernel_id = "aki-a12bc3de"
+  key_name  = "test"
 
   placement {
     availability_zone = data.aws_availability_zones.available.names[0]
@@ -262,7 +262,7 @@ resource "aws_launch_template" "test" {
 
 data "aws_launch_template" "test" {
   tags = {
-    Name     = aws_launch_template.test.tags["Name"]
+    Name = aws_launch_template.test.tags["Name"]
   }
 }
 `, rName)
