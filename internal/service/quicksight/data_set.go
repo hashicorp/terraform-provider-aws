@@ -524,9 +524,10 @@ func ResourceDataSet() *schema.Resource {
 			},
 
 			"physical_table_map": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MaxItems: 32,
+				Type:         schema.TypeSet,
+				Required:     true,
+				MaxItems:     32,
+				ExactlyOneOf: []string{"custom_sql", "relational_table", "s3_source"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"physical_table_map_id": {
@@ -542,7 +543,7 @@ func ResourceDataSet() *schema.Resource {
 									"data_source_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.NoZeroValues,
+										ValidateFunc: verify.ValidARN,
 									},
 									"name": {
 										Type:         schema.TypeString,
@@ -586,7 +587,7 @@ func ResourceDataSet() *schema.Resource {
 									"data_source_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.NoZeroValues,
+										ValidateFunc: verify.ValidARN,
 									},
 									"input_columns": {
 										Type:     schema.TypeList,
@@ -611,11 +612,12 @@ func ResourceDataSet() *schema.Resource {
 									"name": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.NoZeroValues,
+										ValidateFunc: validation.StringLenBetween(1, 64),
 									},
 									"catalog": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 256),
 									},
 
 									"schema": {
@@ -635,7 +637,7 @@ func ResourceDataSet() *schema.Resource {
 									"data_source_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.NoZeroValues,
+										ValidateFunc: verify.ValidARN,
 									},
 									"input_columns": {
 										Type:     schema.TypeList,
@@ -712,7 +714,7 @@ func ResourceDataSet() *schema.Resource {
 						"arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.NoZeroValues,
+							ValidateFunc: verify.ValidARN,
 						},
 						"permission_policy": {
 							Type:         schema.TypeString,
