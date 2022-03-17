@@ -18,6 +18,7 @@ generators:
   - 'internal/**/generate.go'
   - 'internal/generate/**/*'
 github_actions:
+  - '.github/*.yml'
   - '.github/workflows/*.yml'
 linter:
   - '.github/workflows/acctest-terraform-lint.yml'
