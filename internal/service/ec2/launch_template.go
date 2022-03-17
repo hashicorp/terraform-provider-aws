@@ -45,6 +45,10 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"device_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"ebs": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -104,10 +108,6 @@ func ResourceLaunchTemplate() *schema.Resource {
 									},
 								},
 							},
-						},
-						"device_name": {
-							Type:     schema.TypeString,
-							Optional: true,
 						},
 						"no_device": {
 							Type:     schema.TypeString,
@@ -469,6 +469,10 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice([]string{"efa", "interface"}, false),
 						},
+						"ipv4_address_count": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
 						"ipv4_addresses": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -476,10 +480,6 @@ func ResourceLaunchTemplate() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validation.IsIPv4Address,
 							},
-						},
-						"ipv4_address_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
 						},
 						"ipv6_address_count": {
 							Type:     schema.TypeInt,

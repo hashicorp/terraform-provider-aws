@@ -19,30 +19,10 @@ import (
 func DataSourceLaunchTemplate() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceLaunchTemplateRead,
+
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"default_version": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"latest_version": {
-				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"block_device_mappings": {
@@ -51,14 +31,6 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"device_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"no_device": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"virtual_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -102,6 +74,14 @@ func DataSourceLaunchTemplate() *schema.Resource {
 								},
 							},
 						},
+						"no_device": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"virtual_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -116,6 +96,14 @@ func DataSourceLaunchTemplate() *schema.Resource {
 						},
 					},
 				},
+			},
+			"default_version": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"disable_api_termination": {
 				Type:     schema.TypeBool,
@@ -137,6 +125,31 @@ func DataSourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
+			"enclave_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"filter": DataSourceFiltersSchema(),
+			"hibernation_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"configured": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"iam_instance_profile": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -153,11 +166,15 @@ func DataSourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
+			"id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"image_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"instance_initiated_shutdown_behavior": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -214,6 +231,10 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"latest_version": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"metadata_options": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -227,28 +248,16 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"http_tokens": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"http_put_response_hop_limit": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"instance_metadata_tags": {
+						"http_tokens": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-					},
-				},
-			},
-			"enclave_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
+						"instance_metadata_tags": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
@@ -265,6 +274,10 @@ func DataSourceLaunchTemplate() *schema.Resource {
 						},
 					},
 				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"network_interfaces": {
 				Type:     schema.TypeList,
@@ -291,7 +304,15 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"security_groups": {
+						"interface_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ipv4_address_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"ipv4_addresses": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -317,20 +338,12 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"ipv4_addresses": {
+						"security_groups": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"ipv4_address_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
 						"subnet_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"interface_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -362,16 +375,16 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"partition_number": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
 						"spread_domain": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"tenancy": {
 							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"partition_number": {
-							Type:     schema.TypeInt,
 							Computed: true,
 						},
 					},
@@ -382,11 +395,6 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 			},
 			"security_group_names": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -404,24 +412,16 @@ func DataSourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
+			"tags": tftags.TagsSchemaComputed(),
 			"user_data": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"hibernation_options": {
-				Type:     schema.TypeList,
+			"vpc_security_group_ids": {
+				Type:     schema.TypeSet,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"configured": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":   tftags.TagsSchemaComputed(),
-			"filter": DataSourceFiltersSchema(),
 		},
 	}
 }
