@@ -63,14 +63,15 @@ func ResourceConfigurationProfile() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "AWS.Freeform",
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z\.]+`), ""),
+				ForceNew:     true,
+				Default:      ConfigurationProfileTypeAWSFreeform,
+				ValidateFunc: validation.StringInSlice(ConfigurationProfileType_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 			"validator": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -123,12 +124,12 @@ func resourceConfigurationProfileCreate(d *schema.ResourceData, meta interface{}
 		input.RetrievalRoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("validator"); ok && v.(*schema.Set).Len() > 0 {
-		input.Validators = expandAppconfigValidators(v.(*schema.Set).List())
-	}
-
 	if v, ok := d.GetOk("type"); ok {
 		input.Type = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("validator"); ok && v.(*schema.Set).Len() > 0 {
+		input.Validators = expandAppconfigValidators(v.(*schema.Set).List())
 	}
 
 	profile, err := conn.CreateConfigurationProfile(input)
@@ -183,8 +184,8 @@ func resourceConfigurationProfileRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("description", output.Description)
 	d.Set("location_uri", output.LocationUri)
 	d.Set("name", output.Name)
-
 	d.Set("retrieval_role_arn", output.RetrievalRoleArn)
+	d.Set("type", output.Type)
 
 	if err := d.Set("validator", flattenValidators(output.Validators)); err != nil {
 		return fmt.Errorf("error setting validator: %w", err)
@@ -197,7 +198,6 @@ func resourceConfigurationProfileRead(d *schema.ResourceData, meta interface{}) 
 		Resource:  fmt.Sprintf("application/%s/configurationprofile/%s", appID, confProfID),
 		Service:   "appconfig",
 	}.String()
-
 	d.Set("arn", arn)
 
 	tags, err := ListTags(conn, arn)
