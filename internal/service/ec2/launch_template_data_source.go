@@ -5,6 +5,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -545,8 +546,12 @@ func dataSourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error setting instance_market_options: %w", err)
 	}
 
-	if err := d.Set("metadata_options", flattenLaunchTemplateInstanceMetadataOptions(ltData.MetadataOptions)); err != nil {
-		return fmt.Errorf("error setting metadata_options: %w", err)
+	if ltData.MetadataOptions != nil {
+		if err := d.Set("metadata_options", []interface{}{flattenLaunchTemplateInstanceMetadataOptions(ltData.MetadataOptions)}); err != nil {
+			return fmt.Errorf("error setting metadata_options: %w", err)
+		}
+	} else {
+		d.Set("metadata_options", nil)
 	}
 
 	if err := d.Set("enclave_options", getEnclaveOptions(ltData.EnclaveOptions)); err != nil {
@@ -574,4 +579,323 @@ func dataSourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	return nil
+}
+
+// TODO
+// Temporarily move these here.
+// Refactor to use same functions as resource.
+// TODO
+
+func getBlockDeviceMappings(m []*ec2.LaunchTemplateBlockDeviceMapping) []interface{} {
+	s := []interface{}{}
+	for _, v := range m {
+		mapping := map[string]interface{}{
+			"device_name":  aws.StringValue(v.DeviceName),
+			"virtual_name": aws.StringValue(v.VirtualName),
+		}
+		if v.NoDevice != nil {
+			mapping["no_device"] = aws.StringValue(v.NoDevice)
+		}
+		if v.Ebs != nil {
+			ebs := map[string]interface{}{
+				"volume_size": int(aws.Int64Value(v.Ebs.VolumeSize)),
+				"volume_type": aws.StringValue(v.Ebs.VolumeType),
+			}
+			if v.Ebs.DeleteOnTermination != nil {
+				ebs["delete_on_termination"] = strconv.FormatBool(aws.BoolValue(v.Ebs.DeleteOnTermination))
+			}
+			if v.Ebs.Encrypted != nil {
+				ebs["encrypted"] = strconv.FormatBool(aws.BoolValue(v.Ebs.Encrypted))
+			}
+			if v.Ebs.Iops != nil {
+				ebs["iops"] = aws.Int64Value(v.Ebs.Iops)
+			}
+			if v.Ebs.KmsKeyId != nil {
+				ebs["kms_key_id"] = aws.StringValue(v.Ebs.KmsKeyId)
+			}
+			if v.Ebs.SnapshotId != nil {
+				ebs["snapshot_id"] = aws.StringValue(v.Ebs.SnapshotId)
+			}
+			if v.Ebs.Throughput != nil {
+				ebs["throughput"] = aws.Int64Value(v.Ebs.Throughput)
+			}
+
+			mapping["ebs"] = []interface{}{ebs}
+		}
+		s = append(s, mapping)
+	}
+	return s
+}
+
+func getCapacityReservationSpecification(crs *ec2.LaunchTemplateCapacityReservationSpecificationResponse) []interface{} {
+	s := []interface{}{}
+	if crs != nil {
+		s = append(s, map[string]interface{}{
+			"capacity_reservation_preference": aws.StringValue(crs.CapacityReservationPreference),
+			"capacity_reservation_target":     getCapacityReservationTarget(crs.CapacityReservationTarget),
+		})
+	}
+	return s
+}
+
+func getCapacityReservationTarget(crt *ec2.CapacityReservationTargetResponse) []interface{} {
+	s := []interface{}{}
+	if crt != nil {
+		s = append(s, map[string]interface{}{
+			"capacity_reservation_id": aws.StringValue(crt.CapacityReservationId),
+		})
+	}
+	return s
+}
+
+func getCpuOptions(cs *ec2.LaunchTemplateCpuOptions) []interface{} {
+	s := []interface{}{}
+	if cs != nil {
+		s = append(s, map[string]interface{}{
+			"core_count":       aws.Int64Value(cs.CoreCount),
+			"threads_per_core": aws.Int64Value(cs.ThreadsPerCore),
+		})
+	}
+	return s
+}
+
+func getCreditSpecification(cs *ec2.CreditSpecification) []interface{} {
+	s := []interface{}{}
+	if cs != nil {
+		s = append(s, map[string]interface{}{
+			"cpu_credits": aws.StringValue(cs.CpuCredits),
+		})
+	}
+	return s
+}
+
+func getElasticGpuSpecifications(e []*ec2.ElasticGpuSpecificationResponse) []interface{} {
+	s := []interface{}{}
+	for _, v := range e {
+		s = append(s, map[string]interface{}{
+			"type": aws.StringValue(v.Type),
+		})
+	}
+	return s
+}
+
+func flattenEc2LaunchTemplateElasticInferenceAcceleratorResponse(accelerators []*ec2.LaunchTemplateElasticInferenceAcceleratorResponse) []interface{} {
+	l := []interface{}{}
+
+	for _, accelerator := range accelerators {
+		if accelerator == nil {
+			continue
+		}
+
+		m := map[string]interface{}{
+			"type": aws.StringValue(accelerator.Type),
+		}
+
+		l = append(l, m)
+	}
+
+	return l
+}
+
+func getIamInstanceProfile(i *ec2.LaunchTemplateIamInstanceProfileSpecification) []interface{} {
+	s := []interface{}{}
+	if i != nil {
+		s = append(s, map[string]interface{}{
+			"arn":  aws.StringValue(i.Arn),
+			"name": aws.StringValue(i.Name),
+		})
+	}
+	return s
+}
+
+func getInstanceMarketOptions(m *ec2.LaunchTemplateInstanceMarketOptions) []interface{} {
+	s := []interface{}{}
+	if m != nil {
+		mo := map[string]interface{}{
+			"market_type": aws.StringValue(m.MarketType),
+		}
+		so := m.SpotOptions
+		if so != nil {
+			spotOptions := map[string]interface{}{}
+
+			if so.BlockDurationMinutes != nil {
+				spotOptions["block_duration_minutes"] = aws.Int64Value(so.BlockDurationMinutes)
+			}
+
+			if so.InstanceInterruptionBehavior != nil {
+				spotOptions["instance_interruption_behavior"] = aws.StringValue(so.InstanceInterruptionBehavior)
+			}
+
+			if so.MaxPrice != nil {
+				spotOptions["max_price"] = aws.StringValue(so.MaxPrice)
+			}
+
+			if so.SpotInstanceType != nil {
+				spotOptions["spot_instance_type"] = aws.StringValue(so.SpotInstanceType)
+			}
+
+			if so.ValidUntil != nil {
+				spotOptions["valid_until"] = aws.TimeValue(so.ValidUntil).Format(time.RFC3339)
+			}
+
+			mo["spot_options"] = []interface{}{spotOptions}
+		}
+		s = append(s, mo)
+	}
+	return s
+}
+
+func getLicenseSpecifications(licenseSpecifications []*ec2.LaunchTemplateLicenseConfiguration) []map[string]interface{} {
+	var s []map[string]interface{}
+	for _, v := range licenseSpecifications {
+		s = append(s, map[string]interface{}{
+			"license_configuration_arn": aws.StringValue(v.LicenseConfigurationArn),
+		})
+	}
+	return s
+}
+
+func getEnclaveOptions(m *ec2.LaunchTemplateEnclaveOptions) []interface{} {
+	s := []interface{}{}
+	if m != nil {
+		mo := map[string]interface{}{
+			"enabled": aws.BoolValue(m.Enabled),
+		}
+		s = append(s, mo)
+	}
+	return s
+}
+
+func getMonitoring(m *ec2.LaunchTemplatesMonitoring) []interface{} {
+	s := []interface{}{}
+	if m != nil {
+		mo := map[string]interface{}{
+			"enabled": aws.BoolValue(m.Enabled),
+		}
+		s = append(s, mo)
+	}
+	return s
+}
+
+func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecification) []interface{} {
+	s := []interface{}{}
+	for _, v := range n {
+		var ipv4Addresses []string
+
+		networkInterface := map[string]interface{}{
+			"description":          aws.StringValue(v.Description),
+			"device_index":         aws.Int64Value(v.DeviceIndex),
+			"interface_type":       aws.StringValue(v.InterfaceType),
+			"ipv4_address_count":   aws.Int64Value(v.SecondaryPrivateIpAddressCount),
+			"ipv6_address_count":   aws.Int64Value(v.Ipv6AddressCount),
+			"network_card_index":   aws.Int64Value(v.NetworkCardIndex),
+			"network_interface_id": aws.StringValue(v.NetworkInterfaceId),
+			"private_ip_address":   aws.StringValue(v.PrivateIpAddress),
+			"subnet_id":            aws.StringValue(v.SubnetId),
+		}
+
+		if v.AssociateCarrierIpAddress != nil {
+			networkInterface["associate_carrier_ip_address"] = strconv.FormatBool(aws.BoolValue(v.AssociateCarrierIpAddress))
+		}
+
+		if v.AssociatePublicIpAddress != nil {
+			networkInterface["associate_public_ip_address"] = strconv.FormatBool(aws.BoolValue(v.AssociatePublicIpAddress))
+		}
+
+		if v.DeleteOnTermination != nil {
+			networkInterface["delete_on_termination"] = strconv.FormatBool(aws.BoolValue(v.DeleteOnTermination))
+		}
+
+		if len(v.Ipv6Addresses) > 0 {
+			raw, ok := networkInterface["ipv6_addresses"]
+			if !ok {
+				raw = schema.NewSet(schema.HashString, nil)
+			}
+
+			list := raw.(*schema.Set)
+
+			for _, address := range v.Ipv6Addresses {
+				list.Add(aws.StringValue(address.Ipv6Address))
+			}
+
+			networkInterface["ipv6_addresses"] = list
+		}
+
+		for _, address := range v.PrivateIpAddresses {
+			ipv4Addresses = append(ipv4Addresses, aws.StringValue(address.PrivateIpAddress))
+		}
+		if len(ipv4Addresses) > 0 {
+			networkInterface["ipv4_addresses"] = ipv4Addresses
+		}
+
+		if len(v.Groups) > 0 {
+			raw, ok := networkInterface["security_groups"]
+			if !ok {
+				raw = schema.NewSet(schema.HashString, nil)
+			}
+			list := raw.(*schema.Set)
+
+			for _, group := range v.Groups {
+				list.Add(aws.StringValue(group))
+			}
+
+			networkInterface["security_groups"] = list
+		}
+
+		s = append(s, networkInterface)
+	}
+	return s
+}
+
+func getPlacement(p *ec2.LaunchTemplatePlacement) []interface{} {
+	var s []interface{}
+	if p != nil {
+		s = append(s, map[string]interface{}{
+			"affinity":                aws.StringValue(p.Affinity),
+			"availability_zone":       aws.StringValue(p.AvailabilityZone),
+			"group_name":              aws.StringValue(p.GroupName),
+			"host_id":                 aws.StringValue(p.HostId),
+			"host_resource_group_arn": aws.StringValue(p.HostResourceGroupArn),
+			"spread_domain":           aws.StringValue(p.SpreadDomain),
+			"tenancy":                 aws.StringValue(p.Tenancy),
+			"partition_number":        aws.Int64Value(p.PartitionNumber),
+		})
+	}
+	return s
+}
+
+func expandLaunchTemplateHibernationOptions(l []interface{}) *ec2.LaunchTemplateHibernationOptionsRequest {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	opts := &ec2.LaunchTemplateHibernationOptionsRequest{
+		Configured: aws.Bool(m["configured"].(bool)),
+	}
+
+	return opts
+}
+
+func flattenLaunchTemplateHibernationOptions(m *ec2.LaunchTemplateHibernationOptions) []interface{} {
+	s := []interface{}{}
+	if m != nil {
+		mo := map[string]interface{}{
+			"configured": aws.BoolValue(m.Configured),
+		}
+		s = append(s, mo)
+	}
+	return s
+}
+
+func getTagSpecifications(t []*ec2.LaunchTemplateTagSpecification) []interface{} {
+	var s []interface{}
+	for _, v := range t {
+		s = append(s, map[string]interface{}{
+			"resource_type": aws.StringValue(v.ResourceType),
+			"tags":          KeyValueTags(v.Tags).IgnoreAWS().Map(),
+		})
+	}
+	return s
 }

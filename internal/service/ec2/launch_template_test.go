@@ -2077,6 +2077,7 @@ resource "aws_autoscaling_group" "test" {
   desired_capacity   = 0
   max_size           = 0
   min_size           = 0
+  name               = %[1]q
 
   launch_template {
     id      = aws_launch_template.test.id
@@ -2103,6 +2104,7 @@ resource "aws_autoscaling_group" "test" {
   desired_capacity   = 0
   max_size           = 0
   min_size           = 0
+  name               = %[1]q
 
   launch_template {
     id      = aws_launch_template.test.id
@@ -2137,6 +2139,7 @@ resource "aws_autoscaling_group" "test" {
   desired_capacity   = 0
   min_size           = 0
   max_size           = 0
+  name               = %[1]q
 
   launch_template {
     id      = aws_launch_template.test.id
@@ -2172,6 +2175,7 @@ resource "aws_autoscaling_group" "test" {
   desired_capacity   = 0
   min_size           = 0
   max_size           = 0
+  name               = %[1]q
 
   launch_template {
     id      = aws_launch_template.test.id
