@@ -42,9 +42,11 @@ buckets or enabling object lock on an existing bucket. ([#23716](https://github.
 BUG FIXES:
 
 * resource/aws_s3_bucket: Prevent panic when expanding the bucket's list of `cors_rule` ([#7547](https://github.com/hashicorp/terraform-provider-aws/issues/7547))
+* resource/aws_s3_bucket_replication_configuration: Change `rule` configuration block to list instead of set ([#23737](https://github.com/hashicorp/terraform-provider-aws/issues/23737))
 * resource/aws_s3_bucket_replication_configuration: Correctly configure empty `rule.filter` configuration block in API requests ([#23716](https://github.com/hashicorp/terraform-provider-aws/issues/23716))
 * resource/aws_s3_bucket_replication_configuration: Ensure both `key` and `value` arguments of the `rule.filter.tag` configuration block are correctly populated in the outgoing API request and terraform state. ([#23716](https://github.com/hashicorp/terraform-provider-aws/issues/23716))
 * resource/aws_s3_bucket_replication_configuration: Prevent inconsistent final plan when `rule.filter.prefix` is an empty string ([#23716](https://github.com/hashicorp/terraform-provider-aws/issues/23716))
+* resource/aws_s3_bucket_replication_configuration: Set `rule.id` as Computed to prevent drift when the value is not configured ([#23737](https://github.com/hashicorp/terraform-provider-aws/issues/23737))
 
 ## 3.74.3 (February 17, 2022)
 
