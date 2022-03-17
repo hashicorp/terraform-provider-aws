@@ -177,6 +177,15 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccReplicationGroupConfig_EngineVersion(rName, "6.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &v4),
+					testAccCheckReplicationGroupNotRecreated(&v3, &v4),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.0"),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
+				),
+			},
+			{
 				Config: testAccReplicationGroupConfig_EngineVersion(rName, "6.x"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &v4),

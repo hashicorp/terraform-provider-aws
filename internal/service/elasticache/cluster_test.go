@@ -636,6 +636,15 @@ func TestAccElastiCacheCluster_EngineVersion_redis(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccClusterConfig_EngineVersion_Redis(rName, "6.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &v4),
+					testAccCheckClusterNotRecreated(&v3, &v4),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.0"),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
+				),
+			},
+			{
 				Config: testAccClusterConfig_EngineVersion_Redis(rName, "6.x"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v4),
