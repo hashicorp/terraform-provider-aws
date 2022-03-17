@@ -39,27 +39,27 @@ resource "aws_appconfig_hosted_configuration_version" "example" {
   content_type             = "application/json"
 
   content = jsonencode({
-      flags: {
-        foo: {
-          name: "foo",
-          _deprecation: {
-              "status": "planned"
-          }
-        }
-        bar: {
-          name: "bar",
+    flags: {
+      foo: {
+        name: "foo",
+        _deprecation: {
+          "status": "planned"
         }
       }
-      values: {
-        foo: {
-          enabled: "true",
-        }
-        bar: {
-          enabled: "true",
-        }
+      bar: {
+        name: "bar",
       }
-      version: "1"
-    })
+    }
+    values: {
+      foo: {
+        enabled: "true",
+      }
+      bar: {
+        enabled: "true",
+      }
+    }
+    version: "1"
+  })
 }
 ```
 
