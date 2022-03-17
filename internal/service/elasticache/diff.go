@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	multierror "github.com/hashicorp/go-multierror"
@@ -38,6 +39,10 @@ func CustomizeDiffEngineVersion(_ context.Context, diff *schema.ResourceDiff, v 
 	}
 
 	if nVersion.GreaterThan(oVersion) {
+		return nil
+		// If the engine is 'redis' and the new engine_version contains a similar major version but has a minor version containing a 'x', the gVersion will be equal here.
+		// In that case, ElastiCache will pull the latest minor version of the major version and we prevent re-creation.
+	} else if nVersion.Equal(oVersion) && strings.Contains(n.(string), "x") && diff.Get("engine").(string) == engineRedis {
 		return nil
 	}
 
