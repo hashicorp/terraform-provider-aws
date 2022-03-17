@@ -194,7 +194,8 @@ The `capacity_reservation_specification` block supports the following:
 
 The `capacity_reservation_target` block supports the following:
 
-* `capacity_reservation_id` - The ID of the Capacity Reservation to target.
+* `capacity_reservation_id` - The ID of the Capacity Reservation in which to run the instance.
+* `capacity_reservation_resource_group_arn` - The ARN of the Capacity Reservation resource group in which to run the instance.
 
 ### CPU Options
 

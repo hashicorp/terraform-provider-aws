@@ -100,6 +100,10 @@ func DataSourceLaunchTemplate() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
+									"capacity_reservation_resource_group_arn": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
 								},
 							},
 						},

@@ -138,8 +138,15 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"capacity_reservation_id": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:          schema.TypeString,
+										Optional:      true,
+										ConflictsWith: []string{"capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_resource_group_arn"},
+									},
+									"capacity_reservation_resource_group_arn": {
+										Type:          schema.TypeString,
+										Optional:      true,
+										ValidateFunc:  verify.ValidARN,
+										ConflictsWith: []string{"capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_id"},
 									},
 								},
 							},
@@ -1106,6 +1113,10 @@ func expandCapacityReservationTarget(tfMap map[string]interface{}) *ec2.Capacity
 		apiObject.CapacityReservationId = aws.String(v)
 	}
 
+	if v, ok := tfMap["capacity_reservation_resource_group_arn"].(string); ok && v != "" {
+		apiObject.CapacityReservationResourceGroupArn = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -1816,6 +1827,10 @@ func flattenCapacityReservationTargetResponse(apiObject *ec2.CapacityReservation
 
 	if v := apiObject.CapacityReservationId; v != nil {
 		tfMap["capacity_reservation_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.CapacityReservationResourceGroupArn; v != nil {
+		tfMap["capacity_reservation_resource_group_arn"] = aws.StringValue(v)
 	}
 
 	return tfMap
