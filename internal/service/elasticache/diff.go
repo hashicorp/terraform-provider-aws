@@ -59,7 +59,7 @@ func CustomizeDiffValidateClusterAZMode(_ context.Context, diff *schema.Resource
 // CustomizeDiffValidateClusterEngineVersion validates the correct format for `engine_version`, based on `engine`
 func CustomizeDiffValidateClusterEngineVersion(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	// Memcached: Versions in format <major>.<minor>.<bug fix>
-	// Redis: Starting with version 6, must match <major>.x, prior to version 6, <major>.<minor>.<bug fix>
+	// Redis: Starting with version 6, must match <major>.<minor>, prior to version 6, <major>.<minor>.<bug fix>
 	engineVersion, ok := diff.GetOk("engine_version")
 	if !ok {
 		return nil

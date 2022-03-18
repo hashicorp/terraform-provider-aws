@@ -37,7 +37,7 @@ func validVersionString(v interface{}, k string) (ws []string, errors []error) {
 
 const (
 	redisVersionPreV6RegexpRaw  = `[1-5](\.[[:digit:]]+){2}`
-	redisVersionPostV6RegexpRaw = `([6-9]|[[:digit:]]{2})\.x`
+	redisVersionPostV6RegexpRaw = `([6-9]|[[:digit:]]{2})\.([[:digit:]])`
 
 	redisVersionRegexpRaw = redisVersionPreV6RegexpRaw + "|" + redisVersionPostV6RegexpRaw
 )
@@ -56,7 +56,7 @@ func ValidRedisVersionString(v interface{}, k string) (ws []string, errors []err
 	value := v.(string)
 
 	if !redisVersionRegexp.MatchString(value) {
-		errors = append(errors, fmt.Errorf("%s: Redis versions must match <major>.x when using version 6 or higher, or <major>.<minor>.<bug-fix>", k))
+		errors = append(errors, fmt.Errorf("%s: Redis versions must match <major>.<minor> when using version 6 or higher, or <major>.<minor>.<bug-fix>", k))
 	}
 
 	return

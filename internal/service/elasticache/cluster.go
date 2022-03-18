@@ -565,11 +565,7 @@ func setEngineVersionFromCacheCluster(d *schema.ResourceData, c *elasticache.Cac
 	if engineVersion.Segments()[0] < 6 {
 		d.Set("engine_version", engineVersion.String()) // e.g. 3.2.10
 	} else {
-		if strings.Contains(d.Get("engine_version").(string), "x") {
-			d.Set("engine_version", fmt.Sprintf("%d.x", engineVersion.Segments()[0])) // e.g. 6.x
-		} else {
-			d.Set("engine_version", fmt.Sprintf("%d.%d", engineVersion.Segments()[0], engineVersion.Segments()[1])) // e.g. 6.0
-		}
+		d.Set("engine_version", fmt.Sprintf("%d.%d", engineVersion.Segments()[0], engineVersion.Segments()[1])) // e.g. 6.2
 	}
 	d.Set("engine_version_actual", engineVersion.String()) // e.g. 6.0.5
 
