@@ -1,4 +1,13 @@
 ## 4.7.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_imagebuilder_image_pipelines` ([#23741](https://github.com/hashicorp/terraform-provider-aws/issues/23741))
+
+ENHANCEMENTS:
+
+* resource/aws_athena_workgroup: Add `acl_configuration` and `expected_bucket_owner` arguments to the `configuration.result_configuration` block ([#23748](https://github.com/hashicorp/terraform-provider-aws/issues/23748))
+
 ## 4.6.0 (March 18, 2022)
 
 FEATURES:
