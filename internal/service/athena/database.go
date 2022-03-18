@@ -31,6 +31,7 @@ func ResourceDatabase() *schema.Resource {
 			"bucket": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"force_destroy": {
 				Type:     schema.TypeBool,
