@@ -263,13 +263,17 @@ func resourceCapacityReservationUpdate(d *schema.ResourceData, meta interface{})
 func resourceCapacityReservationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	opts := &ec2.CancelCapacityReservationInput{
+	log.Printf("[DEBUG] Deleting EC2 Capacity Reservation: %s", d.Id())
+	_, err := conn.CancelCapacityReservation(&ec2.CancelCapacityReservationInput{
 		CapacityReservationId: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidCapacityReservationIdNotFound) {
+		return nil
 	}
 
-	_, err := conn.CancelCapacityReservation(opts)
 	if err != nil {
-		return fmt.Errorf("Error cancelling EC2 Capacity Reservation: %s", err)
+		return fmt.Errorf("error deleting EC2 Capacity Reservation (%s): %w", d.Id(), err)
 	}
 
 	return nil
