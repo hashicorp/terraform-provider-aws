@@ -80,6 +80,20 @@ func ResourceWorkGroup() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"acl_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"s3_acl_option": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(athena.S3AclOption_Values(), false),
+												},
+											},
+										},
+									},
 									"encryption_configuration": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -98,6 +112,10 @@ func ResourceWorkGroup() *schema.Resource {
 												},
 											},
 										},
+									},
+									"expected_bucket_owner": {
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 									"output_location": {
 										Type:     schema.TypeString,
@@ -278,28 +296,22 @@ func resourceWorkGroupDelete(d *schema.ResourceData, meta interface{}) error {
 func resourceWorkGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AthenaConn
 
-	workGroupUpdate := false
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &athena.UpdateWorkGroupInput{
+			WorkGroup: aws.String(d.Get("name").(string)),
+		}
 
-	input := &athena.UpdateWorkGroupInput{
-		WorkGroup: aws.String(d.Get("name").(string)),
-	}
+		if d.HasChange("configuration") {
+			input.ConfigurationUpdates = expandAthenaWorkGroupConfigurationUpdates(d.Get("configuration").([]interface{}))
+		}
 
-	if d.HasChange("configuration") {
-		workGroupUpdate = true
-		input.ConfigurationUpdates = expandAthenaWorkGroupConfigurationUpdates(d.Get("configuration").([]interface{}))
-	}
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
+		}
 
-	if d.HasChange("description") {
-		workGroupUpdate = true
-		input.Description = aws.String(d.Get("description").(string))
-	}
-
-	if d.HasChange("state") {
-		workGroupUpdate = true
-		input.State = aws.String(d.Get("state").(string))
-	}
-
-	if workGroupUpdate {
+		if d.HasChange("state") {
+			input.State = aws.String(d.Get("state").(string))
+		}
 		_, err := conn.UpdateWorkGroup(input)
 
 		if err != nil {
@@ -420,8 +432,12 @@ func expandAthenaWorkGroupResultConfiguration(l []interface{}) *athena.ResultCon
 		resultConfiguration.EncryptionConfiguration = expandAthenaWorkGroupEncryptionConfiguration(v.([]interface{}))
 	}
 
-	if v, ok := m["output_location"]; ok && v.(string) != "" {
-		resultConfiguration.OutputLocation = aws.String(v.(string))
+	if v, ok := m["output_location"].(string); ok && v != "" {
+		resultConfiguration.OutputLocation = aws.String(v)
+	}
+
+	if v, ok := m["expected_bucket_owner"].(string); ok && v != "" {
+		resultConfiguration.ExpectedBucketOwner = aws.String(v)
 	}
 
 	return resultConfiguration
@@ -442,10 +458,16 @@ func expandAthenaWorkGroupResultConfigurationUpdates(l []interface{}) *athena.Re
 		resultConfigurationUpdates.RemoveEncryptionConfiguration = aws.Bool(true)
 	}
 
-	if v, ok := m["output_location"]; ok && v.(string) != "" {
-		resultConfigurationUpdates.OutputLocation = aws.String(v.(string))
+	if v, ok := m["output_location"].(string); ok && v != "" {
+		resultConfigurationUpdates.OutputLocation = aws.String(v)
 	} else {
 		resultConfigurationUpdates.RemoveOutputLocation = aws.Bool(true)
+	}
+
+	if v, ok := m["expected_bucket_owner"].(string); ok && v != "" {
+		resultConfigurationUpdates.ExpectedBucketOwner = aws.String(v)
+	} else {
+		resultConfigurationUpdates.RemoveExpectedBucketOwner = aws.Bool(true)
 	}
 
 	return resultConfigurationUpdates
