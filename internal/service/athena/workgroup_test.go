@@ -828,9 +828,9 @@ resource "aws_athena_workgroup" "test" {
     result_configuration {
       acl_configuration {
         s3_acl_option = "BUCKET_OWNER_FULL_CONTROL"
-	  }
+      }
     }
-  }  
+  }
 }
 `, rName)
 }
