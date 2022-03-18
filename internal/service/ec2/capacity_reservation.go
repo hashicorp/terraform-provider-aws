@@ -159,6 +159,10 @@ func resourceCapacityReservationCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(aws.StringValue(output.CapacityReservation.CapacityReservationId))
 
+	if _, err := WaitCapacityReservationActive(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for EC2 Capacity Reservation (%s) create: %w", d.Id(), err)
+	}
+
 	return resourceCapacityReservationRead(d, meta)
 }
 
@@ -233,6 +237,10 @@ func resourceCapacityReservationUpdate(d *schema.ResourceData, meta interface{})
 		if err != nil {
 			return fmt.Errorf("error updating EC2 Capacity Reservation (%s): %w", d.Id(), err)
 		}
+
+		if _, err := WaitCapacityReservationActive(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for EC2 Capacity Reservation (%s) update: %w", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags_all") {
@@ -260,6 +268,10 @@ func resourceCapacityReservationDelete(d *schema.ResourceData, meta interface{})
 
 	if err != nil {
 		return fmt.Errorf("error deleting EC2 Capacity Reservation (%s): %w", d.Id(), err)
+	}
+
+	if _, err := WaitCapacityReservationDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for EC2 Capacity Reservation (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil

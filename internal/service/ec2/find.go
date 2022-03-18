@@ -72,7 +72,8 @@ func FindCapacityReservationByID(conn *ec2.EC2, id string) (*ec2.CapacityReserva
 		return nil, err
 	}
 
-	if state := aws.StringValue(output.State); state == ec2.CapacityReservationStateCancelled {
+	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/capacity-reservations-using.html#capacity-reservations-view.
+	if state := aws.StringValue(output.State); state == ec2.CapacityReservationStateCancelled || state == ec2.CapacityReservationStateExpired {
 		return nil, &resource.NotFoundError{
 			Message:     state,
 			LastRequest: input,
