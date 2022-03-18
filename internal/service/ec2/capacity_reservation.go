@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -166,39 +167,26 @@ func resourceCapacityReservationRead(d *schema.ResourceData, meta interface{}) e
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.DescribeCapacityReservations(&ec2.DescribeCapacityReservationsInput{
-		CapacityReservationIds: []*string{aws.String(d.Id())},
-	})
+	reservation, err := FindCapacityReservationByID(conn, d.Id())
 
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, "InvalidCapacityReservationId.NotFound") {
-			log.Printf("[WARN] EC2 Capacity Reservation (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading EC2 Capacity Reservation %s: %s", d.Id(), err)
-	}
-
-	if resp == nil || len(resp.CapacityReservations) == 0 || resp.CapacityReservations[0] == nil {
-		return fmt.Errorf("error reading EC2 Capacity Reservation (%s): empty response", d.Id())
-	}
-
-	reservation := resp.CapacityReservations[0]
-
-	if aws.StringValue(reservation.State) == ec2.CapacityReservationStateCancelled || aws.StringValue(reservation.State) == ec2.CapacityReservationStateExpired {
-		log.Printf("[WARN] EC2 Capacity Reservation (%s) no longer active, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Capacity Reservation %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	d.Set("availability_zone", reservation.AvailabilityZone)
-	d.Set("ebs_optimized", reservation.EbsOptimized)
-
-	d.Set("end_date", "")
-	if reservation.EndDate != nil {
-		d.Set("end_date", aws.TimeValue(reservation.EndDate).Format(time.RFC3339))
+	if err != nil {
+		return fmt.Errorf("error reading EC2 Capacity Reservation (%s): %w", d.Id(), err)
 	}
 
+	d.Set("arn", reservation.CapacityReservationArn)
+	d.Set("availability_zone", reservation.AvailabilityZone)
+	d.Set("ebs_optimized", reservation.EbsOptimized)
+	if reservation.EndDate != nil {
+		d.Set("end_date", aws.TimeValue(reservation.EndDate).Format(time.RFC3339))
+	} else {
+		d.Set("end_date", nil)
+	}
 	d.Set("end_date_type", reservation.EndDateType)
 	d.Set("ephemeral_storage", reservation.EphemeralStorage)
 	d.Set("instance_count", reservation.TotalInstanceCount)
@@ -207,6 +195,7 @@ func resourceCapacityReservationRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("instance_type", reservation.InstanceType)
 	d.Set("outpost_arn", reservation.OutpostArn)
 	d.Set("owner_id", reservation.OwnerId)
+	d.Set("tenancy", reservation.Tenancy)
 
 	tags := KeyValueTags(reservation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -218,9 +207,6 @@ func resourceCapacityReservationRead(d *schema.ResourceData, meta interface{}) e
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
-
-	d.Set("tenancy", reservation.Tenancy)
-	d.Set("arn", reservation.CapacityReservationArn)
 
 	return nil
 }
