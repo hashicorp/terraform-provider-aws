@@ -2,6 +2,7 @@ package ssm_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -36,6 +37,7 @@ func TestAccSSMMaintenanceWindowTask_basic(t *testing.T) {
 				Config: testAccMaintenanceWindowTaskBasicUpdateConfig(rName, "test description", "RUN_COMMAND", "AWS-InstallPowerShellModule", 3, 3, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowTaskExists(resourceName, &after),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm", regexp.MustCompile(`windowtask/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("maintenance-window-task-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "description", "test description"),
 					resource.TestCheckResourceAttr(resourceName, "task_type", "RUN_COMMAND"),
@@ -44,6 +46,33 @@ func TestAccSSMMaintenanceWindowTask_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "max_concurrency", "3"),
 					resource.TestCheckResourceAttr(resourceName, "max_errors", "2"),
 					testAccCheckWindowsTaskNotRecreated(t, &before, &after),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccMaintenanceWindowTaskImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSSMMaintenanceWindowTask_noTarget(t *testing.T) {
+	var before ssm.MaintenanceWindowTask
+	resourceName := "aws_ssm_maintenance_window_task.test"
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckMaintenanceWindowTaskDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMaintenanceWindowTaskNoTargetConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMaintenanceWindowTaskExists(resourceName, &before),
 				),
 			},
 			{
@@ -558,6 +587,19 @@ resource "aws_ssm_maintenance_window_task" "test" {
       }
     }
   }
+}
+`)
+}
+
+func testAccMaintenanceWindowTaskNoTargetConfig(rName string) string {
+	return fmt.Sprintf(testAccMaintenanceWindowTaskBaseConfig(rName) + `
+
+resource "aws_ssm_maintenance_window_task" "test" {
+  window_id        = aws_ssm_maintenance_window.test.id
+  task_type        = "AUTOMATION"
+  task_arn         = "AWS-RunShellScript"
+  priority         = 1
+  service_role_arn = aws_iam_role.test.arn
 }
 `)
 }
