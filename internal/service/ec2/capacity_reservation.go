@@ -33,6 +33,10 @@ func ResourceCapacityReservation() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"availability_zone": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -50,13 +54,10 @@ func ResourceCapacityReservation() *schema.Resource {
 				ValidateFunc: validation.IsRFC3339Time,
 			},
 			"end_date_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ec2.EndDateTypeUnlimited,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.EndDateTypeUnlimited,
-					ec2.EndDateTypeLimited,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.EndDateTypeUnlimited,
+				ValidateFunc: validation.StringInSlice(ec2.EndDateType_Values(), false),
 			},
 			"ephemeral_storage": {
 				Type:     schema.TypeBool,
@@ -69,32 +70,17 @@ func ResourceCapacityReservation() *schema.Resource {
 				Required: true,
 			},
 			"instance_match_criteria": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  ec2.InstanceMatchCriteriaOpen,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.InstanceMatchCriteriaOpen,
-					ec2.InstanceMatchCriteriaTargeted,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      ec2.InstanceMatchCriteriaOpen,
+				ValidateFunc: validation.StringInSlice(ec2.InstanceMatchCriteria_Values(), false),
 			},
 			"instance_platform": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.CapacityReservationInstancePlatformLinuxUnix,
-					ec2.CapacityReservationInstancePlatformRedHatEnterpriseLinux,
-					ec2.CapacityReservationInstancePlatformSuselinux,
-					ec2.CapacityReservationInstancePlatformWindows,
-					ec2.CapacityReservationInstancePlatformWindowswithSqlserver,
-					ec2.CapacityReservationInstancePlatformWindowswithSqlserverEnterprise,
-					ec2.CapacityReservationInstancePlatformWindowswithSqlserverStandard,
-					ec2.CapacityReservationInstancePlatformWindowswithSqlserverWeb,
-					ec2.CapacityReservationInstancePlatformLinuxwithSqlserverStandard,
-					ec2.CapacityReservationInstancePlatformLinuxwithSqlserverWeb,
-					ec2.CapacityReservationInstancePlatformLinuxwithSqlserverEnterprise,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.CapacityReservationInstancePlatform_Values(), false),
 			},
 			"instance_type": {
 				Type:     schema.TypeString,
@@ -113,18 +99,11 @@ func ResourceCapacityReservation() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"tenancy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  ec2.CapacityReservationTenancyDefault,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.CapacityReservationTenancyDefault,
-					ec2.CapacityReservationTenancyDedicated,
-				}, false),
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      ec2.CapacityReservationTenancyDefault,
+				ValidateFunc: validation.StringInSlice(ec2.CapacityReservationTenancy_Values(), false),
 			},
 		},
 	}
