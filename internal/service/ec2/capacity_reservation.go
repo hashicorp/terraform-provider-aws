@@ -228,25 +228,25 @@ func resourceCapacityReservationRead(d *schema.ResourceData, meta interface{}) e
 func resourceCapacityReservationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	opts := &ec2.ModifyCapacityReservationInput{
-		CapacityReservationId: aws.String(d.Id()),
-		EndDateType:           aws.String(d.Get("end_date_type").(string)),
-		InstanceCount:         aws.Int64(int64(d.Get("instance_count").(int))),
-	}
-
-	if v, ok := d.GetOk("end_date"); ok {
-		t, err := time.Parse(time.RFC3339, v.(string))
-		if err != nil {
-			return fmt.Errorf("Error parsing EC2 Capacity Reservation end date: %s", err.Error())
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &ec2.ModifyCapacityReservationInput{
+			CapacityReservationId: aws.String(d.Id()),
+			EndDateType:           aws.String(d.Get("end_date_type").(string)),
+			InstanceCount:         aws.Int64(int64(d.Get("instance_count").(int))),
 		}
-		opts.EndDate = aws.Time(t)
-	}
 
-	log.Printf("[DEBUG] Capacity reservation: %s", opts)
+		if v, ok := d.GetOk("end_date"); ok {
+			v, _ := time.Parse(time.RFC3339, v.(string))
 
-	_, err := conn.ModifyCapacityReservation(opts)
-	if err != nil {
-		return fmt.Errorf("Error modifying EC2 Capacity Reservation: %s", err)
+			input.EndDate = aws.Time(v)
+		}
+
+		log.Printf("[DEBUG] Updating EC2 Capacity Reservation: %s", input)
+		_, err := conn.ModifyCapacityReservation(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating EC2 Capacity Reservation (%s): %w", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags_all") {
