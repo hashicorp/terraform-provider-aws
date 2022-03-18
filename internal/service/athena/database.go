@@ -189,9 +189,7 @@ func resourceDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AthenaConn
 
-	name := d.Get("name").(string)
-
-	queryString := fmt.Sprintf("drop database `%s`", name)
+	queryString := fmt.Sprintf("drop database `%s`", d.Id())
 	if d.Get("force_destroy").(bool) {
 		queryString += " cascade"
 	}
