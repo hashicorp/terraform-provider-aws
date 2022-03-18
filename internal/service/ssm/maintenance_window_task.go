@@ -793,12 +793,16 @@ func resourceMaintenanceWindowTaskUpdate(d *schema.ResourceData, meta interface{
 		params.ServiceRoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("max_errors"); ok {
-		params.MaxErrors = aws.String(v.(string))
+	if d.HasChange("max_errors") {
+		if v, ok := d.GetOk("max_errors"); ok {
+			params.MaxErrors = aws.String(v.(string))
+		}
 	}
 
-	if v, ok := d.GetOk("max_concurrency"); ok {
-		params.MaxConcurrency = aws.String(v.(string))
+	if d.HasChange("max_concurrency") {
+		if v, ok := d.GetOk("max_concurrency"); ok {
+			params.MaxConcurrency = aws.String(v.(string))
+		}
 	}
 
 	if v, ok := d.GetOk("targets"); ok {

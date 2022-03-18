@@ -89,6 +89,41 @@ func TestAccSSMMaintenanceWindowTask_noTarget(t *testing.T) {
 	})
 }
 
+func TestAccSSMMaintenanceWindowTask_cutoff(t *testing.T) {
+	var before ssm.MaintenanceWindowTask
+	resourceName := "aws_ssm_maintenance_window_task.test"
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckMaintenanceWindowTaskDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMaintenanceWindowTaskCutoffConfig(rName, "CANCEL_TASK"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMaintenanceWindowTaskExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "cutoff_behavior", "CANCEL_TASK"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccMaintenanceWindowTaskImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMaintenanceWindowTaskCutoffConfig(rName, "CONTINUE_TASK"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMaintenanceWindowTaskExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "cutoff_behavior", "CONTINUE_TASK"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSSMMaintenanceWindowTask_noRole(t *testing.T) {
 	var task ssm.MaintenanceWindowTask
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -606,6 +641,20 @@ resource "aws_ssm_maintenance_window_task" "test" {
   service_role_arn = aws_iam_role.test.arn
 }
 `)
+}
+
+func testAccMaintenanceWindowTaskCutoffConfig(rName, cutoff string) string {
+	return fmt.Sprintf(testAccMaintenanceWindowTaskBaseConfig(rName)+`
+
+resource "aws_ssm_maintenance_window_task" "test" {
+  window_id        = aws_ssm_maintenance_window.test.id
+  task_type        = "AUTOMATION"
+  task_arn         = "AWS-RunShellScript"
+  priority         = 1
+  service_role_arn = aws_iam_role.test.arn
+  cutoff_behavior  = %[1]q
+}
+`, cutoff)
 }
 
 func testAccMaintenanceWindowTaskBasicUpdateConfig(rName, description, taskType, taskArn string, priority, maxConcurrency, maxErrors int) string {
