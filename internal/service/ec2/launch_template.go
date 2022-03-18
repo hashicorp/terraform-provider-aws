@@ -1615,10 +1615,7 @@ func flattenResponseLaunchTemplateData(d *schema.ResourceData, apiObject *ec2.Re
 		if err := d.Set("credit_specification", []interface{}{flattenCreditSpecification(apiObject.CreditSpecification)}); err != nil {
 			return fmt.Errorf("error setting credit_specification: %w", err)
 		}
-	} else {
-		// Don't overwrite any configured value.
-		// d.Set("credit_specification", nil)
-	}
+	} // Don't overwrite any configured value.
 	d.Set("disable_api_termination", apiObject.DisableApiTermination)
 	if apiObject.EbsOptimized != nil {
 		d.Set("ebs_optimized", strconv.FormatBool(aws.BoolValue(apiObject.EbsOptimized)))
