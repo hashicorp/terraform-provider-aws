@@ -86,56 +86,6 @@ func ResourceDatabase() *schema.Resource {
 	}
 }
 
-func expandAthenaResultConfiguration(d *schema.ResourceData) *athena.ResultConfiguration {
-
-	resultConfig := &athena.ResultConfiguration{
-		OutputLocation:          aws.String("s3://" + d.Get("bucket").(string)),
-		EncryptionConfiguration: expandAthenaResultConfigurationEncryptionConfig(d.Get("encryption_configuration").([]interface{})),
-	}
-
-	if v, ok := d.GetOk("expected_bucket_owner"); ok {
-		resultConfig.ExpectedBucketOwner = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("acl_configuration"); ok && len(v.([]interface{})) > 0 {
-		resultConfig.AclConfiguration = expandAthenaResultConfigurationAclConfig(v.([]interface{}))
-	}
-
-	return resultConfig
-}
-
-func expandAthenaResultConfigurationEncryptionConfig(config []interface{}) *athena.EncryptionConfiguration {
-	if len(config) <= 0 {
-		return nil
-	}
-
-	data := config[0].(map[string]interface{})
-
-	encryptionConfig := &athena.EncryptionConfiguration{
-		EncryptionOption: aws.String(data["encryption_option"].(string)),
-	}
-
-	if v, ok := data["kms_key"].(string); ok && v != "" {
-		encryptionConfig.KmsKey = aws.String(v)
-	}
-
-	return encryptionConfig
-}
-
-func expandAthenaResultConfigurationAclConfig(config []interface{}) *athena.AclConfiguration {
-	if len(config) <= 0 {
-		return nil
-	}
-
-	data := config[0].(map[string]interface{})
-
-	encryptionConfig := &athena.AclConfiguration{
-		S3AclOption: aws.String(data["s3_acl_option"].(string)),
-	}
-
-	return encryptionConfig
-}
-
 func resourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AthenaConn
 
@@ -210,6 +160,56 @@ func resourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func expandAthenaResultConfiguration(d *schema.ResourceData) *athena.ResultConfiguration {
+
+	resultConfig := &athena.ResultConfiguration{
+		OutputLocation:          aws.String("s3://" + d.Get("bucket").(string)),
+		EncryptionConfiguration: expandAthenaResultConfigurationEncryptionConfig(d.Get("encryption_configuration").([]interface{})),
+	}
+
+	if v, ok := d.GetOk("expected_bucket_owner"); ok {
+		resultConfig.ExpectedBucketOwner = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("acl_configuration"); ok && len(v.([]interface{})) > 0 {
+		resultConfig.AclConfiguration = expandAthenaResultConfigurationAclConfig(v.([]interface{}))
+	}
+
+	return resultConfig
+}
+
+func expandAthenaResultConfigurationEncryptionConfig(config []interface{}) *athena.EncryptionConfiguration {
+	if len(config) <= 0 {
+		return nil
+	}
+
+	data := config[0].(map[string]interface{})
+
+	encryptionConfig := &athena.EncryptionConfiguration{
+		EncryptionOption: aws.String(data["encryption_option"].(string)),
+	}
+
+	if v, ok := data["kms_key"].(string); ok && v != "" {
+		encryptionConfig.KmsKey = aws.String(v)
+	}
+
+	return encryptionConfig
+}
+
+func expandAthenaResultConfigurationAclConfig(config []interface{}) *athena.AclConfiguration {
+	if len(config) <= 0 {
+		return nil
+	}
+
+	data := config[0].(map[string]interface{})
+
+	encryptionConfig := &athena.AclConfiguration{
+		S3AclOption: aws.String(data["s3_acl_option"].(string)),
+	}
+
+	return encryptionConfig
 }
 
 func executeAndExpectNoRows(qeid, action string, conn *athena.Athena) error {
