@@ -35,46 +35,6 @@ func TestAccAthenaDatabase_basic(t *testing.T) {
 	})
 }
 
-func TestAccAthenaDatabase_description(t *testing.T) {
-	rInt := sdkacctest.RandInt()
-	dbName := sdkacctest.RandString(8)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDatabaseDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAthenaDatabaseCommentConfig(rInt, dbName, false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists("aws_athena_database.hoge"),
-					resource.TestCheckResourceAttr("aws_athena_database.hoge", "name", dbName),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAthenaDatabase_unescaped_description(t *testing.T) {
-	rInt := sdkacctest.RandInt()
-	dbName := sdkacctest.RandString(8)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDatabaseDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAthenaDatabaseUnescapedCommentConfig(rInt, dbName, false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists("aws_athena_database.hoge"),
-					resource.TestCheckResourceAttr("aws_athena_database.hoge", "name", dbName),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAthenaDatabase_encryption(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	dbName := sdkacctest.RandString(8)
@@ -389,38 +349,6 @@ resource "aws_s3_bucket" "hoge" {
 resource "aws_athena_database" "hoge" {
   name          = "%[2]s"
   bucket        = aws_s3_bucket.hoge.bucket
-  force_destroy = %[3]t
-}
-`, randInt, dbName, forceDestroy)
-}
-
-func testAccAthenaDatabaseCommentConfig(randInt int, dbName string, forceDestroy bool) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "hoge" {
-  bucket        = "tf-test-athena-db-%[1]d"
-  force_destroy = true
-}
-
-resource "aws_athena_database" "hoge" {
-  name          = "%[2]s"
-  bucket        = aws_s3_bucket.hoge.bucket
-  comment       = "athena is a goddess"
-  force_destroy = %[3]t
-}
-`, randInt, dbName, forceDestroy)
-}
-
-func testAccAthenaDatabaseUnescapedCommentConfig(randInt int, dbName string, forceDestroy bool) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "hoge" {
-  bucket        = "tf-test-athena-db-%[1]d"
-  force_destroy = true
-}
-
-resource "aws_athena_database" "hoge" {
-  name          = "%[2]s"
-  bucket        = aws_s3_bucket.hoge.bucket
-  comment       = "athena's a goddess"
   force_destroy = %[3]t
 }
 `, randInt, dbName, forceDestroy)
