@@ -89,8 +89,12 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 							},
 						},
 						"filter": {
-							Type:             schema.TypeList,
-							Optional:         true,
+							Type:     schema.TypeList,
+							Optional: true,
+							// If neither the filter block nor the prefix parameter in the rule are specified,
+							// we apply the Default behavior from v3.x of the provider (Filter with empty string Prefix),
+							// which will thus return a Filter in the GetBucketLifecycleConfiguration request and
+							// require diff suppression.
 							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 							MaxItems:         1,
 							Elem: &schema.Resource{
