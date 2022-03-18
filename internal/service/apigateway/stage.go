@@ -362,7 +362,7 @@ func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			if _, ok := d.GetOk("canary_settings"); ok {
 				operations = append(operations, &apigateway.PatchOperation{
-					Op:    aws.String("replace"),
+					Op:    aws.String(apigateway.OpReplace),
 					Path:  aws.String("/canarySettings/deploymentId"),
 					Value: aws.String(d.Get("deployment_id").(string)),
 				})
@@ -575,7 +575,7 @@ func appendCanarySettingsPatchOperations(operations []*apigateway.PatchOperation
 	newPercentTraffic := newSettings["percent_traffic"].(float64)
 	if oldPercentTraffic != newPercentTraffic {
 		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
+			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/canarySettings/percentTraffic"),
 			Value: aws.String(fmt.Sprintf("%f", newPercentTraffic)),
 		})
@@ -585,7 +585,7 @@ func appendCanarySettingsPatchOperations(operations []*apigateway.PatchOperation
 	newUseStageCache := newSettings["use_stage_cache"].(bool)
 	if oldUseStageCache != newUseStageCache {
 		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
+			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/canarySettings/useStageCache"),
 			Value: aws.String(fmt.Sprintf("%t", newUseStageCache)),
 		})
