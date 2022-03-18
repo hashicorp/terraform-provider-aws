@@ -16,9 +16,10 @@ import (
 )
 
 func TestAccAthenaDatabase_basic(t *testing.T) {
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbName := sdkacctest.RandString(8)
 	resourceName := "aws_athena_database.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
@@ -26,7 +27,7 @@ func TestAccAthenaDatabase_basic(t *testing.T) {
 		CheckDestroy: testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAthenaDatabaseConfig(rInt, dbName, false),
+				Config: testAccAthenaDatabaseConfig(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", dbName),
@@ -40,9 +41,10 @@ func TestAccAthenaDatabase_basic(t *testing.T) {
 }
 
 func TestAccAthenaDatabase_acl(t *testing.T) {
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbName := sdkacctest.RandString(8)
 	resourceName := "aws_athena_database.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
@@ -50,7 +52,7 @@ func TestAccAthenaDatabase_acl(t *testing.T) {
 		CheckDestroy: testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAthenaDatabaseAclConfig(rInt, dbName, false),
+				Config: testAccAthenaDatabaseAclConfig(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", dbName),
@@ -63,7 +65,7 @@ func TestAccAthenaDatabase_acl(t *testing.T) {
 }
 
 func TestAccAthenaDatabase_encryption(t *testing.T) {
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbName := sdkacctest.RandString(8)
 	resourceName := "aws_athena_database.test"
 
@@ -74,7 +76,7 @@ func TestAccAthenaDatabase_encryption(t *testing.T) {
 		CheckDestroy: testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAthenaDatabaseWithKMSConfig(rInt, dbName, false),
+				Config: testAccAthenaDatabaseWithKMSConfig(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
@@ -87,7 +89,7 @@ func TestAccAthenaDatabase_encryption(t *testing.T) {
 }
 
 func TestAccAthenaDatabase_nameStartsWithUnderscore(t *testing.T) {
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbName := "_" + sdkacctest.RandString(8)
 	resourceName := "aws_athena_database.test"
 
@@ -98,7 +100,7 @@ func TestAccAthenaDatabase_nameStartsWithUnderscore(t *testing.T) {
 		CheckDestroy: testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAthenaDatabaseConfig(rInt, dbName, false),
+				Config: testAccAthenaDatabaseConfig(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", dbName),
@@ -109,8 +111,9 @@ func TestAccAthenaDatabase_nameStartsWithUnderscore(t *testing.T) {
 }
 
 func TestAccAthenaDatabase_nameCantHaveUppercase(t *testing.T) {
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbName := "A" + sdkacctest.RandString(8)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
@@ -118,7 +121,7 @@ func TestAccAthenaDatabase_nameCantHaveUppercase(t *testing.T) {
 		CheckDestroy: testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAthenaDatabaseConfig(rInt, dbName, false),
+				Config:      testAccAthenaDatabaseConfig(rName, dbName, false),
 				ExpectError: regexp.MustCompile(`must be lowercase letters, numbers, or underscore \('_'\)`),
 			},
 		},
@@ -126,8 +129,9 @@ func TestAccAthenaDatabase_nameCantHaveUppercase(t *testing.T) {
 }
 
 func TestAccAthenaDatabase_destroyFailsIfTablesExist(t *testing.T) {
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbName := sdkacctest.RandString(8)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
@@ -135,7 +139,7 @@ func TestAccAthenaDatabase_destroyFailsIfTablesExist(t *testing.T) {
 		CheckDestroy: testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAthenaDatabaseConfig(rInt, dbName, false),
+				Config: testAccAthenaDatabaseConfig(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists("aws_athena_database.test"),
 					testAccDatabaseCreateTables(dbName),
@@ -148,8 +152,9 @@ func TestAccAthenaDatabase_destroyFailsIfTablesExist(t *testing.T) {
 }
 
 func TestAccAthenaDatabase_forceDestroyAlwaysSucceeds(t *testing.T) {
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbName := sdkacctest.RandString(8)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
@@ -157,7 +162,7 @@ func TestAccAthenaDatabase_forceDestroyAlwaysSucceeds(t *testing.T) {
 		CheckDestroy: testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAthenaDatabaseConfig(rInt, dbName, true),
+				Config: testAccAthenaDatabaseConfig(rName, dbName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists("aws_athena_database.test"),
 					testAccDatabaseCreateTables(dbName),
@@ -167,9 +172,54 @@ func TestAccAthenaDatabase_forceDestroyAlwaysSucceeds(t *testing.T) {
 	})
 }
 
-func TestAccAthenaDatabase_disppears(t *testing.T) {
-	rInt := sdkacctest.RandInt()
+func TestAccAthenaDatabase_description(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbName := sdkacctest.RandString(8)
+	resourceName := "aws_athena_database.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDatabaseDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaDatabaseCommentConfig(rName, dbName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", dbName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAthenaDatabase_unescaped_description(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dbName := sdkacctest.RandString(8)
+	resourceName := "aws_athena_database.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDatabaseDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaDatabaseUnescapedCommentConfig(rName, dbName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", dbName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAthenaDatabase_disppears(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dbName := sdkacctest.RandString(8)
+
 	resourceName := "aws_athena_database.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -178,7 +228,7 @@ func TestAccAthenaDatabase_disppears(t *testing.T) {
 		CheckDestroy: testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAthenaDatabaseConfig(rInt, dbName, false),
+				Config: testAccAthenaDatabaseConfig(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfathena.ResourceDatabase(), resourceName),
@@ -338,30 +388,30 @@ func testAccAthenaDatabaseFindBucketName(s *terraform.State, dbName string) (buc
 	return bucket, err
 }
 
-func testAccAthenaDatabaseConfig(randInt int, dbName string, forceDestroy bool) string {
+func testAccAthenaDatabaseConfig(rName string, dbName string, forceDestroy bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket        = "tf-test-athena-db-%[1]d"
+  bucket        = %[1]q
   force_destroy = true
 }
 
 resource "aws_athena_database" "test" {
-  name          = "%[2]s"
+  name          = %[2]q
   bucket        = aws_s3_bucket.test.bucket
   force_destroy = %[3]t
 }
-`, randInt, dbName, forceDestroy)
+`, rName, dbName, forceDestroy)
 }
 
-func testAccAthenaDatabaseAclConfig(randInt int, dbName string, forceDestroy bool) string {
+func testAccAthenaDatabaseAclConfig(rName string, dbName string, forceDestroy bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket        = "tf-test-athena-db-%[1]d"
+  bucket        = %[1]q
   force_destroy = true
 }
 
 resource "aws_athena_database" "test" {
-  name          = "%[2]s"
+  name          = %[2]q
   bucket        = aws_s3_bucket.test.bucket
   force_destroy = %[3]t
 
@@ -369,17 +419,18 @@ resource "aws_athena_database" "test" {
     s3_acl_option = "BUCKET_OWNER_FULL_CONTROL"
   }
 }
-`, randInt, dbName, forceDestroy)
+`, rName, dbName, forceDestroy)
 }
 
-func testAccAthenaDatabaseWithKMSConfig(randInt int, dbName string, forceDestroy bool) string {
+func testAccAthenaDatabaseWithKMSConfig(rName string, dbName string, forceDestroy bool) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 10
+  description             = %[1]q
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket        = "tf-test-athena-db-%[1]d"
+  bucket        = %[1]q
   force_destroy = true
 }
 
@@ -398,7 +449,7 @@ resource "aws_athena_database" "test" {
   # Must have bucket SSE enabled first
   depends_on = [aws_s3_bucket_server_side_encryption_configuration.test]
 
-  name          = "%[2]s"
+  name          = %[2]q
   bucket        = aws_s3_bucket.test.bucket
   force_destroy = %[3]t
 
@@ -407,5 +458,37 @@ resource "aws_athena_database" "test" {
     kms_key           = aws_kms_key.test.arn
   }
 }
-`, randInt, dbName, forceDestroy)
+`, rName, dbName, forceDestroy)
+}
+
+func testAccAthenaDatabaseCommentConfig(rName string, dbName string, forceDestroy bool) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_athena_database" "test" {
+  name          = %[2]q
+  bucket        = aws_s3_bucket.test.bucket
+  comment       = "athena is a goddess"
+  force_destroy = %[3]t
+}
+`, rName, dbName, forceDestroy)
+}
+
+func testAccAthenaDatabaseUnescapedCommentConfig(rName string, dbName string, forceDestroy bool) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_athena_database" "test" {
+  name          = %[2]q
+  bucket        = aws_s3_bucket.test.bucket
+  comment       = "athena's a goddess"
+  force_destroy = %[3]t
+}
+`, rName, dbName, forceDestroy)
 }

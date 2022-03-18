@@ -9,3 +9,7 @@ resource/aws_athena_database: Remove from state on resource Read if deleted outs
 ```release-note:enhancement
 resource/aws_athena_database: Do not recreate the resource if `bucket` changes
 ```
+
+```release-note:enhancement
+resource/aws_athena_database: Add `comment` argument to support database descriptions
+```

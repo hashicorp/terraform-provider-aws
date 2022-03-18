@@ -44,6 +44,11 @@ func ResourceDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"comment": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"encryption_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -88,20 +93,32 @@ func ResourceDatabase() *schema.Resource {
 func resourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AthenaConn
 
+	name := d.Get("name").(string)
+	var queryString string
+
+	if v, ok := d.GetOk("comment"); ok {
+		queryString = fmt.Sprintf("create database `%[1]s` comment '%[2]s';", name, strings.Replace(v.(string), "'", "\\'", -1))
+	} else {
+		queryString = fmt.Sprintf("create database `%[1]s`;", name)
+	}
+
 	input := &athena.StartQueryExecutionInput{
-		QueryString:         aws.String(fmt.Sprintf("create database `%s`;", d.Get("name").(string))),
+		QueryString:         aws.String(queryString),
 		ResultConfiguration: expandAthenaResultConfiguration(d),
 	}
 
 	resp, err := conn.StartQueryExecution(input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error starting Athena Database (%s) query execution: %w", name, err)
 	}
 
 	if err := executeAndExpectNoRows(*resp.QueryExecutionId, "create", conn); err != nil {
 		return err
 	}
-	d.SetId(d.Get("name").(string))
+
+	d.SetId(name)
+
 	return resourceDatabaseRead(d, meta)
 }
 
