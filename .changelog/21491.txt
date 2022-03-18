@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_athena_database: Remove ForceNew from bucket field.
-```
