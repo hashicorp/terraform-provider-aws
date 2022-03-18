@@ -31,13 +31,16 @@ func TestAccSSMMaintenanceWindowTask_basic(t *testing.T) {
 				Config: testAccMaintenanceWindowTaskBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowTaskExists(resourceName, &before),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm", regexp.MustCompile(`windowtask/.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, "window_task_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "window_id", "aws_ssm_maintenance_window.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "targets.#", "1"),
 				),
 			},
 			{
 				Config: testAccMaintenanceWindowTaskBasicUpdateConfig(rName, "test description", "RUN_COMMAND", "AWS-InstallPowerShellModule", 3, 3, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowTaskExists(resourceName, &after),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm", regexp.MustCompile(`windowtask/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("maintenance-window-task-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "description", "test description"),
 					resource.TestCheckResourceAttr(resourceName, "task_type", "RUN_COMMAND"),
@@ -73,6 +76,7 @@ func TestAccSSMMaintenanceWindowTask_noTarget(t *testing.T) {
 				Config: testAccMaintenanceWindowTaskNoTargetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowTaskExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "targets.#", "0"),
 				),
 			},
 			{
