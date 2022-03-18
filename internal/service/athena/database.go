@@ -40,6 +40,11 @@ func ResourceDatabase() *schema.Resource {
 					},
 				},
 			},
+			"bucket": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"encryption_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -47,26 +52,21 @@ func ResourceDatabase() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
 						"encryption_option": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(athena.EncryptionOption_Values(), false),
 							ForceNew:     true,
 						},
+						"kms_key": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
 					},
 				},
 			},
 			"expected_bucket_owner": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"bucket": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
