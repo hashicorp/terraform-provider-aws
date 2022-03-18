@@ -20,7 +20,7 @@ func ResourceDatabase() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceDatabaseCreate,
 		Read:   resourceDatabaseRead,
-		Update: resourceDatabaseUpdate,
+		Update: schema.Noop,
 		Delete: resourceDatabaseDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -43,7 +43,6 @@ func ResourceDatabase() *schema.Resource {
 			"bucket": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 			"encryption_configuration": {
 				Type:     schema.TypeList,
@@ -130,10 +129,6 @@ func resourceDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", db.Name)
 
 	return nil
-}
-
-func resourceDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceDatabaseRead(d, meta)
 }
 
 func resourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
