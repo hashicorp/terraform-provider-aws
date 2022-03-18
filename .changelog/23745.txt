@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_athena_database: Add `acl_configuration` and `expected_bucket_owner` args.
+```
+
+```release-note:enhancement
+resource/aws_athena_database: Remove from state on read if deleted outside of terraform.
+```
