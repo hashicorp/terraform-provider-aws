@@ -114,7 +114,7 @@ func resourceCapacityReservationCreate(d *schema.ResourceData, meta interface{})
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	opts := &ec2.CreateCapacityReservationInput{
+	input := &ec2.CreateCapacityReservationInput{
 		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
 		EndDateType:       aws.String(d.Get("end_date_type").(string)),
 		InstanceCount:     aws.Int64(int64(d.Get("instance_count").(int))),
@@ -124,40 +124,40 @@ func resourceCapacityReservationCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("ebs_optimized"); ok {
-		opts.EbsOptimized = aws.Bool(v.(bool))
+		input.EbsOptimized = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("end_date"); ok {
-		t, err := time.Parse(time.RFC3339, v.(string))
-		if err != nil {
-			return fmt.Errorf("Error parsing EC2 Capacity Reservation end date: %s", err.Error())
-		}
-		opts.EndDate = aws.Time(t)
+		v, _ := time.Parse(time.RFC3339, v.(string))
+
+		input.EndDate = aws.Time(v)
 	}
 
 	if v, ok := d.GetOk("ephemeral_storage"); ok {
-		opts.EphemeralStorage = aws.Bool(v.(bool))
+		input.EphemeralStorage = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("instance_match_criteria"); ok {
-		opts.InstanceMatchCriteria = aws.String(v.(string))
+		input.InstanceMatchCriteria = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("outpost_arn"); ok {
-		opts.OutpostArn = aws.String(v.(string))
+		input.OutpostArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("tenancy"); ok {
-		opts.Tenancy = aws.String(v.(string))
+		input.Tenancy = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Capacity reservation: %s", opts)
+	log.Printf("[DEBUG] Creating EC2 Capacity Reservation: %s", input)
+	output, err := conn.CreateCapacityReservation(input)
 
-	out, err := conn.CreateCapacityReservation(opts)
 	if err != nil {
-		return fmt.Errorf("Error creating EC2 Capacity Reservation: %s", err)
+		return fmt.Errorf("error creating EC2 Capacity Reservation: %w", err)
 	}
-	d.SetId(aws.StringValue(out.CapacityReservation.CapacityReservationId))
+
+	d.SetId(aws.StringValue(output.CapacityReservation.CapacityReservationId))
+
 	return resourceCapacityReservationRead(d, meta)
 }
 
