@@ -54,6 +54,38 @@ func TestAccAthenaWorkGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccAthenaWorkGroup_aclConfig(t *testing.T) {
+	var workgroup1 athena.WorkGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_athena_workgroup.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckWorkGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaWorkGroupConfigConfigurationResultConfigurationAclConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(resourceName, &workgroup1),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "athena", fmt.Sprintf("workgroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.acl_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.acl_configuration.0.s3_acl_option", "BUCKET_OWNER_FULL_CONTROL"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
 func TestAccAthenaWorkGroup_disappears(t *testing.T) {
 	var workgroup1 athena.WorkGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -785,6 +817,22 @@ resource "aws_athena_workgroup" "test" {
   }
 }
 `, rName, bucketName)
+}
+
+func testAccAthenaWorkGroupConfigConfigurationResultConfigurationAclConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+
+  configuration {
+    result_configuration {
+      acl_configuration {
+        s3_acl_option = "BUCKET_OWNER_FULL_CONTROL"
+	  }
+    }
+  }  
+}
+`, rName)
 }
 
 func testAccAthenaWorkGroupConfigConfigurationResultConfigurationEncryptionConfigurationEncryptionOptionSseS3(rName string) string {

@@ -543,6 +543,14 @@ func flattenAthenaWorkGroupResultConfiguration(resultConfiguration *athena.Resul
 		"output_location":          aws.StringValue(resultConfiguration.OutputLocation),
 	}
 
+	if resultConfiguration.ExpectedBucketOwner != nil {
+		m["expected_bucket_owner"] = aws.StringValue(resultConfiguration.ExpectedBucketOwner)
+	}
+
+	if resultConfiguration.AclConfiguration != nil {
+		m["acl_configuration"] = flattenAthenaWorkGroupAclConfiguration(resultConfiguration.AclConfiguration)
+	}
+
 	return []interface{}{m}
 }
 
@@ -554,6 +562,18 @@ func flattenAthenaWorkGroupEncryptionConfiguration(encryptionConfiguration *athe
 	m := map[string]interface{}{
 		"encryption_option": aws.StringValue(encryptionConfiguration.EncryptionOption),
 		"kms_key_arn":       aws.StringValue(encryptionConfiguration.KmsKey),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenAthenaWorkGroupAclConfiguration(aclConfig *athena.AclConfiguration) []interface{} {
+	if aclConfig == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"s3_acl_option": aws.StringValue(aclConfig.S3AclOption),
 	}
 
 	return []interface{}{m}
