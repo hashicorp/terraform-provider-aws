@@ -440,6 +440,10 @@ func expandAthenaWorkGroupResultConfiguration(l []interface{}) *athena.ResultCon
 		resultConfiguration.ExpectedBucketOwner = aws.String(v)
 	}
 
+	if v, ok := m["acl_configuration"]; ok {
+		resultConfiguration.AclConfiguration = expandAthenaResultConfigurationAclConfig(v.([]interface{}))
+	}
+
 	return resultConfiguration
 }
 
@@ -468,6 +472,12 @@ func expandAthenaWorkGroupResultConfigurationUpdates(l []interface{}) *athena.Re
 		resultConfigurationUpdates.ExpectedBucketOwner = aws.String(v)
 	} else {
 		resultConfigurationUpdates.RemoveExpectedBucketOwner = aws.Bool(true)
+	}
+
+	if v, ok := m["acl_configuration"]; ok {
+		resultConfigurationUpdates.AclConfiguration = expandAthenaResultConfigurationAclConfig(v.([]interface{}))
+	} else {
+		resultConfigurationUpdates.RemoveAclConfiguration = aws.Bool(true)
 	}
 
 	return resultConfigurationUpdates

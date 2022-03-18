@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfathena "github.com/hashicorp/terraform-provider-aws/internal/service/athena"
 )
 
 func TestAccAthenaWorkGroup_basic(t *testing.T) {
@@ -68,7 +69,7 @@ func TestAccAthenaWorkGroup_disappears(t *testing.T) {
 				Config: testAccAthenaWorkGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup1),
-					testAccCheckWorkGroupDisappears(&workgroup1),
+					acctest.CheckResourceDisappears(acctest.Provider, tfathena.ResourceWorkGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -664,20 +665,6 @@ func testAccCheckWorkGroupExists(name string, workgroup *athena.WorkGroup) resou
 		*workgroup = *output.WorkGroup
 
 		return nil
-	}
-}
-
-func testAccCheckWorkGroupDisappears(workgroup *athena.WorkGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
-
-		input := &athena.DeleteWorkGroupInput{
-			WorkGroup: workgroup.Name,
-		}
-
-		_, err := conn.DeleteWorkGroup(input)
-
-		return err
 	}
 }
 
