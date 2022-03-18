@@ -29,15 +29,43 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchTemplateNameConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLaunchTemplateExists(resourceName, &template),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`launch-template/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", ""),
+					resource.TestCheckResourceAttr(resourceName, "elastic_gpu_specifications.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "enclave_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "hibernation_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iam_instance_profile.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "image_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_initiated_shutdown_behavior", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", ""),
+					resource.TestCheckResourceAttr(resourceName, "kernel_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "key_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "latest_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "license_specification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "placement.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ram_disk_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "security_group_names.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tag_specifications.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "user_data", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "0"),
 				),
 			},
 			{
@@ -1126,6 +1154,36 @@ func TestAccEC2LaunchTemplate_Placement_partitionNum(t *testing.T) {
 	})
 }
 
+func TestAccEC2LaunchTemplate_privateDNSNameOptions(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplatePrivateDNSNameOptionsConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", "false"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.hostname_type", "resource-name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEC2LaunchTemplate_NetworkInterface_ipv6Addresses(t *testing.T) {
 	var template ec2.LaunchTemplate
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2023,6 +2081,20 @@ resource "aws_launch_template" "test" {
 
   placement {
     host_resource_group_arn = aws_resourcegroups_group.test.arn
+  }
+}
+`, rName)
+}
+
+func testAccLaunchTemplatePrivateDNSNameOptionsConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  private_dns_name_options {
+    enable_resource_name_dns_aaaa_record = true
+    enable_resource_name_dns_a_record    = false
+    hostname_type                        = "resource-name"
   }
 }
 `, rName)

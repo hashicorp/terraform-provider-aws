@@ -144,6 +144,7 @@ The following arguments are supported:
 * `network_interfaces` - (Optional) Customize network interfaces to be attached at instance boot time. See [Network
   Interfaces](#network-interfaces) below for more details.
 * `placement` - (Optional) The placement of the instance. See [Placement](#placement) below for more details.
+* `private_dns_name_options` - (Optional) The options for the instance hostname. The default values are inherited from the subnet. See [Private DNS Name Options](#private-dns-name-options) below for more details.
 * `ram_disk_id` - (Optional) The ID of the RAM disk.
 * `security_group_names` - (Optional) A list of security group names to associate with. If you are creating Instances in a VPC, use
   `vpc_security_group_ids` instead.
@@ -230,6 +231,20 @@ Attach an Elastic Inference Accelerator to the instance. Additional information 
 The `elastic_inference_accelerator` configuration block supports the following:
 
 * `type` - (Required) Accelerator type.
+
+### Enclave Options
+
+The `enclave_options` block supports the following:
+
+* `enabled` - If set to `true`, Nitro Enclaves will be enabled on the instance.
+
+For more information, see the documentation on [Nitro Enclaves](https://docs.aws.amazon.com/enclaves/latest/user/nitro-enclave.html).
+
+### Hibernation Options
+
+The `hibernation_options` block supports the following:
+
+* `configured` - If set to `true`, the launched EC2 instance will hibernation enabled.
 
 ### Instance Profile
 
@@ -330,19 +345,13 @@ The `placement` block supports the following:
 * `tenancy` - The tenancy of the instance (if the instance is running in a VPC). Can be `default`, `dedicated`, or `host`.
 * `partition_number` - The number of the partition the instance should launch in. Valid only if the placement group strategy is set to partition.
 
-### Hibernation Options
+### Private DNS Name Options
 
-The `hibernation_options` block supports the following:
+The `private_dns_name_options` block supports the following:
 
-* `configured` - If set to `true`, the launched EC2 instance will hibernation enabled.
-
-### Enclave Options
-
-The `enclave_options` block supports the following:
-
-* `enabled` - If set to `true`, Nitro Enclaves will be enabled on the instance.
-
-For more information, see the documentation on [Nitro Enclaves](https://docs.aws.amazon.com/enclaves/latest/user/nitro-enclave.html).
+* `enable_resource_name_dns_aaaa_record` - Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records.
+* `enable_resource_name_dns_a_record` - Indicates whether to respond to DNS queries for instance hostnames with DNS A records.
+* `hostname_type` - The type of hostname for Amazon EC2 instances. For IPv4 only subnets, an instance DNS name must be based on the instance IPv4 address. For IPv6 native subnets, an instance DNS name must be based on the instance ID. For dual-stack subnets, you can specify whether DNS names use the instance IPv4 address or the instance ID. Valid values: `ip-name` and `resource-name`.
 
 ### Tag Specifications
 

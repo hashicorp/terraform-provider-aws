@@ -17,3 +17,11 @@ resource/aws_launch_template: Add `capacity_reservation_resource_group_arn` argu
 ```release-note:enhancement
 data-source/aws_launch_template: Add `capacity_reservation_resource_group_arn` attribute to the `capacity_reservation_specification.capacity_reservation_target` configuration block
 ```
+
+```release-note:enhancement
+resource/aws_launch_template: Add `private_dns_name_options` argument
+```
+
+```release-note:enhancement
+data-source/aws_launch_template: Add `private_dns_name_options` attribute
+```

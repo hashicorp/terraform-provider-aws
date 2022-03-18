@@ -51,6 +51,7 @@ func TestAccEC2LaunchTemplateDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "network_interfaces.#", dataSourceName, "network_interfaces.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "placement.#", dataSourceName, "placement.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "private_dns_name_options.#", dataSourceName, "private_dns_name_options.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "ram_disk_id", dataSourceName, "ram_disk_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_names.#", dataSourceName, "security_group_names.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "tag_specifications.#", dataSourceName, "tag_specifications.#"),

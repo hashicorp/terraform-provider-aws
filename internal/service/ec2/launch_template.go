@@ -593,6 +593,28 @@ func ResourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
+			"private_dns_name_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enable_resource_name_dns_aaaa_record": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"enable_resource_name_dns_a_record": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"hostname_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(ec2.HostnameType_Values(), false),
+						},
+					},
+				},
+			},
 			"ram_disk_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -778,6 +800,7 @@ func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 		"monitoring",
 		"network_interfaces",
 		"placement",
+		"private_dns_name_options",
 		"ram_disk_id",
 		"security_group_names",
 		"tag_specifications",
@@ -965,6 +988,10 @@ func expandRequestLaunchTemplateData(d *schema.ResourceData) *ec2.RequestLaunchT
 
 	if v, ok := d.GetOk("placement"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		apiObject.Placement = expandLaunchTemplatePlacementRequest(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("private_dns_name_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.PrivateDnsNameOptions = expandLaunchTemplatePrivateDnsNameOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("ram_disk_id"); ok {
@@ -1547,6 +1574,23 @@ func expandLaunchTemplatePlacementRequest(tfMap map[string]interface{}) *ec2.Lau
 	return apiObject
 }
 
+func expandLaunchTemplatePrivateDnsNameOptionsRequest(tfMap map[string]interface{}) *ec2.LaunchTemplatePrivateDnsNameOptionsRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.LaunchTemplatePrivateDnsNameOptionsRequest{
+		EnableResourceNameDnsAAAARecord: aws.Bool(tfMap["enable_resource_name_dns_aaaa_record"].(bool)),
+		EnableResourceNameDnsARecord:    aws.Bool(tfMap["enable_resource_name_dns_a_record"].(bool)),
+	}
+
+	if v, ok := tfMap["hostname_type"].(string); ok && v != "" {
+		apiObject.HostnameType = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func expandLaunchTemplateTagSpecificationRequest(tfMap map[string]interface{}) *ec2.LaunchTemplateTagSpecificationRequest {
 	if tfMap == nil {
 		return nil
@@ -1699,6 +1743,13 @@ func flattenResponseLaunchTemplateData(d *schema.ResourceData, apiObject *ec2.Re
 		}
 	} else {
 		d.Set("placement", nil)
+	}
+	if apiObject.PrivateDnsNameOptions != nil {
+		if err := d.Set("private_dns_name_options", []interface{}{flattenLaunchTemplatePrivateDnsNameOptions(apiObject.PrivateDnsNameOptions)}); err != nil {
+			return fmt.Errorf("error setting private_dns_name_options: %w", err)
+		}
+	} else {
+		d.Set("private_dns_name_options", nil)
 	}
 	d.Set("ram_disk_id", apiObject.RamDiskId)
 	d.Set("security_group_names", aws.StringValueSlice(apiObject.SecurityGroups))
@@ -2222,6 +2273,23 @@ func flattenLaunchTemplatePlacement(apiObject *ec2.LaunchTemplatePlacement) map[
 
 	if v := apiObject.Tenancy; v != nil {
 		tfMap["tenancy"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenLaunchTemplatePrivateDnsNameOptions(apiObject *ec2.LaunchTemplatePrivateDnsNameOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"enable_resource_name_dns_aaaa_record": aws.BoolValue(apiObject.EnableResourceNameDnsAAAARecord),
+		"enable_resource_name_dns_a_record":    aws.BoolValue(apiObject.EnableResourceNameDnsARecord),
+	}
+
+	if v := apiObject.HostnameType; v != nil {
+		tfMap["hostname_type"] = aws.StringValue(v)
 	}
 
 	return tfMap

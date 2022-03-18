@@ -474,6 +474,26 @@ func DataSourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
+			"private_dns_name_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enable_resource_name_dns_aaaa_record": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"enable_resource_name_dns_a_record": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"hostname_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"ram_disk_id": {
 				Type:     schema.TypeString,
 				Computed: true,
