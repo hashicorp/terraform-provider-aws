@@ -916,7 +916,7 @@ resource "aws_api_gateway_stage" "test" {
     stage_variable_overrides = {
       four = "5"
     }
-	use_stage_cache = "false"
+    use_stage_cache = "false"
   }
   variables = {
     one = "1"
