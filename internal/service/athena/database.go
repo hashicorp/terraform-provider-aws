@@ -93,7 +93,7 @@ func expandAthenaResultConfiguration(d *schema.ResourceData) *athena.ResultConfi
 		EncryptionConfiguration: expandAthenaResultConfigurationEncryptionConfig(d.Get("encryption_configuration").([]interface{})),
 	}
 
-	if v, ok := d.GetOk("expected_bucket_owner"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("expected_bucket_owner"); ok {
 		resultConfig.ExpectedBucketOwner = aws.String(v.(string))
 	}
 
