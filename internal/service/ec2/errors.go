@@ -31,6 +31,7 @@ const (
 	ErrCodeInvalidDhcpOptionIDNotFound                    = "InvalidDhcpOptionID.NotFound"
 	ErrCodeInvalidFlowLogIdNotFound                       = "InvalidFlowLogId.NotFound"
 	ErrCodeInvalidGatewayIDNotFound                       = "InvalidGatewayID.NotFound"
+	ErrCodeInvalidGroupInUse                              = "InvalidGroup.InUse"
 	ErrCodeInvalidGroupNotFound                           = "InvalidGroup.NotFound"
 	ErrCodeInvalidHostIDNotFound                          = "InvalidHostID.NotFound"
 	ErrCodeInvalidInstanceIDNotFound                      = "InvalidInstanceID.NotFound"

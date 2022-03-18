@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -167,28 +166,28 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	groupName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &ec2.CreateSecurityGroupInput{
-		GroupName: aws.String(groupName),
+		GroupName: aws.String(name),
 	}
 
 	if v := d.Get("description"); v != nil {
 		input.Description = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSecurityGroup)
-	}
-
 	if v, ok := d.GetOk("vpc_id"); ok {
 		input.VpcId = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSecurityGroup)
 	}
 
 	log.Printf("[DEBUG] Creating Security Group: %s", input)
 	output, err := conn.CreateSecurityGroup(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Security Group (%s): %w", groupName, err)
+		return fmt.Errorf("error creating Security Group (%s): %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.GroupId))
@@ -203,10 +202,8 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 	// AWS defaults all Security Groups to have an ALLOW ALL egress rule. Here we
 	// revoke that rule, so users don't unknowingly have/use it.
 	if aws.StringValue(group.VpcId) != "" {
-		log.Printf("[DEBUG] Revoking default egress rule for Security Group for %s", d.Id())
-
 		input := &ec2.RevokeSecurityGroupEgressInput{
-			GroupId: output.GroupId,
+			GroupId: aws.String(d.Id()),
 			IpPermissions: []*ec2.IpPermission{
 				{
 					FromPort: aws.Int64(0),
@@ -221,13 +218,12 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 			},
 		}
 
-		if _, err = conn.RevokeSecurityGroupEgress(input); err != nil {
-			return fmt.Errorf("Error revoking default egress rule for Security Group (%s): %w", d.Id(), err)
+		if _, err := conn.RevokeSecurityGroupEgress(input); err != nil {
+			return fmt.Errorf("error revoking default egress rule for Security Group (%s): %w", d.Id(), err)
 		}
 
-		log.Printf("[DEBUG] Revoking default IPv6 egress rule for Security Group for %s", d.Id())
 		input = &ec2.RevokeSecurityGroupEgressInput{
-			GroupId: output.GroupId,
+			GroupId: aws.String(d.Id()),
 			IpPermissions: []*ec2.IpPermission{
 				{
 					FromPort: aws.Int64(0),
@@ -242,12 +238,11 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 			},
 		}
 
-		_, err = conn.RevokeSecurityGroupEgress(input)
-		if err != nil {
+		if _, err := conn.RevokeSecurityGroupEgress(input); err != nil {
 			//If we have a NotFound or InvalidParameterValue, then we are trying to remove the default IPv6 egress of a non-IPv6
 			//enabled SG
 			if !tfawserr.ErrCodeEquals(err, ErrCodeInvalidPermissionNotFound) && !tfawserr.ErrMessageContains(err, ErrCodeInvalidParameterValue, "remote-ipv6-range") {
-				return fmt.Errorf("Error revoking default IPv6 egress rule for Security Group (%s): %w", d.Id(), err)
+				return fmt.Errorf("error revoking default IPv6 egress rule for Security Group (%s): %w", d.Id(), err)
 			}
 		}
 
@@ -284,19 +279,19 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	ingressRules := MatchRules("ingress", localIngressRules, remoteIngressRules)
 	egressRules := MatchRules("egress", localEgressRules, remoteEgressRules)
 
-	sgArn := arn.ARN{
-		AccountID: aws.StringValue(sg.OwnerId),
+	ownerID := aws.StringValue(sg.OwnerId)
+	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("security-group/%s", aws.StringValue(sg.GroupId)),
 		Service:   ec2.ServiceName,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: ownerID,
+		Resource:  fmt.Sprintf("security-group/%s", d.Id()),
 	}
-
-	d.Set("arn", sgArn.String())
+	d.Set("arn", arn.String())
 	d.Set("description", sg.Description)
 	d.Set("name", sg.GroupName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(sg.GroupName)))
-	d.Set("owner_id", sg.OwnerId)
+	d.Set("owner_id", ownerID)
 	d.Set("vpc_id", sg.VpcId)
 
 	if err := d.Set("ingress", ingressRules); err != nil {
@@ -355,8 +350,6 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	log.Printf("[DEBUG] Security Group destroy: %v", d.Id())
-
 	if err := deleteLingeringLambdaENIs(conn, "group-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error deleting Lambda ENIs using Security Group (%s): %w", d.Id(), err)
 	}
@@ -367,42 +360,26 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 			return err
 		}
 	}
-	input := &ec2.DeleteSecurityGroupInput{
-		GroupId: aws.String(d.Id()),
-	}
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.DeleteSecurityGroup(input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, "InvalidGroup.NotFound") {
-				return nil
-			}
 
-			// If it is a dependency violation, we want to retry
-			if tfawserr.ErrMessageContains(err, "DependencyViolation", "has a dependent object") {
-				return resource.RetryableError(err)
-			}
+	log.Printf("[DEBUG] Deleting Security Group: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(
+		d.Timeout(schema.TimeoutDelete),
+		func() (interface{}, error) {
+			return conn.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
+				GroupId: aws.String(d.Id()),
+			})
+		},
+		ErrCodeDependencyViolation, ErrCodeInvalidGroupInUse,
+	)
 
-			if tfawserr.ErrCodeEquals(err, "DependencyViolation") {
-				return resource.RetryableError(err)
-			}
-
-			if tfawserr.ErrCodeEquals(err, "InvalidGroup.InUse") {
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
-		}
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidGroupNotFound) {
 		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteSecurityGroup(input)
-		if tfawserr.ErrCodeEquals(err, "InvalidGroup.NotFound") {
-			return nil
-		}
 	}
+
 	if err != nil {
-		return fmt.Errorf("Error deleting security group: %w", err)
+		return fmt.Errorf("error deleting Security Group (%s): %w", d.Id(), err)
 	}
+
 	return nil
 }
 
