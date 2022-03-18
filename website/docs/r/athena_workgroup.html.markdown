@@ -60,6 +60,7 @@ The following arguments are supported:
 
 * `encryption_configuration` - (Optional) Configuration block with encryption settings. See [Encryption Configuration](#encryption-configuration) below.
 * `acl_configuration` - (Optional) Indicates that an Amazon S3 canned ACL should be set to control ownership of stored query results. See [ACL Configuration](#acl-configuration) below.
+* `expected_bucket_owner` - (Optional) The AWS account ID that you expect to be the owner of the Amazon S3 bucket.
 * `output_location` - (Optional) The location in Amazon S3 where your query results are stored, such as `s3://path/to/query/bucket/`. For more information, see [Queries and Query Result Files](https://docs.aws.amazon.com/athena/latest/ug/querying.html).
 
 ##### ACL Configuration
