@@ -431,6 +431,19 @@ func ExpandLifecycleRules(l []interface{}) ([]*s3.LifecycleRule, error) {
 			result.Filter = ExpandLifecycleRuleFilter(v)
 		}
 
+		if v, ok := tfMap["prefix"].(string); ok && result.Filter == nil {
+			// If neither the filter block nor the prefix are specified,
+			// apply the Default behavior from v3.x of the provider;
+			// otherwise, set the prefix as specified in Terraform.
+			if v == "" {
+				result.SetFilter(&s3.LifecycleRuleFilter{
+					Prefix: aws.String(v),
+				})
+			} else {
+				result.Prefix = aws.String(v)
+			}
+		}
+
 		if v, ok := tfMap["id"].(string); ok {
 			result.ID = aws.String(v)
 		}
@@ -441,10 +454,6 @@ func ExpandLifecycleRules(l []interface{}) ([]*s3.LifecycleRule, error) {
 
 		if v, ok := tfMap["noncurrent_version_transition"].(*schema.Set); ok && v.Len() > 0 {
 			result.NoncurrentVersionTransitions = ExpandLifecycleRuleNoncurrentVersionTransitions(v.List())
-		}
-
-		if v, ok := tfMap["prefix"].(string); ok && result.Filter == nil {
-			result.Prefix = aws.String(v)
 		}
 
 		if v, ok := tfMap["status"].(string); ok && v != "" {
