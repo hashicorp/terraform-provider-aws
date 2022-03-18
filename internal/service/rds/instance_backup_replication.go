@@ -6,12 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func resourceInstanceBackupReplication() *schema.Resource {
+func ResourceInstanceBackupReplication() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceInstanceBackupReplicationCreate,
 		Read:   resourceInstanceBackupReplicationRead,
@@ -60,7 +61,7 @@ func resourceInstanceBackupReplicationCreate(d *schema.ResourceData, meta interf
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Starting automated backup replication for: %s", *input.SourceDBInstanceArn)
+	log.Printf("[DEBUG] Starting RDS instance backup replication for: %s", *input.SourceDBInstanceArn)
 
 	output, err := conn.StartDBInstanceAutomatedBackupsReplication(input)
 
@@ -76,11 +77,50 @@ func resourceInstanceBackupReplicationCreate(d *schema.ResourceData, meta interf
 func resourceInstanceBackupReplicationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
+	input := &rds.DescribeDBInstanceAutomatedBackupsInput{
+		DBInstanceAutomatedBackupsArn: aws.String(d.Id()),
+	}
+
+	output, err := conn.DescribeDBInstanceAutomatedBackups(input)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceAutomatedBackupNotFoundFault) {
+		log.Printf("[WARN] RDS instance backup replication not found, removing from state: %s", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading RDS instance backup replication: %s", err)
+	}
+
+	for _, backup := range output.DBInstanceAutomatedBackups {
+		if aws.StringValue(backup.DBInstanceAutomatedBackupsArn) == d.Id() {
+			d.Set("source_db_instance_arn", backup.DBInstanceArn)
+			d.Set("destination_region", backup.Region)
+			d.Set("retention_period", backup.BackupRetentionPeriod)
+			d.Set("kms_key_id", backup.KmsKeyId)
+		} else {
+			return fmt.Errorf("Unable to find RDS instance backup replication: %s", d.Id())
+		}
+	}
+
 	return nil
 }
 
 func resourceInstanceBackupReplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
+
+	input := &rds.StopDBInstanceAutomatedBackupsReplicationInput{
+		SourceDBInstanceArn: aws.String(d.Get("source_db_instance_arn").(string)),
+	}
+
+	log.Printf("[DEBUG] Deleting RDS instance backup replication for: %s", *input.SourceDBInstanceArn)
+
+	_, err := conn.StopDBInstanceAutomatedBackupsReplication(input)
+
+	if err != nil {
+		return fmt.Errorf("error deleting RDS instance backup replication: %s", err)
+	}
 
 	return nil
 }

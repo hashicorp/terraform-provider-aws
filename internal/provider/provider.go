@@ -1662,7 +1662,7 @@ func Provider() *schema.Provider {
 			"aws_db_cluster_snapshot":            rds.ResourceClusterSnapshot(),
 			"aws_db_event_subscription":          rds.ResourceEventSubscription(),
 			"aws_db_instance":                    rds.ResourceInstance(),
-			"aws_db_instance_backup_replication": rds.resourceInstanceBackupReplication(),
+			"aws_db_instance_backup_replication": rds.ResourceInstanceBackupReplication(),
 			"aws_db_instance_role_association":   rds.ResourceInstanceRoleAssociation(),
 			"aws_db_option_group":                rds.ResourceOptionGroup(),
 			"aws_db_parameter_group":             rds.ResourceParameterGroup(),
