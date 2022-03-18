@@ -17,6 +17,9 @@ generators:
   - 'internal/**/*_gen_test.go'
   - 'internal/**/generate.go'
   - 'internal/generate/**/*'
+github_actions:
+  - '.github/*.yml'
+  - '.github/workflows/*.yml'
 linter:
   - '.github/workflows/acctest-terraform-lint.yml'
   - '.github/workflows/terraform_provider.yml'
@@ -376,6 +379,9 @@ service/kafka:
 service/kafkaconnect:
   - 'internal/service/kafkaconnect/**/*'
   - 'website/**/mskconnect_*'
+service/keyspaces:
+  - 'internal/service/keyspaces/**/*'
+  - 'website/**/keyspaces_*'
 service/kinesis:
   - 'internal/service/kinesis/**/*'
   - '*_aws_kinesis_stream*'

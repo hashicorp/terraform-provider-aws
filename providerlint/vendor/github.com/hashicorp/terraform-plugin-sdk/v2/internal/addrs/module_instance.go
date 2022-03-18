@@ -92,7 +92,6 @@ func parseModuleInstancePrefix(traversal hcl.Traversal) (ModuleInstance, hcl.Tra
 				"Invalid address operator",
 				"Module address prefix must be followed by dot and then a name.",
 			))
-			break
 		}
 
 		if next != "module" {
@@ -122,7 +121,6 @@ func parseModuleInstancePrefix(traversal hcl.Traversal) (ModuleInstance, hcl.Tra
 				"Invalid address operator",
 				"Prefix \"module.\" must be followed by a module name.",
 			))
-			break
 		}
 		remain = remain[1:]
 		step := ModuleInstanceStep{

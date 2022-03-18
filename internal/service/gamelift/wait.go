@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -143,4 +144,48 @@ func isGameliftEventFailure(event *gamelift.Event) bool {
 		}
 	}
 	return false
+}
+
+func waitGameServerGroupActive(conn *gamelift.GameLift, name string, timeout time.Duration) (*gamelift.GameServerGroup, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			gamelift.GameServerGroupStatusNew,
+			gamelift.GameServerGroupStatusActivating,
+		},
+		Target:  []string{gamelift.GameServerGroupStatusActive},
+		Refresh: statusGameServerGroup(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*gamelift.GameServerGroup); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitGameServerGroupTerminated(conn *gamelift.GameLift, name string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			gamelift.GameServerGroupStatusDeleteScheduled,
+			gamelift.GameServerGroupStatusDeleting,
+		},
+		Target:  []string{},
+		Refresh: statusGameServerGroup(conn, name),
+		Timeout: timeout,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting GameLift Game Server Group (%s): %w", name, err)
+	}
+
+	return nil
 }

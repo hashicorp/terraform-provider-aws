@@ -148,6 +148,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
 	"github.com/aws/aws-sdk-go/service/kendra"
+	"github.com/aws/aws-sdk-go/service/keyspaces"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
@@ -433,6 +434,7 @@ const (
 	Kafka                         = "kafka"
 	KafkaConnect                  = "kafkaconnect"
 	Kendra                        = "kendra"
+	Keyspaces                     = "keyspaces"
 	Kinesis                       = "kinesis"
 	KinesisAnalytics              = "kinesisanalytics"
 	KinesisAnalyticsV2            = "kinesisanalyticsv2"
@@ -729,6 +731,7 @@ func init() {
 	serviceData[Kafka] = &ServiceDatum{AWSClientName: "Kafka", AWSServiceName: kafka.ServiceName, AWSEndpointsID: kafka.EndpointsID, AWSServiceID: kafka.ServiceID, ProviderNameUpper: "Kafka", HCLKeys: []string{"kafka"}}
 	serviceData[KafkaConnect] = &ServiceDatum{AWSClientName: "KafkaConnect", AWSServiceName: kafkaconnect.ServiceName, AWSEndpointsID: kafkaconnect.EndpointsID, AWSServiceID: kafkaconnect.ServiceID, ProviderNameUpper: "KafkaConnect", HCLKeys: []string{"kafkaconnect"}}
 	serviceData[Kendra] = &ServiceDatum{AWSClientName: "Kendra", AWSServiceName: kendra.ServiceName, AWSEndpointsID: kendra.EndpointsID, AWSServiceID: kendra.ServiceID, ProviderNameUpper: "Kendra", HCLKeys: []string{"kendra"}}
+	serviceData[Keyspaces] = &ServiceDatum{AWSClientName: "Keyspaces", AWSServiceName: keyspaces.ServiceName, AWSEndpointsID: keyspaces.EndpointsID, AWSServiceID: keyspaces.ServiceID, ProviderNameUpper: "Keyspaces", HCLKeys: []string{"keyspaces"}}
 	serviceData[Kinesis] = &ServiceDatum{AWSClientName: "Kinesis", AWSServiceName: kinesis.ServiceName, AWSEndpointsID: kinesis.EndpointsID, AWSServiceID: kinesis.ServiceID, ProviderNameUpper: "Kinesis", HCLKeys: []string{"kinesis"}}
 	serviceData[KinesisAnalytics] = &ServiceDatum{AWSClientName: "KinesisAnalytics", AWSServiceName: kinesisanalytics.ServiceName, AWSEndpointsID: kinesisanalytics.EndpointsID, AWSServiceID: kinesisanalytics.ServiceID, ProviderNameUpper: "KinesisAnalytics", HCLKeys: []string{"kinesisanalytics"}}
 	serviceData[KinesisAnalyticsV2] = &ServiceDatum{AWSClientName: "KinesisAnalyticsV2", AWSServiceName: kinesisanalyticsv2.ServiceName, AWSEndpointsID: kinesisanalyticsv2.EndpointsID, AWSServiceID: kinesisanalyticsv2.ServiceID, ProviderNameUpper: "KinesisAnalyticsV2", HCLKeys: []string{"kinesisanalyticsv2"}}
@@ -1040,6 +1043,7 @@ type AWSClient struct {
 	KafkaConn                         *kafka.Kafka
 	KafkaConnectConn                  *kafkaconnect.KafkaConnect
 	KendraConn                        *kendra.Kendra
+	KeyspacesConn                     *keyspaces.Keyspaces
 	KinesisAnalyticsConn              *kinesisanalytics.KinesisAnalytics
 	KinesisAnalyticsV2Conn            *kinesisanalyticsv2.KinesisAnalyticsV2
 	KinesisConn                       *kinesis.Kinesis
@@ -1141,6 +1145,7 @@ type AWSClient struct {
 	ServiceDiscoveryConn              *servicediscovery.ServiceDiscovery
 	ServiceQuotasConn                 *servicequotas.ServiceQuotas
 	SESConn                           *ses.SES
+	Session                           *session.Session
 	SESV2Conn                         *sesv2.SESV2
 	SFNConn                           *sfn.SFN
 	ShieldConn                        *shield.Shield
@@ -1261,7 +1266,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		return nil, diag.Errorf("error creating AWS SDK v1 session: %s", err)
 	}
 
-	accountID, Partition, err := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
+	accountID, partition, err := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
 	if err != nil {
 		return nil, diag.Errorf("error retrieving account details: %s", err)
 	}
@@ -1438,6 +1443,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		KafkaConn:                         kafka.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Kafka])})),
 		KafkaConnectConn:                  kafkaconnect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[KafkaConnect])})),
 		KendraConn:                        kendra.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Kendra])})),
+		KeyspacesConn:                     keyspaces.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Keyspaces])})),
 		KinesisAnalyticsConn:              kinesisanalytics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[KinesisAnalytics])})),
 		KinesisAnalyticsV2Conn:            kinesisanalyticsv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[KinesisAnalyticsV2])})),
 		KinesisConn:                       kinesis.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Kinesis])})),
@@ -1491,7 +1497,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		OpsWorksConn:                      opsworks.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[OpsWorks])})),
 		OrganizationsConn:                 organizations.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Organizations])})),
 		OutpostsConn:                      outposts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Outposts])})),
-		Partition:                         Partition,
+		Partition:                         partition,
 		PersonalizeConn:                   personalize.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Personalize])})),
 		PersonalizeEventsConn:             personalizeevents.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[PersonalizeEvents])})),
 		PersonalizeRuntimeConn:            personalizeruntime.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[PersonalizeRuntime])})),
@@ -1519,6 +1525,9 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		Route53DomainsConn: route53domains.NewFromConfig(cfg, func(o *route53domains.Options) {
 			if endpoint := c.Endpoints[Route53Domains]; endpoint != "" {
 				o.EndpointResolver = route53domains.EndpointResolverFromURL(endpoint)
+			} else if partition == endpoints.AwsPartitionID {
+				// Route 53 Domains is only available in AWS Commercial us-east-1 Region.
+				o.Region = endpoints.UsEast1RegionID
 			}
 		}),
 		Route53RecoveryControlConfigConn: route53recoverycontrolconfig.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Route53RecoveryControlConfig])})),
@@ -1540,6 +1549,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		ServiceQuotasConn:                servicequotas.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[ServiceQuotas])})),
 		SESConn:                          ses.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SES])})),
 		SESV2Conn:                        sesv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SESV2])})),
+		Session:                          sess,
 		SFNConn:                          sfn.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SFN])})),
 		SignerConn:                       signer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[Signer])})),
 		SimpleDBConn:                     simpledb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[SimpleDB])})),
@@ -1617,7 +1627,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	client.S3ConnURICleaningDisabled = s3.New(sess.Copy(s3Config))
 
 	// Force "global" services to correct regions
-	switch Partition {
+	switch partition {
 	case endpoints.AwsPartitionID:
 		globalAcceleratorConfig.Region = aws.String(endpoints.UsWest2RegionID)
 		route53Config.Region = aws.String(endpoints.UsEast1RegionID)

@@ -32,6 +32,11 @@ func TestAccGrafana_serial(t *testing.T) {
 		"LicenseAssociation": {
 			"enterpriseFreeTrial": testAccGrafanaLicenseAssociation_freeTrial,
 		},
+		"SamlConfiguration": {
+			"basic":         testAccGrafanaWorkspaceSamlConfiguration_basic,
+			"loginValidity": testAccGrafanaWorkspaceSamlConfiguration_loginValidity,
+			"assertions":    testAccGrafanaWorkspaceSamlConfiguration_assertions,
+		},
 	}
 
 	for group, m := range testCases {

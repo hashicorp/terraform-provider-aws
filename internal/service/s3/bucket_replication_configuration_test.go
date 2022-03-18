@@ -540,6 +540,46 @@ func TestAccS3BucketReplicationConfiguration_replicaModifications(t *testing.T) 
 	})
 }
 
+// TestAccS3BucketReplicationConfiguration_withoutId ensures a configuration with a Computed
+// rule.id does not result in a non-empty plan
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23690
+func TestAccS3BucketReplicationConfiguration_withoutId(t *testing.T) {
+	resourceName := "aws_s3_bucket_replication_configuration.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dstBucketResourceName := "aws_s3_bucket.destination"
+	iamRoleResourceName := "aws_iam_role.test"
+
+	// record the initialized providers so that we can use them to check for the instances in each region
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketReplicationConfiguration_prefix_withoutIdConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketReplicationConfigurationExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "rule.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.prefix", "foo"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.status", s3.ReplicationRuleStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "rule.0.destination.0.bucket", dstBucketResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 // StorageClass issue: https://github.com/hashicorp/terraform/issues/10909
 func TestAccS3BucketReplicationConfiguration_withoutStorageClass(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -838,6 +878,10 @@ func TestAccS3BucketReplicationConfiguration_filter_emptyPrefix(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				// The "rule" parameter as a TypeList will have a nil value
+				// if prefix was specified as an empty string, which was used as workaround
+				// when the parameter was a TypeSet
+				ImportStateVerifyIgnore: []string{"rule.0.filter.0.prefix"},
 			},
 		},
 	})
@@ -948,6 +992,47 @@ func TestAccS3BucketReplicationConfiguration_filter_andOperator(t *testing.T) {
 						"destination.#":                      "1",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// TestAccS3BucketReplicationConfiguration_filter_withoutId ensures a configuration with a Computed
+// rule.id does not result in a non-empty plan.
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23690
+func TestAccS3BucketReplicationConfiguration_filter_withoutId(t *testing.T) {
+	resourceName := "aws_s3_bucket_replication_configuration.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dstBucketResourceName := "aws_s3_bucket.destination"
+	iamRoleResourceName := "aws_iam_role.test"
+
+	// record the initialized providers so that we can use them to check for the instances in each region
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketReplicationConfiguration_filter_withoutIdConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketReplicationConfigurationExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "rule.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.status", s3.ReplicationRuleStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.delete_marker_replication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.destination.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "rule.0.destination.0.bucket", dstBucketResourceName, "arn"),
 				),
 			},
 			{
@@ -1117,6 +1202,57 @@ resource "aws_s3_bucket_replication_configuration" "test" {
     }
   }
 }`, storageClass)
+}
+
+func testAccBucketReplicationConfiguration_prefix_withoutIdConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccBucketReplicationConfigurationBase(rName), `
+resource "aws_s3_bucket_replication_configuration" "test" {
+  depends_on = [
+    aws_s3_bucket_versioning.source,
+    aws_s3_bucket_versioning.destination
+  ]
+
+  bucket = aws_s3_bucket.source.id
+  role   = aws_iam_role.test.arn
+
+  rule {
+    prefix = "foo"
+    status = "Enabled"
+
+    destination {
+      bucket = aws_s3_bucket.destination.arn
+    }
+  }
+}`)
+}
+
+func testAccBucketReplicationConfiguration_filter_withoutIdConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccBucketReplicationConfigurationBase(rName), `
+resource "aws_s3_bucket_replication_configuration" "test" {
+  depends_on = [
+    aws_s3_bucket_versioning.source,
+    aws_s3_bucket_versioning.destination
+  ]
+
+  bucket = aws_s3_bucket.source.id
+  role   = aws_iam_role.test.arn
+
+  rule {
+    filter {}
+
+    status = "Enabled"
+
+    delete_marker_replication {
+      status = "Disabled"
+    }
+
+    destination {
+      bucket = aws_s3_bucket.destination.arn
+    }
+  }
+}`)
 }
 
 func testAccBucketReplicationConfigurationRTC(rName string) string {

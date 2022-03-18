@@ -3073,27 +3073,11 @@ func expandCapacityReservationSpecification(crs []interface{}) *ec2.CapacityRese
 		capacityReservationSpecification.CapacityReservationPreference = aws.String(v.(string))
 	}
 
-	if v, ok := m["capacity_reservation_target"]; ok && v != "" && (len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil) {
-		capacityReservationSpecification.CapacityReservationTarget = expandCapacityReservationTarget(v.([]interface{}))
+	if v, ok := m["capacity_reservation_target"].([]interface{}); ok && len(v) > 0 {
+		capacityReservationSpecification.CapacityReservationTarget = expandCapacityReservationTarget(v[0].(map[string]interface{}))
 	}
 
 	return capacityReservationSpecification
-}
-
-func expandCapacityReservationTarget(crt []interface{}) *ec2.CapacityReservationTarget {
-	if len(crt) < 1 || crt[0] == nil {
-		return nil
-	}
-
-	m := crt[0].(map[string]interface{})
-
-	capacityReservationTarget := &ec2.CapacityReservationTarget{}
-
-	if v, ok := m["capacity_reservation_id"]; ok && v != "" {
-		capacityReservationTarget.CapacityReservationId = aws.String(v.(string))
-	}
-
-	return capacityReservationTarget
 }
 
 func flattenEc2InstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse) []interface{} {

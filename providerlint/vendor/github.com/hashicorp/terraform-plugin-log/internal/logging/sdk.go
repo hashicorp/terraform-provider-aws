@@ -16,10 +16,39 @@ func GetSDKRootLogger(ctx context.Context) hclog.Logger {
 	return logger.(hclog.Logger)
 }
 
+// GetSDKRootLoggerOptions returns the root logger options used for
+// creating the root SDK logger. If the root logger has not been created or
+// the options are not present, it will return nil.
+func GetSDKRootLoggerOptions(ctx context.Context) *hclog.LoggerOptions {
+	if GetSDKRootLogger(ctx) == nil {
+		return nil
+	}
+
+	loggerOptionsRaw := ctx.Value(SDKRootLoggerOptionsKey)
+
+	if loggerOptionsRaw == nil {
+		return nil
+	}
+
+	loggerOptions, ok := loggerOptionsRaw.(*hclog.LoggerOptions)
+
+	if !ok {
+		return nil
+	}
+
+	return loggerOptions
+}
+
 // SetSDKRootLogger sets `logger` as the root logger used for writing logs from
 // an SDK.
 func SetSDKRootLogger(ctx context.Context, logger hclog.Logger) context.Context {
 	return context.WithValue(ctx, SDKRootLoggerKey, logger)
+}
+
+// SetSDKRootLoggerOptions sets `loggerOptions` as the root logger options
+// used for creating the SDK root logger.
+func SetSDKRootLoggerOptions(ctx context.Context, loggerOptions *hclog.LoggerOptions) context.Context {
+	return context.WithValue(ctx, SDKRootLoggerOptionsKey, loggerOptions)
 }
 
 // NewSDKSubsystemLoggerWarning is the text included in log output when a
