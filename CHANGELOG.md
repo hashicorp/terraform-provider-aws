@@ -1,4 +1,3 @@
-## 4.06.0 (Unreleased)
 ## 4.6.0 (Unreleased)
 
 FEATURES:
