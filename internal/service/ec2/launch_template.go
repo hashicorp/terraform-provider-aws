@@ -1429,7 +1429,7 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 		apiObject.Description = aws.String(v)
 	}
 
-	if v, ok := tfMap["device_index"].(int); ok && v != 0 {
+	if v, ok := tfMap["device_index"].(int); ok {
 		apiObject.DeviceIndex = aws.Int64(int64(v))
 	}
 
