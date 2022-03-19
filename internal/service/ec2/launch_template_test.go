@@ -783,6 +783,7 @@ func TestAccEC2LaunchTemplate_networkInterface(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_prefixes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv6_prefix_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv6_prefixes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.device_index", "0"),
 				),
 			},
 			{
