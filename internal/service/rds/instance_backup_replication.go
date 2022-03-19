@@ -29,20 +29,18 @@ func ResourceInstanceBackupReplication() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"destination_region": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+			"kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"retention_period": {
 				Type:     schema.TypeInt,
-				Required: true,
 				ForceNew: true,
-			},
-			"kms_key_id": {
-				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
+				Default:  7,
 			},
 		},
 	}
@@ -53,7 +51,6 @@ func resourceInstanceBackupReplicationCreate(d *schema.ResourceData, meta interf
 
 	input := &rds.StartDBInstanceAutomatedBackupsReplicationInput{
 		BackupRetentionPeriod: aws.Int64(int64(d.Get("retention_period").(int))),
-		DestinationRegion:     aws.String(d.Get("destination_region").(string)),
 		SourceDBInstanceArn:   aws.String(d.Get("source_db_instance_arn").(string)),
 	}
 
@@ -96,9 +93,8 @@ func resourceInstanceBackupReplicationRead(d *schema.ResourceData, meta interfac
 	for _, backup := range output.DBInstanceAutomatedBackups {
 		if aws.StringValue(backup.DBInstanceAutomatedBackupsArn) == d.Id() {
 			d.Set("source_db_instance_arn", backup.DBInstanceArn)
-			d.Set("destination_region", backup.Region)
-			d.Set("retention_period", backup.BackupRetentionPeriod)
 			d.Set("kms_key_id", backup.KmsKeyId)
+			d.Set("retention_period", backup.BackupRetentionPeriod)
 		} else {
 			return fmt.Errorf("Unable to find RDS instance backup replication: %s", d.Id())
 		}
