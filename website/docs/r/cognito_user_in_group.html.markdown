@@ -6,7 +6,7 @@ description: |-
   Adds the specified user to the specified group.
 ---
 
-# Resource: aws_cognito_user_group
+# Resource: aws_cognito_user_in_group
 
 Adds the specified user to the specified group.
 
