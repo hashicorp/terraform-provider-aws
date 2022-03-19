@@ -62,6 +62,7 @@ func resourceUserInGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error adding user to group: %w", err)
 	}
 
+	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
 	d.SetId(resource.UniqueId())
 
 	return resourceUserInGroupRead(d, meta)
