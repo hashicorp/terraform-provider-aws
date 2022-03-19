@@ -35,7 +35,7 @@ func FindCognitoUserPoolUICustomization(conn *cognitoidentityprovider.CognitoIde
 	return output.UICustomization, nil
 }
 
-// FindCognitoUserInGroup checks whether the user is present in the group. Returns boolean value accordingly.
+// FindCognitoUserInGroup checks whether the specified user is present in the specified group. Returns boolean value accordingly.
 func FindCognitoUserInGroup(conn *cognitoidentityprovider.CognitoIdentityProvider, groupName, userPoolId, username string) (bool, error) {
 	input := &cognitoidentityprovider.AdminListGroupsForUserInput{
 		UserPoolId: aws.String(userPoolId),
