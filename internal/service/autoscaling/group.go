@@ -2111,7 +2111,22 @@ func FlattenWarmPoolConfiguration(warmPoolConfiguration *autoscaling.WarmPoolCon
 		"pool_state":                  aws.StringValue(warmPoolConfiguration.PoolState),
 		"min_size":                    aws.Int64Value(warmPoolConfiguration.MinSize),
 		"max_group_prepared_capacity": maxGroupPreparedCapacity,
-		"instance_reuse_policy":       expandWarmPoolInstanceReusePolicy(m["instance_reuse_policy"].([]interface{})),
+	}
+
+	if warmPoolConfiguration.InstanceReusePolicy != nil {
+		m["instance_reuse_policy"] = flattenWarmPoolInstanceReusePolicy(warmPoolConfiguration.InstanceReusePolicy)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWarmPoolInstanceReusePolicy(instanceReusePolicy *autoscaling.InstanceReusePolicy) []interface{} {
+	if instanceReusePolicy == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"reuse_on_scale_in": aws.BoolValue(instanceReusePolicy.ReuseOnScaleIn),
 	}
 
 	return []interface{}{m}
@@ -2279,7 +2294,7 @@ func expandWarmPoolInstanceReusePolicy(l []interface{}) *autoscaling.InstanceReu
 	instanceReusePolicy := &autoscaling.InstanceReusePolicy{}
 
 	if v, ok := m["reuse_on_scale_in"]; ok {
-		instanceReusePolicy.ReuseOnScaleIn = aws.Bool(d.Get("protect_from_scale_in").(bool))
+		instanceReusePolicy.ReuseOnScaleIn = aws.Bool(v.(bool))
 	}
 
 	return instanceReusePolicy
