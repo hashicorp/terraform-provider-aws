@@ -591,6 +591,16 @@ func ResourceGroup() *schema.Resource {
 							Optional: true,
 							Default:  -1,
 						},
+						"instance_reuse_policy": {
+							Type: schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"reuse_on_scale_in": {
+										Type:         schema.TypeBool,
+										Optional:     true,
+										Default:      false,
 					},
 				},
 			},
