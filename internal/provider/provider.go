@@ -460,6 +460,7 @@ func Provider() *schema.Provider {
 
 			"aws_cloudtrail_service_account": cloudtrail.DataSourceServiceAccount(),
 
+			"aws_cloudwatch_event_bus":        events.DataSourceBus(),
 			"aws_cloudwatch_event_connection": events.DataSourceConnection(),
 			"aws_cloudwatch_event_source":     events.DataSourceSource(),
 
