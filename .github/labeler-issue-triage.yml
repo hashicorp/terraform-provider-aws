@@ -50,6 +50,8 @@ service/apigatewayv2:
   - '((\*|-) ?`?|(data|resource) "?)aws_apigatewayv2_'
 service/appconfig:
   - '((\*|-) ?`?|(data|resource) "?)aws_appconfig_'
+service/appflow:
+  - '((\*|-) ?`?|(data|resource) "?)aws_appflow_'
 service/appintegrations:
   - '((\*|-) ?`?|(data|resource) "?)aws_appintegrations_'
 service/applicationautoscaling:
