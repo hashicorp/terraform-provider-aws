@@ -58,7 +58,7 @@ func ResourceListenerRule() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ForceNew:     true,
+				ForceNew:     false,
 				ValidateFunc: validListenerRulePriority,
 			},
 			"action": {
