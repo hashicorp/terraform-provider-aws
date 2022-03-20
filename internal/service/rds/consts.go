@@ -38,6 +38,11 @@ const (
 )
 
 const (
+	InstanceAutomatedBackupPending     = "pending"
+	InstanceAutomatedBackupReplicating = "replicating"
+)
+
+const (
 	EventSubscriptionStatusActive    = "active"
 	EventSubscriptionStatusCreating  = "creating"
 	EventSubscriptionStatusDeleting  = "deleting"

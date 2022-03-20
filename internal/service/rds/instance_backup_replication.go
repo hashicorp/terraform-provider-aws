@@ -50,8 +50,8 @@ func resourceInstanceBackupReplicationCreate(d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	input := &rds.StartDBInstanceAutomatedBackupsReplicationInput{
-		BackupRetentionPeriod: aws.Int64(int64(d.Get("retention_period").(int))),
 		SourceDBInstanceArn:   aws.String(d.Get("source_db_instance_arn").(string)),
+		BackupRetentionPeriod: aws.Int64(int64(d.Get("retention_period").(int))),
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
@@ -67,6 +67,10 @@ func resourceInstanceBackupReplicationCreate(d *schema.ResourceData, meta interf
 	}
 
 	d.SetId(aws.StringValue(output.DBInstanceAutomatedBackup.DBInstanceAutomatedBackupsArn))
+
+	if _, err := waitDBInstanceAutomatedBackupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutDefault)); err != nil {
+		return fmt.Errorf("error waiting for DB instance automated backup (%s) creation: %w", d.Id(), err)
+	}
 
 	return resourceInstanceBackupReplicationRead(d, meta)
 }
@@ -117,6 +121,10 @@ func resourceInstanceBackupReplicationDelete(d *schema.ResourceData, meta interf
 	if err != nil {
 		return fmt.Errorf("error deleting RDS instance backup replication: %s", err)
 	}
+
+	// if _, err := waitDBInstanceAutomatedBackupAvailable(conn, *input.SourceDBInstanceArn, d.Timeout(schema.TimeoutDefault)); err != nil {
+	// 	return fmt.Errorf("error waiting for DB Instance (%s) delete: %w", *input.SourceDBInstanceArn, err)
+	// }
 
 	return nil
 }

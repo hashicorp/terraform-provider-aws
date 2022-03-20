@@ -79,3 +79,19 @@ func statusDBInstance(conn *rds.RDS, id string) resource.StateRefreshFunc {
 		return output, aws.StringValue(output.DBInstanceStatus), nil
 	}
 }
+
+func statusDBInstanceAutomatedBackup(conn *rds.RDS, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDBInstanceAutomatedBackupByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}

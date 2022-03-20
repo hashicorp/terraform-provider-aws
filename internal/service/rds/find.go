@@ -189,3 +189,24 @@ func FindEventSubscriptionByID(conn *rds.RDS, id string) (*rds.EventSubscription
 
 	return output.EventSubscriptionsList[0], nil
 }
+
+func FindDBInstanceAutomatedBackupByID(conn *rds.RDS, id string) (*rds.DBInstanceAutomatedBackup, error) {
+	input := &rds.DescribeDBInstanceAutomatedBackupsInput{
+		DBInstanceAutomatedBackupsArn: aws.String(id),
+	}
+
+	output, err := conn.DescribeDBInstanceAutomatedBackups(input)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceAutomatedBackupNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil || len(output.DBInstanceAutomatedBackups) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DBInstanceAutomatedBackups[0], nil
+}
