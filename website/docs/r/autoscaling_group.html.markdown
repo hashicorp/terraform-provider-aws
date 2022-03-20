@@ -325,7 +325,7 @@ resource "aws_autoscaling_group" "example" {
   min_size           = 1
 
   warm_pool {
-    pool_state                  = "Stopped"
+    pool_state                  = "Hibernated"
     min_size                    = 1
     max_group_prepared_capacity = 10
   }
