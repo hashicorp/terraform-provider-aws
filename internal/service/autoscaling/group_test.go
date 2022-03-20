@@ -4788,9 +4788,9 @@ resource "aws_autoscaling_group" "test" {
     pool_state                  = "Stopped"
     min_size                    = 0
     max_group_prepared_capacity = 2
-	instance_reuse_policy {
-		reuse_on_scale_in = true
-	}
+    instance_reuse_policy {
+      reuse_on_scale_in = true
+    }
   }
 }
 `
