@@ -21,10 +21,10 @@ import (
 
 func ResourceConnector() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceConnectorCreate,
-		ReadContext:   resourceConnectorRead,
-		UpdateContext: resourceConnectorUpdate,
-		DeleteContext: resourceConnectorDelete,
+		CreateWithoutTimeout: resourceConnectorCreate,
+		ReadWithoutTimeout:   resourceConnectorRead,
+		UpdateWithoutTimeout: resourceConnectorUpdate,
+		DeleteWithoutTimeout: resourceConnectorDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
