@@ -755,8 +755,8 @@ func Provider() *schema.Provider {
 			"aws_resourcegroupstaggingapi_resources": resourcegroupstaggingapi.DataSourceResources(),
 
 			"aws_route53_delegation_set":          route53.DataSourceDelegationSet(),
-			"aws_route53_zone":                    route53.DataSourceZone(),
 			"aws_route53_traffic_policy_document": route53.DataSourceTrafficPolicyDocument(),
+			"aws_route53_zone":                    route53.DataSourceZone(),
 
 			"aws_route53_resolver_endpoint": route53resolver.DataSourceEndpoint(),
 			"aws_route53_resolver_rule":     route53resolver.DataSourceRule(),
