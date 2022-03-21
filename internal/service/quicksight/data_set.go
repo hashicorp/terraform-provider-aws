@@ -217,22 +217,23 @@ func ResourceDataSet() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(1, 64),
 						},
 						"source": {
-							Type:         schema.TypeList,
-							Required:     true,
-							MaxItems:     1,
-							ExactlyOneOf: []string{"data_set_arn", "join_instruction", "physical_table_id"},
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"data_set_arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-										Optional: true,
+										Type:         schema.TypeString,
+										Computed:     true,
+										Optional:     true,
+										ExactlyOneOf: []string{"data_set_arn", "join_instruction", "physical_table_id"},
 									},
 									"join_instruction": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Optional: true,
-										MaxItems: 1,
+										Type:         schema.TypeList,
+										Computed:     true,
+										Optional:     true,
+										MaxItems:     1,
+										ExactlyOneOf: []string{"data_set_arn", "join_instruction", "physical_table_id"},
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"left_operand": {
@@ -292,6 +293,7 @@ func ResourceDataSet() *schema.Resource {
 										Type:         schema.TypeString,
 										Computed:     true,
 										Optional:     true,
+										ExactlyOneOf: []string{"data_set_arn", "join_instruction", "physical_table_id"},
 										ValidateFunc: validation.StringLenBetween(1, 64),
 									},
 								},
@@ -525,10 +527,9 @@ func ResourceDataSet() *schema.Resource {
 			},
 
 			"physical_table_map": {
-				Type:         schema.TypeSet,
-				Required:     true,
-				MaxItems:     32,
-				ExactlyOneOf: []string{"custom_sql", "relational_table", "s3_source"},
+				Type:     schema.TypeSet,
+				Required: true,
+				MaxItems: 32,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"physical_table_map_id": {
@@ -536,9 +537,10 @@ func ResourceDataSet() *schema.Resource {
 							Required: true,
 						},
 						"custom_sql": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:         schema.TypeList,
+							Optional:     true,
+							MaxItems:     1,
+							ExactlyOneOf: []string{"custom_sql", "relational_table", "s3_source"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"data_source_arn": {
@@ -580,9 +582,10 @@ func ResourceDataSet() *schema.Resource {
 							},
 						},
 						"relational_table": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:         schema.TypeList,
+							Optional:     true,
+							MaxItems:     1,
+							ExactlyOneOf: []string{"custom_sql", "relational_table", "s3_source"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"data_source_arn": {
@@ -629,10 +632,11 @@ func ResourceDataSet() *schema.Resource {
 							},
 						},
 						"s3_source": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Optional: true,
-							MaxItems: 1,
+							Type:         schema.TypeList,
+							Computed:     true,
+							Optional:     true,
+							MaxItems:     1,
+							ExactlyOneOf: []string{"custom_sql", "relational_table", "s3_source"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"data_source_arn": {
@@ -822,7 +826,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		params.ColumnGroups = expandQuickSightDataSetColumnGroups(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("column_level_permission_rules"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("column_level_permission_rules"); ok && len(v.([]interface{})) > 0 {
 		params.ColumnLevelPermissionRules = expandQuickSightDataSetColumnLevelPermissionRules(v.([]interface{}))
 	}
 
@@ -861,6 +865,9 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+
+	// arn.IsARN(d.Id()
+
 	conn := meta.(*conns.AWSClient).QuickSightConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -1830,13 +1837,8 @@ func expandQuickSightDataSetPermissions(tfList []interface{}) []*quicksight.Reso
 	for i, tfListRaw := range tfList {
 		tfMap := tfListRaw.(map[string]interface{})
 
-		var fin []string
-		for _, str := range tfMap["actions"].([]interface{}) {
-			fin = append(fin, str.(string))
-		}
-
 		permission := &quicksight.ResourcePermission{
-			Actions:   aws.StringSlice(fin),
+			Actions:   flex.ExpandStringList(tfMap["actions"].([]interface{})),
 			Principal: aws.String(tfMap["principal"].(string)),
 		}
 
