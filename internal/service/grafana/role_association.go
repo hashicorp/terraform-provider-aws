@@ -3,13 +3,11 @@ package grafana
 import (
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/managedgrafana"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
@@ -31,10 +29,6 @@ func ResourceRoleAssociation() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 47),
-					validation.StringMatch(regexp.MustCompile(`^([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$`), "must match ([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}"),
-				),
 			},
 			"role": {
 				Type:     schema.TypeString,
@@ -44,10 +38,6 @@ func ResourceRoleAssociation() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 47),
-					validation.StringMatch(regexp.MustCompile(`^([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$`), "must match ([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}"),
-				),
 			},
 			"workspace_id": {
 				Type:     schema.TypeString,
@@ -122,23 +112,25 @@ func resourceRoleAssociationRead(d *schema.ResourceData, meta interface{}) error
 	users := roleAssociation[managedgrafana.UserTypeSsoUser]
 	groups := roleAssociation[managedgrafana.UserTypeSsoGroup]
 
-	if len(users) == 0 && len(groups) == 0 {
+	usersLength := len(users)
+	groupsLength := len(groups)
+	if usersLength == 0 && groupsLength == 0 {
 		return fmt.Errorf("role association not found %s-%s", d.Get("workspace_id").(string), d.Get("role").(string))
 	}
 
-	userIds := make([]*string, len(users))
-	for i := 0; i < len(userIds); i++ {
-		userIds[i] = users[i].Id
-	}
-	if len(userIds) > 0 {
+	if usersLength > 0 {
+		userIds := make([]*string, usersLength)
+		for i := 0; i < len(userIds); i++ {
+			userIds[i] = users[i].Id
+		}
 		d.Set("user_ids", userIds)
 	}
 
-	groupIds := make([]*string, len(groups))
-	for i := 0; i < len(userIds); i++ {
-		groupIds[i] = groups[i].Id
-	}
-	if len(userIds) > 0 {
+	if groupsLength > 0 {
+		groupIds := make([]*string, groupsLength)
+		for i := 0; i < len(groupIds); i++ {
+			groupIds[i] = groups[i].Id
+		}
 		d.Set("group_ids", groupIds)
 	}
 
