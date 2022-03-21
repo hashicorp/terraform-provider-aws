@@ -1,9 +1,7 @@
 package kafkaconnect
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -14,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -442,43 +439,57 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("error reading MSK Connect Connector (%s): %s", d.Id(), err)
 	}
 
-	_ = d.Set("arn", connector.ConnectorArn)
-	_ = d.Set("description", connector.ConnectorDescription)
-	_ = d.Set("name", connector.ConnectorName)
-	_ = d.Set("version", connector.CurrentVersion)
-	_ = d.Set("kafkaconnect_version", connector.KafkaConnectVersion)
-	_ = d.Set("service_execution_role_arn", connector.ServiceExecutionRoleArn)
-
-	if err := d.Set("capacity", flattenConnectorCapacity(connector.Capacity)); err != nil {
-		return diag.Errorf("error setting capacity: %s", err)
+	d.Set("arn", connector.ConnectorArn)
+	if connector.Capacity != nil {
+		if err := d.Set("capacity", []interface{}{flattenCapacityDescription(connector.Capacity)}); err != nil {
+			return diag.Errorf("error setting capacity: %s", err)
+		}
+	} else {
+		d.Set("capacity", nil)
 	}
-
-	if err := d.Set("connector_configuration", flattenConnectorConfiguration(connector.ConnectorConfiguration)); err != nil {
-		return diag.Errorf("error setting connector_configuration: %s", err)
+	d.Set("connector_configuration", aws.StringValueMap(connector.ConnectorConfiguration))
+	d.Set("description", connector.ConnectorDescription)
+	if connector.KafkaCluster != nil {
+		if err := d.Set("kafka_cluster", []interface{}{flattenKafkaClusterDescription(connector.KafkaCluster)}); err != nil {
+			return diag.Errorf("error setting kafka_cluster: %s", err)
+		}
+	} else {
+		d.Set("kafka_cluster", nil)
 	}
-
-	if err := d.Set("kafka_cluster", flattenKafkaCluster(connector.KafkaCluster)); err != nil {
-		return diag.Errorf("error setting kafka_cluster: %s", err)
+	if connector.KafkaClusterClientAuthentication != nil {
+		if err := d.Set("kafka_cluster_client_authentication", []interface{}{flattenKafkaClusterClientAuthenticationDescription(connector.KafkaClusterClientAuthentication)}); err != nil {
+			return diag.Errorf("error setting kafka_cluster_client_authentication: %s", err)
+		}
+	} else {
+		d.Set("kafka_cluster_client_authentication", nil)
 	}
-
-	if err := d.Set("kafka_cluster_client_authentication", flattenKafkaClientAuthentication(connector.KafkaClusterClientAuthentication)); err != nil {
-		return diag.Errorf("error setting kafka_cluster_client_authentication: %s", err)
+	if connector.KafkaClusterEncryptionInTransit != nil {
+		if err := d.Set("kafka_cluster_encryption_in_transit", []interface{}{flattenKafkaClusterEncryptionInTransitDescription(connector.KafkaClusterEncryptionInTransit)}); err != nil {
+			return diag.Errorf("error setting kafka_cluster_encryption_in_transit: %s", err)
+		}
+	} else {
+		d.Set("kafka_cluster_encryption_in_transit", nil)
 	}
-
-	if err := d.Set("kafka_cluster_encryption_in_transit", flattenKafkaEncryptionInTransit(connector.KafkaClusterEncryptionInTransit)); err != nil {
-		return diag.Errorf("error setting kafka_cluster_encryption_in_transit: %s", err)
+	d.Set("kafkaconnect_version", connector.KafkaConnectVersion)
+	if connector.LogDelivery != nil {
+		if err := d.Set("log_delivery", []interface{}{flattenLogDeliveryDescription(connector.LogDelivery)}); err != nil {
+			return diag.Errorf("error setting log_delivery: %s", err)
+		}
+	} else {
+		d.Set("log_delivery", nil)
 	}
-
-	if err := d.Set("plugin", flattenPlugins(connector.Plugins)); err != nil {
+	d.Set("name", connector.ConnectorName)
+	if err := d.Set("plugin", flattenPluginDescriptions(connector.Plugins)); err != nil {
 		return diag.Errorf("error setting plugin: %s", err)
 	}
-
-	if err := d.Set("log_delivery", flattenLogDelivery(connector.LogDelivery)); err != nil {
-		return diag.Errorf("error setting log_delivery: %s", err)
-	}
-
-	if err := d.Set("worker_configuration", flattenWorkerConfiguration(connector.WorkerConfiguration)); err != nil {
-		return diag.Errorf("error setting worker_configuration: %s", err)
+	d.Set("service_execution_role_arn", connector.ServiceExecutionRoleArn)
+	d.Set("version", connector.CurrentVersion)
+	if connector.WorkerConfiguration != nil {
+		if err := d.Set("worker_configuration", []interface{}{flattenWorkerConfigurationDescription(connector.WorkerConfiguration)}); err != nil {
+			return diag.Errorf("error setting worker_configuration: %s", err)
+		}
+	} else {
+		d.Set("worker_configuration", nil)
 	}
 
 	return nil
@@ -969,247 +980,336 @@ func expandWorkerConfiguration(tfMap map[string]interface{}) *kafkaconnect.Worke
 	return apiObject
 }
 
-func flattenConnectorCapacity(capacity *kafkaconnect.CapacityDescription) []interface{} {
-	if capacity == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"autoscaling":          flattenAutoScaling(capacity.AutoScaling),
-		"provisioned_capacity": flattenProvisionedCapacity(capacity.ProvisionedCapacity),
-	}
-
-	return []interface{}{m}
-}
-
-func flattenAutoScaling(scaling *kafkaconnect.AutoScalingDescription) []interface{} {
-	if scaling == nil {
-		return []interface{}{}
-	}
-
-	tfMap := map[string]interface{}{
-		"max_worker_count": scaling.MaxWorkerCount,
-		"mcu_count":        scaling.McuCount,
-		"min_worker_count": scaling.MinWorkerCount,
-	}
-
-	if scaling.ScaleInPolicy != nil {
-		tfMap["scale_in_policy"] = flattenScaleInPolicy(scaling.ScaleInPolicy)
-	}
-	if scaling.ScaleOutPolicy != nil {
-		tfMap["scale_out_policy"] = flattenScaleOutPolicy(scaling.ScaleOutPolicy)
-	}
-
-	return []interface{}{tfMap}
-}
-
-func flattenScaleInPolicy(policy *kafkaconnect.ScaleInPolicyDescription) []interface{} {
-	if policy == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"cpu_utilization_percentage": policy.CpuUtilizationPercentage,
-	}
-	return []interface{}{m}
-}
-
-func flattenScaleOutPolicy(policy *kafkaconnect.ScaleOutPolicyDescription) []interface{} {
-	if policy == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"cpu_utilization_percentage": policy.CpuUtilizationPercentage,
-	}
-	return []interface{}{m}
-}
-
-func flattenProvisionedCapacity(capacity *kafkaconnect.ProvisionedCapacityDescription) []interface{} {
-	if capacity == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"mcu_count":    capacity.McuCount,
-		"worker_count": capacity.WorkerCount,
-	}
-
-	return []interface{}{m}
-}
-
-func flattenKafkaCluster(kafkaCluster *kafkaconnect.KafkaClusterDescription) []interface{} {
-	if kafkaCluster == nil {
-		return []interface{}{}
-	}
-
-	return []interface{}{
-		flattenApacheKafkaCluster(kafkaCluster.ApacheKafkaCluster),
-	}
-}
-
-func flattenApacheKafkaCluster(apacheKafkaCluster *kafkaconnect.ApacheKafkaClusterDescription) interface{} {
-
-	if apacheKafkaCluster == nil {
+func flattenCapacityDescription(apiObject *kafkaconnect.CapacityDescription) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	m := flattenVpc(apacheKafkaCluster.Vpc)
-	m["bootstrap_servers"] = apacheKafkaCluster.BootstrapServers
+	tfMap := map[string]interface{}{}
 
-	return m
+	if v := apiObject.AutoScaling; v != nil {
+		tfMap["autoscaling"] = []interface{}{flattenAutoScalingDescription(v)}
+	}
+
+	if v := apiObject.ProvisionedCapacity; v != nil {
+		tfMap["provisioned_capacity"] = []interface{}{flattenProvisionedCapacityDescription(v)}
+	}
+
+	return tfMap
 }
 
-func flattenVpc(vpc *kafkaconnect.VpcDescription) map[string]interface{} {
-	subnetIds := make([]string, len(vpc.Subnets))
-	for i, subnet := range vpc.Subnets {
-		subnetIds[i] = aws.StringValue(subnet)
-	}
-
-	securityGroupIds := make([]string, len(vpc.SecurityGroups))
-	for i, securityGroup := range vpc.SecurityGroups {
-		securityGroupIds[i] = aws.StringValue(securityGroup)
-	}
-
-	return map[string]interface{}{
-		"subnets":         subnetIds,
-		"security_groups": securityGroupIds,
-	}
-}
-
-func flattenKafkaClientAuthentication(clientAuthentication *kafkaconnect.KafkaClusterClientAuthenticationDescription) []interface{} {
-	if clientAuthentication == nil {
+func flattenAutoScalingDescription(apiObject *kafkaconnect.AutoScalingDescription) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	clientAuthMap := map[string]interface{}{
-		"authentication_type": clientAuthentication.AuthenticationType,
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.MaxWorkerCount; v != nil {
+		tfMap["max_worker_count"] = aws.Int64Value(v)
 	}
 
-	return []interface{}{clientAuthMap}
+	if v := apiObject.McuCount; v != nil {
+		tfMap["mcu_count"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.MinWorkerCount; v != nil {
+		tfMap["min_worker_count"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.ScaleInPolicy; v != nil {
+		tfMap["scale_in_policy"] = []interface{}{flattenScaleInPolicyDescription(v)}
+	}
+
+	if v := apiObject.ScaleOutPolicy; v != nil {
+		tfMap["scale_out_policy"] = []interface{}{flattenScaleOutPolicyDescription(v)}
+	}
+
+	return tfMap
 }
 
-func flattenKafkaEncryptionInTransit(encryptionInTransit *kafkaconnect.KafkaClusterEncryptionInTransitDescription) []interface{} {
-	if encryptionInTransit == nil {
+func flattenScaleInPolicyDescription(apiObject *kafkaconnect.ScaleInPolicyDescription) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	encryptionMap := map[string]interface{}{
-		"encryption_type": encryptionInTransit.EncryptionType,
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CpuUtilizationPercentage; v != nil {
+		tfMap["cpu_utilization_percentage"] = aws.Int64Value(v)
 	}
-	return []interface{}{encryptionMap}
+
+	return tfMap
 }
 
-func PluginHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["arn"].(string)))
-	buf.WriteString(fmt.Sprintf("%d-", m["revision"].(int64)))
-	return create.StringHashcode(buf.String())
-}
-
-func flattenPlugins(plugins []*kafkaconnect.PluginDescription) *schema.Set {
-	var s []interface{}
-	for _, plugin := range plugins {
-		s = append(s, flattenPlugin(plugin))
-	}
-	return schema.NewSet(PluginHash, s)
-}
-
-func flattenPlugin(plugin *kafkaconnect.PluginDescription) map[string]interface{} {
-	m := make(map[string]interface{})
-	m["arn"] = aws.StringValue(plugin.CustomPlugin.CustomPluginArn)
-	m["revision"] = aws.Int64Value(plugin.CustomPlugin.Revision)
-	return m
-}
-
-func flattenConnectorConfiguration(configuration map[string]*string) map[string]interface{} {
-	if len(configuration) == 0 {
+func flattenScaleOutPolicyDescription(apiObject *kafkaconnect.ScaleOutPolicyDescription) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	configMap := make(map[string]interface{})
+	tfMap := map[string]interface{}{}
 
-	for k, v := range configuration {
-		configMap[k] = v
+	if v := apiObject.CpuUtilizationPercentage; v != nil {
+		tfMap["cpu_utilization_percentage"] = aws.Int64Value(v)
 	}
 
-	return configMap
+	return tfMap
 }
 
-func flattenLogDelivery(delivery *kafkaconnect.LogDeliveryDescription) []interface{} {
-	if delivery == nil {
+func flattenProvisionedCapacityDescription(apiObject *kafkaconnect.ProvisionedCapacityDescription) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"worker_log_delivery": flattenWorkerLogDelivery(delivery.WorkerLogDelivery),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.McuCount; v != nil {
+		tfMap["mcu_count"] = aws.Int64Value(v)
 	}
 
-	return []interface{}{m}
+	if v := apiObject.WorkerCount; v != nil {
+		tfMap["worker_count"] = aws.Int64Value(v)
+	}
+
+	return tfMap
 }
 
-func flattenWorkerLogDelivery(delivery *kafkaconnect.WorkerLogDeliveryDescription) []interface{} {
-	if delivery == nil {
+func flattenKafkaClusterDescription(apiObject *kafkaconnect.KafkaClusterDescription) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"cloudwatch_logs": flattenCloudWatchLogDelivery(delivery.CloudWatchLogs),
-		"firehose":        flattenFirehoseLogDelivery(delivery.Firehose),
-		"s3":              flattenS3LogDelivery(delivery.S3),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ApacheKafkaCluster; v != nil {
+		tfMap["apache_kafka_cluster"] = []interface{}{flattenApacheKafkaClusterDescription(v)}
 	}
 
-	return []interface{}{m}
+	return tfMap
 }
 
-func flattenCloudWatchLogDelivery(cloudWatchLog *kafkaconnect.CloudWatchLogsLogDeliveryDescription) []interface{} {
-	if cloudWatchLog == nil {
+func flattenApacheKafkaClusterDescription(apiObject *kafkaconnect.ApacheKafkaClusterDescription) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"enabled":   cloudWatchLog.Enabled,
-		"log_group": cloudWatchLog.LogGroup,
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.BootstrapServers; v != nil {
+		tfMap["bootstrap_servers"] = aws.StringValue(v)
 	}
-	return []interface{}{m}
+
+	if v := apiObject.Vpc; v != nil {
+		tfMap["vpc"] = []interface{}{flattenVpcDescription(v)}
+	}
+
+	return tfMap
 }
 
-func flattenFirehoseLogDelivery(firehose *kafkaconnect.FirehoseLogDeliveryDescription) []interface{} {
-	if firehose == nil {
+func flattenVpcDescription(apiObject *kafkaconnect.VpcDescription) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"enabled":         firehose.Enabled,
-		"delivery_stream": firehose.DeliveryStream,
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.SecurityGroups; v != nil {
+		tfMap["security_groups"] = aws.StringValueSlice(v)
 	}
 
-	return []interface{}{m}
+	if v := apiObject.Subnets; v != nil {
+		tfMap["subnets"] = aws.StringValueSlice(v)
+	}
+
+	return tfMap
 }
 
-func flattenS3LogDelivery(s3 *kafkaconnect.S3LogDeliveryDescription) []interface{} {
-	if s3 == nil {
-		return nil
-	}
-	m := map[string]interface{}{
-		"enabled": s3.Enabled,
-		"bucket":  s3.Bucket,
-		"prefix":  s3.Prefix,
-	}
-
-	return []interface{}{m}
-}
-
-func flattenWorkerConfiguration(configuration *kafkaconnect.WorkerConfigurationDescription) []interface{} {
-	if configuration == nil {
+func flattenKafkaClusterClientAuthenticationDescription(apiObject *kafkaconnect.KafkaClusterClientAuthenticationDescription) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"revision": configuration.Revision,
-		"arn":      configuration.WorkerConfigurationArn,
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AuthenticationType; v != nil {
+		tfMap["authentication_type"] = aws.StringValue(v)
 	}
 
-	return []interface{}{m}
+	return tfMap
+}
+
+func flattenKafkaClusterEncryptionInTransitDescription(apiObject *kafkaconnect.KafkaClusterEncryptionInTransitDescription) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.EncryptionType; v != nil {
+		tfMap["encryption_type"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenPluginDescription(apiObject *kafkaconnect.PluginDescription) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CustomPlugin; v != nil {
+		tfMap["custom_plugin"] = []interface{}{flattenCustomPluginDescription(v)}
+	}
+
+	return tfMap
+}
+
+func flattenPluginDescriptions(apiObjects []*kafkaconnect.PluginDescription) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenPluginDescription(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenCustomPluginDescription(apiObject *kafkaconnect.CustomPluginDescription) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CustomPluginArn; v != nil {
+		tfMap["arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Revision; v != nil {
+		tfMap["revision"] = aws.Int64Value(v)
+	}
+
+	return tfMap
+}
+
+func flattenLogDeliveryDescription(apiObject *kafkaconnect.LogDeliveryDescription) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.WorkerLogDelivery; v != nil {
+		tfMap["worker_log_delivery"] = []interface{}{flattenWorkerLogDeliveryDescription(v)}
+	}
+
+	return tfMap
+}
+
+func flattenWorkerLogDeliveryDescription(apiObject *kafkaconnect.WorkerLogDeliveryDescription) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CloudWatchLogs; v != nil {
+		tfMap["cloudwatch_logs"] = []interface{}{flattenCloudWatchLogsLogDeliveryDescription(v)}
+	}
+
+	if v := apiObject.Firehose; v != nil {
+		tfMap["firehose"] = []interface{}{flattenFirehoseLogDeliveryDescription(v)}
+	}
+
+	if v := apiObject.S3; v != nil {
+		tfMap["s3"] = []interface{}{flattenS3LogDeliveryDescription(v)}
+	}
+
+	return tfMap
+}
+
+func flattenCloudWatchLogsLogDeliveryDescription(apiObject *kafkaconnect.CloudWatchLogsLogDeliveryDescription) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap["enabled"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.LogGroup; v != nil {
+		tfMap["log_group"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenFirehoseLogDeliveryDescription(apiObject *kafkaconnect.FirehoseLogDeliveryDescription) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DeliveryStream; v != nil {
+		tfMap["delivery_stream"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap["enabled"] = aws.BoolValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenS3LogDeliveryDescription(apiObject *kafkaconnect.S3LogDeliveryDescription) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Bucket; v != nil {
+		tfMap["bucket"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap["enabled"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.Prefix; v != nil {
+		tfMap["prefix"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenWorkerConfigurationDescription(apiObject *kafkaconnect.WorkerConfigurationDescription) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Revision; v != nil {
+		tfMap["revision"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.WorkerConfigurationArn; v != nil {
+		tfMap["arn"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
