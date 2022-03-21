@@ -123,11 +123,9 @@ func ResourceConnector() *schema.Resource {
 					},
 				},
 			},
-			"configuration": { // TODO: -> connector_configuration
-				Type: schema.TypeMap,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
+			"connector_configuration": {
+				Type:     schema.TypeMap,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 				Required: true,
 				ForceNew: true,
 			},
@@ -386,7 +384,7 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 		KafkaConnectVersion:              aws.String(d.Get("kafkaconnect_version").(string)),
 		ServiceExecutionRoleArn:          aws.String(d.Get("service_execution_role_arn").(string)),
 		Capacity:                         expandCapacity(d.Get("capacity").([]interface{})),
-		ConnectorConfiguration:           expandConnectorConfiguration(d.Get("configuration").(map[string]interface{})),
+		ConnectorConfiguration:           expandConnectorConfiguration(d.Get("connector_configuration").(map[string]interface{})),
 		KafkaCluster:                     expandKafkaCluster(d.Get("kafka_cluster").([]interface{})),
 		KafkaClusterClientAuthentication: expandKafkaClientAuthentication(d.Get("kafka_cluster_client_authentication").([]interface{})),
 		KafkaClusterEncryptionInTransit:  expandKafkaEncryptionInTransit(d.Get("encryption_in_transit").([]interface{})),
