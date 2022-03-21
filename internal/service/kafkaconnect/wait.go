@@ -11,24 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func waitCustomPluginCreated(conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.DescribeCustomPluginOutput, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{kafkaconnect.CustomPluginStateCreating},
-		Target:  []string{kafkaconnect.CustomPluginStateActive},
-		Refresh: statusCustomPluginState(conn, arn),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*kafkaconnect.DescribeCustomPluginOutput); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitConnectorCreatedWithContext(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOutput, error) {
+func waitConnectorCreated(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kafkaconnect.ConnectorStateCreating},
 		Target:  []string{kafkaconnect.ConnectorStateRunning},
@@ -45,7 +28,7 @@ func waitConnectorCreatedWithContext(ctx context.Context, conn *kafkaconnect.Kaf
 	return nil, err
 }
 
-func waitConnectorDeletedWithContext(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOutput, error) {
+func waitConnectorDeleted(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kafkaconnect.ConnectorStateDeleting},
 		Target:  []string{},
@@ -62,7 +45,7 @@ func waitConnectorDeletedWithContext(ctx context.Context, conn *kafkaconnect.Kaf
 	return nil, err
 }
 
-func waitConnectorOperationCompletedWithContext(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.ConnectorSummary, error) {
+func waitConnectorOperationCompleted(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.ConnectorSummary, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kafkaconnect.ConnectorStateUpdating},
 		Target:  []string{kafkaconnect.ConnectorStateRunning},
@@ -77,6 +60,23 @@ func waitConnectorOperationCompletedWithContext(ctx context.Context, conn *kafka
 			tfresource.SetLastError(err, fmt.Errorf("connector (%s) state update failed", arn))
 		}
 
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitCustomPluginCreated(conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.DescribeCustomPluginOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{kafkaconnect.CustomPluginStateCreating},
+		Target:  []string{kafkaconnect.CustomPluginStateActive},
+		Refresh: statusCustomPluginState(conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*kafkaconnect.DescribeCustomPluginOutput); ok {
 		return output, err
 	}
 

@@ -409,7 +409,7 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(aws.StringValue(output.ConnectorArn))
 
-	_, err = waitConnectorCreatedWithContext(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	_, err = waitConnectorCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return diag.Errorf("error waiting for MSK Connect Connector (%s) create: %s", d.Id(), err)
@@ -492,7 +492,7 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	connectorARN := aws.StringValue(output.ConnectorArn)
 
-	_, err = waitConnectorOperationCompletedWithContext(ctx, conn, connectorARN, d.Timeout(schema.TimeoutUpdate))
+	_, err = waitConnectorOperationCompleted(ctx, conn, connectorARN, d.Timeout(schema.TimeoutUpdate))
 
 	if err != nil {
 		return diag.Errorf("error waiting for MSK Kafka Connector (%s) operation (%s): %s", d.Id(), connectorARN, err)
@@ -517,7 +517,7 @@ func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("error deleting MSK Connect Connector (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitConnectorDeletedWithContext(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	_, err = waitConnectorDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return diag.Errorf("error waiting for MSK Connect Connector (%s) delete: %s", d.Id(), err)
