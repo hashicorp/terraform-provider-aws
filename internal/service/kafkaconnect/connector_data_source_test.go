@@ -14,8 +14,6 @@ func TestAccKafkaConnectConnectorDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mskconnect_connect.test"
 	dataSourceName := "data.aws_mskconnect_connect.test"
-
-	propertiesFileContent := "key.converter=hello\nvalue.converter=world"
 	bootstrapServers := fmt.Sprintf("%s:9094,%s:9094", acctest.RandomDomainName(), acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -25,7 +23,7 @@ func TestAccKafkaConnectConnectorDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectorDataSourceConfig(rName, bootstrapServers, propertiesFileContent),
+				Config: testAccConnectorDataSourceConfig(rName, bootstrapServers),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
@@ -38,8 +36,8 @@ func TestAccKafkaConnectConnectorDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccConnectorDataSourceConfig(rName string, bootstrapServers string, workerConfigurationPropertiesFileContent string) string {
-	return acctest.ConfigCompose(testAccConnectorConfigBasic(rName, bootstrapServers, workerConfigurationPropertiesFileContent), `
+func testAccConnectorDataSourceConfig(rName, bootstrapServers string) string {
+	return acctest.ConfigCompose(testAccConnectorConfigBasic(rName, bootstrapServers), `
 data "aws_mskconnect_connector" "test" {
   name = aws_mskconnect_connector.test.name
 }
