@@ -279,23 +279,23 @@ func ResourceConnector() *schema.Resource {
 					},
 				},
 			},
-			"worker_configuration": {
-				Type: schema.TypeList,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"arn": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"revision": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-				MaxItems: 1,
-				Optional: true,
-			},
+			// "worker_configuration": {
+			// 	Type: schema.TypeList,
+			// 	Elem: &schema.Resource{
+			// 		Schema: map[string]*schema.Schema{
+			// 			"arn": {
+			// 				Type:     schema.TypeString,
+			// 				Required: true,
+			// 			},
+			// 			"revision": {
+			// 				Type:     schema.TypeString,
+			// 				Required: true,
+			// 			},
+			// 		},
+			// 	},
+			// 	MaxItems: 1,
+			// 	Optional: true,
+			// },
 		},
 	}
 }
@@ -320,10 +320,6 @@ func resourceConnectorCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("log_delivery"); ok {
 		input.LogDelivery = expandLogDelivery(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("worker_configuration"); ok {
-		input.WorkerConfiguration = expandWorkerConfiguration(v.([]interface{}))
 	}
 
 	output, err := conn.CreateConnector(input)
@@ -640,19 +636,4 @@ func expandS3LogDelivery(tfList []interface{}) *kafkaconnect.S3LogDelivery {
 	}
 
 	return logDelivery
-}
-
-func expandWorkerConfiguration(tfList []interface{}) *kafkaconnect.WorkerConfiguration {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	tfMap := tfList[0].(map[string]interface{})
-
-	workerConfiguration := &kafkaconnect.WorkerConfiguration{
-		Revision: aws.Int64(int64(tfMap["revision"].(int))),
-		WorkerConfigurationArn: aws.String(tfMap["arn"].(string)),
-	}
-
-	return workerConfiguration
 }
