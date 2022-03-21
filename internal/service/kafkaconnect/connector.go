@@ -32,6 +32,7 @@ func ResourceConnector() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
@@ -477,26 +478,24 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KafkaConnectConn
 
-	if d.HasChanges("capacity.0.autoscaling", "capacity.0.provisioned_capacity") {
-		input := &kafkaconnect.UpdateConnectorInput{
-			Capacity:       expandCapacityUpdate(d.Get("capacity").([]interface{})),
-			ConnectorArn:   aws.String(d.Id()),
-			CurrentVersion: aws.String(d.Get("version").(string)),
-		}
+	input := &kafkaconnect.UpdateConnectorInput{
+		Capacity:       expandCapacityUpdate(d.Get("capacity").([]interface{})),
+		ConnectorArn:   aws.String(d.Id()),
+		CurrentVersion: aws.String(d.Get("version").(string)),
+	}
 
-		output, err := conn.UpdateConnectorWithContext(ctx, input)
+	output, err := conn.UpdateConnectorWithContext(ctx, input)
 
-		if err != nil {
-			return diag.Errorf("error updating MSK Kafka Connector (%s) capacity: %s", d.Id(), err)
-		}
+	if err != nil {
+		return diag.Errorf("error updating MSK Kafka Connector (%s) capacity: %s", d.Id(), err)
+	}
 
-		connectorARN := aws.StringValue(output.ConnectorArn)
+	connectorARN := aws.StringValue(output.ConnectorArn)
 
-		_, err = waitConnectorOperationCompletedWithContext(ctx, conn, connectorARN, d.Timeout(schema.TimeoutUpdate))
+	_, err = waitConnectorOperationCompletedWithContext(ctx, conn, connectorARN, d.Timeout(schema.TimeoutUpdate))
 
-		if err != nil {
-			return diag.Errorf("error waiting for MSK Kafka Connector (%s) operation (%s): %s", d.Id(), connectorARN, err)
-		}
+	if err != nil {
+		return diag.Errorf("error waiting for MSK Kafka Connector (%s) operation (%s): %s", d.Id(), connectorARN, err)
 	}
 
 	return resourceConnectorRead(ctx, d, meta)
