@@ -22,19 +22,3 @@ func statusCustomPluginState(conn *kafkaconnect.KafkaConnect, arn string) resour
 		return output, aws.StringValue(output.CustomPluginState), nil
 	}
 }
-
-func statusConnectorState(conn *kafkaconnect.KafkaConnect, arn string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindConnectorByARN(conn, arn)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.ConnectorState), nil
-	}
-}
