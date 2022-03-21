@@ -772,17 +772,28 @@ func TestAccEC2LaunchTemplate_networkInterface(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchTemplateConfig_networkInterface(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_carrier_ip_address", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_public_ip_address", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.delete_on_termination", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.description", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.device_index", "0"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.interface_type", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_address_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_addresses.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_prefix_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_prefixes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv6_address_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv6_addresses.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv6_prefix_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv6_prefixes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.network_card_index", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.private_ip_address", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.security_groups.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.subnet_id", ""),
 				),
 			},
 			{

@@ -1429,7 +1429,7 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 		apiObject.Description = aws.String(v)
 	}
 
-	if v, ok := tfMap["device_index"].(int); ok && v != 0 {
+	if v, ok := tfMap["device_index"].(int); ok {
 		apiObject.DeviceIndex = aws.Int64(int64(v))
 	}
 
@@ -1485,7 +1485,7 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 		apiObject.Ipv6Prefixes = expandIPv6PrefixSpecificationRequests(v.List())
 	}
 
-	if v, ok := tfMap["network_card_index"].(int); ok && v != 0 {
+	if v, ok := tfMap["network_card_index"].(int); ok {
 		apiObject.NetworkCardIndex = aws.Int64(int64(v))
 	}
 
