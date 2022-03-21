@@ -19,10 +19,10 @@ import (
 
 func ResourceKeyspace() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceKeyspaceCreate,
-		ReadContext:   resourceKeyspaceRead,
-		UpdateContext: resourceKeyspaceUpdate,
-		DeleteContext: resourceKeyspaceDelete,
+		CreateWithoutTimeout: resourceKeyspaceCreate,
+		ReadWithoutTimeout:   resourceKeyspaceRead,
+		UpdateWithoutTimeout: resourceKeyspaceUpdate,
+		DeleteWithoutTimeout: resourceKeyspaceDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
