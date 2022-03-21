@@ -41,8 +41,7 @@ func TestAccKeyspacesKeyspace_basic(t *testing.T) {
 					testAccCheckKeyspaceExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cassandra", "/keyspace/"+rName+"/"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -76,7 +75,7 @@ func TestAccKeyspacesKeyspace_disappears(t *testing.T) {
 	})
 }
 
-func TestAccKeyspacesKeyspace_update_tags(t *testing.T) {
+func TestAccKeyspacesKeyspace_tags(t *testing.T) {
 	rName := "tf_test_" + sdkacctest.RandString(8)
 	resourceName := "aws_keyspaces_keyspace.test"
 
@@ -87,43 +86,11 @@ func TestAccKeyspacesKeyspace_update_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckKeyspaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyspaceConfig_withTags0(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyspaceExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccKeyspaceConfig_withTags2(rName, "Key1", "value1", "Key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyspaceExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "value2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key2", "value2"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccKeyspaceConfig_withTags1(rName, "Key1", "value1"),
+				Config: testAccKeyspaceConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -132,17 +99,21 @@ func TestAccKeyspacesKeyspace_update_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccKeyspaceConfig_withTags0(rName),
+				Config: testAccKeyspaceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyspaceExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config: testAccKeyspaceConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyspaceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -199,23 +170,11 @@ func testAccKeyspaceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_keyspaces_keyspace" "test" {
   name = %[1]q
-
-  tags = {
-    Test = "test"
-  }
 }
 `, rName)
 }
 
-func testAccKeyspaceConfig_withTags0(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_keyspaces_keyspace" "test" {
-  name = %[1]q
-}
-`, rName)
-}
-
-func testAccKeyspaceConfig_withTags1(rName, tag1Key, tag1Value string) string {
+func testAccKeyspaceConfigTags1(rName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_keyspaces_keyspace" "test" {
   name = %[1]q
@@ -227,7 +186,7 @@ resource "aws_keyspaces_keyspace" "test" {
 `, rName, tag1Key, tag1Value)
 }
 
-func testAccKeyspaceConfig_withTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccKeyspaceConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_keyspaces_keyspace" "test" {
   name = %[1]q
