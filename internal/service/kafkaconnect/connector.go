@@ -40,24 +40,6 @@ func ResourceConnector() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"capacity": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -65,10 +47,9 @@ func ResourceConnector() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"autoscaling": {
-							Type:         schema.TypeList,
-							MaxItems:     1,
-							Optional:     true,
-							ExactlyOneOf: []string{"capacity.0.autoscaling", "capacity.0.provisioned_capacity"},
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"max_worker_count": {
@@ -117,12 +98,12 @@ func ResourceConnector() *schema.Resource {
 									},
 								},
 							},
+							ExactlyOneOf: []string{"capacity.0.autoscaling", "capacity.0.provisioned_capacity"},
 						},
 						"provisioned_capacity": {
-							Type:         schema.TypeList,
-							MaxItems:     1,
-							Optional:     true,
-							ExactlyOneOf: []string{"capacity.0.autoscaling", "capacity.0.provisioned_capacity"},
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"mcu_count": {
@@ -137,17 +118,73 @@ func ResourceConnector() *schema.Resource {
 									},
 								},
 							},
+							ExactlyOneOf: []string{"capacity.0.autoscaling", "capacity.0.provisioned_capacity"},
 						},
 					},
 				},
 			},
-			"configuration": {
+			"client_authentication": { // TODO -> kafka_cluster_client_authentication
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Required: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"authentication_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      kafkaconnect.KafkaClusterClientAuthenticationTypeNone,
+							ValidateFunc: validation.StringInSlice(kafkaconnect.KafkaClusterClientAuthenticationType_Values(), false),
+						},
+					},
+				},
+			},
+			"configuration": { // TODO: -> connector_configuration
 				Type: schema.TypeMap,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 				Required: true,
 				ForceNew: true,
+			},
+			"custom_plugin": { // TODO -> plugin.custom_plugin
+				Type:     schema.TypeSet,
+				Required: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"revision": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+					},
+				},
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"encryption_in_transit": { // TODO -> kafka_cluster_encryption_in_transit
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Required: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"encryption_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      kafkaconnect.KafkaClusterEncryptionInTransitTypePlaintext,
+							ValidateFunc: validation.StringInSlice(kafkaconnect.KafkaClusterEncryptionInTransitType_Values(), false),
+						},
+					},
+				},
 			},
 			"kafka_cluster": {
 				Type:     schema.TypeList,
@@ -172,14 +209,14 @@ func ResourceConnector() *schema.Resource {
 										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"security_group_ids": {
+												"security_group_ids": { // TODO -> security_groups
 													Type: schema.TypeSet,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
 													Required: true,
 												},
-												"subnet_ids": {
+												"subnet_ids": { // TODO -> subnets
 													Type: schema.TypeSet,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
@@ -199,62 +236,6 @@ func ResourceConnector() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-			"client_authentication": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"authentication_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      kafkaconnect.KafkaClusterClientAuthenticationTypeNone,
-							ValidateFunc: validation.StringInSlice(kafkaconnect.KafkaClusterClientAuthenticationType_Values(), false),
-						},
-					},
-				},
-			},
-			"encryption_in_transit": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"encryption_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      kafkaconnect.KafkaClusterEncryptionInTransitTypePlaintext,
-							ValidateFunc: validation.StringInSlice(kafkaconnect.KafkaClusterEncryptionInTransitType_Values(), false),
-						},
-					},
-				},
-			},
-			"custom_plugin": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"revision": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-					},
-				},
-			},
-			"service_execution_role_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
 			},
 			"log_delivery": {
 				Type:     schema.TypeList,
@@ -292,13 +273,13 @@ func ResourceConnector() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"enabled": {
-													Type:     schema.TypeBool,
-													Required: true,
-												},
 												"delivery_stream": {
 													Type:     schema.TypeString,
 													Optional: true,
+												},
+												"enabled": {
+													Type:     schema.TypeBool,
+													Required: true,
 												},
 											},
 										},
@@ -309,13 +290,13 @@ func ResourceConnector() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"enabled": {
-													Type:     schema.TypeBool,
-													Required: true,
-												},
 												"bucket": {
 													Type:     schema.TypeString,
 													Optional: true,
+												},
+												"enabled": {
+													Type:     schema.TypeBool,
+													Required: true,
 												},
 												"prefix": {
 													Type:     schema.TypeString,
@@ -330,8 +311,30 @@ func ResourceConnector() *schema.Resource {
 					},
 				},
 			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"service_execution_role_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"state": { // TODO Remove state
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"worker_configuration": {
-				Type: schema.TypeList,
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"arn": {
@@ -347,9 +350,6 @@ func ResourceConnector() *schema.Resource {
 						},
 					},
 				},
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
 			},
 		},
 	}
