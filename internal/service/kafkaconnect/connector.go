@@ -133,6 +133,7 @@ func ResourceConnector() *schema.Resource {
 						"authentication_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							ForceNew:     true,
 							Default:      kafkaconnect.KafkaClusterClientAuthenticationTypeNone,
 							ValidateFunc: validation.StringInSlice(kafkaconnect.KafkaClusterClientAuthenticationType_Values(), false),
 						},
@@ -156,11 +157,13 @@ func ResourceConnector() *schema.Resource {
 						"arn": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 						"revision": {
 							Type:     schema.TypeInt,
 							Required: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -180,6 +183,7 @@ func ResourceConnector() *schema.Resource {
 						"encryption_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							ForceNew:     true,
 							Default:      kafkaconnect.KafkaClusterEncryptionInTransitTypePlaintext,
 							ValidateFunc: validation.StringInSlice(kafkaconnect.KafkaClusterEncryptionInTransitType_Values(), false),
 						},
@@ -197,16 +201,19 @@ func ResourceConnector() *schema.Resource {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Required: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"bootstrap_servers": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 									"vpc": {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										Required: true,
+										ForceNew: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"security_group_ids": { // TODO -> security_groups
@@ -215,6 +222,7 @@ func ResourceConnector() *schema.Resource {
 														Type: schema.TypeString,
 													},
 													Required: true,
+													ForceNew: true,
 												},
 												"subnet_ids": { // TODO -> subnets
 													Type: schema.TypeSet,
@@ -222,6 +230,7 @@ func ResourceConnector() *schema.Resource {
 														Type: schema.TypeString,
 													},
 													Required: true,
+													ForceNew: true,
 												},
 											},
 										},
@@ -248,21 +257,25 @@ func ResourceConnector() *schema.Resource {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Required: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cloudwatch": {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										Optional: true,
+										ForceNew: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"enabled": {
 													Type:     schema.TypeBool,
 													Required: true,
+													ForceNew: true,
 												},
 												"log_group": {
 													Type:     schema.TypeString,
 													Optional: true,
+													ForceNew: true,
 												},
 											},
 										},
@@ -271,15 +284,18 @@ func ResourceConnector() *schema.Resource {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										Optional: true,
+										ForceNew: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"delivery_stream": {
 													Type:     schema.TypeString,
 													Optional: true,
+													ForceNew: true,
 												},
 												"enabled": {
 													Type:     schema.TypeBool,
 													Required: true,
+													ForceNew: true,
 												},
 											},
 										},
@@ -288,19 +304,23 @@ func ResourceConnector() *schema.Resource {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										Optional: true,
+										ForceNew: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"bucket": {
 													Type:     schema.TypeString,
 													Optional: true,
+													ForceNew: true,
 												},
 												"enabled": {
 													Type:     schema.TypeBool,
 													Required: true,
+													ForceNew: true,
 												},
 												"prefix": {
 													Type:     schema.TypeString,
 													Optional: true,
+													ForceNew: true,
 												},
 											},
 										},
@@ -340,8 +360,8 @@ func ResourceConnector() *schema.Resource {
 						"arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: verify.ValidARN,
 							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 						"revision": {
 							Type:     schema.TypeInt,
