@@ -185,26 +185,22 @@ func ResourceService() *schema.Resource {
 						"elb_name": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ForceNew: true,
 						},
 
 						"target_group_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 
 						"container_name": {
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
 
 						"container_port": {
 							Type:         schema.TypeInt,
 							Required:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(0, 65536),
 						},
 					},
@@ -319,24 +315,20 @@ func ResourceService() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"container_name": {
 							Type:     schema.TypeString,
-							ForceNew: true,
 							Optional: true,
 						},
 						"container_port": {
 							Type:         schema.TypeInt,
-							ForceNew:     true,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 65536),
 						},
 						"port": {
 							Type:         schema.TypeInt,
-							ForceNew:     true,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 65536),
 						},
 						"registry_arn": {
 							Type:         schema.TypeString,
-							ForceNew:     true,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
