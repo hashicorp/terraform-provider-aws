@@ -346,10 +346,6 @@ func ResourceConnector() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"state": { // TODO Remove state
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"version": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -440,7 +436,6 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	_ = d.Set("arn", connector.ConnectorArn)
 	_ = d.Set("description", connector.ConnectorDescription)
 	_ = d.Set("name", connector.ConnectorName)
-	_ = d.Set("state", connector.ConnectorState)
 	_ = d.Set("version", connector.CurrentVersion)
 	_ = d.Set("kafkaconnect_version", connector.KafkaConnectVersion)
 	_ = d.Set("service_execution_role_arn", connector.ServiceExecutionRoleArn)
