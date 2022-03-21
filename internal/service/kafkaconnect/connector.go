@@ -134,23 +134,6 @@ func ResourceConnector() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"encryption_in_transit": { // TODO -> kafka_cluster_encryption_in_transit
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"encryption_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							Default:      kafkaconnect.KafkaClusterEncryptionInTransitTypePlaintext,
-							ValidateFunc: validation.StringInSlice(kafkaconnect.KafkaClusterEncryptionInTransitType_Values(), false),
-						},
-					},
-				},
-			},
 			"kafka_cluster": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -215,6 +198,23 @@ func ResourceConnector() *schema.Resource {
 							ForceNew:     true,
 							Default:      kafkaconnect.KafkaClusterClientAuthenticationTypeNone,
 							ValidateFunc: validation.StringInSlice(kafkaconnect.KafkaClusterClientAuthenticationType_Values(), false),
+						},
+					},
+				},
+			},
+			"kafka_cluster_encryption_in_transit": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Required: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"encryption_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							Default:      kafkaconnect.KafkaClusterEncryptionInTransitTypePlaintext,
+							ValidateFunc: validation.StringInSlice(kafkaconnect.KafkaClusterEncryptionInTransitType_Values(), false),
 						},
 					},
 				},
@@ -397,7 +397,7 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 		ConnectorConfiguration:           expandConnectorConfiguration(d.Get("connector_configuration").(map[string]interface{})),
 		KafkaCluster:                     expandKafkaCluster(d.Get("kafka_cluster").([]interface{})),
 		KafkaClusterClientAuthentication: expandKafkaClientAuthentication(d.Get("kafka_cluster_client_authentication").([]interface{})),
-		KafkaClusterEncryptionInTransit:  expandKafkaEncryptionInTransit(d.Get("encryption_in_transit").([]interface{})),
+		KafkaClusterEncryptionInTransit:  expandKafkaEncryptionInTransit(d.Get("kafka_cluster_encryption_in_transit").([]interface{})),
 		Plugins:                          expandPlugins(d.Get("plugin").(*schema.Set).List()),
 	}
 
@@ -465,12 +465,8 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("error setting kafka_cluster_client_authentication: %s", err)
 	}
 
-	if err := d.Set("encryption_in_transit", flattenKafkaEncryptionInTransit(connector.KafkaClusterEncryptionInTransit)); err != nil {
-		return diag.Errorf("error setting encryption_in_transit: %s", err)
-	}
-
-	if err := d.Set("encryption_in_transit", flattenKafkaEncryptionInTransit(connector.KafkaClusterEncryptionInTransit)); err != nil {
-		return diag.Errorf("error setting encryption_in_transit: %s", err)
+	if err := d.Set("kafka_cluster_encryption_in_transit", flattenKafkaEncryptionInTransit(connector.KafkaClusterEncryptionInTransit)); err != nil {
+		return diag.Errorf("error setting kafka_cluster_encryption_in_transit: %s", err)
 	}
 
 	if err := d.Set("plugin", flattenPlugins(connector.Plugins)); err != nil {
