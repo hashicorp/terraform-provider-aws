@@ -160,13 +160,11 @@ func ResourceConnector() *schema.Resource {
 										ForceNew: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"security_group_ids": { // TODO -> security_groups
-													Type: schema.TypeSet,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-													},
+												"security_groups": {
+													Type:     schema.TypeSet,
 													Required: true,
 													ForceNew: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
 												"subnet_ids": { // TODO -> subnets
 													Type: schema.TypeSet,
@@ -797,7 +795,7 @@ func expandVpc(tfList []interface{}) *kafkaconnect.Vpc {
 		subnets[i] = subnet.(string)
 	}
 
-	sgsList := tfMap["security_group_ids"].(*schema.Set).List()
+	sgsList := tfMap["security_groups"].(*schema.Set).List()
 	securityGroups := make([]string, len(sgsList))
 
 	for i, sg := range sgsList {
@@ -822,8 +820,8 @@ func flattenVpc(vpc *kafkaconnect.VpcDescription) map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"subnet_ids":         subnetIds,
-		"security_group_ids": securityGroupIds,
+		"subnet_ids":      subnetIds,
+		"security_groups": securityGroupIds,
 	}
 }
 
