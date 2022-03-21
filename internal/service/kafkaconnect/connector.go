@@ -129,26 +129,6 @@ func ResourceConnector() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"custom_plugin": { // TODO -> plugin.custom_plugin
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"revision": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
-						},
-					},
-				},
-			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -334,6 +314,36 @@ func ResourceConnector() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"plugin": {
+				Type:     schema.TypeSet,
+				Required: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"custom_plugin": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Required: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"revision": {
+										Type:     schema.TypeInt,
+										Required: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"service_execution_role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -388,7 +398,7 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 		KafkaCluster:                     expandKafkaCluster(d.Get("kafka_cluster").([]interface{})),
 		KafkaClusterClientAuthentication: expandKafkaClientAuthentication(d.Get("kafka_cluster_client_authentication").([]interface{})),
 		KafkaClusterEncryptionInTransit:  expandKafkaEncryptionInTransit(d.Get("encryption_in_transit").([]interface{})),
-		Plugins:                          expandPlugins(d.Get("custom_plugin").(*schema.Set).List()),
+		Plugins:                          expandPlugins(d.Get("plugin").(*schema.Set).List()),
 	}
 
 	if v, ok := d.GetOk("log_delivery"); ok {
@@ -463,8 +473,8 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("error setting encryption_in_transit: %s", err)
 	}
 
-	if err := d.Set("custom_plugin", flattenPlugins(connector.Plugins)); err != nil {
-		return diag.Errorf("error setting custom_plugin: %s", err)
+	if err := d.Set("plugin", flattenPlugins(connector.Plugins)); err != nil {
+		return diag.Errorf("error setting plugin: %s", err)
 	}
 
 	if err := d.Set("log_delivery", flattenLogDelivery(connector.LogDelivery)); err != nil {
