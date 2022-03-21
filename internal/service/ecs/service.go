@@ -1073,7 +1073,9 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("load_balancer") {
-			input.LoadBalancers = expandLoadBalancers(d.Get("load_balancer").([]interface{}))
+			if v, ok := d.Get("load_balancer").(*schema.Set); ok && v != nil {
+				input.LoadBalancers = expandLoadBalancers(v.List())
+			}
 		}
 
 		if d.HasChange("propagate_tags") {
