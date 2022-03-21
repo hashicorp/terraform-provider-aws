@@ -3750,11 +3750,9 @@ func TestAccEC2Instance_UserData_unspecifiedToEmptyString(t *testing.T) {
 }
 
 func TestAccEC2Instance_UserDataReplaceOnChange_On(t *testing.T) {
-	var v ec2.Instance
+	var instance1, instance2 ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
-
-	var instanceId string
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -3765,8 +3763,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_UserData_Specified_With_Replace_Flag(rName, "TestData1", "true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &v),
-					testResourceIdHasChanged(resourceName, &instanceId, t),
+					testAccCheckInstanceExists(resourceName, &instance1),
 				),
 			},
 			{
@@ -3779,8 +3776,8 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_UserData_Specified_With_Replace_Flag(rName, "TestData2", "true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &v),
-					testResourceIdHasChanged(resourceName, &instanceId, t),
+					testAccCheckInstanceExists(resourceName, &instance2),
+					testAccCheckInstanceRecreated(&instance1, &instance2),
 				),
 			},
 		},
@@ -3788,11 +3785,9 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On(t *testing.T) {
 }
 
 func TestAccEC2Instance_UserDataReplaceOnChange_On_Base64(t *testing.T) {
-	var v ec2.Instance
+	var instance1, instance2 ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
-
-	var instanceId string
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -3803,8 +3798,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On_Base64(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_UserData64_Specified_With_Replace_Flag(rName, "3dc39dda39be1205215e776bad998da361a5955d", "true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &v),
-					testResourceIdHasChanged(resourceName, &instanceId, t),
+					testAccCheckInstanceExists(resourceName, &instance1),
 				),
 			},
 			{
@@ -3817,8 +3811,8 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On_Base64(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_UserData64_Specified_With_Replace_Flag(rName, "3dc39dda39be1205215e776bad998da361a5955e", "true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &v),
-					testResourceIdHasChanged(resourceName, &instanceId, t),
+					testAccCheckInstanceExists(resourceName, &instance2),
+					testAccCheckInstanceRecreated(&instance1, &instance2),
 				),
 			},
 		},
@@ -3826,11 +3820,9 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On_Base64(t *testing.T) {
 }
 
 func TestAccEC2Instance_UserDataReplaceOnChange_Off(t *testing.T) {
-	var v ec2.Instance
+	var instance1, instance2 ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
-
-	var instanceId string
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -3841,8 +3833,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_UserData_Specified_With_Replace_Flag(rName, "TestData1", "false"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &v),
-					testResourceIdHasNotChanged(resourceName, &instanceId, t),
+					testAccCheckInstanceExists(resourceName, &instance1),
 				),
 			},
 			{
@@ -3855,8 +3846,8 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_UserData_Specified_With_Replace_Flag(rName, "TestData2", "false"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &v),
-					testResourceIdHasNotChanged(resourceName, &instanceId, t),
+					testAccCheckInstanceExists(resourceName, &instance2),
+					testAccCheckInstanceNotRecreated(&instance1, &instance2),
 				),
 			},
 		},
@@ -3864,11 +3855,9 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off(t *testing.T) {
 }
 
 func TestAccEC2Instance_UserDataReplaceOnChange_Off_Base64(t *testing.T) {
-	var v ec2.Instance
+	var instance1, instance2 ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
-
-	var instanceId string
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -3879,8 +3868,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off_Base64(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_UserData64_Specified_With_Replace_Flag(rName, "3dc39dda39be1205215e776bad998da361a5955d", "false"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &v),
-					testResourceIdHasNotChanged(resourceName, &instanceId, t),
+					testAccCheckInstanceExists(resourceName, &instance1),
 				),
 			},
 			{
@@ -3893,8 +3881,8 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off_Base64(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_UserData64_Specified_With_Replace_Flag(rName, "3dc39dda39be1205215e776bad998da361a5955e", "false"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &v),
-					testResourceIdHasNotChanged(resourceName, &instanceId, t),
+					testAccCheckInstanceExists(resourceName, &instance2),
+					testAccCheckInstanceNotRecreated(&instance1, &instance2),
 				),
 			},
 		},
@@ -4291,40 +4279,6 @@ func testAccCheckInstanceExistsWithProvider(n string, i *ec2.Instance, providerF
 		}
 
 		return fmt.Errorf("Instance not found")
-	}
-}
-
-func testResourceIdHasChanged(resourceName string, instanceId *string, t *testing.T) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		instance := s.RootModule().Resources[resourceName]
-		if *instanceId == "" {
-			*instanceId = instance.Primary.ID
-			t.Logf("First instanceId set to %s", *instanceId)
-			return nil
-		}
-		if *instanceId != instance.Primary.ID {
-			t.Logf("Second instanceId set to %s", instance.Primary.ID)
-			return nil
-		} else {
-			return fmt.Errorf("A new instance should have been created")
-		}
-	}
-}
-
-func testResourceIdHasNotChanged(resourceName string, instanceId *string, t *testing.T) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		instance := s.RootModule().Resources[resourceName]
-		if *instanceId == "" {
-			*instanceId = instance.Primary.ID
-			t.Logf("First instanceId set to %s", *instanceId)
-			return nil
-		}
-		if *instanceId == instance.Primary.ID {
-			t.Logf("Second instanceId set to %s", instance.Primary.ID)
-			return nil
-		} else {
-			return fmt.Errorf("A new instance should not have been created")
-		}
 	}
 }
 
