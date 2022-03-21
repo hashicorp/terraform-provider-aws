@@ -279,11 +279,13 @@ func testAccCheckSubscriptionFilterExists(n string, filter *cloudwatchlogs.Subsc
 		logGroupName := rs.Primary.Attributes["log_group_name"]
 		filterName := rs.Primary.Attributes["name"]
 
-		_, err := tfcloudwatchlogs.FindSubscriptionFilter(conn, logGroupName, filterName)
+		sub, err := tfcloudwatchlogs.FindSubscriptionFilter(conn, logGroupName, filterName)
 
 		if err != nil {
 			return err
 		}
+
+		*filter = *sub
 
 		return nil
 	}
