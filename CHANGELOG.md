@@ -4,12 +4,14 @@ FEATURES:
 
 * **New Data Source:** `aws_imagebuilder_image_pipelines` ([#23741](https://github.com/hashicorp/terraform-provider-aws/issues/23741))
 * **New Resource:** `aws_cognito_user_in_group` ([#23765](https://github.com/hashicorp/terraform-provider-aws/issues/23765))
+* **New Resource:** `aws_keyspaces_keyspace` ([#23770](https://github.com/hashicorp/terraform-provider-aws/issues/23770))
 
 ENHANCEMENTS:
 
 * data-source/aws_ssm_document: Support `TEXT` `document_format` ([#23757](https://github.com/hashicorp/terraform-provider-aws/issues/23757))
 * resource/aws_api_gateway_stage: Add `canary_settings` argument. ([#23754](https://github.com/hashicorp/terraform-provider-aws/issues/23754))
 * resource/aws_athena_workgroup: Add `acl_configuration` and `expected_bucket_owner` arguments to the `configuration.result_configuration` block ([#23748](https://github.com/hashicorp/terraform-provider-aws/issues/23748))
+* resource/aws_autoscaling_group: Add `instance_reuse_policy` argument to support [Warm Pool scale-in](https://aws.amazon.com/about-aws/whats-new/2022/02/amazon-ec2-auto-scaling-warm-pools-supports-hibernating-returning-instances-warm-pools-scale-in/) ([#23769](https://github.com/hashicorp/terraform-provider-aws/issues/23769))
 * resource/aws_autoscaling_group: Update documentation to include [Warm Pool hibernation](https://aws.amazon.com/about-aws/whats-new/2022/02/amazon-ec2-auto-scaling-warm-pools-supports-hibernating-returning-instances-warm-pools-scale-in/) ([#23772](https://github.com/hashicorp/terraform-provider-aws/issues/23772))
 * resource/aws_cloudwatch_log_subscription_filter: Add plan time validations for `name`, `destination_arn`, `filter_pattern`, `role_arn`, `distribution`. ([#23760](https://github.com/hashicorp/terraform-provider-aws/issues/23760))
 * resource/aws_ssm_maintenance_window_task: Add `arn` and `window_task_id` attributes. ([#23756](https://github.com/hashicorp/terraform-provider-aws/issues/23756))
@@ -18,6 +20,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_ssm_document: Dont generate `arn` for AWS managed docs. ([#23757](https://github.com/hashicorp/terraform-provider-aws/issues/23757))
+* resource/aws_launch_template: Fix `network_interfaces.device_index` and `network_interfaces.network_card_index` of `0` not being set ([#23767](https://github.com/hashicorp/terraform-provider-aws/issues/23767))
 * resource/aws_ssm_maintenance_window_task: Allow creating a window taks without targets. ([#23756](https://github.com/hashicorp/terraform-provider-aws/issues/23756))
 
 ## 4.6.0 (March 18, 2022)
