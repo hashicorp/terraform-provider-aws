@@ -38,6 +38,20 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "example" {
 }
 ```
 
+## Usage Notes
+
+~> **NOTE:** To avoid conflicts always add the following lifecycle object to the `aws_s3_bucket` resource of the source bucket.
+
+This resource implements the same features that are provided by the `server_side_encryption_configuration` configuration block of the [`aws_s3_bucket` resource](s3_bucket.html.markdown). To avoid conflicts or unexpected apply results, a lifecycle configuration is needed on the `aws_s3_bucket` to ignore changes to the internal `server_side_encryption_configuration` configuration block. Failure to add the `lifecycle` configuration to the `aws_s3_bucket` will result in conflicting state results.
+
+```
+lifecycle {
+  ignore_changes = [
+    server_side_encryption_configuration
+  ]
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
