@@ -78,3 +78,44 @@ func FindSamlConfigurationByID(conn *managedgrafana.ManagedGrafana, id string) (
 
 	return output.Authentication.Saml, nil
 }
+
+func FindRoleAssociationByRoleAndWorkspaceID(conn *managedgrafana.ManagedGrafana, role string, workspaceID string) (map[string][]*managedgrafana.User, error) {
+	var nextToken *string
+	userTypeIdMap := make(map[string][]*managedgrafana.User)
+	userTypeIdMap[managedgrafana.UserTypeSsoUser] = make([]*managedgrafana.User, 0)
+	userTypeIdMap[managedgrafana.UserTypeSsoGroup] = make([]*managedgrafana.User, 0)
+	for {
+		input := &managedgrafana.ListPermissionsInput{
+			MaxResults:  aws.Int64(100),
+			WorkspaceId: aws.String(workspaceID),
+		}
+
+		if nextToken != nil {
+			input.NextToken = nextToken
+		}
+
+		permissions, err := conn.ListPermissions(input)
+
+		if err != nil {
+			return nil, &resource.NotFoundError{
+				Message:     workspaceID,
+				LastRequest: input,
+			}
+		}
+
+		for _, entry := range permissions.Permissions {
+			if aws.StringValue(entry.Role) == role {
+				userType := aws.StringValue(entry.User.Type)
+				userTypeIdMap[userType] = append(userTypeIdMap[userType], entry.User)
+			}
+		}
+
+		nextToken = permissions.NextToken
+
+		if nextToken == nil || aws.StringValue(nextToken) == "" {
+			break
+		}
+	}
+
+	return userTypeIdMap, nil
+}
