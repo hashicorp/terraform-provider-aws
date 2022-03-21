@@ -45,43 +45,6 @@ func ResourceDataSet() *schema.Resource {
 				ValidateFunc: verify.ValidAccountID,
 			},
 
-			"output_columns": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"output_column": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"description": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.StringLenBetween(0, 500),
-									},
-									"name": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.StringLenBetween(1, 128),
-									},
-									"type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.StringInSlice(quicksight.ColumnDataType_Values(), false),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-
 			"column_groups": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -814,7 +777,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		AwsAccountId:     aws.String(awsAccountId),
 		DataSetId:        aws.String(id),
 		ImportMode:       aws.String(d.Get("import_mode").(string)),
-		PhysicalTableMap: expandQuickSightDataSetPhysicalTableMap(d.Get("physical_table_map").(*schema.Set)),
+		PhysicalTableMap: expandDataSetPhysicalTableMap(d.Get("physical_table_map").(*schema.Set)),
 		Name:             aws.String(d.Get("name").(string)),
 	}
 
@@ -823,35 +786,35 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("column_groups"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		params.ColumnGroups = expandQuickSightDataSetColumnGroups(v.([]interface{}))
+		params.ColumnGroups = expandDataSetColumnGroups(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("column_level_permission_rules"); ok && len(v.([]interface{})) > 0 {
-		params.ColumnLevelPermissionRules = expandQuickSightDataSetColumnLevelPermissionRules(v.([]interface{}))
+		params.ColumnLevelPermissionRules = expandDataSetColumnLevelPermissionRules(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("data_set_usage_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		params.DataSetUsageConfiguration = expandQuickSightDataSetUsageConfiguration(v.([]interface{}))
+		params.DataSetUsageConfiguration = expandDataSetUsageConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("field_folders"); ok && len(v.([]interface{})) != 0 {
-		params.FieldFolders = expandQuickSightDataSetFieldFolders(v.([]interface{}))
+		params.FieldFolders = expandDataSetFieldFolders(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("logical_table_map"); ok && len(v.([]interface{})) != 0 {
-		params.LogicalTableMap = expandQuickSightDataSetLogicalTableMap(v.([]interface{}))
+		params.LogicalTableMap = expandDataSetLogicalTableMap(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("permissions"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		params.Permissions = expandQuickSightDataSetPermissions(v.([]interface{}))
+		params.Permissions = expandDataSetPermissions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("row_level_permission_data_set"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		params.RowLevelPermissionDataSet = expandQuickSightDataSetRowLevelPermissionDataSet(v.(map[string]interface{}))
+		params.RowLevelPermissionDataSet = expandDataSetRowLevelPermissionDataSet(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("row_level_permission_tag_configurations"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		params.RowLevelPermissionTagConfiguration = expandQuickSightDataSetRowLevelPermissionTagConfigurations(v.(map[string]interface{}))
+		params.RowLevelPermissionTagConfiguration = expandDataSetRowLevelPermissionTagConfigurations(v.(map[string]interface{}))
 	}
 
 	_, err := conn.CreateDataSetWithContext(ctx, params)
@@ -859,7 +822,9 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("error creating QuickSight Data Set: %s", err)
 	}
 
-	// confirm dataset has been created? having troubles due to a lack of output status and error handling.
+	if _, err := waitDataSetCreated(ctx, conn, awsAccountId, id); err != nil {
+		return diag.Errorf("error waiting from QuickSight Data Set (%s) creation: %s", d.Id(), err)
+	}
 
 	return resourceDataSetRead(ctx, d, meta)
 }
@@ -906,41 +871,36 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("name", dataSet.Name)
 	d.Set("import_mode", dataSet.ImportMode)
 
-	if err := d.Set("column_groups", flattenQuickSightColumnGroups(dataSet.ColumnGroups)); err != nil {
+	if err := d.Set("column_groups", flattenColumnGroups(dataSet.ColumnGroups)); err != nil {
 		return diag.Errorf("error setting column_groups: %s", err)
 	}
 
-	if err := d.Set("column_level_permission_rules", flattenQuickSightColumnLevelPermissionRules(dataSet.ColumnLevelPermissionRules)); err != nil {
+	if err := d.Set("column_level_permission_rules", flattenColumnLevelPermissionRules(dataSet.ColumnLevelPermissionRules)); err != nil {
 		return diag.Errorf("error setting column_level_permission_rules: %s", err)
 	}
-	if err := d.Set("data_set_usage_configuration", flattenQuickSightDataSetUsageConfiguration(dataSet.DataSetUsageConfiguration)); err != nil {
+	if err := d.Set("data_set_usage_configuration", flattenDataSetUsageConfiguration(dataSet.DataSetUsageConfiguration)); err != nil {
 		return diag.Errorf("error setting data_set_usage_configuration: %s", err)
 	}
 
-	if err := d.Set("field_folders", flattenQuickSightFieldFolders(dataSet.FieldFolders)); err != nil {
+	if err := d.Set("field_folders", flattenFieldFolders(dataSet.FieldFolders)); err != nil {
 		return diag.Errorf("error setting field_folders: %s", err)
 	}
 
-	if err := d.Set("logical_table_map", flattenQuickSightLogicalTableMap(dataSet.LogicalTableMap)); err != nil {
+	if err := d.Set("logical_table_map", flattenLogicalTableMap(dataSet.LogicalTableMap)); err != nil {
 		return diag.Errorf("error setting logical_table_map: %s", err)
 	}
 
-	if err := d.Set("physical_table_map", flattenQuickSightPhysicalTableMap(dataSet.PhysicalTableMap)); err != nil {
+	if err := d.Set("physical_table_map", flattenPhysicalTableMap(dataSet.PhysicalTableMap)); err != nil {
 		return diag.Errorf("error setting physical_table_map: %s", err)
 	}
 
-	if err := d.Set("row_level_permission_data_set", flattenQuickSightRowLevelPermissionDataSet(dataSet.RowLevelPermissionDataSet)); err != nil {
+	if err := d.Set("row_level_permission_data_set", flattenRowLevelPermissionDataSet(dataSet.RowLevelPermissionDataSet)); err != nil {
 		return diag.Errorf("error setting row_level_permission_data_set: %s", err)
 	}
 
-	if err := d.Set("row_level_permission_tag_configuration", flattenQuickSightRowLevelPermissionTagConfiguration(dataSet.RowLevelPermissionTagConfiguration)); err != nil {
+	if err := d.Set("row_level_permission_tag_configuration", flattenRowLevelPermissionTagConfiguration(dataSet.RowLevelPermissionTagConfiguration)); err != nil {
 		return diag.Errorf("error setting row_level_permission_tag_configuration: %s", err)
 	}
-
-	// not sure how to prevent an error when setting output_columns
-	// if err := d.Set("output_columns", flattenQuickSightOutputColumns(dataSet.OutputColumns)); err != nil {
-	// 	return diag.Errorf("error setting output_columns: %s", err)
-	// }
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
@@ -990,19 +950,19 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("column_groups") {
-			params.ColumnGroups = expandQuickSightDataSetColumnGroups(d.Get("column_groups").([]interface{}))
+			params.ColumnGroups = expandDataSetColumnGroups(d.Get("column_groups").([]interface{}))
 		}
 
 		if d.HasChange("column_level_permission_rules") {
-			params.ColumnLevelPermissionRules = expandQuickSightDataSetColumnLevelPermissionRules(d.Get("column_level_permission_rules").([]interface{}))
+			params.ColumnLevelPermissionRules = expandDataSetColumnLevelPermissionRules(d.Get("column_level_permission_rules").([]interface{}))
 		}
 
 		if d.HasChange("data_set_usage_configuration") {
-			params.DataSetUsageConfiguration = expandQuickSightDataSetUsageConfiguration(d.Get("data_set_usage_configuration").([]interface{}))
+			params.DataSetUsageConfiguration = expandDataSetUsageConfiguration(d.Get("data_set_usage_configuration").([]interface{}))
 		}
 
 		if d.HasChange("field_folders") {
-			params.FieldFolders = expandQuickSightDataSetFieldFolders(d.Get("field_folders").([]interface{}))
+			params.FieldFolders = expandDataSetFieldFolders(d.Get("field_folders").([]interface{}))
 		}
 
 		if d.HasChange("import_mode") {
@@ -1010,19 +970,19 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("logical_table_map") {
-			params.LogicalTableMap = expandQuickSightDataSetLogicalTableMap(d.Get("logical_table_map").([]interface{}))
+			params.LogicalTableMap = expandDataSetLogicalTableMap(d.Get("logical_table_map").([]interface{}))
 		}
 
 		if d.HasChange("physical_table_map") {
-			params.PhysicalTableMap = expandQuickSightDataSetPhysicalTableMap(d.Get("physical_table_map").(*schema.Set))
+			params.PhysicalTableMap = expandDataSetPhysicalTableMap(d.Get("physical_table_map").(*schema.Set))
 		}
 
 		if d.HasChange("row_level_permission_data_set") {
-			params.RowLevelPermissionDataSet = expandQuickSightDataSetRowLevelPermissionDataSet(d.Get("row_level_permission_data_set").(map[string]interface{}))
+			params.RowLevelPermissionDataSet = expandDataSetRowLevelPermissionDataSet(d.Get("row_level_permission_data_set").(map[string]interface{}))
 		}
 
 		if d.HasChange("row_level_permission_tag_configuration") {
-			params.RowLevelPermissionTagConfiguration = expandQuickSightDataSetRowLevelPermissionTagConfigurations(d.Get("row_level_permission_tag_configuration").(map[string]interface{}))
+			params.RowLevelPermissionTagConfiguration = expandDataSetRowLevelPermissionTagConfigurations(d.Get("row_level_permission_tag_configuration").(map[string]interface{}))
 		}
 
 		_, err = conn.UpdateDataSetWithContext(ctx, params)
@@ -1106,7 +1066,7 @@ func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return nil
 }
 
-func expandQuickSightDataSetColumnGroups(tfList []interface{}) []*quicksight.ColumnGroup {
+func expandDataSetColumnGroups(tfList []interface{}) []*quicksight.ColumnGroup {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1119,7 +1079,7 @@ func expandQuickSightDataSetColumnGroups(tfList []interface{}) []*quicksight.Col
 			continue
 		}
 
-		columnGroup := expandQuickSightDataSetColumnGroup(tfMap)
+		columnGroup := expandDataSetColumnGroup(tfMap)
 
 		if columnGroup == nil {
 			continue
@@ -1131,20 +1091,20 @@ func expandQuickSightDataSetColumnGroups(tfList []interface{}) []*quicksight.Col
 	return columnGroups
 }
 
-func expandQuickSightDataSetColumnGroup(tfMap map[string]interface{}) *quicksight.ColumnGroup {
+func expandDataSetColumnGroup(tfMap map[string]interface{}) *quicksight.ColumnGroup {
 	if len(tfMap) == 0 {
 		return nil
 	}
 
 	columnGroup := &quicksight.ColumnGroup{}
 	if tfMapRaw, ok := tfMap["geo_spatial_column_group"].([]interface{}); ok {
-		columnGroup.GeoSpatialColumnGroup = expandQuickSightDataSetGeoSpatialColumnGroup(tfMapRaw[0].(map[string]interface{}))
+		columnGroup.GeoSpatialColumnGroup = expandDataSetGeoSpatialColumnGroup(tfMapRaw[0].(map[string]interface{}))
 	}
 
 	return columnGroup
 }
 
-func expandQuickSightDataSetGeoSpatialColumnGroup(tfMap map[string]interface{}) *quicksight.GeoSpatialColumnGroup {
+func expandDataSetGeoSpatialColumnGroup(tfMap map[string]interface{}) *quicksight.GeoSpatialColumnGroup {
 	if tfMap == nil {
 		return nil
 	}
@@ -1166,7 +1126,7 @@ func expandQuickSightDataSetGeoSpatialColumnGroup(tfMap map[string]interface{}) 
 	return geoSpatialColumnGroup
 }
 
-func expandQuickSightDataSetColumnLevelPermissionRules(tfList []interface{}) []*quicksight.ColumnLevelPermissionRule {
+func expandDataSetColumnLevelPermissionRules(tfList []interface{}) []*quicksight.ColumnLevelPermissionRule {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1193,7 +1153,7 @@ func expandQuickSightDataSetColumnLevelPermissionRules(tfList []interface{}) []*
 	return columnLevelPermissionRules
 }
 
-func expandQuickSightDataSetUsageConfiguration(tfList []interface{}) *quicksight.DataSetUsageConfiguration {
+func expandDataSetUsageConfiguration(tfList []interface{}) *quicksight.DataSetUsageConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1216,7 +1176,7 @@ func expandQuickSightDataSetUsageConfiguration(tfList []interface{}) *quicksight
 	return usageConfiguration
 }
 
-func expandQuickSightDataSetFieldFolders(tfList []interface{}) map[string]*quicksight.FieldFolder {
+func expandDataSetFieldFolders(tfList []interface{}) map[string]*quicksight.FieldFolder {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1251,7 +1211,7 @@ func expandQuickSightDataSetFieldFolders(tfList []interface{}) map[string]*quick
 	return fieldFolderMap
 }
 
-func expandQuickSightDataSetLogicalTableMap(tfList []interface{}) map[string]*quicksight.LogicalTable {
+func expandDataSetLogicalTableMap(tfList []interface{}) map[string]*quicksight.LogicalTable {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1271,11 +1231,11 @@ func expandQuickSightDataSetLogicalTableMap(tfList []interface{}) map[string]*qu
 		}
 
 		if v, ok := vMap["source"].([]interface{}); ok {
-			logicalTable.Source = expandQuickSightDataSetLogicalTableSource(v[0].(map[string]interface{}))
+			logicalTable.Source = expandDataSetLogicalTableSource(v[0].(map[string]interface{}))
 		}
 
 		if v, ok := vMap["data_transforms"].([]interface{}); ok {
-			logicalTable.DataTransforms = expandQuickSightDataSetDataTransforms(v)
+			logicalTable.DataTransforms = expandDataSetDataTransforms(v)
 		}
 
 		logicalTableMap["s3PhysicalTable"] = logicalTable
@@ -1284,7 +1244,7 @@ func expandQuickSightDataSetLogicalTableMap(tfList []interface{}) map[string]*qu
 	return logicalTableMap
 }
 
-func expandQuickSightDataSetLogicalTableSource(tfMap map[string]interface{}) *quicksight.LogicalTableSource {
+func expandDataSetLogicalTableSource(tfMap map[string]interface{}) *quicksight.LogicalTableSource {
 	if tfMap == nil {
 		return nil
 	}
@@ -1300,13 +1260,13 @@ func expandQuickSightDataSetLogicalTableSource(tfMap map[string]interface{}) *qu
 	}
 
 	if v, ok := tfMap["join_instruction"].(map[string]interface{}); ok {
-		logicalTableSource.JoinInstruction = expandQuickSightDataSetJoinInstruction(v)
+		logicalTableSource.JoinInstruction = expandDataSetJoinInstruction(v)
 	}
 
 	return logicalTableSource
 }
 
-func expandQuickSightDataSetJoinInstruction(tfMap map[string]interface{}) *quicksight.JoinInstruction {
+func expandDataSetJoinInstruction(tfMap map[string]interface{}) *quicksight.JoinInstruction {
 	if tfMap == nil {
 		return nil
 	}
@@ -1330,17 +1290,17 @@ func expandQuickSightDataSetJoinInstruction(tfMap map[string]interface{}) *quick
 	}
 
 	if v, ok := tfMap["left_join_key_properties"].(map[string]interface{}); ok {
-		joinInstruction.LeftJoinKeyProperties = expandQuickSightDataSetJoinKeyProperties(v)
+		joinInstruction.LeftJoinKeyProperties = expandDataSetJoinKeyProperties(v)
 	}
 
 	if v, ok := tfMap["right_join_key_properties"].(map[string]interface{}); ok {
-		joinInstruction.RightJoinKeyProperties = expandQuickSightDataSetJoinKeyProperties(v)
+		joinInstruction.RightJoinKeyProperties = expandDataSetJoinKeyProperties(v)
 	}
 
 	return joinInstruction
 }
 
-func expandQuickSightDataSetJoinKeyProperties(tfMap map[string]interface{}) *quicksight.JoinKeyProperties {
+func expandDataSetJoinKeyProperties(tfMap map[string]interface{}) *quicksight.JoinKeyProperties {
 	if tfMap == nil {
 		return nil
 	}
@@ -1354,7 +1314,7 @@ func expandQuickSightDataSetJoinKeyProperties(tfMap map[string]interface{}) *qui
 	return joinKeyProperties
 }
 
-func expandQuickSightDataSetDataTransforms(tfList []interface{}) []*quicksight.TransformOperation {
+func expandDataSetDataTransforms(tfList []interface{}) []*quicksight.TransformOperation {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1368,7 +1328,7 @@ func expandQuickSightDataSetDataTransforms(tfList []interface{}) []*quicksight.T
 			continue
 		}
 
-		transformOperation := expandQuickSightDataSetDataTransform(tfMap)
+		transformOperation := expandDataSetDataTransform(tfMap)
 
 		if transformOperation == nil {
 			continue
@@ -1381,7 +1341,7 @@ func expandQuickSightDataSetDataTransforms(tfList []interface{}) []*quicksight.T
 	return transformOperations
 }
 
-func expandQuickSightDataSetDataTransform(tfMap map[string]interface{}) *quicksight.TransformOperation {
+func expandDataSetDataTransform(tfMap map[string]interface{}) *quicksight.TransformOperation {
 	if tfMap == nil {
 		return nil
 	}
@@ -1389,37 +1349,37 @@ func expandQuickSightDataSetDataTransform(tfMap map[string]interface{}) *quicksi
 	transformOperation := &quicksight.TransformOperation{}
 
 	if v, ok := tfMap["cast_column_type_operation"].(map[string]interface{}); ok {
-		transformOperation.CastColumnTypeOperation = expandQuickSightDataSetCastColumnTypeOperation(v)
+		transformOperation.CastColumnTypeOperation = expandDataSetCastColumnTypeOperation(v)
 	}
 
 	if v, ok := tfMap["create_columns_operation"].(map[string]interface{}); ok {
-		transformOperation.CreateColumnsOperation = expandQuickSightDataSetCreateColumnsOperation(v)
+		transformOperation.CreateColumnsOperation = expandDataSetCreateColumnsOperation(v)
 	}
 
 	if v, ok := tfMap["filter_operation"].(map[string]interface{}); ok {
-		transformOperation.FilterOperation = expandQuickSightDataSetFilterOperation(v)
+		transformOperation.FilterOperation = expandDataSetFilterOperation(v)
 	}
 
 	if v, ok := tfMap["project_operation"].(map[string]interface{}); ok {
-		transformOperation.ProjectOperation = expandQuickSightDataSetProjectOperation(v)
+		transformOperation.ProjectOperation = expandDataSetProjectOperation(v)
 	}
 
 	if v, ok := tfMap["rename_column_operation"].(map[string]interface{}); ok {
-		transformOperation.RenameColumnOperation = expandQuickSightDataSetRenameColumnOperation(v)
+		transformOperation.RenameColumnOperation = expandDataSetRenameColumnOperation(v)
 	}
 
 	if v, ok := tfMap["tag_column_operation"].(map[string]interface{}); ok {
-		transformOperation.TagColumnOperation = expandQuickSightDataSetTagColumnOperation(v)
+		transformOperation.TagColumnOperation = expandDataSetTagColumnOperation(v)
 	}
 
 	if v, ok := tfMap["untag_column_operation"].(map[string]interface{}); ok {
-		transformOperation.UntagColumnOperation = expandQuickSightDataSetUntagColumnOperation(v)
+		transformOperation.UntagColumnOperation = expandDataSetUntagColumnOperation(v)
 	}
 
 	return transformOperation
 }
 
-func expandQuickSightDataSetCastColumnTypeOperation(tfMap map[string]interface{}) *quicksight.CastColumnTypeOperation {
+func expandDataSetCastColumnTypeOperation(tfMap map[string]interface{}) *quicksight.CastColumnTypeOperation {
 	if tfMap == nil {
 		return nil
 	}
@@ -1441,7 +1401,7 @@ func expandQuickSightDataSetCastColumnTypeOperation(tfMap map[string]interface{}
 	return castColumnTypeOperation
 }
 
-func expandQuickSightDataSetCreateColumnsOperation(tfMap map[string]interface{}) *quicksight.CreateColumnsOperation {
+func expandDataSetCreateColumnsOperation(tfMap map[string]interface{}) *quicksight.CreateColumnsOperation {
 	if tfMap == nil {
 		return nil
 	}
@@ -1449,13 +1409,13 @@ func expandQuickSightDataSetCreateColumnsOperation(tfMap map[string]interface{})
 	createColumnsOperation := &quicksight.CreateColumnsOperation{}
 
 	if v, ok := tfMap["columns"].([]interface{}); ok {
-		createColumnsOperation.Columns = expandQuickSightDataSetCalculatedColumns(v)
+		createColumnsOperation.Columns = expandDataSetCalculatedColumns(v)
 	}
 
 	return createColumnsOperation
 }
 
-func expandQuickSightDataSetCalculatedColumns(tfList []interface{}) []*quicksight.CalculatedColumn {
+func expandDataSetCalculatedColumns(tfList []interface{}) []*quicksight.CalculatedColumn {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1469,7 +1429,7 @@ func expandQuickSightDataSetCalculatedColumns(tfList []interface{}) []*quicksigh
 			continue
 		}
 
-		calculatedColumn := expandQuickSightDataSetCalculatedColumn(tfMap)
+		calculatedColumn := expandDataSetCalculatedColumn(tfMap)
 		if calculatedColumn == nil {
 			continue
 		}
@@ -1480,7 +1440,7 @@ func expandQuickSightDataSetCalculatedColumns(tfList []interface{}) []*quicksigh
 	return calculatedColumns
 }
 
-func expandQuickSightDataSetCalculatedColumn(tfMap map[string]interface{}) *quicksight.CalculatedColumn {
+func expandDataSetCalculatedColumn(tfMap map[string]interface{}) *quicksight.CalculatedColumn {
 	if tfMap == nil {
 		return nil
 	}
@@ -1502,7 +1462,7 @@ func expandQuickSightDataSetCalculatedColumn(tfMap map[string]interface{}) *quic
 	return calculatedColumn
 }
 
-func expandQuickSightDataSetFilterOperation(tfMap map[string]interface{}) *quicksight.FilterOperation {
+func expandDataSetFilterOperation(tfMap map[string]interface{}) *quicksight.FilterOperation {
 	if tfMap == nil {
 		return nil
 	}
@@ -1516,7 +1476,7 @@ func expandQuickSightDataSetFilterOperation(tfMap map[string]interface{}) *quick
 	return filterOperation
 }
 
-func expandQuickSightDataSetProjectOperation(tfMap map[string]interface{}) *quicksight.ProjectOperation {
+func expandDataSetProjectOperation(tfMap map[string]interface{}) *quicksight.ProjectOperation {
 	if tfMap == nil {
 		return nil
 	}
@@ -1530,7 +1490,7 @@ func expandQuickSightDataSetProjectOperation(tfMap map[string]interface{}) *quic
 	return projectOperation
 }
 
-func expandQuickSightDataSetRenameColumnOperation(tfMap map[string]interface{}) *quicksight.RenameColumnOperation {
+func expandDataSetRenameColumnOperation(tfMap map[string]interface{}) *quicksight.RenameColumnOperation {
 	if tfMap == nil {
 		return nil
 	}
@@ -1548,7 +1508,7 @@ func expandQuickSightDataSetRenameColumnOperation(tfMap map[string]interface{}) 
 	return renameColumnOperation
 }
 
-func expandQuickSightDataSetTagColumnOperation(tfMap map[string]interface{}) *quicksight.TagColumnOperation {
+func expandDataSetTagColumnOperation(tfMap map[string]interface{}) *quicksight.TagColumnOperation {
 	if tfMap == nil {
 		return nil
 	}
@@ -1560,13 +1520,13 @@ func expandQuickSightDataSetTagColumnOperation(tfMap map[string]interface{}) *qu
 	}
 
 	if v, ok := tfMap["tags"].([]interface{}); ok {
-		tagColumnOperation.Tags = expandQuickSightDataSetTags(v)
+		tagColumnOperation.Tags = expandDataSetTags(v)
 	}
 
 	return tagColumnOperation
 }
 
-func expandQuickSightDataSetTags(tfList []interface{}) []*quicksight.ColumnTag {
+func expandDataSetTags(tfList []interface{}) []*quicksight.ColumnTag {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1580,7 +1540,7 @@ func expandQuickSightDataSetTags(tfList []interface{}) []*quicksight.ColumnTag {
 			continue
 		}
 
-		tag := expandQuickSightDataSetTag(tfMap)
+		tag := expandDataSetTag(tfMap)
 		if tag == nil {
 			continue
 		}
@@ -1591,7 +1551,7 @@ func expandQuickSightDataSetTags(tfList []interface{}) []*quicksight.ColumnTag {
 	return tags
 }
 
-func expandQuickSightDataSetTag(tfMap map[string]interface{}) *quicksight.ColumnTag {
+func expandDataSetTag(tfMap map[string]interface{}) *quicksight.ColumnTag {
 	if tfMap == nil {
 		return nil
 	}
@@ -1599,7 +1559,7 @@ func expandQuickSightDataSetTag(tfMap map[string]interface{}) *quicksight.Column
 	tag := &quicksight.ColumnTag{}
 
 	if v, ok := tfMap["column_description"].(map[string]interface{}); ok {
-		tag.ColumnDescription = expandQuickSightDataSetColumnDescription(v)
+		tag.ColumnDescription = expandDataSetColumnDescription(v)
 	}
 
 	if v, ok := tfMap["column_geographic_role"].(string); ok {
@@ -1609,7 +1569,7 @@ func expandQuickSightDataSetTag(tfMap map[string]interface{}) *quicksight.Column
 	return tag
 }
 
-func expandQuickSightDataSetColumnDescription(tfMap map[string]interface{}) *quicksight.ColumnDescription {
+func expandDataSetColumnDescription(tfMap map[string]interface{}) *quicksight.ColumnDescription {
 	if tfMap == nil {
 		return nil
 	}
@@ -1623,7 +1583,7 @@ func expandQuickSightDataSetColumnDescription(tfMap map[string]interface{}) *qui
 	return columnDescription
 }
 
-func expandQuickSightDataSetUntagColumnOperation(tfMap map[string]interface{}) *quicksight.UntagColumnOperation {
+func expandDataSetUntagColumnOperation(tfMap map[string]interface{}) *quicksight.UntagColumnOperation {
 	if tfMap == nil {
 		return nil
 	}
@@ -1641,7 +1601,7 @@ func expandQuickSightDataSetUntagColumnOperation(tfMap map[string]interface{}) *
 	return untagColumnOperation
 }
 
-func expandQuickSightDataSetPhysicalTableMap(tfSet *schema.Set) map[string]*quicksight.PhysicalTable {
+func expandDataSetPhysicalTableMap(tfSet *schema.Set) map[string]*quicksight.PhysicalTable {
 	if tfSet.Len() == 0 {
 		return nil
 	}
@@ -1660,19 +1620,19 @@ func expandQuickSightDataSetPhysicalTableMap(tfSet *schema.Set) map[string]*quic
 
 		if customSqlList, ok := vMap["custom_sql"].([]interface{}); ok {
 			for _, v := range customSqlList {
-				physicalTable.CustomSql = expandQuickSightDataSetCustomSql(v.(map[string]interface{}))
+				physicalTable.CustomSql = expandDataSetCustomSql(v.(map[string]interface{}))
 			}
 		}
 
 		if relationalTableList, ok := vMap["relational_table"].([]interface{}); ok {
 			for _, v := range relationalTableList {
-				physicalTable.RelationalTable = expandQuickSightDataSetRelationalTable(v.(map[string]interface{}))
+				physicalTable.RelationalTable = expandDataSetRelationalTable(v.(map[string]interface{}))
 			}
 		}
 
 		if s3SourceList, ok := vMap["s3_source"].([]interface{}); ok {
 			for _, v := range s3SourceList {
-				physicalTable.S3Source = expandQuickSightDataSetS3Source(v.(map[string]interface{}))
+				physicalTable.S3Source = expandDataSetS3Source(v.(map[string]interface{}))
 			}
 		}
 
@@ -1682,7 +1642,7 @@ func expandQuickSightDataSetPhysicalTableMap(tfSet *schema.Set) map[string]*quic
 	return physicalTableMap
 }
 
-func expandQuickSightDataSetCustomSql(tfMap map[string]interface{}) *quicksight.CustomSql {
+func expandDataSetCustomSql(tfMap map[string]interface{}) *quicksight.CustomSql {
 	if tfMap == nil {
 		return nil
 	}
@@ -1690,7 +1650,7 @@ func expandQuickSightDataSetCustomSql(tfMap map[string]interface{}) *quicksight.
 	customSql := &quicksight.CustomSql{}
 
 	if v, ok := tfMap["columns"].([]interface{}); ok {
-		customSql.Columns = expandQuickSightDataSetInputColumns(v)
+		customSql.Columns = expandDataSetInputColumns(v)
 	}
 
 	if v, ok := tfMap["data_source_arn"].(string); ok {
@@ -1708,7 +1668,7 @@ func expandQuickSightDataSetCustomSql(tfMap map[string]interface{}) *quicksight.
 	return customSql
 }
 
-func expandQuickSightDataSetInputColumns(tfList []interface{}) []*quicksight.InputColumn {
+func expandDataSetInputColumns(tfList []interface{}) []*quicksight.InputColumn {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1722,7 +1682,7 @@ func expandQuickSightDataSetInputColumns(tfList []interface{}) []*quicksight.Inp
 			continue
 		}
 
-		inputColumn := expandQuickSightDataSetInputColumn(tfMap)
+		inputColumn := expandDataSetInputColumn(tfMap)
 		if inputColumn == nil {
 			continue
 		}
@@ -1732,7 +1692,7 @@ func expandQuickSightDataSetInputColumns(tfList []interface{}) []*quicksight.Inp
 	return inputColumns
 }
 
-func expandQuickSightDataSetInputColumn(tfMap map[string]interface{}) *quicksight.InputColumn {
+func expandDataSetInputColumn(tfMap map[string]interface{}) *quicksight.InputColumn {
 	if tfMap == nil {
 		return nil
 	}
@@ -1749,7 +1709,7 @@ func expandQuickSightDataSetInputColumn(tfMap map[string]interface{}) *quicksigh
 	return inputColumn
 }
 
-func expandQuickSightDataSetRelationalTable(tfMap map[string]interface{}) *quicksight.RelationalTable {
+func expandDataSetRelationalTable(tfMap map[string]interface{}) *quicksight.RelationalTable {
 	if tfMap == nil {
 		return nil
 	}
@@ -1757,7 +1717,7 @@ func expandQuickSightDataSetRelationalTable(tfMap map[string]interface{}) *quick
 	relationalTable := &quicksight.RelationalTable{}
 
 	if v, ok := tfMap["input_columns"].([]interface{}); ok {
-		relationalTable.InputColumns = expandQuickSightDataSetInputColumns(v)
+		relationalTable.InputColumns = expandDataSetInputColumns(v)
 	}
 
 	if v, ok := tfMap["catelog"].(string); ok {
@@ -1779,7 +1739,7 @@ func expandQuickSightDataSetRelationalTable(tfMap map[string]interface{}) *quick
 	return relationalTable
 }
 
-func expandQuickSightDataSetS3Source(tfMap map[string]interface{}) *quicksight.S3Source {
+func expandDataSetS3Source(tfMap map[string]interface{}) *quicksight.S3Source {
 	if tfMap == nil {
 		return nil
 	}
@@ -1787,11 +1747,11 @@ func expandQuickSightDataSetS3Source(tfMap map[string]interface{}) *quicksight.S
 	s3Source := &quicksight.S3Source{}
 
 	if v, ok := tfMap["input_columns"].([]interface{}); ok {
-		s3Source.InputColumns = expandQuickSightDataSetInputColumns(v)
+		s3Source.InputColumns = expandDataSetInputColumns(v)
 	}
 
 	if v, ok := tfMap["upload_settings"].(map[string]interface{}); ok {
-		s3Source.UploadSettings = expandQuickSightDataSetUploadSettings(v)
+		s3Source.UploadSettings = expandDataSetUploadSettings(v)
 	}
 
 	if v, ok := tfMap["data_source_arn"].(string); ok {
@@ -1801,7 +1761,7 @@ func expandQuickSightDataSetS3Source(tfMap map[string]interface{}) *quicksight.S
 	return s3Source
 }
 
-func expandQuickSightDataSetUploadSettings(tfMap map[string]interface{}) *quicksight.UploadSettings {
+func expandDataSetUploadSettings(tfMap map[string]interface{}) *quicksight.UploadSettings {
 	if tfMap == nil {
 		return nil
 	}
@@ -1831,7 +1791,7 @@ func expandQuickSightDataSetUploadSettings(tfMap map[string]interface{}) *quicks
 	return uploadSettings
 }
 
-func expandQuickSightDataSetPermissions(tfList []interface{}) []*quicksight.ResourcePermission {
+func expandDataSetPermissions(tfList []interface{}) []*quicksight.ResourcePermission {
 	permissions := make([]*quicksight.ResourcePermission, len(tfList))
 
 	for i, tfListRaw := range tfList {
@@ -1847,7 +1807,7 @@ func expandQuickSightDataSetPermissions(tfList []interface{}) []*quicksight.Reso
 	return permissions
 }
 
-func expandQuickSightDataSetRowLevelPermissionDataSet(tfMap map[string]interface{}) *quicksight.RowLevelPermissionDataSet {
+func expandDataSetRowLevelPermissionDataSet(tfMap map[string]interface{}) *quicksight.RowLevelPermissionDataSet {
 	if tfMap == nil {
 		return nil
 	}
@@ -1877,7 +1837,7 @@ func expandQuickSightDataSetRowLevelPermissionDataSet(tfMap map[string]interface
 	return rowLevelPermission
 }
 
-func expandQuickSightDataSetRowLevelPermissionTagConfigurations(tfMap map[string]interface{}) *quicksight.RowLevelPermissionTagConfiguration {
+func expandDataSetRowLevelPermissionTagConfigurations(tfMap map[string]interface{}) *quicksight.RowLevelPermissionTagConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -1885,7 +1845,7 @@ func expandQuickSightDataSetRowLevelPermissionTagConfigurations(tfMap map[string
 	rowLevelPermissionTagConfiguration := &quicksight.RowLevelPermissionTagConfiguration{}
 
 	if v, ok := tfMap["tag_rules"].([]interface{}); ok {
-		rowLevelPermissionTagConfiguration.TagRules = expandQuickSightDataSetTagRules(v)
+		rowLevelPermissionTagConfiguration.TagRules = expandDataSetTagRules(v)
 	}
 
 	if v, ok := tfMap["status"].(string); ok {
@@ -1895,7 +1855,7 @@ func expandQuickSightDataSetRowLevelPermissionTagConfigurations(tfMap map[string
 	return rowLevelPermissionTagConfiguration
 }
 
-func expandQuickSightDataSetTagRules(tfList []interface{}) []*quicksight.RowLevelPermissionTagRule {
+func expandDataSetTagRules(tfList []interface{}) []*quicksight.RowLevelPermissionTagRule {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1908,7 +1868,7 @@ func expandQuickSightDataSetTagRules(tfList []interface{}) []*quicksight.RowLeve
 			continue
 		}
 
-		tagRule := expandQuickSightDataSetTagRule(tfMap)
+		tagRule := expandDataSetTagRule(tfMap)
 
 		if tagRule == nil {
 			continue
@@ -1920,7 +1880,7 @@ func expandQuickSightDataSetTagRules(tfList []interface{}) []*quicksight.RowLeve
 	return tagRules
 }
 
-func expandQuickSightDataSetTagRule(tfMap map[string]interface{}) *quicksight.RowLevelPermissionTagRule {
+func expandDataSetTagRule(tfMap map[string]interface{}) *quicksight.RowLevelPermissionTagRule {
 	if tfMap == nil {
 		return nil
 	}
@@ -1946,7 +1906,7 @@ func expandQuickSightDataSetTagRule(tfMap map[string]interface{}) *quicksight.Ro
 	return tagRules
 }
 
-func flattenQuickSightColumnGroups(groups []*quicksight.ColumnGroup) []interface{} {
+func flattenColumnGroups(groups []*quicksight.ColumnGroup) []interface{} {
 	if len(groups) == 0 {
 		return nil
 	}
@@ -1958,13 +1918,13 @@ func flattenQuickSightColumnGroups(groups []*quicksight.ColumnGroup) []interface
 			continue
 		}
 
-		tfList = append(tfList, flattenQuickSightColumnGroup(group))
+		tfList = append(tfList, flattenColumnGroup(group))
 	}
 
 	return tfList
 }
 
-func flattenQuickSightColumnGroup(group *quicksight.ColumnGroup) map[string]interface{} {
+func flattenColumnGroup(group *quicksight.ColumnGroup) map[string]interface{} {
 	if group == nil {
 		return nil
 	}
@@ -1972,13 +1932,13 @@ func flattenQuickSightColumnGroup(group *quicksight.ColumnGroup) map[string]inte
 	tfMap := map[string]interface{}{}
 
 	if group.GeoSpatialColumnGroup != nil {
-		tfMap["geo_spatial_column_group"] = flattenQuickSightGeoSpatialColumnGroup(group.GeoSpatialColumnGroup)
+		tfMap["geo_spatial_column_group"] = flattenGeoSpatialColumnGroup(group.GeoSpatialColumnGroup)
 	}
 
 	return tfMap
 }
 
-func flattenQuickSightGeoSpatialColumnGroup(group *quicksight.GeoSpatialColumnGroup) map[string]interface{} {
+func flattenGeoSpatialColumnGroup(group *quicksight.GeoSpatialColumnGroup) map[string]interface{} {
 	if group == nil {
 		return nil
 	}
@@ -2000,7 +1960,7 @@ func flattenQuickSightGeoSpatialColumnGroup(group *quicksight.GeoSpatialColumnGr
 	return tfMap
 }
 
-func flattenQuickSightColumnLevelPermissionRules(rules []*quicksight.ColumnLevelPermissionRule) []interface{} {
+func flattenColumnLevelPermissionRules(rules []*quicksight.ColumnLevelPermissionRule) []interface{} {
 	if len(rules) == 0 {
 		return nil
 	}
@@ -2012,13 +1972,13 @@ func flattenQuickSightColumnLevelPermissionRules(rules []*quicksight.ColumnLevel
 			continue
 		}
 
-		tfList = append(tfList, flattenQuickSightColumnLevelPermissionRule(rule))
+		tfList = append(tfList, flattenColumnLevelPermissionRule(rule))
 	}
 
 	return tfList
 }
 
-func flattenQuickSightColumnLevelPermissionRule(rule *quicksight.ColumnLevelPermissionRule) map[string]interface{} {
+func flattenColumnLevelPermissionRule(rule *quicksight.ColumnLevelPermissionRule) map[string]interface{} {
 	if rule == nil {
 		return nil
 	}
@@ -2036,7 +1996,7 @@ func flattenQuickSightColumnLevelPermissionRule(rule *quicksight.ColumnLevelPerm
 	return tfMap
 }
 
-func flattenQuickSightDataSetUsageConfiguration(configuration *quicksight.DataSetUsageConfiguration) []interface{} {
+func flattenDataSetUsageConfiguration(configuration *quicksight.DataSetUsageConfiguration) []interface{} {
 	if configuration == nil {
 		return nil
 	}
@@ -2055,7 +2015,7 @@ func flattenQuickSightDataSetUsageConfiguration(configuration *quicksight.DataSe
 	return tfList
 }
 
-func flattenQuickSightFieldFolders(folders map[string]*quicksight.FieldFolder) []interface{} {
+func flattenFieldFolders(folders map[string]*quicksight.FieldFolder) []interface{} {
 	if len(folders) == 0 {
 		return nil
 	}
@@ -2067,14 +2027,14 @@ func flattenQuickSightFieldFolders(folders map[string]*quicksight.FieldFolder) [
 			continue
 		}
 
-		tfMap := flattenQuickSightFieldFolder(key, value)
+		tfMap := flattenFieldFolder(key, value)
 		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
 }
 
-func flattenQuickSightFieldFolder(fieldFolderId string, fieldFolder *quicksight.FieldFolder) map[string]interface{} {
+func flattenFieldFolder(fieldFolderId string, fieldFolder *quicksight.FieldFolder) map[string]interface{} {
 	if fieldFolder == nil {
 		return nil
 	}
@@ -2094,7 +2054,7 @@ func flattenQuickSightFieldFolder(fieldFolderId string, fieldFolder *quicksight.
 	return tfMap
 }
 
-func flattenQuickSightLogicalTableMap(maps map[string]*quicksight.LogicalTable) []interface{} {
+func flattenLogicalTableMap(maps map[string]*quicksight.LogicalTable) []interface{} {
 	if len(maps) == 0 {
 		return nil
 	}
@@ -2106,14 +2066,14 @@ func flattenQuickSightLogicalTableMap(maps map[string]*quicksight.LogicalTable) 
 			continue
 		}
 
-		tfMap := flattenQuickSightLogicalTable(table)
+		tfMap := flattenLogicalTable(table)
 		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
 }
 
-func flattenQuickSightLogicalTable(table *quicksight.LogicalTable) map[string]interface{} {
+func flattenLogicalTable(table *quicksight.LogicalTable) map[string]interface{} {
 	if table == nil {
 		return nil
 	}
@@ -2125,17 +2085,17 @@ func flattenQuickSightLogicalTable(table *quicksight.LogicalTable) map[string]in
 	}
 
 	if table.DataTransforms != nil {
-		tfMap["data_transforms"] = flattenQuickSightTransformOperations(table.DataTransforms)
+		tfMap["data_transforms"] = flattenTransformOperations(table.DataTransforms)
 	}
 
 	if table.Source != nil {
-		tfMap["source"] = flattenQuickSightLogicalTableSource(table.Source)
+		tfMap["source"] = flattenLogicalTableSource(table.Source)
 	}
 
 	return tfMap
 }
 
-func flattenQuickSightTransformOperations(operations []*quicksight.TransformOperation) interface{} {
+func flattenTransformOperations(operations []*quicksight.TransformOperation) interface{} {
 	if len(operations) == 0 {
 		return nil
 	}
@@ -2147,13 +2107,13 @@ func flattenQuickSightTransformOperations(operations []*quicksight.TransformOper
 			continue
 		}
 
-		tfList = append(tfList, flattenQuickSightTransformOperation(operation))
+		tfList = append(tfList, flattenTransformOperation(operation))
 	}
 
 	return tfList
 }
 
-func flattenQuickSightTransformOperation(operation *quicksight.TransformOperation) map[string]interface{} {
+func flattenTransformOperation(operation *quicksight.TransformOperation) map[string]interface{} {
 	if operation == nil {
 		return nil
 	}
@@ -2161,37 +2121,37 @@ func flattenQuickSightTransformOperation(operation *quicksight.TransformOperatio
 	tfMap := map[string]interface{}{}
 
 	if operation.CastColumnTypeOperation != nil {
-		tfMap["cast_column_type_operation"] = flattenQuickSightCastColumnTypeOperation(operation.CastColumnTypeOperation)
+		tfMap["cast_column_type_operation"] = flattenCastColumnTypeOperation(operation.CastColumnTypeOperation)
 	}
 
 	if operation.CreateColumnsOperation != nil {
-		tfMap["create_column_operation"] = flattenQuickSightCreateColumnOperation(operation.CreateColumnsOperation)
+		tfMap["create_column_operation"] = flattenCreateColumnOperation(operation.CreateColumnsOperation)
 	}
 
 	if operation.FilterOperation != nil {
-		tfMap["filter_operation"] = flattenQuickSightFilterOperation(operation.FilterOperation)
+		tfMap["filter_operation"] = flattenFilterOperation(operation.FilterOperation)
 	}
 
 	if operation.ProjectOperation != nil {
-		tfMap["project_operation"] = flattenQuickSightProjectOperation(operation.ProjectOperation)
+		tfMap["project_operation"] = flattenProjectOperation(operation.ProjectOperation)
 	}
 
 	if operation.RenameColumnOperation != nil {
-		tfMap["rename_column_operation"] = flattenQuickSightRenameColumnOperation(operation.RenameColumnOperation)
+		tfMap["rename_column_operation"] = flattenRenameColumnOperation(operation.RenameColumnOperation)
 	}
 
 	if operation.TagColumnOperation != nil {
-		tfMap["tag_column_operation"] = flattenQuickSightTagColumnOperation(operation.TagColumnOperation)
+		tfMap["tag_column_operation"] = flattenTagColumnOperation(operation.TagColumnOperation)
 	}
 
 	if operation.UntagColumnOperation != nil {
-		tfMap["untag_column_operation"] = flattenQuickSightUntagColumnOperation(operation.UntagColumnOperation)
+		tfMap["untag_column_operation"] = flattenUntagColumnOperation(operation.UntagColumnOperation)
 	}
 
 	return tfMap
 }
 
-func flattenQuickSightCastColumnTypeOperation(operation *quicksight.CastColumnTypeOperation) map[string]interface{} {
+func flattenCastColumnTypeOperation(operation *quicksight.CastColumnTypeOperation) map[string]interface{} {
 	if operation == nil {
 		return nil
 	}
@@ -2213,7 +2173,7 @@ func flattenQuickSightCastColumnTypeOperation(operation *quicksight.CastColumnTy
 	return tfMap
 }
 
-func flattenQuickSightCreateColumnOperation(operation *quicksight.CreateColumnsOperation) map[string]interface{} {
+func flattenCreateColumnOperation(operation *quicksight.CreateColumnsOperation) map[string]interface{} {
 	if operation == nil {
 		return nil
 	}
@@ -2221,13 +2181,13 @@ func flattenQuickSightCreateColumnOperation(operation *quicksight.CreateColumnsO
 	tfMap := map[string]interface{}{}
 
 	if operation.Columns != nil {
-		tfMap["columns"] = flattenQuickSightCalculatedColumns(operation.Columns)
+		tfMap["columns"] = flattenCalculatedColumns(operation.Columns)
 	}
 
 	return tfMap
 }
 
-func flattenQuickSightCalculatedColumns(columns []*quicksight.CalculatedColumn) interface{} {
+func flattenCalculatedColumns(columns []*quicksight.CalculatedColumn) interface{} {
 	if len(columns) == 0 {
 		return nil
 	}
@@ -2239,13 +2199,13 @@ func flattenQuickSightCalculatedColumns(columns []*quicksight.CalculatedColumn) 
 			continue
 		}
 
-		tfList = append(tfList, flattenQuickSightCalculatedColumn(column))
+		tfList = append(tfList, flattenCalculatedColumn(column))
 	}
 
 	return tfList
 }
 
-func flattenQuickSightCalculatedColumn(column *quicksight.CalculatedColumn) map[string]interface{} {
+func flattenCalculatedColumn(column *quicksight.CalculatedColumn) map[string]interface{} {
 	if column == nil {
 		return nil
 	}
@@ -2267,7 +2227,7 @@ func flattenQuickSightCalculatedColumn(column *quicksight.CalculatedColumn) map[
 	return tfMap
 }
 
-func flattenQuickSightFilterOperation(operation *quicksight.FilterOperation) map[string]interface{} {
+func flattenFilterOperation(operation *quicksight.FilterOperation) map[string]interface{} {
 	if operation == nil {
 		return nil
 	}
@@ -2281,7 +2241,7 @@ func flattenQuickSightFilterOperation(operation *quicksight.FilterOperation) map
 	return tfMap
 }
 
-func flattenQuickSightProjectOperation(operation *quicksight.ProjectOperation) map[string]interface{} {
+func flattenProjectOperation(operation *quicksight.ProjectOperation) map[string]interface{} {
 	if operation == nil {
 		return nil
 	}
@@ -2295,7 +2255,7 @@ func flattenQuickSightProjectOperation(operation *quicksight.ProjectOperation) m
 	return tfMap
 }
 
-func flattenQuickSightRenameColumnOperation(operation *quicksight.RenameColumnOperation) map[string]interface{} {
+func flattenRenameColumnOperation(operation *quicksight.RenameColumnOperation) map[string]interface{} {
 	if operation == nil {
 		return nil
 	}
@@ -2313,7 +2273,7 @@ func flattenQuickSightRenameColumnOperation(operation *quicksight.RenameColumnOp
 	return tfMap
 }
 
-func flattenQuickSightTagColumnOperation(operation *quicksight.TagColumnOperation) map[string]interface{} {
+func flattenTagColumnOperation(operation *quicksight.TagColumnOperation) map[string]interface{} {
 	if operation == nil {
 		return nil
 	}
@@ -2325,13 +2285,13 @@ func flattenQuickSightTagColumnOperation(operation *quicksight.TagColumnOperatio
 	}
 
 	if operation.Tags != nil {
-		tfMap["tags"] = flattenQuickSightTags(operation.Tags)
+		tfMap["tags"] = flattenTags(operation.Tags)
 	}
 
 	return tfMap
 }
 
-func flattenQuickSightTags(tags []*quicksight.ColumnTag) []interface{} {
+func flattenTags(tags []*quicksight.ColumnTag) []interface{} {
 	if len(tags) == 0 {
 		return nil
 	}
@@ -2343,13 +2303,13 @@ func flattenQuickSightTags(tags []*quicksight.ColumnTag) []interface{} {
 			continue
 		}
 
-		tfList = append(tfList, flattenQuickSightTag(tag))
+		tfList = append(tfList, flattenTag(tag))
 	}
 
 	return tfList
 }
 
-func flattenQuickSightTag(tag *quicksight.ColumnTag) map[string]interface{} {
+func flattenTag(tag *quicksight.ColumnTag) map[string]interface{} {
 	if tag == nil {
 		return nil
 	}
@@ -2357,7 +2317,7 @@ func flattenQuickSightTag(tag *quicksight.ColumnTag) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if tag.ColumnDescription != nil {
-		tfMap["column_description"] = flattenQuickSightColumnDescription(tag.ColumnDescription)
+		tfMap["column_description"] = flattenColumnDescription(tag.ColumnDescription)
 	}
 
 	if tag.ColumnGeographicRole != nil {
@@ -2367,7 +2327,7 @@ func flattenQuickSightTag(tag *quicksight.ColumnTag) map[string]interface{} {
 	return tfMap
 }
 
-func flattenQuickSightColumnDescription(desc *quicksight.ColumnDescription) map[string]interface{} {
+func flattenColumnDescription(desc *quicksight.ColumnDescription) map[string]interface{} {
 	if desc == nil {
 		return nil
 	}
@@ -2381,7 +2341,7 @@ func flattenQuickSightColumnDescription(desc *quicksight.ColumnDescription) map[
 	return tfMap
 }
 
-func flattenQuickSightUntagColumnOperation(operation *quicksight.UntagColumnOperation) map[string]interface{} {
+func flattenUntagColumnOperation(operation *quicksight.UntagColumnOperation) map[string]interface{} {
 	if operation == nil {
 		return nil
 	}
@@ -2399,7 +2359,7 @@ func flattenQuickSightUntagColumnOperation(operation *quicksight.UntagColumnOper
 	return tfMap
 }
 
-func flattenQuickSightLogicalTableSource(source *quicksight.LogicalTableSource) []interface{} {
+func flattenLogicalTableSource(source *quicksight.LogicalTableSource) []interface{} {
 	if source == nil {
 		return nil
 	}
@@ -2411,7 +2371,7 @@ func flattenQuickSightLogicalTableSource(source *quicksight.LogicalTableSource) 
 	}
 
 	if source.JoinInstruction != nil {
-		tfMap["join_instruction"] = flattenQuickSightJoinInstruction(source.JoinInstruction)
+		tfMap["join_instruction"] = flattenJoinInstruction(source.JoinInstruction)
 	}
 
 	if source.PhysicalTableId != nil {
@@ -2421,7 +2381,7 @@ func flattenQuickSightLogicalTableSource(source *quicksight.LogicalTableSource) 
 	return []interface{}{tfMap}
 }
 
-func flattenQuickSightJoinInstruction(instruction *quicksight.JoinInstruction) map[string]interface{} {
+func flattenJoinInstruction(instruction *quicksight.JoinInstruction) map[string]interface{} {
 	if instruction == nil {
 		return nil
 	}
@@ -2429,7 +2389,7 @@ func flattenQuickSightJoinInstruction(instruction *quicksight.JoinInstruction) m
 	tfMap := map[string]interface{}{}
 
 	if instruction.LeftJoinKeyProperties != nil {
-		tfMap["left_join_key_properties"] = flattenQuickSightJoinKeyProperties(instruction.LeftJoinKeyProperties)
+		tfMap["left_join_key_properties"] = flattenJoinKeyProperties(instruction.LeftJoinKeyProperties)
 	}
 
 	if instruction.LeftOperand != nil {
@@ -2441,7 +2401,7 @@ func flattenQuickSightJoinInstruction(instruction *quicksight.JoinInstruction) m
 	}
 
 	if instruction.RightJoinKeyProperties != nil {
-		tfMap["right_join_key_properties"] = flattenQuickSightJoinKeyProperties(instruction.RightJoinKeyProperties)
+		tfMap["right_join_key_properties"] = flattenJoinKeyProperties(instruction.RightJoinKeyProperties)
 	}
 
 	if instruction.RightOperand != nil {
@@ -2455,7 +2415,7 @@ func flattenQuickSightJoinInstruction(instruction *quicksight.JoinInstruction) m
 	return tfMap
 }
 
-func flattenQuickSightJoinKeyProperties(prop *quicksight.JoinKeyProperties) map[string]interface{} {
+func flattenJoinKeyProperties(prop *quicksight.JoinKeyProperties) map[string]interface{} {
 	if prop == nil {
 		return nil
 	}
@@ -2469,7 +2429,7 @@ func flattenQuickSightJoinKeyProperties(prop *quicksight.JoinKeyProperties) map[
 	return tfMap
 }
 
-func flattenQuickSightPhysicalTableMap(maps map[string]*quicksight.PhysicalTable) *schema.Set {
+func flattenPhysicalTableMap(maps map[string]*quicksight.PhysicalTable) *schema.Set {
 	if len(maps) == 0 {
 		return nil
 	}
@@ -2481,7 +2441,7 @@ func flattenQuickSightPhysicalTableMap(maps map[string]*quicksight.PhysicalTable
 			continue
 		}
 
-		tfMap := flattenQuickSightPhysicalTable(k, v)
+		tfMap := flattenPhysicalTable(k, v)
 		tfSet.Add(tfMap)
 	}
 
@@ -2497,7 +2457,7 @@ func physicalTableMapHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func flattenQuickSightPhysicalTable(key string, table *quicksight.PhysicalTable) map[string]interface{} {
+func flattenPhysicalTable(key string, table *quicksight.PhysicalTable) map[string]interface{} {
 	if table == nil {
 		return nil
 	}
@@ -2507,21 +2467,21 @@ func flattenQuickSightPhysicalTable(key string, table *quicksight.PhysicalTable)
 	tfMap["physical_table_map_id"] = key
 
 	if table.CustomSql != nil {
-		tfMap["custom_sql"] = flattenQuickSightCustomSql(table.CustomSql)
+		tfMap["custom_sql"] = flattenCustomSql(table.CustomSql)
 	}
 
 	if table.RelationalTable != nil {
-		tfMap["relational_table"] = flattenQuickSightRelationalTable(table.RelationalTable)
+		tfMap["relational_table"] = flattenRelationalTable(table.RelationalTable)
 	}
 
 	if table.S3Source != nil {
-		tfMap["s3_source"] = flattenQuickSightS3Source(table.S3Source)
+		tfMap["s3_source"] = flattenS3Source(table.S3Source)
 	}
 
 	return tfMap
 }
 
-func flattenQuickSightCustomSql(sql *quicksight.CustomSql) map[string]interface{} {
+func flattenCustomSql(sql *quicksight.CustomSql) map[string]interface{} {
 	if sql == nil {
 		return nil
 	}
@@ -2529,7 +2489,7 @@ func flattenQuickSightCustomSql(sql *quicksight.CustomSql) map[string]interface{
 	tfMap := map[string]interface{}{}
 
 	if sql.Columns != nil {
-		tfMap["columns"] = flattenQuickSightInputColumns(sql.Columns)
+		tfMap["columns"] = flattenInputColumns(sql.Columns)
 	}
 
 	if sql.DataSourceArn != nil {
@@ -2547,7 +2507,7 @@ func flattenQuickSightCustomSql(sql *quicksight.CustomSql) map[string]interface{
 	return tfMap
 }
 
-func flattenQuickSightInputColumns(columns []*quicksight.InputColumn) []interface{} {
+func flattenInputColumns(columns []*quicksight.InputColumn) []interface{} {
 	if len(columns) == 0 {
 		return nil
 	}
@@ -2559,13 +2519,13 @@ func flattenQuickSightInputColumns(columns []*quicksight.InputColumn) []interfac
 			continue
 		}
 
-		tfList = append(tfList, flattenQuickSightInputColumn(column))
+		tfList = append(tfList, flattenInputColumn(column))
 	}
 
 	return tfList
 }
 
-func flattenQuickSightInputColumn(column *quicksight.InputColumn) map[string]interface{} {
+func flattenInputColumn(column *quicksight.InputColumn) map[string]interface{} {
 	if column == nil {
 		return nil
 	}
@@ -2583,7 +2543,7 @@ func flattenQuickSightInputColumn(column *quicksight.InputColumn) map[string]int
 	return tfMap
 }
 
-func flattenQuickSightRelationalTable(table *quicksight.RelationalTable) map[string]interface{} {
+func flattenRelationalTable(table *quicksight.RelationalTable) map[string]interface{} {
 	if table == nil {
 		return nil
 	}
@@ -2599,7 +2559,7 @@ func flattenQuickSightRelationalTable(table *quicksight.RelationalTable) map[str
 	}
 
 	if table.InputColumns != nil {
-		tfMap["input_columns"] = flattenQuickSightInputColumns(table.InputColumns)
+		tfMap["input_columns"] = flattenInputColumns(table.InputColumns)
 	}
 
 	if table.Name != nil {
@@ -2613,7 +2573,7 @@ func flattenQuickSightRelationalTable(table *quicksight.RelationalTable) map[str
 	return tfMap
 }
 
-func flattenQuickSightS3Source(source *quicksight.S3Source) []interface{} {
+func flattenS3Source(source *quicksight.S3Source) []interface{} {
 	if source == nil {
 		return nil
 	}
@@ -2625,17 +2585,17 @@ func flattenQuickSightS3Source(source *quicksight.S3Source) []interface{} {
 	}
 
 	if source.InputColumns != nil {
-		tfMap["input_columns"] = flattenQuickSightInputColumns(source.InputColumns)
+		tfMap["input_columns"] = flattenInputColumns(source.InputColumns)
 	}
 
 	if source.UploadSettings != nil {
-		tfMap["upload_settings"] = flattenQuickSightUploadSettings(source.UploadSettings)
+		tfMap["upload_settings"] = flattenUploadSettings(source.UploadSettings)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenQuickSightUploadSettings(settings *quicksight.UploadSettings) []interface{} {
+func flattenUploadSettings(settings *quicksight.UploadSettings) []interface{} {
 	if settings == nil {
 		return nil
 	}
@@ -2665,7 +2625,7 @@ func flattenQuickSightUploadSettings(settings *quicksight.UploadSettings) []inte
 	return []interface{}{tfMap}
 }
 
-func flattenQuickSightRowLevelPermissionDataSet(set *quicksight.RowLevelPermissionDataSet) []interface{} {
+func flattenRowLevelPermissionDataSet(set *quicksight.RowLevelPermissionDataSet) []interface{} {
 	if set == nil {
 		return nil
 	}
@@ -2695,7 +2655,7 @@ func flattenQuickSightRowLevelPermissionDataSet(set *quicksight.RowLevelPermissi
 	return []interface{}{tfMap}
 }
 
-func flattenQuickSightRowLevelPermissionTagConfiguration(configuration *quicksight.RowLevelPermissionTagConfiguration) []interface{} {
+func flattenRowLevelPermissionTagConfiguration(configuration *quicksight.RowLevelPermissionTagConfiguration) []interface{} {
 	if configuration == nil {
 		return nil
 	}
@@ -2707,13 +2667,13 @@ func flattenQuickSightRowLevelPermissionTagConfiguration(configuration *quicksig
 	}
 
 	if configuration.TagRules != nil {
-		tfMap["tag_rules"] = flattenQuickSightTagRules(configuration.TagRules)
+		tfMap["tag_rules"] = flattenTagRules(configuration.TagRules)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenQuickSightTagRules(rules []*quicksight.RowLevelPermissionTagRule) []interface{} {
+func flattenTagRules(rules []*quicksight.RowLevelPermissionTagRule) []interface{} {
 	if len(rules) == 0 {
 		return nil
 	}
@@ -2725,13 +2685,13 @@ func flattenQuickSightTagRules(rules []*quicksight.RowLevelPermissionTagRule) []
 			continue
 		}
 
-		tfList = append(tfList, flattenQuickSightTagRule(rule))
+		tfList = append(tfList, flattenTagRule(rule))
 	}
 
 	return tfList
 }
 
-func flattenQuickSightTagRule(rule *quicksight.RowLevelPermissionTagRule) map[string]interface{} {
+func flattenTagRule(rule *quicksight.RowLevelPermissionTagRule) map[string]interface{} {
 	if rule == nil {
 		return nil
 	}
@@ -2756,46 +2716,6 @@ func flattenQuickSightTagRule(rule *quicksight.RowLevelPermissionTagRule) map[st
 
 	return tfMap
 }
-
-// func flattenQuickSightOutputColumns(columns []*quicksight.OutputColumn) []interface{} {
-// 	if len(columns) == 0 {
-// 		return nil
-// 	}
-
-// 	var tfList []interface{}
-
-// 	for _, column := range columns {
-// 		if column == nil {
-// 			continue
-// 		}
-
-// 		tfList = append(tfList, flattenQuickSightOutputColumn(column))
-// 	}
-
-// 	return tfList
-// }
-
-// func flattenQuickSightOutputColumn(column *quicksight.OutputColumn) map[string]interface{} {
-// 	if column == nil {
-// 		return nil
-// 	}
-
-// 	tfMap := map[string]interface{}{}
-
-// 	if column.Description != nil {
-// 		tfMap["description"] = aws.StringValue(column.Description)
-// 	}
-
-// 	if column.Name != nil {
-// 		tfMap["name"] = aws.StringValue(column.Name)
-// 	}
-
-// 	if column.Type != nil {
-// 		tfMap["type"] = aws.StringValue(column.Type)
-// 	}
-
-// 	return tfMap
-// }
 
 func ParseDataSetID(id string) (string, string, error) {
 	parts := strings.SplitN(id, "/", 2)
