@@ -55,8 +55,9 @@ func ResourceConnector() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"max_worker_count": {
-										Type:     schema.TypeInt,
-										Required: true,
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntBetween(1, 10),
 									},
 									"mcu_count": {
 										Type:         schema.TypeInt,
@@ -65,8 +66,9 @@ func ResourceConnector() *schema.Resource {
 										ValidateFunc: validation.IntInSlice([]int{1, 2, 4, 8}),
 									},
 									"min_worker_count": {
-										Type:     schema.TypeInt,
-										Required: true,
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntBetween(1, 10),
 									},
 									"scale_in_policy": {
 										Type:     schema.TypeList,
@@ -115,8 +117,9 @@ func ResourceConnector() *schema.Resource {
 										ValidateFunc: validation.IntInSlice([]int{1, 2, 4, 8}),
 									},
 									"worker_count": {
-										Type:     schema.TypeInt,
-										Required: true,
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntBetween(1, 10),
 									},
 								},
 							},
@@ -132,9 +135,10 @@ func ResourceConnector() *schema.Resource {
 				ForceNew: true,
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 			"kafka_cluster": {
 				Type:     schema.TypeList,
@@ -308,9 +312,10 @@ func ResourceConnector() *schema.Resource {
 				},
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"plugin": {
 				Type:     schema.TypeSet,
@@ -428,13 +433,13 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	connector, err := FindConnectorByARN(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) && !d.IsNewResource() {
-		log.Printf("[WARN] MSK Connector (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] MSK Connect Connector (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading MSK Connector (%s): %s", d.Id(), err)
+		return diag.Errorf("error reading MSK Connect Connector (%s): %s", d.Id(), err)
 	}
 
 	_ = d.Set("arn", connector.ConnectorArn)
@@ -491,13 +496,13 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	_, err := conn.UpdateConnectorWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error updating MSK Kafka Connector (%s) capacity: %s", d.Id(), err)
+		return diag.Errorf("error updating MSK Connect Connector (%s): %s", d.Id(), err)
 	}
 
 	_, err = waitConnectorUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 
 	if err != nil {
-		return diag.Errorf("error waiting for MSK Kafka Connector (%s) update: %s", d.Id(), err)
+		return diag.Errorf("error waiting for MSK Connect Connector (%s) update: %s", d.Id(), err)
 	}
 
 	return resourceConnectorRead(ctx, d, meta)
@@ -897,6 +902,10 @@ func expandCloudWatchLogsLogDelivery(tfMap map[string]interface{}) *kafkaconnect
 
 	if v, ok := tfMap["enabled"].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["log_group"].(string); ok && v != "" {
+		apiObject.LogGroup = aws.String(v)
 	}
 
 	return apiObject
