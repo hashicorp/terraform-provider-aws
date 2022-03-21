@@ -6,17 +6,17 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccTrafficPolicy_basic(t *testing.T) {
-	var output route53.TrafficPolicySummary
+	var v route53.TrafficPolicy
 	resourceName := "aws_route53_traffic_policy.test"
 	rName := fmt.Sprintf("tf-route53-traffic-policy-%s", sdkacctest.RandString(5))
 
@@ -29,7 +29,7 @@ func TestAccTrafficPolicy_basic(t *testing.T) {
 			{
 				Config: testAccTrafficPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrafficPolicyExists(resourceName, &output),
+					testAccCheckTrafficPolicyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -44,7 +44,7 @@ func TestAccTrafficPolicy_basic(t *testing.T) {
 }
 
 func TestAccTrafficPolicy_disappears(t *testing.T) {
-	var output route53.TrafficPolicySummary
+	var v route53.TrafficPolicy
 	resourceName := "aws_route53_traffic_policy.test"
 	rName := fmt.Sprintf("tf-route53-traffic-policy-%s", sdkacctest.RandString(5))
 
@@ -57,8 +57,8 @@ func TestAccTrafficPolicy_disappears(t *testing.T) {
 			{
 				Config: testAccTrafficPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrafficPolicyExists(resourceName, &output),
-					testAccCheckTrafficPolicyDisappears(&output),
+					testAccCheckTrafficPolicyExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceTrafficPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -67,7 +67,7 @@ func TestAccTrafficPolicy_disappears(t *testing.T) {
 }
 
 func TestAccTrafficPolicy_complete(t *testing.T) {
-	var output route53.TrafficPolicySummary
+	var v route53.TrafficPolicy
 	resourceName := "aws_route53_traffic_policy.test"
 	rName := fmt.Sprintf("tf-route53-traffic-policy-%s", sdkacctest.RandString(5))
 	comment := `comment`
@@ -82,7 +82,7 @@ func TestAccTrafficPolicy_complete(t *testing.T) {
 			{
 				Config: testAccTrafficPolicyConfigComplete(rName, comment),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrafficPolicyExists(resourceName, &output),
+					testAccCheckTrafficPolicyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "comment", comment),
 				),
@@ -90,7 +90,7 @@ func TestAccTrafficPolicy_complete(t *testing.T) {
 			{
 				Config: testAccTrafficPolicyConfigComplete(rName, commentUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrafficPolicyExists(resourceName, &output),
+					testAccCheckTrafficPolicyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "comment", commentUpdated),
 				),
@@ -105,26 +105,26 @@ func TestAccTrafficPolicy_complete(t *testing.T) {
 	})
 }
 
-func testAccCheckTrafficPolicyExists(resourceName string, trafficPolicy *route53.TrafficPolicySummary) resource.TestCheckFunc {
+func testAccCheckTrafficPolicyExists(n string, v *route53.TrafficPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Route53 Traffic Policy ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
 
-		resp, err := tfroute53.FindTrafficPolicyById(context.Background(), conn, rs.Primary.ID)
+		output, err := tfroute53.FindTrafficPolicyByID(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("problem checking for traffic policy existence: %w", err)
+			return err
 		}
 
-		if resp == nil {
-			return fmt.Errorf("traffic policy %q does not exist", rs.Primary.ID)
-		}
-
-		*trafficPolicy = *resp
+		*v = *output
 
 		return nil
 	}
@@ -138,17 +138,17 @@ func testAccCheckTrafficPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, err := tfroute53.FindTrafficPolicyById(context.Background(), conn, rs.Primary.ID)
-		if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchTrafficPolicy) || resp == nil {
+		_, err := tfroute53.FindTrafficPolicyByID(context.Background(), conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("error during check if traffic policy still exists, %#v", err)
+			return err
 		}
-		if resp != nil {
-			return fmt.Errorf("traffic Policy still exists")
-		}
+
+		return fmt.Errorf("Route53 Traffic Policy %s still exists", rs.Primary.ID)
 	}
 	return nil
 }

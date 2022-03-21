@@ -41,12 +41,6 @@ func ResourceTrafficPolicy() *schema.Resource {
 			},
 		},
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
 			"comment": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -57,6 +51,12 @@ func ResourceTrafficPolicy() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 102400),
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
 			"type": {
 				Type:     schema.TypeString,
@@ -113,39 +113,23 @@ func resourceTrafficPolicyCreate(ctx context.Context, d *schema.ResourceData, me
 func resourceTrafficPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
-	object, err := FindTrafficPolicyById(ctx, conn, d.Id())
-	if err != nil {
-		return diag.Errorf("error getting Route53 Traffic Policy %s from ListTrafficPolicies: %s", d.Get("name").(string), err)
-	}
+	trafficPolicy, err := FindTrafficPolicyByID(ctx, conn, d.Id())
 
-	if object == nil {
-		log.Printf("[WARN] Route53 Traffic Policy (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	request := &route53.GetTrafficPolicyInput{
-		Id:      aws.String(d.Id()),
-		Version: object.LatestVersion,
-	}
-
-	response, err := conn.GetTrafficPolicy(request)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchTrafficPolicy) {
-		log.Printf("[WARN] Route53 Traffic Policy (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Route53 Traffic Policy %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("error getting Route53 Traffic Policy %s, version %d: %s", d.Get("name").(string), d.Get("version").(int), err)
+		return diag.Errorf("error reading Route53 Traffic Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("comment", response.TrafficPolicy.Comment)
-	d.Set("document", response.TrafficPolicy.Document)
-	d.Set("name", response.TrafficPolicy.Name)
-	d.Set("type", response.TrafficPolicy.Type)
-	d.Set("version", response.TrafficPolicy.Version)
+	d.Set("comment", trafficPolicy.Comment)
+	d.Set("document", trafficPolicy.Document)
+	d.Set("name", trafficPolicy.Name)
+	d.Set("type", trafficPolicy.Type)
+	d.Set("version", trafficPolicy.Version)
 
 	return nil
 }
@@ -153,23 +137,19 @@ func resourceTrafficPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 func resourceTrafficPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
-	object, err := FindTrafficPolicyById(ctx, conn, d.Id())
-	if err != nil {
-		return diag.Errorf("error getting Route53 Traffic Policy %s from ListTrafficPolicies: %s", d.Get("name").(string), err)
-	}
-
 	input := &route53.UpdateTrafficPolicyCommentInput{
 		Id:      aws.String(d.Id()),
-		Version: object.LatestVersion,
+		Version: aws.Int64(int64(d.Get("version").(int))),
 	}
 
 	if d.HasChange("comment") {
 		input.Comment = aws.String(d.Get("comment").(string))
 	}
 
-	_, err = conn.UpdateTrafficPolicyCommentWithContext(ctx, input)
+	_, err := conn.UpdateTrafficPolicyCommentWithContext(ctx, input)
+
 	if err != nil {
-		return diag.Errorf("error updating Route53 Traffic Policy: %s. %s", d.Get("name").(string), err)
+		return diag.Errorf("error updating Route53 Traffic Policy (%s): %s", d.Id(), err)
 	}
 
 	return resourceTrafficPolicyRead(ctx, d, meta)
