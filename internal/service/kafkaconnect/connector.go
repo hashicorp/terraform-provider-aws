@@ -123,23 +123,6 @@ func ResourceConnector() *schema.Resource {
 					},
 				},
 			},
-			"client_authentication": { // TODO -> kafka_cluster_client_authentication
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"authentication_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							Default:      kafkaconnect.KafkaClusterClientAuthenticationTypeNone,
-							ValidateFunc: validation.StringInSlice(kafkaconnect.KafkaClusterClientAuthenticationType_Values(), false),
-						},
-					},
-				},
-			},
 			"configuration": { // TODO: -> connector_configuration
 				Type: schema.TypeMap,
 				Elem: &schema.Schema{
@@ -237,6 +220,23 @@ func ResourceConnector() *schema.Resource {
 									},
 								},
 							},
+						},
+					},
+				},
+			},
+			"kafka_cluster_client_authentication": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Required: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"authentication_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							Default:      kafkaconnect.KafkaClusterClientAuthenticationTypeNone,
+							ValidateFunc: validation.StringInSlice(kafkaconnect.KafkaClusterClientAuthenticationType_Values(), false),
 						},
 					},
 				},
@@ -388,7 +388,7 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 		Capacity:                         expandCapacity(d.Get("capacity").([]interface{})),
 		ConnectorConfiguration:           expandConnectorConfiguration(d.Get("configuration").(map[string]interface{})),
 		KafkaCluster:                     expandKafkaCluster(d.Get("kafka_cluster").([]interface{})),
-		KafkaClusterClientAuthentication: expandKafkaClientAuthentication(d.Get("client_authentication").([]interface{})),
+		KafkaClusterClientAuthentication: expandKafkaClientAuthentication(d.Get("kafka_cluster_client_authentication").([]interface{})),
 		KafkaClusterEncryptionInTransit:  expandKafkaEncryptionInTransit(d.Get("encryption_in_transit").([]interface{})),
 		Plugins:                          expandPlugins(d.Get("custom_plugin").(*schema.Set).List()),
 	}
@@ -453,8 +453,8 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("error setting kafka_cluster: %s", err)
 	}
 
-	if err := d.Set("client_authentication", flattenKafkaClientAuthentication(connector.KafkaClusterClientAuthentication)); err != nil {
-		return diag.Errorf("error setting client_authentication: %s", err)
+	if err := d.Set("kafka_cluster_client_authentication", flattenKafkaClientAuthentication(connector.KafkaClusterClientAuthentication)); err != nil {
+		return diag.Errorf("error setting kafka_cluster_client_authentication: %s", err)
 	}
 
 	if err := d.Set("encryption_in_transit", flattenKafkaEncryptionInTransit(connector.KafkaClusterEncryptionInTransit)); err != nil {
