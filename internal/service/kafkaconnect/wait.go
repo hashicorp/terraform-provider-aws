@@ -22,6 +22,10 @@ func waitConnectorCreated(ctx context.Context, conn *kafkaconnect.KafkaConnect, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*kafkaconnect.DescribeConnectorOutput); ok {
+		if state, stateDescription := aws.StringValue(output.ConnectorState), output.StateDescription; state == kafkaconnect.ConnectorStateFailed && stateDescription != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(stateDescription.Code), aws.StringValue(stateDescription.Message)))
+		}
+
 		return output, err
 	}
 
@@ -39,13 +43,17 @@ func waitConnectorDeleted(ctx context.Context, conn *kafkaconnect.KafkaConnect, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*kafkaconnect.DescribeConnectorOutput); ok {
+		if state, stateDescription := aws.StringValue(output.ConnectorState), output.StateDescription; state == kafkaconnect.ConnectorStateFailed && stateDescription != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(stateDescription.Code), aws.StringValue(stateDescription.Message)))
+		}
+
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitConnectorOperationCompleted(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.ConnectorSummary, error) {
+func waitConnectorUpdated(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kafkaconnect.ConnectorStateUpdating},
 		Target:  []string{kafkaconnect.ConnectorStateRunning},
@@ -55,9 +63,9 @@ func waitConnectorOperationCompleted(ctx context.Context, conn *kafkaconnect.Kaf
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*kafkaconnect.ConnectorSummary); ok {
-		if state := aws.StringValue(output.ConnectorState); state == kafkaconnect.ConnectorStateFailed {
-			tfresource.SetLastError(err, fmt.Errorf("connector (%s) state update failed", arn))
+	if output, ok := outputRaw.(*kafkaconnect.DescribeConnectorOutput); ok {
+		if state, stateDescription := aws.StringValue(output.ConnectorState), output.StateDescription; state == kafkaconnect.ConnectorStateFailed && stateDescription != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(stateDescription.Code), aws.StringValue(stateDescription.Message)))
 		}
 
 		return output, err

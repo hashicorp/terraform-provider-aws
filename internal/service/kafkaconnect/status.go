@@ -9,22 +9,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusCustomPluginState(conn *kafkaconnect.KafkaConnect, arn string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindCustomPluginByARN(conn, arn)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.CustomPluginState), nil
-	}
-}
-
 func statusConnectorState(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindConnectorByARN(ctx, conn, arn)
@@ -38,5 +22,21 @@ func statusConnectorState(ctx context.Context, conn *kafkaconnect.KafkaConnect, 
 		}
 
 		return output, aws.StringValue(output.ConnectorState), nil
+	}
+}
+
+func statusCustomPluginState(conn *kafkaconnect.KafkaConnect, arn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindCustomPluginByARN(conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.CustomPluginState), nil
 	}
 }

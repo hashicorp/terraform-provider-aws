@@ -10,6 +10,31 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func FindConnectorByARN(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string) (*kafkaconnect.DescribeConnectorOutput, error) {
+	input := &kafkaconnect.DescribeConnectorInput{
+		ConnectorArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeConnectorWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, kafkaconnect.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 func FindCustomPluginByARN(conn *kafkaconnect.KafkaConnect, arn string) (*kafkaconnect.DescribeCustomPluginOutput, error) {
 	input := &kafkaconnect.DescribeCustomPluginInput{
 		CustomPluginArn: aws.String(arn),
@@ -41,30 +66,6 @@ func FindWorkerConfigurationByARN(conn *kafkaconnect.KafkaConnect, arn string) (
 	}
 
 	output, err := conn.DescribeWorkerConfiguration(input)
-	if tfawserr.ErrCodeEquals(err, kafkaconnect.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
-func FindConnectorByARN(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string) (*kafkaconnect.DescribeConnectorOutput, error) {
-	input := &kafkaconnect.DescribeConnectorInput{
-		ConnectorArn: aws.String(arn),
-	}
-
-	output, err := conn.DescribeConnectorWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, kafkaconnect.ErrCodeNotFoundException) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,

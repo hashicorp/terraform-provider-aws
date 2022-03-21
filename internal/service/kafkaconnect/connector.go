@@ -484,18 +484,16 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		CurrentVersion: aws.String(d.Get("version").(string)),
 	}
 
-	output, err := conn.UpdateConnectorWithContext(ctx, input)
+	_, err := conn.UpdateConnectorWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("error updating MSK Kafka Connector (%s) capacity: %s", d.Id(), err)
 	}
 
-	connectorARN := aws.StringValue(output.ConnectorArn)
-
-	_, err = waitConnectorOperationCompleted(ctx, conn, connectorARN, d.Timeout(schema.TimeoutUpdate))
+	_, err = waitConnectorUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 
 	if err != nil {
-		return diag.Errorf("error waiting for MSK Kafka Connector (%s) operation (%s): %s", d.Id(), connectorARN, err)
+		return diag.Errorf("error waiting for MSK Kafka Connector (%s) update: %s", d.Id(), err)
 	}
 
 	return resourceConnectorRead(ctx, d, meta)
