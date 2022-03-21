@@ -12,8 +12,7 @@ import (
 
 func TestAccAWSRoute53TrafficPolicy_basic(t *testing.T) {
 	policyName := fmt.Sprintf("policy-%s", acctest.RandString(8))
-	resourceName := "test"
-	fullResourceName := fmt.Sprintf("aws_route53_traffic_policy.%s", resourceName)
+	resourceName := "aws_route53_traffic_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -21,29 +20,23 @@ func TestAccAWSRoute53TrafficPolicy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckRoute53TrafficPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53TrafficPolicyConfig(resourceName, policyName),
+				Config: testAccRoute53TrafficPolicyConfig(policyName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(fullResourceName, "latest_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "latest_version", "1"),
 				),
-			},
-			{
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccAWSRoute53TrafficPolicyImportStateIdFunc(fullResourceName),
-				ResourceName:      fullResourceName,
 			},
 		},
 	})
 }
 
-func testAccRoute53TrafficPolicyConfig(resourceName, policyName string) string {
+func testAccRoute53TrafficPolicyConfig(name string) string {
 	return fmt.Sprintf(`
-resource "aws_route53_traffic_policy" "%s" {
+resource "aws_route53_traffic_policy" "test" {
 	name     = "%s"
 	comment  = "comment"
 	document = "{\"AWSPolicyFormatVersion\":\"2015-10-01\",\"RecordType\":\"A\",\"Endpoints\":{\"endpoint-start-NkPh\":{\"Type\":\"value\",\"Value\":\"10.0.0.1\"}},\"StartEndpoint\":\"endpoint-start-NkPh\"}"
 }
-`, resourceName, policyName)
+`, name)
 }
 
 func testAccCheckRoute53TrafficPolicyDestroy(s *terraform.State) error {
@@ -65,15 +58,4 @@ func testAccCheckRoute53TrafficPolicyDestroyWithProvider(s *terraform.State, pro
 		}
 	}
 	return nil
-}
-
-func testAccAWSRoute53TrafficPolicyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["id"], rs.Primary.Attributes["latest_version"]), nil
-	}
 }
