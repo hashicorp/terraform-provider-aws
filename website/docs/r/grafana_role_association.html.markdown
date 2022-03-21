@@ -3,7 +3,7 @@ subcategory: "Grafana"
 layout: "aws"
 page_title: "AWS: aws_grafana_role_association"
 description: |-
-Provides an Amazon Managed Grafana workspace role association resource.
+  Provides an Amazon Managed Grafana workspace role association resource.
 ---
 
 # Resource: aws_grafana_role_association
