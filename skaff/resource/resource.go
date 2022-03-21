@@ -9,6 +9,8 @@ import (
 	"regexp"
 	"strings"
 	"text/template"
+
+	"github.com/hashicorp/terraform-provider-aws/name"
 )
 
 //go:embed resource.tmpl
@@ -18,6 +20,7 @@ type TemplateData struct {
 	Resource        string
 	IncludeComments bool
 	ServicePackage  string
+	ServiceConn     string
 }
 
 func toSnakeCase(upper string, snakeName string) string {
@@ -32,7 +35,7 @@ func toSnakeCase(upper string, snakeName string) string {
 	return strings.TrimPrefix(strings.ToLower(re2.ReplaceAllString(upper, `_$1`)), "_")
 }
 
-func Create(name, snakeName string, comments bool) error {
+func Create(resName, snakeName string, comments bool) error {
 	wd, err := os.Getwd() // os.Getenv("GOPACKAGE") not available since this is not run with go generate
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %s", err)
@@ -40,11 +43,11 @@ func Create(name, snakeName string, comments bool) error {
 
 	servicePackage := filepath.Base(wd)
 
-	if name == "" {
+	if resName == "" {
 		return fmt.Errorf("error checking: no name given")
 	}
 
-	if name == strings.ToLower(name) {
+	if resName == strings.ToLower(resName) {
 		return fmt.Errorf("error checking: name should be properly capitalized (e.g., DBInstance)")
 	}
 
@@ -52,12 +55,19 @@ func Create(name, snakeName string, comments bool) error {
 		return fmt.Errorf("error checking: snake name should be all lower case with underscores, if needed (e.g., db_instance)")
 	}
 
-	filename := fmt.Sprintf("%s.go", toSnakeCase(name, snakeName))
+	filename := fmt.Sprintf("%s.go", toSnakeCase(resName, snakeName))
+
+	connName, err := name.ServiceProviderNameUpper(servicePackage)
+
+	if err != nil {
+		return fmt.Errorf("error getting service connection name: %w", err)
+	}
 
 	templateData := TemplateData{
-		Resource:        name,
+		Resource:        resName,
 		IncludeComments: comments,
 		ServicePackage:  servicePackage,
+		ServiceConn:     fmt.Sprintf("%sConn", connName),
 	}
 
 	return writeTemplate("newres", filename, templateData)

@@ -1,15 +1,14 @@
+package skaff
 // **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
 //
 // TIP: You have opted to include helpful guiding comments. These comments are
 // meant to teach and remind. However, they should be removed before submitting
 // your work in a PR. Thank you!
 
-package scaffold
-
-// TIP: This is a common set of imports but not fully customized to your code
-// since your code hasn't been written yet. Make sure you, your IDE, or
-// goimports -w <file> fixes these imports. 
 import (
+	// TIP: This is a common set of imports but not fully customized to your code
+	// since your code hasn't been written yet. Make sure you, your IDE, or
+	// goimports -w <file> fixes these imports.
 	"context"
 	"errors"
 	"fmt"
@@ -20,8 +19,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/scaffold"
-	"github.com/aws/aws-sdk-go-v2/service/scaffold/types"
+	"github.com/aws/aws-sdk-go-v2/service/skaff"
+	"github.com/aws/aws-sdk-go-v2/service/skaff/types" // TIP: Some v2 packages use a separate package for types while some do not.
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -34,21 +33,25 @@ import (
 )
 
 func ResourceCheese() *schema.Resource {
-	return &schema.Resource{// Tip: These 4 functions handle CRUD responsibilities below.
+	return &schema.Resource{
+		// TIP: These 4 functions handle CRUD responsibilities below.
 		CreateWithoutTimeout: resourceCheeseCreate,
 		ReadWithoutTimeout:   resourceCheeseRead,
 		UpdateWithoutTimeout: resourceCheeseUpdate,
 		DeleteWithoutTimeout: resourceCheeseDelete,
-		// Tip: Users can configure timeout lengths (if you use the times they
+
+		// TIP: Users can configure timeout lengths (if you use the times they
 		// provide). These are the defaults if they don't configure timeouts.
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
-		// Tip: In the schema, list each of the arguments and attributes in
-		// snake case (e.g., delete_automated_backups). Please alphabetize
-		// arguments to make it easier not to find them.
+
+		// TIP: In the schema, add each of the arguments and attributes in
+		// snake case (e.g., delete_automated_backups).
+		// * Alphabetize arguments to make it easier to find them.
+		// * Do not add a blank line between arguments/attributes.
 		// 
 		// Users can configure argument values while attribute values cannot be
 		// configured and are read as output. Arguments have either:
@@ -64,109 +67,20 @@ func ResourceCheese() *schema.Resource {
 		// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
 		// they are only in the input struct (e.g., ModifyDBInstanceInput) for
 		// the modify operation.
-		
-		// from AWS or detect drift. "ValidateFunc" is helpful to catch errors
-		// before anything is sent to AWS. With long-running configurations
-		// especially, this is very helpful.
+		//
+		// For more about schema options, visit 
+		// https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#Schema
 		Schema: map[string]*schema.Schema{
-			"abuse_contact_email": {
+			"arn": { // TIP: Many, but not all, resources have an `arn` attribute.
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"abuse_contact_phone": {
+			"replace_with_arguments": { // TIP: Add all your arguments and attributes.
 				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"admin_contact": contactSchema,
-			"admin_privacy": {
-				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
 			},
-			"auto_renew": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"creation_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"domain_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"expiration_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name_server": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 6,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"glue_ips": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 2,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.IsIPAddress,
-							},
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"registrant_contact": contactSchema,
-			"registrant_privacy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"registrar_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"registrar_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"reseller": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"status_list": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"tags":         tftags.TagsSchema(),
+			"tags":         tftags.TagsSchema(), // TIP: Many, but not all, resources have `tags` and `tags_all` attributes.
 			"tags_all":     tftags.TagsSchemaComputed(),
-			"tech_contact": contactSchema,
-			"tech_privacy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"transfer_lock": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"whois_server": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,

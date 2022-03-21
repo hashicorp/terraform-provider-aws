@@ -7,8 +7,8 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "scaffold [resource]",
-	Short: "Create scaffolding for Terraform AWS Provider",
+	Use:   "skaff [resource]",
+	Short: "Create scaffolding for the Terraform AWS Provider",
 }
 
 func Execute() {
@@ -16,8 +16,4 @@ func Execute() {
 	if err != nil {
 		os.Exit(1)
 	}
-}
-
-func init() {
-
 }

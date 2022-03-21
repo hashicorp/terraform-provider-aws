@@ -1,4 +1,4 @@
-module github.com/hashicorp/terraform-provider-aws/scaffold
+module github.com/hashicorp/terraform-provider-aws/skaff
 
 go 1.17
 
