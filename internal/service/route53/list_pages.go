@@ -12,7 +12,7 @@ import (
 
 // Custom Route 53 service lister functions using the same format as generated code.
 
-func listTrafficPolicyInstancesPages(conn *route53.Route53, input *route53.ListTrafficPolicyInstancesInput, fn func(*route53.ListTrafficPolicyInstancesOutput, bool) bool) error {
+func listTrafficPolicyInstancesPages(conn *route53.Route53, input *route53.ListTrafficPolicyInstancesInput, fn func(*route53.ListTrafficPolicyInstancesOutput, bool) bool) error { //nolint:deadcode // This function is called from a sweeper.
 	return listTrafficPolicyInstancesPagesWithContext(context.Background(), conn, input, fn)
 }
 
