@@ -372,7 +372,7 @@ Each block supports the following arguments:
 
 The processing guidance for a Rule, used by AWS WAF to determine whether a web request matches the rule. See the [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statements-list.html) for more information.
 
--> **NOTE:** Although the `statement` block is recursive, currently only 3 levels are supported.
+-> **NOTE:** Although the `statement` block is recursive, currently only 7 levels are supported.
 
 The `statement` block supports the following arguments:
 
