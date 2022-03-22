@@ -23,7 +23,7 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ env.GO_VERSION }}
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -54,7 +54,7 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ env.GO_VERSION }}
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -65,7 +65,7 @@ jobs:
 
       - run: cd tools && go install github.com/terraform-linters/tflint
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         name: Cache plugin dir
         with:
           path: ~/.tflint.d/plugins
