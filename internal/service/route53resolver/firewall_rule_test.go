@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -140,7 +140,7 @@ func testAccCheckRoute53ResolverFirewallRuleDestroy(s *terraform.State) error {
 		// Try to find the resource
 		_, err := tfroute53resolver.FindFirewallRuleByID(conn, rs.Primary.ID)
 		// Verify the error is what we want
-		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 			continue
 		}
 		if err != nil {

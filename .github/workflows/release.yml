@@ -1,54 +1,89 @@
-name: Post Publish
+name: Release
+
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+permissions:
+  contents: write
+
 jobs:
-  tidy:
-    name: Tidy Asana
-    runs-on: ubuntu-latest
+  go-version:
+    runs-on: macos-latest
+    outputs:
+      version: ${{ steps.go-version.outputs.version }}
     steps:
-      - uses: breathingdust/github-asana-tidy@v1
-        with:
-          asana_pat: ${{ secrets.asana_pat }}
-          asana_target_section_gid: '1141945723817371'
-          asana_workspace_gid: '90955849329269'
-          asana_project_gid: '632425409545160'
-          asana_github_url_field_gid: '1134594824474912'
-          github_release_name: ${{ github.event.release.tag_name }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  project-archive:
-    name: Archive Released Cards
-    runs-on: ubuntu-latest
+      - uses: actions/checkout@v2
+      - id: go-version
+        run: echo "::set-output name=version::$(cat ./.go-version)"
+  release-notes:
+    runs-on: macos-latest
     steps:
-      - uses: breathingdust/github-project-archive@v1
+      - uses: actions/checkout@v2
         with:
-          github_done_column_id: 11513756
-          github_release_name: ${{ github.event.release.tag_name }}
-          github_token: ${{ secrets.ORGSCOPED_GITHUB_TOKEN }}
+          fetch-depth: 0
+      - name: Generate Release Notes
+        run: sed -n -e "1{/# /d;}" -e "2{/^$/d;}" -e "/# \[$(git describe --abbrev=0 --exclude="$(git describe --abbrev=0 --match='v*.*.*' --tags)" --match='v*.*.*' --tags | tr -d v)/q;p" CHANGELOG.md > release-notes.txt
+      - uses: actions/upload-artifact@v2
+        with:
+          name: release-notes
+          path: release-notes.txt
+          retention-days: 1
+  terraform-provider-release:
+    name: 'Terraform Provider Release'
+    needs: [go-version, release-notes]
+    uses: hashicorp/ghaction-terraform-provider-release/.github/workflows/hashicorp.yml@v1
+    secrets:
+      hc-releases-aws-access-key-id: '${{ secrets.TF_PROVIDER_RELEASE_AWS_ACCESS_KEY_ID }}'
+      hc-releases-aws-secret-access-key: '${{ secrets.TF_PROVIDER_RELEASE_AWS_SECRET_ACCESS_KEY }}'
+      hc-releases-aws-role-arn: '${{ secrets.TF_PROVIDER_RELEASE_AWS_ROLE_ARN }}'
+      hc-releases-fastly-api-token: '${{ secrets.HASHI_FASTLY_PURGE_TOKEN }}'
+      hc-releases-github-token: '${{ secrets.HASHI_RELEASES_GITHUB_TOKEN }}'
+      hc-releases-terraform-registry-sync-token: '${{ secrets.TF_PROVIDER_RELEASE_TERRAFORM_REGISTRY_SYNC_TOKEN }}'
+      setup-signore-github-token: '${{ secrets.HASHI_SIGNORE_GITHUB_TOKEN }}'
+      signore-client-id: '${{ secrets.SIGNORE_CLIENT_ID }}'
+      signore-client-secret: '${{ secrets.SIGNORE_CLIENT_SECRET }}'
+    with:
+      goreleaser-release-args: --timeout 2h
+      hc-releases-aws-role-duration-seconds: 7200
+      release-notes: true
+      setup-go-version: '${{ needs.go-version.outputs.version }}'
   changelog-newversion:
-      runs-on: ubuntu-latest
+      needs: [terraform-provider-release]
+      runs-on: macos-latest
       steps:
-        - uses: actions/checkout@v2
+        - uses: actions/checkout@v3
           with:
             fetch-depth: 0
             ref: main
-        - run: |
+        - name: Update Changelog Header
+          id: changelog
+          run: |
             CHANGELOG_FILE_NAME="CHANGELOG.md"
             PREVIOUS_RELEASE_TAG=$(git describe --abbrev=0 --match='v*.*.*' --tags)
+           
+            # Add Release Date
+            RELEASE_DATE=`date +%B' '%e', '%Y`
+            sed -i -e "1 s/Unreleased/$RELEASE_DATE/" $CHANGELOG_FILE_NAME           
+            
+            # Prepend next release line
             echo Previous release is: $PREVIOUS_RELEASE_TAG
-
+            
             NEW_RELEASE_LINE=$(echo $PREVIOUS_RELEASE_TAG | awk -F. '{
                 $1 = substr($1,2)
                 $2 += 1
-                printf("%s.%02d.%s\n\n", $1, $2, $3);
+                printf("%s.%01d.0\n\n", $1, $2);
             }')
-
+            
             echo New minor version is: v$NEW_RELEASE_LINE
-
+            
             echo -e "## $NEW_RELEASE_LINE (Unreleased)\n$(cat $CHANGELOG_FILE_NAME)" > $CHANGELOG_FILE_NAME
+            
+            echo ::set-output name=prev_release_tag::$PREVIOUS_RELEASE_TAG
         - run: |
               git config --local user.email changelogbot@hashicorp.com
               git config --local user.name changelogbot
               git add CHANGELOG.md
-              git commit -m "Update CHANGELOG.md after ${{ github.event.release.tag_name }}" 
+              git commit -m "Update CHANGELOG.md after ${{ steps.changelog.outputs.prev_release_tag }}" 
               git push

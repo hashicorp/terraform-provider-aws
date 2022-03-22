@@ -134,14 +134,15 @@ resource "aws_ssm_maintenance_window_task" "example" {
 The following arguments are supported:
 
 * `window_id` - (Required) The Id of the maintenance window to register the task with.
-* `max_concurrency` - (Required) The maximum number of targets this task can be run for in parallel.
-* `max_errors` - (Required) The maximum number of errors allowed before this task stops being scheduled.
+* `max_concurrency` - (Optional) The maximum number of targets this task can be run for in parallel.
+* `max_errors` - (Optional) The maximum number of errors allowed before this task stops being scheduled.
+* `cutoff_behavior` - (Optional) Indicates whether tasks should continue to run after the cutoff time specified in the maintenance windows is reached. Valid values are `CONTINUE_TASK` and `CANCEL_TASK`.
 * `task_type` - (Required) The type of task being registered. Valid values: `AUTOMATION`, `LAMBDA`, `RUN_COMMAND` or `STEP_FUNCTIONS`.
 * `task_arn` - (Required) The ARN of the task to execute.
 * `service_role_arn` - (Optional) The role that should be assumed when executing the task. If a role is not provided, Systems Manager uses your account's service-linked role. If no service-linked role for Systems Manager exists in your account, it is created for you.
 * `name` - (Optional) The name of the maintenance window task.
 * `description` - (Optional) The description of the maintenance window task.
-* `targets` - (Required) The targets (either instances or window target ids). Instances are specified using Key=InstanceIds,Values=instanceid1,instanceid2. Window target ids are specified using Key=WindowTargetIds,Values=window target id1, window target id2.
+* `targets` - (Optional) The targets (either instances or window target ids). Instances are specified using Key=InstanceIds,Values=instanceid1,instanceid2. Window target ids are specified using Key=WindowTargetIds,Values=window target id1, window target id2.
 * `priority` - (Optional) The priority of the task in the Maintenance Window, the lower the number the higher the priority. Tasks in a Maintenance Window are scheduled in priority order with tasks that have the same priority scheduled in parallel.
 * `task_invocation_parameters` - (Optional) Configuration block with parameters for task execution.
 
@@ -201,7 +202,9 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The ARN of the maintenance window task.
 * `id` - The ID of the maintenance window task.
+* `window_task_id` - The ID of the maintenance window task.
 
 ## Import
 

@@ -1,7 +1,6 @@
 package ec2
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -9,7 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -156,11 +156,6 @@ func ResourceVPCEndpoint() *schema.Resource {
 }
 
 func resourceVPCEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	if d.Get("vpc_endpoint_type").(string) == ec2.VpcEndpointTypeInterface &&
-		d.Get("security_group_ids").(*schema.Set).Len() == 0 {
-		return errors.New("An Interface VPC Endpoint must always have at least one Security Group")
-	}
-
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -194,7 +189,7 @@ func resourceVPCEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	vpce := resp.VpcEndpoint
 	d.SetId(aws.StringValue(vpce.VpcEndpointId))
 
-	if d.Get("auto_accept").(bool) && aws.StringValue(vpce.State) == VPCEndpointStatePendingAcceptance {
+	if d.Get("auto_accept").(bool) && aws.StringValue(vpce.State) == VpcEndpointStatePendingAcceptance {
 		if err := vpcEndpointAccept(conn, d.Id(), aws.StringValue(vpce.ServiceName), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return err
 		}
@@ -271,11 +266,21 @@ func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting network_interface_ids: %s", err)
 	}
 	d.Set("owner_id", vpce.OwnerId)
-	policy, err := structure.NormalizeJsonString(aws.StringValue(vpce.PolicyDocument))
+
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.StringValue(vpce.PolicyDocument))
+
 	if err != nil {
-		return fmt.Errorf("policy contains an invalid JSON: %s", err)
+		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
 	}
-	d.Set("policy", policy)
+
+	policyToSet, err = structure.NormalizeJsonString(policyToSet)
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policyToSet, err)
+	}
+
+	d.Set("policy", policyToSet)
+
 	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
 	err = d.Set("route_table_ids", flex.FlattenStringSet(vpce.RouteTableIds))
 	if err != nil {
@@ -314,7 +319,7 @@ func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 func resourceVPCEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && d.Get("state").(string) == VPCEndpointStatePendingAcceptance {
+	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && d.Get("state").(string) == VpcEndpointStatePendingAcceptance {
 		if err := vpcEndpointAccept(conn, d.Id(), d.Get("service_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return err
 		}
@@ -326,15 +331,19 @@ func resourceVPCEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("policy") {
-			policy, err := structure.NormalizeJsonString(d.Get("policy"))
-			if err != nil {
-				return fmt.Errorf("policy contains an invalid JSON: %s", err)
-			}
+			o, n := d.GetChange("policy")
 
-			if policy == "" {
-				req.ResetPolicy = aws.Bool(true)
-			} else {
-				req.PolicyDocument = aws.String(policy)
+			if equivalent, err := awspolicy.PoliciesAreEquivalent(o.(string), n.(string)); err != nil || !equivalent {
+				policy, err := structure.NormalizeJsonString(d.Get("policy"))
+				if err != nil {
+					return fmt.Errorf("policy contains an invalid JSON: %s", err)
+				}
+
+				if policy == "" {
+					req.ResetPolicy = aws.Bool(true)
+				} else {
+					req.PolicyDocument = aws.String(policy)
+				}
 			}
 		}
 
@@ -381,7 +390,7 @@ func resourceVPCEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 		err = UnsuccessfulItemsError(output.Unsuccessful)
 	}
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVPCEndpointNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcEndpointNotFound) {
 		return nil
 	}
 

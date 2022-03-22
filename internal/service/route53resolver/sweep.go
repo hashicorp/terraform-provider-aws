@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -168,7 +168,7 @@ func sweepEndpoints(region string) error {
 			_, err := conn.DeleteResolverEndpoint(&route53resolver.DeleteResolverEndpointInput{
 				ResolverEndpointId: aws.String(id),
 			})
-			if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 				continue
 			}
 			if err != nil {
@@ -575,7 +575,7 @@ func sweepRuleAssociations(region string) error {
 				ResolverRuleId: resolverRuleAssociation.ResolverRuleId,
 				VPCId:          resolverRuleAssociation.VPCId,
 			})
-			if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 				continue
 			}
 			if sweep.SkipSweepError(err) {
@@ -635,7 +635,7 @@ func sweepRules(region string) error {
 			_, err := conn.DeleteResolverRule(&route53resolver.DeleteResolverRuleInput{
 				ResolverRuleId: aws.String(id),
 			})
-			if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 				continue
 			}
 			if err != nil {

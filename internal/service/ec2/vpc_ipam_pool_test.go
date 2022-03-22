@@ -18,7 +18,7 @@ func TestAccVPCIpamPool_basic(t *testing.T) {
 	resourceName := "aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVPCIpamPoolDestroy,
@@ -60,7 +60,7 @@ func TestAccVPCIpamPool_tags(t *testing.T) {
 	resourceName := "aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVPCIpamPoolDestroy,
@@ -96,32 +96,12 @@ func TestAccVPCIpamPool_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCIpamPoolExists(n string, pool *ec2.IpamPool) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		id := rs.Primary.ID
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		found_pool, err := tfec2.FindIpamPoolById(conn, id)
-
-		if err != nil {
-			return err
-		}
-		*pool = *found_pool
-
-		return nil
-	}
-}
-
 func TestAccVPCIpamPool_ipv6Basic(t *testing.T) {
 	var pool ec2.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckVPCIpamPoolDestroy,
@@ -143,6 +123,26 @@ func TestAccVPCIpamPool_ipv6Basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckVPCIpamPoolExists(n string, pool *ec2.IpamPool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		id := rs.Primary.ID
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		found_pool, err := tfec2.FindIpamPoolById(conn, id)
+
+		if err != nil {
+			return err
+		}
+		*pool = *found_pool
+
+		return nil
+	}
 }
 
 func testAccCheckVPCIpamPoolDestroy(s *terraform.State) error {

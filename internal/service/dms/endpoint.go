@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -54,7 +54,7 @@ func ResourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							// API returns this error with ModifyEndpoint:
-							// InvalidParameterCombinationException: Elasticsearch endpoint cant be modified.
+							// InvalidParameterCombinationException: OpenSearch endpoint cant be modified.
 							ForceNew: true,
 						},
 						"error_retry_duration": {
@@ -63,7 +63,7 @@ func ResourceEndpoint() *schema.Resource {
 							Default:      300,
 							ValidateFunc: validation.IntAtLeast(0),
 							// API returns this error with ModifyEndpoint:
-							// InvalidParameterCombinationException: Elasticsearch endpoint cant be modified.
+							// InvalidParameterCombinationException: OpenSearch endpoint cant be modified.
 							ForceNew: true,
 						},
 						"full_load_error_percentage": {
@@ -72,7 +72,7 @@ func ResourceEndpoint() *schema.Resource {
 							Default:      10,
 							ValidateFunc: validation.IntBetween(0, 100),
 							// API returns this error with ModifyEndpoint:
-							// InvalidParameterCombinationException: Elasticsearch endpoint cant be modified.
+							// InvalidParameterCombinationException: OpenSearch endpoint cant be modified.
 							ForceNew: true,
 						},
 						"service_access_role_arn": {
@@ -80,7 +80,7 @@ func ResourceEndpoint() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 							// API returns this error with ModifyEndpoint:
-							// InvalidParameterCombinationException: Elasticsearch endpoint cant be modified.
+							// InvalidParameterCombinationException: OpenSearch endpoint cant be modified.
 							ForceNew: true,
 						},
 					},
@@ -282,17 +282,32 @@ func ResourceEndpoint() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"auth_mechanism": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      mongoDBAuthMechanismValueDefault,
+							ValidateFunc: validation.StringInSlice(mongoDBAuthMechanismValue_Values(), false),
+						},
+						"auth_source": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  mongoDBAuthSourceAdmin,
+						},
 						"auth_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      dms.AuthTypeValuePassword,
 							ValidateFunc: validation.StringInSlice(dms.AuthTypeValue_Values(), false),
 						},
-						"auth_mechanism": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      mongoDBAuthMechanismValueDefault,
-							ValidateFunc: validation.StringInSlice(mongoDBAuthMechanismValue_Values(), false),
+						"docs_to_investigate": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "1000",
+						},
+						"extract_doc_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "false",
 						},
 						"nesting_level": {
 							Type:         schema.TypeString,
@@ -300,32 +315,19 @@ func ResourceEndpoint() *schema.Resource {
 							Default:      dms.NestingLevelValueNone,
 							ValidateFunc: validation.StringInSlice(dms.NestingLevelValue_Values(), false),
 						},
-						"extract_doc_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "false",
-						},
-						"docs_to_investigate": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "1000",
-						},
-						"auth_source": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  mongoDBAuthSourceAdmin,
-						},
 					},
 				},
 			},
 			"password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				ConflictsWith: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
 			},
 			"port": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ConflictsWith: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
 			},
 			"s3_settings": {
 				Type:             schema.TypeList,
@@ -334,26 +336,10 @@ func ResourceEndpoint() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"service_access_role_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "",
-							ValidateFunc: verify.ValidARN,
-						},
-						"external_table_definition": {
-							Type:     schema.TypeString,
+						"add_column_name": {
+							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  "",
-						},
-						"csv_row_delimiter": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "\\n",
-						},
-						"csv_delimiter": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  ",",
+							Default:  false,
 						},
 						"bucket_folder": {
 							Type:     schema.TypeString,
@@ -365,22 +351,147 @@ func ResourceEndpoint() *schema.Resource {
 							Optional: true,
 							Default:  "",
 						},
+						"canned_acl_for_objects": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.CannedAclForObjectsValueNone,
+							ValidateFunc: validation.StringInSlice(dms.CannedAclForObjectsValue_Values(), true),
+							StateFunc: func(v interface{}) string {
+								return strings.ToLower(v.(string))
+							},
+						},
+						"cdc_inserts_and_updates": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"cdc_inserts_only": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"cdc_max_batch_interval": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      60,
+							ValidateFunc: validation.IntAtLeast(0),
+						},
+						"cdc_min_file_size": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      32,
+							ValidateFunc: validation.IntAtLeast(0),
+						},
+						"cdc_path": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
+						},
 						"compression_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      s3SettingsCompressionTypeNone,
 							ValidateFunc: validation.StringInSlice(s3SettingsCompressionType_Values(), false),
 						},
-						"date_partition_enabled": {
-							Type:     schema.TypeBool,
+						"csv_delimiter": {
+							Type:     schema.TypeString,
 							Optional: true,
-							Default:  false,
+							Default:  ",",
+						},
+						"csv_no_sup_value": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
+						},
+						"csv_null_value": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "NULL",
+						},
+						"csv_row_delimiter": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "\\n",
 						},
 						"data_format": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      dms.DataFormatValueCsv,
 							ValidateFunc: validation.StringInSlice(dms.DataFormatValue_Values(), false),
+						},
+						"data_page_size": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      1048576,
+							ValidateFunc: validation.IntAtLeast(0),
+						},
+						"date_partition_delimiter": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.DatePartitionDelimiterValueSlash,
+							ValidateFunc: validation.StringInSlice(dms.DatePartitionDelimiterValue_Values(), true),
+							StateFunc: func(v interface{}) string {
+								return strings.ToLower(v.(string))
+							},
+						},
+						"date_partition_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"date_partition_sequence": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.DatePartitionSequenceValueYyyymmdd,
+							ValidateFunc: validation.StringInSlice(dms.DatePartitionSequenceValue_Values(), true),
+							StateFunc: func(v interface{}) string {
+								return strings.ToLower(v.(string))
+							},
+						},
+						"dict_page_size_limit": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      1048576,
+							ValidateFunc: validation.IntAtLeast(0),
+						},
+						"enable_statistics": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"encoding_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.EncodingTypeValueRleDictionary,
+							ValidateFunc: validation.StringInSlice(dms.EncodingTypeValue_Values(), false),
+						},
+						"encryption_mode": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      s3SettingsEncryptionModeSseS3,
+							ValidateFunc: validation.StringInSlice(s3SettingsEncryptionMode_Values(), false),
+						},
+						"external_table_definition": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
+						},
+						"ignore_headers_row": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      0,
+							ValidateFunc: validation.IntInSlice([]int{0, 1}),
+						},
+						"include_op_for_full_load": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"max_file_size": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      1048576,
+							ValidateFunc: validation.IntBetween(1, 1048576),
 						},
 						"parquet_timestamp_in_millisecond": {
 							Type:     schema.TypeBool,
@@ -393,22 +504,64 @@ func ResourceEndpoint() *schema.Resource {
 							Default:      dms.ParquetVersionValueParquet10,
 							ValidateFunc: validation.StringInSlice(dms.ParquetVersionValue_Values(), false),
 						},
-						"encryption_mode": {
-							Type:         schema.TypeString,
+						"preserve_transactions": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"rfc_4180": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"row_group_length": {
+							Type:         schema.TypeInt,
 							Optional:     true,
-							Default:      s3SettingsEncryptionModeSseS3,
-							ValidateFunc: validation.StringInSlice(s3SettingsEncryptionMode_Values(), false),
+							Default:      10000,
+							ValidateFunc: validation.IntAtLeast(0),
 						},
 						"server_side_encryption_kms_key_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
+						},
+						"service_access_role_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "",
+							ValidateFunc: verify.ValidARN,
+						},
+						"timestamp_column_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
+						},
+						"use_csv_no_sup_value": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 					},
 				},
 			},
+			"secrets_manager_access_role_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  verify.ValidARN,
+				RequiredWith:  []string{"secrets_manager_arn"},
+				ConflictsWith: []string{"username", "password", "server_name", "port"},
+			},
+			"secrets_manager_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  verify.ValidARN,
+				RequiredWith:  []string{"secrets_manager_access_role_arn"},
+				ConflictsWith: []string{"username", "password", "server_name", "port"},
+			},
 			"server_name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
 			},
 			"service_access_role": {
 				Type:     schema.TypeString,
@@ -423,8 +576,9 @@ func ResourceEndpoint() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"username": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
 			},
 		},
 
@@ -447,12 +601,30 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		Tags:               Tags(tags.IgnoreAWS()),
 	}
 
+	if v, ok := d.GetOk("certificate_arn"); ok {
+		request.CertificateArn = aws.String(v.(string))
+	}
+
+	// Send ExtraConnectionAttributes in the API request for all resource types
+	// per https://github.com/hashicorp/terraform-provider-aws/issues/8009
+	if v, ok := d.GetOk("extra_connection_attributes"); ok {
+		request.ExtraConnectionAttributes = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("kms_key_arn"); ok {
+		request.KmsKeyId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ssl_mode"); ok {
+		request.SslMode = aws.String(v.(string))
+	}
+
 	switch d.Get("engine_name").(string) {
 	case engineNameDynamoDB:
 		request.DynamoDbSettings = &dms.DynamoDbSettings{
 			ServiceAccessRoleArn: aws.String(d.Get("service_access_role").(string)),
 		}
-	case engineNameElasticsearch:
+	case engineNameElasticsearch, engineNameOpenSearch:
 		request.ElasticsearchSettings = &dms.ElasticsearchSettings{
 			ServiceAccessRoleArn:    aws.String(d.Get("elasticsearch_settings.0.service_access_role_arn").(string)),
 			EndpointUri:             aws.String(d.Get("elasticsearch_settings.0.endpoint_uri").(string)),
@@ -460,9 +632,9 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 			FullLoadErrorPercentage: aws.Int64(int64(d.Get("elasticsearch_settings.0.full_load_error_percentage").(int))),
 		}
 	case engineNameKafka:
-		request.KafkaSettings = expandDmsKafkaSettings(d.Get("kafka_settings").([]interface{})[0].(map[string]interface{}))
+		request.KafkaSettings = expandKafkaSettings(d.Get("kafka_settings").([]interface{})[0].(map[string]interface{}))
 	case engineNameKinesis:
-		request.KinesisSettings = expandDmsKinesisSettings(d.Get("kinesis_settings").([]interface{})[0].(map[string]interface{}))
+		request.KinesisSettings = expandKinesisSettings(d.Get("kinesis_settings").([]interface{})[0].(map[string]interface{}))
 	case engineNameMongodb:
 		request.MongoDbSettings = &dms.MongoDbSettings{
 			Username:     aws.String(d.Get("username").(string)),
@@ -486,22 +658,54 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		request.ServerName = aws.String(d.Get("server_name").(string))
 		request.Port = aws.Int64(int64(d.Get("port").(int)))
 		request.DatabaseName = aws.String(d.Get("database_name").(string))
-	case engineNameS3:
-		request.S3Settings = &dms.S3Settings{
-			BucketFolder:                  aws.String(d.Get("s3_settings.0.bucket_folder").(string)),
-			BucketName:                    aws.String(d.Get("s3_settings.0.bucket_name").(string)),
-			CompressionType:               aws.String(d.Get("s3_settings.0.compression_type").(string)),
-			CsvDelimiter:                  aws.String(d.Get("s3_settings.0.csv_delimiter").(string)),
-			CsvRowDelimiter:               aws.String(d.Get("s3_settings.0.csv_row_delimiter").(string)),
-			DataFormat:                    aws.String(d.Get("s3_settings.0.data_format").(string)),
-			DatePartitionEnabled:          aws.Bool(d.Get("s3_settings.0.date_partition_enabled").(bool)),
-			EncryptionMode:                aws.String(d.Get("s3_settings.0.encryption_mode").(string)),
-			ExternalTableDefinition:       aws.String(d.Get("s3_settings.0.external_table_definition").(string)),
-			ParquetTimestampInMillisecond: aws.Bool(d.Get("s3_settings.0.parquet_timestamp_in_millisecond").(bool)),
-			ParquetVersion:                aws.String(d.Get("s3_settings.0.parquet_version").(string)),
-			ServerSideEncryptionKmsKeyId:  aws.String(d.Get("s3_settings.0.server_side_encryption_kms_key_id").(string)),
-			ServiceAccessRoleArn:          aws.String(d.Get("s3_settings.0.service_access_role_arn").(string)),
+	case engineNameOracle:
+		if _, ok := d.GetOk("secrets_manager_arn"); ok {
+			request.OracleSettings = &dms.OracleSettings{
+				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
+				SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
+				DatabaseName:                aws.String(d.Get("database_name").(string)),
+			}
+		} else {
+			request.OracleSettings = &dms.OracleSettings{
+				Username:     aws.String(d.Get("username").(string)),
+				Password:     aws.String(d.Get("password").(string)),
+				ServerName:   aws.String(d.Get("server_name").(string)),
+				Port:         aws.Int64(int64(d.Get("port").(int))),
+				DatabaseName: aws.String(d.Get("database_name").(string)),
+			}
+
+			// Set connection info in top-level namespace as well
+			request.Username = aws.String(d.Get("username").(string))
+			request.Password = aws.String(d.Get("password").(string))
+			request.ServerName = aws.String(d.Get("server_name").(string))
+			request.Port = aws.Int64(int64(d.Get("port").(int)))
+			request.DatabaseName = aws.String(d.Get("database_name").(string))
 		}
+	case engineNamePostgres:
+		if _, ok := d.GetOk("secrets_manager_arn"); ok {
+			request.PostgreSQLSettings = &dms.PostgreSQLSettings{
+				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
+				SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
+				DatabaseName:                aws.String(d.Get("database_name").(string)),
+			}
+		} else {
+			request.PostgreSQLSettings = &dms.PostgreSQLSettings{
+				Username:     aws.String(d.Get("username").(string)),
+				Password:     aws.String(d.Get("password").(string)),
+				ServerName:   aws.String(d.Get("server_name").(string)),
+				Port:         aws.Int64(int64(d.Get("port").(int))),
+				DatabaseName: aws.String(d.Get("database_name").(string)),
+			}
+
+			// Set connection info in top-level namespace as well
+			request.Username = aws.String(d.Get("username").(string))
+			request.Password = aws.String(d.Get("password").(string))
+			request.ServerName = aws.String(d.Get("server_name").(string))
+			request.Port = aws.Int64(int64(d.Get("port").(int)))
+			request.DatabaseName = aws.String(d.Get("database_name").(string))
+		}
+	case engineNameS3:
+		request.S3Settings = expandS3Settings(d.Get("s3_settings").([]interface{})[0].(map[string]interface{}))
 	default:
 		request.Password = aws.String(d.Get("password").(string))
 		request.Port = aws.Int64(int64(d.Get("port").(int)))
@@ -511,31 +715,13 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		if v, ok := d.GetOk("database_name"); ok {
 			request.DatabaseName = aws.String(v.(string))
 		}
-
-		if v, ok := d.GetOk("kms_key_arn"); ok {
-			request.KmsKeyId = aws.String(v.(string))
-		}
-	}
-
-	if v, ok := d.GetOk("certificate_arn"); ok {
-		request.CertificateArn = aws.String(v.(string))
-	}
-
-	// Send ExtraConnectionAttributes in the API request for all resource types
-	// per https://github.com/hashicorp/terraform-provider-aws/issues/8009
-	if v, ok := d.GetOk("extra_connection_attributes"); ok {
-		request.ExtraConnectionAttributes = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("ssl_mode"); ok {
-		request.SslMode = aws.String(v.(string))
 	}
 
 	log.Println("[DEBUG] DMS create endpoint:", request)
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.CreateEndpoint(request)
-		if tfawserr.ErrMessageContains(err, "AccessDeniedFault", "") {
+		if tfawserr.ErrCodeEquals(err, "AccessDeniedFault") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -661,7 +847,7 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			hasChanges = true
 		}
-	case engineNameElasticsearch:
+	case engineNameElasticsearch, engineNameOpenSearch:
 		if d.HasChanges(
 			"elasticsearch_settings.0.endpoint_uri",
 			"elasticsearch_settings.0.error_retry_duration",
@@ -678,13 +864,13 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	case engineNameKafka:
 		if d.HasChange("kafka_settings") {
-			request.KafkaSettings = expandDmsKafkaSettings(d.Get("kafka_settings").([]interface{})[0].(map[string]interface{}))
+			request.KafkaSettings = expandKafkaSettings(d.Get("kafka_settings").([]interface{})[0].(map[string]interface{}))
 			request.EngineName = aws.String(engineName)
 			hasChanges = true
 		}
 	case engineNameKinesis:
 		if d.HasChanges("kinesis_settings") {
-			request.KinesisSettings = expandDmsKinesisSettings(d.Get("kinesis_settings").([]interface{})[0].(map[string]interface{}))
+			request.KinesisSettings = expandKinesisSettings(d.Get("kinesis_settings").([]interface{})[0].(map[string]interface{}))
 			request.EngineName = aws.String(engineName)
 			hasChanges = true
 		}
@@ -719,27 +905,67 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			hasChanges = true
 		}
-	case engineNameS3:
+	case engineNameOracle:
 		if d.HasChanges(
-			"s3_settings.0.service_access_role_arn", "s3_settings.0.external_table_definition",
-			"s3_settings.0.csv_row_delimiter", "s3_settings.0.csv_delimiter", "s3_settings.0.bucket_folder",
-			"s3_settings.0.bucket_name", "s3_settings.0.compression_type", "s3_settings.0.data_format",
-			"s3_settings.0.parquet_version", "s3_settings.0.parquet_timestamp_in_millisecond",
-			"s3_settings.0.encryption_mode", "s3_settings.0.server_side_encryption_kms_key_id") {
-			request.S3Settings = &dms.S3Settings{
-				BucketFolder:                  aws.String(d.Get("s3_settings.0.bucket_folder").(string)),
-				BucketName:                    aws.String(d.Get("s3_settings.0.bucket_name").(string)),
-				CompressionType:               aws.String(d.Get("s3_settings.0.compression_type").(string)),
-				CsvDelimiter:                  aws.String(d.Get("s3_settings.0.csv_delimiter").(string)),
-				CsvRowDelimiter:               aws.String(d.Get("s3_settings.0.csv_row_delimiter").(string)),
-				DataFormat:                    aws.String(d.Get("s3_settings.0.data_format").(string)),
-				EncryptionMode:                aws.String(d.Get("s3_settings.0.encryption_mode").(string)),
-				ExternalTableDefinition:       aws.String(d.Get("s3_settings.0.external_table_definition").(string)),
-				ParquetTimestampInMillisecond: aws.Bool(d.Get("s3_settings.0.parquet_timestamp_in_millisecond").(bool)),
-				ParquetVersion:                aws.String(d.Get("s3_settings.0.parquet_version").(string)),
-				ServerSideEncryptionKmsKeyId:  aws.String(d.Get("s3_settings.0.server_side_encryption_kms_key_id").(string)),
-				ServiceAccessRoleArn:          aws.String(d.Get("s3_settings.0.service_access_role_arn").(string)),
+			"username", "password", "server_name", "port", "database_name", "secrets_manager_access_role_arn",
+			"secrets_manager_arn") {
+			if _, ok := d.GetOk("secrets_manager_arn"); ok {
+				request.OracleSettings = &dms.OracleSettings{
+					DatabaseName:                aws.String(d.Get("database_name").(string)),
+					SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
+					SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
+				}
+			} else {
+				request.OracleSettings = &dms.OracleSettings{
+					Username:     aws.String(d.Get("username").(string)),
+					Password:     aws.String(d.Get("password").(string)),
+					ServerName:   aws.String(d.Get("server_name").(string)),
+					Port:         aws.Int64(int64(d.Get("port").(int))),
+					DatabaseName: aws.String(d.Get("database_name").(string)),
+				}
+				request.EngineName = aws.String(d.Get("engine_name").(string)) // Must be included (should be 'oracle')
+
+				// Update connection info in top-level namespace as well
+				request.Username = aws.String(d.Get("username").(string))
+				request.Password = aws.String(d.Get("password").(string))
+				request.ServerName = aws.String(d.Get("server_name").(string))
+				request.Port = aws.Int64(int64(d.Get("port").(int)))
+				request.DatabaseName = aws.String(d.Get("database_name").(string))
 			}
+			hasChanges = true
+		}
+	case engineNamePostgres:
+		if d.HasChanges(
+			"username", "password", "server_name", "port", "database_name", "secrets_manager_access_role_arn",
+			"secrets_manager_arn") {
+			if _, ok := d.GetOk("secrets_manager_arn"); ok {
+				request.PostgreSQLSettings = &dms.PostgreSQLSettings{
+					DatabaseName:                aws.String(d.Get("database_name").(string)),
+					SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
+					SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
+				}
+			} else {
+				request.PostgreSQLSettings = &dms.PostgreSQLSettings{
+					Username:     aws.String(d.Get("username").(string)),
+					Password:     aws.String(d.Get("password").(string)),
+					ServerName:   aws.String(d.Get("server_name").(string)),
+					Port:         aws.Int64(int64(d.Get("port").(int))),
+					DatabaseName: aws.String(d.Get("database_name").(string)),
+				}
+				request.EngineName = aws.String(d.Get("engine_name").(string)) // Must be included (should be 'postgres')
+
+				// Update connection info in top-level namespace as well
+				request.Username = aws.String(d.Get("username").(string))
+				request.Password = aws.String(d.Get("password").(string))
+				request.ServerName = aws.String(d.Get("server_name").(string))
+				request.Port = aws.Int64(int64(d.Get("port").(int)))
+				request.DatabaseName = aws.String(d.Get("database_name").(string))
+			}
+			hasChanges = true
+		}
+	case engineNameS3:
+		if d.HasChanges("s3_settings") {
+			request.S3Settings = expandS3Settings(d.Get("s3_settings").([]interface{})[0].(map[string]interface{}))
 			request.EngineName = aws.String(engineName)
 			hasChanges = true
 		}
@@ -811,7 +1037,7 @@ func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 
 func resourceEndpointCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	switch engineName := diff.Get("engine_name").(string); engineName {
-	case engineNameElasticsearch:
+	case engineNameElasticsearch, engineNameOpenSearch:
 		if v, ok := diff.GetOk("elasticsearch_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
 			return fmt.Errorf("elasticsearch_settings must be set when engine_name = %q", engineName)
 		}
@@ -847,21 +1073,21 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 	d.Set("engine_name", endpoint.EngineName)
 	d.Set("extra_connection_attributes", endpoint.ExtraConnectionAttributes)
 
-	switch *endpoint.EngineName {
-	case "dynamodb":
+	switch aws.StringValue(endpoint.EngineName) {
+	case engineNameDynamoDB:
 		if endpoint.DynamoDbSettings != nil {
 			d.Set("service_access_role", endpoint.DynamoDbSettings.ServiceAccessRoleArn)
 		} else {
 			d.Set("service_access_role", "")
 		}
-	case "elasticsearch":
-		if err := d.Set("elasticsearch_settings", flattenDmsElasticsearchSettings(endpoint.ElasticsearchSettings)); err != nil {
+	case engineNameElasticsearch, engineNameOpenSearch:
+		if err := d.Set("elasticsearch_settings", flattenOpenSearchSettings(endpoint.ElasticsearchSettings)); err != nil {
 			return fmt.Errorf("Error setting elasticsearch for DMS: %s", err)
 		}
-	case "kafka":
+	case engineNameKafka:
 		if endpoint.KafkaSettings != nil {
 			// SASL password isn't returned in API. Propagate state value.
-			tfMap := flattenDmsKafkaSettings(endpoint.KafkaSettings)
+			tfMap := flattenKafkaSettings(endpoint.KafkaSettings)
 			tfMap["sasl_password"] = d.Get("kafka_settings.0.sasl_password").(string)
 
 			if err := d.Set("kafka_settings", []interface{}{tfMap}); err != nil {
@@ -870,11 +1096,11 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		} else {
 			d.Set("kafka_settings", nil)
 		}
-	case "kinesis":
-		if err := d.Set("kinesis_settings", []interface{}{flattenDmsKinesisSettings(endpoint.KinesisSettings)}); err != nil {
+	case engineNameKinesis:
+		if err := d.Set("kinesis_settings", []interface{}{flattenKinesisSettings(endpoint.KinesisSettings)}); err != nil {
 			return fmt.Errorf("error setting kinesis_settings: %w", err)
 		}
-	case "mongodb":
+	case engineNameMongodb:
 		if endpoint.MongoDbSettings != nil {
 			d.Set("username", endpoint.MongoDbSettings.Username)
 			d.Set("server_name", endpoint.MongoDbSettings.ServerName)
@@ -886,11 +1112,39 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 			d.Set("port", endpoint.Port)
 			d.Set("database_name", endpoint.DatabaseName)
 		}
-		if err := d.Set("mongodb_settings", flattenDmsMongoDbSettings(endpoint.MongoDbSettings)); err != nil {
+		if err := d.Set("mongodb_settings", flattenMongoDBSettings(endpoint.MongoDbSettings)); err != nil {
 			return fmt.Errorf("Error setting mongodb_settings for DMS: %s", err)
 		}
-	case "s3":
-		if err := d.Set("s3_settings", flattenDmsS3Settings(endpoint.S3Settings)); err != nil {
+	case engineNameOracle:
+		if endpoint.OracleSettings != nil {
+			d.Set("username", endpoint.OracleSettings.Username)
+			d.Set("server_name", endpoint.OracleSettings.ServerName)
+			d.Set("port", endpoint.OracleSettings.Port)
+			d.Set("database_name", endpoint.OracleSettings.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", endpoint.OracleSettings.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", endpoint.OracleSettings.SecretsManagerSecretId)
+		} else {
+			d.Set("username", endpoint.Username)
+			d.Set("server_name", endpoint.ServerName)
+			d.Set("port", endpoint.Port)
+			d.Set("database_name", endpoint.DatabaseName)
+		}
+	case engineNamePostgres:
+		if endpoint.PostgreSQLSettings != nil {
+			d.Set("username", endpoint.PostgreSQLSettings.Username)
+			d.Set("server_name", endpoint.PostgreSQLSettings.ServerName)
+			d.Set("port", endpoint.PostgreSQLSettings.Port)
+			d.Set("database_name", endpoint.PostgreSQLSettings.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", endpoint.PostgreSQLSettings.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", endpoint.PostgreSQLSettings.SecretsManagerSecretId)
+		} else {
+			d.Set("username", endpoint.Username)
+			d.Set("server_name", endpoint.ServerName)
+			d.Set("port", endpoint.Port)
+			d.Set("database_name", endpoint.DatabaseName)
+		}
+	case engineNameS3:
+		if err := d.Set("s3_settings", flattenS3Settings(endpoint.S3Settings)); err != nil {
 			return fmt.Errorf("Error setting s3_settings for DMS: %s", err)
 		}
 	default:
@@ -907,7 +1161,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 	return nil
 }
 
-func flattenDmsElasticsearchSettings(settings *dms.ElasticsearchSettings) []map[string]interface{} {
+func flattenOpenSearchSettings(settings *dms.ElasticsearchSettings) []map[string]interface{} {
 	if settings == nil {
 		return []map[string]interface{}{}
 	}
@@ -922,7 +1176,7 @@ func flattenDmsElasticsearchSettings(settings *dms.ElasticsearchSettings) []map[
 	return []map[string]interface{}{m}
 }
 
-func expandDmsKafkaSettings(tfMap map[string]interface{}) *dms.KafkaSettings {
+func expandKafkaSettings(tfMap map[string]interface{}) *dms.KafkaSettings {
 	if tfMap == nil {
 		return nil
 	}
@@ -1004,7 +1258,7 @@ func expandDmsKafkaSettings(tfMap map[string]interface{}) *dms.KafkaSettings {
 	return apiObject
 }
 
-func flattenDmsKafkaSettings(apiObject *dms.KafkaSettings) map[string]interface{} {
+func flattenKafkaSettings(apiObject *dms.KafkaSettings) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1086,7 +1340,7 @@ func flattenDmsKafkaSettings(apiObject *dms.KafkaSettings) map[string]interface{
 	return tfMap
 }
 
-func expandDmsKinesisSettings(tfMap map[string]interface{}) *dms.KinesisSettings {
+func expandKinesisSettings(tfMap map[string]interface{}) *dms.KinesisSettings {
 	if tfMap == nil {
 		return nil
 	}
@@ -1132,7 +1386,7 @@ func expandDmsKinesisSettings(tfMap map[string]interface{}) *dms.KinesisSettings
 	return apiObject
 }
 
-func flattenDmsKinesisSettings(apiObject *dms.KinesisSettings) map[string]interface{} {
+func flattenKinesisSettings(apiObject *dms.KinesisSettings) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1178,7 +1432,7 @@ func flattenDmsKinesisSettings(apiObject *dms.KinesisSettings) map[string]interf
 	return tfMap
 }
 
-func flattenDmsMongoDbSettings(settings *dms.MongoDbSettings) []map[string]interface{} {
+func flattenMongoDBSettings(settings *dms.MongoDbSettings) []map[string]interface{} {
 	if settings == nil {
 		return []map[string]interface{}{}
 	}
@@ -1195,28 +1449,239 @@ func flattenDmsMongoDbSettings(settings *dms.MongoDbSettings) []map[string]inter
 	return []map[string]interface{}{m}
 }
 
-func flattenDmsS3Settings(settings *dms.S3Settings) []map[string]interface{} {
-	if settings == nil {
+func expandS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &dms.S3Settings{}
+
+	if v, ok := tfMap["add_column_name"].(bool); ok {
+		apiObject.AddColumnName = aws.Bool(v)
+	}
+	if v, ok := tfMap["bucket_folder"].(string); ok {
+		apiObject.BucketFolder = aws.String(v)
+	}
+	if v, ok := tfMap["bucket_name"].(string); ok {
+		apiObject.BucketName = aws.String(v)
+	}
+	if v, ok := tfMap["canned_acl_for_objects"].(string); ok {
+		apiObject.CannedAclForObjects = aws.String(v)
+	}
+	if v, ok := tfMap["cdc_inserts_and_updates"].(bool); ok {
+		apiObject.CdcInsertsAndUpdates = aws.Bool(v)
+	}
+	if v, ok := tfMap["cdc_inserts_only"].(bool); ok {
+		apiObject.CdcInsertsOnly = aws.Bool(v)
+	}
+	if v, ok := tfMap["cdc_max_batch_interval"].(int); ok {
+		apiObject.CdcMaxBatchInterval = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["cdc_min_file_size"].(int); ok {
+		apiObject.CdcMinFileSize = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["cdc_path"].(string); ok {
+		apiObject.CdcPath = aws.String(v)
+	}
+	if v, ok := tfMap["compression_type"].(string); ok {
+		apiObject.CompressionType = aws.String(v)
+	}
+	if v, ok := tfMap["csv_delimiter"].(string); ok {
+		apiObject.CsvDelimiter = aws.String(v)
+	}
+	if v, ok := tfMap["csv_no_sup_value"].(string); ok {
+		apiObject.CsvNoSupValue = aws.String(v)
+	}
+	if v, ok := tfMap["csv_null_value"].(string); ok {
+		apiObject.CsvNullValue = aws.String(v)
+	}
+	if v, ok := tfMap["csv_row_delimiter"].(string); ok {
+		apiObject.CsvRowDelimiter = aws.String(v)
+	}
+	if v, ok := tfMap["data_format"].(string); ok {
+		apiObject.DataFormat = aws.String(v)
+	}
+	if v, ok := tfMap["data_page_size"].(int); ok {
+		apiObject.DataPageSize = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["date_partition_delimiter"].(string); ok {
+		apiObject.DatePartitionDelimiter = aws.String(v)
+	}
+	if v, ok := tfMap["date_partition_enabled"].(bool); ok {
+		apiObject.DatePartitionEnabled = aws.Bool(v)
+	}
+	if v, ok := tfMap["date_partition_sequence"].(string); ok {
+		apiObject.DatePartitionSequence = aws.String(v)
+	}
+	if v, ok := tfMap["dict_page_size_limit"].(int); ok {
+		apiObject.DictPageSizeLimit = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["enable_statistics"].(bool); ok {
+		apiObject.EnableStatistics = aws.Bool(v)
+	}
+	if v, ok := tfMap["encoding_type"].(string); ok {
+		apiObject.EncodingType = aws.String(v)
+	}
+	if v, ok := tfMap["encryption_mode"].(string); ok {
+		apiObject.EncryptionMode = aws.String(v)
+	}
+	if v, ok := tfMap["external_table_definition"].(string); ok {
+		apiObject.ExternalTableDefinition = aws.String(v)
+	}
+	if v, ok := tfMap["ignore_header_rows"].(int); ok {
+		apiObject.IgnoreHeaderRows = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["include_op_for_full_load"].(bool); ok {
+		apiObject.IncludeOpForFullLoad = aws.Bool(v)
+	}
+	if v, ok := tfMap["max_file_size"].(int); ok {
+		apiObject.MaxFileSize = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["parquet_timestamp_in_millisecond"].(bool); ok {
+		apiObject.ParquetTimestampInMillisecond = aws.Bool(v)
+	}
+	if v, ok := tfMap["parquet_version"].(string); ok {
+		apiObject.ParquetVersion = aws.String(v)
+	}
+	if v, ok := tfMap["preserve_transactions"].(bool); ok {
+		apiObject.PreserveTransactions = aws.Bool(v)
+	}
+	if v, ok := tfMap["rfc_4180"].(bool); ok {
+		apiObject.Rfc4180 = aws.Bool(v)
+	}
+	if v, ok := tfMap["row_group_length"].(int); ok {
+		apiObject.RowGroupLength = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["server_side_encryption_kms_key_id"].(string); ok {
+		apiObject.ServerSideEncryptionKmsKeyId = aws.String(v)
+	}
+	if v, ok := tfMap["service_access_role_arn"].(string); ok {
+		apiObject.ServiceAccessRoleArn = aws.String(v)
+	}
+	if v, ok := tfMap["timestamp_column_name"].(string); ok {
+		apiObject.TimestampColumnName = aws.String(v)
+	}
+	if v, ok := tfMap["use_csv_no_sup_value"].(bool); ok {
+		apiObject.UseCsvNoSupValue = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func flattenS3Settings(apiObject *dms.S3Settings) []map[string]interface{} {
+	if apiObject == nil {
 		return []map[string]interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"bucket_folder":                     aws.StringValue(settings.BucketFolder),
-		"bucket_name":                       aws.StringValue(settings.BucketName),
-		"compression_type":                  aws.StringValue(settings.CompressionType),
-		"csv_delimiter":                     aws.StringValue(settings.CsvDelimiter),
-		"csv_row_delimiter":                 aws.StringValue(settings.CsvRowDelimiter),
-		"data_format":                       aws.StringValue(settings.DataFormat),
-		"date_partition_enabled":            aws.BoolValue(settings.DatePartitionEnabled),
-		"encryption_mode":                   aws.StringValue(settings.EncryptionMode),
-		"external_table_definition":         aws.StringValue(settings.ExternalTableDefinition),
-		"parquet_timestamp_in_millisecond":  aws.BoolValue(settings.ParquetTimestampInMillisecond),
-		"parquet_version":                   aws.StringValue(settings.ParquetVersion),
-		"server_side_encryption_kms_key_id": aws.StringValue(settings.ServerSideEncryptionKmsKeyId),
-		"service_access_role_arn":           aws.StringValue(settings.ServiceAccessRoleArn),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AddColumnName; v != nil {
+		tfMap["add_column_name"] = aws.BoolValue(v)
+	}
+	if v := apiObject.BucketFolder; v != nil {
+		tfMap["bucket_folder"] = aws.StringValue(v)
+	}
+	if v := apiObject.BucketName; v != nil {
+		tfMap["bucket_name"] = aws.StringValue(v)
+	}
+	if v := apiObject.CannedAclForObjects; v != nil {
+		tfMap["canned_acl_for_objects"] = aws.StringValue(v)
+	}
+	if v := apiObject.CdcInsertsAndUpdates; v != nil {
+		tfMap["cdc_inserts_and_updates"] = aws.BoolValue(v)
+	}
+	if v := apiObject.CdcInsertsOnly; v != nil {
+		tfMap["cdc_inserts_only"] = aws.BoolValue(v)
+	}
+	if v := apiObject.CdcMaxBatchInterval; v != nil {
+		tfMap["cdc_max_batch_interval"] = aws.Int64Value(v)
+	}
+	if v := apiObject.CdcMinFileSize; v != nil {
+		tfMap["cdc_min_file_size"] = aws.Int64Value(v)
+	}
+	if v := apiObject.CdcPath; v != nil {
+		tfMap["cdc_path"] = aws.StringValue(v)
+	}
+	if v := apiObject.CompressionType; v != nil {
+		tfMap["compression_type"] = aws.StringValue(v)
+	}
+	if v := apiObject.CsvDelimiter; v != nil {
+		tfMap["csv_delimiter"] = aws.StringValue(v)
+	}
+	if v := apiObject.CsvNoSupValue; v != nil {
+		tfMap["csv_no_sup_value"] = aws.StringValue(v)
+	}
+	if v := apiObject.CsvNullValue; v != nil {
+		tfMap["csv_null_value"] = aws.StringValue(v)
+	}
+	if v := apiObject.CsvRowDelimiter; v != nil {
+		tfMap["csv_row_delimiter"] = aws.StringValue(v)
+	}
+	if v := apiObject.DataFormat; v != nil {
+		tfMap["data_format"] = aws.StringValue(v)
+	}
+	if v := apiObject.DataPageSize; v != nil {
+		tfMap["data_page_size"] = aws.Int64Value(v)
+	}
+	if v := apiObject.DatePartitionDelimiter; v != nil {
+		tfMap["date_partition_delimiter"] = aws.StringValue(v)
+	}
+	if v := apiObject.DatePartitionEnabled; v != nil {
+		tfMap["date_partition_enabled"] = aws.BoolValue(v)
+	}
+	if v := apiObject.DatePartitionSequence; v != nil {
+		tfMap["date_partition_sequence"] = aws.StringValue(v)
+	}
+	if v := apiObject.DictPageSizeLimit; v != nil {
+		tfMap["dict_page_size_limit"] = aws.Int64Value(v)
+	}
+	if v := apiObject.EnableStatistics; v != nil {
+		tfMap["enable_statistics"] = aws.BoolValue(v)
+	}
+	if v := apiObject.EncodingType; v != nil {
+		tfMap["encoding_type"] = aws.StringValue(v)
+	}
+	if v := apiObject.EncryptionMode; v != nil {
+		tfMap["encryption_mode"] = aws.StringValue(v)
+	}
+	if v := apiObject.ExternalTableDefinition; v != nil {
+		tfMap["external_table_definition"] = aws.StringValue(v)
+	}
+	if v := apiObject.IgnoreHeaderRows; v != nil {
+		tfMap["ignore_header_rows"] = aws.Int64Value(v)
+	}
+	if v := apiObject.IncludeOpForFullLoad; v != nil {
+		tfMap["include_op_for_full_load"] = aws.BoolValue(v)
+	}
+	if v := apiObject.MaxFileSize; v != nil {
+		tfMap["max_file_size"] = aws.Int64Value(v)
+	}
+	if v := apiObject.ParquetTimestampInMillisecond; v != nil {
+		tfMap["parquet_timestamp_in_millisecond"] = aws.BoolValue(v)
+	}
+	if v := apiObject.ParquetVersion; v != nil {
+		tfMap["parquet_version"] = aws.StringValue(v)
+	}
+	if v := apiObject.Rfc4180; v != nil {
+		tfMap["rfc_4180"] = aws.BoolValue(v)
+	}
+	if v := apiObject.RowGroupLength; v != nil {
+		tfMap["row_group_length"] = aws.Int64Value(v)
+	}
+	if v := apiObject.ServerSideEncryptionKmsKeyId; v != nil {
+		tfMap["server_side_encryption_kms_key_id"] = aws.StringValue(v)
+	}
+	if v := apiObject.ServiceAccessRoleArn; v != nil {
+		tfMap["service_access_role_arn"] = aws.StringValue(v)
+	}
+	if v := apiObject.TimestampColumnName; v != nil {
+		tfMap["timestamp_column_name"] = aws.StringValue(v)
+	}
+	if v := apiObject.UseCsvNoSupValue; v != nil {
+		tfMap["use_csv_no_sup_value"] = aws.BoolValue(v)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]interface{}{tfMap}
 }
 
 func suppressExtraConnectionAttributesDiffs(_, old, new string, d *schema.ResourceData) bool {

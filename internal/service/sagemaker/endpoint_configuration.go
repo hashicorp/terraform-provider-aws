@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -427,8 +427,8 @@ func expandSagemakerProductionVariants(configured []interface{}) []*sagemaker.Pr
 			l.InitialVariantWeight = aws.Float64(v.(float64))
 		}
 
-		if v, ok := data["accelerator_type"]; ok && v.(string) != "" {
-			l.AcceleratorType = aws.String(data["accelerator_type"].(string))
+		if v, ok := data["accelerator_type"].(string); ok && v != "" {
+			l.AcceleratorType = aws.String(v)
 		}
 
 		containers = append(containers, l)
@@ -472,12 +472,12 @@ func expandSagemakerDataCaptureConfig(configured []interface{}) *sagemaker.DataC
 		c.EnableCapture = aws.Bool(v.(bool))
 	}
 
-	if v, ok := m["kms_key_id"]; ok && v.(string) != "" {
-		c.KmsKeyId = aws.String(v.(string))
+	if v, ok := m["kms_key_id"].(string); ok && v != "" {
+		c.KmsKeyId = aws.String(v)
 	}
 
-	if v, ok := m["capture_content_type_header"]; ok && (len(v.([]interface{})) > 0) {
-		c.CaptureContentTypeHeader = expandSagemakerCaptureContentTypeHeader(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := m["capture_content_type_header"].([]interface{}); ok && (len(v) > 0) {
+		c.CaptureContentTypeHeader = expandSagemakerCaptureContentTypeHeader(v[0].(map[string]interface{}))
 	}
 
 	return c
@@ -577,12 +577,12 @@ func expandSagemakerEndpointConfigAsyncInferenceConfig(configured []interface{})
 
 	c := &sagemaker.AsyncInferenceConfig{}
 
-	if v, ok := m["client_config"]; ok && (len(v.([]interface{})) > 0) {
-		c.ClientConfig = expandSagemakerEndpointConfigClientConfig(v.([]interface{}))
+	if v, ok := m["client_config"].([]interface{}); ok && len(v) > 0 {
+		c.ClientConfig = expandSagemakerEndpointConfigClientConfig(v)
 	}
 
-	if v, ok := m["output_config"]; ok && (len(v.([]interface{})) > 0) {
-		c.OutputConfig = expandSagemakerEndpointConfigOutputConfig(v.([]interface{}))
+	if v, ok := m["output_config"].([]interface{}); ok && len(v) > 0 {
+		c.OutputConfig = expandSagemakerEndpointConfigOutputConfig(v)
 	}
 
 	return c
@@ -615,12 +615,12 @@ func expandSagemakerEndpointConfigOutputConfig(configured []interface{}) *sagema
 		S3OutputPath: aws.String(m["s3_output_path"].(string)),
 	}
 
-	if v, ok := m["kms_key_id"]; ok {
-		c.KmsKeyId = aws.String(v.(string))
+	if v, ok := m["kms_key_id"].(string); ok && v != "" {
+		c.KmsKeyId = aws.String(v)
 	}
 
-	if v, ok := m["notification_config"]; ok && (len(v.([]interface{})) > 0) {
-		c.NotificationConfig = expandSagemakerEndpointConfigNotificationConfig(v.([]interface{}))
+	if v, ok := m["notification_config"].([]interface{}); ok && len(v) > 0 {
+		c.NotificationConfig = expandSagemakerEndpointConfigNotificationConfig(v)
 	}
 
 	return c
@@ -635,12 +635,12 @@ func expandSagemakerEndpointConfigNotificationConfig(configured []interface{}) *
 
 	c := &sagemaker.AsyncInferenceNotificationConfig{}
 
-	if v, ok := m["error_topic"]; ok {
-		c.ErrorTopic = aws.String(v.(string))
+	if v, ok := m["error_topic"].(string); ok && v != "" {
+		c.ErrorTopic = aws.String(v)
 	}
 
-	if v, ok := m["success_topic"]; ok {
-		c.SuccessTopic = aws.String(v.(string))
+	if v, ok := m["success_topic"].(string); ok && v != "" {
+		c.SuccessTopic = aws.String(v)
 	}
 
 	return c

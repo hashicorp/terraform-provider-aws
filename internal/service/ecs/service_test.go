@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -315,6 +315,10 @@ func TestAccECSService_healthCheckGracePeriodSeconds(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
@@ -411,6 +415,10 @@ func TestAccECSService_DeploymentControllerType_codeDeployUpdateDesiredCountAndH
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1098,6 +1106,10 @@ func TestAccECSService_ServiceRegistries_changes(t *testing.T) {
 	updatedServiceDiscoveryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
@@ -1221,10 +1233,10 @@ func TestAccECSService_Tags_propagate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceManagedTagsConfig(rName),
+				Config: testAccServicePropagateTagsConfig(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &third),
-					resource.TestCheckResourceAttr(resourceName, "propagate_tags", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags", ecs.PropagateTagsNone),
 				),
 			},
 		},
@@ -1315,10 +1327,10 @@ func testAccCheckServiceExists(name string, service *ecs.Service) resource.TestC
 			output, err = conn.DescribeServices(input)
 
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, ecs.ErrCodeClusterNotFoundException, "") {
+				if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
 					return resource.RetryableError(err)
 				}
-				if tfawserr.ErrMessageContains(err, ecs.ErrCodeServiceNotFoundException, "") {
+				if tfawserr.ErrCodeEquals(err, ecs.ErrCodeServiceNotFoundException) {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)

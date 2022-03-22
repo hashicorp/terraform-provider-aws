@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -54,6 +54,23 @@ func ResourceTopicRule() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validTopicRuleCloudWatchAlarmStateValue,
+						},
+					},
+				},
+			},
+			"cloudwatch_logs": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"log_group_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -463,6 +480,43 @@ func ResourceTopicRule() *schema.Resource {
 							},
 							ExactlyOneOf: []string{
 								"error_action.0.cloudwatch_alarm",
+								"error_action.0.cloudwatch_logs",
+								"error_action.0.cloudwatch_metric",
+								"error_action.0.dynamodb",
+								"error_action.0.dynamodbv2",
+								"error_action.0.elasticsearch",
+								"error_action.0.firehose",
+								"error_action.0.iot_analytics",
+								"error_action.0.iot_events",
+								"error_action.0.kinesis",
+								"error_action.0.lambda",
+								"error_action.0.republish",
+								"error_action.0.s3",
+								"error_action.0.step_functions",
+								"error_action.0.sns",
+								"error_action.0.sqs",
+							},
+						},
+						"cloudwatch_logs": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"log_group_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"role_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+							ExactlyOneOf: []string{
+								"error_action.0.cloudwatch_alarm",
+								"error_action.0.cloudwatch_logs",
 								"error_action.0.cloudwatch_metric",
 								"error_action.0.dynamodb",
 								"error_action.0.dynamodbv2",
@@ -515,6 +569,7 @@ func ResourceTopicRule() *schema.Resource {
 							},
 							ExactlyOneOf: []string{
 								"error_action.0.cloudwatch_alarm",
+								"error_action.0.cloudwatch_logs",
 								"error_action.0.cloudwatch_metric",
 								"error_action.0.dynamodb",
 								"error_action.0.dynamodbv2",
@@ -587,6 +642,7 @@ func ResourceTopicRule() *schema.Resource {
 							},
 							ExactlyOneOf: []string{
 								"error_action.0.cloudwatch_alarm",
+								"error_action.0.cloudwatch_logs",
 								"error_action.0.cloudwatch_metric",
 								"error_action.0.dynamodb",
 								"error_action.0.dynamodbv2",
@@ -631,6 +687,7 @@ func ResourceTopicRule() *schema.Resource {
 							},
 							ExactlyOneOf: []string{
 								"error_action.0.cloudwatch_alarm",
+								"error_action.0.cloudwatch_logs",
 								"error_action.0.cloudwatch_metric",
 								"error_action.0.dynamodb",
 								"error_action.0.dynamodbv2",
@@ -679,6 +736,7 @@ func ResourceTopicRule() *schema.Resource {
 							},
 							ExactlyOneOf: []string{
 								"error_action.0.cloudwatch_alarm",
+								"error_action.0.cloudwatch_logs",
 								"error_action.0.cloudwatch_metric",
 								"error_action.0.dynamodb",
 								"error_action.0.dynamodbv2",
@@ -719,6 +777,7 @@ func ResourceTopicRule() *schema.Resource {
 							},
 							ExactlyOneOf: []string{
 								"error_action.0.cloudwatch_alarm",
+								"error_action.0.cloudwatch_logs",
 								"error_action.0.cloudwatch_metric",
 								"error_action.0.dynamodb",
 								"error_action.0.dynamodbv2",
@@ -754,6 +813,7 @@ func ResourceTopicRule() *schema.Resource {
 							},
 							ExactlyOneOf: []string{
 								"error_action.0.cloudwatch_alarm",
+								"error_action.0.cloudwatch_logs",
 								"error_action.0.cloudwatch_metric",
 								"error_action.0.dynamodb",
 								"error_action.0.dynamodbv2",
@@ -793,6 +853,7 @@ func ResourceTopicRule() *schema.Resource {
 							},
 							ExactlyOneOf: []string{
 								"error_action.0.cloudwatch_alarm",
+								"error_action.0.cloudwatch_logs",
 								"error_action.0.cloudwatch_metric",
 								"error_action.0.dynamodb",
 								"error_action.0.dynamodbv2",
@@ -832,6 +893,7 @@ func ResourceTopicRule() *schema.Resource {
 							},
 							ExactlyOneOf: []string{
 								"error_action.0.cloudwatch_alarm",
+								"error_action.0.cloudwatch_logs",
 								"error_action.0.cloudwatch_metric",
 								"error_action.0.dynamodb",
 								"error_action.0.dynamodbv2",
@@ -863,6 +925,7 @@ func ResourceTopicRule() *schema.Resource {
 							},
 							ExactlyOneOf: []string{
 								"error_action.0.cloudwatch_alarm",
+								"error_action.0.cloudwatch_logs",
 								"error_action.0.cloudwatch_metric",
 								"error_action.0.dynamodb",
 								"error_action.0.dynamodbv2",
@@ -904,6 +967,7 @@ func ResourceTopicRule() *schema.Resource {
 							},
 							ExactlyOneOf: []string{
 								"error_action.0.cloudwatch_alarm",
+								"error_action.0.cloudwatch_logs",
 								"error_action.0.cloudwatch_metric",
 								"error_action.0.dynamodb",
 								"error_action.0.dynamodbv2",
@@ -943,6 +1007,7 @@ func ResourceTopicRule() *schema.Resource {
 							},
 							ExactlyOneOf: []string{
 								"error_action.0.cloudwatch_alarm",
+								"error_action.0.cloudwatch_logs",
 								"error_action.0.cloudwatch_metric",
 								"error_action.0.dynamodb",
 								"error_action.0.dynamodbv2",
@@ -982,6 +1047,7 @@ func ResourceTopicRule() *schema.Resource {
 							},
 							ExactlyOneOf: []string{
 								"error_action.0.cloudwatch_alarm",
+								"error_action.0.cloudwatch_logs",
 								"error_action.0.cloudwatch_metric",
 								"error_action.0.dynamodb",
 								"error_action.0.dynamodbv2",
@@ -1023,6 +1089,7 @@ func ResourceTopicRule() *schema.Resource {
 							},
 							ExactlyOneOf: []string{
 								"error_action.0.cloudwatch_alarm",
+								"error_action.0.cloudwatch_logs",
 								"error_action.0.cloudwatch_metric",
 								"error_action.0.dynamodb",
 								"error_action.0.dynamodbv2",
@@ -1062,6 +1129,7 @@ func ResourceTopicRule() *schema.Resource {
 							},
 							ExactlyOneOf: []string{
 								"error_action.0.cloudwatch_alarm",
+								"error_action.0.cloudwatch_logs",
 								"error_action.0.cloudwatch_metric",
 								"error_action.0.dynamodb",
 								"error_action.0.dynamodbv2",
@@ -1175,6 +1243,10 @@ func resourceTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting cloudwatch_alarm: %w", err)
 	}
 
+	if err := d.Set("cloudwatch_logs", flattenIotCloudWatchLogsActions(out.Rule.Actions)); err != nil {
+		return fmt.Errorf("error setting cloudwatch_logs: %w", err)
+	}
+
 	if err := d.Set("cloudwatch_metric", flattenIotCloudwatchMetricActions(out.Rule.Actions)); err != nil {
 		return fmt.Errorf("error setting cloudwatch_metric: %w", err)
 	}
@@ -1243,6 +1315,7 @@ func resourceTopicRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChanges(
 		"cloudwatch_alarm",
+		"cloudwatch_logs",
 		"cloudwatch_metric",
 		"description",
 		"dynamodb",
@@ -1339,6 +1412,25 @@ func expandIotCloudwatchAlarmAction(tfList []interface{}) *iot.CloudwatchAlarmAc
 
 	if v, ok := tfMap["state_value"].(string); ok && v != "" {
 		apiObject.StateValue = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandIotCloudwatchLogsAction(tfList []interface{}) *iot.CloudwatchLogsAction {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &iot.CloudwatchLogsAction{}
+	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["log_group_name"].(string); ok && v != "" {
+		apiObject.LogGroupName = aws.String(v)
+	}
+
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+		apiObject.RoleArn = aws.String(v)
 	}
 
 	return apiObject
@@ -1713,6 +1805,17 @@ func expandIotTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 	}
 
 	// Legacy root attribute handling
+	for _, tfMapRaw := range d.Get("cloudwatch_logs").(*schema.Set).List() {
+		action := expandIotCloudwatchLogsAction([]interface{}{tfMapRaw})
+
+		if action == nil {
+			continue
+		}
+
+		actions = append(actions, &iot.Action{CloudwatchLogs: action})
+	}
+
+	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("cloudwatch_metric").(*schema.Set).List() {
 		action := expandIotCloudwatchMetricAction([]interface{}{tfMapRaw})
 
@@ -1886,6 +1989,16 @@ func expandIotTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 
 					iotErrorAction = &iot.Action{CloudwatchAlarm: action}
 
+				}
+			case "cloudwatch_logs":
+				for _, tfMapRaw := range v.([]interface{}) {
+					action := expandIotCloudwatchLogsAction([]interface{}{tfMapRaw})
+
+					if action == nil {
+						continue
+					}
+
+					iotErrorAction = &iot.Action{CloudwatchLogs: action}
 				}
 			case "cloudwatch_metric":
 				for _, tfMapRaw := range v.([]interface{}) {
@@ -2078,6 +2191,41 @@ func flattenIotCloudWatchAlarmActions(actions []*iot.Action) []interface{} {
 
 		if v := action.CloudwatchAlarm; v != nil {
 			results = append(results, flattenIotCloudwatchAlarmAction(v)...)
+		}
+	}
+
+	return results
+}
+
+func flattenIotCloudwatchLogsAction(apiObject *iot.CloudwatchLogsAction) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]interface{})
+
+	if v := apiObject.LogGroupName; v != nil {
+		tfMap["log_group_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.RoleArn; v != nil {
+		tfMap["role_arn"] = aws.StringValue(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+// Legacy root attribute handling
+func flattenIotCloudWatchLogsActions(actions []*iot.Action) []interface{} {
+	results := make([]interface{}, 0)
+
+	for _, action := range actions {
+		if action == nil {
+			continue
+		}
+
+		if v := action.CloudwatchLogs; v != nil {
+			results = append(results, flattenIotCloudwatchLogsAction(v)...)
 		}
 	}
 
@@ -2663,6 +2811,10 @@ func flattenIotErrorAction(errorAction *iot.Action) []map[string]interface{} {
 	input := []*iot.Action{errorAction}
 	if errorAction.CloudwatchAlarm != nil {
 		results = append(results, map[string]interface{}{"cloudwatch_alarm": flattenIotCloudWatchAlarmActions(input)})
+		return results
+	}
+	if errorAction.CloudwatchLogs != nil {
+		results = append(results, map[string]interface{}{"cloudwatch_logs": flattenIotCloudWatchLogsActions(input)})
 		return results
 	}
 	if errorAction.CloudwatchMetric != nil {

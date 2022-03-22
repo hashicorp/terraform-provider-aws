@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/chime"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -65,7 +65,7 @@ func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	resp, err := conn.GetVoiceConnectorLoggingConfigurationWithContext(ctx, input)
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 		log.Printf("[WARN] Chime Voice Connector logging configuration %s not found", d.Id())
 		d.SetId("")
 		return nil
@@ -93,7 +93,7 @@ func resourceVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		if _, err := conn.PutVoiceConnectorLoggingConfigurationWithContext(ctx, input); err != nil {
-			if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 				log.Printf("[WARN] Chime Voice Connector logging configuration %s not found", d.Id())
 				d.SetId("")
 				return nil
@@ -117,7 +117,7 @@ func resourceVoiceConnectorLoggingDelete(ctx context.Context, d *schema.Resource
 
 	_, err := conn.PutVoiceConnectorLoggingConfigurationWithContext(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 		return nil
 	}
 

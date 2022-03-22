@@ -33,11 +33,13 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_nodes.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_nodes.0.public_ip_address"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_type", "single-node"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
 					resource.TestMatchResourceAttr(resourceName, "dns_name", regexp.MustCompile(fmt.Sprintf("^%s.*\\.redshift\\..*", rName))),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", "false"),
 				),
 			},
 			{
@@ -427,7 +429,7 @@ func TestAccRedshiftCluster_tags(t *testing.T) {
 }
 
 func TestAccRedshiftCluster_forceNewUsername(t *testing.T) {
-	var v redshift.Cluster
+	var v1, v2 redshift.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -440,16 +442,17 @@ func TestAccRedshiftCluster_forceNewUsername(t *testing.T) {
 			{
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
-					testAccCheckClusterMasterUsername(&v, "foo_test"),
+					testAccCheckClusterExists(resourceName, &v1),
+					testAccCheckClusterMasterUsername(&v1, "foo_test"),
 					resource.TestCheckResourceAttr(resourceName, "master_username", "foo_test"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_updatedUsername(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
-					testAccCheckClusterMasterUsername(&v, "new_username"),
+					testAccCheckClusterExists(resourceName, &v2),
+					testAccCheckClusterRecreated(&v1, &v2),
+					testAccCheckClusterMasterUsername(&v2, "new_username"),
 					resource.TestCheckResourceAttr(resourceName, "master_username", "new_username"),
 				),
 			},
@@ -458,6 +461,71 @@ func TestAccRedshiftCluster_forceNewUsername(t *testing.T) {
 }
 
 func TestAccRedshiftCluster_changeAvailabilityZone(t *testing.T) {
+	var v1, v2 redshift.Cluster
+	resourceName := "aws_redshift_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_updateAvailabilityZone(rName, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.0"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_updateAvailabilityZone(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &v2),
+					testAccCheckClusterNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRedshiftCluster_changeAvailabilityZoneAndSetAvailabilityZoneRelocation(t *testing.T) {
+	var v1, v2 redshift.Cluster
+	resourceName := "aws_redshift_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_updateAvailabilityZone_availabilityZoneRelocationNotSet(rName, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.0"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_updateAvailabilityZone(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &v2),
+					testAccCheckClusterNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRedshiftCluster_changeAvailabilityZone_availabilityZoneRelocationNotSet(t *testing.T) {
 	var v redshift.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -469,18 +537,17 @@ func TestAccRedshiftCluster_changeAvailabilityZone(t *testing.T) {
 		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccClusterConfig_updateAvailabilityZone_availabilityZoneRelocationNotSet(rName, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.0"),
 				),
 			},
 			{
-				Config: testAccClusterConfig_updatedAvailabilityZone(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.1"),
-				),
+				Config:      testAccClusterConfig_updateAvailabilityZone_availabilityZoneRelocationNotSet(rName, 1),
+				ExpectError: regexp.MustCompile(`cannot change availability_zone if availability_zone_relocation_enabled is not true`),
 			},
 		},
 	})
@@ -541,6 +608,62 @@ func TestAccRedshiftCluster_changeEncryption2(t *testing.T) {
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccRedshiftCluster_availabilityZoneRelocation(t *testing.T) {
+	var v redshift.Cluster
+	resourceName := "aws_redshift_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_availabilityZoneRelocation(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_snapshot_identifier",
+					"master_password",
+					"skip_final_snapshot",
+				},
+			},
+			{
+				Config: testAccClusterConfig_availabilityZoneRelocation(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRedshiftCluster_availabilityZoneRelocation_publiclyAccessible(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterConfig_availabilityZoneRelocation_publiclyAccessible(rName),
+				ExpectError: regexp.MustCompile(`availability_zone_relocation_enabled can not be true when publicly_accessible is true`),
 			},
 		},
 	})
@@ -649,6 +772,21 @@ func testAccCheckClusterNotRecreated(i, j *redshift.Cluster) resource.TestCheckF
 		// Clusters with the same identifier can/will have an overlapping Endpoint.Address.
 		if aws.StringValue(i.ClusterPublicKey) != aws.StringValue(j.ClusterPublicKey) {
 			return errors.New("Redshift Cluster was recreated")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckClusterRecreated(i, j *redshift.Cluster) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		// In lieu of some other uniquely identifying attribute from the API that always changes
+		// when a cluster is destroyed and recreated with the same identifier, we use the SSH key
+		// as it will get regenerated when a cluster is destroyed.
+		// Certain update operations (e.g KMS encrypting a cluster) will change ClusterCreateTime.
+		// Clusters with the same identifier can/will have an overlapping Endpoint.Address.
+		if aws.StringValue(i.ClusterPublicKey) == aws.StringValue(j.ClusterPublicKey) {
+			return errors.New("Redshift Cluster was not recreated")
 		}
 
 		return nil
@@ -909,7 +1047,10 @@ data "aws_redshift_service_account" "main" {}
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
+}
 
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.test.id
   policy = <<EOF
 {
   "Version": "2008-10-17",
@@ -938,6 +1079,9 @@ EOF
 }
 
 resource "aws_redshift_cluster" "test" {
+  # Must have bucket policy attached first
+  depends_on = [aws_s3_bucket_policy.test]
+
   cluster_identifier                  = %[1]q
   availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
@@ -1263,18 +1407,84 @@ resource "aws_redshift_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterConfig_updatedAvailabilityZone(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+func testAccClusterConfig_updateAvailabilityZone(rName string, regionIndex int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
+		fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[1]
   database_name                       = "mydb"
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
+  node_type                           = "ra3.xlplus"
+  automated_snapshot_retention_period = 1
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
+
+  publicly_accessible                  = false
+  availability_zone_relocation_enabled = true
+  availability_zone                    = data.aws_availability_zones.available.names[%[2]d]
+}
+`, rName, regionIndex))
+}
+
+func testAccClusterConfig_updateAvailabilityZone_availabilityZoneRelocationNotSet(rName string, regionIndex int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
+		fmt.Sprintf(`
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier                  = %[1]q
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "ra3.xlplus"
+  automated_snapshot_retention_period = 1
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
+
+  publicly_accessible                  = false
+  availability_zone_relocation_enabled = false
+  availability_zone                    = data.aws_availability_zones.available.names[%[2]d]
+}
+`, rName, regionIndex))
+}
+
+func testAccClusterConfig_availabilityZoneRelocation(rName string, enabled bool) string {
+	return acctest.ConfigCompose(
+		fmt.Sprintf(`
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier                  = %[1]q
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "ra3.xlplus"
+  number_of_nodes                     = 2
+  cluster_type                        = "multi-node"
+  automated_snapshot_retention_period = 1
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
+
+  publicly_accessible                  = false
+  availability_zone_relocation_enabled = %[2]t
+}
+`, rName, enabled))
+}
+
+func testAccClusterConfig_availabilityZoneRelocation_publiclyAccessible(rName string) string {
+	return acctest.ConfigCompose(
+		fmt.Sprintf(`
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier                  = %[1]q
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "ra3.xlplus"
+  automated_snapshot_retention_period = 1
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
+
+  publicly_accessible                  = true
+  availability_zone_relocation_enabled = true
 }
 `, rName))
 }

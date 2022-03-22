@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -371,6 +371,12 @@ func ResourceInstance() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice([]string{ec2.HttpTokensStateOptional, ec2.HttpTokensStateRequired}, false),
 						},
+						"instance_metadata_tags": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      ec2.InstanceMetadataTagsStateDisabled,
+							ValidateFunc: validation.StringInSlice(ec2.InstanceMetadataTagsState_Values(), false),
+						},
 					},
 				},
 			},
@@ -434,14 +440,11 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"private_ip": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-				ValidateFunc: validation.Any(
-					validation.StringIsEmpty,
-					validation.IsIPv4Address,
-				),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Computed:     true,
+				ValidateFunc: validation.IsIPv4Address,
 			},
 			"public_dns": {
 				Type:     schema.TypeString,
@@ -457,9 +460,7 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
-					// "You can only modify the volume size, volume type, and Delete on
-					// Termination flag on the block device mapping entry for the root
-					// device volume."
+					// "For the root volume, you can only modify the following: volume size, volume type, and the Delete on Termination flag."
 					// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html
 					Schema: map[string]*schema.Schema{
 						"delete_on_termination": {
@@ -563,7 +564,6 @@ func ResourceInstance() *schema.Resource {
 			"user_data": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ForceNew:      true,
 				Computed:      true,
 				ConflictsWith: []string{"user_data_base64"},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -588,7 +588,6 @@ func ResourceInstance() *schema.Resource {
 			"user_data_base64": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ForceNew:      true,
 				Computed:      true,
 				ConflictsWith: []string{"user_data"},
 				ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
@@ -600,6 +599,11 @@ func ResourceInstance() *schema.Resource {
 					}
 					return
 				},
+			},
+			"user_data_replace_on_change": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"volume_tags": tftags.TagsSchema(),
 			"vpc_security_group_ids": {
@@ -695,6 +699,14 @@ func ResourceInstance() *schema.Resource {
 			}),
 			customdiff.ComputedIf("launch_template.0.name", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("launch_template.0.id")
+			}),
+			customdiff.ForceNewIf("user_data", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				replace := diff.Get("user_data_replace_on_change")
+				return replace.(bool)
+			}),
+			customdiff.ForceNewIf("user_data_base64", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				replace := diff.Get("user_data_replace_on_change")
+				return replace.(bool)
 			}),
 		),
 	}
@@ -896,7 +908,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		// If the instance was not found, return nil so that we can show
 		// that the instance is gone.
-		if tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
 			log.Printf("[WARN] EC2 Instance (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -1169,7 +1181,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US)
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362
-		if err != nil && !tfawserr.ErrMessageContains(err, "UnsupportedOperation", "") {
+		if err != nil && !tfawserr.ErrCodeEquals(err, "UnsupportedOperation") {
 			return fmt.Errorf("error getting EC2 Instance (%s) Credit Specifications: %s", d.Id(), err)
 		}
 
@@ -1327,7 +1339,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				// Tolerate InvalidParameterCombination error in Classic, otherwise
 				// return the error
-				if !tfawserr.ErrMessageContains(err, "InvalidParameterCombination", "") {
+				if !tfawserr.ErrCodeEquals(err, "InvalidParameterCombination") {
 					return err
 				}
 				log.Printf("[WARN] Attempted to modify SourceDestCheck on non VPC instance: %s", err)
@@ -1422,73 +1434,74 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("instance_type") && !d.IsNewResource() {
-		log.Printf("[INFO] Stopping Instance %q for instance_type change", d.Id())
-		_, err := conn.StopInstances(&ec2.StopInstancesInput{
-			InstanceIds: []*string{aws.String(d.Id())},
-		})
-		if err != nil {
-			return fmt.Errorf("error stopping instance (%s): %s", d.Id(), err)
-		}
+	if d.HasChanges("instance_type", "user_data", "user_data_base64") && !d.IsNewResource() {
+		// For each argument change, we start and stop the instance
+		// to account for behaviors occurring outside terraform.
+		// Only one attribute can be modified at a time, else we get
+		// "InvalidParameterCombination: Fields for multiple attribute types specified"
+		if d.HasChange("instance_type") {
+			log.Printf("[INFO] Modifying instance type %s", d.Id())
 
-		if err := WaitForInstanceStopping(conn, d.Id(), InstanceStopTimeout); err != nil {
-			return err
-		}
-
-		log.Printf("[INFO] Modifying instance type %s", d.Id())
-		_, err = conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
-			InstanceId: aws.String(d.Id()),
-			InstanceType: &ec2.AttributeValue{
-				Value: aws.String(d.Get("instance_type").(string)),
-			},
-		})
-		if err != nil {
-			return err
-		}
-
-		log.Printf("[INFO] Starting Instance %q after instance_type change", d.Id())
-
-		input := &ec2.StartInstancesInput{
-			InstanceIds: []*string{aws.String(d.Id())},
-		}
-
-		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433
-		err = resource.Retry(InstanceAttributePropagationTimeout, func() *resource.RetryError {
-			_, err := conn.StartInstances(input)
-
-			if tfawserr.ErrMessageContains(err, ErrCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value") {
-				return resource.RetryableError(err)
+			input := &ec2.ModifyInstanceAttributeInput{
+				InstanceId: aws.String(d.Id()),
+				InstanceType: &ec2.AttributeValue{
+					Value: aws.String(d.Get("instance_type").(string)),
+				},
 			}
 
+			if err := modifyAttributeWithInstanceStopStart(d, conn, input); err != nil {
+				return fmt.Errorf("error updating instance (%s) instance type: %w", d.Id(), err)
+			}
+		}
+
+		// From the API reference:
+		// "If you are using an AWS SDK or command line tool,
+		// base64-encoding is performed for you, and you can load the text from a file.
+		// Otherwise, you must provide base64-encoded text".
+
+		if d.HasChange("user_data") {
+			log.Printf("[INFO] Modifying user data %s", d.Id())
+
+			// Decode so the AWS SDK doesn't double encode
+			userData, err := base64.StdEncoding.DecodeString(d.Get("user_data").(string))
 			if err != nil {
-				return resource.NonRetryableError(err)
+				log.Printf("[DEBUG] Instance (%s) user_data not base64 decoded", d.Id())
+				userData = []byte(d.Get("user_data").(string))
 			}
 
-			return nil
-		})
+			input := &ec2.ModifyInstanceAttributeInput{
+				InstanceId: aws.String(d.Id()),
+				UserData: &ec2.BlobAttributeValue{
+					Value: userData,
+				},
+			}
 
-		if tfresource.TimedOut(err) {
-			_, err = conn.StartInstances(input)
+			if err := modifyAttributeWithInstanceStopStart(d, conn, input); err != nil {
+				return fmt.Errorf("error updating instance (%s) user data: %w", d.Id(), err)
+			}
 		}
 
-		if err != nil {
-			return fmt.Errorf("error starting EC2 Instance (%s): %w", d.Id(), err)
-		}
+		if d.HasChange("user_data_base64") {
+			log.Printf("[INFO] Modifying user data base64 %s", d.Id())
 
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameStopped},
-			Target:     []string{ec2.InstanceStateNameRunning},
-			Refresh:    InstanceStateRefreshFunc(conn, d.Id(), []string{ec2.InstanceStateNameTerminated}),
-			Timeout:    d.Timeout(schema.TimeoutUpdate),
-			Delay:      10 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
+			// Schema validation technically ensures the data is Base64 encoded.
+			// Decode so the AWS SDK doesn't double encode
+			userData, err := base64.StdEncoding.DecodeString(d.Get("user_data_base64").(string))
+			if err != nil {
+				log.Printf("[DEBUG] Instance (%s) user_data_base64 not base64 decoded", d.Id())
+				userData = []byte(d.Get("user_data_base64").(string))
+			}
 
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return fmt.Errorf(
-				"Error waiting for instance (%s) to become ready: %s",
-				d.Id(), err)
+			input := &ec2.ModifyInstanceAttributeInput{
+				InstanceId: aws.String(d.Id()),
+				UserData: &ec2.BlobAttributeValue{
+					Value: userData,
+				},
+			}
+
+			if err := modifyAttributeWithInstanceStopStart(d, conn, input); err != nil {
+				return fmt.Errorf("error updating instance (%s) user data base64: %w", d.Id(), err)
+			}
 		}
 	}
 
@@ -1561,6 +1574,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 					// These parameters are not allowed unless HttpEndpoint is enabled
 					input.HttpTokens = aws.String(mo["http_tokens"].(string))
 					input.HttpPutResponseHopLimit = aws.Int64(int64(mo["http_put_response_hop_limit"].(int)))
+					input.InstanceMetadataTags = aws.String(mo["instance_metadata_tags"].(string))
 				}
 				_, err := conn.ModifyInstanceMetadataOptions(input)
 				if err != nil {
@@ -1764,13 +1778,69 @@ func resourceInstanceDisableAPITermination(conn *ec2.EC2, id string, disableAPIT
 	return nil
 }
 
+// modifyAttributeWithInstanceStopStart modifies a specific attribute provided
+// as input by first stopping the EC2 instance before the modification
+// and then starting up the EC2 instance after modification.
+// Reference: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html
+func modifyAttributeWithInstanceStopStart(d *schema.ResourceData, conn *ec2.EC2, input *ec2.ModifyInstanceAttributeInput) error {
+	log.Printf("[INFO] Stopping Instance %q for attribute change", d.Id())
+	_, err := conn.StopInstances(&ec2.StopInstancesInput{
+		InstanceIds: []*string{aws.String(d.Id())},
+	})
+
+	if err != nil {
+		return fmt.Errorf("error stopping EC2 Instance (%s): %w", d.Id(), err)
+	}
+
+	if err := WaitForInstanceStopping(conn, d.Id(), InstanceStopTimeout); err != nil {
+		return err
+	}
+
+	if _, err := conn.ModifyInstanceAttribute(input); err != nil {
+		return err
+	}
+
+	startInput := &ec2.StartInstancesInput{
+		InstanceIds: []*string{aws.String(d.Id())},
+	}
+
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433
+	err = resource.Retry(InstanceAttributePropagationTimeout, func() *resource.RetryError {
+		_, err := conn.StartInstances(startInput)
+
+		if tfawserr.ErrMessageContains(err, ErrCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.StartInstances(startInput)
+	}
+
+	if err != nil {
+		return fmt.Errorf("error starting EC2 Instance (%s): %w", d.Id(), err)
+	}
+
+	if err := WaitForInstanceRunning(conn, d.Id(), InstanceStartTimeout); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // InstanceStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
 // an EC2 instance.
 func InstanceStateRefreshFunc(conn *ec2.EC2, instanceID string, failStates []string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		instance, err := InstanceFindByID(conn, instanceID)
 		if err != nil {
-			if !tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
+			if !tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
 				log.Printf("Error on InstanceStateRefresh: %s", err)
 				return nil, "", err
 			}
@@ -1801,7 +1871,7 @@ func MetadataOptionsRefreshFunc(conn *ec2.EC2, instanceID string) resource.State
 	return func() (interface{}, string, error) {
 		instance, err := InstanceFindByID(conn, instanceID)
 		if err != nil {
-			if !tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
+			if !tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
 				log.Printf("Error on InstanceStateRefresh: %s", err)
 				return nil, "", err
 			}
@@ -1825,7 +1895,7 @@ func RootBlockDeviceDeleteOnTerminationRefreshFunc(conn *ec2.EC2, instanceID str
 	return func() (interface{}, string, error) {
 		instance, err := InstanceFindByID(conn, instanceID)
 		if err != nil {
-			if !tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
+			if !tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
 				log.Printf("Error on InstanceStateRefresh: %s", err)
 				return nil, "", err
 			}
@@ -1894,17 +1964,28 @@ func readBlockDevices(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.
 		return err
 	}
 
-	// This handles cases where the root device block is of type "EBS"
-	// and #readBlockDevicesFromInstance only returns 1 reference to a block-device
-	// stored in ibds["root"]
-	if _, ok := d.GetOk("ebs_block_device"); ok {
-		if len(ibds["ebs"].([]map[string]interface{})) == 0 {
-			ebs := make(map[string]interface{})
-			for k, v := range ibds["root"].(map[string]interface{}) {
-				ebs[k] = v
+	// Special handling for instances where the only block device is the root device:
+	// The call to readBlockDevicesFromInstance above will return the block device
+	// in ibds["root"] not ibds["ebs"], thus to set the state correctly,
+	// the root block device must be copied over to ibds["ebs"]
+	if ibds != nil {
+		if _, ok := d.GetOk("ebs_block_device"); ok {
+			if v, ok := ibds["ebs"].([]map[string]interface{}); ok && len(v) == 0 {
+				if root, ok := ibds["root"].(map[string]interface{}); ok {
+					// Make deep copy of data
+					m := make(map[string]interface{})
+
+					for k, v := range root {
+						m[k] = v
+					}
+
+					if snapshotID, ok := ibds["snapshot_id"].(string); ok {
+						m["snapshot_id"] = snapshotID
+					}
+
+					ibds["ebs"] = []interface{}{m}
+				}
 			}
-			ebs["snapshot_id"] = ibds["snapshot_id"]
-			ibds["ebs"] = append(ibds["ebs"].([]map[string]interface{}), ebs)
 		}
 	}
 
@@ -2434,18 +2515,13 @@ func readSecurityGroups(d *schema.ResourceData, instance *ec2.Instance, conn *ec
 
 	// If the instance is in a VPC, find out if that VPC is Default to determine
 	// whether to store names.
-	if aws.StringValue(instance.VpcId) != "" {
-		out, err := conn.DescribeVpcs(&ec2.DescribeVpcsInput{
-			VpcIds: []*string{instance.VpcId},
-		})
+	if vpcID := aws.StringValue(instance.VpcId); vpcID != "" {
+		vpc, err := FindVPCByID(conn, vpcID)
+
 		if err != nil {
-			log.Printf("[WARN] Unable to describe VPC %q: %s", aws.StringValue(instance.VpcId), err)
-		} else if len(out.Vpcs) == 0 {
-			// This may happen in Eucalyptus Cloud
-			log.Printf("[WARN] Unable to retrieve VPCs")
+			log.Printf("[WARN] error reading EC2 Instance (%s) VPC (%s): %s", d.Id(), vpcID, err)
 		} else {
-			isInDefaultVpc := aws.BoolValue(out.Vpcs[0].IsDefault)
-			useName = isInDefaultVpc
+			useName = aws.BoolValue(vpc.IsDefault)
 		}
 	}
 
@@ -2764,13 +2840,34 @@ func terminateInstance(conn *ec2.EC2, id string, timeout time.Duration) error {
 		InstanceIds: []*string{aws.String(id)},
 	}
 	if _, err := conn.TerminateInstances(req); err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
 			return nil
 		}
 		return err
 	}
 
 	return waitForInstanceDeletion(conn, id, timeout)
+}
+
+func WaitForInstanceRunning(conn *ec2.EC2, id string, timeout time.Duration) error {
+	log.Printf("[DEBUG] Waiting for instance (%s) to be running", id)
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameStopped},
+		Target:     []string{ec2.InstanceStateNameRunning},
+		Refresh:    InstanceStateRefreshFunc(conn, id, []string{ec2.InstanceStateNameTerminated}),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	if err != nil {
+		return fmt.Errorf(
+			"error waiting for instance (%s) to be running: %s", id, err)
+	}
+
+	return nil
 }
 
 func WaitForInstanceStopping(conn *ec2.EC2, id string, timeout time.Duration) error {
@@ -2940,6 +3037,10 @@ func expandEc2InstanceMetadataOptions(l []interface{}) *ec2.InstanceMetadataOpti
 		if v, ok := m["http_put_response_hop_limit"].(int); ok && v != 0 {
 			opts.HttpPutResponseHopLimit = aws.Int64(int64(v))
 		}
+
+		if v, ok := m["instance_metadata_tags"].(string); ok && v != "" {
+			opts.InstanceMetadataTags = aws.String(v)
+		}
 	}
 
 	return opts
@@ -2985,27 +3086,11 @@ func expandCapacityReservationSpecification(crs []interface{}) *ec2.CapacityRese
 		capacityReservationSpecification.CapacityReservationPreference = aws.String(v.(string))
 	}
 
-	if v, ok := m["capacity_reservation_target"]; ok && v != "" && (len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil) {
-		capacityReservationSpecification.CapacityReservationTarget = expandCapacityReservationTarget(v.([]interface{}))
+	if v, ok := m["capacity_reservation_target"].([]interface{}); ok && len(v) > 0 {
+		capacityReservationSpecification.CapacityReservationTarget = expandCapacityReservationTarget(v[0].(map[string]interface{}))
 	}
 
 	return capacityReservationSpecification
-}
-
-func expandCapacityReservationTarget(crt []interface{}) *ec2.CapacityReservationTarget {
-	if len(crt) < 1 || crt[0] == nil {
-		return nil
-	}
-
-	m := crt[0].(map[string]interface{})
-
-	capacityReservationTarget := &ec2.CapacityReservationTarget{}
-
-	if v, ok := m["capacity_reservation_id"]; ok && v != "" {
-		capacityReservationTarget.CapacityReservationId = aws.String(v.(string))
-	}
-
-	return capacityReservationTarget
 }
 
 func flattenEc2InstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse) []interface{} {
@@ -3017,6 +3102,7 @@ func flattenEc2InstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse
 		"http_endpoint":               aws.StringValue(opts.HttpEndpoint),
 		"http_put_response_hop_limit": aws.Int64Value(opts.HttpPutResponseHopLimit),
 		"http_tokens":                 aws.StringValue(opts.HttpTokens),
+		"instance_metadata_tags":      aws.StringValue(opts.InstanceMetadataTags),
 	}
 
 	return []interface{}{m}
@@ -3110,7 +3196,7 @@ func getInstanceLaunchTemplate(conn *ec2.EC2, d *schema.ResourceData) ([]map[str
 	name, defaultVersion, latestVersion, err := getLaunchTemplateSpecification(conn, id)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.Malformed", "") || tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateId.Malformed") || tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateId.NotFound") {
 			// Instance is tagged with non existent template just set it to nil
 			log.Printf("[WARN] Launch template %s not found, removing from state", id)
 			return nil, nil
@@ -3132,7 +3218,7 @@ func getInstanceLaunchTemplate(conn *ec2.EC2, d *schema.ResourceData) ([]map[str
 	}
 
 	if _, err := conn.DescribeLaunchTemplateVersions(dltvi); err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.VersionNotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateId.VersionNotFound") {
 			// Instance is tagged with non existent template version, just don't set it
 			log.Printf("[WARN] Launch template %s version %s not found, removing from state", id, liveVersion)
 			result = append(result, attrs)

@@ -1125,6 +1125,8 @@ func TestAccAutoScalingGroup_warmPool(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.pool_state", "Stopped"),
 					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.min_size", "0"),
 					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.max_group_prepared_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.instance_reuse_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.instance_reuse_policy.0.reuse_on_scale_in", "true"),
 				),
 			},
 			{
@@ -2301,6 +2303,33 @@ func TestAccAutoScalingGroup_launchTempPartitionNum(t *testing.T) {
 					"wait_for_capacity_timeout",
 					"wait_for_elb_capacity",
 				},
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_Destroy_whenProtectedFromScaleIn(t *testing.T) {
+	var group autoscaling.Group
+	rName := fmt.Sprintf("terraform-test-%s", sdkacctest.RandString(10))
+	resourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_DestroyWhenProtectedFromScaleIn_beforeDestroy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					testAccCheckGroupHealthyCapacity(&group, 2),
+					resource.TestCheckResourceAttr(resourceName, "protect_from_scale_in", "true"),
+				),
+			},
+			{
+				Config: testAccGroupConfig_DestroyWhenProtectedFromScaleIn_afterDestroy(),
+				// Reaching this step is good enough, as it indicates the ASG was destroyed successfully.
 			},
 		},
 	})
@@ -4759,6 +4788,9 @@ resource "aws_autoscaling_group" "test" {
     pool_state                  = "Stopped"
     min_size                    = 0
     max_group_prepared_capacity = 2
+    instance_reuse_policy {
+      reuse_on_scale_in = true
+    }
   }
 }
 `
@@ -4772,6 +4804,56 @@ resource "aws_autoscaling_group" "test" {
   min_size             = 1
   desired_capacity     = 1
   launch_configuration = aws_launch_configuration.test.name
+}
+`
+}
+
+func testAccGroupConfig_DestroyWhenProtectedFromScaleIn_beforeDestroy(name string) string {
+	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
+		fmt.Sprintf(`
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_configuration" "test" {
+  image_id      = data.aws_ami.test.id
+  instance_type = "t3.micro"
+}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones    = [data.aws_availability_zones.available.names[0]]
+  name                  = %[1]q
+  max_size              = 2
+  min_size              = 2
+  desired_capacity      = 2
+  protect_from_scale_in = true
+  launch_configuration  = aws_launch_configuration.test.name
+}
+`, name)
+}
+
+func testAccGroupConfig_DestroyWhenProtectedFromScaleIn_afterDestroy() string {
+	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
+		`
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_configuration" "test" {
+  image_id      = data.aws_ami.test.id
+  instance_type = "t3.micro"
 }
 `
 }

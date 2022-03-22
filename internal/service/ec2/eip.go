@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -387,7 +387,7 @@ func resourceEIPUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 			_, err := conn.AssociateAddress(assocOpts)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, "InvalidAllocationID.NotFound", "") {
+				if tfawserr.ErrCodeEquals(err, "InvalidAllocationID.NotFound") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)

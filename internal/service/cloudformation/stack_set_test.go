@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -36,6 +36,7 @@ func TestAccCloudFormationStackSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "administration_role_arn", iamRoleResourceName, "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudformation", regexp.MustCompile(`stackset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "call_as", "SELF"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "execution_role_name", "AWSCloudFormationStackSetExecutionRole"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -52,6 +53,7 @@ func TestAccCloudFormationStackSet_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -107,6 +109,7 @@ func TestAccCloudFormationStackSet_administrationRoleARN(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -145,6 +148,7 @@ func TestAccCloudFormationStackSet_description(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -183,6 +187,7 @@ func TestAccCloudFormationStackSet_executionRoleName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -238,6 +243,7 @@ func TestAccCloudFormationStackSet_name(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -277,6 +283,7 @@ func TestAccCloudFormationStackSet_parameters(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -337,6 +344,7 @@ func TestAccCloudFormationStackSet_Parameters_default(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -389,6 +397,7 @@ func TestAccCloudFormationStackSet_Parameters_noEcho(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -439,6 +448,7 @@ func TestAccCloudFormationStackSet_PermissionModel_serviceManaged(t *testing.T) 
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -470,6 +480,7 @@ func TestAccCloudFormationStackSet_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -525,6 +536,7 @@ func TestAccCloudFormationStackSet_templateBody(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -564,6 +576,7 @@ func TestAccCloudFormationStackSet_templateURL(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -587,9 +600,11 @@ func testAccCheckCloudFormationStackSetExists(resourceName string, v *cloudforma
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
+		callAs := rs.Primary.Attributes["call_as"]
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 
-		output, err := tfcloudformation.FindStackSetByName(conn, rs.Primary.ID)
+		output, err := tfcloudformation.FindStackSetByName(conn, rs.Primary.ID, callAs)
 
 		if err != nil {
 			return err
@@ -609,7 +624,9 @@ func testAccCheckStackSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfcloudformation.FindStackSetByName(conn, rs.Primary.ID)
+		callAs := rs.Primary.Attributes["call_as"]
+
+		_, err := tfcloudformation.FindStackSetByName(conn, rs.Primary.ID, callAs)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -1344,11 +1361,15 @@ EOF
 }
 
 resource "aws_s3_bucket" "test" {
-  acl    = "public-read"
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "public-read"
+}
+
+resource "aws_s3_object" "test" {
   acl    = "public-read"
   bucket = aws_s3_bucket.test.bucket
 
@@ -1362,7 +1383,7 @@ CONTENT
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
-  template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
+  template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
 }
 `, rName, testAccStackSetTemplateBodyVPC(rName+"1"))
 }
@@ -1393,11 +1414,15 @@ EOF
 }
 
 resource "aws_s3_bucket" "test" {
-  acl    = "public-read"
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "public-read"
+}
+
+resource "aws_s3_object" "test" {
   acl    = "public-read"
   bucket = aws_s3_bucket.test.bucket
 
@@ -1411,7 +1436,7 @@ CONTENT
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
-  template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
+  template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
 }
 `, rName, testAccStackSetTemplateBodyVPC(rName+"2"))
 }

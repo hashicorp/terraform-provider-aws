@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -17,6 +17,10 @@ import (
 )
 
 func TestAccRDSProxy_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -59,6 +63,10 @@ func TestAccRDSProxy_basic(t *testing.T) {
 }
 
 func TestAccRDSProxy_name(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxy rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -94,6 +102,10 @@ func TestAccRDSProxy_name(t *testing.T) {
 }
 
 func TestAccRDSProxy_debugLogging(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxy rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -128,6 +140,10 @@ func TestAccRDSProxy_debugLogging(t *testing.T) {
 }
 
 func TestAccRDSProxy_idleClientTimeout(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxy rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -162,6 +178,10 @@ func TestAccRDSProxy_idleClientTimeout(t *testing.T) {
 }
 
 func TestAccRDSProxy_requireTLS(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxy rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -196,6 +216,10 @@ func TestAccRDSProxy_requireTLS(t *testing.T) {
 }
 
 func TestAccRDSProxy_roleARN(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxy rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -231,6 +255,10 @@ func TestAccRDSProxy_roleARN(t *testing.T) {
 }
 
 func TestAccRDSProxy_vpcSecurityGroupIDs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxy rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -268,6 +296,10 @@ func TestAccRDSProxy_vpcSecurityGroupIDs(t *testing.T) {
 }
 
 func TestAccRDSProxy_authDescription(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxy rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -303,6 +335,10 @@ func TestAccRDSProxy_authDescription(t *testing.T) {
 }
 
 func TestAccRDSProxy_authIAMAuth(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxy rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -338,6 +374,10 @@ func TestAccRDSProxy_authIAMAuth(t *testing.T) {
 }
 
 func TestAccRDSProxy_authSecretARN(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxy rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -373,6 +413,10 @@ func TestAccRDSProxy_authSecretARN(t *testing.T) {
 }
 
 func TestAccRDSProxy_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxy rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -409,6 +453,10 @@ func TestAccRDSProxy_tags(t *testing.T) {
 }
 
 func TestAccRDSProxy_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -437,7 +485,7 @@ func testAccDBProxyPreCheck(t *testing.T) {
 	input := &rds.DescribeDBProxiesInput{}
 	_, err := conn.DescribeDBProxies(input)
 
-	if tfawserr.ErrMessageContains(err, "InvalidAction", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidAction") {
 		t.Skipf("skipping acceptance test, RDS Proxy not supported: %s", err)
 	}
 
@@ -467,7 +515,7 @@ func testAccCheckProxyDestroy(s *terraform.State) error {
 			}
 		}
 
-		if !tfawserr.ErrMessageContains(err, rds.ErrCodeDBProxyNotFoundFault, "") {
+		if !tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 			return err
 		}
 	}

@@ -2,13 +2,14 @@ package quicksight_test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -73,6 +74,34 @@ func TestAccQuickSightUser_withInvalidFormattedEmailStillWorks(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "email", "nottarealemailbutworks2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccQuickSightUser_withNamespace(t *testing.T) {
+	key := "QUICKSIGHT_NAMESPACE"
+	namespace := os.Getenv(key)
+	if namespace == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	var user quicksight.User
+	rName := "tfacctest" + sdkacctest.RandString(10)
+	resourceName := "aws_quicksight_user." + rName
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, quicksight.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckQuickSightUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserWithNamespaceConfig(rName, namespace),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQuickSightUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "namespace", namespace),
 				),
 			},
 		},
@@ -155,7 +184,7 @@ func testAccCheckQuickSightUserDestroy(s *terraform.State) error {
 			Namespace:    aws.String(namespace),
 			UserName:     aws.String(userName),
 		})
-		if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 			continue
 		}
 
@@ -206,6 +235,21 @@ resource "aws_quicksight_user" %[1]q {
   user_role      = "READER"
 }
 `, rName, email)
+}
+
+func testAccUserWithNamespaceConfig(rName, namespace string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_quicksight_user" %[1]q {
+  aws_account_id = data.aws_caller_identity.current.account_id
+  user_name      = %[1]q
+  email          = %[2]q
+	namespace      = %[3]q
+  identity_type  = "QUICKSIGHT"
+  user_role      = "READER"
+}
+`, rName, acctest.DefaultEmailAddress, namespace)
 }
 
 func testAccUserConfig(rName string) string {

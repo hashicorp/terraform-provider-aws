@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccCloudWatchLogsSubscriptionFilter_basic(t *testing.T) {
@@ -64,7 +65,7 @@ func TestAccCloudWatchLogsSubscriptionFilter_disappears(t *testing.T) {
 				Config: testAccSubscriptionFilterDestinationARNLambdaConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(resourceName, &filter),
-					testAccCheckCloudwatchLogSubscriptionFilterDisappears(&filter),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchlogs.ResourceSubscriptionFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -91,7 +92,7 @@ func TestAccCloudWatchLogsSubscriptionFilter_Disappears_logGroup(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(resourceName, &filter),
 					testAccCheckCloudWatchLogGroupExists(logGroupResourceName, &logGroup),
-					testAccCheckCloudWatchLogGroupDisappears(&logGroup),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchlogs.ResourceGroup(), logGroupResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -233,21 +234,6 @@ func TestAccCloudWatchLogsSubscriptionFilter_roleARN(t *testing.T) {
 	})
 }
 
-func testAccCheckCloudwatchLogSubscriptionFilterDisappears(filter *cloudwatchlogs.SubscriptionFilter) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
-
-		input := &cloudwatchlogs.DeleteSubscriptionFilterInput{
-			FilterName:   filter.FilterName,
-			LogGroupName: filter.LogGroupName,
-		}
-
-		_, err := conn.DeleteSubscriptionFilter(input)
-
-		return err
-	}
-}
-
 func testAccCheckCloudwatchLogSubscriptionFilterDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 
@@ -259,15 +245,17 @@ func testAccCheckCloudwatchLogSubscriptionFilterDestroy(s *terraform.State) erro
 		logGroupName := rs.Primary.Attributes["log_group_name"]
 		filterName := rs.Primary.Attributes["name"]
 
-		input := cloudwatchlogs.DescribeSubscriptionFiltersInput{
-			LogGroupName:     aws.String(logGroupName),
-			FilterNamePrefix: aws.String(filterName),
+		_, err := tfcloudwatchlogs.FindSubscriptionFilter(conn, logGroupName, filterName)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		_, err := conn.DescribeSubscriptionFilters(&input)
-		if err == nil {
-			return fmt.Errorf("SubscriptionFilter still exists")
+		if err != nil {
+			return err
 		}
+
+		return fmt.Errorf("Subscription Filter still exists")
 
 	}
 
@@ -291,26 +279,13 @@ func testAccCheckSubscriptionFilterExists(n string, filter *cloudwatchlogs.Subsc
 		logGroupName := rs.Primary.Attributes["log_group_name"]
 		filterName := rs.Primary.Attributes["name"]
 
-		input := cloudwatchlogs.DescribeSubscriptionFiltersInput{
-			LogGroupName:     aws.String(logGroupName),
-			FilterNamePrefix: aws.String(filterName),
-		}
+		sub, err := tfcloudwatchlogs.FindSubscriptionFilter(conn, logGroupName, filterName)
 
-		resp, err := conn.DescribeSubscriptionFilters(&input)
 		if err != nil {
 			return err
 		}
 
-		for _, sf := range resp.SubscriptionFilters {
-			if aws.StringValue(sf.FilterName) == filterName {
-				*filter = *sf
-				break
-			}
-		}
-
-		if filter == nil {
-			return fmt.Errorf("SubscriptionFilter not found")
-		}
+		*filter = *sub
 
 		return nil
 	}
@@ -453,9 +428,13 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  acl           = "private"
   bucket        = %[1]q
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 `, rName)
 }

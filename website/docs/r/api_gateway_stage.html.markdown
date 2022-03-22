@@ -73,7 +73,7 @@ resource "aws_api_gateway_method_settings" "example" {
 
 API Gateway provides the ability to [enable CloudWatch API logging](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html). To manage the CloudWatch Log Group when this feature is enabled, the [`aws_cloudwatch_log_group` resource](/docs/providers/aws/r/cloudwatch_log_group.html) can be used where the name matches the API Gateway naming convention. If the CloudWatch Log Group previously exists, the [`aws_cloudwatch_log_group` resource can be imported into Terraform](/docs/providers/aws/r/cloudwatch_log_group.html#import) as a one time operation and recreation of the environment can occur without import.
 
--> The below configuration uses [`depends_on`](https://www.terraform.io/docs/configuration/meta-arguments/depends_on.html) to prevent ordering issues with API Gateway automatically creating the log group first and a variable for naming consistency. Other ordering and naming methodologies may be more appropriate for your environment.
+-> The below configuration uses [`depends_on`](https://www.terraform.io/language/meta-arguments/depends_on) to prevent ordering issues with API Gateway automatically creating the log group first and a variable for naming consistency. Other ordering and naming methodologies may be more appropriate for your environment.
 
 ```terraform
 variable "stage_name" {
@@ -106,23 +106,28 @@ The following arguments are supported:
 * `rest_api_id` - (Required) The ID of the associated REST API
 * `stage_name` - (Required) The name of the stage
 * `deployment_id` - (Required) The ID of the deployment that the stage points to
-* `access_log_settings` - (Optional) Enables access logs for the API stage. Detailed below.
+* `access_log_settings` - (Optional) Enables access logs for the API stage. See [Access Log Settings](#access-log-settings) below.
 * `cache_cluster_enabled` - (Optional) Specifies whether a cache cluster is enabled for the stage
 * `cache_cluster_size` - (Optional) The size of the cache cluster for the stage, if enabled. Allowed values include `0.5`, `1.6`, `6.1`, `13.5`, `28.4`, `58.2`, `118` and `237`.
+* `canary_settings` - (Optional) Configuration settings of a canary deployment. See [Canary Settings](#canary-settings) below.
 * `client_certificate_id` - (Optional) The identifier of a client certificate for the stage.
-* `description` - (Optional) The description of the stage
+* `description` - (Optional) The description of the stage.
 * `documentation_version` - (Optional) The version of the associated API documentation
 * `variables` - (Optional) A map that defines the stage variables
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `xray_tracing_enabled` - (Optional) Whether active tracing with X-ray is enabled. Defaults to `false`.
 
-### Nested Blocks
-
-#### `access_log_settings`
+### Access Log Settings
 
 * `destination_arn` - (Required) The Amazon Resource Name (ARN) of the CloudWatch Logs log group or Kinesis Data Firehose delivery stream to receive access logs. If you specify a Kinesis Data Firehose delivery stream, the stream name must begin with `amazon-apigateway-`. Automatically removes trailing `:*` if present.
 * `format` - (Required) The formatting and values recorded in the logs.
 For more information on configuring the log format rules visit the AWS [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html)
+
+### Canary Settings
+
+* `percent_traffic` - (Optional) The percent `0.0` - `100.0` of traffic to divert to the canary deployment.
+* `stage_variable_overrides` - (Optional) A map of overridden stage `variables` (including new variables) for the canary deployment.
+* `use_stage_cache` - (Optional) Whether the canary deployment uses the stage cache. Defaults to false.
 
 ## Attributes Reference
 
@@ -136,6 +141,7 @@ In addition to all arguments above, the following attributes are exported:
   when allowing API Gateway to invoke a Lambda function,
   e.g., `arn:aws:execute-api:eu-west-2:123456789012:z4675bid1j/prod`
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `web_acl_arn` - The ARN of the WebAcl associated with the Stage.
 
 ## Import
 

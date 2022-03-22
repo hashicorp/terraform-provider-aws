@@ -15,16 +15,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {
-	resource.AddTestSweepers("aws_s3_bucket_object", &resource.Sweeper{
-		Name: "aws_s3_bucket_object",
-		F:    sweepBucketObjects,
+	resource.AddTestSweepers("aws_s3_object", &resource.Sweeper{
+		Name: "aws_s3_object",
+		F:    sweepObjects,
 	})
 
 	resource.AddTestSweepers("aws_s3_bucket", &resource.Sweeper{
@@ -32,13 +32,13 @@ func init() {
 		F:    sweepBuckets,
 		Dependencies: []string{
 			"aws_s3_access_point",
-			"aws_s3_bucket_object",
+			"aws_s3_object",
 			"aws_s3control_multi_region_access_point",
 		},
 	})
 }
 
-func sweepBucketObjects(region string) error {
+func sweepObjects(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -50,16 +50,16 @@ func sweepBucketObjects(region string) error {
 	output, err := conn.ListBuckets(input)
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping S3 Bucket Objects sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping S3 Objects sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing S3 Bucket Objects: %s", err)
+		return fmt.Errorf("error listing S3 Objects: %s", err)
 	}
 
 	if len(output.Buckets) == 0 {
-		log.Print("[DEBUG] No S3 Bucket Objects to sweep")
+		log.Print("[DEBUG] No S3 Objects to sweep")
 		return nil
 	}
 
@@ -67,7 +67,7 @@ func sweepBucketObjects(region string) error {
 		bucketName := aws.StringValue(bucket.Name)
 
 		hasPrefix := false
-		prefixes := []string{"mybucket.", "mylogs.", "tf-acc", "tf-object-test", "tf-test", "tf-emr-bootstrap"}
+		prefixes := []string{"tf-acc", "tf-object-test", "tf-test", "tf-emr-bootstrap"}
 
 		for _, prefix := range prefixes {
 			if strings.HasPrefix(bucketName, prefix) {
@@ -93,7 +93,7 @@ func sweepBucketObjects(region string) error {
 			continue
 		}
 
-		objectLockEnabled, err := bucketObjectLockEnabled(conn, bucketName)
+		objectLockEnabled, err := objectLockEnabled(conn, bucketName)
 
 		if err != nil {
 			log.Printf("[ERROR] Error getting S3 Bucket (%s) Object Lock: %s", bucketName, err)
@@ -141,7 +141,7 @@ func sweepBuckets(region string) error {
 		name := aws.StringValue(bucket.Name)
 
 		sweepable := false
-		prefixes := []string{"mybucket.", "mylogs.", "tf-acc", "tf-object-test", "tf-test", "tf-emr-bootstrap", "terraform-remote-s3-test"}
+		prefixes := []string{"tf-acc", "tf-object-test", "tf-test", "tf-emr-bootstrap", "terraform-remote-s3-test"}
 
 		for _, prefix := range prefixes {
 			if strings.HasPrefix(name, prefix) {
@@ -179,11 +179,11 @@ func sweepBuckets(region string) error {
 		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.DeleteBucket(input)
 
-			if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
+			if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 				return nil
 			}
 
-			if tfawserr.ErrMessageContains(err, "BucketNotEmpty", "") {
+			if tfawserr.ErrCodeEquals(err, "BucketNotEmpty") {
 				return resource.RetryableError(err)
 			}
 
@@ -217,14 +217,14 @@ func bucketRegion(conn *s3.S3, bucket string) (string, error) {
 	return region, nil
 }
 
-func bucketObjectLockEnabled(conn *s3.S3, bucket string) (bool, error) {
+func objectLockEnabled(conn *s3.S3, bucket string) (bool, error) {
 	input := &s3.GetObjectLockConfigurationInput{
 		Bucket: aws.String(bucket),
 	}
 
 	output, err := conn.GetObjectLockConfiguration(input)
 
-	if tfawserr.ErrMessageContains(err, "ObjectLockConfigurationNotFoundError", "") {
+	if tfawserr.ErrCodeEquals(err, "ObjectLockConfigurationNotFoundError") {
 		return false, nil
 	}
 

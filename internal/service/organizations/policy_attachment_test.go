@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -145,11 +145,11 @@ func testAccCheckPolicyAttachmentDestroy(s *terraform.State) error {
 			return !lastPage
 		})
 
-		if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
 			continue
 		}
 
-		if tfawserr.ErrMessageContains(err, organizations.ErrCodeTargetNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeTargetNotFoundException) {
 			continue
 		}
 

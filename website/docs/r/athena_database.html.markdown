@@ -13,13 +13,13 @@ Provides an Athena database.
 ## Example Usage
 
 ```terraform
-resource "aws_s3_bucket" "hoge" {
-  bucket = "hoge"
+resource "aws_s3_bucket" "example" {
+  bucket = "example"
 }
 
-resource "aws_athena_database" "hoge" {
+resource "aws_athena_database" "example" {
   name   = "database_name"
-  bucket = aws_s3_bucket.hoge.bucket
+  bucket = aws_s3_bucket.example.bucket
 }
 ```
 
@@ -27,17 +27,24 @@ resource "aws_athena_database" "hoge" {
 
 The following arguments are supported:
 
+* `bucket` - (Required) Name of S3 bucket to save the results of the query execution.
 * `name` - (Required) Name of the database to create.
-* `bucket` - (Required) Name of s3 bucket to save the results of the query execution.
-* `encryption_configuration` - (Optional) The encryption key block AWS Athena uses to decrypt the data in S3, such as an AWS Key Management Service (AWS KMS) key. An `encryption_configuration` block is documented below.
+* `acl_configuration` - (Optional) Indicates that an Amazon S3 canned ACL should be set to control ownership of stored query results. See [ACL Configuration](#acl-configuration) below.
+* `comment` - (Optional) Description of the database.
+* `encryption_configuration` - (Optional) The encryption key block AWS Athena uses to decrypt the data in S3, such as an AWS Key Management Service (AWS KMS) key. See [Encryption Configuration](#encryption-configuration) below.
+* `expected_bucket_owner` - (Optional) The AWS account ID that you expect to be the owner of the Amazon S3 bucket.
 * `force_destroy` - (Optional, Default: false) A boolean that indicates all tables should be deleted from the database so that the database can be destroyed without error. The tables are *not* recoverable.
 
-An `encryption_configuration` block supports the following arguments:
+### ACL Configuration
+
+* `s3_acl_option` - (Required) The Amazon S3 canned ACL that Athena should specify when storing query results. Valid value is `BUCKET_OWNER_FULL_CONTROL`.
+
+~> **NOTE:** When Athena queries are executed, result files may be created in the specified bucket. Consider using `force_destroy` on the bucket too in order to avoid any problems when destroying the bucket.  
+
+### Encryption Configuration
 
 * `encryption_option` - (Required) The type of key; one of `SSE_S3`, `SSE_KMS`, `CSE_KMS`
 * `kms_key` - (Optional) The KMS key ARN or ID; required for key types `SSE_KMS` and `CSE_KMS`.
-
-~> **NOTE:** When Athena queries are executed, result files may be created in the specified bucket. Consider using `force_destroy` on the bucket too in order to avoid any problems when destroying the bucket.  
 
 ## Attributes Reference
 

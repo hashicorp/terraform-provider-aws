@@ -50,6 +50,8 @@ service/apigatewayv2:
   - '((\*|-) ?`?|(data|resource) "?)aws_apigatewayv2_'
 service/appconfig:
   - '((\*|-) ?`?|(data|resource) "?)aws_appconfig_'
+service/appintegrations:
+  - '((\*|-) ?`?|(data|resource) "?)aws_appintegrations_'
 service/applicationautoscaling:
   - '((\*|-) ?`?|(data|resource) "?)aws_appautoscaling_'
 service/applicationdiscoveryservice:
@@ -100,6 +102,8 @@ service/cloudwatch:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_(?!(event_|log_|query_))'
 service/cloudwatchlogs:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_(log_|query_)'
+service/cloudwatchrum:
+  - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatchrum_'
 service/codeartifact:
   - '((\*|-) ?`?|(data|resource) "?)aws_codeartifact_'
 service/codebuild:
@@ -192,6 +196,8 @@ service/globalaccelerator:
   - '((\*|-) ?`?|(data|resource) "?)aws_globalaccelerator_'
 service/glue:
   - '((\*|-) ?`?|(data|resource) "?)aws_glue_'
+service/grafana:
+  - '((\*|-) ?`?|(data|resource) "?)aws_grafana_'
 service/greengrass:
   - '((\*|-) ?`?|(data|resource) "?)aws_greengrass_'
 service/guardduty:
@@ -212,6 +218,10 @@ service/iotevents:
   - '((\*|-) ?`?|(data|resource) "?)aws_iotevents_'
 service/kafka:
   - '((\*|-) ?`?|(data|resource) "?)aws_msk_'
+service/kafkaconnect:
+  - '((\*|-) ?`?|(data|resource) "?)aws_mskconnect_'
+service/keyspaces:
+  - '((\*|-) ?`?|(data|resource) "?)aws_keyspaces_'
 service/kinesis:
   - '((\*|-) ?`?|(data|resource) "?)aws_kinesis_stream'
 service/kinesisanalytics:
@@ -301,7 +311,7 @@ service/route53:
 service/route53domains:
   - '((\*|-) ?`?|(data|resource) "?)aws_route53domains_'
 service/route53recoverycontrolconfig:
-  - '((\*|-) ?`?|(data|resource) "?)aws_route53recoverycontrolconfig_'  
+  - '((\*|-) ?`?|(data|resource) "?)aws_route53recoverycontrolconfig_'
 service/route53recoveryreadiness:
   - '((\*|-) ?`?|(data|resource) "?)aws_route53recoveryreadiness_'
 service/route53resolver:

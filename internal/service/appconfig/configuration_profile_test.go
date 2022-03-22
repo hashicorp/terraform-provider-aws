@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appconfig"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -31,13 +31,14 @@ func TestAccAppConfigConfigurationProfile_basic(t *testing.T) {
 				Config: testAccConfigurationProfileNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`application/[a-z0-9]{4,7}/configurationprofile/[a-z0-9]{4,7}`)),
 					resource.TestCheckResourceAttrPair(resourceName, "application_id", appResourceName, "id"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`application/[a-z0-9]{4,7}/configurationprofile/[a-z0-9]{4,7}`)),
 					resource.TestMatchResourceAttr(resourceName, "configuration_profile_id", regexp.MustCompile(`[a-z0-9]{4,7}`)),
 					resource.TestCheckResourceAttr(resourceName, "location_uri", "hosted"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "validator.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "AWS.Freeform"),
+					resource.TestCheckResourceAttr(resourceName, "validator.#", "0"),
 				),
 			},
 			{

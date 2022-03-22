@@ -56,6 +56,8 @@ func testAccServer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "SERVICE_MANAGED"),
 					resource.TestCheckResourceAttr(resourceName, "invocation_role", ""),
 					resource.TestCheckResourceAttr(resourceName, "logging_role", ""),
+					resource.TestCheckResourceAttr(resourceName, "post_authentication_login_banner", ""),
+					resource.TestCheckResourceAttr(resourceName, "pre_authentication_login_banner", ""),
 					resource.TestCheckResourceAttr(resourceName, "protocols.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "protocols.*", "SFTP"),
 					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-2018-11"),
@@ -688,7 +690,7 @@ func testAccServer_protocols(t *testing.T) {
 				Config: testAccServerRootCAConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckACMPCACertificateAuthorityExists(acmCAResourceName, &ca),
-					acctest.CheckACMPCACertificateAuthorityActivateCA(&ca),
+					acctest.CheckACMPCACertificateAuthorityActivateRootCA(&ca),
 				),
 			},
 			{
@@ -929,6 +931,34 @@ func testAccServer_lambdaFunction(t *testing.T) {
 					testAccCheckServerExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "AWS_LAMBDA"),
 					resource.TestCheckResourceAttrPair(resourceName, "function", "aws_lambda_function.test", "arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
+func testAccTransferServer_AuthenticationLoginBanners(t *testing.T) {
+	var conf transfer.DescribedServer
+	resourceName := "aws_transfer_server.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerDisplayBannersConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "post_authentication_login_banner", "This system is for the use of authorized users only - post"),
+					resource.TestCheckResourceAttr(resourceName, "pre_authentication_login_banner", "This system is for the use of authorized users only - pre"),
 				),
 			},
 			{
@@ -1191,6 +1221,15 @@ resource "aws_api_gateway_deployment" "test" {
 func testAccServerBasicConfig() string {
 	return `
 resource "aws_transfer_server" "test" {}
+`
+}
+
+func testAccServerDisplayBannersConfig() string {
+	return `
+resource "aws_transfer_server" "test" {
+  pre_authentication_login_banner  = "This system is for the use of authorized users only - pre"
+  post_authentication_login_banner = "This system is for the use of authorized users only - post"
+}
 `
 }
 

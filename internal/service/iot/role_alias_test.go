@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -42,7 +42,7 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 					testAccCheckRoleAliasExists(resourceName),
 					testAccCheckRoleAliasExists(resourceName2),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("rolealias/%s", alias)),
-					resource.TestCheckResourceAttr(resourceName, "credential_duration", "1800"),
+					resource.TestCheckResourceAttr(resourceName, "credential_duration", "43200"),
 				),
 			},
 			{
@@ -88,7 +88,7 @@ func testAccCheckRoleAliasDestroy(s *terraform.State) error {
 
 		_, err := tfiot.GetRoleAliasDescription(conn, rs.Primary.ID)
 
-		if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 			continue
 		}
 
@@ -175,7 +175,7 @@ EOF
 resource "aws_iot_role_alias" "ra" {
   alias               = "%s"
   role_arn            = aws_iam_role.role.arn
-  credential_duration = 1800
+  credential_duration = 43200
 }
 
 resource "aws_iot_role_alias" "ra2" {

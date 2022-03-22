@@ -17,6 +17,9 @@ generators:
   - 'internal/**/*_gen_test.go'
   - 'internal/**/generate.go'
   - 'internal/generate/**/*'
+github_actions:
+  - '.github/*.yml'
+  - '.github/workflows/*.yml'
 linter:
   - '.github/workflows/acctest-terraform-lint.yml'
   - '.github/workflows/terraform_provider.yml'
@@ -77,6 +80,9 @@ service/apigatewayv2:
 service/appconfig:
   - 'internal/service/appconfig/**/*'
   - 'website/**/appconfig_*'
+service/appintegrations:
+  - 'internal/service/appintegrations/**/*'
+  - 'website/**/appintegrations_*'
 service/applicationautoscaling:
   - 'internal/service/appautoscaling/**/*'
   - 'website/**/appautoscaling_*'
@@ -153,6 +159,9 @@ service/cloudwatchlogs:
   - 'internal/service/cloudwatchlogs/**/*'
   - 'website/**/cloudwatch_log_*'
   - 'website/**/cloudwatch_query_definition*'
+service/cloudwatchrum:
+  - 'internal/service/cloudwatchrum/**/*'
+  - 'website/**/cloudwatchrum_*'
 service/codeartifact:
   - 'internal/service/codeartifact/**/*'
   - 'website/**/codeartifact_*'
@@ -337,6 +346,9 @@ service/globalaccelerator:
 service/glue:
   - 'internal/service/glue/**/*'
   - 'website/**/glue_*'
+service/grafana:
+  - 'internal/service/grafana/**/*'
+  - 'website/**/grafana_*'
 service/greengrass:
   - 'internal/service/greengrass/**/*'
   - 'website/**/greengrass_*'
@@ -367,6 +379,12 @@ service/iotevents:
 service/kafka:
   - 'internal/service/kafka/**/*'
   - 'website/**/msk_*'
+service/kafkaconnect:
+  - 'internal/service/kafkaconnect/**/*'
+  - 'website/**/mskconnect_*'
+service/keyspaces:
+  - 'internal/service/keyspaces/**/*'
+  - 'website/**/keyspaces_*'
 service/kinesis:
   - 'internal/service/kinesis/**/*'
   - '*_aws_kinesis_stream*'

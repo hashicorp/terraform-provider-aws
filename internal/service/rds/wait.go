@@ -8,8 +8,6 @@ import (
 )
 
 const (
-	rdsClusterInitiateUpgradeTimeout = 5 * time.Minute
-
 	dbClusterRoleAssociationCreatedTimeout = 5 * time.Minute
 	dbClusterRoleAssociationDeletedTimeout = 5 * time.Minute
 )
@@ -54,12 +52,13 @@ func waitEventSubscriptionDeleted(conn *rds.RDS, id string, timeout time.Duratio
 
 func waitEventSubscriptionUpdated(conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{EventSubscriptionStatusModifying},
-		Target:     []string{EventSubscriptionStatusActive},
-		Refresh:    statusEventSubscription(conn, id),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
+		Pending:                   []string{EventSubscriptionStatusModifying},
+		Target:                    []string{EventSubscriptionStatusActive},
+		Refresh:                   statusEventSubscription(conn, id),
+		Timeout:                   timeout,
+		MinTimeout:                10 * time.Second,
+		Delay:                     30 * time.Second,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -154,17 +153,19 @@ func waitDBInstanceDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rd
 			InstanceStatusCreating,
 			InstanceStatusDeleting,
 			InstanceStatusIncompatibleParameters,
+			InstanceStatusIncompatibleRestore,
 			InstanceStatusModifying,
 			InstanceStatusStarting,
 			InstanceStatusStopping,
 			InstanceStatusStorageFull,
 			InstanceStatusStorageOptimization,
 		},
-		Target:     []string{},
-		Refresh:    statusDBInstance(conn, id),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
+		Target:                    []string{},
+		Refresh:                   statusDBInstance(conn, id),
+		Timeout:                   timeout,
+		MinTimeout:                10 * time.Second,
+		Delay:                     30 * time.Second,
+		ContinuousTargetOccurence: 3,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

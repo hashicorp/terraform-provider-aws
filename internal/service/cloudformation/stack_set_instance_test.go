@@ -46,6 +46,7 @@ func TestAccCloudFormationStackSetInstance_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"retain_stack",
+					"call_as",
 				},
 			},
 		},
@@ -127,6 +128,7 @@ func TestAccCloudFormationStackSetInstance_parameterOverrides(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"retain_stack",
+					"call_as",
 				},
 			},
 			{
@@ -190,6 +192,7 @@ func TestAccCloudFormationStackSetInstance_retainStack(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"retain_stack",
+					"call_as",
 				},
 			},
 			{
@@ -271,6 +274,8 @@ func testAccCheckCloudFormationStackSetInstanceExists(resourceName string, v *cl
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
+		callAs := rs.Primary.Attributes["call_as"]
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 
 		stackSetName, accountID, region, err := tfcloudformation.StackSetInstanceParseResourceID(rs.Primary.ID)
@@ -279,7 +284,7 @@ func testAccCheckCloudFormationStackSetInstanceExists(resourceName string, v *cl
 			return err
 		}
 
-		output, err := tfcloudformation.FindStackInstanceByName(conn, stackSetName, accountID, region)
+		output, err := tfcloudformation.FindStackInstanceByName(conn, stackSetName, accountID, region, callAs)
 
 		if err != nil {
 			return err
@@ -315,13 +320,15 @@ func testAccCheckStackSetInstanceDestroy(s *terraform.State) error {
 			continue
 		}
 
+		callAs := rs.Primary.Attributes["call_as"]
+
 		stackSetName, accountID, region, err := tfcloudformation.StackSetInstanceParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		_, err = tfcloudformation.FindStackInstanceByName(conn, stackSetName, accountID, region)
+		_, err = tfcloudformation.FindStackInstanceByName(conn, stackSetName, accountID, region, callAs)
 
 		if tfresource.NotFound(err) {
 			continue

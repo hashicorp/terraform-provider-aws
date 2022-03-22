@@ -6,12 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfathena "github.com/hashicorp/terraform-provider-aws/internal/service/athena"
 )
 
 func TestAccAthenaWorkGroup_basic(t *testing.T) {
@@ -53,6 +54,38 @@ func TestAccAthenaWorkGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccAthenaWorkGroup_aclConfig(t *testing.T) {
+	var workgroup1 athena.WorkGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_athena_workgroup.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckWorkGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaWorkGroupConfigConfigurationResultConfigurationAclConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(resourceName, &workgroup1),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "athena", fmt.Sprintf("workgroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.acl_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.acl_configuration.0.s3_acl_option", "BUCKET_OWNER_FULL_CONTROL"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
 func TestAccAthenaWorkGroup_disappears(t *testing.T) {
 	var workgroup1 athena.WorkGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -68,7 +101,7 @@ func TestAccAthenaWorkGroup_disappears(t *testing.T) {
 				Config: testAccAthenaWorkGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup1),
-					testAccCheckWorkGroupDisappears(&workgroup1),
+					acctest.CheckResourceDisappears(acctest.Provider, tfathena.ResourceWorkGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -667,20 +700,6 @@ func testAccCheckWorkGroupExists(name string, workgroup *athena.WorkGroup) resou
 	}
 }
 
-func testAccCheckWorkGroupDisappears(workgroup *athena.WorkGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
-
-		input := &athena.DeleteWorkGroupInput{
-			WorkGroup: workgroup.Name,
-		}
-
-		_, err := conn.DeleteWorkGroup(input)
-
-		return err
-	}
-}
-
 func testAccAthenaWorkGroupConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
@@ -798,6 +817,22 @@ resource "aws_athena_workgroup" "test" {
   }
 }
 `, rName, bucketName)
+}
+
+func testAccAthenaWorkGroupConfigConfigurationResultConfigurationAclConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+
+  configuration {
+    result_configuration {
+      acl_configuration {
+        s3_acl_option = "BUCKET_OWNER_FULL_CONTROL"
+      }
+    }
+  }
+}
+`, rName)
 }
 
 func testAccAthenaWorkGroupConfigConfigurationResultConfigurationEncryptionConfigurationEncryptionOptionSseS3(rName string) string {

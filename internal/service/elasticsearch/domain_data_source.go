@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceDomain() *schema.Resource {
@@ -329,20 +329,10 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticsearchConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	reqDescribeDomain := &elasticsearchservice.DescribeElasticsearchDomainInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
-	}
-
-	respDescribeDomain, err := conn.DescribeElasticsearchDomain(reqDescribeDomain)
+	ds, err := FindDomainByName(conn, d.Get("domain_name").(string))
 	if err != nil {
-		return fmt.Errorf("error querying elasticsearch_domain: %w", err)
-	}
-
-	if respDescribeDomain.DomainStatus == nil {
 		return fmt.Errorf("your query returned no results")
 	}
-
-	ds := respDescribeDomain.DomainStatus
 
 	reqDescribeDomainConfig := &elasticsearchservice.DescribeElasticsearchDomainConfigInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
@@ -369,7 +359,7 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("access_policies", policies)
 	}
 
-	if err := d.Set("advanced_options", verify.PointersMapToStringList(ds.AdvancedOptions)); err != nil {
+	if err := d.Set("advanced_options", flex.PointersMapToStringList(ds.AdvancedOptions)); err != nil {
 		return fmt.Errorf("error setting advanced_options: %w", err)
 	}
 
@@ -396,11 +386,11 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting encryption_at_rest: %w", err)
 	}
 
-	if err := d.Set("node_to_node_encryption", flattenESNodeToNodeEncryptionOptions(ds.NodeToNodeEncryptionOptions)); err != nil {
+	if err := d.Set("node_to_node_encryption", flattenNodeToNodeEncryptionOptions(ds.NodeToNodeEncryptionOptions)); err != nil {
 		return fmt.Errorf("error setting node_to_node_encryption: %w", err)
 	}
 
-	if err := d.Set("cluster_config", flattenESClusterConfig(ds.ElasticsearchClusterConfig)); err != nil {
+	if err := d.Set("cluster_config", flattenClusterConfig(ds.ElasticsearchClusterConfig)); err != nil {
 		return fmt.Errorf("error setting cluster_config: %w", err)
 	}
 
@@ -413,7 +403,7 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error setting vpc_options: %w", err)
 		}
 
-		endpoints := verify.PointersMapToStringList(ds.Endpoints)
+		endpoints := flex.PointersMapToStringList(ds.Endpoints)
 		if err := d.Set("endpoint", endpoints["vpc"]); err != nil {
 			return fmt.Errorf("error setting endpoint: %w", err)
 		}
@@ -431,18 +421,8 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if ds.LogPublishingOptions != nil {
-		m := make([]map[string]interface{}, 0)
-		for k, val := range ds.LogPublishingOptions {
-			mm := map[string]interface{}{}
-			mm["log_type"] = k
-			if val.CloudWatchLogsLogGroupArn != nil {
-				mm["cloudwatch_log_group_arn"] = aws.StringValue(val.CloudWatchLogsLogGroupArn)
-			}
-			mm["enabled"] = aws.BoolValue(val.Enabled)
-			m = append(m, mm)
-		}
-		d.Set("log_publishing_options", m)
+	if err := d.Set("log_publishing_options", flattenLogPublishingOptions(ds.LogPublishingOptions)); err != nil {
+		return fmt.Errorf("error setting log_publishing_options: %w", err)
 	}
 
 	d.Set("elasticsearch_version", ds.ElasticsearchVersion)

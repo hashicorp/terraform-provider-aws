@@ -22,8 +22,9 @@ func DataSourceReplicationGroup() *schema.Resource {
 				ValidateFunc: validateReplicationGroupID,
 			},
 			"replication_group_description": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "Use description instead",
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -35,6 +36,10 @@ func DataSourceReplicationGroup() *schema.Resource {
 			},
 			"automatic_failover_enabled": {
 				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"port": {
@@ -53,9 +58,18 @@ func DataSourceReplicationGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"number_cache_clusters": {
+			"num_cache_clusters": {
 				Type:     schema.TypeInt,
 				Computed: true,
+			},
+			"num_node_groups": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"number_cache_clusters": {
+				Type:       schema.TypeInt,
+				Computed:   true,
+				Deprecated: "Use num_cache_clusters instead",
 			},
 			"member_clusters": {
 				Type:     schema.TypeSet,
@@ -68,6 +82,10 @@ func DataSourceReplicationGroup() *schema.Resource {
 			},
 			"node_type": {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"replicas_per_node_group": {
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"snapshot_window": {
@@ -93,6 +111,7 @@ func dataSourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.SetId(aws.StringValue(rg.ReplicationGroupId))
+	d.Set("description", rg.Description)
 	d.Set("replication_group_description", rg.Description)
 	d.Set("arn", rg.ARN)
 	d.Set("auth_token_enabled", rg.AuthTokenEnabled)
@@ -129,11 +148,15 @@ func dataSourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("primary_endpoint_address", rg.NodeGroups[0].PrimaryEndpoint.Address)
 		d.Set("reader_endpoint_address", rg.NodeGroups[0].ReaderEndpoint.Address)
 	}
+
+	d.Set("num_cache_clusters", len(rg.MemberClusters))
 	d.Set("number_cache_clusters", len(rg.MemberClusters))
 	if err := d.Set("member_clusters", flex.FlattenStringList(rg.MemberClusters)); err != nil {
 		return fmt.Errorf("error setting member_clusters: %w", err)
 	}
 	d.Set("node_type", rg.CacheNodeType)
+	d.Set("num_node_groups", len(rg.NodeGroups))
+	d.Set("replicas_per_node_group", len(rg.NodeGroups[0].NodeGroupMembers)-1)
 	d.Set("snapshot_window", rg.SnapshotWindow)
 	d.Set("snapshot_retention_limit", rg.SnapshotRetentionLimit)
 	return nil

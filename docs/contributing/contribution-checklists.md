@@ -29,7 +29,7 @@ each type of contribution.
 
 ## Documentation Update
 
-The [Terraform AWS Provider's website source][website] is in this repository
+The [Terraform AWS Provider's website source](../../website) is in this repository
 along with the code and tests. Below are some common items that will get
 flagged during documentation reviews:
 
@@ -60,9 +60,6 @@ guidelines.
 - [ ] __Documentation updates__: If your code makes any changes that need to
    be documented, you should include those doc updates in the same PR. This
    includes things like new resource attributes or changes in default values.
-   The [Terraform website][website] source is in this repo and includes
-   instructions for getting a local copy of the site up and running if you'd
-   like to preview your changes.
 - [ ] __Well-formed Code__: Do your best to follow existing conventions you
    see in the codebase, and ensure your code is formatted with `go fmt`.
    The PR reviewers can help out on this front, and may provide comments with
@@ -151,7 +148,7 @@ func TestAccServiceThing_nameGenerated(t *testing.T) {
         Check: resource.ComposeTestCheckFunc(
           testAccCheckThingExists(resourceName, &thing),
           create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
-          resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+          resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
         ),
       },
       // If the resource supports import:
@@ -307,7 +304,7 @@ More details about this code generation, including fixes for potential error mes
   func ResourceCluster() *schema.Resource {
     return &schema.Resource{
       /* ... other configuration ... */
-      CustomizeDiff: SetTagsDiff,
+      CustomizeDiff: verify.SetTagsDiff,
     }
   }
   ```
@@ -335,7 +332,7 @@ More details about this code generation, including fixes for potential error mes
   
   input := &eks.CreateClusterInput{
     /* ... other configuration ... */
-    Tags: Tags(tags.IgnoreAws()),
+    Tags: Tags(tags.IgnoreAWS()),
   }
   ```
 
@@ -351,7 +348,7 @@ More details about this code generation, including fixes for potential error mes
   }
 
   if len(tags) > 0 {
-    input.Tags = Tags(tags.IgnoreAws())
+    input.Tags = Tags(tags.IgnoreAWS())
   }
   ```
 
@@ -364,7 +361,7 @@ More details about this code generation, including fixes for potential error mes
   
   if len(tags) > 0 {
     if err := UpdateTags(conn, d.Id(), nil, tags); err != nil {
-      return fmt.Errorf("error adding Elasticsearch Cluster (%s) tags: %s", d.Id(), err)
+      return fmt.Errorf("error adding Elasticsearch Cluster (%s) tags: %w", d.Id(), err)
     }
   }
   ```
@@ -391,7 +388,7 @@ More details about this code generation, including fixes for potential error mes
   
   /* ... other d.Set(...) logic ... */
 
-  tags := keyvaluetags.EksKeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+  tags := keyvaluetags.EksKeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
   
   if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
     return fmt.Errorf("error setting tags: %w", err)
@@ -414,10 +411,10 @@ More details about this code generation, including fixes for potential error mes
   tags, err := keyvaluetags.AthenaListTags(conn, arn.String())
 
   if err != nil {
-    return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+    return fmt.Errorf("error listing tags for resource (%s): %w", arn, err)
   }
 
-  tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+  tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
   
   if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
     return fmt.Errorf("error setting tags: %w", err)
@@ -434,7 +431,7 @@ More details about this code generation, including fixes for potential error mes
   if d.HasChange("tags_all") {
     o, n := d.GetChange("tags_all")
     if err := keyvaluetags.EksUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-      return fmt.Errorf("error updating tags: %s", err)
+      return fmt.Errorf("error updating tags: %w", err)
     }
   }
   ```
@@ -451,7 +448,7 @@ More details about this code generation, including fixes for potential error mes
     }
 
     if _, err := conn.CreatePolicyVersion(request); err != nil {
-        return fmt.Errorf("error updating IAM policy %s: %w", d.Id(), err)
+        return fmt.Errorf("error updating IAM policy (%s): %w", d.Id(), err)
     }
   }
   ```
@@ -586,7 +583,7 @@ More details about this code generation can be found in the [namevaluesfilters d
 
 ### Resource Filter Code Implementation
 
-- In the resource's equivalent data source Go file (e.g., `internal/service/ec2/internet_gateway_data_source.go`), add the following Go import: `"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"`
+- In the resource's equivalent data source Go file (e.g., `internal/service/ec2/internet_gateway_data_source.go`), add the following Go import: `"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"`
 - In the resource schema, add `"filter": namevaluesfilters.Schema(),`
 - Implement the logic to build the list of filters:
 
@@ -598,7 +595,7 @@ filters := namevaluesfilters.New(map[string]string{
 	"internet-gateway-id": d.Get("internet_gateway_id").(string),
 })
 // Add filters based on keyvalue tags (N.B. Not applicable to all AWS services that support filtering)
-filters.Add(namevaluesfilters.Ec2Tags(keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()))
+filters.Add(namevaluesfilters.Ec2Tags(keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()))
 // Add filters based on the custom filtering "filter" attribute.
 filters.Add(d.Get("filter").(*schema.Set))
 
@@ -933,9 +930,10 @@ manually sourced values from documentation. Amazon employees can code search
 previous region values to find new region values in internal packages like
 RIPStaticConfig if they are not documented yet.
 
-- [ ] Check [Elastic Load Balancing endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elb_hosted_zone_id.go`
-- [ ] Check [Amazon Simple Storage Service endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/s3.html#s3_region) and add Route53 Hosted Zone ID if available to `aws/hosted_zones.go`
-- [ ] Check [CloudTrail Supported Regions docs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html#cloudtrail-supported-regions) and add AWS Account ID if available to `aws/data_source_aws_cloudtrail_service_account.go`
-- [ ] Check [Elastic Load Balancing Access Logs docs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) and add Elastic Load Balancing Account ID if available to `aws/data_source_aws_elb_service_account.go`
-- [ ] Check [Redshift Database Audit Logging docs](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) and add AWS Account ID if available to `aws/data_source_aws_redshift_service_account.go`
-- [ ] Check [AWS Elastic Beanstalk endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/elasticbeanstalk.html#elasticbeanstalk_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elastic_beanstalk_hosted_zone.go`
+- [ ] Check [Elastic Load Balancing endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region) and add Route53 Hosted Zone ID if available to [`internal/service/elb/hosted_zone_id_data_source.go`](../../internal/service/elb/hosted_zone_id_data_source.go)
+- [ ] Check [Amazon Simple Storage Service endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/s3.html#s3_region) and add Route53 Hosted Zone ID if available to [`internal/service/s3/hosted_zones.go`](../../internal/service/s3/hosted_zones.go)
+- [ ] Check [CloudTrail Supported Regions docs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html#cloudtrail-supported-regions) and add AWS Account ID if available to [`internal/service/cloudtrail/service_account_data_source.go`](../../internal/service/cloudtrail/service_account_data_source.go)
+- [ ] Check [Elastic Load Balancing Access Logs docs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) and add Elastic Load Balancing Account ID if available to [`internal/service/elb/service_account_data_source.go`](../../internal/service/elb/service_account_data_source.go)
+- [ ] Check [Redshift Database Audit Logging docs](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) and add AWS Account ID if available to [`internal/service/redshift/service_account_data_source.go`](../../internal/service/redshift/service_account_data_source.go)
+- [ ] Check [AWS Elastic Beanstalk endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/elasticbeanstalk.html#elasticbeanstalk_region) and add Route53 Hosted Zone ID if available to [`internal/service/elasticbeanstalk/hosted_zone_data_source.go`](../../internal/service/elasticbeanstalk/hosted_zone_data_source.go)
+- [ ] Check [Sagemaker docs](https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html) and add AWS Account IDs if available to [`internal/service/sagemaker/prebuilt_ecr_image_data_source.go`](../../internal/service/sagemaker/prebuilt_ecr_image_data_source.go)

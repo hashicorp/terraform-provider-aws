@@ -11,6 +11,10 @@ import (
 )
 
 func TestAccRDSProxyDataSource_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	dataSourceName := "data.aws_db_proxy.test"
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

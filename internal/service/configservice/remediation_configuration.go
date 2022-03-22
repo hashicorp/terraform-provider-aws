@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -301,7 +301,7 @@ func resourceRemediationConfigurationRead(d *schema.ResourceData, meta interface
 		ConfigRuleNames: []*string{aws.String(d.Id())},
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchConfigRuleException, "") {
+		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigRuleException) {
 			log.Printf("[WARN] Config Rule %q is gone (NoSuchConfigRuleException)", d.Id())
 			d.SetId("")
 			return nil

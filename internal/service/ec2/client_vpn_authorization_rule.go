@@ -3,12 +3,15 @@ package ec2
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -18,25 +21,20 @@ func ResourceClientVPNAuthorizationRule() *schema.Resource {
 		Read:   resourceClientVPNAuthorizationRuleRead,
 		Delete: resourceClientVPNAuthorizationRuleDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceClientVPNAuthorizationRuleImport,
+			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(ClientVPNAuthorizationRuleCreatedTimeout),
+			Delete: schema.DefaultTimeout(ClientVPNAuthorizationRuleDeletedTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
-			"client_vpn_endpoint_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"target_network_cidr": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidCIDRNetworkAddress,
-			},
 			"access_group_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
+				ValidateFunc: validation.StringDoesNotContainAny(","),
 				ExactlyOneOf: []string{"access_group_id", "authorize_all_groups"},
 			},
 			"authorize_all_groups": {
@@ -45,10 +43,21 @@ func ResourceClientVPNAuthorizationRule() *schema.Resource {
 				ForceNew:     true,
 				ExactlyOneOf: []string{"access_group_id", "authorize_all_groups"},
 			},
+			"client_vpn_endpoint_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+			},
+			"target_network_cidr": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidCIDRNetworkAddress,
 			},
 		},
 	}
@@ -58,11 +67,11 @@ func resourceClientVPNAuthorizationRuleCreate(d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
-	targetNetworkCidr := d.Get("target_network_cidr").(string)
+	targetNetworkCIDR := d.Get("target_network_cidr").(string)
 
 	input := &ec2.AuthorizeClientVpnIngressInput{
 		ClientVpnEndpointId: aws.String(endpointID),
-		TargetNetworkCidr:   aws.String(targetNetworkCidr),
+		TargetNetworkCidr:   aws.String(targetNetworkCIDR),
 	}
 
 	var accessGroupID string
@@ -79,20 +88,20 @@ func resourceClientVPNAuthorizationRuleCreate(d *schema.ResourceData, meta inter
 		input.Description = aws.String(v.(string))
 	}
 
-	id := ClientVPNAuthorizationRuleCreateID(endpointID, targetNetworkCidr, accessGroupID)
+	id := ClientVPNAuthorizationRuleCreateResourceID(endpointID, targetNetworkCIDR, accessGroupID)
 
-	log.Printf("[DEBUG] Creating Client VPN authorization rule: %#v", input)
+	log.Printf("[DEBUG] Creating EC2 Client VPN Authorization Rule: %s", input)
 	_, err := conn.AuthorizeClientVpnIngress(input)
-	if err != nil {
-		return fmt.Errorf("error creating Client VPN authorization rule %q: %w", id, err)
-	}
 
-	_, err = WaitClientVPNAuthorizationRuleAuthorized(conn, id)
 	if err != nil {
-		return fmt.Errorf("error waiting for Client VPN authorization rule %q to be active: %w", id, err)
+		return fmt.Errorf("error authorizing EC2 Client VPN Authorization Rule (%s): %w", id, err)
 	}
 
 	d.SetId(id)
+
+	if _, err := WaitClientVPNAuthorizationRuleCreated(conn, endpointID, targetNetworkCIDR, accessGroupID, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for EC2 Client VPN Authorization Rule (%s) create: %w", d.Id(), err)
+	}
 
 	return resourceClientVPNAuthorizationRuleRead(d, meta)
 }
@@ -100,33 +109,29 @@ func resourceClientVPNAuthorizationRuleCreate(d *schema.ResourceData, meta inter
 func resourceClientVPNAuthorizationRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	result, err := FindClientVPNAuthorizationRule(conn,
-		d.Get("client_vpn_endpoint_id").(string),
-		d.Get("target_network_cidr").(string),
-		d.Get("access_group_id").(string),
-	)
+	endpointID, targetNetworkCIDR, accessGroupID, err := ClientVPNAuthorizationRuleParseResourceID(d.Id())
 
-	if tfawserr.ErrMessageContains(err, ErrCodeClientVPNAuthorizationRuleNotFound, "") {
-		log.Printf("[WARN] EC2 Client VPN authorization rule (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
 	if err != nil {
-		return fmt.Errorf("error reading Client VPN authorization rule: %w", err)
+		return err
 	}
 
-	if result == nil || len(result.AuthorizationRules) == 0 || result.AuthorizationRules[0] == nil {
-		log.Printf("[WARN] EC2 Client VPN authorization rule (%s) not found, removing from state", d.Id())
+	rule, err := FindClientVPNAuthorizationRuleByThreePartKey(conn, endpointID, targetNetworkCIDR, accessGroupID)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Client VPN Authorization Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	rule := result.AuthorizationRules[0]
-	d.Set("client_vpn_endpoint_id", rule.ClientVpnEndpointId)
-	d.Set("target_network_cidr", rule.DestinationCidr)
+	if err != nil {
+		return fmt.Errorf("error reading EC2 Client VPN Authorization Rule (%s): %w", d.Id(), err)
+	}
+
 	d.Set("access_group_id", rule.GroupId)
 	d.Set("authorize_all_groups", rule.AccessAll)
+	d.Set("client_vpn_endpoint_id", rule.ClientVpnEndpointId)
 	d.Set("description", rule.Description)
+	d.Set("target_network_cidr", rule.DestinationCidr)
 
 	return nil
 }
@@ -134,51 +139,61 @@ func resourceClientVPNAuthorizationRuleRead(d *schema.ResourceData, meta interfa
 func resourceClientVPNAuthorizationRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	input := &ec2.RevokeClientVpnIngressInput{
-		ClientVpnEndpointId: aws.String(d.Get("client_vpn_endpoint_id").(string)),
-		TargetNetworkCidr:   aws.String(d.Get("target_network_cidr").(string)),
-		RevokeAllGroups:     aws.Bool(d.Get("authorize_all_groups").(bool)),
-	}
-	if v, ok := d.GetOk("access_group_id"); ok {
-		input.AccessGroupId = aws.String(v.(string))
+	endpointID, targetNetworkCIDR, accessGroupID, err := ClientVPNAuthorizationRuleParseResourceID(d.Id())
+
+	if err != nil {
+		return err
 	}
 
-	log.Printf("[DEBUG] Revoking Client VPN authorization rule %q", d.Id())
-	err := deleteClientVpnAuthorizationRule(conn, input)
+	input := &ec2.RevokeClientVpnIngressInput{
+		ClientVpnEndpointId: aws.String(endpointID),
+		RevokeAllGroups:     aws.Bool(d.Get("authorize_all_groups").(bool)),
+		TargetNetworkCidr:   aws.String(targetNetworkCIDR),
+	}
+	if accessGroupID != "" {
+		input.AccessGroupId = aws.String(accessGroupID)
+	}
+
+	log.Printf("[DEBUG] Deleting EC2 Client VPN Authorization Rule: %s", d.Id())
+	_, err = conn.RevokeClientVpnIngress(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnEndpointIdNotFound, ErrCodeInvalidClientVpnAuthorizationRuleNotFound) {
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("error revoking Client VPN authorization rule %q: %w", d.Id(), err)
+		return fmt.Errorf("error revoking EC2 Client VPN Authorization Rule (%s): %w", d.Id(), err)
+	}
+
+	if _, err := WaitClientVPNAuthorizationRuleDeleted(conn, endpointID, targetNetworkCIDR, accessGroupID, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for EC2 Client VPN Authorization Rule (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func resourceClientVPNAuthorizationRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	endpointID, targetNetworkCidr, accessGroupID, err := ClientVPNAuthorizationRuleParseID(d.Id())
-	if err != nil {
-		return nil, err
-	}
+const clientVPNAuthorizationRuleIDSeparator = ","
 
-	d.Set("client_vpn_endpoint_id", endpointID)
-	d.Set("target_network_cidr", targetNetworkCidr)
-	d.Set("access_group_id", accessGroupID)
-	return []*schema.ResourceData{d}, nil
+func ClientVPNAuthorizationRuleCreateResourceID(endpointID, targetNetworkCIDR, accessGroupID string) string {
+	parts := []string{endpointID, targetNetworkCIDR}
+	if accessGroupID != "" {
+		parts = append(parts, accessGroupID)
+	}
+	id := strings.Join(parts, clientVPNAuthorizationRuleIDSeparator)
+
+	return id
 }
 
-func deleteClientVpnAuthorizationRule(conn *ec2.EC2, input *ec2.RevokeClientVpnIngressInput) error {
-	id := ClientVPNAuthorizationRuleCreateID(
-		aws.StringValue(input.ClientVpnEndpointId),
-		aws.StringValue(input.TargetNetworkCidr),
-		aws.StringValue(input.AccessGroupId))
+func ClientVPNAuthorizationRuleParseResourceID(id string) (string, string, string, error) {
+	parts := strings.Split(id, clientVPNAuthorizationRuleIDSeparator)
 
-	_, err := conn.RevokeClientVpnIngress(input)
-	if tfawserr.ErrMessageContains(err, ErrCodeClientVPNAuthorizationRuleNotFound, "") {
-		return nil
-	}
-	if err != nil {
-		return err
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], "", nil
 	}
 
-	_, err = WaitClientVPNAuthorizationRuleRevoked(conn, id)
+	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
+		return parts[0], parts[1], parts[2], nil
+	}
 
-	return err
+	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected endpoint-id%[2]starget-network-cidr or endpoint-id%[2]starget-network-cidr%[2]sgroup-id", id, clientVPNAuthorizationRuleIDSeparator)
 }

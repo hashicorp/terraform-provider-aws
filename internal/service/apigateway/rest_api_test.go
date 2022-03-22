@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -1078,10 +1078,10 @@ func TestAccAPIGatewayRestAPI_parameters(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayRestAPI_policy(t *testing.T) {
+func TestAccAPIGatewayRestAPI_Policy_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
-	expectedPolicyText := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":"*"},"Action":"execute-api:Invoke","Resource":"*","Condition":{"IpAddress":{"aws:SourceIp":"123.123.123.123/32"}}}]}`
-	expectedUpdatePolicyText := `{"Version":"2012-10-17","Statement":[{"Effect":"Deny","Principal":{"AWS":"*"},"Action":"execute-api:Invoke","Resource":"*"}]}`
+	expectedPolicyText := `{"Statement":[{"Action":"execute-api:Invoke","Condition":{"IpAddress":{"aws:SourceIp":"123.123.123.123/32"}},"Effect":"Allow","Principal":{"AWS":"*"},"Resource":"*"}],"Version":"2012-10-17"}`
+	expectedUpdatePolicyText := `{"Statement":[{"Action":"execute-api:Invoke","Effect":"Deny","Principal":{"AWS":"*"},"Resource":"*"}],"Version":"2012-10-17"}`
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1097,15 +1097,41 @@ func TestAccAPIGatewayRestAPI_policy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"policy"},
 			},
 			{
 				Config: testAccRestAPIUpdatePolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "policy", expectedUpdatePolicyText),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayRestAPI_Policy_order(t *testing.T) {
+	resourceName := "aws_api_gateway_rest_api.test"
+	expectedPolicyText := `{"Statement":[{"Action":"execute-api:Invoke","Condition":{"IpAddress":{"aws:SourceIp":["123.123.123.123/32","122.122.122.122/32","169.254.169.253/32"]}},"Effect":"Allow","Principal":{"AWS":"*"},"Resource":"*"}],"Version":"2012-10-17"}`
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckRestAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRestAPIWithPolicyOrderConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "policy", expectedPolicyText),
+				),
+			},
+			{
+				Config:   testAccRestAPIWithPolicyNewOrderConfig(rName),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -1134,7 +1160,7 @@ func TestAccAPIGatewayRestAPI_Policy_overrideBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "policy"},
 			},
 			// Verify updated body still has override policy
 			{
@@ -1688,27 +1714,23 @@ resource "aws_api_gateway_rest_api" "test" {
 func testAccRestAPIWithPolicyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name   = %[1]q
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "execute-api:Invoke",
-      "Resource": "*",
-      "Condition": {
-        "IpAddress": {
-          "aws:SourceIp": "123.123.123.123/32"
+  name = %[1]q
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "execute-api:Invoke"
+      Condition = {
+        IpAddress = {
+          "aws:SourceIp" = "123.123.123.123/32"
         }
       }
-    }
-  ]
-}
-EOF
+      Effect = "Allow"
+      Principal = {
+        AWS = "*"
+      }
+      Resource = "*"
+    }]
+  })
 }
 `, rName)
 }
@@ -1716,22 +1738,74 @@ EOF
 func testAccRestAPIUpdatePolicyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name   = %[1]q
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Deny",
-            "Principal": {
-                "AWS": "*"
-            },
-            "Action": "execute-api:Invoke",
-            "Resource": "*"
-        }
-    ]
+  name = %[1]q
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "execute-api:Invoke"
+      Effect = "Deny"
+      Principal = {
+        AWS = "*"
+      }
+      Resource = "*"
+    }]
+  })
 }
-EOF
+`, rName)
+}
+
+func testAccRestAPIWithPolicyOrderConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "execute-api:Invoke"
+      Condition = {
+        IpAddress = {
+          "aws:SourceIp" = [
+            "123.123.123.123/32",
+            "122.122.122.122/32",
+            "169.254.169.253/32",
+          ]
+        }
+      }
+      Effect = "Allow"
+      Principal = {
+        AWS = "*"
+      }
+      Resource = "*"
+    }]
+  })
+}
+`, rName)
+}
+
+func testAccRestAPIWithPolicyNewOrderConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "execute-api:Invoke"
+      Condition = {
+        IpAddress = {
+          "aws:SourceIp" = [
+            "122.122.122.122/32",
+            "169.254.169.253/32",
+            "123.123.123.123/32",
+          ]
+        }
+      }
+      Effect = "Allow"
+      Principal = {
+        AWS = "*"
+      }
+      Resource = "*"
+    }]
+  })
 }
 `, rName)
 }

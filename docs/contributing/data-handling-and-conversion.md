@@ -96,7 +96,7 @@ To expand on the data handling that occurs specifically within the Terraform AWS
 
 To further understand the necessary data conversions used throughout the Terraform AWS Provider codebase between AWS Go SDK types and the Terraform Plugin SDK, the following table can be referenced for most scenarios:
 
-<!-- markdownlint-disable MD033 --->
+<!-- markdownlint-disable no-inline-html --->
 
 | AWS API Model | AWS Go SDK | Terraform Plugin SDK | Terraform Language/State |
 |---------------|------------|----------------------|--------------------------|
@@ -109,7 +109,7 @@ To further understand the necessary data conversions used throughout the Terrafo
 | `structure` | `struct` | `TypeList` (`[]interface{}` of `map[string]interface{}`) | `list(object(any))` |
 | `timestamp` | `*time.Time` | `TypeString` (typically RFC3339 formatted) | `string` |
 
-<!-- markdownlint-enable MD033 --->
+<!-- markdownlint-enable no-inline-html --->
 
 You may notice there are type encoding differences the AWS Go SDK and Terraform Plugin SDK:
 
@@ -359,7 +359,7 @@ To read:
 input := service.ExampleOperationInput{}
 
 if v, ok := d.GetOk("attribute_name"); ok && len(v.([]interface{})) > 0 {
-    input.AttributeName = expandStringList(v.([]interface{}))
+    input.AttributeName = flex.ExpandStringList(v.([]interface{}))
 }
 ```
 
@@ -377,7 +377,7 @@ To read:
 input := service.ExampleOperationInput{}
 
 if v, ok := d.GetOk("attribute_name"); ok && len(v.(map[string]interface{})) > 0 {
-    input.AttributeName = expandStringMap(v.(map[string]interface{}))
+    input.AttributeName = flex.ExpandStringMap(v.(map[string]interface{}))
 }
 ```
 
@@ -415,7 +415,7 @@ To read:
 input := service.ExampleOperationInput{}
 
 if v, ok := d.GetOk("attribute_name"); ok && v.(*schema.Set).Len() > 0 {
-    input.AttributeName = expandStringSet(v.(*schema.Set))
+    input.AttributeName = flex.ExpandStringSet(v.(*schema.Set))
 }
 ```
 
@@ -461,9 +461,9 @@ To read:
 input := service.ExampleOperationInput{}
 
 if v, ok := d.GetOk("attribute_name"); ok {
-    t, _ := time.Parse(time.RFC3339, v.(string))
+    v, _ := time.Parse(time.RFC3339, v.(string))
 
-    input.AttributeName = aws.Time(t)
+    input.AttributeName = aws.Time(v)
 }
 ```
 
@@ -650,7 +650,7 @@ func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
     if v, ok := tfMap["nested_attribute_name"].([]interface{}); ok && len(v) > 0 {
-        apiObject.NestedAttributeName = expandStringList(v)
+        apiObject.NestedAttributeName = flex.ExpandStringList(v)
     }
 
     // ...
@@ -679,7 +679,7 @@ To read:
 input := service.ExampleOperationInput{}
 
 if v, ok := tfMap["nested_attribute_name"].(map[string]interface{}); ok && len(v) > 0 {
-    apiObject.NestedAttributeName = expandStringMap(v)
+    apiObject.NestedAttributeName = flex.ExpandStringMap(v)
 }
 ```
 
@@ -736,7 +736,7 @@ func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
     if v, ok := tfMap["nested_attribute_name"].(*schema.Set); ok && v.Len() > 0 {
-        apiObject.NestedAttributeName = expandStringSet(v)
+        apiObject.NestedAttributeName = flex.ExpandStringSet(v)
     }
 
     // ...
@@ -806,9 +806,9 @@ func expandStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
     if v, ok := tfMap["nested_attribute_name"].(string); ok && v != "" {
-        t, _ := time.Parse(time.RFC3339, v.(string))
+        v, _ := time.Parse(time.RFC3339, v)
 
-        apiObject.NestedAttributeName = aws.Time(t)
+        apiObject.NestedAttributeName = aws.Time(v)
     }
 
     // ...

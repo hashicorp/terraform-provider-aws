@@ -21,6 +21,8 @@ mutually-exclusive. If `aws_autoscaling_attachment` resources are used, either a
 to ignore changes to the `load_balancers` and `target_group_arns` arguments within a
 [`lifecycle` configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html).
 
+> **Hands-on:** Try the [Manage AWS Auto Scaling Groups](https://learn.hashicorp.com/tutorials/terraform/aws-asg?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) tutorial on HashiCorp Learn.
+
 ## Example Usage
 
 ```terraform
@@ -323,9 +325,13 @@ resource "aws_autoscaling_group" "example" {
   min_size           = 1
 
   warm_pool {
-    pool_state                  = "Stopped"
+    pool_state                  = "Hibernated"
     min_size                    = 1
     max_group_prepared_capacity = 10
+
+    instance_reuse_policy {
+      reuse_on_scale_in = true
+    }
   }
 }
 ```
@@ -371,7 +377,7 @@ The following arguments are supported:
 * `suspended_processes` - (Optional) A list of processes to suspend for the Auto Scaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`.
 Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your Auto Scaling Group from functioning properly.
 * `tag` (Optional) Configuration block(s) containing resource tags. Conflicts with `tags`. See [Tag](#tag-and-tags) below for more details.
-* `tags` (Optional) Set of maps containing resource tags. Conflicts with `tag`. See [Tags](#tag-and-tags) below for more details.
+* `tags` (Optional, **Deprecated** use `tag` instead) Set of maps containing resource tags. Conflicts with `tag`. See [Tags](#tag-and-tags) below for more details.
 * `placement_group` (Optional) The name of the placement group into which you'll launch your instances, if any.
 * `metrics_granularity` - (Optional) The granularity to associate with the metrics to collect. The only valid value is `1Minute`. Default is `1Minute`.
 * `enabled_metrics` - (Optional) A list of metrics to collect. The allowed values are defined by the [underlying AWS API](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_EnableMetricsCollection.html).
@@ -481,6 +487,8 @@ This configuration block supports the following:
 
 ~> **NOTE:** A refresh is started when any of the following Auto Scaling Group properties change: `launch_configuration`, `launch_template`, `mixed_instances_policy`. Additional properties can be specified in the `triggers` property of `instance_refresh`.
 
+~> **NOTE:** A refresh will not start when `version = "$Latest"` is configured in the `launch_template` block. To trigger the instance refresh when a launch template is changed, configure `version` to use the `latest_version` attribute of the `aws_launch_template` resource.
+
 ~> **NOTE:** Auto Scaling Groups support up to one active instance refresh at a time. When this resource is updated, any existing refresh is cancelled.
 
 ~> **NOTE:** Depending on health check settings and group size, an instance refresh may take a long time or fail. This resource does not wait for the instance refresh to complete.
@@ -489,9 +497,16 @@ This configuration block supports the following:
 
 This configuration block supports the following:
 
-* `pool_state` - (Optional) Sets the instance state to transition to after the lifecycle hooks finish. Valid values are: Stopped (default) or Running.
+* `pool_state` - (Optional) Sets the instance state to transition to after the lifecycle hooks finish. Valid values are: Stopped (default), Running or Hibernated.
 * `min_size` - (Optional) Specifies the minimum number of instances to maintain in the warm pool. This helps you to ensure that there is always a certain number of warmed instances available to handle traffic spikes. Defaults to 0 if not specified.
+* `instance_reuse_policy` - (Optional) Indicates whether instances in the Auto Scaling group can be returned to the warm pool on scale in. The default is to terminate instances in the Auto Scaling group when the group scales in.
 * `max_group_prepared_capacity` - (Optional) Specifies the total maximum number of instances that are allowed to be in the warm pool or in any state except Terminated for the Auto Scaling group.
+
+##### instance_reuse_policy
+
+This configuration block supports the following:
+
+* `reuse_on_scale_in` - (Optional) Specifies whether instances in the Auto Scaling group can be returned to the warm pool on scale in.
 
 ## Attributes Reference
 
