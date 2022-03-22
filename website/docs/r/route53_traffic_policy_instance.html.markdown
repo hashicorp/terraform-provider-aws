@@ -38,7 +38,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of traffic policy instance.
 * `message` - If `state` is `Failed`, an explanation of the reason for the failure. If `state` is another value, `message` is empty. .
-* `state` - State of a policy traffic instance.
 
 ## Import
 

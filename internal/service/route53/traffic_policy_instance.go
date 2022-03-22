@@ -22,6 +22,7 @@ func ResourceTrafficPolicyInstance() *schema.Resource {
 		ReadWithoutTimeout:   resourceTrafficPolicyInstanceRead,
 		UpdateWithoutTimeout: resourceTrafficPolicyInstanceUpdate,
 		DeleteWithoutTimeout: resourceTrafficPolicyInstanceDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -46,10 +47,6 @@ func ResourceTrafficPolicyInstance() *schema.Resource {
 					value := strings.TrimSuffix(v.(string), ".")
 					return strings.ToLower(value)
 				},
-			},
-			"state": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"traffic_policy_id": {
 				Type:         schema.TypeString,
@@ -134,7 +131,6 @@ func resourceTrafficPolicyInstanceRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("hosted_zone_id", output.TrafficPolicyInstance.HostedZoneId)
 	d.Set("message", output.TrafficPolicyInstance.Message)
 	d.Set("name", strings.TrimSuffix(aws.StringValue(output.TrafficPolicyInstance.Name), "."))
-	d.Set("state", output.TrafficPolicyInstance.State)
 	d.Set("traffic_policy_id", output.TrafficPolicyInstance.TrafficPolicyId)
 	d.Set("traffic_policy_version", output.TrafficPolicyInstance.TrafficPolicyVersion)
 	d.Set("ttl", output.TrafficPolicyInstance.TTL)
