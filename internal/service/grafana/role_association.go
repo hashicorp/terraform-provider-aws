@@ -55,12 +55,12 @@ func resourceRoleAssociationUpsert(d *schema.ResourceData, meta interface{}) err
 	var typeSsoUser string
 	if v, ok := d.GetOk("user_ids"); ok {
 		typeSsoUser = managedgrafana.UserTypeSsoUser
-		updateInstructions = populateUpdateInstructions(d, v, managedgrafana.UpdateActionAdd, typeSsoUser, updateInstructions)
+		updateInstructions = populateUpdateInstructions(d.Get("role").(string), flex.ExpandStringList(v.([]interface{})), managedgrafana.UpdateActionAdd, typeSsoUser, updateInstructions)
 	}
 
 	if v, ok := d.GetOk("group_ids"); ok {
 		typeSsoUser = managedgrafana.UserTypeSsoGroup
-		updateInstructions = populateUpdateInstructions(d, v, managedgrafana.UpdateActionAdd, typeSsoUser, updateInstructions)
+		updateInstructions = populateUpdateInstructions(d.Get("role").(string), flex.ExpandStringList(v.([]interface{})), managedgrafana.UpdateActionAdd, typeSsoUser, updateInstructions)
 	}
 
 	input := &managedgrafana.UpdatePermissionsInput{
@@ -82,8 +82,7 @@ func resourceRoleAssociationUpsert(d *schema.ResourceData, meta interface{}) err
 	return resourceRoleAssociationRead(d, meta)
 }
 
-func populateUpdateInstructions(d *schema.ResourceData, v interface{}, action string, typeSsoUser string, updateInstructions []*managedgrafana.UpdateInstruction) []*managedgrafana.UpdateInstruction {
-	list := flex.ExpandStringList(v.([]interface{}))
+func populateUpdateInstructions(role string, list []*string, action string, typeSsoUser string, updateInstructions []*managedgrafana.UpdateInstruction) []*managedgrafana.UpdateInstruction {
 	users := make([]*managedgrafana.User, len(list))
 	for i := 0; i < len(users); i++ {
 		users[i] = &managedgrafana.User{
@@ -93,7 +92,7 @@ func populateUpdateInstructions(d *schema.ResourceData, v interface{}, action st
 	}
 	updateInstructions = append(updateInstructions, &managedgrafana.UpdateInstruction{
 		Action: aws.String(action),
-		Role:   aws.String(d.Get("role").(string)),
+		Role:   aws.String(role),
 		Users:  users,
 	})
 
@@ -144,12 +143,12 @@ func resourceRoleAssociationDelete(d *schema.ResourceData, meta interface{}) err
 	var typeSsoUser string
 	if v, ok := d.GetOk("user_ids"); ok {
 		typeSsoUser = managedgrafana.UserTypeSsoUser
-		updateInstructions = populateUpdateInstructions(d, v, managedgrafana.UpdateActionRevoke, typeSsoUser, updateInstructions)
+		updateInstructions = populateUpdateInstructions(d.Get("role").(string), flex.ExpandStringList(v.([]interface{})), managedgrafana.UpdateActionRevoke, typeSsoUser, updateInstructions)
 	}
 
 	if v, ok := d.GetOk("group_ids"); ok {
 		typeSsoUser = managedgrafana.UserTypeSsoGroup
-		updateInstructions = populateUpdateInstructions(d, v, managedgrafana.UpdateActionRevoke, typeSsoUser, updateInstructions)
+		updateInstructions = populateUpdateInstructions(d.Get("role").(string), flex.ExpandStringList(v.([]interface{})), managedgrafana.UpdateActionRevoke, typeSsoUser, updateInstructions)
 	}
 
 	input := &managedgrafana.UpdatePermissionsInput{
