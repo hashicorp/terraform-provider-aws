@@ -37,6 +37,14 @@ func TestAccGrafana_serial(t *testing.T) {
 			"loginValidity": testAccGrafanaWorkspaceSamlConfiguration_loginValidity,
 			"assertions":    testAccGrafanaWorkspaceSamlConfiguration_assertions,
 		},
+		"RoleAssociation": {
+			"usersAdmin":           testAccGrafanaRoleAssociation_usersAdmin,
+			"usersEditor":          testAccGrafanaRoleAssociation_usersEditor,
+			"groupsAdmin":          testAccGrafanaRoleAssociation_groupsAdmin,
+			"groupsEditor":         testAccGrafanaRoleAssociation_groupsEditor,
+			"usersAndGroupsAdmin":  testAccGrafanaRoleAssociation_usersAndGroupsAdmin,
+			"usersAndGroupsEditor": testAccGrafanaRoleAssociation_usersAndGroupsEditor,
+		},
 	}
 
 	for group, m := range testCases {

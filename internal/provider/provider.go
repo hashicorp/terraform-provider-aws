@@ -1444,6 +1444,7 @@ func Provider() *schema.Provider {
 			"aws_glue_workflow":                         glue.ResourceWorkflow(),
 
 			"aws_grafana_license_association":          grafana.ResourceLicenseAssociation(),
+			"aws_grafana_role_association":             grafana.ResourceRoleAssociation(),
 			"aws_grafana_workspace":                    grafana.ResourceWorkspace(),
 			"aws_grafana_workspace_saml_configuration": grafana.ResourceWorkspaceSamlConfiguration(),
 
