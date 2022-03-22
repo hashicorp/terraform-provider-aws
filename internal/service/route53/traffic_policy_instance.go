@@ -34,10 +34,6 @@ func ResourceTrafficPolicyInstance() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 32),
 			},
-			"message": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -125,7 +121,6 @@ func resourceTrafficPolicyInstanceRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set("hosted_zone_id", trafficPolicyInstance.HostedZoneId)
-	d.Set("message", trafficPolicyInstance.Message)
 	d.Set("name", strings.TrimSuffix(aws.StringValue(trafficPolicyInstance.Name), "."))
 	d.Set("traffic_policy_id", trafficPolicyInstance.TrafficPolicyId)
 	d.Set("traffic_policy_version", trafficPolicyInstance.TrafficPolicyVersion)
