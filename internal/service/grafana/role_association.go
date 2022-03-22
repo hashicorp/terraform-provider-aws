@@ -27,7 +27,7 @@ func ResourceRoleAssociation() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"group_ids": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -36,7 +36,7 @@ func ResourceRoleAssociation() *schema.Resource {
 				Required: true,
 			},
 			"user_ids": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -56,15 +56,14 @@ func resourceRoleAssociationUpsert(d *schema.ResourceData, meta interface{}) err
 	workspaceID := d.Get("workspace_id").(string)
 
 	updateInstructions := make([]*managedgrafana.UpdateInstruction, 0)
-	var typeSsoUser string
-	if v, ok := d.GetOk("user_ids"); ok {
-		typeSsoUser = managedgrafana.UserTypeSsoUser
-		updateInstructions = populateUpdateInstructions(role, flex.ExpandStringList(v.([]interface{})), managedgrafana.UpdateActionAdd, typeSsoUser, updateInstructions)
+	if v, ok := d.GetOk("user_ids"); ok && v.(*schema.Set).Len() > 0 {
+		typeSsoUser := managedgrafana.UserTypeSsoUser
+		updateInstructions = populateUpdateInstructions(role, flex.ExpandStringSet(v.(*schema.Set)), managedgrafana.UpdateActionAdd, typeSsoUser, updateInstructions)
 	}
 
-	if v, ok := d.GetOk("group_ids"); ok {
-		typeSsoUser = managedgrafana.UserTypeSsoGroup
-		updateInstructions = populateUpdateInstructions(role, flex.ExpandStringList(v.([]interface{})), managedgrafana.UpdateActionAdd, typeSsoUser, updateInstructions)
+	if v, ok := d.GetOk("group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		typeSsoUser := managedgrafana.UserTypeSsoGroup
+		updateInstructions = populateUpdateInstructions(role, flex.ExpandStringSet(v.(*schema.Set)), managedgrafana.UpdateActionAdd, typeSsoUser, updateInstructions)
 	}
 
 	input := &managedgrafana.UpdatePermissionsInput{
@@ -132,15 +131,14 @@ func resourceRoleAssociationDelete(d *schema.ResourceData, meta interface{}) err
 	conn := meta.(*conns.AWSClient).GrafanaConn
 
 	updateInstructions := make([]*managedgrafana.UpdateInstruction, 0)
-	var typeSsoUser string
-	if v, ok := d.GetOk("user_ids"); ok {
-		typeSsoUser = managedgrafana.UserTypeSsoUser
-		updateInstructions = populateUpdateInstructions(d.Get("role").(string), flex.ExpandStringList(v.([]interface{})), managedgrafana.UpdateActionRevoke, typeSsoUser, updateInstructions)
+	if v, ok := d.GetOk("user_ids"); ok && v.(*schema.Set).Len() > 0 {
+		typeSsoUser := managedgrafana.UserTypeSsoUser
+		updateInstructions = populateUpdateInstructions(d.Get("role").(string), flex.ExpandStringSet(v.(*schema.Set)), managedgrafana.UpdateActionRevoke, typeSsoUser, updateInstructions)
 	}
 
-	if v, ok := d.GetOk("group_ids"); ok {
-		typeSsoUser = managedgrafana.UserTypeSsoGroup
-		updateInstructions = populateUpdateInstructions(d.Get("role").(string), flex.ExpandStringList(v.([]interface{})), managedgrafana.UpdateActionRevoke, typeSsoUser, updateInstructions)
+	if v, ok := d.GetOk("group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		typeSsoUser := managedgrafana.UserTypeSsoGroup
+		updateInstructions = populateUpdateInstructions(d.Get("role").(string), flex.ExpandStringSet(v.(*schema.Set)), managedgrafana.UpdateActionRevoke, typeSsoUser, updateInstructions)
 	}
 
 	input := &managedgrafana.UpdatePermissionsInput{
