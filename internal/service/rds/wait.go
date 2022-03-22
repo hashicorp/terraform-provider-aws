@@ -240,7 +240,9 @@ func waitDBInstanceAutomatedBackupAvailable(conn *rds.RDS, arn string, timeout t
 		Pending: []string{
 			InstanceAutomatedBackupPending,
 		},
-		Target:  []string{InstanceAutomatedBackupReplicating},
+		Target: []string{
+			InstanceAutomatedBackupReplicating,
+		},
 		Refresh: statusDBInstanceAutomatedBackup(conn, arn),
 		Timeout: timeout,
 	}
