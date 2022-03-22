@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceRoleAssociation() *schema.Resource {
@@ -51,21 +52,24 @@ func ResourceRoleAssociation() *schema.Resource {
 func resourceRoleAssociationUpsert(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
 
+	role := d.Get("role").(string)
+	workspaceID := d.Get("workspace_id").(string)
+
 	updateInstructions := make([]*managedgrafana.UpdateInstruction, 0)
 	var typeSsoUser string
 	if v, ok := d.GetOk("user_ids"); ok {
 		typeSsoUser = managedgrafana.UserTypeSsoUser
-		updateInstructions = populateUpdateInstructions(d.Get("role").(string), flex.ExpandStringList(v.([]interface{})), managedgrafana.UpdateActionAdd, typeSsoUser, updateInstructions)
+		updateInstructions = populateUpdateInstructions(role, flex.ExpandStringList(v.([]interface{})), managedgrafana.UpdateActionAdd, typeSsoUser, updateInstructions)
 	}
 
 	if v, ok := d.GetOk("group_ids"); ok {
 		typeSsoUser = managedgrafana.UserTypeSsoGroup
-		updateInstructions = populateUpdateInstructions(d.Get("role").(string), flex.ExpandStringList(v.([]interface{})), managedgrafana.UpdateActionAdd, typeSsoUser, updateInstructions)
+		updateInstructions = populateUpdateInstructions(role, flex.ExpandStringList(v.([]interface{})), managedgrafana.UpdateActionAdd, typeSsoUser, updateInstructions)
 	}
 
 	input := &managedgrafana.UpdatePermissionsInput{
 		UpdateInstructionBatch: updateInstructions,
-		WorkspaceId:            aws.String(d.Get("workspace_id").(string)),
+		WorkspaceId:            aws.String(workspaceID),
 	}
 
 	log.Printf("[DEBUG] Creating Grafana Workspace Role Association: %s", input)
@@ -77,6 +81,10 @@ func resourceRoleAssociationUpsert(d *schema.ResourceData, meta interface{}) err
 
 	if err != nil {
 		return fmt.Errorf("error creating Grafana Workspace Role Association: %w", err)
+	}
+
+	if d.Id() == "" {
+		d.SetId(fmt.Sprintf("%s/%s", workspaceID, role))
 	}
 
 	return resourceRoleAssociationRead(d, meta)
@@ -102,36 +110,20 @@ func populateUpdateInstructions(role string, list []*string, action string, type
 func resourceRoleAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
 
-	roleAssociation, err := FindRoleAssociationByRoleAndWorkspaceID(conn, d.Get("role").(string), d.Get("workspace_id").(string))
+	roleAssociations, err := FindRoleAssociationsByRoleAndWorkspaceID(conn, d.Get("role").(string), d.Get("workspace_id").(string))
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Grafana Workspace Role Association %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Grafana Workspace (%s-%s): %w", d.Get("workspace_id").(string), d.Get("role").(string), err)
+		return fmt.Errorf("error reading Grafana Workspace Role Association (%s): %w", d.Id(), err)
 	}
 
-	users := roleAssociation[managedgrafana.UserTypeSsoUser]
-	groups := roleAssociation[managedgrafana.UserTypeSsoGroup]
-
-	usersLength := len(users)
-	groupsLength := len(groups)
-	if usersLength == 0 && groupsLength == 0 {
-		return fmt.Errorf("role association not found %s-%s", d.Get("workspace_id").(string), d.Get("role").(string))
-	}
-
-	if usersLength > 0 {
-		userIds := make([]*string, usersLength)
-		for i := 0; i < len(userIds); i++ {
-			userIds[i] = users[i].Id
-		}
-		d.Set("user_ids", userIds)
-	}
-
-	if groupsLength > 0 {
-		groupIds := make([]*string, groupsLength)
-		for i := 0; i < len(groupIds); i++ {
-			groupIds[i] = groups[i].Id
-		}
-		d.Set("group_ids", groupIds)
-	}
+	d.Set("group_ids", roleAssociations[managedgrafana.UserTypeSsoGroup])
+	d.Set("user_ids", roleAssociations[managedgrafana.UserTypeSsoUser])
 
 	return nil
 }
@@ -156,11 +148,11 @@ func resourceRoleAssociationDelete(d *schema.ResourceData, meta interface{}) err
 		WorkspaceId:            aws.String(d.Get("workspace_id").(string)),
 	}
 
-	log.Printf("[DEBUG] Creating Grafana Workspace Role Association: %s", input)
+	log.Printf("[DEBUG] Deleting Grafana Workspace Role Association: %s", input)
 	_, err := conn.UpdatePermissions(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Grafana Workspace Role Association: %w", err)
+		return fmt.Errorf("error deleting Grafana Workspace Role Association: %w", err)
 	}
 
 	return nil
