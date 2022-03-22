@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_wafv2_rule_group: Increase limit on nested `statement` blocks from 3 to 7
+```
