@@ -18,7 +18,7 @@ import (
 func TestAccTrafficPolicy_basic(t *testing.T) {
 	var v route53.TrafficPolicy
 	resourceName := "aws_route53_traffic_policy.test"
-	rName := fmt.Sprintf("tf-route53-traffic-policy-%s", sdkacctest.RandString(5))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -28,9 +28,12 @@ func TestAccTrafficPolicy_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficPolicyConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrafficPolicyExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "comment", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "type", "A"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 				),
 			},
 			{
@@ -46,7 +49,7 @@ func TestAccTrafficPolicy_basic(t *testing.T) {
 func TestAccTrafficPolicy_disappears(t *testing.T) {
 	var v route53.TrafficPolicy
 	resourceName := "aws_route53_traffic_policy.test"
-	rName := fmt.Sprintf("tf-route53-traffic-policy-%s", sdkacctest.RandString(5))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -66,10 +69,10 @@ func TestAccTrafficPolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccTrafficPolicy_complete(t *testing.T) {
+func TestAccTrafficPolicy_update(t *testing.T) {
 	var v route53.TrafficPolicy
 	resourceName := "aws_route53_traffic_policy.test"
-	rName := fmt.Sprintf("tf-route53-traffic-policy-%s", sdkacctest.RandString(5))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	comment := `comment`
 	commentUpdated := `comment updated`
 
@@ -83,7 +86,6 @@ func TestAccTrafficPolicy_complete(t *testing.T) {
 				Config: testAccTrafficPolicyConfigComplete(rName, comment),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficPolicyExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "comment", comment),
 				),
 			},
@@ -91,7 +93,6 @@ func TestAccTrafficPolicy_complete(t *testing.T) {
 				Config: testAccTrafficPolicyConfigComplete(rName, commentUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficPolicyExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "comment", commentUpdated),
 				),
 			},
@@ -164,7 +165,7 @@ func testAccTrafficPolicyImportStateIdFunc(resourceName string) resource.ImportS
 	}
 }
 
-func testAccTrafficPolicyConfig(name string) string {
+func testAccTrafficPolicyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_traffic_policy" "test" {
   name     = %[1]q
@@ -182,10 +183,10 @@ resource "aws_route53_traffic_policy" "test" {
 }
 EOT
 }
-`, name)
+`, rName)
 }
 
-func testAccTrafficPolicyConfigComplete(name, comment string) string {
+func testAccTrafficPolicyConfigComplete(rName, comment string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_traffic_policy" "test" {
   name     = %[1]q
@@ -204,5 +205,5 @@ resource "aws_route53_traffic_policy" "test" {
 }
 EOT
 }
-`, name, comment)
+`, rName, comment)
 }

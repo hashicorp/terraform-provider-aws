@@ -138,10 +138,11 @@ func resourceTrafficPolicyUpdate(ctx context.Context, d *schema.ResourceData, me
 		input.Comment = aws.String(d.Get("comment").(string))
 	}
 
+	log.Printf("[INFO] Updating Route53 Traffic Policy comment: %s", input)
 	_, err := conn.UpdateTrafficPolicyCommentWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error updating Route53 Traffic Policy (%s): %s", d.Id(), err)
+		return diag.Errorf("error updating Route53 Traffic Policy (%s) comment: %s", d.Id(), err)
 	}
 
 	return resourceTrafficPolicyRead(ctx, d, meta)
@@ -150,45 +151,42 @@ func resourceTrafficPolicyUpdate(ctx context.Context, d *schema.ResourceData, me
 func resourceTrafficPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
-	var trafficPolicies []*route53.TrafficPolicy
-	var versionMarker *string
+	input := &route53.ListTrafficPolicyVersionsInput{
+		Id: aws.String(d.Id()),
+	}
+	var output []*route53.TrafficPolicy
 
-	for allPoliciesListed := false; !allPoliciesListed; {
-		listRequest := &route53.ListTrafficPolicyVersionsInput{
-			Id: aws.String(d.Id()),
-		}
-		if versionMarker != nil {
-			listRequest.TrafficPolicyVersionMarker = versionMarker
+	err := listTrafficPolicyVersionsPagesWithContext(ctx, conn, input, func(page *route53.ListTrafficPolicyVersionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		listResponse, err := conn.ListTrafficPolicyVersionsWithContext(ctx, listRequest)
+		output = append(output, page.TrafficPolicies...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return diag.Errorf("error listing Route 53 Traffic Policy (%s) versions: %s", d.Id(), err)
+	}
+
+	for _, v := range output {
+		version := aws.Int64Value(v.Version)
+
+		log.Printf("[INFO] Delete Route53 Traffic Policy (%s) version: %d", input, version)
+		_, err := conn.DeleteTrafficPolicyWithContext(ctx, &route53.DeleteTrafficPolicyInput{
+			Id:      aws.String(d.Id()),
+			Version: aws.Int64(version),
+		})
+
+		if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchTrafficPolicy) {
+			continue
+		}
+
 		if err != nil {
-			return diag.Errorf("error listing Route 53 Traffic Policy versions: %v", err)
-		}
-
-		trafficPolicies = append(trafficPolicies, listResponse.TrafficPolicies...)
-
-		if aws.BoolValue(listResponse.IsTruncated) {
-			versionMarker = listResponse.TrafficPolicyVersionMarker
-		} else {
-			allPoliciesListed = true
+			return diag.Errorf("error deleting Route 53 Traffic Policy (%s) version (%d): %s", d.Id(), version, err)
 		}
 	}
 
-	for _, trafficPolicy := range trafficPolicies {
-		input := &route53.DeleteTrafficPolicyInput{
-			Id:      trafficPolicy.Id,
-			Version: trafficPolicy.Version,
-		}
-
-		_, err := conn.DeleteTrafficPolicyWithContext(ctx, input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchTrafficPolicy) {
-				return nil
-			}
-
-			return diag.Errorf("error deleting Route53 Traffic Policy %s, version %d: %s", aws.StringValue(trafficPolicy.Id), aws.Int64Value(trafficPolicy.Version), err)
-		}
-	}
 	return nil
 }
