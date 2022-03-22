@@ -7,10 +7,11 @@ For example, the EC2 API defines both [`DescribeInstancesPages`](https://docs.aw
 The `listpages` executable is called as follows:
 
 ```console
-$ go run main.go -ListOps <function-name>[,<function-name>]
+$ go run main.go -ListOps <function-name>[,<function-name>] [<generated-lister-file>]
 ```
 
 * `<function-name>`: Name of a function to wrap
+* `<generated-lister-file>`: Name of the generated lister source file, defaults to `list_pages_gen.go`
 
 Optional Flags:
 
