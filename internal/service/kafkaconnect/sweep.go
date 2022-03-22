@@ -1,7 +1,7 @@
 //go:build sweep
 // +build sweep
 
-package kafka
+package kafkaconnect
 
 import (
 	"fmt"
