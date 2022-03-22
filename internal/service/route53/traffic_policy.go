@@ -173,7 +173,7 @@ func resourceTrafficPolicyDelete(ctx context.Context, d *schema.ResourceData, me
 	for _, v := range output {
 		version := aws.Int64Value(v.Version)
 
-		log.Printf("[INFO] Delete Route53 Traffic Policy (%s) version: %d", input, version)
+		log.Printf("[INFO] Delete Route53 Traffic Policy (%s) version: %d", d.Id(), version)
 		_, err := conn.DeleteTrafficPolicyWithContext(ctx, &route53.DeleteTrafficPolicyInput{
 			Id:      aws.String(d.Id()),
 			Version: aws.Int64(version),

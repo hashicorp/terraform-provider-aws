@@ -18,9 +18,8 @@ import (
 func TestAccRoute53TrafficPolicyInstance_basic(t *testing.T) {
 	var v route53.TrafficPolicyInstance
 	resourceName := "aws_route53_traffic_policy_instance.test"
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	zoneName := acctest.RandomDomainName()
-	rName := fmt.Sprintf("%s_%s", sdkacctest.RandString(5), zoneName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -29,10 +28,11 @@ func TestAccRoute53TrafficPolicyInstance_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficPolicyInstanceConfig(zoneName, rName),
+				Config: testAccTrafficPolicyInstanceConfig(rName, zoneName, 3600),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53TrafficPolicyInstanceExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("%s.%s", rName, zoneName)),
+					resource.TestCheckResourceAttr(resourceName, "ttl", "3600"),
 				),
 			},
 			{
@@ -47,9 +47,8 @@ func TestAccRoute53TrafficPolicyInstance_basic(t *testing.T) {
 func TestAccRoute53TrafficPolicyInstance_disappears(t *testing.T) {
 	var v route53.TrafficPolicyInstance
 	resourceName := "aws_route53_traffic_policy_instance.test"
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	zoneName := acctest.RandomDomainName()
-	rName := fmt.Sprintf("%s_%s", sdkacctest.RandString(5), zoneName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -58,7 +57,7 @@ func TestAccRoute53TrafficPolicyInstance_disappears(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficPolicyInstanceConfig(zoneName, rName),
+				Config: testAccTrafficPolicyInstanceConfig(rName, zoneName, 360),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53TrafficPolicyInstanceExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceTrafficPolicyInstance(), resourceName),
@@ -69,13 +68,11 @@ func TestAccRoute53TrafficPolicyInstance_disappears(t *testing.T) {
 	})
 }
 
-func TestAccRoute53TrafficPolicyInstance_complete(t *testing.T) {
+func TestAccRoute53TrafficPolicyInstance_update(t *testing.T) {
 	var v route53.TrafficPolicyInstance
 	resourceName := "aws_route53_traffic_policy_instance.test"
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	zoneName := acctest.RandomDomainName()
-	rName := fmt.Sprintf("%s_%s", sdkacctest.RandString(5), zoneName)
-	rNameUpdated := fmt.Sprintf("%s_%s", sdkacctest.RandString(5), zoneName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -84,17 +81,17 @@ func TestAccRoute53TrafficPolicyInstance_complete(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficPolicyInstanceConfig(zoneName, rName),
+				Config: testAccTrafficPolicyInstanceConfig(rName, zoneName, 3600),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53TrafficPolicyInstanceExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "ttl", "3600"),
 				),
 			},
 			{
-				Config: testAccTrafficPolicyInstanceConfig(zoneName, rNameUpdated),
+				Config: testAccTrafficPolicyInstanceConfig(rName, zoneName, 7200),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53TrafficPolicyInstanceExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "ttl", "7200"),
 				),
 			},
 			{
@@ -154,14 +151,14 @@ func testAccCheckRoute53TrafficPolicyInstanceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccTrafficPolicyInstanceConfig(zoneName, instanceName string) string {
+func testAccTrafficPolicyInstanceConfig(rName, zoneName string, ttl int) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
-  name = %[1]q
+  name = %[2]q
 }
 
 resource "aws_route53_traffic_policy" "test" {
-  name     = aws_route53_zone.test.name
+  name     = %[1]q
   document = <<-EOT
 {
     "AWSPolicyFormatVersion":"2015-10-01",
@@ -179,10 +176,10 @@ EOT
 
 resource "aws_route53_traffic_policy_instance" "test" {
   hosted_zone_id         = aws_route53_zone.test.zone_id
-  name                   = %[2]q
+  name                   = "%[1]s.%[2]s"
   traffic_policy_id      = aws_route53_traffic_policy.test.id
   traffic_policy_version = aws_route53_traffic_policy.test.version
-  ttl                    = 360
+  ttl                    = %[3]d
 }
-`, zoneName, instanceName)
+`, rName, zoneName, ttl)
 }

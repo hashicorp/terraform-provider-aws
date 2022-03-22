@@ -92,7 +92,7 @@ func waitKeySigningKeyStatusUpdated(conn *route53.Route53, hostedZoneID string, 
 	return nil, err
 }
 
-func waitTrafficPolicyInstanceStateApplied(ctx context.Context, conn *route53.Route53, id string) (*route53.TrafficPolicyInstance, error) {
+func waitTrafficPolicyInstanceStateCreated(ctx context.Context, conn *route53.Route53, id string) (*route53.TrafficPolicyInstance, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{TrafficPolicyInstanceStateCreating},
 		Target:  []string{TrafficPolicyInstanceStateApplied},
@@ -115,8 +115,29 @@ func waitTrafficPolicyInstanceStateApplied(ctx context.Context, conn *route53.Ro
 
 func waitTrafficPolicyInstanceStateDeleted(ctx context.Context, conn *route53.Route53, id string) (*route53.TrafficPolicyInstance, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{TrafficPolicyInstanceStateApplied},
+		Pending: []string{TrafficPolicyInstanceStateDeleting},
 		Target:  []string{},
+		Refresh: statusTrafficPolicyInstanceState(ctx, conn, id),
+		Timeout: trafficPolicyInstanceOperationTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*route53.TrafficPolicyInstance); ok {
+		if state := aws.StringValue(output.State); state == TrafficPolicyInstanceStateFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitTrafficPolicyInstanceStateUpdated(ctx context.Context, conn *route53.Route53, id string) (*route53.TrafficPolicyInstance, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{TrafficPolicyInstanceStateUpdating},
+		Target:  []string{TrafficPolicyInstanceStateApplied},
 		Refresh: statusTrafficPolicyInstanceState(ctx, conn, id),
 		Timeout: trafficPolicyInstanceOperationTimeout,
 	}

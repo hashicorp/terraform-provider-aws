@@ -15,5 +15,7 @@ const (
 
 	TrafficPolicyInstanceStateApplied  = "Applied"
 	TrafficPolicyInstanceStateCreating = "Creating"
+	TrafficPolicyInstanceStateDeleting = "Deleting"
 	TrafficPolicyInstanceStateFailed   = "Failed"
+	TrafficPolicyInstanceStateUpdating = "Updating"
 )
