@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/route53"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -15,6 +16,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func testAccPreCheckRoute53TrafficPolicy(t *testing.T) {
+	acctest.PreCheckPartitionHasService(route53.EndpointsID, t)
+
+	if got, want := acctest.Partition(), endpoints.AwsUsGovPartitionID; got == want {
+		t.Skipf("Route 53 Traffic Policies are not supported in %s partition", got)
+	}
+}
+
 func TestAccRoute53TrafficPolicyInstance_basic(t *testing.T) {
 	var v route53.TrafficPolicyInstance
 	resourceName := "aws_route53_traffic_policy_instance.test"
@@ -22,7 +31,7 @@ func TestAccRoute53TrafficPolicyInstance_basic(t *testing.T) {
 	zoneName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53TrafficPolicy(t) },
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckRoute53TrafficPolicyInstanceDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
@@ -51,7 +60,7 @@ func TestAccRoute53TrafficPolicyInstance_disappears(t *testing.T) {
 	zoneName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53TrafficPolicy(t) },
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckRoute53TrafficPolicyInstanceDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
@@ -75,7 +84,7 @@ func TestAccRoute53TrafficPolicyInstance_update(t *testing.T) {
 	zoneName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53TrafficPolicy(t) },
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckRoute53TrafficPolicyInstanceDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
