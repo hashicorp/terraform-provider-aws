@@ -955,21 +955,21 @@ data "aws_partition" "current" {}
 resource "aws_organizations_organization" "test" {}
 
 resource "aws_organizations_organizational_unit" "test" {
-	name = %[1]q
-	parent_id = aws_organizations_organization.test.roots[0].id
+  name      = %[1]q
+  parent_id = aws_organizations_organization.test.roots[0].id
 }
 
 resource "aws_imagebuilder_distribution_configuration" "test" {
-	name = %[1]q
-	distribution {
-	  ami_distribution_configuration {
-		launch_permission {
-		  organizational_unit_arns = [aws_organizations_organizational_unit.test.arn]
-		}
-	  }
-	  region = data.aws_region.current.name
-	}
+  name = %[1]q
+  distribution {
+    ami_distribution_configuration {
+      launch_permission {
+        organizational_unit_arns = [aws_organizations_organizational_unit.test.arn]
+      }
+    }
+    region = data.aws_region.current.name
   }
+}
   `, rName)
 }
 
