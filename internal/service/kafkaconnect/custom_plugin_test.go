@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkafkaconnect "github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccKafkaConnectCustomPlugin_basic(t *testing.T) {
@@ -21,7 +22,7 @@ func TestAccKafkaConnectCustomPlugin_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy: nil,
+		CheckDestroy: testAccCheckCustomPluginDestroy,
 		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
@@ -54,7 +55,7 @@ func TestAccKafkaConnectCustomPlugin_description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy: nil,
+		CheckDestroy: testAccCheckCustomPluginDestroy,
 		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
@@ -81,7 +82,7 @@ func TestAccKafkaConnectCustomPlugin_contentType(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy: nil,
+		CheckDestroy: testAccCheckCustomPluginDestroy,
 		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
@@ -114,7 +115,7 @@ func TestAccKafkaConnectCustomPlugin_objectVersion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy: nil,
+		CheckDestroy: testAccCheckCustomPluginDestroy,
 		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
@@ -141,7 +142,7 @@ func testAccCheckCustomPluginExists(name string) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No MSK Custom Plugin ID is set")
+			return fmt.Errorf("No MSK Connect Custom Plugin ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn
@@ -154,6 +155,30 @@ func testAccCheckCustomPluginExists(name string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+func testAccCheckCustomPluginDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_mskconnect_custom_plugin" {
+			continue
+		}
+
+		_, err := tfkafkaconnect.FindCustomPluginByARN(context.TODO(), conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("MSK Connect Custom Plugin %s still exists", rs.Primary.ID)
+	}
+
+	return nil
 }
 
 func testAccCheckCustomPluginObjectVersion(name string) resource.TestCheckFunc {

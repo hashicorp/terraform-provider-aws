@@ -94,3 +94,20 @@ func waitCustomPluginCreated(ctx context.Context, conn *kafkaconnect.KafkaConnec
 
 	return nil, err
 }
+
+func waitCustomPluginDeleted(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.DescribeCustomPluginOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{kafkaconnect.CustomPluginStateDeleting},
+		Target:  []string{},
+		Refresh: statusCustomPluginState(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*kafkaconnect.DescribeCustomPluginOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}

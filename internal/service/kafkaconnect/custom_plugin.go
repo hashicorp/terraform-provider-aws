@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -19,7 +20,7 @@ func ResourceCustomPlugin() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomPluginCreate,
 		ReadWithoutTimeout:   resourceCustomPluginRead,
-		Delete:               schema.Noop,
+		DeleteWithoutTimeout: resourceCustomPluginDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -27,6 +28,7 @@ func ResourceCustomPlugin() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -164,6 +166,31 @@ func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("content_type", nil)
 		d.Set("latest_revision", nil)
 		d.Set("location", nil)
+	}
+
+	return nil
+}
+
+func resourceCustomPluginDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).KafkaConnectConn
+
+	log.Printf("[DEBUG] Deleting MSK Connect Custom Plugin: %s", d.Id())
+	_, err := conn.DeleteCustomPluginWithContext(ctx, &kafkaconnect.DeleteCustomPluginInput{
+		CustomPluginArn: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, kafkaconnect.ErrCodeNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return diag.Errorf("error deleting MSK Connect Custom Plugin (%s): %s", d.Id(), err)
+	}
+
+	_, err = waitCustomPluginDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+
+	if err != nil {
+		return diag.Errorf("error waiting for MSK Connect Custom Plugin (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
