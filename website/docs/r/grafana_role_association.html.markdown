@@ -57,3 +57,7 @@ The following arguments are optional:
 
 * `group_ids` - (Optional) The AWS SSO group ids to be assigned the role given in `role`.
 * `user_ids` - (Optional) The AWS SSO user ids to be assigned the role given in `role`.
+
+## Attributes Reference
+
+No additional attributes are exported.
