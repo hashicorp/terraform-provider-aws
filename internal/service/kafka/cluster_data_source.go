@@ -54,6 +54,10 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"zookeeper_connect_string_tls": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
