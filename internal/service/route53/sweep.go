@@ -35,6 +35,11 @@ func init() {
 		F:    sweepQueryLogs,
 	})
 
+	resource.AddTestSweepers("aws_route53_traffic_policy", &resource.Sweeper{
+		Name: "aws_route53_traffic_policy",
+		F:    sweepTrafficPolicies,
+	})
+
 	resource.AddTestSweepers("aws_route53_zone", &resource.Sweeper{
 		Name: "aws_route53_zone",
 		Dependencies: []string{
@@ -43,6 +48,7 @@ func init() {
 			"aws_service_discovery_private_dns_namespace",
 			"aws_elb",
 			"aws_route53_key_signing_key",
+			"aws_route53_traffic_policy",
 		},
 		F: sweepZones,
 	})
@@ -219,6 +225,49 @@ func sweepQueryLogs(region string) error {
 	}
 
 	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepTrafficPolicies(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).Route53Conn
+	input := &route53.ListTrafficPoliciesInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = listTrafficPoliciesPages(conn, input, func(page *route53.ListTrafficPoliciesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TrafficPolicySummaries {
+			r := ResourceTrafficPolicy()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.Id))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Route 53 Traffic Policy sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing Route 53 Traffic Policies (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Route 53 Traffic Policies (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepZones(region string) error {
