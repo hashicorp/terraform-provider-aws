@@ -1,6 +1,7 @@
 package kafkaconnect_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -145,7 +146,7 @@ func testAccCheckCustomPluginExists(name string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn
 
-		_, err := tfkafkaconnect.FindCustomPluginByARN(conn, rs.Primary.ID)
+		_, err := tfkafkaconnect.FindCustomPluginByARN(context.TODO(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

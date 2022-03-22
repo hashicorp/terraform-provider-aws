@@ -35,12 +35,12 @@ func FindConnectorByARN(ctx context.Context, conn *kafkaconnect.KafkaConnect, ar
 	return output, nil
 }
 
-func FindCustomPluginByARN(conn *kafkaconnect.KafkaConnect, arn string) (*kafkaconnect.DescribeCustomPluginOutput, error) {
+func FindCustomPluginByARN(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string) (*kafkaconnect.DescribeCustomPluginOutput, error) {
 	input := &kafkaconnect.DescribeCustomPluginInput{
 		CustomPluginArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeCustomPlugin(input)
+	output, err := conn.DescribeCustomPluginWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, kafkaconnect.ErrCodeNotFoundException) {
 		return nil, &resource.NotFoundError{

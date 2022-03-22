@@ -74,17 +74,21 @@ func waitConnectorUpdated(ctx context.Context, conn *kafkaconnect.KafkaConnect, 
 	return nil, err
 }
 
-func waitCustomPluginCreated(conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.DescribeCustomPluginOutput, error) {
+func waitCustomPluginCreated(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.DescribeCustomPluginOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kafkaconnect.CustomPluginStateCreating},
 		Target:  []string{kafkaconnect.CustomPluginStateActive},
-		Refresh: statusCustomPluginState(conn, arn),
+		Refresh: statusCustomPluginState(ctx, conn, arn),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*kafkaconnect.DescribeCustomPluginOutput); ok {
+		if state, stateDescription := aws.StringValue(output.CustomPluginState), output.StateDescription; state == kafkaconnect.CustomPluginStateCreateFailed && stateDescription != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(stateDescription.Code), aws.StringValue(stateDescription.Message)))
+		}
+
 		return output, err
 	}
 

@@ -25,9 +25,9 @@ func statusConnectorState(ctx context.Context, conn *kafkaconnect.KafkaConnect, 
 	}
 }
 
-func statusCustomPluginState(conn *kafkaconnect.KafkaConnect, arn string) resource.StateRefreshFunc {
+func statusCustomPluginState(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindCustomPluginByARN(conn, arn)
+		output, err := FindCustomPluginByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
