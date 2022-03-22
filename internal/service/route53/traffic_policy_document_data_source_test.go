@@ -13,7 +13,7 @@ import (
 	tfrouter53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 )
 
-func TestAccDataSourceTrafficPolicyDocument_basic(t *testing.T) {
+func TestAccRoute53TrafficPolicyDocumentDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -30,7 +30,7 @@ func TestAccDataSourceTrafficPolicyDocument_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceTrafficPolicyDocument_complete(t *testing.T) {
+func TestAccRoute53TrafficPolicyDocumentDataSource_complete(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
