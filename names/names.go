@@ -911,3 +911,11 @@ func ServiceEnvVar(key string) string {
 
 	return ""
 }
+
+func AWSServiceName(key string) (string, error) {
+	if v, ok := serviceData[key]; ok {
+		return v.AWSServiceName, nil
+	}
+
+	return "", fmt.Errorf("no service data found for %s", key)
+}
