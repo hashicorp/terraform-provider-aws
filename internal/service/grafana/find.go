@@ -79,43 +79,41 @@ func FindSamlConfigurationByID(conn *managedgrafana.ManagedGrafana, id string) (
 	return output.Authentication.Saml, nil
 }
 
-func FindRoleAssociationByRoleAndWorkspaceID(conn *managedgrafana.ManagedGrafana, role string, workspaceID string) (map[string][]*managedgrafana.User, error) {
-	var nextToken *string
-	userTypeIdMap := make(map[string][]*managedgrafana.User)
-	userTypeIdMap[managedgrafana.UserTypeSsoUser] = make([]*managedgrafana.User, 0)
-	userTypeIdMap[managedgrafana.UserTypeSsoGroup] = make([]*managedgrafana.User, 0)
-	for {
-		input := &managedgrafana.ListPermissionsInput{
-			MaxResults:  aws.Int64(100),
-			WorkspaceId: aws.String(workspaceID),
+func FindRoleAssociationsByRoleAndWorkspaceID(conn *managedgrafana.ManagedGrafana, role string, workspaceID string) (map[string][]string, error) {
+	input := &managedgrafana.ListPermissionsInput{
+		WorkspaceId: aws.String(workspaceID),
+	}
+	output := make(map[string][]string, 0)
+
+	err := conn.ListPermissionsPages(input, func(page *managedgrafana.ListPermissionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if nextToken != nil {
-			input.NextToken = nextToken
-		}
-
-		permissions, err := conn.ListPermissions(input)
-
-		if err != nil {
-			return nil, &resource.NotFoundError{
-				Message:     workspaceID,
-				LastRequest: input,
+		for _, v := range page.Permissions {
+			if aws.StringValue(v.Role) == role {
+				userType := aws.StringValue(v.User.Type)
+				output[userType] = append(output[userType], aws.StringValue(v.User.Id))
 			}
 		}
 
-		for _, entry := range permissions.Permissions {
-			if aws.StringValue(entry.Role) == role {
-				userType := aws.StringValue(entry.User.Type)
-				userTypeIdMap[userType] = append(userTypeIdMap[userType], entry.User)
-			}
-		}
+		return !lastPage
+	})
 
-		nextToken = permissions.NextToken
-
-		if nextToken == nil || aws.StringValue(nextToken) == "" {
-			break
+	if tfawserr.ErrCodeEquals(err, managedgrafana.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
 	}
 
-	return userTypeIdMap, nil
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

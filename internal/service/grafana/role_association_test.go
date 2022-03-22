@@ -282,23 +282,19 @@ resource "aws_grafana_role_association" "test" {
 `, role, userID, groupID))
 }
 
-func testAccCheckRoleAssociationExists(name string) resource.TestCheckFunc {
+func testAccCheckRoleAssociationExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn
 
-		usersMap, err := tfgrafana.FindRoleAssociationByRoleAndWorkspaceID(conn, rs.Primary.Attributes["role"], rs.Primary.Attributes["workspace_id"])
+		_, err := tfgrafana.FindRoleAssociationsByRoleAndWorkspaceID(conn, rs.Primary.Attributes["role"], rs.Primary.Attributes["workspace_id"])
 
 		if err != nil {
 			return err
-		}
-
-		if len(usersMap[managedgrafana.UserTypeSsoUser]) == 0 && len(usersMap[managedgrafana.UserTypeSsoGroup]) == 0 {
-			return fmt.Errorf("Not found: %s", name)
 		}
 
 		return nil
@@ -313,21 +309,17 @@ func testAccCheckRoleAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		role := rs.Primary.Attributes["role"]
-		workspaceID := rs.Primary.Attributes["workspace_id"]
-		userMap, err := tfgrafana.FindRoleAssociationByRoleAndWorkspaceID(conn, role, workspaceID)
+		_, err := tfgrafana.FindRoleAssociationsByRoleAndWorkspaceID(conn, rs.Primary.Attributes["role"], rs.Primary.Attributes["workspace_id"])
 
 		if tfresource.NotFound(err) {
 			continue
 		}
 
-		if len(userMap[managedgrafana.UserTypeSsoUser]) > 0 || len(userMap[managedgrafana.UserTypeSsoGroup]) > 0 {
-			return fmt.Errorf("Grafana Workspace Role Association %s-%s still exists", role, workspaceID)
-		}
-
 		if err != nil {
 			return err
 		}
+
+		return fmt.Errorf("Grafana Workspace Role Association %s still exists", rs.Primary.ID)
 	}
 	return nil
 }
