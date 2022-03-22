@@ -2,6 +2,7 @@ package grafana_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/managedgrafana"
@@ -15,10 +16,17 @@ import (
 )
 
 func testAccGrafanaRoleAssociation_usersAdmin(t *testing.T) {
+	key := "GRAFANA_SSO_USER_ID"
+	userID := os.Getenv(key)
+	if userID == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
 	role := managedgrafana.RoleAdmin
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_role_association.test"
 	workspaceResourceName := "aws_grafana_workspace.test"
+
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
@@ -31,12 +39,12 @@ func testAccGrafanaRoleAssociation_usersAdmin(t *testing.T) {
 			Providers:    acctest.Providers,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccWorkspaceGrafanaRoleAssociationUsers(rName, role),
+					Config: testAccWorkspaceGrafanaRoleAssociationUsers(rName, role, userID),
 					Check: resource.ComposeAggregateTestCheckFunc(
 						testAccCheckRoleAssociationExists(resourceName),
 						resource.TestCheckResourceAttr(resourceName, "role", role),
 						resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
-						resource.TestCheckResourceAttr(resourceName, "user_ids.0", "USER_ID"),
+						resource.TestCheckResourceAttr(resourceName, "user_ids.0", userID),
 						resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
 					),
 				},
@@ -45,10 +53,17 @@ func testAccGrafanaRoleAssociation_usersAdmin(t *testing.T) {
 }
 
 func testAccGrafanaRoleAssociation_usersEditor(t *testing.T) {
+	key := "GRAFANA_SSO_USER_ID"
+	userID := os.Getenv(key)
+	if userID == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
 	role := managedgrafana.RoleEditor
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_role_association.test"
 	workspaceResourceName := "aws_grafana_workspace.test"
+
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
@@ -61,12 +76,12 @@ func testAccGrafanaRoleAssociation_usersEditor(t *testing.T) {
 			Providers:    acctest.Providers,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccWorkspaceGrafanaRoleAssociationUsers(rName, role),
+					Config: testAccWorkspaceGrafanaRoleAssociationUsers(rName, role, userID),
 					Check: resource.ComposeAggregateTestCheckFunc(
 						testAccCheckRoleAssociationExists(resourceName),
 						resource.TestCheckResourceAttr(resourceName, "role", role),
 						resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
-						resource.TestCheckResourceAttr(resourceName, "user_ids.0", "USER_ID"),
+						resource.TestCheckResourceAttr(resourceName, "user_ids.0", userID),
 						resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
 					),
 				},
@@ -75,10 +90,17 @@ func testAccGrafanaRoleAssociation_usersEditor(t *testing.T) {
 }
 
 func testAccGrafanaRoleAssociation_groupsAdmin(t *testing.T) {
+	key := "GRAFANA_SSO_GROUP_ID"
+	groupID := os.Getenv(key)
+	if groupID == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
 	role := managedgrafana.RoleAdmin
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_role_association.test"
 	workspaceResourceName := "aws_grafana_workspace.test"
+
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
@@ -91,12 +113,12 @@ func testAccGrafanaRoleAssociation_groupsAdmin(t *testing.T) {
 			Providers:    acctest.Providers,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccWorkspaceGrafanaRoleAssociationGroups(rName, role),
+					Config: testAccWorkspaceGrafanaRoleAssociationGroups(rName, role, groupID),
 					Check: resource.ComposeAggregateTestCheckFunc(
 						testAccCheckRoleAssociationExists(resourceName),
+						resource.TestCheckResourceAttr(resourceName, "group_ids.#", "1"),
+						resource.TestCheckResourceAttr(resourceName, "group_ids.0", groupID),
 						resource.TestCheckResourceAttr(resourceName, "role", role),
-						resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
-						resource.TestCheckResourceAttr(resourceName, "user_ids.0", "USER_ID"),
 						resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
 					),
 				},
@@ -105,10 +127,17 @@ func testAccGrafanaRoleAssociation_groupsAdmin(t *testing.T) {
 }
 
 func testAccGrafanaRoleAssociation_groupsEditor(t *testing.T) {
+	key := "GRAFANA_SSO_GROUP_ID"
+	groupID := os.Getenv(key)
+	if groupID == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
 	role := managedgrafana.RoleEditor
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_role_association.test"
 	workspaceResourceName := "aws_grafana_workspace.test"
+
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
@@ -121,12 +150,12 @@ func testAccGrafanaRoleAssociation_groupsEditor(t *testing.T) {
 			Providers:    acctest.Providers,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccWorkspaceGrafanaRoleAssociationGroups(rName, role),
+					Config: testAccWorkspaceGrafanaRoleAssociationGroups(rName, role, groupID),
 					Check: resource.ComposeAggregateTestCheckFunc(
 						testAccCheckRoleAssociationExists(resourceName),
+						resource.TestCheckResourceAttr(resourceName, "group_ids.#", "1"),
+						resource.TestCheckResourceAttr(resourceName, "group_ids.0", groupID),
 						resource.TestCheckResourceAttr(resourceName, "role", role),
-						resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
-						resource.TestCheckResourceAttr(resourceName, "user_ids.0", "USER_ID"),
 						resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
 					),
 				},
@@ -135,10 +164,22 @@ func testAccGrafanaRoleAssociation_groupsEditor(t *testing.T) {
 }
 
 func testAccGrafanaRoleAssociation_usersAndGroupsAdmin(t *testing.T) {
+	key := "GRAFANA_SSO_USER_ID"
+	userID := os.Getenv(key)
+	if userID == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+	key = "GRAFANA_SSO_GROUP_ID"
+	groupID := os.Getenv(key)
+	if groupID == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
 	role := managedgrafana.RoleAdmin
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_role_association.test"
 	workspaceResourceName := "aws_grafana_workspace.test"
+
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
@@ -151,12 +192,14 @@ func testAccGrafanaRoleAssociation_usersAndGroupsAdmin(t *testing.T) {
 			Providers:    acctest.Providers,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccWorkspaceGrafanaRoleAssociationUsersAndGroups(rName, role),
+					Config: testAccWorkspaceGrafanaRoleAssociationUsersAndGroups(rName, role, userID, groupID),
 					Check: resource.ComposeAggregateTestCheckFunc(
 						testAccCheckRoleAssociationExists(resourceName),
+						resource.TestCheckResourceAttr(resourceName, "group_ids.#", "1"),
+						resource.TestCheckResourceAttr(resourceName, "group_ids.0", groupID),
 						resource.TestCheckResourceAttr(resourceName, "role", role),
 						resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
-						resource.TestCheckResourceAttr(resourceName, "user_ids.0", "USER_ID"),
+						resource.TestCheckResourceAttr(resourceName, "user_ids.0", userID),
 						resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
 					),
 				},
@@ -165,10 +208,22 @@ func testAccGrafanaRoleAssociation_usersAndGroupsAdmin(t *testing.T) {
 }
 
 func testAccGrafanaRoleAssociation_usersAndGroupsEditor(t *testing.T) {
+	key := "GRAFANA_SSO_USER_ID"
+	userID := os.Getenv(key)
+	if userID == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+	key = "GRAFANA_SSO_GROUP_ID"
+	groupID := os.Getenv(key)
+	if groupID == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
 	role := managedgrafana.RoleEditor
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_role_association.test"
 	workspaceResourceName := "aws_grafana_workspace.test"
+
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
@@ -181,12 +236,14 @@ func testAccGrafanaRoleAssociation_usersAndGroupsEditor(t *testing.T) {
 			Providers:    acctest.Providers,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccWorkspaceGrafanaRoleAssociationUsersAndGroups(rName, role),
+					Config: testAccWorkspaceGrafanaRoleAssociationUsersAndGroups(rName, role, userID, groupID),
 					Check: resource.ComposeAggregateTestCheckFunc(
 						testAccCheckRoleAssociationExists(resourceName),
+						resource.TestCheckResourceAttr(resourceName, "group_ids.#", "1"),
+						resource.TestCheckResourceAttr(resourceName, "group_ids.0", groupID),
 						resource.TestCheckResourceAttr(resourceName, "role", role),
 						resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
-						resource.TestCheckResourceAttr(resourceName, "user_ids.0", "USER_ID"),
+						resource.TestCheckResourceAttr(resourceName, "user_ids.0", userID),
 						resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
 					),
 				},
@@ -194,35 +251,35 @@ func testAccGrafanaRoleAssociation_usersAndGroupsEditor(t *testing.T) {
 		})
 }
 
-func testAccWorkspaceGrafanaRoleAssociationUsers(rName string, role string) string {
+func testAccWorkspaceGrafanaRoleAssociationUsers(rName, role, userID string) string {
 	return acctest.ConfigCompose(testAccWorkspaceConfigAuthenticationProvider(rName, "AWS_SSO"), fmt.Sprintf(`
 resource "aws_grafana_role_association" "test" {
   role         = %[1]q
-  user_ids     = ["9a67126fc1-ad12499e-78c0-4476-b180-f68a772b8be9"]
+  user_ids     = [%[2]q]
   workspace_id = aws_grafana_workspace.test.id
 }
-`, role))
+`, role, userID))
 }
 
-func testAccWorkspaceGrafanaRoleAssociationGroups(rName string, role string) string {
+func testAccWorkspaceGrafanaRoleAssociationGroups(rName, role, groupID string) string {
 	return acctest.ConfigCompose(testAccWorkspaceConfigAuthenticationProvider(rName, "AWS_SSO"), fmt.Sprintf(`
 resource "aws_grafana_role_association" "test" {
   role         = %[1]q
-  group_ids    = ["9a67126fc1-6dbc70ac-546e-4191-af47-b0dd9fe827ce"]
+  group_ids    = [%[2]q]
   workspace_id = aws_grafana_workspace.test.id
 }
-`, role))
+`, role, groupID))
 }
 
-func testAccWorkspaceGrafanaRoleAssociationUsersAndGroups(rName string, role string) string {
+func testAccWorkspaceGrafanaRoleAssociationUsersAndGroups(rName, role, userID, groupID string) string {
 	return acctest.ConfigCompose(testAccWorkspaceConfigAuthenticationProvider(rName, "AWS_SSO"), fmt.Sprintf(`
 resource "aws_grafana_role_association" "test" {
   role         = %[1]q
-  user_ids     = ["9a67126fc1-ad12499e-78c0-4476-b180-f68a772b8be9"]
-  group_ids    = ["9a67126fc1-6dbc70ac-546e-4191-af47-b0dd9fe827ce"]
+  user_ids     = [%[2]q]
+  group_ids    = [%[3]q]
   workspace_id = aws_grafana_workspace.test.id
 }
-`, role))
+`, role, userID, groupID))
 }
 
 func testAccCheckRoleAssociationExists(name string) resource.TestCheckFunc {
