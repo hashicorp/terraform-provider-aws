@@ -17,6 +17,7 @@ variable "service_labels" {
     "apigatewayv2",
     "appconfig",
     "appflow",
+    "appintegrations",
     "applicationautoscaling",
     "applicationdiscoveryservice",
     "applicationinsights",

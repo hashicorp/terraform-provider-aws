@@ -2,12 +2,14 @@ package athena
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -18,19 +20,59 @@ func ResourceDatabase() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceDatabaseCreate,
 		Read:   resourceDatabaseRead,
-		Update: resourceDatabaseUpdate,
+		Update: schema.Noop,
 		Delete: resourceDatabaseDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile("^[_a-z0-9]+$"), "must be lowercase letters, numbers, or underscore ('_')"),
+			"acl_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"s3_acl_option": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(athena.S3AclOption_Values(), false),
+							ForceNew:     true,
+						},
+					},
+				},
 			},
 			"bucket": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+			},
+			"comment": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"encryption_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"encryption_option": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(athena.EncryptionOption_Values(), false),
+							ForceNew:     true,
+						},
+						"kms_key": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
+			"expected_bucket_owner": {
+				Type:     schema.TypeString,
+				Optional: true,
 				ForceNew: true,
 			},
 			"force_destroy": {
@@ -38,75 +80,45 @@ func ResourceDatabase() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"encryption_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kms_key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"encryption_option": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								athena.EncryptionOptionCseKms,
-								athena.EncryptionOptionSseKms,
-								athena.EncryptionOptionSseS3,
-							}, false),
-						},
-					},
-				},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile("^[_a-z0-9]+$"), "must be lowercase letters, numbers, or underscore ('_')"),
 			},
 		},
 	}
 }
 
-func expandAthenaResultConfiguration(bucket string, encryptionConfigurationList []interface{}) *athena.ResultConfiguration {
-	resultConfig := athena.ResultConfiguration{
-		OutputLocation: aws.String("s3://" + bucket),
-	}
-
-	if len(encryptionConfigurationList) <= 0 {
-		return &resultConfig
-	}
-
-	data := encryptionConfigurationList[0].(map[string]interface{})
-	keyType := data["encryption_option"].(string)
-	keyID := data["kms_key"].(string)
-
-	encryptionConfig := athena.EncryptionConfiguration{
-		EncryptionOption: aws.String(keyType),
-	}
-
-	if len(keyID) > 0 {
-		encryptionConfig.KmsKey = aws.String(keyID)
-	}
-
-	resultConfig.EncryptionConfiguration = &encryptionConfig
-
-	return &resultConfig
-}
-
 func resourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AthenaConn
 
+	name := d.Get("name").(string)
+	var queryString string
+
+	if v, ok := d.GetOk("comment"); ok {
+		queryString = fmt.Sprintf("create database `%[1]s` comment '%[2]s';", name, strings.Replace(v.(string), "'", "\\'", -1))
+	} else {
+		queryString = fmt.Sprintf("create database `%[1]s`;", name)
+	}
+
 	input := &athena.StartQueryExecutionInput{
-		QueryString:         aws.String(fmt.Sprintf("create database `%s`;", d.Get("name").(string))),
-		ResultConfiguration: expandAthenaResultConfiguration(d.Get("bucket").(string), d.Get("encryption_configuration").([]interface{})),
+		QueryString:         aws.String(queryString),
+		ResultConfiguration: expandAthenaResultConfiguration(d),
 	}
 
 	resp, err := conn.StartQueryExecution(input)
+
 	if err != nil {
+		return fmt.Errorf("error starting Athena Database (%s) query execution: %w", name, err)
+	}
+
+	if err := executeAndExpectNoRows(*resp.QueryExecutionId, "create", conn); err != nil {
 		return err
 	}
 
-	if err := executeAndExpectNoRowsWhenCreate(*resp.QueryExecutionId, conn); err != nil {
-		return err
-	}
-	d.SetId(d.Get("name").(string))
+	d.SetId(name)
+
 	return resourceDatabaseRead(d, meta)
 }
 
@@ -114,26 +126,32 @@ func resourceDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AthenaConn
 
 	input := &athena.GetDatabaseInput{
-		DatabaseName: aws.String(d.Get("name").(string)),
+		DatabaseName: aws.String(d.Id()),
 		CatalogName:  aws.String("AwsDataCatalog"),
 	}
-	_, err := conn.GetDatabase(input)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+	res, err := conn.GetDatabase(input)
 
-func resourceDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceDatabaseRead(d, meta)
+	if tfawserr.ErrMessageContains(err, athena.ErrCodeMetadataException, "not found") && !d.IsNewResource() {
+		log.Printf("[WARN] Athena Database (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading Athena Database (%s): %w", d.Id(), err)
+	}
+
+	db := res.Database
+
+	d.Set("name", db.Name)
+
+	return nil
 }
 
 func resourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AthenaConn
 
-	name := d.Get("name").(string)
-
-	queryString := fmt.Sprintf("drop database `%s`", name)
+	queryString := fmt.Sprintf("drop database `%s`", d.Id())
 	if d.Get("force_destroy").(bool) {
 		queryString += " cascade"
 	}
@@ -141,7 +159,7 @@ func resourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 
 	input := &athena.StartQueryExecutionInput{
 		QueryString:         aws.String(queryString),
-		ResultConfiguration: expandAthenaResultConfiguration(d.Get("bucket").(string), d.Get("encryption_configuration").([]interface{})),
+		ResultConfiguration: expandAthenaResultConfiguration(d),
 	}
 
 	resp, err := conn.StartQueryExecution(input)
@@ -149,30 +167,70 @@ func resourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := executeAndExpectNoRowsWhenDrop(*resp.QueryExecutionId, conn); err != nil {
+	if err := executeAndExpectNoRows(*resp.QueryExecutionId, "delete", conn); err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func executeAndExpectNoRowsWhenCreate(qeid string, conn *athena.Athena) error {
+func expandAthenaResultConfiguration(d *schema.ResourceData) *athena.ResultConfiguration {
+
+	resultConfig := &athena.ResultConfiguration{
+		OutputLocation:          aws.String("s3://" + d.Get("bucket").(string)),
+		EncryptionConfiguration: expandAthenaResultConfigurationEncryptionConfig(d.Get("encryption_configuration").([]interface{})),
+	}
+
+	if v, ok := d.GetOk("expected_bucket_owner"); ok {
+		resultConfig.ExpectedBucketOwner = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("acl_configuration"); ok && len(v.([]interface{})) > 0 {
+		resultConfig.AclConfiguration = expandAthenaResultConfigurationAclConfig(v.([]interface{}))
+	}
+
+	return resultConfig
+}
+
+func expandAthenaResultConfigurationEncryptionConfig(config []interface{}) *athena.EncryptionConfiguration {
+	if len(config) <= 0 {
+		return nil
+	}
+
+	data := config[0].(map[string]interface{})
+
+	encryptionConfig := &athena.EncryptionConfiguration{
+		EncryptionOption: aws.String(data["encryption_option"].(string)),
+	}
+
+	if v, ok := data["kms_key"].(string); ok && v != "" {
+		encryptionConfig.KmsKey = aws.String(v)
+	}
+
+	return encryptionConfig
+}
+
+func expandAthenaResultConfigurationAclConfig(config []interface{}) *athena.AclConfiguration {
+	if len(config) <= 0 {
+		return nil
+	}
+
+	data := config[0].(map[string]interface{})
+
+	encryptionConfig := &athena.AclConfiguration{
+		S3AclOption: aws.String(data["s3_acl_option"].(string)),
+	}
+
+	return encryptionConfig
+}
+
+func executeAndExpectNoRows(qeid, action string, conn *athena.Athena) error {
 	rs, err := QueryExecutionResult(qeid, conn)
 	if err != nil {
 		return err
 	}
 	if len(rs.Rows) != 0 {
-		return fmt.Errorf("Athena create database, unexpected query result: %s", flattenAthenaResultSet(rs))
-	}
-	return nil
-}
-
-func executeAndExpectNoRowsWhenDrop(qeid string, conn *athena.Athena) error {
-	rs, err := QueryExecutionResult(qeid, conn)
-	if err != nil {
-		return err
-	}
-	if len(rs.Rows) != 0 {
-		return fmt.Errorf("Athena drop database, unexpected query result: %s", flattenAthenaResultSet(rs))
+		return fmt.Errorf("Athena %s database, unexpected query result: %s", action, flattenAthenaResultSet(rs))
 	}
 	return nil
 }

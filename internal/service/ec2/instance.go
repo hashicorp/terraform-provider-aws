@@ -600,6 +600,11 @@ func ResourceInstance() *schema.Resource {
 					return
 				},
 			},
+			"user_data_replace_on_change": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"volume_tags": tftags.TagsSchema(),
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
@@ -694,6 +699,14 @@ func ResourceInstance() *schema.Resource {
 			}),
 			customdiff.ComputedIf("launch_template.0.name", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("launch_template.0.id")
+			}),
+			customdiff.ForceNewIf("user_data", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				replace := diff.Get("user_data_replace_on_change")
+				return replace.(bool)
+			}),
+			customdiff.ForceNewIf("user_data_base64", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				replace := diff.Get("user_data_replace_on_change")
+				return replace.(bool)
 			}),
 		),
 	}
@@ -3073,27 +3086,11 @@ func expandCapacityReservationSpecification(crs []interface{}) *ec2.CapacityRese
 		capacityReservationSpecification.CapacityReservationPreference = aws.String(v.(string))
 	}
 
-	if v, ok := m["capacity_reservation_target"]; ok && v != "" && (len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil) {
-		capacityReservationSpecification.CapacityReservationTarget = expandCapacityReservationTarget(v.([]interface{}))
+	if v, ok := m["capacity_reservation_target"].([]interface{}); ok && len(v) > 0 {
+		capacityReservationSpecification.CapacityReservationTarget = expandCapacityReservationTarget(v[0].(map[string]interface{}))
 	}
 
 	return capacityReservationSpecification
-}
-
-func expandCapacityReservationTarget(crt []interface{}) *ec2.CapacityReservationTarget {
-	if len(crt) < 1 || crt[0] == nil {
-		return nil
-	}
-
-	m := crt[0].(map[string]interface{})
-
-	capacityReservationTarget := &ec2.CapacityReservationTarget{}
-
-	if v, ok := m["capacity_reservation_id"]; ok && v != "" {
-		capacityReservationTarget.CapacityReservationId = aws.String(v.(string))
-	}
-
-	return capacityReservationTarget
 }
 
 func flattenEc2InstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse) []interface{} {

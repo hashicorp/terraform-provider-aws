@@ -540,7 +540,7 @@ resource and remove `lifecycle_rule` and its nested arguments in the `aws_s3_buc
 
 ~> **Note:** When configuring the `rule.filter` configuration block in the new `aws_s3_bucket_lifecycle_configuration` resource, use the AWS CLI s3api [get-bucket-lifecycle-configuration](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/s3api/get-bucket-lifecycle-configuration.html)
 to get the source bucket's lifecycle configuration and determine if the `Filter` is configured as `"Filter" : {}` or `"Filter" : { "Prefix": "" }`.
-If AWS returns the former, configure `rule.filter` as `filter {}`. Otherwise, configure `rule.filter` as `filter { prefix = "" }` as shown here:
+If AWS returns the former, configure `rule.filter` as `filter {}`. Otherwise, neither a `rule.filter` nor `rule.prefix` parameter should be configured as shown here:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
@@ -556,10 +556,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "example" {
     id     = "Keep previous version 30 days, then in Glacier another 60"
     status = "Enabled"
 
-    filter {
-      prefix = ""
-    }
-
     noncurrent_version_transition {
       noncurrent_days = 30
       storage_class   = "GLACIER"
@@ -573,10 +569,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "example" {
   rule {
     id     = "Delete old incomplete multi-part uploads"
     status = "Enabled"
-
-    filter {
-      prefix = ""
-    }
 
     abort_incomplete_multipart_upload {
       days_after_initiation = 7
@@ -655,8 +647,91 @@ resource "aws_s3_bucket_lifecycle_configuration" "example" {
     id     = "log-expiration"
     status = "Enabled"
 
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    transition {
+      days          = 180
+      storage_class = "GLACIER"
+    }
+  }
+}
+```
+
+Run `terraform import` on each new resource, _e.g._,
+
+```shell
+$ terraform import aws_s3_bucket_lifecycle_configuration.example yournamehere
+aws_s3_bucket_lifecycle_configuration.example: Importing from ID "yournamehere"...
+aws_s3_bucket_lifecycle_configuration.example: Import prepared!
+  Prepared aws_s3_bucket_lifecycle_configuration for import
+aws_s3_bucket_lifecycle_configuration.example: Refreshing state... [id=yournamehere]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
+#### For Lifecycle Rules with `prefix`
+
+For example, given this configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  lifecycle_rule {
+    id      = "log-expiration"
+    enabled = true
+    prefix  = "foobar"
+
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    transition {
+      days          = 180
+      storage_class = "GLACIER"
+    }
+  }
+}
+```
+
+You will receive the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
+│
+│ Can't configure a value for "lifecycle_rule": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since the `lifecycle_rule` argument changed to read-only, update the configuration to use the `aws_s3_bucket_lifecycle_configuration`
+resource and remove `lifecycle_rule` and its nested arguments in the `aws_s3_bucket` resource:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  rule {
+    id     = "log-expiration"
+    status = "Enabled"
+
     filter {
-      prefix = ""
+      prefix = "foobar"
     }
 
     transition {
@@ -687,8 +762,7 @@ The resources that were imported are shown above. These resources are now in
 your Terraform state and will henceforth be managed by Terraform.
 ```
 
-#### For Lifecycle Rules with a `prefix`
-
+#### For Lifecycle Rules with `prefix` and `tags`
 
 For example, given this previous configuration:
 

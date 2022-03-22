@@ -8,6 +8,10 @@ package logging
 // Refer to the terraform-plugin-go logging keys as well, which should be
 // equivalent to these when possible.
 const (
+	// Attribute path representation, which is typically in flatmap form such
+	// as parent.0.child in this project.
+	KeyAttributePath = "tf_attribute_path"
+
 	// The type of data source being operated on, such as "archive_file"
 	KeyDataSourceType = "tf_data_source_type"
 

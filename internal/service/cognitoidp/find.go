@@ -1,6 +1,7 @@
 package cognitoidp
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -32,4 +33,43 @@ func FindCognitoUserPoolUICustomization(conn *cognitoidentityprovider.CognitoIde
 	}
 
 	return output.UICustomization, nil
+}
+
+// FindCognitoUserInGroup checks whether the specified user is present in the specified group. Returns boolean value accordingly.
+func FindCognitoUserInGroup(conn *cognitoidentityprovider.CognitoIdentityProvider, groupName, userPoolId, username string) (bool, error) {
+	input := &cognitoidentityprovider.AdminListGroupsForUserInput{
+		UserPoolId: aws.String(userPoolId),
+		Username:   aws.String(username),
+	}
+
+	found := false
+
+	err := conn.AdminListGroupsForUserPages(input, func(page *cognitoidentityprovider.AdminListGroupsForUserOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, group := range page.Groups {
+			if group == nil {
+				continue
+			}
+
+			if aws.StringValue(group.GroupName) == groupName {
+				found = true
+				break
+			}
+		}
+
+		if found {
+			return false
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return false, fmt.Errorf("error reading groups for user: %w", err)
+	}
+
+	return found, nil
 }

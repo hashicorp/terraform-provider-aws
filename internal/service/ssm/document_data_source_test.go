@@ -45,7 +45,26 @@ func TestAccSSMDocumentDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckDocumentDataSourceConfig(name string, documentFormat string) string {
+func TestAccSSMDocumentDataSource_awsManaged(t *testing.T) {
+	resourceName := "data.aws_ssm_document.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:  acctest.Providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckDocumentDataSourceAWSManagedDocumentConfig(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", "AWS-StartEC2Instance"),
+					resource.TestCheckResourceAttr(resourceName, "arn", "AWS-StartEC2Instance"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckDocumentDataSourceConfig(name, documentFormat string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "test" {
   name          = "%s"
@@ -77,4 +96,12 @@ data "aws_ssm_document" "test" {
   document_format = "%s"
 }
 `, name, documentFormat)
+}
+
+func testAccCheckDocumentDataSourceAWSManagedDocumentConfig() string {
+	return `
+data "aws_ssm_document" "test" {
+  name = "AWS-StartEC2Instance"
+}
+`
 }

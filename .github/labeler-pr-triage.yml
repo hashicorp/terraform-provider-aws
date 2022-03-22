@@ -80,6 +80,9 @@ service/apigatewayv2:
 service/appconfig:
   - 'internal/service/appconfig/**/*'
   - 'website/**/appconfig_*'
+service/appintegrations:
+  - 'internal/service/appintegrations/**/*'
+  - 'website/**/appintegrations_*'
 service/applicationautoscaling:
   - 'internal/service/appautoscaling/**/*'
   - 'website/**/appautoscaling_*'
