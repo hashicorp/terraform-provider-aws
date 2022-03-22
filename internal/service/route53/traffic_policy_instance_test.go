@@ -16,7 +16,7 @@ import (
 	tfrouter53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 )
 
-func TestAccTrafficPolicyInstance_basic(t *testing.T) {
+func TestAccRoute53TrafficPolicyInstance_basic(t *testing.T) {
 	var output route53.GetTrafficPolicyInstanceOutput
 	resourceName := "aws_route53_traffic_policy_instance.test"
 
@@ -32,7 +32,7 @@ func TestAccTrafficPolicyInstance_basic(t *testing.T) {
 			{
 				Config: testAccTrafficPolicyInstanceConfig(zoneName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrafficPolicyInstanceExists(resourceName, &output),
+					testAccCheckRoute53TrafficPolicyInstanceExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -45,7 +45,7 @@ func TestAccTrafficPolicyInstance_basic(t *testing.T) {
 	})
 }
 
-func TestAccTrafficPolicyInstance_disappears(t *testing.T) {
+func TestAccRoute53TrafficPolicyInstance_disappears(t *testing.T) {
 	var output route53.GetTrafficPolicyInstanceOutput
 	resourceName := "aws_route53_traffic_policy_instance.test"
 
@@ -61,7 +61,7 @@ func TestAccTrafficPolicyInstance_disappears(t *testing.T) {
 			{
 				Config: testAccTrafficPolicyInstanceConfig(zoneName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrafficPolicyInstanceExists(resourceName, &output),
+					testAccCheckRoute53TrafficPolicyInstanceExists(resourceName, &output),
 					acctest.CheckResourceDisappears(acctest.Provider, tfrouter53.ResourceTrafficPolicyInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -70,7 +70,7 @@ func TestAccTrafficPolicyInstance_disappears(t *testing.T) {
 	})
 }
 
-func TestAccTrafficPolicyInstance_complete(t *testing.T) {
+func TestAccRoute53TrafficPolicyInstance_complete(t *testing.T) {
 	var output route53.GetTrafficPolicyInstanceOutput
 	resourceName := "aws_route53_traffic_policy_instance.test"
 
@@ -87,14 +87,14 @@ func TestAccTrafficPolicyInstance_complete(t *testing.T) {
 			{
 				Config: testAccTrafficPolicyInstanceConfig(zoneName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrafficPolicyInstanceExists(resourceName, &output),
+					testAccCheckRoute53TrafficPolicyInstanceExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
 				Config: testAccTrafficPolicyInstanceConfig(zoneName, rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrafficPolicyInstanceExists(resourceName, &output),
+					testAccCheckRoute53TrafficPolicyInstanceExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 				),
 			},
@@ -107,7 +107,7 @@ func TestAccTrafficPolicyInstance_complete(t *testing.T) {
 	})
 }
 
-func testAccCheckTrafficPolicyInstanceExists(resourceName string, output *route53.GetTrafficPolicyInstanceOutput) resource.TestCheckFunc {
+func testAccCheckRoute53TrafficPolicyInstanceExists(resourceName string, output *route53.GetTrafficPolicyInstanceOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
