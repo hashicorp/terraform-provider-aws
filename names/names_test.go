@@ -240,3 +240,55 @@ func TestServiceProviderNameUpper(t *testing.T) {
 		})
 	}
 }
+
+func TestAWSServiceName(t *testing.T) {
+	testCases := []struct {
+		TestName string
+		Input    string
+		Expected string
+		Error    bool
+	}{
+		{
+			TestName: "empty",
+			Input:    "",
+			Expected: "",
+			Error:    true,
+		},
+		{
+			TestName: Transcribe,
+			Input:    Transcribe,
+			Expected: "Transcribe",
+			Error:    false,
+		},
+		{
+			TestName: AppAutoScaling,
+			Input:    AppAutoScaling,
+			Expected: "AppAutoScaling",
+			Error:    false,
+		},
+		{
+			TestName: DMS,
+			Input:    DMS,
+			Expected: "DMS",
+			Error:    false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			got, err := ServiceProviderNameUpper(testCase.Input)
+
+			if err != nil && !testCase.Error {
+				t.Errorf("got error (%s), expected no error", err)
+			}
+
+			if err == nil && testCase.Error {
+				t.Errorf("got (%s) and no error, expected error", got)
+			}
+
+			if got != testCase.Expected {
+				t.Errorf("got %s, expected %s", got, testCase.Expected)
+			}
+		})
+	}
+}
