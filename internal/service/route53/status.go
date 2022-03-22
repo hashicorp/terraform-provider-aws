@@ -61,19 +61,18 @@ func statusKeySigningKey(conn *route53.Route53, hostedZoneID string, name string
 	}
 }
 
-//statusTrafficPolicyInstanceState fetches the traffic policy instance and its state
 func statusTrafficPolicyInstanceState(ctx context.Context, conn *route53.Route53, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		object, err := FindTrafficPolicyInstanceId(ctx, conn, id)
+		output, err := FindTrafficPolicyInstanceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, "Unknown", err
+			return nil, "", err
 		}
 
-		return object, aws.StringValue(object.TrafficPolicyInstance.State), nil
+		return output, aws.StringValue(output.State), nil
 	}
 }

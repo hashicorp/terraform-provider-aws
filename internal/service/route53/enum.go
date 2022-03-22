@@ -12,4 +12,8 @@ const (
 	ServeSignatureInternalFailure = "INTERNAL_FAILURE"
 	ServeSignatureNotSigning      = "NOT_SIGNING"
 	ServeSignatureSigning         = "SIGNING"
+
+	TrafficPolicyInstanceStateApplied  = "Applied"
+	TrafficPolicyInstanceStateCreating = "Creating"
+	TrafficPolicyInstanceStateFailed   = "Failed"
 )

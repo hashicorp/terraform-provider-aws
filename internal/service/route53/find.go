@@ -139,12 +139,12 @@ func FindTrafficPolicyByID(ctx context.Context, conn *route53.Route53, id string
 	return output.TrafficPolicy, nil
 }
 
-func FindTrafficPolicyInstanceId(ctx context.Context, conn *route53.Route53, id string) (*route53.GetTrafficPolicyInstanceOutput, error) {
+func FindTrafficPolicyInstanceByID(ctx context.Context, conn *route53.Route53, id string) (*route53.TrafficPolicyInstance, error) {
 	input := &route53.GetTrafficPolicyInstanceInput{
 		Id: aws.String(id),
 	}
 
-	resp, err := conn.GetTrafficPolicyInstanceWithContext(ctx, input)
+	output, err := conn.GetTrafficPolicyInstanceWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchTrafficPolicyInstance) {
 		return nil, &resource.NotFoundError{
@@ -157,12 +157,9 @@ func FindTrafficPolicyInstanceId(ctx context.Context, conn *route53.Route53, id 
 		return nil, err
 	}
 
-	if resp == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+	if output == nil || output.TrafficPolicyInstance == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return resp, nil
+	return output.TrafficPolicyInstance, nil
 }

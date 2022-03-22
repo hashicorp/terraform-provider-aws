@@ -112,28 +112,24 @@ func resourceTrafficPolicyInstanceCreate(ctx context.Context, d *schema.Resource
 func resourceTrafficPolicyInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
-	input := &route53.GetTrafficPolicyInstanceInput{
-		Id: aws.String(d.Id()),
-	}
+	trafficPolicyInstance, err := FindTrafficPolicyInstanceByID(ctx, conn, d.Id())
 
-	output, err := conn.GetTrafficPolicyInstanceWithContext(ctx, input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchTrafficPolicyInstance) {
-		log.Printf("[WARN] Route53 Traffic Policy Instance (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Route53 Traffic Policy Instance %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Route53 Traffic Policy Instance %s: %s", d.Get("name").(string), err)
+		return diag.Errorf("error reading Route53 Traffic Policy Instance (%s): %s", d.Id(), err)
 	}
 
-	d.Set("hosted_zone_id", output.TrafficPolicyInstance.HostedZoneId)
-	d.Set("message", output.TrafficPolicyInstance.Message)
-	d.Set("name", strings.TrimSuffix(aws.StringValue(output.TrafficPolicyInstance.Name), "."))
-	d.Set("traffic_policy_id", output.TrafficPolicyInstance.TrafficPolicyId)
-	d.Set("traffic_policy_version", output.TrafficPolicyInstance.TrafficPolicyVersion)
-	d.Set("ttl", output.TrafficPolicyInstance.TTL)
+	d.Set("hosted_zone_id", trafficPolicyInstance.HostedZoneId)
+	d.Set("message", trafficPolicyInstance.Message)
+	d.Set("name", strings.TrimSuffix(aws.StringValue(trafficPolicyInstance.Name), "."))
+	d.Set("traffic_policy_id", trafficPolicyInstance.TrafficPolicyId)
+	d.Set("traffic_policy_version", trafficPolicyInstance.TrafficPolicyVersion)
+	d.Set("ttl", trafficPolicyInstance.TTL)
 
 	return nil
 }
