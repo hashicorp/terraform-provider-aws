@@ -12,6 +12,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	dbInstanceAutomatedBackupReplicationRetained = "retained"
+)
+
 func ResourceInstanceBackupReplication() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceInstanceBackupReplicationCreate,
@@ -100,7 +104,7 @@ func resourceInstanceBackupReplicationRead(d *schema.ResourceData, meta interfac
 			d.Set("kms_key_id", backup.KmsKeyId)
 			d.Set("retention_period", backup.BackupRetentionPeriod)
 		} else {
-			return fmt.Errorf("Unable to find RDS instance backup replication: %s", d.Id())
+			return fmt.Errorf("unable to find RDS instance backup replication: %s", d.Id())
 		}
 	}
 
@@ -108,23 +112,66 @@ func resourceInstanceBackupReplicationRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceInstanceBackupReplicationDelete(d *schema.ResourceData, meta interface{}) error {
+	var sourceDatabaseRegion string
+	var databaseIdentifier string
+
 	conn := meta.(*conns.AWSClient).RDSConn
 
+	describeInput := &rds.DescribeDBInstanceAutomatedBackupsInput{
+		DBInstanceAutomatedBackupsArn: aws.String(d.Id()),
+	}
+
+	describeOutput, err := conn.DescribeDBInstanceAutomatedBackups(describeInput)
+
+	// Get and set the region of the source database and database identifier
+	for _, backup := range describeOutput.DBInstanceAutomatedBackups {
+		if aws.StringValue(backup.DBInstanceAutomatedBackupsArn) == d.Id() {
+			sourceDatabaseRegion = aws.StringValue(backup.Region)
+			databaseIdentifier = aws.StringValue(backup.DBInstanceIdentifier)
+		} else {
+			return fmt.Errorf("unable to find RDS instance backup replication: %s", d.Id())
+		}
+		// Check if the automated backup is retained
+		if aws.StringValue(backup.Status) == dbInstanceAutomatedBackupReplicationRetained {
+			log.Printf("[WARN] RDS instance backup replication is retained, removing from state: %s", d.Id())
+			d.SetId("")
+			return nil // If the automated backup is retained, it's 'deleted'
+		}
+	}
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceAutomatedBackupNotFoundFault) {
+		log.Printf("[WARN] RDS instance backup replication not found, removing from state: %s", d.Id())
+		d.SetId("")
+		return nil // The resource is already deleted or was never created
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading RDS instance backup replication: %s", err)
+	}
+
+	// Initiate a stop of the replication process
 	input := &rds.StopDBInstanceAutomatedBackupsReplicationInput{
 		SourceDBInstanceArn: aws.String(d.Get("source_db_instance_arn").(string)),
 	}
 
-	log.Printf("[DEBUG] Deleting RDS instance backup replication for: %s", *input.SourceDBInstanceArn)
+	log.Printf("[DEBUG] Stopping RDS instance backup replication for: %s", *input.SourceDBInstanceArn)
 
-	_, err := conn.StopDBInstanceAutomatedBackupsReplication(input)
+	_, err = conn.StopDBInstanceAutomatedBackupsReplication(input)
 
 	if err != nil {
-		return fmt.Errorf("error deleting RDS instance backup replication: %s", err)
+		return fmt.Errorf("error stopping RDS instance backup replication: %s", err)
 	}
 
-	// if _, err := waitDBInstanceAutomatedBackupAvailable(conn, *input.SourceDBInstanceArn, d.Timeout(schema.TimeoutDefault)); err != nil {
-	// 	return fmt.Errorf("error waiting for DB Instance (%s) delete: %w", *input.SourceDBInstanceArn, err)
-	// }
+	// Create a new client to the source region
+	sourceDatabaseConn := conn
+	if sourceDatabaseRegion != meta.(*conns.AWSClient).Region {
+		sourceDatabaseConn = rds.New(meta.(*conns.AWSClient).Session, aws.NewConfig().WithRegion(sourceDatabaseRegion))
+	}
+
+	// Wait for the source database to be available after the replication is stopped
+	if _, err := waitDBInstanceAvailable(sourceDatabaseConn, databaseIdentifier, d.Timeout(schema.TimeoutDefault)); err != nil {
+		return fmt.Errorf("error waiting for DB Instance (%s) delete: %w", *input.SourceDBInstanceArn, err)
+	}
 
 	return nil
 }
