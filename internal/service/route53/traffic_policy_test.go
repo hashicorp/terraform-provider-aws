@@ -153,21 +153,6 @@ func testAccCheckTrafficPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckTrafficPolicyDisappears(trafficPolicy *route53.TrafficPolicySummary) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
-
-		input := &route53.DeleteTrafficPolicyInput{
-			Id:      trafficPolicy.Id,
-			Version: trafficPolicy.LatestVersion,
-		}
-
-		_, err := conn.DeleteTrafficPolicyWithContext(context.Background(), input)
-
-		return err
-	}
-}
-
 func testAccTrafficPolicyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]

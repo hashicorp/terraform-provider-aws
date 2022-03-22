@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,22 +23,28 @@ func ResourceTrafficPolicy() *schema.Resource {
 		ReadWithoutTimeout:   resourceTrafficPolicyRead,
 		UpdateWithoutTimeout: resourceTrafficPolicyUpdate,
 		DeleteWithoutTimeout: resourceTrafficPolicyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				idParts := strings.Split(d.Id(), "/")
-				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-					return nil, fmt.Errorf("unexpected format of ID (%q), expected traffic-policy-id/traffic-policy-version", d.Id())
+				const idSeparator = "/"
+				parts := strings.Split(d.Id(), idSeparator)
+				if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+					return nil, fmt.Errorf("unexpected format for ID (%[1]s), expected TRAFFIC-POLICY-ID%[2]sTRAFFIC-POLICY-VERSION", d.Id(), idSeparator)
 				}
-				version, err := strconv.Atoi(idParts[1])
+
+				version, err := strconv.Atoi(parts[1])
+
 				if err != nil {
-					return nil, fmt.Errorf("cannot convert to int: %s", idParts[1])
+					return nil, err
 				}
+
+				d.SetId(parts[0])
 				d.Set("version", version)
-				d.SetId(idParts[0])
 
 				return []*schema.ResourceData{d}, nil
 			},
 		},
+
 		Schema: map[string]*schema.Schema{
 			"comment": {
 				Type:         schema.TypeString,
@@ -73,39 +78,26 @@ func ResourceTrafficPolicy() *schema.Resource {
 func resourceTrafficPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
+	name := d.Get("name").(string)
 	input := &route53.CreateTrafficPolicyInput{
 		Document: aws.String(d.Get("document").(string)),
-		Name:     aws.String(d.Get("name").(string)),
+		Name:     aws.String(name),
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
 		input.Comment = aws.String(v.(string))
 	}
 
-	var err error
-	var output *route53.CreateTrafficPolicyOutput
-	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		output, err = conn.CreateTrafficPolicyWithContext(ctx, input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchTrafficPolicy) {
-				resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateTrafficPolicyWithContext(ctx, input)
-	}
+	log.Printf("[INFO] Creating Route53 Traffic Policy: %s", input)
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return conn.CreateTrafficPolicyWithContext(ctx, input)
+	}, route53.ErrCodeNoSuchTrafficPolicy)
 
 	if err != nil {
-		return diag.Errorf("error creating Route53 traffic policy: %s", err)
+		return diag.Errorf("error creating Route53 Traffic Policy (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.TrafficPolicy.Id))
+	d.SetId(aws.StringValue(outputRaw.(*route53.CreateTrafficPolicyOutput).TrafficPolicy.Id))
 
 	return resourceTrafficPolicyRead(ctx, d, meta)
 }
