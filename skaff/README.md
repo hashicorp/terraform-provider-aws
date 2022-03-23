@@ -1,6 +1,8 @@
 # skaff
 
-The `skaff` tool is a Terraform AWS Provider scaffolding tool. We are actively developing this tool and we may completely change it, abandon it, or delete it without warning. **We do not recommend using this tool (yet).**
+**WARNING:** We are actively developing this tool. We may completely change it, abandon it, or delete it without notice. *We do not recommend using this tool at this time.*
+
+The `skaff` tool is a Terraform AWS Provider scaffolding tool.
 
 To use `skaff`, starting in the `terraform-provider-aws` directory:
 
