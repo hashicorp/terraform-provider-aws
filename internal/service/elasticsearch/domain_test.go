@@ -374,7 +374,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 						t.Fatal(err)
 					}
 
-					err = tfelasticsearch.WaitForDomainCreation(conn, rName[:28])
+					err = tfelasticsearch.WaitForDomainCreation(conn, rName[:28], 60*time.Minute)
 					if err != nil {
 						t.Fatal(err)
 					}
