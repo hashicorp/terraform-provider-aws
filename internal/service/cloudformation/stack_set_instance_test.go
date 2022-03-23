@@ -290,17 +290,13 @@ func TestAccCloudFormationStackSetInstance_operationPreferences(t *testing.T) {
 				Config: testAccStackSetInstanceOperationPreferencesConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "10"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"retain_stack",
-				},
 			},
 			{
 				Config: testAccStackSetInstanceConfig_ServiceManagedStackSet(rName),
@@ -726,7 +722,11 @@ resource "aws_cloudformation_stack_set_instance" "test" {
 
   operation_preferences {
     failure_tolerance_count = 1
-    max_concurrent_count = 10
+    max_concurrent_count    = 10
+  }
+
+  deployment_targets {
+    organizational_unit_ids = [data.aws_organizations_organization.test.roots[0].id]
   }
 
   stack_set_name = aws_cloudformation_stack_set.test.name
