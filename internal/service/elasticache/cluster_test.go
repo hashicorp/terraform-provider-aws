@@ -779,14 +779,14 @@ func TestAccElastiCacheCluster_Engine_Redis_LogDeliveryConfigurations(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &ec),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination", rName),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_type", "cloudwatch-logs"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_format", "text"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_type", "engine-log"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.destination", rName),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.destination_type", "cloudwatch-logs"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.log_format", "text"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.log_type", "slow-log"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination_type", "cloudwatch-logs"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_format", "text"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_type", "engine-log"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.destination_type", "cloudwatch-logs"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.log_format", "text"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.log_type", "slow-log"),
 				),
 			},
 			{
@@ -800,14 +800,14 @@ func TestAccElastiCacheCluster_Engine_Redis_LogDeliveryConfigurations(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &ec),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination", rName),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_type", "kinesis-firehose"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_format", "json"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_type", "engine-log"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.destination", rName),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.destination_type", "kinesis-firehose"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.log_format", "json"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.log_type", "slow-log"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination_type", "kinesis-firehose"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_type", "engine-log"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.destination_type", "kinesis-firehose"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.log_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.log_type", "slow-log"),
 				),
 			},
 			{
@@ -821,14 +821,14 @@ func TestAccElastiCacheCluster_Engine_Redis_LogDeliveryConfigurations(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &ec),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination", rName),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_type", "cloudwatch-logs"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_format", "text"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_type", "slow-log"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.destination", rName),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.destination_type", "kinesis-firehose"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.log_format", "json"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.log_type", "engine-log"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination_type", "cloudwatch-logs"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_format", "text"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_type", "slow-log"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.destination_type", "kinesis-firehose"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.log_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.log_type", "engine-log"),
 				),
 			},
 			{
@@ -836,14 +836,14 @@ func TestAccElastiCacheCluster_Engine_Redis_LogDeliveryConfigurations(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &ec),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination", rName),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_type", "cloudwatch-logs"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_format", "text"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_type", "engine-log"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.destination", rName),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.destination_type", "kinesis-firehose"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.log_format", "json"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.1.log_type", "slow-log"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination_type", "cloudwatch-logs"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_format", "text"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_type", "engine-log"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.destination_type", "kinesis-firehose"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.log_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.log_type", "slow-log"),
 				),
 			},
 			{
@@ -851,14 +851,14 @@ func TestAccElastiCacheCluster_Engine_Redis_LogDeliveryConfigurations(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &ec),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_type"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_format"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_type"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.destination"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.destination_type"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.log_format"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.log_type"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.0.destination"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.0.destination_type"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.0.log_format"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.0.log_type"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.1.destination"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.1.destination_type"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.1.log_format"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.1.log_type"),
 				),
 			},
 			{
@@ -866,14 +866,14 @@ func TestAccElastiCacheCluster_Engine_Redis_LogDeliveryConfigurations(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &ec),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination", rName),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_type", "kinesis-firehose"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_format", "json"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_type", "slow-log"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.destination"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.destination_type"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.log_format"),
-					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.1.log_type"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination_type", "kinesis-firehose"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_type", "slow-log"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.1.destination"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.1.destination_type"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.1.log_format"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.1.log_type"),
 				),
 			},
 			{
@@ -1615,7 +1615,7 @@ resource "aws_elasticache_cluster" "test" {
   num_cache_nodes   = 1
   port              = 6379
   apply_immediately = true
-  dynamic "log_delivery_configurations" {
+  dynamic "log_delivery_configuration" {
     for_each = tobool("%[2]t") ? [""] : []
     content {
       destination      = ("%[3]s" == "cloudwatch-logs") ? aws_cloudwatch_log_group.lg.name : (("%[3]s" == "kinesis-firehose") ? aws_kinesis_firehose_delivery_stream.ds.name : null)
@@ -1624,7 +1624,7 @@ resource "aws_elasticache_cluster" "test" {
       log_type         = "slow-log"
     }
   }
-  dynamic "log_delivery_configurations" {
+  dynamic "log_delivery_configuration" {
     for_each = tobool("%[5]t") ? [""] : []
     content {
       destination      = ("%[6]s" == "cloudwatch-logs") ? aws_cloudwatch_log_group.lg.name : (("%[6]s" == "kinesis-firehose") ? aws_kinesis_firehose_delivery_stream.ds.name : null)

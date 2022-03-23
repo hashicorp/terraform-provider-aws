@@ -159,7 +159,7 @@ func ResourceReplicationGroup() *schema.Resource {
 					"snapshot_name",
 				},
 			},
-			"log_delivery_configurations": {
+			"log_delivery_configuration": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 2,
@@ -471,7 +471,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		params.SnapshotArns = flex.ExpandStringSet(snaps)
 	}
 
-	if v, ok := d.GetOk("log_delivery_configurations"); ok {
+	if v, ok := d.GetOk("log_delivery_configuration"); ok {
 		params.LogDeliveryConfigurations = []*elasticache.LogDeliveryConfigurationRequest{}
 		v := v.(*schema.Set).List()
 		for _, v := range v {
@@ -692,7 +692,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 			return err
 		}
 
-		d.Set("log_delivery_configurations", flattenLogDeliveryConfigurations(rgp.LogDeliveryConfigurations))
+		d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(rgp.LogDeliveryConfigurations))
 		d.Set("snapshot_window", rgp.SnapshotWindow)
 		d.Set("snapshot_retention_limit", rgp.SnapshotRetentionLimit)
 
@@ -785,9 +785,9 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if d.HasChange("log_delivery_configurations") {
+	if d.HasChange("log_delivery_configuration") {
 
-		oldLogDeliveryConfig, newLogDeliveryConfig := d.GetChange("log_delivery_configurations")
+		oldLogDeliveryConfig, newLogDeliveryConfig := d.GetChange("log_delivery_configuration")
 
 		params.LogDeliveryConfigurations = []*elasticache.LogDeliveryConfigurationRequest{}
 		logTypesToSubmit := make(map[string]bool)

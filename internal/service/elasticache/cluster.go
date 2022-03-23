@@ -135,7 +135,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"log_delivery_configurations": {
+			"log_delivery_configuration": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 2,
@@ -362,7 +362,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		req.SnapshotWindow = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("log_delivery_configurations"); ok {
+	if v, ok := d.GetOk("log_delivery_configuration"); ok {
 		req.LogDeliveryConfigurations = []*elasticache.LogDeliveryConfigurationRequest{}
 		v := v.(*schema.Set).List()
 		for _, v := range v {
@@ -437,7 +437,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.Set("log_delivery_configurations", flattenLogDeliveryConfigurations(c.LogDeliveryConfigurations))
+	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(c.LogDeliveryConfigurations))
 	d.Set("snapshot_window", c.SnapshotWindow)
 	d.Set("snapshot_retention_limit", c.SnapshotRetentionLimit)
 
@@ -562,9 +562,9 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		requestUpdate = true
 	}
 
-	if d.HasChange("log_delivery_configurations") {
+	if d.HasChange("log_delivery_configuration") {
 
-		oldLogDeliveryConfig, newLogDeliveryConfig := d.GetChange("log_delivery_configurations")
+		oldLogDeliveryConfig, newLogDeliveryConfig := d.GetChange("log_delivery_configuration")
 
 		req.LogDeliveryConfigurations = []*elasticache.LogDeliveryConfigurationRequest{}
 		logTypesToSubmit := make(map[string]bool)
