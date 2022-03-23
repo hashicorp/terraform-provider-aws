@@ -15,6 +15,16 @@ import (
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(imagebuilder.EndpointsID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"You have reached the maximum allowed number of license configurations created in one day",
+	)
+}
+
 func TestAccImageBuilderDistributionConfiguration_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
@@ -318,6 +328,69 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLau
 	})
 }
 
+func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLaunchPermission_organizationArns(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	organizationResourceName := "aws_organizations_organization.test"
+	resourceName := "aws_imagebuilder_distribution_configuration.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckOrganizationsAccount(t)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDistributionConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationArnsConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "distribution.*.ami_distribution_configuration.0.launch_permission.0.organization_arns.*", organizationResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLaunchPermission_organizationalUnitArns(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	organizationalUnitResourceName := "aws_organizations_organizational_unit.test"
+
+	resourceName := "aws_imagebuilder_distribution_configuration.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckOrganizationsAccount(t)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDistributionConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationalUnitArnsConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "distribution.*.ami_distribution_configuration.0.launch_permission.0.organizational_unit_arns.*", organizationalUnitResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_name(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
@@ -562,7 +635,10 @@ func TestAccImageBuilderDistributionConfiguration_Distribution_licenseARNs(t *te
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/license-manager.amazonaws.com")
+		},
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDistributionConfigurationDestroy,
@@ -861,6 +937,53 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
   }
 }
 `, rName, userId)
+}
+
+func testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationArnsConfig(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_organizations_organization" "test" {}
+
+resource "aws_imagebuilder_distribution_configuration" "test" {
+  name = %[1]q
+  distribution {
+    ami_distribution_configuration {
+      launch_permission {
+        organization_arns = [aws_organizations_organization.test.arn]
+      }
+    }
+    region = data.aws_region.current.name
+  }
+}
+`, rName)
+}
+
+func testAccDistributionConfigurationDistributionAMIDistributionConfigurationLaunchPermissionOrganizationalUnitArnsConfig(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_organizations_organization" "test" {}
+
+resource "aws_organizations_organizational_unit" "test" {
+  name      = %[1]q
+  parent_id = aws_organizations_organization.test.roots[0].id
+}
+
+resource "aws_imagebuilder_distribution_configuration" "test" {
+  name = %[1]q
+  distribution {
+    ami_distribution_configuration {
+      launch_permission {
+        organizational_unit_arns = [aws_organizations_organizational_unit.test.arn]
+      }
+    }
+    region = data.aws_region.current.name
+  }
+}
+  `, rName)
 }
 
 func testAccDistributionConfigurationDistributionAMIDistributionConfigurationNameConfig(rName string, name string) string {
