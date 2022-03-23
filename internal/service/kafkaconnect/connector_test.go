@@ -18,7 +18,6 @@ import (
 func TestAccKafkaConnectConnector_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mskconnect_custom_plugin.test"
-	bootstrapServers := fmt.Sprintf("%s:9094,%s:9094", acctest.RandomDomainName(), acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
@@ -27,7 +26,7 @@ func TestAccKafkaConnectConnector_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectorConfigBasic(rName, bootstrapServers),
+				Config: testAccConnectorConfigBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -41,15 +40,16 @@ func TestAccKafkaConnectConnector_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.0.scale_out_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.0.scale_out_policy.0.cpu_utilization_percentage", "55"),
 					resource.TestCheckResourceAttr(resourceName, "capacity.0.provisioned_capacity.#", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "connector_configuration.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "connector_configuration.connector.class", "io.confluent.connect.s3.S3SinkConnector"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "connector_configuration.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "connector_configuration.connector.class", "com.mongodb.kafka.connect.MongoSinkConnector"),
+					resource.TestCheckResourceAttr(resourceName, "connector_configuration.tasks.max", "1"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.apache_kafka_cluster.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.apache_kafka_cluster.0.bootstrap_servers", bootstrapServers),
+					resource.TestCheckResourceAttrSet(resourceName, "kafka_cluster.0.apache_kafka_cluster.0.bootstrap_servers"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.apache_kafka_cluster.0.vpc.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.apache_kafka_cluster.0.vpc.0.security_groups.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.apache_kafka_cluster.0.vpc.0.subnets.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.apache_kafka_cluster.0.vpc.0.subnets.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster_client_authentication.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster_client_authentication.0.authentication_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster_encryption_in_transit.#", "1"),
@@ -152,6 +152,33 @@ resource "aws_subnet" "test2" {
   }
 }
 
+resource "aws_subnet" "test3" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.10.3.0/24"
+  availability_zone = data.aws_availability_zones.available.names[2]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+  name   = "default"
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id            = aws_vpc.test.id
+  service_name      = "com.amazonaws.${data.aws_region.current.name}.s3"
+  vpc_endpoint_type = "Interface"
+
+  security_group_ids = [
+    data.aws_security_group.test.id,
+  ]
+}
+
 resource "aws_iam_role" "test" {
   name               = %[1]q
   path               = "/"
@@ -179,14 +206,7 @@ resource "aws_iam_role_policy" "test" {
   "Statement": [{
     "Effect": "Allow",
     "Action": [
-      "kafka-cluster:Connect",
-      "kafka-cluster:DescribeCluster",
-      "kafka-cluster:ReadData",
-      "kafka-cluster:WriteData",
-      "kafka-cluster:CreateTopic",
-      "kafka-cluster:DescribeTopic",
-      "kafka-cluster:AlterGroup",
-      "kafka-cluster:DescribeGroup"
+      "s3:*"
     ],
     "Resource": ["*"]
   }]
@@ -194,18 +214,22 @@ resource "aws_iam_role_policy" "test" {
 EOF
 }
 
-resource "aws_security_group" "test" {
-  name   = %[1]q
-  vpc_id = aws_vpc.test.id
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "2.2.1"
+  number_of_broker_nodes = 3
 
-  tags = {
-    Name = %[1]q
+  broker_node_group_info {
+    client_subnets  = [aws_subnet.test1.id, aws_subnet.test2.id, aws_subnet.test3.id]
+    ebs_volume_size = 10
+    instance_type   = "kafka.m5.large"
+    security_groups = [data.aws_security_group.test.id]
   }
 }
 `, rName))
 }
 
-func testAccConnectorConfigBasic(rName, bootstrapServers string) string {
+func testAccConnectorConfigBasic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCustomPluginConfigBasic(rName),
 		testAccWorkerConfigurationBasic(rName, "key.converter=hello\nvalue.converter=world"),
@@ -233,27 +257,23 @@ resource "aws_mskconnect_connector" "test" {
   }
 
   connector_configuration = {
-    "connector.class"      = "io.confluent.connect.s3.S3SinkConnector"
-    "tasks.max"            = "2"
-    "topics"               = "my-example-topic"
-    "s3.region"            = aws_s3_bucket.test.region
-    "s3.bucket.name"       = aws_s3_bucket.test.bucket
-    "flush.size"           = "1"
-    "storage.class"        = "io.confluent.connect.s3.storage.S3Storage"
-    "format.class"         = "io.confluent.connect.s3.format.json.JsonFormat"
-    "partitioner.class"    = "io.confluent.connect.storage.partitioner.DefaultPartitioner"
-    "key.converter"        = "org.apache.kafka.connect.storage.StringConverter"
-    "value.converter"      = "org.apache.kafka.connect.storage.StringConverter"
-    "schema.compatibility" = "NONE"
+    "connector.class" = "com.mongodb.kafka.connect.MongoSinkConnector"
+    "tasks.max"       = "1"
+    "topics"          = "my-example-topic"
+    "connection.uri"  = "mongodb://mongo1:27017,mongo2:27017,mongo3:27017"
+    "database"        = "test"
+    "collection"      = "sink"
+    "key.converter"   = "org.apache.kafka.connect.storage.StringConverter"
+    "value.converter" = "org.apache.kafka.connect.storage.StringConverter"
   }
 
   kafka_cluster {
     apache_kafka_cluster {
-      bootstrap_servers = %[2]q
+      bootstrap_servers = aws_msk_cluster.test.bootstrap_brokers_tls
 
       vpc {
-        security_groups = [aws_security_group.test.id]
-        subnets         = [aws_subnet.test1.id, aws_subnet.test2.id]
+        security_groups = [data.aws_security_group.test.id]
+        subnets         = [aws_subnet.test1.id, aws_subnet.test2.id, aws_subnet.test3.id]
       }
     }
   }
@@ -275,9 +295,9 @@ resource "aws_mskconnect_connector" "test" {
 
   service_execution_role_arn = aws_iam_role.test.arn
 
-  depends_on = [aws_iam_role_policy.test]
+  depends_on = [aws_iam_role_policy.test, aws_vpc_endpoint.test]
 }
-`, rName, bootstrapServers))
+`, rName))
 }
 
 func testAccConnectorConfigAllAttributes(rName, bootstrapServers string) string {

@@ -1,7 +1,6 @@
 package kafkaconnect_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
@@ -14,7 +13,6 @@ func TestAccKafkaConnectConnectorDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mskconnect_connect.test"
 	dataSourceName := "data.aws_mskconnect_connect.test"
-	bootstrapServers := fmt.Sprintf("%s:9094,%s:9094", acctest.RandomDomainName(), acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
@@ -23,7 +21,7 @@ func TestAccKafkaConnectConnectorDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectorDataSourceConfig(rName, bootstrapServers),
+				Config: testAccConnectorDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
@@ -36,8 +34,8 @@ func TestAccKafkaConnectConnectorDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccConnectorDataSourceConfig(rName, bootstrapServers string) string {
-	return acctest.ConfigCompose(testAccConnectorConfigBasic(rName, bootstrapServers), `
+func testAccConnectorDataSourceConfig(rName string) string {
+	return acctest.ConfigCompose(testAccConnectorConfigBasic(rName), `
 data "aws_mskconnect_connector" "test" {
   name = aws_mskconnect_connector.test.name
 }
