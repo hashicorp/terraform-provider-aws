@@ -262,7 +262,7 @@ func TestAccElasticsearchDomain_warm(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticSearchDomain_withColdStorageOptions(t *testing.T) {
+func TestAccElasticsearchDomain_withColdStorageOptions(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticsearch_domain.test"
