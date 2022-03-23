@@ -277,7 +277,8 @@ func TestAccCloudFormationStackSetInstance_operationPreferences(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckStackSet(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheckOrganizationsEnabled(t)
+			acctest.PreCheckOrganizationManagementAccount(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    acctest.Providers,
