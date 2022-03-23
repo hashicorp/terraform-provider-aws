@@ -45,6 +45,12 @@ func ResourceStackSetInstance() *schema.Resource {
 				ValidateFunc:  verify.ValidAccountID,
 				ConflictsWith: []string{"deployment_targets"},
 			},
+			"call_as": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      cloudformation.CallAsSelf,
+				ValidateFunc: validation.StringInSlice(cloudformation.CallAs_Values(), false),
+			},
 			"deployment_targets": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -64,10 +70,6 @@ func ResourceStackSetInstance() *schema.Resource {
 				},
 				ConflictsWith: []string{"account_id"},
 			},
-			"organizational_unit_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"operation_preferences": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -78,30 +80,30 @@ func ResourceStackSetInstance() *schema.Resource {
 							Type:          schema.TypeInt,
 							Optional:      true,
 							ValidateFunc:  validation.IntAtLeast(0),
-							ConflictsWith: []string{"operation_preferences.failure_tolerance_percentage"},
+							ConflictsWith: []string{"operation_preferences.0.failure_tolerance_percentage"},
 						},
 						"failure_tolerance_percentage": {
 							Type:          schema.TypeInt,
 							Optional:      true,
 							ValidateFunc:  validation.IntBetween(0, 100),
-							ConflictsWith: []string{"operation_preferences.failure_tolerance_count"},
+							ConflictsWith: []string{"operation_preferences.0.failure_tolerance_count"},
 						},
 						"max_concurrent_count": {
 							Type:          schema.TypeInt,
 							Optional:      true,
 							ValidateFunc:  validation.IntAtLeast(1),
-							ConflictsWith: []string{"operation_preferences.max_concurrent_percentage"},
+							ConflictsWith: []string{"operation_preferences.0.max_concurrent_percentage"},
 						},
 						"max_concurrent_percentage": {
 							Type:          schema.TypeInt,
 							Optional:      true,
 							ValidateFunc:  validation.IntBetween(1, 100),
-							ConflictsWith: []string{"operation_preferences.max_concurrent_count"},
+							ConflictsWith: []string{"operation_preferences.0.max_concurrent_count"},
 						},
 						"region_concurrency_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(SEQUENTIAL|PARALLEL)$`), ""),
+							ValidateFunc: validation.StringInSlice(cloudformation.RegionConcurrencyType_Values(), false),
 						},
 						"region_order": {
 							Type:     schema.TypeList,
@@ -114,6 +116,10 @@ func ResourceStackSetInstance() *schema.Resource {
 						},
 					},
 				},
+			},
+			"organizational_unit_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"parameter_overrides": {
 				Type:     schema.TypeMap,
@@ -140,12 +146,6 @@ func ResourceStackSetInstance() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
-			},
-			"call_as": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(cloudformation.CallAs_Values(), false),
-				Default:      cloudformation.CallAsSelf,
 			},
 		},
 	}
