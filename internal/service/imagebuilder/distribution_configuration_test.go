@@ -15,6 +15,16 @@ import (
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(imagebuilder.EndpointsID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"You have reached the maximum allowed number of license configurations created in one day",
+	)
+}
+
 func TestAccImageBuilderDistributionConfiguration_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
