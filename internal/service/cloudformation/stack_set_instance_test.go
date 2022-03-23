@@ -724,7 +724,7 @@ resource "aws_cloudformation_stack_set_instance" "test" {
 
   operation_preferences {
     failure_tolerance_count = 1
-		max_concurrent_count = 10
+    max_concurrent_count = 10
   }
 
   stack_set_name = aws_cloudformation_stack_set.test.name
