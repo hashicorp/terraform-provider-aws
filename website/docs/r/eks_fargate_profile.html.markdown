@@ -91,7 +91,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EKS Fargate Profiles can be imported using the `cluster_name` and `fargate_profile_name` separated by a colon (`:`), e.g.
+EKS Fargate Profiles can be imported using the `cluster_name` and `fargate_profile_name` separated by a colon (`:`), e.g.,
 
 ```
 $ terraform import aws_eks_fargate_profile.my_fargate_profile my_cluster:my_fargate_profile

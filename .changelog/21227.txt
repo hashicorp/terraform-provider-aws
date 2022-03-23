@@ -1,0 +1,3 @@
+```release-note:bug
+resource/glue_catalog_table: Ignore not exists errors on delete
+```

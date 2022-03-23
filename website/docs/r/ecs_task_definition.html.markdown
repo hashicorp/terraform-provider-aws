@@ -163,30 +163,30 @@ resource "aws_ecs_task_definition" "test" {
   family                = "test"
   container_definitions = <<TASK_DEFINITION
 [
-	{
-		"cpu": 10,
-		"command": ["sleep", "10"],
-		"entryPoint": ["/"],
-		"environment": [
-			{"name": "VARNAME", "value": "VARVAL"}
-		],
-		"essential": true,
-		"image": "jenkins",
-		"memory": 128,
-		"name": "jenkins",
-		"portMappings": [
-			{
-				"containerPort": 80,
-				"hostPort": 8080
-			}
-		],
+  {
+    "cpu": 10,
+    "command": ["sleep", "10"],
+    "entryPoint": ["/"],
+    "environment": [
+      {"name": "VARNAME", "value": "VARVAL"}
+    ],
+    "essential": true,
+    "image": "jenkins",
+    "memory": 128,
+    "name": "jenkins",
+    "portMappings": [
+      {
+        "containerPort": 80,
+        "hostPort": 8080
+      }
+    ],
         "resourceRequirements":[
             {
                 "type":"InferenceAccelerator",
                 "value":"device_1"
             }
         ]
-	}
+  }
 ]
 TASK_DEFINITION
 
@@ -197,9 +197,37 @@ TASK_DEFINITION
 }
 ```
 
+### Example Using `runtime_platform` and `fargate`
+
+```terraform
+resource "aws_ecs_task_definition" "test" {
+  family                   = "test"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = 1024
+  memory                   = 2048
+  container_definitions    = <<TASK_DEFINITION
+[
+  {
+    "name": "iis",
+    "image": "mcr.microsoft.com/windows/servercore/iis",
+    "cpu": 1024,
+    "memory": 2048,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+
+  runtime_platform {
+    operating_system_family = "WINDOWS_SERVER_2019_CORE"
+    cpu_architecture        = "X86_64"
+  }
+}
+```
+
 ## Argument Reference
 
-~> **NOTE**: Proper escaping is required for JSON field values containing quotes (`"`) such as `environment` values. If directly setting the JSON, they should be escaped as `\"` in the JSON,  e.g. `"value": "I \"love\" escaped quotes"`. If using a Terraform variable value, they should be escaped as `\\\"` in the variable, e.g. `value = "I \\\"love\\\" escaped quotes"` in the variable and `"value": "${var.myvariable}"` in the JSON.
+~> **NOTE**: Proper escaping is required for JSON field values containing quotes (`"`) such as `environment` values. If directly setting the JSON, they should be escaped as `\"` in the JSON,  e.g., `"value": "I \"love\" escaped quotes"`. If using a Terraform variable value, they should be escaped as `\\\"` in the variable, e.g., `value = "I \\\"love\\\" escaped quotes"` in the variable and `"value": "${var.myvariable}"` in the JSON.
 
 The following arguments are required:
 
@@ -214,9 +242,11 @@ The following arguments are optional:
 * `ipc_mode` - (Optional) IPC resource namespace to be used for the containers in the task The valid values are `host`, `task`, and `none`.
 * `memory` - (Optional) Amount (in MiB) of memory used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `network_mode` - (Optional) Docker networking mode to use for the containers in the task. Valid values are `none`, `bridge`, `awsvpc`, and `host`.
+* `runtime_platform` - (Optional) Configuration block for [runtime_platform](#runtime_platform) that containers in your task may use.
 * `pid_mode` - (Optional) Process namespace to use for the containers in the task. The valid values are `host` and `task`.
 * `placement_constraints` - (Optional) Configuration block for rules that are taken into consideration during task placement. Maximum number of `placement_constraints` is `10`. [Detailed below](#placement_constraints).
 * `proxy_configuration` - (Optional) Configuration block for the App Mesh proxy. [Detailed below.](#proxy_configuration)
+* `ephemeral_storage` - (Optional)  The amount of ephemeral storage to allocate for the task. This parameter is used to expand the total amount of ephemeral storage available, beyond the default amount, for tasks hosted on AWS Fargate. See [Ephemeral Storage](#ephemeral_storage).
 * `requires_compatibilities` - (Optional) Set of launch types required by the task. The valid values are `EC2` and `FARGATE`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `task_role_arn` - (Optional) ARN of IAM role that allows your Amazon ECS container task to make calls to other AWS services.
@@ -251,6 +281,11 @@ For more information, see [Specifying an EFS volume in your Task Definition Deve
 * `transit_encryption_port` - (Optional) Port to use for transit encryption. If you do not specify a transit encryption port, it will use the port selection strategy that the Amazon EFS mount helper uses.
 * `authorization_config` - (Optional) Configuration block for [authorization](#authorization_config) for the Amazon EFS file system. Detailed below.
 
+### runtime_platform
+
+* `operating_system_family` - (Optional) If the `requires_compatibilities` is `FARGATE` this field is required; must be set to a valid option from the [operating system family in the runtime platform](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#runtime-platform) setting
+* `cpu_architecture` - (Optional) Must be set to either `X86_64` or `ARM64`; see [cpu architecture](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#runtime-platform)
+
 #### authorization_config
 
 * `access_point_id` - (Optional) Access point ID to use. If an access point is specified, the root directory value will be relative to the directory set for the access point. If specified, transit encryption must be enabled in the EFSVolumeConfiguration.
@@ -279,6 +314,10 @@ For more information, see [Specifying an FSX Windows File Server volume in your 
 * `container_name` - (Required) Name of the container that will serve as the App Mesh proxy.
 * `properties` - (Required) Set of network configuration parameters to provide the Container Network Interface (CNI) plugin, specified a key-value mapping.
 * `type` - (Optional) Proxy type. The default value is `APPMESH`. The only supported value is `APPMESH`.
+
+### ephemeral_storage
+
+* `size_in_gib` - (Required) The total amount, in GiB, of ephemeral storage to set for the task. The minimum supported value is `21` GiB and the maximum supported value is `200` GiB.
 
 ### inference_accelerator
 

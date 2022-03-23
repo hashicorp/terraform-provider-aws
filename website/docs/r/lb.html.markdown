@@ -22,7 +22,7 @@ resource "aws_lb" "test" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.lb_sg.id]
-  subnets            = aws_subnet.public.*.id
+  subnets            = [for subnet in aws_subnet.public : subnet.id]
 
   enable_deletion_protection = true
 
@@ -45,7 +45,7 @@ resource "aws_lb" "test" {
   name               = "test-lb-tf"
   internal           = false
   load_balancer_type = "network"
-  subnets            = aws_subnet.public.*.id
+  subnets            = [for subnet in aws_subnet.public : subnet.id]
 
   enable_deletion_protection = true
 
@@ -120,8 +120,10 @@ for load balancers of type `network` will force a recreation of the resource.
 * `enable_cross_zone_load_balancing` - (Optional) If true, cross-zone load balancing of the load balancer will be enabled.
    This is a `network` load balancer feature. Defaults to `false`.
 * `enable_http2` - (Optional) Indicates whether HTTP/2 is enabled in `application` load balancers. Defaults to `true`.
+* `enable_waf_fail_open` - (Optional) Indicates whether to allow a WAF-enabled load balancer to route requests to targets if it is unable to forward the request to AWS WAF. Defaults to `false`.
 * `customer_owned_ipv4_pool` - (Optional) The ID of the customer owned ipv4 pool to use for this load balancer.
 * `ip_address_type` - (Optional) The type of IP addresses used by the subnets for your load balancer. The possible values are `ipv4` and `dualstack`
+* `desync_mitigation_mode` - (Optional) Determines how the load balancer handles requests that might pose a security risk to an application due to HTTP desync. Valid values are `monitor`, `defensive` (default), `strictest`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Access Logs (`access_logs`) support the following:
@@ -160,7 +162,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-LBs can be imported using their ARN, e.g.
+LBs can be imported using their ARN, e.g.,
 
 ```
 $ terraform import aws_lb.bar arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188

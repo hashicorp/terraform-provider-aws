@@ -10,6 +10,8 @@ description: |-
 
 Manages Route 53 Hosted Zone Domain Name System Security Extensions (DNSSEC). For more information about managing DNSSEC in Route 53, see the [Route 53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-configuring-dnssec.html).
 
+!> **WARNING:** If you disable DNSSEC signing for your hosted zone before the DNS changes have propagated, your domain could become unavailable on the internet. When you remove the DS records, you must wait until the longest TTL for the DS records that you remove has expired before you complete the step to disable DNSSEC signing. Please refer to the [Route 53 Developer Guide - Disable DNSSEC](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-configuring-dnssec-disable.html) for a detailed breakdown on the steps required to disable DNSSEC safely for a hosted zone.
+
 ## Example Usage
 
 ```terraform
@@ -31,9 +33,24 @@ resource "aws_kms_key" "example" {
         ],
         Effect = "Allow"
         Principal = {
-          Service = "api-service.dnssec.route53.aws.internal"
+          Service = "dnssec-route53.amazonaws.com"
         }
-        Sid = "Route 53 DNSSEC Permissions"
+        Sid      = "Allow Route 53 DNSSEC Service",
+        Resource = "*"
+      },
+      {
+        Action = "kms:CreateGrant",
+        Effect = "Allow"
+        Principal = {
+          Service = "dnssec-route53.amazonaws.com"
+        }
+        Sid      = "Allow Route 53 DNSSEC Service to CreateGrant",
+        Resource = "*"
+        Condition = {
+          Bool = {
+            "kms:GrantIsForAWSResource" = "true"
+          }
+        }
       },
       {
         Action = "kms:*"
@@ -54,12 +71,15 @@ resource "aws_route53_zone" "example" {
 }
 
 resource "aws_route53_key_signing_key" "example" {
-  hosted_zone_id             = aws_route53_zone.test.id
-  key_management_service_arn = aws_kms_key.test.arn
+  hosted_zone_id             = aws_route53_zone.example.id
+  key_management_service_arn = aws_kms_key.example.arn
   name                       = "example"
 }
 
 resource "aws_route53_hosted_zone_dnssec" "example" {
+  depends_on = [
+    aws_route53_key_signing_key.example
+  ]
   hosted_zone_id = aws_route53_key_signing_key.example.hosted_zone_id
 }
 ```
@@ -82,7 +102,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_route53_hosted_zone_dnssec` resources can be imported by using the Route 53 Hosted Zone identifier, e.g.
+`aws_route53_hosted_zone_dnssec` resources can be imported by using the Route 53 Hosted Zone identifier, e.g.,
 
 ```
 $ terraform import aws_route53_hosted_zone_dnssec.example Z1D633PJN98FT9

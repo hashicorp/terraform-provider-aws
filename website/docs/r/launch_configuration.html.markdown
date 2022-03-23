@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Autoscaling"
 layout: "aws"
 page_title: "AWS: aws_launch_configuration"
 description: |-
@@ -136,7 +136,7 @@ resource "aws_autoscaling_group" "bar" {
 The following arguments are supported:
 
 * `name` - (Optional) The name of the launch configuration. If you leave
-  this blank, Terraform will auto-generate a unique name.
+  this blank, Terraform will auto-generate a unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified
   prefix. Conflicts with `name`.
 * `image_id` - (Required) The EC2 image ID to launch.
@@ -210,10 +210,11 @@ Modifying any `ebs_block_device` currently requires resource replacement.
 
 Each `ephemeral_block_device` supports the following:
 
-* `device_name` - The name of the block device to mount on the instance.
-* `virtual_name` - The [Instance Store Device
+* `device_name` - (Required) The name of the block device to mount on the instance.
+* `no_device` - (Optional) Whether the device in the block device mapping of the AMI is suppressed.
+* `virtual_name` - (Optional) The [Instance Store Device
   Name](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#InstanceStoreDeviceNames)
-  (e.g. `"ephemeral0"`)
+  (e.g., `"ephemeral0"`)
 
 Each AWS Instance type has a different set of Instance Store block devices
 available for attachment. AWS [publishes a
@@ -240,7 +241,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Launch configurations can be imported using the `name`, e.g.
+Launch configurations can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_launch_configuration.as_conf terraform-lg-123456
