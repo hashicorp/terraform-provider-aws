@@ -35,6 +35,8 @@ In addition to all arguments above, the following attributes are exported:
         * `description` - Description to apply to distributed AMI.
         * `kms_key_id` - Amazon Resource Name (ARN) of Key Management Service (KMS) Key to encrypt AMI.
         * `launch_permission` - Nested list of EC2 launch permissions.
+            * `organization_arns` - Set of AWS Organization ARNs.
+            * `organizational_unit_arns` - Set of AWS Organizational Unit ARNs.
             * `user_groups` - Set of EC2 launch permission user groups.
             * `user_ids` - Set of AWS Account identifiers.
         * `target_account_ids` - Set of target AWS Account identifiers.
