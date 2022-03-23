@@ -305,7 +305,7 @@ func TestAccS3BucketAcl_disappears(t *testing.T) {
 
 func TestAccS3BucketAcl_migrate_aclNoChange(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketResourceName := "aws_s3_bucket.bucket"
+	bucketResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_s3_bucket_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -334,7 +334,7 @@ func TestAccS3BucketAcl_migrate_aclNoChange(t *testing.T) {
 
 func TestAccS3BucketAcl_migrate_aclWithChange(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketResourceName := "aws_s3_bucket.bucket"
+	bucketResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_s3_bucket_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -363,7 +363,7 @@ func TestAccS3BucketAcl_migrate_aclWithChange(t *testing.T) {
 
 func TestAccS3BucketAcl_migrate_grantsNoChange(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketResourceName := "aws_s3_bucket.bucket"
+	bucketResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_s3_bucket_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -412,7 +412,7 @@ func TestAccS3BucketAcl_migrate_grantsNoChange(t *testing.T) {
 
 func TestAccS3BucketAcl_migrate_grantsWithChange(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketResourceName := "aws_s3_bucket.bucket"
+	bucketResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_s3_bucket_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -755,12 +755,12 @@ resource "aws_s3_bucket_acl" "test" {
 
 func testAccBucketAcl_Migrate_AclConfig(rName, acl string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
 resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.test.id
   acl    = %[2]q
 }
 `, rName, acl)
@@ -770,12 +770,12 @@ func testAccBucketAcl_Migrate_GrantsNoChangeConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_canonical_user_id" "current" {}
 
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
 resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.test.id
   access_control_policy {
     grant {
       grantee {
@@ -807,12 +807,12 @@ data "aws_canonical_user_id" "current" {}
 
 data "aws_partition" "current" {}
 
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
 resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.test.id
   access_control_policy {
     grant {
       grantee {
