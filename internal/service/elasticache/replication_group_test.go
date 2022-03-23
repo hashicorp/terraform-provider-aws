@@ -3432,6 +3432,7 @@ data "aws_iam_policy_document" "p" {
     }
   }
 }
+
 resource "aws_cloudwatch_log_resource_policy" "rp" {
   policy_document = data.aws_iam_policy_document.p.json
   policy_name     = "%[1]s"
@@ -3439,14 +3440,16 @@ resource "aws_cloudwatch_log_resource_policy" "rp" {
     aws_cloudwatch_log_group.lg
   ]
 }
+
 resource "aws_cloudwatch_log_group" "lg" {
   retention_in_days = 1
   name              = "%[1]s"
 }
+
 resource "aws_s3_bucket" "b" {
-  acl           = "private"
   force_destroy = true
 }
+
 resource "aws_iam_role" "r" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -3483,6 +3486,7 @@ resource "aws_iam_role" "r" {
     })
   }
 }
+
 resource "aws_kinesis_firehose_delivery_stream" "ds" {
   name        = "%[1]s"
   destination = "s3"
@@ -3496,6 +3500,7 @@ resource "aws_kinesis_firehose_delivery_stream" "ds" {
     ]
   }
 }
+
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = "%[1]s"
   replication_group_description = "test description"
@@ -3533,6 +3538,7 @@ resource "aws_elasticache_replication_group" "test" {
     }
   }
 }
+
 data "aws_elasticache_replication_group" "test" {
   replication_group_id = aws_elasticache_replication_group.test.replication_group_id
 }
