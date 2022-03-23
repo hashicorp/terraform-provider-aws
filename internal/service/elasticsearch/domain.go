@@ -195,6 +195,20 @@ func ResourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"cold_storage_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enabled": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+								},
+							},
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+						},
 						"dedicated_master_count": {
 							Type:             schema.TypeInt,
 							Optional:         true,
@@ -1043,6 +1057,10 @@ func flattenNodeToNodeEncryptionOptions(o *elasticsearch.NodeToNodeEncryptionOpt
 func expandClusterConfig(m map[string]interface{}) *elasticsearch.ElasticsearchClusterConfig {
 	config := elasticsearch.ElasticsearchClusterConfig{}
 
+	if v, ok := m["cold_storage_options"]; ok {
+		config.ColdStorageOptions = expandColdStorageOptions(v.([]interface{}))
+	}
+
 	if v, ok := m["dedicated_master_enabled"]; ok {
 		isEnabled := v.(bool)
 		config.DedicatedMasterEnabled = aws.Bool(isEnabled)
@@ -1093,6 +1111,22 @@ func expandClusterConfig(m map[string]interface{}) *elasticsearch.ElasticsearchC
 	return &config
 }
 
+func expandColdStorageOptions(v []interface{}) *elasticsearch.ColdStorageOptions {
+	if len(v) == 0 || v[0] == nil {
+		return nil
+	}
+
+	m := v[0].(map[string]interface{})
+
+	coldStorageOptions := &elasticsearch.ColdStorageOptions{}
+
+	if v, ok := m["enabled"]; ok {
+		coldStorageOptions.Enabled = aws.Bool(v.(bool))
+	}
+
+	return coldStorageOptions
+}
+
 func expandZoneAwarenessConfig(l []interface{}) *elasticsearch.ZoneAwarenessConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -1115,6 +1149,9 @@ func flattenClusterConfig(c *elasticsearch.ElasticsearchClusterConfig) []map[str
 		"zone_awareness_enabled": aws.BoolValue(c.ZoneAwarenessEnabled),
 	}
 
+	if c.ColdStorageOptions != nil {
+		m["cold_storage_options"] = flattenColdStorageOptions(c.ColdStorageOptions)
+	}
 	if c.DedicatedMasterCount != nil {
 		m["dedicated_master_count"] = aws.Int64Value(c.DedicatedMasterCount)
 	}
@@ -1141,6 +1178,18 @@ func flattenClusterConfig(c *elasticsearch.ElasticsearchClusterConfig) []map[str
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func flattenColdStorageOptions(coldStorageOptions *elasticsearch.ColdStorageOptions) []interface{} {
+	if coldStorageOptions == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"enabled": aws.BoolValue(coldStorageOptions.Enabled),
+	}
+
+	return []interface{}{m}
 }
 
 func flattenZoneAwarenessConfig(zoneAwarenessConfig *elasticsearch.ZoneAwarenessConfig) []interface{} {
