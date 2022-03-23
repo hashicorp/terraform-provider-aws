@@ -200,16 +200,17 @@ func ResourceDomain() *schema.Resource {
 						"cold_storage_options": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"enabled": {
 										Type:     schema.TypeBool,
-										Required: true,
+										Optional: true,
+										Computed: true,
 									},
 								},
 							},
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 						},
 						"dedicated_master_count": {
 							Type:             schema.TypeInt,
