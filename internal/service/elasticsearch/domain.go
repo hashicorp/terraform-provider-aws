@@ -1059,8 +1059,8 @@ func flattenNodeToNodeEncryptionOptions(o *elasticsearch.NodeToNodeEncryptionOpt
 func expandClusterConfig(m map[string]interface{}) *elasticsearch.ElasticsearchClusterConfig {
 	config := elasticsearch.ElasticsearchClusterConfig{}
 
-	if v, ok := m["cold_storage_options"]; ok {
-		config.ColdStorageOptions = expandColdStorageOptions(v.([]interface{}))
+	if v, ok := m["cold_storage_options"].([]interface{}); ok && len(v) > 0 {
+		config.ColdStorageOptions = expandColdStorageOptions(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := m["dedicated_master_enabled"]; ok {
@@ -1113,20 +1113,18 @@ func expandClusterConfig(m map[string]interface{}) *elasticsearch.ElasticsearchC
 	return &config
 }
 
-func expandColdStorageOptions(v []interface{}) *elasticsearch.ColdStorageOptions {
-	if len(v) == 0 || v[0] == nil {
+func expandColdStorageOptions(tfMap map[string]interface{}) *elasticsearch.ColdStorageOptions {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := v[0].(map[string]interface{})
+	apiObject := &elasticsearch.ColdStorageOptions{}
 
-	coldStorageOptions := &elasticsearch.ColdStorageOptions{}
-
-	if v, ok := m["enabled"]; ok {
-		coldStorageOptions.Enabled = aws.Bool(v.(bool))
+	if v, ok := tfMap["enabled"].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
 	}
 
-	return coldStorageOptions
+	return apiObject
 }
 
 func expandZoneAwarenessConfig(l []interface{}) *elasticsearch.ZoneAwarenessConfig {
