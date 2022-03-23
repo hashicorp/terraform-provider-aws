@@ -378,9 +378,11 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"acceleration_status": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "Use the aws_s3_bucket_accelerate_configuration resource instead",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Deprecated:   "Use the aws_s3_bucket_accelerate_configuration resource instead",
+				ValidateFunc: validation.StringInSlice(s3.BucketAccelerateStatus_Values(), false),
 			},
 
 			"request_payer": {
@@ -762,6 +764,12 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if d.HasChange("acceleration_status") {
+		if err := resourceBucketInternalAccelerationUpdate(conn, d); err != nil {
+			return fmt.Errorf("error updating S3 Bucket (%s) Acceleration Status: %w", d.Id(), err)
+		}
+	}
+
 	if d.HasChange("acl") && !d.IsNewResource() {
 		if err := resourceBucketInternalACLUpdate(conn, d); err != nil {
 			return fmt.Errorf("error updating S3 Bucket (%s) ACL: %w", d.Id(), err)
@@ -1000,7 +1008,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Amazon S3 Transfer Acceleration might not be supported in the region
 	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeMethodNotAllowed, ErrCodeUnsupportedArgument, ErrCodeNotImplemented) {
-		return fmt.Errorf("error getting S3 Bucket acceleration configuration: %w", err)
+		return fmt.Errorf("error getting S3 Bucket (%s) accelerate configuration: %w", d.Id(), err)
 	}
 
 	if accelerate, ok := accelerateResponse.(*s3.GetBucketAccelerateConfigurationOutput); ok {
@@ -1481,6 +1489,21 @@ func normalizeRegion(region string) string {
 }
 
 ////////////////////////////////////////// Argument-Specific Update Functions //////////////////////////////////////////
+
+func resourceBucketInternalAccelerationUpdate(conn *s3.S3, d *schema.ResourceData) error {
+	input := &s3.PutBucketAccelerateConfigurationInput{
+		Bucket: aws.String(d.Id()),
+		AccelerateConfiguration: &s3.AccelerateConfiguration{
+			Status: aws.String(d.Get("acceleration_status").(string)),
+		},
+	}
+
+	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		return conn.PutBucketAccelerateConfiguration(input)
+	})
+
+	return err
+}
 
 func resourceBucketInternalACLUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	acl := d.Get("acl").(string)

@@ -109,6 +109,66 @@ func TestAccS3BucketAccelerateConfiguration_disappears(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketAccelerateConfiguration_migrate_noChange(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_accelerate_configuration.test"
+	bucketResourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketAccelerateConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withAcceleration(rName, s3.BucketAccelerateStatusEnabled),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(bucketResourceName),
+					resource.TestCheckResourceAttr(bucketResourceName, "acceleration_status", s3.BucketAccelerateStatusEnabled),
+				),
+			},
+			{
+				Config: testAccBucketAccelerateConfigurationBasicConfig(rName, s3.BucketAccelerateStatusEnabled),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketAccelerateConfigurationExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "status", s3.BucketAccelerateStatusEnabled),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketAccelerateConfiguration_migrate_withChange(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_accelerate_configuration.test"
+	bucketResourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketAccelerateConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withAcceleration(rName, s3.BucketAccelerateStatusEnabled),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(bucketResourceName),
+					resource.TestCheckResourceAttr(bucketResourceName, "acceleration_status", s3.BucketAccelerateStatusEnabled),
+				),
+			},
+			{
+				Config: testAccBucketAccelerateConfigurationBasicConfig(rName, s3.BucketAccelerateStatusSuspended),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketAccelerateConfigurationExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "status", s3.BucketAccelerateStatusSuspended),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBucketAccelerateConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
