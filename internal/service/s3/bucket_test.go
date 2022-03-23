@@ -263,6 +263,38 @@ func TestAccS3Bucket_Basic_acceleration(t *testing.T) {
 	})
 }
 
+func TestAccS3Bucket_Basic_keyEnabled(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withDefaultEncryptionAndBucketKeyEnabled_KmsMasterKey(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", "aws:kms"),
+					resource.TestMatchResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", regexp.MustCompile("^arn")),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.bucket_key_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+			},
+		},
+	})
+}
+
 // Test TestAccS3Bucket_disappears is designed to fail with a "plan
 // not empty" error in Terraform, to check against regressions.
 // See https://github.com/hashicorp/terraform/pull/2925
@@ -1351,6 +1383,102 @@ func TestAccS3Bucket_Security_logging(t *testing.T) {
 		},
 	})
 }
+func TestAccS3Bucket_Security_enableDefaultEncryptionWhenTypical(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withDefaultEncryption_KmsMasterKey(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", s3.ServerSideEncryptionAwsKms),
+					resource.TestMatchResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", regexp.MustCompile("^arn")),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Security_enableDefaultEncryptionWhenAES256IsUsed(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withDefaultEncryption_defaultKey(bucketName, s3.ServerSideEncryptionAes256),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", s3.ServerSideEncryptionAes256),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Security_disableDefaultEncryptionWhenDefaultEncryptionIsEnabled(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withDefaultEncryption_defaultKey(bucketName, s3.ServerSideEncryptionAwsKms),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+			},
+			{
+				// As ServerSide Encryption Configuration is a Computed field, removing them from terraform will not
+				// trigger an update to remove it from the S3 bucket.
+				Config: testAccBucketConfig_Basic(bucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
+				),
+			},
+		},
+	})
+}
 
 func TestAccS3Bucket_Web_simple(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2081,6 +2209,67 @@ resource "aws_s3_bucket" "test" {
     allowed_origins = [""]
     expose_headers  = ["x-amz-server-side-encryption", "ETag"]
     max_age_seconds = 3000
+  }
+}
+`, bucketName)
+}
+
+func testAccBucketConfig_withDefaultEncryption_defaultKey(bucketName, sseAlgorithm string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = %[2]q
+      }
+    }
+  }
+}
+`, bucketName, sseAlgorithm)
+}
+
+func testAccBucketConfig_withDefaultEncryption_KmsMasterKey(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = "KMS Key for Bucket %[1]s"
+  deletion_window_in_days = 10
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = aws_kms_key.test.arn
+        sse_algorithm     = "aws:kms"
+      }
+    }
+  }
+}
+`, bucketName)
+}
+
+func testAccBucketConfig_withDefaultEncryptionAndBucketKeyEnabled_KmsMasterKey(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = "KMS Key for Bucket %[1]s"
+  deletion_window_in_days = 7
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = aws_kms_key.test.arn
+        sse_algorithm     = "aws:kms"
+      }
+      bucket_key_enabled = true
+    }
   }
 }
 `, bucketName)
