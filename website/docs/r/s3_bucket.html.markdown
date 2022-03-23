@@ -24,6 +24,10 @@ Configuring with both will cause inconsistencies and may overwrite configuration
 or with the deprecated parameter `grant` in the resource `aws_s3_bucket`.
 Configuring with both will cause inconsistencies and may overwrite configuration.
 
+~> **NOTE on S3 Bucket CORS Configuration:** S3 Bucket CORS can be configured in either the standalone resource [`aws_s3_bucket_cors_configuration`](s3_bucket_cors_configuration.html.markdown)
+or with the deprecated parameter `cors_rule` in the resource `aws_s3_bucket`.
+Configuring with both will cause inconsistencies and may overwrite configuration.
+
 ## Example Usage
 
 ### Private Bucket w/ Tags
@@ -51,8 +55,23 @@ See the [`aws_s3_bucket_website_configuration` resource](s3_bucket_website_confi
 
 ### Using CORS
 
-The `cors_rule` argument is read-only as of version 4.0 of the Terraform AWS Provider.
-See the [`aws_s3_bucket_cors_configuration` resource](s3_bucket_cors_configuration.html.markdown) for configuration details.
+-> **NOTE:** The parameter `cors_rule` is deprecated.
+Use the resource [`aws_s3_bucket_cors_configuration`](s3_bucket_cors_configuration.html.markdown) instead.
+
+```terraform
+resource "aws_s3_bucket" "b" {
+  bucket = "s3-website-test.hashicorp.com"
+  acl    = "public-read"
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "POST"]
+    allowed_origins = ["https://s3-website-test.hashicorp.com"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
+```
 
 ### Using versioning
 
@@ -121,10 +140,23 @@ The following arguments are supported:
   Use the resource [`aws_s3_bucket_accelerate_configuration`](s3_bucket_accelerate_configuration.html) instead.
 * `acl` - (Optional, **Deprecated**) The [canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl) to apply. Valid values are `private`, `public-read`, `public-read-write`, `aws-exec-read`, `authenticated-read`, and `log-delivery-write`. Defaults to `private`.  Conflicts with `grant`. Terraform will only perform drift detection if a configuration value is provided. Use the resource [`aws_s3_bucket_acl`](s3_bucket_acl.html.markdown) instead.
 * `grant` - (Optional, **Deprecated**) An [ACL policy grant](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#sample-acl). See [Grant](#grant) below for details. Conflicts with `acl`. Terraform will only perform drift detection if a configuration value is provided. Use the resource [`aws_s3_bucket_acl`](s3_bucket_acl.html.markdown) instead.
+* `cors_rule` - (Optional, **Deprecated**) A rule of [Cross-Origin Resource Sharing](https://docs.aws.amazon.com/AmazonS3/latest/dev/cors.html). See [CORS rule](#cors-rule) below for details. Terraform will only perform drift detection if a configuration value is provided. Use the resource [`aws_s3_bucket_cors_configuration`](s3_bucket_cors_configuration.html.markdown) instead.
 * `force_destroy` - (Optional, Default:`false`) A boolean that indicates all objects (including any [locked objects](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html)) should be deleted from the bucket so that the bucket can be destroyed without error. These objects are *not* recoverable.
 * `object_lock_enabled` - (Optional, Default:`false`, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled.
 * `object_lock_configuration` - (Optional) A configuration of [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html). See [Object Lock Configuration](#object-lock-configuration) below.
 * `tags` - (Optional) A map of tags to assign to the bucket. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### CORS Rule
+
+~> **NOTE:** Currently, changes to the `cors_rule` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes of CORS rules to an S3 bucket, use the `aws_s3_bucket_cors_configuration` resource instead. If you use `cors_rule` on an `aws_s3_bucket`, Terraform will assume management over the full set of CORS rules for the S3 bucket, treating additional CORS rules as drift. For this reason, `cors_rule` cannot be mixed with the external `aws_s3_bucket_cors_configuration` resource for a given S3 bucket.
+
+The `cors_rule` configuration block supports the following arguments:
+
+* `allowed_headers` - (Optional) List of headers allowed.
+* `allowed_methods` - (Required) One or more HTTP methods that you allow the origin to execute. Can be `GET`, `PUT`, `POST`, `DELETE` or `HEAD`.
+* `allowed_origins` - (Required) One or more origins you want customers to be able to access the bucket from.
+* `expose_headers` - (Optional) One or more headers in the response that you want customers to be able to access from their applications (for example, from a JavaScript `XMLHttpRequest` object).
+* `max_age_seconds` - (Optional) Specifies time in seconds that browser can cache the response for a preflight request.
 
 ### Grant
 
@@ -156,12 +188,6 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the bucket. Will be of format `arn:aws:s3:::bucketname`.
 * `bucket_domain_name` - The bucket domain name. Will be of format `bucketname.s3.amazonaws.com`.
 * `bucket_regional_domain_name` - The bucket region-specific domain name. The bucket domain name including the region name, please refer [here](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region) for format. Note: The AWS CloudFront allows specifying S3 region-specific endpoint when creating S3 origin, it will prevent [redirect issues](https://forums.aws.amazon.com/thread.jspa?threadID=216814) from CloudFront to S3 Origin URL.
-* `cors_rule` - Set of origins and methods ([cross-origin](https://docs.aws.amazon.com/AmazonS3/latest/dev/cors.html) access allowed).
-    * `allowed_headers` - Set of headers that are specified in the Access-Control-Request-Headers header.
-    * `allowed_methods` - Set of HTTP methods that the origin is allowed to execute.
-    * `allowed_origins` - Set of origins customers are able to access the bucket from.
-    * `expose_headers` - Set of headers in the response that customers are able to access from their applications.
-    * `max_age_seconds` The time in seconds that browser can cache the response for a preflight request.
 * `hosted_zone_id` - The [Route 53 Hosted Zone ID](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints) for this bucket's region.
 * `lifecycle_rule` - A configuration of [object lifecycle management](http://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html).
     * `id` - Unique identifier for the rule.
