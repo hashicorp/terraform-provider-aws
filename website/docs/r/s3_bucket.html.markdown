@@ -28,6 +28,10 @@ Configuring with both will cause inconsistencies and may overwrite configuration
 or with the deprecated parameter `cors_rule` in the resource `aws_s3_bucket`.
 Configuring with both will cause inconsistencies and may overwrite configuration.
 
+~> **NOTE on S3 Bucket Lifecycle Configuration:** S3 Bucket Lifecycle can be configured in either the standalone resource [`aws_s3_bucket_lifecycle_configuration`](s3_bucket_lifecycle_configuration.html)
+or with the deprecated parameter `lifecycle_rule` in the resource `aws_s3_bucket`.
+Configuring with both will cause inconsistencies and may overwrite configuration.
+
 ## Example Usage
 
 ### Private Bucket w/ Tags
@@ -85,8 +89,81 @@ See the [`aws_s3_bucket_logging` resource](s3_bucket_logging.html.markdown) for 
 
 ### Using object lifecycle
 
-The `lifecycle_rule` argument is read-only as of version 4.0 of the Terraform AWS Provider.
-See the [`aws_s3_bucket_lifecycle_configuration` resource](s3_bucket_lifecycle_configuration.html.markdown) for configuration details.
+### Using object lifecycle
+
+-> **NOTE:** The parameter `lifecycle_rule` is deprecated.
+Use the resource [`aws_s3_bucket_lifecycle_configuration`](s3_bucket_lifecycle_configuration.html) instead.
+
+```terraform
+resource "aws_s3_bucket" "bucket" {
+  bucket = "my-bucket"
+  acl    = "private"
+
+  lifecycle_rule {
+    id      = "log"
+    enabled = true
+
+    prefix = "log/"
+
+    tags = {
+      rule      = "log"
+      autoclean = "true"
+    }
+
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA" # or "ONEZONE_IA"
+    }
+
+    transition {
+      days          = 60
+      storage_class = "GLACIER"
+    }
+
+    expiration {
+      days = 90
+    }
+  }
+
+  lifecycle_rule {
+    id      = "tmp"
+    prefix  = "tmp/"
+    enabled = true
+
+    expiration {
+      date = "2016-01-12"
+    }
+  }
+}
+
+resource "aws_s3_bucket" "versioning_bucket" {
+  bucket = "my-versioning-bucket"
+  acl    = "private"
+
+  versioning {
+    enabled = true
+  }
+
+  lifecycle_rule {
+    prefix  = "config/"
+    enabled = true
+
+    noncurrent_version_transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    noncurrent_version_transition {
+      days          = 60
+      storage_class = "GLACIER"
+    }
+
+    noncurrent_version_expiration {
+      days = 90
+    }
+  }
+}
+```
 
 ### Using object lock configuration
 
@@ -142,6 +219,8 @@ The following arguments are supported:
 * `grant` - (Optional, **Deprecated**) An [ACL policy grant](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#sample-acl). See [Grant](#grant) below for details. Conflicts with `acl`. Terraform will only perform drift detection if a configuration value is provided. Use the resource [`aws_s3_bucket_acl`](s3_bucket_acl.html.markdown) instead.
 * `cors_rule` - (Optional, **Deprecated**) A rule of [Cross-Origin Resource Sharing](https://docs.aws.amazon.com/AmazonS3/latest/dev/cors.html). See [CORS rule](#cors-rule) below for details. Terraform will only perform drift detection if a configuration value is provided. Use the resource [`aws_s3_bucket_cors_configuration`](s3_bucket_cors_configuration.html.markdown) instead.
 * `force_destroy` - (Optional, Default:`false`) A boolean that indicates all objects (including any [locked objects](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html)) should be deleted from the bucket so that the bucket can be destroyed without error. These objects are *not* recoverable.
+* `lifecycle_rule` - (Optional, **Deprecated**) A configuration of [object lifecycle management](http://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html). See [Lifecycle Rule](#lifecycle-rule) below for details. Terraform will only perform drift detection if a configuration value is provided.
+  Use the resource [`aws_s3_bucket_lifecycle_configuration`](s3_bucket_lifecycle_configuration.html) instead.
 * `object_lock_enabled` - (Optional, Default:`false`, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled.
 * `object_lock_configuration` - (Optional) A configuration of [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html). See [Object Lock Configuration](#object-lock-configuration) below.
 * `tags` - (Optional) A map of tags to assign to the bucket. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -169,6 +248,53 @@ The `grant` configuration block supports the following arguments:
 * `permissions` - (Required) List of permissions to apply for grantee. Valid values are `READ`, `WRITE`, `READ_ACP`, `WRITE_ACP`, `FULL_CONTROL`.
 * `uri` - (Optional) Uri address to grant for. Used only when `type` is `Group`.
 
+### Lifecycle Rule
+
+~> **NOTE:** Currently, changes to the `lifecycle_rule` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes of Lifecycle rules to an S3 bucket, use the `aws_s3_bucket_lifecycle_configuration` resource instead. If you use `lifecycle_rule` on an `aws_s3_bucket`, Terraform will assume management over the full set of Lifecycle rules for the S3 bucket, treating additional Lifecycle rules as drift. For this reason, `lifecycle_rule` cannot be mixed with the external `aws_s3_bucket_lifecycle_configuration` resource for a given S3 bucket.
+
+~> **NOTE:** At least one of `abort_incomplete_multipart_upload_days`, `expiration`, `transition`, `noncurrent_version_expiration`, `noncurrent_version_transition` must be specified.
+
+The `lifecycle_rule` configuration block supports the following arguments:
+
+* `id` - (Optional) Unique identifier for the rule. Must be less than or equal to 255 characters in length.
+* `prefix` - (Optional) Object key prefix identifying one or more objects to which the rule applies.
+* `tags` - (Optional) Specifies object tags key and value.
+* `enabled` - (Required) Specifies lifecycle rule status.
+* `abort_incomplete_multipart_upload_days` (Optional) Specifies the number of days after initiating a multipart upload when the multipart upload must be completed.
+* `expiration` - (Optional) Specifies a period in the object's expire. See [Expiration](#expiration) below for details.
+* `transition` - (Optional) Specifies a period in the object's transitions. See [Transition](#transition) below for details.
+* `noncurrent_version_expiration` - (Optional) Specifies when noncurrent object versions expire. See [Noncurrent Version Expiration](#noncurrent-version-expiration) below for details.
+* `noncurrent_version_transition` - (Optional) Specifies when noncurrent object versions transitions. See [Noncurrent Version Transition](#noncurrent-version-transition) below for details.
+
+### Expiration
+
+The `expiration` configuration block supports the following arguments:
+
+* `date` - (Optional) Specifies the date after which you want the corresponding action to take effect.
+* `days` - (Optional) Specifies the number of days after object creation when the specific rule action takes effect.
+* `expired_object_delete_marker` - (Optional) On a versioned bucket (versioning-enabled or versioning-suspended bucket), you can add this element in the lifecycle configuration to direct Amazon S3 to delete expired object delete markers. This cannot be specified with Days or Date in a Lifecycle Expiration Policy.
+
+### Transition
+
+The `transition` configuration block supports the following arguments:
+
+* `date` - (Optional) Specifies the date after which you want the corresponding action to take effect.
+* `days` - (Optional) Specifies the number of days after object creation when the specific rule action takes effect.
+* `storage_class` - (Required) Specifies the Amazon S3 [storage class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Transition.html#AmazonS3-Type-Transition-StorageClass) to which you want the object to transition.
+
+### Noncurrent Version Expiration
+
+The `noncurrent_version_expiration` configuration block supports the following arguments:
+
+* `days` - (Required) Specifies the number of days noncurrent object versions expire.
+
+### Noncurrent Version Transition
+
+The `noncurrent_version_transition` configuration supports the following arguments:
+
+* `days` - (Required) Specifies the number of days noncurrent object versions transition.
+* `storage_class` - (Required) Specifies the Amazon S3 [storage class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Transition.html#AmazonS3-Type-Transition-StorageClass) to which you want the object to transition.
+
 ### Object Lock Configuration
 
 ~> **NOTE:** You can only **enable** S3 Object Lock for **new** buckets. If you need to **enable** S3 Object Lock for an **existing** bucket, please contact AWS Support.
@@ -189,25 +315,6 @@ In addition to all arguments above, the following attributes are exported:
 * `bucket_domain_name` - The bucket domain name. Will be of format `bucketname.s3.amazonaws.com`.
 * `bucket_regional_domain_name` - The bucket region-specific domain name. The bucket domain name including the region name, please refer [here](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region) for format. Note: The AWS CloudFront allows specifying S3 region-specific endpoint when creating S3 origin, it will prevent [redirect issues](https://forums.aws.amazon.com/thread.jspa?threadID=216814) from CloudFront to S3 Origin URL.
 * `hosted_zone_id` - The [Route 53 Hosted Zone ID](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints) for this bucket's region.
-* `lifecycle_rule` - A configuration of [object lifecycle management](http://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html).
-    * `id` - Unique identifier for the rule.
-    * `prefix` - Object key prefix identifying one or more objects to which the rule applies.
-    * `tags` - Object tags key and value.
-    * `enabled` - Lifecycle rule status.
-    * `abort_incomplete_multipart_upload_days` - Number of days after initiating a multipart upload when the multipart upload must be completed.
-    * `expiration` - The expiration for the lifecycle of the object in the form of date, days and, whether the object has a delete marker.
-        * `date` - Indicates at what date the object is to be moved or deleted.
-        * `days` - Indicates the lifetime, in days, of the objects that are subject to the rule. The value must be a non-zero positive integer.
-        * `expired_object_delete_marker` - Indicates whether Amazon S3 will remove a delete marker with no noncurrent versions.
-    * `transition` - Specifies when an Amazon S3 object transitions to a specified storage class.
-        * `date` - The date after which you want the corresponding action to take effect.
-        * `days` - The number of days after object creation when the specific rule action takes effect.
-        * `storage_class` - The Amazon S3 [storage class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Transition.html#AmazonS3-Type-Transition-StorageClass) an object will transition to.
-    * `noncurrent_version_expiration` - When noncurrent object versions expire.
-        * `days` - The number of days noncurrent object versions expire.
-    * `noncurrent_version_transition` - When noncurrent object versions transition.
-        * `days` - The number of days noncurrent object versions transition.
-        * `storage_class` - The Amazon S3 [storage class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Transition.html#AmazonS3-Type-Transition-StorageClass) an object will transition to.
 * `logging` - The [logging parameters](https://docs.aws.amazon.com/AmazonS3/latest/UG/ManagingBucketLogging.html) for the bucket.
     * `target_bucket` - The name of the bucket that receives the log objects.
     * `target_prefix` - The prefix for all log object keys/
