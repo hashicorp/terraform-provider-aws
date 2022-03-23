@@ -1233,10 +1233,10 @@ func TestAccECSService_Tags_propagate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceManagedTagsConfig(rName),
+				Config: testAccServicePropagateTagsConfig(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &third),
-					resource.TestCheckResourceAttr(resourceName, "propagate_tags", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags", ecs.PropagateTagsNone),
 				),
 			},
 		},

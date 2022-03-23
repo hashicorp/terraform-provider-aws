@@ -1125,6 +1125,8 @@ func TestAccAutoScalingGroup_warmPool(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.pool_state", "Stopped"),
 					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.min_size", "0"),
 					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.max_group_prepared_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.instance_reuse_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool.0.instance_reuse_policy.0.reuse_on_scale_in", "true"),
 				),
 			},
 			{
@@ -4786,6 +4788,9 @@ resource "aws_autoscaling_group" "test" {
     pool_state                  = "Stopped"
     min_size                    = 0
     max_group_prepared_capacity = 2
+    instance_reuse_policy {
+      reuse_on_scale_in = true
+    }
   }
 }
 `

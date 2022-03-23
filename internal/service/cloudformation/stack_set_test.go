@@ -600,9 +600,11 @@ func testAccCheckCloudFormationStackSetExists(resourceName string, v *cloudforma
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
+		callAs := rs.Primary.Attributes["call_as"]
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 
-		output, err := tfcloudformation.FindStackSetByName(conn, rs.Primary.ID)
+		output, err := tfcloudformation.FindStackSetByName(conn, rs.Primary.ID, callAs)
 
 		if err != nil {
 			return err
@@ -622,7 +624,9 @@ func testAccCheckStackSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfcloudformation.FindStackSetByName(conn, rs.Primary.ID)
+		callAs := rs.Primary.Attributes["call_as"]
+
+		_, err := tfcloudformation.FindStackSetByName(conn, rs.Primary.ID, callAs)
 
 		if tfresource.NotFound(err) {
 			continue

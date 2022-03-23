@@ -38,10 +38,14 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"token": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+			},
 			"rule": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
-				Set:      rulesHash,
 				MaxItems: 1000,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -236,12 +240,14 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 						"id": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringLenBetween(0, 255),
 						},
 						"prefix": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
+							Deprecated:   "Use filter instead",
 						},
 						"priority": {
 							Type:     schema.TypeInt,
@@ -303,12 +309,16 @@ func resourceBucketReplicationConfigurationCreate(d *schema.ResourceData, meta i
 
 	rc := &s3.ReplicationConfiguration{
 		Role:  aws.String(d.Get("role").(string)),
-		Rules: ExpandRules(d.Get("rule").(*schema.Set).List()),
+		Rules: ExpandReplicationRules(d.Get("rule").([]interface{})),
 	}
 
 	input := &s3.PutBucketReplicationInput{
 		Bucket:                   aws.String(bucket),
 		ReplicationConfiguration: rc,
+	}
+
+	if v, ok := d.GetOk("token"); ok {
+		input.Token = aws.String(v.(string))
 	}
 
 	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
@@ -367,7 +377,7 @@ func resourceBucketReplicationConfigurationRead(d *schema.ResourceData, meta int
 
 	d.Set("bucket", d.Id())
 	d.Set("role", r.Role)
-	if err := d.Set("rule", schema.NewSet(rulesHash, FlattenRules(r.Rules))); err != nil {
+	if err := d.Set("rule", FlattenReplicationRules(r.Rules)); err != nil {
 		return fmt.Errorf("error setting rule: %w", err)
 	}
 
@@ -379,12 +389,16 @@ func resourceBucketReplicationConfigurationUpdate(d *schema.ResourceData, meta i
 
 	rc := &s3.ReplicationConfiguration{
 		Role:  aws.String(d.Get("role").(string)),
-		Rules: ExpandRules(d.Get("rule").(*schema.Set).List()),
+		Rules: ExpandReplicationRules(d.Get("rule").([]interface{})),
 	}
 
 	input := &s3.PutBucketReplicationInput{
 		Bucket:                   aws.String(d.Id()),
 		ReplicationConfiguration: rc,
+	}
+
+	if v, ok := d.GetOk("token"); ok {
+		input.Token = aws.String(v.(string))
 	}
 
 	err := resource.Retry(propagationTimeout, func() *resource.RetryError {

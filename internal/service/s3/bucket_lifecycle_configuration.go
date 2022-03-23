@@ -91,7 +91,12 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 						"filter": {
 							Type:     schema.TypeList,
 							Optional: true,
-							MaxItems: 1,
+							// If neither the filter block nor the prefix parameter in the rule are specified,
+							// we apply the Default behavior from v3.x of the provider (Filter with empty string Prefix),
+							// which will thus return a Filter in the GetBucketLifecycleConfiguration request and
+							// require diff suppression.
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"and": {
@@ -164,9 +169,9 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"newer_noncurrent_versions": {
-										Type:         schema.TypeInt,
+										Type:         nullable.TypeNullableInt,
 										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
+										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(1),
 									},
 									"noncurrent_days": {
 										Type:         schema.TypeInt,
@@ -182,9 +187,9 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"newer_noncurrent_versions": {
-										Type:         schema.TypeInt,
+										Type:         nullable.TypeNullableInt,
 										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
+										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(1),
 									},
 									"noncurrent_days": {
 										Type:         schema.TypeInt,

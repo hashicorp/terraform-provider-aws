@@ -56,11 +56,11 @@ const (
 	StackSetUpdatedDefaultTimeout = 30 * time.Minute
 )
 
-func WaitStackSetOperationSucceeded(conn *cloudformation.CloudFormation, stackSetName, operationID string, timeout time.Duration) (*cloudformation.StackSetOperation, error) {
+func WaitStackSetOperationSucceeded(conn *cloudformation.CloudFormation, stackSetName, operationID, callAs string, timeout time.Duration) (*cloudformation.StackSetOperation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{cloudformation.StackSetOperationStatusRunning},
 		Target:  []string{cloudformation.StackSetOperationStatusSucceeded},
-		Refresh: StatusStackSetOperation(conn, stackSetName, operationID),
+		Refresh: StatusStackSetOperation(conn, stackSetName, operationID, callAs),
 		Timeout: timeout,
 		Delay:   stackSetOperationDelay,
 	}
@@ -72,6 +72,7 @@ func WaitStackSetOperationSucceeded(conn *cloudformation.CloudFormation, stackSe
 			input := &cloudformation.ListStackSetOperationResultsInput{
 				OperationId:  aws.String(operationID),
 				StackSetName: aws.String(stackSetName),
+				CallAs:       aws.String(callAs),
 			}
 			var summaries []*cloudformation.StackSetOperationResultSummary
 

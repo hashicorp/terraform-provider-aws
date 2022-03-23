@@ -17,6 +17,10 @@ import (
 )
 
 func TestAccRDSProxyDefaultTargetGroup_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -52,6 +56,10 @@ func TestAccRDSProxyDefaultTargetGroup_basic(t *testing.T) {
 }
 
 func TestAccRDSProxyDefaultTargetGroup_emptyConnectionPool(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -87,6 +95,10 @@ func TestAccRDSProxyDefaultTargetGroup_emptyConnectionPool(t *testing.T) {
 }
 
 func TestAccRDSProxyDefaultTargetGroup_connectionBorrowTimeout(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -121,6 +133,10 @@ func TestAccRDSProxyDefaultTargetGroup_connectionBorrowTimeout(t *testing.T) {
 }
 
 func TestAccRDSProxyDefaultTargetGroup_initQuery(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -155,6 +171,10 @@ func TestAccRDSProxyDefaultTargetGroup_initQuery(t *testing.T) {
 }
 
 func TestAccRDSProxyDefaultTargetGroup_maxConnectionsPercent(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -189,6 +209,10 @@ func TestAccRDSProxyDefaultTargetGroup_maxConnectionsPercent(t *testing.T) {
 }
 
 func TestAccRDSProxyDefaultTargetGroup_maxIdleConnectionsPercent(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -223,6 +247,10 @@ func TestAccRDSProxyDefaultTargetGroup_maxIdleConnectionsPercent(t *testing.T) {
 }
 
 func TestAccRDSProxyDefaultTargetGroup_sessionPinningFilters(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -259,6 +287,10 @@ func TestAccRDSProxyDefaultTargetGroup_sessionPinningFilters(t *testing.T) {
 }
 
 func TestAccRDSProxyDefaultTargetGroup_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBProxy
 	dbProxyResourceName := "aws_db_proxy.test"
 	resourceName := "aws_db_proxy_default_target_group.test"
