@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -568,22 +569,17 @@ func testAccCheckLaunchConfigurationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		describe, err := conn.DescribeLaunchConfigurations(
-			&autoscaling.DescribeLaunchConfigurationsInput{
-				LaunchConfigurationNames: []*string{aws.String(rs.Primary.ID)},
-			})
+		_, err := tfautoscaling.FindLaunchConfigurationByName(conn, rs.Primary.ID)
 
-		if err == nil {
-			if len(describe.LaunchConfigurations) != 0 &&
-				*describe.LaunchConfigurations[0].LaunchConfigurationName == rs.Primary.ID {
-				return fmt.Errorf("Launch Configuration still exists")
-			}
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		// Verify the error
-		if !tfawserr.ErrCodeEquals(err, "InvalidLaunchConfiguration.NotFound") {
+		if err != nil {
 			return err
 		}
+
+		return fmt.Errorf("Autoscaling Launch Configuration %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -629,7 +625,7 @@ func testAccCheckLaunchConfigurationAttributes(conf *autoscaling.LaunchConfigura
 	}
 }
 
-func testAccCheckLaunchConfigurationExists(n string, res *autoscaling.LaunchConfiguration) resource.TestCheckFunc {
+func testAccCheckLaunchConfigurationExists(n string, v *autoscaling.LaunchConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -637,26 +633,18 @@ func testAccCheckLaunchConfigurationExists(n string, res *autoscaling.LaunchConf
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Launch Configuration ID is set")
+			return fmt.Errorf("No Autoscaling Launch Configuration ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
-		describeOpts := autoscaling.DescribeLaunchConfigurationsInput{
-			LaunchConfigurationNames: []*string{aws.String(rs.Primary.ID)},
-		}
-		describe, err := conn.DescribeLaunchConfigurations(&describeOpts)
+		output, err := tfautoscaling.FindLaunchConfigurationByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if len(describe.LaunchConfigurations) != 1 ||
-			*describe.LaunchConfigurations[0].LaunchConfigurationName != rs.Primary.ID {
-			return fmt.Errorf("Launch Configuration Group not found")
-		}
-
-		*res = *describe.LaunchConfigurations[0]
+		*v = *output
 
 		return nil
 	}

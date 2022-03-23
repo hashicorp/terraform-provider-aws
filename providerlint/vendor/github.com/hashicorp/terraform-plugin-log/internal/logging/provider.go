@@ -16,10 +16,39 @@ func GetProviderRootLogger(ctx context.Context) hclog.Logger {
 	return logger.(hclog.Logger)
 }
 
+// GetProviderRootLoggerOptions returns the root logger options used for
+// creating the root provider logger. If the root logger has not been created
+// or the options are not present, it will return nil.
+func GetProviderRootLoggerOptions(ctx context.Context) *hclog.LoggerOptions {
+	if GetProviderRootLogger(ctx) == nil {
+		return nil
+	}
+
+	loggerOptionsRaw := ctx.Value(ProviderRootLoggerOptionsKey)
+
+	if loggerOptionsRaw == nil {
+		return nil
+	}
+
+	loggerOptions, ok := loggerOptionsRaw.(*hclog.LoggerOptions)
+
+	if !ok {
+		return nil
+	}
+
+	return loggerOptions
+}
+
 // SetProviderRootLogger sets `logger` as the root logger used for writing
 // logs from a provider.
 func SetProviderRootLogger(ctx context.Context, logger hclog.Logger) context.Context {
 	return context.WithValue(ctx, ProviderRootLoggerKey, logger)
+}
+
+// SetProviderRootLoggerOptions sets `loggerOptions` as the root logger options
+// used for creating the provider root logger.
+func SetProviderRootLoggerOptions(ctx context.Context, loggerOptions *hclog.LoggerOptions) context.Context {
+	return context.WithValue(ctx, ProviderRootLoggerOptionsKey, loggerOptions)
 }
 
 // NewProviderSubsystemLoggerWarning is the text included in log output when a

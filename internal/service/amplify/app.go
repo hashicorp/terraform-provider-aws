@@ -306,7 +306,6 @@ func ResourceApp() *schema.Resource {
 			"repository": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
 			},
 

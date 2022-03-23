@@ -1,15 +1,14 @@
 package plugintest
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 
 	"github.com/hashicorp/terraform-exec/tfexec"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/logging"
 )
-
-const subprocessCurrentSigil = "4acd63807899403ca4859f5bb948d2c6"
-const subprocessPreviousSigil = "2279afb8cf71423996be1fd65d32f13b"
 
 // AutoInitProviderHelper is the main entrypoint for testing provider plugins
 // using this package. It is intended to be called during TestMain to prepare
@@ -20,8 +19,8 @@ const subprocessPreviousSigil = "2279afb8cf71423996be1fd65d32f13b"
 // available for upgrade tests, and then will return an object containing the
 // results of that initialization which can then be stored in a global variable
 // for use in other tests.
-func AutoInitProviderHelper(sourceDir string) *Helper {
-	helper, err := AutoInitHelper(sourceDir)
+func AutoInitProviderHelper(ctx context.Context, sourceDir string) *Helper {
+	helper, err := AutoInitHelper(ctx, sourceDir)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "cannot run Terraform provider tests: %s\n", err)
 		os.Exit(1)
@@ -49,13 +48,13 @@ type Helper struct {
 // way to get the standard init behavior based on environment variables, and
 // callers should use this unless they have an unusual requirement that calls
 // for constructing a config in a different way.
-func AutoInitHelper(sourceDir string) (*Helper, error) {
-	config, err := DiscoverConfig(sourceDir)
+func AutoInitHelper(ctx context.Context, sourceDir string) (*Helper, error) {
+	config, err := DiscoverConfig(ctx, sourceDir)
 	if err != nil {
 		return nil, err
 	}
 
-	return InitHelper(config)
+	return InitHelper(ctx, config)
 }
 
 // InitHelper prepares a testing helper with the given configuration.
@@ -67,8 +66,8 @@ func AutoInitHelper(sourceDir string) (*Helper, error) {
 // If this function returns an error then it may have left some temporary files
 // behind in the system's temporary directory. There is currently no way to
 // automatically clean those up.
-func InitHelper(config *Config) (*Helper, error) {
-	tempDir := os.Getenv("TF_ACC_TEMP_DIR")
+func InitHelper(ctx context.Context, config *Config) (*Helper, error) {
+	tempDir := os.Getenv(EnvTfAccTempDir)
 	baseDir, err := ioutil.TempDir(tempDir, "plugintest")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temporary directory for test helper: %s", err)
@@ -103,14 +102,17 @@ func (h *Helper) Close() error {
 // If the working directory object is not itself closed by the time the test
 // program exits, the Close method on the helper itself will attempt to
 // delete it.
-func (h *Helper) NewWorkingDir() (*WorkingDir, error) {
+func (h *Helper) NewWorkingDir(ctx context.Context) (*WorkingDir, error) {
 	dir, err := ioutil.TempDir(h.baseDir, "work")
 	if err != nil {
 		return nil, err
 	}
 
+	ctx = logging.TestWorkingDirectoryContext(ctx, dir)
+
 	// symlink the provider source files into the config directory
 	// e.g. testdata
+	logging.HelperResourceTrace(ctx, "Symlinking source directories to work directory")
 	err = symlinkDirectoriesOnly(h.sourceDir, dir)
 	if err != nil {
 		return nil, err
@@ -132,16 +134,21 @@ func (h *Helper) NewWorkingDir() (*WorkingDir, error) {
 // RequireNewWorkingDir is a variant of NewWorkingDir that takes a TestControl
 // object and will immediately fail the running test if the creation of the
 // working directory fails.
-func (h *Helper) RequireNewWorkingDir(t TestControl) *WorkingDir {
+func (h *Helper) RequireNewWorkingDir(ctx context.Context, t TestControl) *WorkingDir {
 	t.Helper()
 
-	wd, err := h.NewWorkingDir()
+	wd, err := h.NewWorkingDir(ctx)
 	if err != nil {
 		t := testingT{t}
 		t.Fatalf("failed to create new working directory: %s", err)
 		return nil
 	}
 	return wd
+}
+
+// WorkingDirectory returns the working directory being used when running tests.
+func (h *Helper) WorkingDirectory() string {
+	return h.baseDir
 }
 
 // TerraformExecPath returns the location of the Terraform CLI executable that

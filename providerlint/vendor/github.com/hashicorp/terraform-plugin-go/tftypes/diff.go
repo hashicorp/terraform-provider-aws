@@ -283,6 +283,9 @@ func (val1 Value) Diff(val2 Value) ([]ValueDiff, error) {
 			// if we have the same keys, we can just let recursion
 			// from the walk check the sub-values match
 			return true, nil
+		case value1.Type().Is(DynamicPseudoType):
+			// Let recursion from the walk check the sub-values match
+			return true, nil
 		}
 		return false, fmt.Errorf("unexpected type %v in Diff at %s", value1.Type(), path)
 	})

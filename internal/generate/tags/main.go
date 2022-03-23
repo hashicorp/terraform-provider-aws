@@ -1001,6 +1001,7 @@ func init() {
 	awsServiceNames["ivs"] = "IVS"
 	awsServiceNames["kafka"] = "Kafka"
 	awsServiceNames["kendra"] = "Kendra"
+	awsServiceNames["keyspaces"] = "Keyspaces"
 	awsServiceNames["kinesis"] = "Kinesis"
 	awsServiceNames["kinesisanalytics"] = "KinesisAnalytics"
 	awsServiceNames["kinesisanalyticsv2"] = "KinesisAnalyticsV2"

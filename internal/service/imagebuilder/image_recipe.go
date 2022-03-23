@@ -265,14 +265,10 @@ func resourceImageRecipeCreate(d *schema.ResourceData, meta interface{}) error {
 		input.ParentImage = aws.String(v.(string))
 	}
 
-	input.AdditionalInstanceConfiguration = &imagebuilder.AdditionalInstanceConfiguration{
-		SystemsManagerAgent: &imagebuilder.SystemsManagerAgent{
-			UninstallAfterBuild: aws.Bool(false),
-		},
-	}
-
 	if v, ok := d.GetOk("systems_manager_agent"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.AdditionalInstanceConfiguration.SystemsManagerAgent = expandSystemsManagerAgent(v.([]interface{})[0].(map[string]interface{}))
+		input.AdditionalInstanceConfiguration = &imagebuilder.AdditionalInstanceConfiguration{
+			SystemsManagerAgent: expandSystemsManagerAgent(v.([]interface{})[0].(map[string]interface{})),
+		}
 	}
 
 	if len(tags) > 0 {
@@ -280,6 +276,9 @@ func resourceImageRecipeCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("user_data_base64"); ok {
+		if input.AdditionalInstanceConfiguration == nil {
+			input.AdditionalInstanceConfiguration = &imagebuilder.AdditionalInstanceConfiguration{}
+		}
 		input.AdditionalInstanceConfiguration.UserDataOverride = aws.String(v.(string))
 	}
 
