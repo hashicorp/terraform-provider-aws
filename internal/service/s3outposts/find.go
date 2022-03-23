@@ -16,7 +16,7 @@ func FindEndpoint(conn *s3outposts.S3Outposts, endpointArn string) (*s3outposts.
 		}
 
 		for _, endpoint := range page.Endpoints {
-			if aws.StringValue(endpoint.EndpointArn) == endpointArn {
+			if aws.StringValue(endpoint.EndpointArn) == endpointArn && aws.StringValue(endpoint.Status) != "Deleting" {
 				result = endpoint
 				return false
 			}

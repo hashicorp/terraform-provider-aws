@@ -67,6 +67,22 @@ func ResourceEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
+			"access_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  "Private",
+				ValidateFunc: validation.StringInSlice([]string{
+					"Private",
+					"CustomerOwnedIp",
+				}, false),
+			},
+			"customer_owned_ipv4_pool": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
+			},
 		},
 	}
 }
@@ -78,6 +94,14 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		OutpostId:       aws.String(d.Get("outpost_id").(string)),
 		SecurityGroupId: aws.String(d.Get("security_group_id").(string)),
 		SubnetId:        aws.String(d.Get("subnet_id").(string)),
+	}
+
+	if v, ok := d.GetOk("access_type"); ok {
+		input.AccessType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("customer_owned_ipv4_pool"); ok {
+		input.CustomerOwnedIpv4Pool = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateEndpoint(input)
@@ -130,6 +154,9 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("outpost_id", endpoint.OutpostsId)
+
+	d.Set("access_type", endpoint.AccessType)
+	d.Set("customer_owned_ipv4_pool", endpoint.CustomerOwnedIpv4Pool)
 
 	return nil
 }
