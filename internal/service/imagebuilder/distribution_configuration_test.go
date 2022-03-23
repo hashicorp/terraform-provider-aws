@@ -635,7 +635,10 @@ func TestAccImageBuilderDistributionConfiguration_Distribution_licenseARNs(t *te
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/license-manager.amazonaws.com")
+		},
 		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckDistributionConfigurationDestroy,
