@@ -128,38 +128,34 @@ func ResourceBucket() *schema.Resource {
 
 			"cors_rule": {
 				Type:       schema.TypeList,
+				Optional:   true,
 				Computed:   true,
 				Deprecated: "Use the aws_s3_bucket_cors_configuration resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"allowed_headers": {
-							Type:       schema.TypeList,
-							Computed:   true,
-							Deprecated: "Use the aws_s3_bucket_cors_configuration resource instead",
-							Elem:       &schema.Schema{Type: schema.TypeString},
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"allowed_methods": {
-							Type:       schema.TypeList,
-							Computed:   true,
-							Deprecated: "Use the aws_s3_bucket_cors_configuration resource instead",
-							Elem:       &schema.Schema{Type: schema.TypeString},
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"allowed_origins": {
-							Type:       schema.TypeList,
-							Computed:   true,
-							Deprecated: "Use the aws_s3_bucket_cors_configuration resource instead",
-							Elem:       &schema.Schema{Type: schema.TypeString},
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"expose_headers": {
-							Type:       schema.TypeList,
-							Computed:   true,
-							Deprecated: "Use the aws_s3_bucket_cors_configuration resource instead",
-							Elem:       &schema.Schema{Type: schema.TypeString},
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"max_age_seconds": {
-							Type:       schema.TypeInt,
-							Computed:   true,
-							Deprecated: "Use the aws_s3_bucket_cors_configuration resource instead",
+							Type:     schema.TypeInt,
+							Optional: true,
 						},
 					},
 				},
@@ -773,6 +769,12 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("acl") && !d.IsNewResource() {
 		if err := resourceBucketInternalACLUpdate(conn, d); err != nil {
 			return fmt.Errorf("error updating S3 Bucket (%s) ACL: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("cors_rule") {
+		if err := resourceBucketInternalCorsUpdate(conn, d); err != nil {
+			return fmt.Errorf("error updating S3 Bucket (%s) CORS Rules: %w", d.Id(), err)
 		}
 	}
 
@@ -1519,6 +1521,72 @@ func resourceBucketInternalACLUpdate(conn *s3.S3, d *schema.ResourceData) error 
 
 	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 		return conn.PutBucketAcl(input)
+	})
+
+	return err
+}
+
+func resourceBucketInternalCorsUpdate(conn *s3.S3, d *schema.ResourceData) error {
+	rawCors := d.Get("cors_rule").([]interface{})
+
+	if len(rawCors) == 0 {
+		// Delete CORS
+		_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+			return conn.DeleteBucketCors(&s3.DeleteBucketCorsInput{
+				Bucket: aws.String(d.Id()),
+			})
+		})
+
+		if err != nil {
+			return fmt.Errorf("error deleting S3 Bucket (%s) CORS: %w", d.Id(), err)
+		}
+
+		return nil
+	}
+	// Put CORS
+	rules := make([]*s3.CORSRule, 0, len(rawCors))
+	for _, cors := range rawCors {
+		// Prevent panic
+		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7546
+		corsMap, ok := cors.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		r := &s3.CORSRule{}
+		for k, v := range corsMap {
+			if k == "max_age_seconds" {
+				r.MaxAgeSeconds = aws.Int64(int64(v.(int)))
+			} else {
+				vMap := make([]*string, len(v.([]interface{})))
+				for i, vv := range v.([]interface{}) {
+					if str, ok := vv.(string); ok {
+						vMap[i] = aws.String(str)
+					}
+				}
+				switch k {
+				case "allowed_headers":
+					r.AllowedHeaders = vMap
+				case "allowed_methods":
+					r.AllowedMethods = vMap
+				case "allowed_origins":
+					r.AllowedOrigins = vMap
+				case "expose_headers":
+					r.ExposeHeaders = vMap
+				}
+			}
+		}
+		rules = append(rules, r)
+	}
+
+	input := &s3.PutBucketCorsInput{
+		Bucket: aws.String(d.Id()),
+		CORSConfiguration: &s3.CORSConfiguration{
+			CORSRules: rules,
+		},
+	}
+
+	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		return conn.PutBucketCors(input)
 	})
 
 	return err
