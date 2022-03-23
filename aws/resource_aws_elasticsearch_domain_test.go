@@ -353,7 +353,7 @@ func TestAccAWSElasticSearchDomain_witColdStorageOptions(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainConfig_WithColdStorageOptions(ri, false, false, false),
+				Config: testAccESDomainConfig_WithColdStorageOptions(ri, true, true, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
