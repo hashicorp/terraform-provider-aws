@@ -84,6 +84,35 @@ func TestAccGlueSchema_json(t *testing.T) {
 	})
 }
 
+func TestAccGlueSchema_protobuf(t *testing.T) {
+	var schema glue.GetSchemaOutput
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_schema.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSchemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSchemaProtobufConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSchemaExists(resourceName, &schema),
+					resource.TestCheckResourceAttr(resourceName, "data_format", "PROTOBUF"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition", "syntax = \"proto2\";\n\npackage tutorial;\n\noption java_multiple_files = true;\noption java_package = \"com.example.tutorial.protos\";\noption java_outer_classname = \"AddressBookProtos\";\n\nmessage Person {\n  optional string name = 1;\n  optional int32 id = 2;\n  optional string email = 3;\n\n  enum PhoneType {\n    MOBILE = 0;\n    HOME = 1;\n    WORK = 2;\n  }\n\n  message PhoneNumber {\n    optional string number = 1;\n    optional PhoneType type = 2 [default = HOME];\n  }\n\n  repeated PhoneNumber phones = 4;\n}\n\nmessage AddressBook {\n  repeated Person people = 1;\n}"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccGlueSchema_description(t *testing.T) {
 	var schema glue.GetSchemaOutput
 
@@ -409,6 +438,18 @@ resource "aws_glue_schema" "test" {
   data_format       = "JSON"
   compatibility     = "NONE"
   schema_definition = "{\"$id\":\"https://example.com/person.schema.json\",\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"title\":\"Person\",\"type\":\"object\",\"properties\":{\"firstName\":{\"type\":\"string\",\"description\":\"The person's first name.\"},\"lastName\":{\"type\":\"string\",\"description\":\"The person's last name.\"},\"age\":{\"description\":\"Age in years which must be equal to or greater than zero.\",\"type\":\"integer\",\"minimum\":0}}}"
+}
+`, rName)
+}
+
+func testAccSchemaProtobufConfig(rName string) string {
+	return testAccSchemaBase(rName) + fmt.Sprintf(`
+resource "aws_glue_schema" "test" {
+  schema_name       = %[1]q
+  registry_arn      = aws_glue_registry.test.arn
+  data_format       = "PROTOBUF"
+  compatibility     = "NONE"
+  schema_definition = "syntax = \"proto2\";\n\npackage tutorial;\n\noption java_multiple_files = true;\noption java_package = \"com.example.tutorial.protos\";\noption java_outer_classname = \"AddressBookProtos\";\n\nmessage Person {\n  optional string name = 1;\n  optional int32 id = 2;\n  optional string email = 3;\n\n  enum PhoneType {\n    MOBILE = 0;\n    HOME = 1;\n    WORK = 2;\n  }\n\n  message PhoneNumber {\n    optional string number = 1;\n    optional PhoneType type = 2 [default = HOME];\n  }\n\n  repeated PhoneNumber phones = 4;\n}\n\nmessage AddressBook {\n  repeated Person people = 1;\n}"
 }
 `, rName)
 }
