@@ -17,7 +17,6 @@ ENHANCEMENTS:
 * resource/aws_instance: Add `user_data_replace_on_change` attribute ([#23604](https://github.com/hashicorp/terraform-provider-aws/issues/23604))
 * resource/aws_ssm_maintenance_window_task: Add `arn` and `window_task_id` attributes. ([#23756](https://github.com/hashicorp/terraform-provider-aws/issues/23756))
 * resource/aws_ssm_maintenance_window_task: Add `cutoff_behavior` argument. ([#23756](https://github.com/hashicorp/terraform-provider-aws/issues/23756))
-* resource/aws_imagebuilder_distribution_configuration: Add `organization_arns` and `organizational_unit_arns` attributes to the `distribution.launch_template_configuration` configuration block ([#21929](https://github.com/hashicorp/terraform-provider-aws/issues/21929))
 
 BUG FIXES:
 
