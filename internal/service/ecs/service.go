@@ -182,26 +182,23 @@ func ResourceService() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"elb_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"target_group_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-
 						"container_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-
 						"container_port": {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntBetween(0, 65536),
+						},
+						"elb_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"target_group_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -218,6 +215,11 @@ func ResourceService() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"assign_public_ip": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"security_groups": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -230,11 +232,6 @@ func ResourceService() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
-						"assign_public_ip": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
 					},
 				},
 			},
@@ -244,11 +241,6 @@ func ResourceService() *schema.Resource {
 				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(ecs.PlacementStrategyType_Values(), false),
-						},
 						"field": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -262,6 +254,11 @@ func ResourceService() *schema.Resource {
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								return strings.EqualFold(old, new)
 							},
+						},
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(ecs.PlacementStrategyType_Values(), false),
 						},
 					},
 				},
