@@ -274,7 +274,11 @@ func TestAccCloudFormationStackSetInstance_operationPreferences(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckStackSet(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			testAccPreCheckStackSet(t)
+			acctest.PreCheckOrganizationsAccount(t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckStackSetInstanceDestroy,
