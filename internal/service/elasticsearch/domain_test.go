@@ -1824,9 +1824,9 @@ func testAccDomainConfig_WithColdStorageOptions(rName string, dMasterEnabled boo
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
-  
+
   elasticsearch_version = "7.9"
-  
+
   cluster_config {
     instance_type            = "m3.medium.elasticsearch"
     instance_count           = "1"
