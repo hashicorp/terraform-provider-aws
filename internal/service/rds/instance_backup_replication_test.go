@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,11 +18,13 @@ func TestAccRDSInstanceBackupReplication_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance_backup_replication.test"
 
+	var providers []*schema.Provider
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceRoleAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckInstanceRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceBackupReplicationConfig(rName),
@@ -42,16 +45,45 @@ func TestAccRDSInstanceBackupReplication_retentionPeriod(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance_backup_replication.test"
 
+	var providers []*schema.Provider
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceBackupReplicationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckInstanceRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceBackupReplicationConfig_RetentionPeriod(rName),
+				Config: testAccInstanceBackupReplicationConfig_retentionPeriod(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "retention_period", "30"),
+					resource.TestCheckResourceAttr(resourceName, "retention_period", "14"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRDSInstanceBackupReplication_kmsEncrypted(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance_backup_replication.test"
+
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckInstanceRoleAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceBackupReplicationConfig_kmsEncrypted(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "retention_period", "7"),
 				),
 			},
 			{
@@ -64,76 +96,86 @@ func TestAccRDSInstanceBackupReplication_retentionPeriod(t *testing.T) {
 }
 
 func testAccInstanceBackupReplicationConfig(rName string) string {
-	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
-provider "aws" {
-  region = "us-west-2"
-  alias =  "replica"
-}
-
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-}
-
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
-  allocated_storage    = 10
-  identifier           = %[1]q
-  engine               = "postgresql"
-  engine_version       = "13.4"
-  instance_class       = "db.t3.micro"
-  name                 = "mydb"
-  username             = "masterusername"
-  password             = "mustbeeightcharacters"
-  skip_final_snapshot  = true
+  allocated_storage       = 10
+  identifier              = %[1]q
+  engine                  = "postgres"
+  engine_version          = "13.4"
+  instance_class          = "db.t3.micro"
+  name                    = "mydb"
+  username                = "masterusername"
+  password                = "mustbeeightcharacters"
+  backup_retention_period = 7
+  skip_final_snapshot     = true
 }
 
-resource "aws_db_instance_backup_replication" "default" {
+resource "aws_db_instance_backup_replication" "test" {
+  source_db_instance_arn = aws_db_instance.test.arn
+
+  provider = "awsalternate"
+}
+`, rName))
+}
+
+func testAccInstanceBackupReplicationConfig_retentionPeriod(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage       = 10
+  identifier              = %[1]q
+  engine                  = "postgres"
+  engine_version          = "13.4"
+  instance_class          = "db.t3.micro"
+  name                    = "mydb"
+  username                = "masterusername"
+  password                = "mustbeeightcharacters"
+  backup_retention_period = 7
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_instance_backup_replication" "test" {
+  source_db_instance_arn = aws_db_instance.test.arn
+  retention_period       = 14
+
+  provider = "awsalternate"
+}
+`, rName))
+}
+
+func testAccInstanceBackupReplicationConfig_kmsEncrypted(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description  = %[1]q
+  provider     = "awsalternate"
+}
+		  
+resource "aws_db_instance" "test" {
+  allocated_storage       = 10
+  identifier              = %[1]q
+  engine                  = "postgres"
+  engine_version          = "13.4"
+  instance_class          = "db.t3.micro"
+  name                    = "mydb"
+  username                = "masterusername"
+  password                = "mustbeeightcharacters"
+  backup_retention_period = 7
+  storage_encrypted       = true
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_instance_backup_replication" "test" {
   source_db_instance_arn = aws_db_instance.test.arn
   kms_key_id             = aws_kms_key.test.arn
 
-  provider = "aws.replica"
+  provider = "awsalternate"
 }
-`, rName)
-}
-
-func testAccInstanceBackupReplicationConfig_RetentionPeriod(rName string) string {
-	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-	
-provider "aws" {
-  region = "us-west-2"
-  alias =  "replica"
-}
-	  
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-}
-
-resource "aws_db_instance" "test" {
-  allocated_storage    = 10
-  identifier           = %[1]q
-  engine               = "postgresql"
-  engine_version       = "13.4"
-  instance_class       = "db.t3.micro"
-  name                 = "mydb"
-  username             = "masterusername"
-  password             = "mustbeeightcharacters"
-  skip_final_snapshot  = true
-}
-
-resource "aws_db_instance_backup_replication" "default" {
-  source_db_instance_arn = aws_db_instance.test.arn
-  kms_key_id             = aws_kms_key.test.arn
-  retention_period       = 30
-
-  provider = "aws.replica"
-}
-`, rName)
+`, rName))
 }
 
 func testAccCheckInstanceBackupReplicationDestroy(s *terraform.State) error {
