@@ -1833,9 +1833,9 @@ resource "aws_elasticsearch_domain" "test" {
     dedicated_master_enabled = %t
     dedicated_master_count   = "3"
     dedicated_master_type    = "m3.medium.elasticsearch"
-	warm_enabled             = %[3]t
+    warm_enabled             = %[3]t
     %[4]s
-	%[5]s
+    %[5]s
   }
   ebs_options {
     ebs_enabled = true
