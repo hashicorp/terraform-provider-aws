@@ -13,7 +13,6 @@ import (
 const (
 	domainUpgradeSuccessMinTimeout = 10 * time.Second
 	domainUpgradeSuccessDelay      = 30 * time.Second
-	domainDeleteRetryTimeout       = 90 * time.Minute
 )
 
 // UpgradeSucceeded waits for an Upgrade to return Success
@@ -98,9 +97,9 @@ func waitForDomainUpdate(conn *elasticsearch.ElasticsearchService, domainName st
 	return nil
 }
 
-func waitForDomainDelete(conn *elasticsearch.ElasticsearchService, domainName string) error {
+func waitForDomainDelete(conn *elasticsearch.ElasticsearchService, domainName string, timeout time.Duration) error {
 	var out *elasticsearch.ElasticsearchDomainStatus
-	err := resource.Retry(domainDeleteRetryTimeout, func() *resource.RetryError {
+	err := resource.Retry(timeout, func() *resource.RetryError {
 		var err error
 		out, err = FindDomainByName(conn, domainName)
 

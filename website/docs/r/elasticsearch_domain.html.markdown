@@ -346,6 +346,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `create` - (Optional, Default: `60m`) How long to wait for creation.
 * `update` - (Optional, Default: `60m`) How long to wait for updates.
+* `delete` - (Optional, Default: `90m`) How long to wait for deletion.
 
 ## Import
 
