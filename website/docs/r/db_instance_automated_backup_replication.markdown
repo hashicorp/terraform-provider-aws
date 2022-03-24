@@ -12,10 +12,60 @@ Manage cross-region replication of automated backups to a different AWS Region. 
 
 * [Replicating automated backups to another AWS Region](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReplicateBackups.html)
 
+-> **Note:** This resource has to be created in the destinaton region.
+
 ## Example Usage
 ```terraform
 resource "aws_db_instance_automated_backup_replication" "default" {
   source_db_instance_arn = "arn:aws:rds:us-west-2:123456789012:db:mydatabase"
+  retention_period       = 14
+}
+```
+
+## Encrypting the automated backup with KMS
+```terraform
+resource "aws_db_instance_automated_backup_replication" "default" {
+  source_db_instance_arn = "arn:aws:rds:us-west-2:123456789012:db:mydatabase"
+  kms_key_id             = "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"
+}
+```
+
+## Example including a RDS DB instance
+```terraform
+provider "aws" {
+  region = "us-east-1"
+}
+
+provider "aws" {
+  region = "us-west-2"
+  alias  = "replica"
+}
+
+resource "aws_db_instance" "default" {
+  allocated_storage       = 10
+  identifier              = "mydb"
+  engine                  = "postgres"
+  engine_version          = "13.4"
+  instance_class          = "db.t3.micro"
+  name                    = "mydb"
+  username                = "masterusername"
+  password                = "mustbeeightcharacters"
+  backup_retention_period = 7
+  storage_encrypted       = true
+  skip_final_snapshot     = true
+}
+
+resource "aws_kms_key" "default" {
+  description = "Encryption key for automated backups"
+
+  provider = "aws.replica"
+}
+
+resource "aws_db_instance_automated_backup_replication" "default" {
+  source_db_instance_arn = aws_db_instance.default.arn
+  kms_key_id             = aws_kms_key.default.arn
+
+  provider = "aws.replica"
 }
 ```
 
