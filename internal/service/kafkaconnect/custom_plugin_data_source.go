@@ -77,6 +77,7 @@ func dataSourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, met
 	plugin := output[0]
 
 	d.SetId(aws.StringValue(plugin.CustomPluginArn))
+
 	d.Set("arn", plugin.CustomPluginArn)
 	d.Set("description", plugin.Description)
 	d.Set("name", plugin.Name)

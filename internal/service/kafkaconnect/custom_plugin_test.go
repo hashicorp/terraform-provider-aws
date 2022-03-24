@@ -51,6 +51,28 @@ func TestAccKafkaConnectCustomPlugin_basic(t *testing.T) {
 	})
 }
 
+func TestAccKafkaConnectCustomPlugin_disappears(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mskconnect_custom_plugin.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy: testAccCheckCustomPluginDestroy,
+		Providers:    acctest.Providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomPluginConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCustomPluginExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfkafkaconnect.ResourceCustomPlugin(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccKafkaConnectCustomPlugin_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mskconnect_custom_plugin.test"
