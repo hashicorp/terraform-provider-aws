@@ -14,7 +14,7 @@ Manage cross-region replication of automated backups to a different AWS Region. 
 
 -> **Note:** This resource has to be created in the destination region.
 
-## Example usage
+## Example Usage
 
 ```terraform
 resource "aws_db_instance_automated_backup_replication" "default" {
