@@ -3,12 +3,12 @@ subcategory: "Kafka Connect (MSK Connect)"
 layout: "aws"
 page_title: "AWS: aws_mskconnect_connector"
 description: |-
-  Provides an Amazon MSK Connect connector resource.
+  Provides an Amazon MSK Connect Connector resource.
 ---
 
 # Resource: aws_mskconnect_connector
 
-Provides an Amazon MSK Connect Connector Resource.
+Provides an Amazon MSK Connect Connector resource.
 
 ## Example Usage
 
@@ -73,12 +73,14 @@ In addition to all arguments above, the following attributes are exported:
 `aws_mskconnect_custom_plugin` provides the following
 [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
-* `create` - (Default `10 minutes`) How long to wait for the MSK Connect Custom Plugin to be created.
+* `create` - (Default `20 minutes`) How long to wait for the MSK Connect Connector to be created.
+* `update` - (Default `20 minutes`) How long to wait for the MSK Connect Connector to be created.
+* `delete` - (Default `10 minutes`) How long to wait for the MSK Connect Connector to be created.
 
 ## Import
 
-MSK Connect Custom Plugin can be imported using the plugin's `arn`, e.g.,
+MSK Connect Connector can be imported using the connector's `arn`, e.g.,
 
 ```
-$ terraform import aws_mskconnect_connector.example 'arn:aws:kafkaconnect:eu-central-1:123456789012:custom-plugin/debezium-example/abcdefgh-1234-5678-9abc-defghijklmno-4'
+$ terraform import aws_mskconnect_connector.example 'arn:aws:kafkaconnect:eu-central-1:123456789012:connector/example/264edee4-17a3-412e-bd76-6681cfc93805-3'
 ```
