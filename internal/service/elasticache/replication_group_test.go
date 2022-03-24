@@ -1168,6 +1168,7 @@ func TestAccElastiCacheReplicationGroup_enableAuthTokenTransitEncryption(t *test
 	}
 
 	var rg elasticache.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1177,7 +1178,7 @@ func TestAccElastiCacheReplicationGroup_enableAuthTokenTransitEncryption(t *test
 		CheckDestroy: testAccCheckReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroup_EnableAuthTokenTransitEncryptionConfig(sdkacctest.RandString(10), sdkacctest.RandString(16)),
+				Config: testAccReplicationGroup_EnableAuthTokenTransitEncryptionConfig(rName, sdkacctest.RandString(16)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", "true"),
