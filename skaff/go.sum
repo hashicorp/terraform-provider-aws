@@ -130,8 +130,6 @@ github.com/hashicorp/terraform-json v0.13.0/go.mod h1:y5OdLBCT+rxbwnpxZs9kGL7R9E
 github.com/hashicorp/terraform-plugin-go v0.8.0/go.mod h1:E3GuvfX0Pz2Azcl6BegD6t51StXsVZMOYQoGO8mkHM0=
 github.com/hashicorp/terraform-plugin-log v0.3.0/go.mod h1:EjueSP/HjlyFAsDqt+okpCPjkT4NDynAe32AeDC4vps=
 github.com/hashicorp/terraform-plugin-sdk/v2 v2.12.0/go.mod h1:TPjMXvpPNWagHzYOmVPzzRRIBTuaLVukR+esL08tgzg=
-github.com/hashicorp/terraform-provider-aws v1.60.1-0.20220322001452-8f7a597d0c24 h1:KCl/FUv9snI6GzVfySGbMz+esNTtSTjKnrCPsmS/Ssc=
-github.com/hashicorp/terraform-provider-aws v1.60.1-0.20220322001452-8f7a597d0c24/go.mod h1:zsp20C5nEOBuHBF+D22DrzMsQp3EPUcCcw+M/Vv9EHc=
 github.com/hashicorp/terraform-registry-address v0.0.0-20210412075316-9b2996cce896/go.mod h1:bzBPnUIkI0RxauU8Dqo+2KrZZ28Cf48s8V6IHt3p4co=
 github.com/hashicorp/terraform-svchost v0.0.0-20200729002733-f050f53b9734/go.mod h1:kNDNcF7sN4DocDLBkQYz73HGKwN1ANB1blq4lIYLYvg=
 github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
