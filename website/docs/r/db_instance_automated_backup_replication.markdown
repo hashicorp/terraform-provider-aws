@@ -1,0 +1,45 @@
+---
+subcategory: "RDS"
+layout: "aws"
+page_title: "AWS: aws_db_instance_automated_backup_replication"
+description: |-
+  Enables replication of automated backups to a different AWS Region.
+---
+
+# Resource: aws_db_instance_automated_backup_replication
+
+Manage cross-region replication of automated backups to a different AWS Region. Documentation for cross-region automated backup replication can be found at:
+
+* [Replicating automated backups to another AWS Region](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReplicateBackups.html)
+
+## Example Usage
+```terraform
+resource "aws_db_instance_automated_backup_replication" "default" {
+  source_db_instance_arn = "arn:aws:rds:us-west-2:123456789012:db:mydatabase"
+}
+```
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `source_db_instance_arn` - (Optional, Forces new resource) The Amazon Resource Name (ARN) of the source DB instance for the replicated automated backups, for example, `arn:aws:rds:us-west-2:123456789012:db:mydatabase`.
+* `retention_period` - (Optional, Forces new resource) The retention period for the replicated automated backups, defaults to `7`.
+* `kms_key_id` - (Optional, Forces new resource) The AWS KMS key identifier for encryption of the replicated automated backups. The KMS key ID is the Amazon Resource Name (ARN) for the KMS encryption key in the destination AWS Region, for example, `arn:aws:kms:us-east-1:123456789012:key/AKIAIOSFODNN7EXAMPLE`.
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - The Amazon Resource Name (ARN) of the replicated automated backups.
+* `source_db_instance_arn` - The Amazon Resource Name (ARN) of the source DB instance for the replicated automated backups.
+* `retention_period` - The retention period for the replicated automated backups.
+* `kms_key_id` - The AWS KMS key identifier for encryption of the replicated automated backups.
+
+## Import
+
+RDS instance automated backup replication can be imported using the `arn`, e.g.,
+
+```
+$ terraform import aws_db_instance_automated_backup_replication.default arn:aws:rds:us-east-1:123456789012:auto-backup:ab-faaa2mgdj1vmp4xflr7yhsrmtbtob7ltrzzz2my
+```

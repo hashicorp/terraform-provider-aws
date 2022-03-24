@@ -16,11 +16,11 @@ const (
 	dbInstanceAutomatedBackupReplicationRetained = "retained"
 )
 
-func ResourceInstanceBackupReplication() *schema.Resource {
+func ResourceInstanceAutomatedBackupReplication() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceInstanceBackupReplicationCreate,
-		Read:   resourceInstanceBackupReplicationRead,
-		Delete: resourceInstanceBackupReplicationDelete,
+		Create: resourceInstanceAutomatedBackupReplicationCreate,
+		Read:   resourceInstanceAutomatedBackupReplicationRead,
+		Delete: resourceInstanceAutomatedBackupReplicationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -50,7 +50,7 @@ func ResourceInstanceBackupReplication() *schema.Resource {
 	}
 }
 
-func resourceInstanceBackupReplicationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceAutomatedBackupReplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	input := &rds.StartDBInstanceAutomatedBackupsReplicationInput{
@@ -62,12 +62,12 @@ func resourceInstanceBackupReplicationCreate(d *schema.ResourceData, meta interf
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Starting RDS instance backup replication for: %s", *input.SourceDBInstanceArn)
+	log.Printf("[DEBUG] Starting RDS instance automated backup replication for: %s", *input.SourceDBInstanceArn)
 
 	output, err := conn.StartDBInstanceAutomatedBackupsReplication(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating RDS instance backup replication: %s", err)
+		return fmt.Errorf("error creating RDS instance automated backup replication: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.DBInstanceAutomatedBackup.DBInstanceAutomatedBackupsArn))
@@ -76,10 +76,10 @@ func resourceInstanceBackupReplicationCreate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error waiting for DB instance automated backup (%s) creation: %w", d.Id(), err)
 	}
 
-	return resourceInstanceBackupReplicationRead(d, meta)
+	return resourceInstanceAutomatedBackupReplicationRead(d, meta)
 }
 
-func resourceInstanceBackupReplicationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceAutomatedBackupReplicationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	input := &rds.DescribeDBInstanceAutomatedBackupsInput{
@@ -89,13 +89,13 @@ func resourceInstanceBackupReplicationRead(d *schema.ResourceData, meta interfac
 	output, err := conn.DescribeDBInstanceAutomatedBackups(input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceAutomatedBackupNotFoundFault) {
-		log.Printf("[WARN] RDS instance backup replication not found, removing from state: %s", d.Id())
+		log.Printf("[WARN] RDS instance automated backup replication not found, removing from state: %s", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading RDS instance backup replication: %s", err)
+		return fmt.Errorf("error reading RDS instance automated backup replication: %s", err)
 	}
 
 	for _, backup := range output.DBInstanceAutomatedBackups {
@@ -104,14 +104,14 @@ func resourceInstanceBackupReplicationRead(d *schema.ResourceData, meta interfac
 			d.Set("kms_key_id", backup.KmsKeyId)
 			d.Set("retention_period", backup.BackupRetentionPeriod)
 		} else {
-			return fmt.Errorf("unable to find RDS instance backup replication: %s", d.Id())
+			return fmt.Errorf("unable to find RDS instance automated backup replication: %s", d.Id())
 		}
 	}
 
 	return nil
 }
 
-func resourceInstanceBackupReplicationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceAutomatedBackupReplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	var sourceDatabaseRegion string
 	var databaseIdentifier string
 
@@ -129,24 +129,24 @@ func resourceInstanceBackupReplicationDelete(d *schema.ResourceData, meta interf
 			sourceDatabaseRegion = aws.StringValue(backup.Region)
 			databaseIdentifier = aws.StringValue(backup.DBInstanceIdentifier)
 		} else {
-			return fmt.Errorf("unable to find RDS instance backup replication: %s", d.Id())
+			return fmt.Errorf("unable to find RDS instance automated backup replication: %s", d.Id())
 		}
 		// Check if the automated backup is retained
 		if aws.StringValue(backup.Status) == dbInstanceAutomatedBackupReplicationRetained {
-			log.Printf("[WARN] RDS instance backup replication is retained, removing from state: %s", d.Id())
+			log.Printf("[WARN] RDS instance automated backup replication is retained, removing from state: %s", d.Id())
 			d.SetId("")
 			return nil // If the automated backup is retained, it's 'deleted'
 		}
 	}
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceAutomatedBackupNotFoundFault) {
-		log.Printf("[WARN] RDS instance backup replication not found, removing from state: %s", d.Id())
+		log.Printf("[WARN] RDS instance automated backup replication not found, removing from state: %s", d.Id())
 		d.SetId("")
 		return nil // The resource is already deleted or was never created
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading RDS instance backup replication: %s", err)
+		return fmt.Errorf("error reading RDS instance automated backup replication: %s", err)
 	}
 
 	// Initiate a stop of the replication process
@@ -154,12 +154,12 @@ func resourceInstanceBackupReplicationDelete(d *schema.ResourceData, meta interf
 		SourceDBInstanceArn: aws.String(d.Get("source_db_instance_arn").(string)),
 	}
 
-	log.Printf("[DEBUG] Stopping RDS instance backup replication for: %s", *input.SourceDBInstanceArn)
+	log.Printf("[DEBUG] Stopping RDS instance automated backup replication for: %s", *input.SourceDBInstanceArn)
 
 	_, err = conn.StopDBInstanceAutomatedBackupsReplication(input)
 
 	if err != nil {
-		return fmt.Errorf("error stopping RDS instance backup replication: %s", err)
+		return fmt.Errorf("error stopping RDS instance automated backup replication: %s", err)
 	}
 
 	// Create a new client to the source region

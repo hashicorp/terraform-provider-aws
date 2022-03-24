@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccRDSInstanceBackupReplication_basic(t *testing.T) {
+func TestAccRDSInstanceAutomatedBackupReplication_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_db_instance_backup_replication.test"
+	resourceName := "aws_db_instance_automated_backup_replication.test"
 
 	var providers []*schema.Provider
 
@@ -27,7 +27,7 @@ func TestAccRDSInstanceBackupReplication_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceBackupReplicationConfig(rName),
+				Config: testAccInstanceAutomatedBackupReplicationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "retention_period", "7"),
 				),
@@ -41,9 +41,9 @@ func TestAccRDSInstanceBackupReplication_basic(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstanceBackupReplication_retentionPeriod(t *testing.T) {
+func TestAccRDSInstanceAutomatedBackupReplication_retentionPeriod(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_db_instance_backup_replication.test"
+	resourceName := "aws_db_instance_automated_backup_replication.test"
 
 	var providers []*schema.Provider
 
@@ -54,7 +54,7 @@ func TestAccRDSInstanceBackupReplication_retentionPeriod(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceBackupReplicationConfig_retentionPeriod(rName),
+				Config: testAccInstanceAutomatedBackupReplicationConfig_retentionPeriod(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "retention_period", "14"),
 				),
@@ -68,9 +68,9 @@ func TestAccRDSInstanceBackupReplication_retentionPeriod(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstanceBackupReplication_kmsEncrypted(t *testing.T) {
+func TestAccRDSInstanceAutomatedBackupReplication_kmsEncrypted(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_db_instance_backup_replication.test"
+	resourceName := "aws_db_instance_automated_backup_replication.test"
 
 	var providers []*schema.Provider
 
@@ -81,7 +81,7 @@ func TestAccRDSInstanceBackupReplication_kmsEncrypted(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceBackupReplicationConfig_kmsEncrypted(rName),
+				Config: testAccInstanceAutomatedBackupReplicationConfig_kmsEncrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "retention_period", "7"),
 				),
@@ -95,7 +95,7 @@ func TestAccRDSInstanceBackupReplication_kmsEncrypted(t *testing.T) {
 	})
 }
 
-func testAccInstanceBackupReplicationConfig(rName string) string {
+func testAccInstanceAutomatedBackupReplicationConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
@@ -112,7 +112,7 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot     = true
 }
 
-resource "aws_db_instance_backup_replication" "test" {
+resource "aws_db_instance_automated_backup_replication" "test" {
   source_db_instance_arn = aws_db_instance.test.arn
 
   provider = "awsalternate"
@@ -120,7 +120,7 @@ resource "aws_db_instance_backup_replication" "test" {
 `, rName))
 }
 
-func testAccInstanceBackupReplicationConfig_retentionPeriod(rName string) string {
+func testAccInstanceAutomatedBackupReplicationConfig_retentionPeriod(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
@@ -137,7 +137,7 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot     = true
 }
 
-resource "aws_db_instance_backup_replication" "test" {
+resource "aws_db_instance_automated_backup_replication" "test" {
   source_db_instance_arn = aws_db_instance.test.arn
   retention_period       = 14
 
@@ -146,7 +146,7 @@ resource "aws_db_instance_backup_replication" "test" {
 `, rName))
 }
 
-func testAccInstanceBackupReplicationConfig_kmsEncrypted(rName string) string {
+func testAccInstanceAutomatedBackupReplicationConfig_kmsEncrypted(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
@@ -169,7 +169,7 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot     = true
 }
 
-resource "aws_db_instance_backup_replication" "test" {
+resource "aws_db_instance_automated_backup_replication" "test" {
   source_db_instance_arn = aws_db_instance.test.arn
   kms_key_id             = aws_kms_key.test.arn
 
@@ -178,11 +178,11 @@ resource "aws_db_instance_backup_replication" "test" {
 `, rName))
 }
 
-func testAccCheckInstanceBackupReplicationDestroy(s *terraform.State) error {
+func testAccCheckInstanceAutomatedBackupReplicationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_db_instance_backup_replication" {
+		if rs.Type != "aws_db_instance_automated_backup_replication" {
 			continue
 		}
 
