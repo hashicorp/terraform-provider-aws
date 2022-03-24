@@ -15,62 +15,178 @@ Provides an Amazon MSK Connect Connector resource.
 ### Basic configuration
 
 ```terraform
-resource "aws_s3_bucket" "example" {
-  bucket = "example"
-}
+resource "aws_mskconnect_connector" "example" {
+  name = "example"
 
-resource "aws_s3_object" "example" {
-  bucket = aws_s3_bucket.example.id
-  key    = "debezium.zip"
-  source = "debezium.zip"
-}
+  kafkaconnect_version = "2.7.1"
 
-resource "aws_mskconnect_custom_plugin" "example" {
-  name         = "debezium-example"
-  content_type = "ZIP"
-  location {
-    s3 {
-      bucket_arn = aws_s3_bucket.example.arn
-      file_key   = aws_s3_object.example.key
+  capacity {
+    autoscaling {
+      mcu_count        = 1
+      min_worker_count = 1
+      max_worker_count = 2
+
+      scale_in_policy {
+        cpu_utilization_percentage = 20
+      }
+
+      scale_out_policy {
+        cpu_utilization_percentage = 80
+      }
     }
   }
+
+  connector_configuration = {
+    "connector.class" = "com.github.jcustenborder.kafka.connect.simulator.SimulatorSinkConnector"
+    "tasks.max"       = "1"
+    "topics"          = "example"
+  }
+
+  kafka_cluster {
+    apache_kafka_cluster {
+      bootstrap_servers = aws_msk_cluster.example.bootstrap_brokers_tls
+
+      vpc {
+        security_groups = [aws_security_group.example.id]
+        subnets         = [aws_subnet.example1.id, aws_subnet.example2.id, aws_subnet.example3.id]
+      }
+    }
+  }
+
+  kafka_cluster_client_authentication {
+    authentication_type = "NONE"
+  }
+
+  kafka_cluster_encryption_in_transit {
+    encryption_type = "TLS"
+  }
+
+  plugin {
+    custom_plugin {
+      arn      = aws_mskconnect_custom_plugin.example.arn
+      revision = aws_mskconnect_custom_plugin.example.latest_revision
+    }
+  }
+
+  service_execution_role_arn = aws_iam_role.example.arn
 }
 ```
 
 ## Argument Reference
 
-The following arguments are required:
+The following arguments are supported:
 
-* `name` - (Required) The name of the custom plugin..
-* `content_type` - (Required) The type of the plugin file. Allowed values are `ZIP` and `JAR`.
-* `location` - (Required) Information about the location of a custom plugin. See below.
+* `capacity` - (Required) Information about the capacity allocated to the connector. See below.
+* `connector_configuration` - (Required) A map of keys to values that represent the configuration for the connector.
+* `description` - (Optional) A summary description of the connector.
+* `kafka_cluster` - (Required) Specifies which Apache Kafka cluster to connect to. See below.
+* `kafka_cluster_client_authentication` - (Required) Details of the client authentication used by the Apache Kafka cluster. See below.
+* `kafka_cluster_encryption_in_transit` - (Required) Details of encryption in transit to the Apache Kafka cluster. See below.
+* `kafkaconnect_version` - (Required) The version of Kafka Connect. It has to be compatible with both the Apache Kafka cluster's version and the plugins.
+* `log_delivery` - (Optional) Details about log delivery. See below.
+* `name` - (Required) The name of the connector.
+* `plugin` - (Required) Specifies which plugins to use for the connector. See below.
+* `service_execution_role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role used by the connector to access the Amazon Web Services resources that it needs. The types of resources depends on the logic of the connector. For example, a connector that has Amazon S3 as a destination must have permissions that allow it to write to the S3 destination bucket.
+* `worker_configuration` - (Optional) Specifies which worker configuration to use with the connector. See below.
 
-The following arguments are optional:
+### capacity Configuration Block
 
-* `description` - (Optional) A summary description of the custom plugin.
+* `autoscaling` - (Optional) Information about the auto scaling parameters for the connector. See below.
+* `provisioned_capacity` - (Optional) Details about a fixed capacity allocated to a connector. See below.
 
-### location Argument Reference
+### autoscaling Configuration Block
 
-* `s3` - (Required) Information of the plugin file stored in Amazon S3. See below.
+* `max_worker_count` - (Required) The maximum number of workers allocated to the connector.
+* `mcu_count` - (Optional) The number of microcontroller units (MCUs) allocated to each connector worker. Valid values: `1`, `2`, `4`, `8`. The default value is `1`.
+* `min_worker_count` - (Required) The minimum number of workers allocated to the connector.
+* `scale_in_policy` - (Optional) The scale-in policy for the connector. See below.
+* `scale_out_policy` - (Optional) The scale-out policy for the connector. See below.
 
-#### location s3 Argument Reference
+### scale_in_policy Configuration Block
 
-* `bucket_arn` - (Required) The Amazon Resource Name (ARN) of an S3 bucket.
-* `file_key` - (Required) The file key for an object in an S3 bucket.
-* `object_version` - (Optional) The version of an object in an S3 bucket.
+* `cpu_utilization_percentage` - (Required) Specifies the CPU utilization percentage threshold at which you want connector scale in to be triggered.
+
+### scale_out_policy Configuration Block
+
+* `cpu_utilization_percentage` - (Required) The CPU utilization percentage threshold at which you want connector scale out to be triggered.
+
+### provisioned_capacity Configuration Block
+
+* `mcu_count` - (Optional) The number of microcontroller units (MCUs) allocated to each connector worker. Valid values: `1`, `2`, `4`, `8`. The default value is `1`.
+* `worker_count` - (Required) The number of workers that are allocated to the connector.
+
+### kafka_cluster Configuration Block
+
+* `apache_kafka_cluster` - (Required) The Apache Kafka cluster to which the connector is connected.
+
+### apache_kafka_cluster Configuration Block
+
+* `bootstrap_servers` - (Required) The bootstrap servers of the cluster.
+* `vpc` - (Required) Details of an Amazon VPC which has network connectivity to the Apache Kafka cluster.
+
+### vpc Configuration Block
+
+* `security_groups` - (Required) The security groups for the connector.
+* `subnets` - (Required) The subnets for the connector.
+
+### kafka_cluster_client_authentication Configuration Block
+
+* `authentication_type` - (Optional) The type of client authentication used to connect to the Apache Kafka cluster. Valid values: `IAM`, `NONE`. A value of `NONE` means that no client authentication is used. The default value is `NONE`.
+
+### kafka_cluster_encryption_in_transit Configuration Block
+
+* `encryption_type` - (Optional) The type of encryption in transit to the Apache Kafka cluster. Valid values: `PLAINTEXT`, `TLS`. The default values is `PLAINTEXT`.
+
+### log_delivery Configuration Block
+
+* `worker_log_delivery` - (Required) The workers can send worker logs to different destination types. This configuration specifies the details of these destinations. See below.
+
+### worker_log_delivery Configuration Block
+
+* `cloudwatch_logs` - (Optional) Details about delivering logs to Amazon CloudWatch Logs. See below.
+* `firehose` - (Optional) Details about delivering logs to Amazon Kinesis Data Firehose. See below.
+* `s3` - (Optional) Details about delivering logs to Amazon S3. See below.
+
+### cloudwatch_logs Configuration Block
+
+* `enabled` - (Required) Whether log delivery to Amazon CloudWatch Logs is enabled.
+* `log_group` - (Required) The name of the CloudWatch log group that is the destination for log delivery.
+
+### firehose Configuration Block
+
+* `delivery_stream` - (Required) The name of the Kinesis Data Firehose delivery stream that is the destination for log delivery.
+* `enabled` - (Required) Specifies whether connector logs get delivered to Amazon Kinesis Data Firehose.
+
+### s3 Configuration Block
+
+* `bucket` - (Required) The name of the S3 bucket that is the destination for log delivery.
+* `enabled` - (Required) Specifies whether connector logs get sent to the specified Amazon S3 destination.
+* `prefix` - (Optional) The S3 prefix that is the destination for log delivery.
+
+### plugin Configuration Block
+
+* `custom_plugin` - (Required) Details about a custom plugin. See below.
+
+### custom_plugin Configuration Block
+
+* `arn` - (Required) The Amazon Resource Name (ARN) of the custom plugin.
+* `revision` - (Required) The revision of the custom plugin.
+
+### worker_configuration Configuration Block
+
+* `arn` - (Required) The Amazon Resource Name (ARN) of the worker configuration.
+* `revision` - (Required) The revision of the worker configuration.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - the Amazon Resource Name (ARN) of the connector.
-* `version` - an ID of the latest successfully created version of the connector.
-* `state` - the state of the connector.
-
+* `arn` - The Amazon Resource Name (ARN) of the connector.
+* `version` - The current version of the connector.
 
 ## Timeouts
 
-`aws_mskconnect_custom_plugin` provides the following
+`aws_mskconnect_connector` provides the following
 [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 * `create` - (Default `20 minutes`) How long to wait for the MSK Connect Connector to be created.
