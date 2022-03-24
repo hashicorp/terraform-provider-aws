@@ -836,8 +836,9 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticsearchConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		input := elasticsearch.UpdateElasticsearchDomainConfigInput{
-			DomainName: aws.String(d.Get("domain_name").(string)),
+		name := d.Get("domain_name").(string)
+		input := &elasticsearch.UpdateElasticsearchDomainConfigInput{
+			DomainName: aws.String(name),
 		}
 
 		if d.HasChange("access_policies") {
@@ -912,30 +913,32 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.LogPublishingOptions = expandLogPublishingOptions(d.Get("log_publishing_options").(*schema.Set))
 		}
 
-		_, err := conn.UpdateElasticsearchDomainConfig(&input)
+		log.Printf("[DEBUG] Updating Elasticsearch Domain config: %s", input)
+		_, err := conn.UpdateElasticsearchDomainConfig(input)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating Elasticsearch Domain (%s) config: %w", d.Id(), err)
 		}
 
-		if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Elasticsearch Domain Update (%s) to succeed: %w", d.Id(), err)
+		if err := waitForDomainUpdate(conn, name, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for Elasticsearch Domain (%s) update: %w", d.Id(), err)
 		}
 
 		if d.HasChange("elasticsearch_version") {
-			upgradeInput := elasticsearch.UpgradeElasticsearchDomainInput{
-				DomainName:    aws.String(d.Get("domain_name").(string)),
+			input := &elasticsearch.UpgradeElasticsearchDomainInput{
+				DomainName:    aws.String(name),
 				TargetVersion: aws.String(d.Get("elasticsearch_version").(string)),
 			}
 
-			_, err := conn.UpgradeElasticsearchDomain(&upgradeInput)
+			log.Printf("[DEBUG] Upgrading Elasticsearch Domain: %s", input)
+			_, err := conn.UpgradeElasticsearchDomain(input)
 
 			if err != nil {
-				return fmt.Errorf("Failed to upgrade elasticsearch domain: %w", err)
+				return fmt.Errorf("error upgrading Elasticsearch Domain (%s): %w", d.Id(), err)
 			}
 
-			if _, err := waitUpgradeSucceeded(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return fmt.Errorf("error waiting for Elasticsearch Domain Upgrade (%s) to succeed: %w", d.Id(), err)
+			if _, err := waitUpgradeSucceeded(conn, name, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return fmt.Errorf("error waiting for Elasticsearch Domain (%s) upgrade: %w", d.Id(), err)
 			}
 		}
 	}
