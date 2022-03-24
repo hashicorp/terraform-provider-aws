@@ -1,7 +1,7 @@
 name: Post Publish
 on:
   release:
-    types: [released]
+    types: [published]
 jobs:
   tidy:
     name: Tidy Asana
