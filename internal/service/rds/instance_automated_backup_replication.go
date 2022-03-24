@@ -141,12 +141,6 @@ func resourceInstanceAutomatedBackupReplicationDelete(d *schema.ResourceData, me
 		}
 	}
 
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceAutomatedBackupNotFoundFault) {
-		log.Printf("[WARN] RDS instance automated backup replication not found, removing from state: %s", d.Id())
-		d.SetId("")
-		return nil // The resource is already deleted or was never created
-	}
-
 	if err != nil {
 		return fmt.Errorf("error reading RDS instance automated backup replication: %s", err)
 	}
