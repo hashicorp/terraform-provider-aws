@@ -151,8 +151,8 @@ func testAccInstanceAutomatedBackupReplicationConfig_kmsEncrypted(rName string) 
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description  = %[1]q
-  provider     = "awsalternate"
+  description = %[1]q
+  provider    = "awsalternate"
 }
 		  
 resource "aws_db_instance" "test" {
