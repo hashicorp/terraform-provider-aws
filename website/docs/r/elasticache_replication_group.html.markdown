@@ -115,7 +115,7 @@ resource "aws_elasticache_replication_group" "test" {
   }
   log_delivery_configuration {
     destination      = aws_kinesis_firehose_delivery_stream.example.name
-    destination_type = "kinesis-firegose"
+    destination_type = "kinesis-firehose"
     log_format       = "json"
     log_type         = "engine-log"
   }
