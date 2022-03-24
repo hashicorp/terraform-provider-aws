@@ -208,6 +208,24 @@ func ResourceFunction() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(lambda.Runtime_Values(), false),
 			},
+			"ephemeral_storage": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"size": {
+							Type:     schema.TypeInt,
+							Required: true,
+							Default:  512,
+							ValidateFunc: validation.All(
+								validation.IntBetween(512, 10240),
+							),
+						},
+					},
+				},
+			},
 			"timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -378,6 +396,7 @@ func hasConfigChanges(d verify.ResourceDiffer) bool {
 		d.HasChange("layers") ||
 		d.HasChange("dead_letter_config") ||
 		d.HasChange("tracing_config") ||
+		d.HasChange("ephemeral_storage") ||
 		d.HasChange("vpc_config.0.security_group_ids") ||
 		d.HasChange("vpc_config.0.subnet_ids") ||
 		d.HasChange("runtime") ||
@@ -505,6 +524,14 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 			Mode: aws.String(tracing["mode"].(string)),
 		}
 	}
+
+	// if v, ok := d.GetOk("ephemeral_storage"); ok {
+	// 	ephemeralStorageConfig := v.([]interface{})
+	// 	ephemeralStorage := ephemeralStorageConfig[0].(map[string]interface{})
+	// 	params.EphemeralStorage = &lambda.EphemeralStorage{
+	// 		Size: aws.Int64(int64(ephemeralStorage["size"].(int))),
+	// 	}
+	// }
 
 	if v, ok := d.GetOk("environment"); ok {
 		environments := v.([]interface{})
