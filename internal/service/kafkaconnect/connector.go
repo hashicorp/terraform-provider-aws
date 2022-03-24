@@ -71,6 +71,7 @@ func ResourceConnector() *schema.Resource {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										Optional: true,
+										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"cpu_utilization_percentage": {
@@ -86,6 +87,7 @@ func ResourceConnector() *schema.Resource {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										Optional: true,
+										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"cpu_utilization_percentage": {
@@ -251,7 +253,7 @@ func ResourceConnector() *schema.Resource {
 												},
 												"log_group": {
 													Type:     schema.TypeString,
-													Optional: true,
+													Required: true,
 													ForceNew: true,
 												},
 											},
@@ -266,7 +268,7 @@ func ResourceConnector() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"delivery_stream": {
 													Type:     schema.TypeString,
-													Optional: true,
+													Required: true,
 													ForceNew: true,
 												},
 												"enabled": {
@@ -286,7 +288,7 @@ func ResourceConnector() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"bucket": {
 													Type:     schema.TypeString,
-													Optional: true,
+													Required: true,
 													ForceNew: true,
 												},
 												"enabled": {

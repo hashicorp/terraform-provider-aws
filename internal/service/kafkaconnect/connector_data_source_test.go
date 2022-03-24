@@ -22,11 +22,10 @@ func TestAccKafkaConnectConnectorDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectorDataSourceConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "state", dataSourceName, "state"),
 					resource.TestCheckResourceAttrPair(resourceName, "version", dataSourceName, "version"),
 				),
 			},
@@ -35,7 +34,7 @@ func TestAccKafkaConnectConnectorDataSource_basic(t *testing.T) {
 }
 
 func testAccConnectorDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(testAccConnectorConfigBasic(rName), `
+	return acctest.ConfigCompose(testAccConnectorConfig(rName), `
 data "aws_mskconnect_connector" "test" {
   name = aws_mskconnect_connector.test.name
 }
