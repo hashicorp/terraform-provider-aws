@@ -695,31 +695,27 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	ds, err := FindDomainByName(conn, d.Get("domain_name").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Elasticsearch domain (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Elasticsearch Domain (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Elasticsearch domain (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading Elasticsearch Domain (%s): %w", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Received Elasticsearch domain: %s", ds)
-
-	outDescribeDomainConfig, err := conn.DescribeElasticsearchDomainConfig(&elasticsearch.DescribeElasticsearchDomainConfigInput{
+	output, err := conn.DescribeElasticsearchDomainConfig(&elasticsearch.DescribeElasticsearchDomainConfigInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading Elasticsearch Domain (%s) config: %w", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Received config for Elasticsearch domain: %s", outDescribeDomainConfig)
+	dc := output.DomainConfig
 
-	dc := outDescribeDomainConfig.DomainConfig
-
-	if ds.AccessPolicies != nil && aws.StringValue(ds.AccessPolicies) != "" {
-		policies, err := verify.PolicyToSet(d.Get("access_policies").(string), aws.StringValue(ds.AccessPolicies))
+	if v := aws.StringValue(ds.AccessPolicies); v != "" {
+		policies, err := verify.PolicyToSet(d.Get("access_policies").(string), v)
 
 		if err != nil {
 			return err
@@ -730,7 +726,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 
 	options := advancedOptionsIgnoreDefault(d.Get("advanced_options").(map[string]interface{}), flex.PointersMapToStringList(ds.AdvancedOptions))
 	if err = d.Set("advanced_options", options); err != nil {
-		return fmt.Errorf("setting advanced_options %v: %w", options, err)
+		return fmt.Errorf("setting advanced_options: %w", err)
 	}
 
 	d.SetId(aws.StringValue(ds.ARN))
@@ -775,9 +771,8 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v := dc.AutoTuneOptions; v != nil {
-		err = d.Set("auto_tune_options", []interface{}{flattenAutoTuneOptions(v.Options)})
-		if err != nil {
-			return err
+		if err := d.Set("auto_tune_options", []interface{}{flattenAutoTuneOptions(v.Options)}); err != nil {
+			return fmt.Errorf("error setting auto_tune_options: %w", err)
 		}
 	}
 
@@ -791,10 +786,8 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		endpoints := flex.PointersMapToStringList(ds.Endpoints)
-		err = d.Set("endpoint", endpoints["vpc"])
-		if err != nil {
-			return err
-		}
+		d.Set("endpoint", endpoints["vpc"])
+
 		d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		if ds.Endpoint != nil {
 			return fmt.Errorf("%q: Elasticsearch domain in VPC expected to have null Endpoint value", d.Id())
@@ -822,7 +815,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Elasticsearch Cluster (%s): %w", d.Id(), err)
+		return fmt.Errorf("error listing tags for Elasticsearch Domain (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
