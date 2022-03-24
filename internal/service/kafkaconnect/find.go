@@ -60,12 +60,13 @@ func FindCustomPluginByARN(ctx context.Context, conn *kafkaconnect.KafkaConnect,
 	return output, nil
 }
 
-func FindWorkerConfigurationByARN(conn *kafkaconnect.KafkaConnect, arn string) (*kafkaconnect.DescribeWorkerConfigurationOutput, error) {
+func FindWorkerConfigurationByARN(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string) (*kafkaconnect.DescribeWorkerConfigurationOutput, error) {
 	input := &kafkaconnect.DescribeWorkerConfigurationInput{
 		WorkerConfigurationArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeWorkerConfiguration(input)
+	output, err := conn.DescribeWorkerConfigurationWithContext(ctx, input)
+
 	if tfawserr.ErrCodeEquals(err, kafkaconnect.ErrCodeNotFoundException) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
