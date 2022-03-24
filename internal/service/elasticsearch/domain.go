@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -509,12 +508,6 @@ func ResourceDomain() *schema.Resource {
 	}
 }
 
-func resourceDomainImport(
-	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	d.Set("domain_name", d.Id())
-	return []*schema.ResourceData{d}, nil
-}
-
 func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticsearchConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -522,14 +515,16 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// The API doesn't check for duplicate names
 	// so w/out this check Create would act as upsert
-	// and might cause duplicate domain to appear in state
-	resp, err := FindDomainByName(conn, d.Get("domain_name").(string))
+	// and might cause duplicate domain to appear in state.
+	name := d.Get("domain_name").(string)
+	_, err := FindDomainByName(conn, name)
+
 	if err == nil {
-		return fmt.Errorf("Elasticsearch domain %s already exists", aws.StringValue(resp.DomainName))
+		return fmt.Errorf("Elasticsearch Domain (%s) already exists", name)
 	}
 
-	inputCreateDomain := elasticsearch.CreateElasticsearchDomainInput{
-		DomainName:           aws.String(d.Get("domain_name").(string)),
+	input := &elasticsearch.CreateElasticsearchDomainInput{
+		DomainName:           aws.String(name),
 		ElasticsearchVersion: aws.String(d.Get("elasticsearch_version").(string)),
 		TagList:              Tags(tags.IgnoreAWS()),
 	}
@@ -541,19 +536,19 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
 		}
 
-		inputCreateDomain.AccessPolicies = aws.String(policy)
+		input.AccessPolicies = aws.String(policy)
 	}
 
 	if v, ok := d.GetOk("advanced_options"); ok {
-		inputCreateDomain.AdvancedOptions = flex.ExpandStringMap(v.(map[string]interface{}))
+		input.AdvancedOptions = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("advanced_security_options"); ok {
-		inputCreateDomain.AdvancedSecurityOptions = expandAdvancedSecurityOptions(v.([]interface{}))
+		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]interface{})) > 0 {
-		inputCreateDomain.AutoTuneOptions = expandAutoTuneOptionsInput(v.([]interface{})[0].(map[string]interface{}))
+		input.AutoTuneOptions = expandAutoTuneOptionsInput(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("ebs_options"); ok {
@@ -565,7 +560,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			s := options[0].(map[string]interface{})
-			inputCreateDomain.EBSOptions = expandEBSOptions(s)
+			input.EBSOptions = expandEBSOptions(s)
 		}
 	}
 
@@ -576,7 +571,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		s := options[0].(map[string]interface{})
-		inputCreateDomain.EncryptionAtRestOptions = expandEncryptAtRestOptions(s)
+		input.EncryptionAtRestOptions = expandEncryptAtRestOptions(s)
 	}
 
 	if v, ok := d.GetOk("cluster_config"); ok {
@@ -587,7 +582,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("At least one field is expected inside cluster_config")
 			}
 			m := config[0].(map[string]interface{})
-			inputCreateDomain.ElasticsearchClusterConfig = expandClusterConfig(m)
+			input.ElasticsearchClusterConfig = expandClusterConfig(m)
 		}
 	}
 
@@ -595,7 +590,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 		options := v.([]interface{})
 
 		s := options[0].(map[string]interface{})
-		inputCreateDomain.NodeToNodeEncryptionOptions = expandNodeToNodeEncryptionOptions(s)
+		input.NodeToNodeEncryptionOptions = expandNodeToNodeEncryptionOptions(s)
 	}
 
 	if v, ok := d.GetOk("snapshot_options"); ok {
@@ -612,7 +607,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 				AutomatedSnapshotStartHour: aws.Int64(int64(o["automated_snapshot_start_hour"].(int))),
 			}
 
-			inputCreateDomain.SnapshotOptions = &snapshotOptions
+			input.SnapshotOptions = &snapshotOptions
 		}
 	}
 
@@ -623,92 +618,70 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		s := options[0].(map[string]interface{})
-		inputCreateDomain.VPCOptions = expandVPCOptions(s)
+		input.VPCOptions = expandVPCOptions(s)
 	}
 
 	if v, ok := d.GetOk("log_publishing_options"); ok {
-		inputCreateDomain.LogPublishingOptions = expandLogPublishingOptions(v.(*schema.Set))
+		input.LogPublishingOptions = expandLogPublishingOptions(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("domain_endpoint_options"); ok {
-		inputCreateDomain.DomainEndpointOptions = expandDomainEndpointOptions(v.([]interface{}))
+		input.DomainEndpointOptions = expandDomainEndpointOptions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("cognito_options"); ok {
-		inputCreateDomain.CognitoOptions = expandCognitoOptions(v.([]interface{}))
+		input.CognitoOptions = expandCognitoOptions(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating Elasticsearch domain: %s", inputCreateDomain)
+	log.Printf("[DEBUG] Creating Elasticsearch Domain: %s", input)
 
-	// IAM Roles can take some time to propagate if set in AccessPolicies and created in the same terraform
-	var out *elasticsearch.CreateElasticsearchDomainOutput
-	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
-		var err error
-		out, err = conn.CreateElasticsearchDomain(&inputCreateDomain)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidTypeException", "Error setting policy") {
-				log.Printf("[DEBUG] Retrying creation of Elasticsearch domain %s", aws.StringValue(inputCreateDomain.DomainName))
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "enable a service-linked role to give Amazon ES permissions") {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Domain is still being deleted") {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Amazon Elasticsearch must be allowed to use the passed role") {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "The passed role has not propagated yet") {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Authentication error") {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Unauthorized Operation: Elasticsearch must be authorised to describe") {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "The passed role must authorize Amazon Elasticsearch to describe") {
-				return resource.RetryableError(err)
+	outputRaw, err := tfresource.RetryWhen(
+		tfiam.PropagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateElasticsearchDomain(input)
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, elasticsearch.ErrCodeInvalidTypeException, "Error setting policy") ||
+				tfawserr.ErrMessageContains(err, elasticsearch.ErrCodeValidationException, "enable a service-linked role to give Amazon ES permissions") ||
+				tfawserr.ErrMessageContains(err, elasticsearch.ErrCodeValidationException, "Domain is still being deleted") ||
+				tfawserr.ErrMessageContains(err, elasticsearch.ErrCodeValidationException, "Amazon Elasticsearch must be allowed to use the passed role") ||
+				tfawserr.ErrMessageContains(err, elasticsearch.ErrCodeValidationException, "The passed role has not propagated yet") ||
+				tfawserr.ErrMessageContains(err, elasticsearch.ErrCodeValidationException, "Authentication error") ||
+				tfawserr.ErrMessageContains(err, elasticsearch.ErrCodeValidationException, "Unauthorized Operation: Elasticsearch must be authorised to describe") ||
+				tfawserr.ErrMessageContains(err, elasticsearch.ErrCodeValidationException, "The passed role must authorize Amazon Elasticsearch to describe") {
+				return true, err
 			}
 
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		out, err = conn.CreateElasticsearchDomain(&inputCreateDomain)
-	}
+			return false, err
+		},
+	)
+
 	if err != nil {
-		return fmt.Errorf("Error creating Elasticsearch domain: %w", err)
+		return fmt.Errorf("error creating Elasticsearch Domain (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(out.DomainStatus.ARN))
+	d.SetId(aws.StringValue(outputRaw.(*elasticsearch.CreateElasticsearchDomainOutput).DomainStatus.ARN))
 
-	log.Printf("[DEBUG] Waiting for Elasticsearch domain %q to be created", d.Id())
-	if err := WaitForDomainCreation(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Elasticsearch Domain (%s) to be created: %w", d.Id(), err)
+	if err := WaitForDomainCreation(conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for Elasticsearch Domain (%s) create: %w", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] Elasticsearch domain %q created", d.Id())
 
 	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]interface{})) > 0 {
-
-		log.Printf("[DEBUG] Modifying config for Elasticsearch domain %q", d.Id())
-
-		inputUpdateDomainConfig := &elasticsearch.UpdateElasticsearchDomainConfigInput{
-			DomainName: aws.String(d.Get("domain_name").(string)),
+		input := &elasticsearch.UpdateElasticsearchDomainConfigInput{
+			AutoTuneOptions: expandAutoTuneOptions(v.([]interface{})[0].(map[string]interface{})),
+			DomainName:      aws.String(name),
 		}
 
-		inputUpdateDomainConfig.AutoTuneOptions = expandAutoTuneOptions(v.([]interface{})[0].(map[string]interface{}))
-
-		_, err = conn.UpdateElasticsearchDomainConfig(inputUpdateDomainConfig)
+		log.Printf("[DEBUG] Updating Elasticsearch Domain config: %s", input)
+		_, err = conn.UpdateElasticsearchDomainConfig(input)
 
 		if err != nil {
-			return fmt.Errorf("Error modifying config for Elasticsearch domain: %s", err)
+			return fmt.Errorf("error updating Elasticsearch Domain (%s) config: %w", d.Id(), err)
 		}
 
-		log.Printf("[DEBUG] Config for Elasticsearch domain %q modified", d.Id())
+		if err := waitForDomainUpdate(conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return fmt.Errorf("error waiting for Elasticsearch Domain (%s) update: %w", d.Id(), err)
+		}
 	}
 
 	return resourceDomainRead(d, meta)
@@ -947,6 +920,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		_, err := conn.UpdateElasticsearchDomainConfig(&input)
+
 		if err != nil {
 			return err
 		}
@@ -962,6 +936,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			_, err := conn.UpgradeElasticsearchDomain(&upgradeInput)
+
 			if err != nil {
 				return fmt.Errorf("Failed to upgrade elasticsearch domain: %w", err)
 			}
@@ -1004,6 +979,12 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func resourceDomainImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	d.Set("domain_name", d.Id())
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func suppressEquivalentKmsKeyIds(k, old, new string, d *schema.ResourceData) bool {
