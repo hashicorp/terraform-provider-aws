@@ -231,7 +231,7 @@ resource "aws_msk_cluster" "test" {
 
 func testAccConnectorConfigBasic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCustomPluginConfigBasic(rName),
+		testAccCustomPluginConfig(rName),
 		testAccWorkerConfigurationBasic(rName, "key.converter=hello\nvalue.converter=world"),
 		testAccConnectorConfigBase(rName),
 		fmt.Sprintf(`
