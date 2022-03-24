@@ -154,7 +154,7 @@ resource "aws_kms_key" "test" {
   description = %[1]q
   provider    = "awsalternate"
 }
-		  
+
 resource "aws_db_instance" "test" {
   allocated_storage       = 10
   identifier              = %[1]q
