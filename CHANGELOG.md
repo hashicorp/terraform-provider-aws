@@ -1,5 +1,9 @@
 ## 3.75.1 (Unreleased)
 
+BUG FIXES:
+
+* resource/aws_route_table_association: Retry resource Read for EC2 eventual consistency ([#23806](https://github.com/hashicorp/terraform-provider-aws/issues/23806))
+
 ## 3.75.0 (March 18, 2022)
 
 NOTES:
