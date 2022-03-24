@@ -24,7 +24,7 @@ func TestAccRDSInstanceAutomatedBackupReplication_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckInstanceRoleAssociationDestroy,
+		CheckDestroy:      testAccCheckInstanceAutomatedBackupReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceAutomatedBackupReplicationConfig(rName),
@@ -51,7 +51,7 @@ func TestAccRDSInstanceAutomatedBackupReplication_retentionPeriod(t *testing.T) 
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckInstanceRoleAssociationDestroy,
+		CheckDestroy:      testAccCheckInstanceAutomatedBackupReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceAutomatedBackupReplicationConfig_retentionPeriod(rName),
@@ -78,7 +78,7 @@ func TestAccRDSInstanceAutomatedBackupReplication_kmsEncrypted(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckInstanceRoleAssociationDestroy,
+		CheckDestroy:      testAccCheckInstanceAutomatedBackupReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceAutomatedBackupReplicationConfig_kmsEncrypted(rName),
