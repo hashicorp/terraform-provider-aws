@@ -956,22 +956,24 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticsearchConn
-	domainName := d.Get("domain_name").(string)
 
-	log.Printf("[DEBUG] Deleting Elasticsearch domain: %q", domainName)
+	name := d.Get("domain_name").(string)
+
+	log.Printf("[DEBUG] Deleting Elasticsearch Domain: %s", d.Id())
 	_, err := conn.DeleteElasticsearchDomain(&elasticsearch.DeleteElasticsearchDomainInput{
-		DomainName: aws.String(domainName),
+		DomainName: aws.String(name),
 	})
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, elasticsearch.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return err
+
+	if tfawserr.ErrCodeEquals(err, elasticsearch.ErrCodeResourceNotFoundException) {
+		return nil
 	}
 
-	log.Printf("[DEBUG] Waiting for Elasticsearch domain %q to be deleted", domainName)
-	if err := waitForDomainDelete(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for Elasticsearch Domain (%s) to be deleted: %w", d.Id(), err)
+	if err != nil {
+		return fmt.Errorf("error deleting Elasticsearch Domain (%s): %w", d.Id(), err)
+	}
+
+	if err := waitForDomainDelete(conn, name, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for Elasticsearch Domain (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
