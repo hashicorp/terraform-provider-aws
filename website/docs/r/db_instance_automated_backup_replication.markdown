@@ -12,9 +12,10 @@ Manage cross-region replication of automated backups to a different AWS Region. 
 
 * [Replicating automated backups to another AWS Region](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReplicateBackups.html)
 
--> **Note:** This resource has to be created in the destinaton region.
+-> **Note:** This resource has to be created in the destination region.
 
 ## Example Usage
+
 ```terraform
 resource "aws_db_instance_automated_backup_replication" "default" {
   source_db_instance_arn = "arn:aws:rds:us-west-2:123456789012:db:mydatabase"
@@ -23,6 +24,7 @@ resource "aws_db_instance_automated_backup_replication" "default" {
 ```
 
 ## Encrypting the automated backup with KMS
+
 ```terraform
 resource "aws_db_instance_automated_backup_replication" "default" {
   source_db_instance_arn = "arn:aws:rds:us-west-2:123456789012:db:mydatabase"
@@ -31,6 +33,7 @@ resource "aws_db_instance_automated_backup_replication" "default" {
 ```
 
 ## Example including a RDS DB instance
+
 ```terraform
 provider "aws" {
   region = "us-east-1"
