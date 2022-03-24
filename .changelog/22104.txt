@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_imagebuilder_distribution_configuration: Add `organization_arns` and `organizational_unit_arns` arguments to the `distribution.ami_distribution_configuration.launch_permission` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_imagebuilder_distribution_configuration: Add `organization_arns` and `organizational_unit_arns` attributes to the `distribution.ami_distribution_configuration.launch_permission` configuration block
+```

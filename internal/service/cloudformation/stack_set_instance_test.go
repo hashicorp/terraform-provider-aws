@@ -33,6 +33,7 @@ func TestAccCloudFormationStackSetInstance_basic(t *testing.T) {
 					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance1),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "retain_stack", "false"),
@@ -224,8 +225,6 @@ func TestAccCloudFormationStackSetInstance_retainStack(t *testing.T) {
 }
 
 func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
-	acctest.Skip(t, "API does not support enabling Organizations access (in particular, creating the Stack Sets IAM Service-Linked Role)")
-
 	var stackInstance cloudformation.StackInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack_set_instance.test"
@@ -234,7 +233,9 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckStackSet(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheckOrganizationsEnabled(t)
+			acctest.PreCheckOrganizationManagementAccount(t)
+			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/stacksets.cloudformation.amazonaws.com")
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID, "organizations"),
 		Providers:    acctest.Providers,
@@ -255,7 +256,47 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"retain_stack",
 					"deployment_targets",
+					"call_as",
 				},
+			},
+			{
+				Config: testAccStackSetInstanceConfig_ServiceManagedStackSet(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFormationStackSetInstance_operationPreferences(t *testing.T) {
+	var stackInstance cloudformation.StackInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			testAccPreCheckStackSet(t)
+			acctest.PreCheckOrganizationsEnabled(t)
+			acctest.PreCheckOrganizationManagementAccount(t)
+			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/stacksets.cloudformation.amazonaws.com")
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckStackSetInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetInstanceOperationPreferencesConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "10"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
+				),
 			},
 			{
 				Config: testAccStackSetInstanceConfig_ServiceManagedStackSet(rName),
@@ -485,17 +526,17 @@ TEMPLATE
 }
 
 func testAccStackSetInstanceConfig(rName string) string {
-	return testAccStackSetInstanceBaseConfig(rName) + `
+	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig(rName), `
 resource "aws_cloudformation_stack_set_instance" "test" {
   depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
 
   stack_set_name = aws_cloudformation_stack_set.test.name
 }
-`
+`)
 }
 
 func testAccStackSetInstanceParameterOverrides1Config(rName, value1 string) string {
-	return testAccStackSetInstanceBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudformation_stack_set_instance" "test" {
   depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
 
@@ -505,11 +546,11 @@ resource "aws_cloudformation_stack_set_instance" "test" {
 
   stack_set_name = aws_cloudformation_stack_set.test.name
 }
-`, value1)
+`, value1))
 }
 
 func testAccStackSetInstanceParameterOverrides2Config(rName, value1, value2 string) string {
-	return testAccStackSetInstanceBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudformation_stack_set_instance" "test" {
   depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
 
@@ -520,18 +561,18 @@ resource "aws_cloudformation_stack_set_instance" "test" {
 
   stack_set_name = aws_cloudformation_stack_set.test.name
 }
-`, value1, value2)
+`, value1, value2))
 }
 
 func testAccStackSetInstanceRetainStackConfig(rName string, retainStack bool) string {
-	return testAccStackSetInstanceBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudformation_stack_set_instance" "test" {
   depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
 
   retain_stack   = %[1]t
   stack_set_name = aws_cloudformation_stack_set.test.name
 }
-`, retainStack)
+`, retainStack))
 }
 
 func testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName string) string {
@@ -651,9 +692,7 @@ TEMPLATE
 }
 
 func testAccStackSetInstanceDeploymentTargetsConfig(rName string) string {
-	return acctest.ConfigCompose(
-		testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName),
-		`
+	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName), `
 resource "aws_cloudformation_stack_set_instance" "test" {
   depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
 
@@ -667,11 +706,28 @@ resource "aws_cloudformation_stack_set_instance" "test" {
 }
 
 func testAccStackSetInstanceConfig_ServiceManagedStackSet(rName string) string {
-	return acctest.ConfigCompose(
-		testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName),
-		`
+	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName), `
 resource "aws_cloudformation_stack_set_instance" "test" {
   depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
+
+  stack_set_name = aws_cloudformation_stack_set.test.name
+}
+`)
+}
+
+func testAccStackSetInstanceOperationPreferencesConfig(rName string) string {
+	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName), `
+resource "aws_cloudformation_stack_set_instance" "test" {
+  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
+
+  operation_preferences {
+    failure_tolerance_count = 1
+    max_concurrent_count    = 10
+  }
+
+  deployment_targets {
+    organizational_unit_ids = [data.aws_organizations_organization.test.roots[0].id]
+  }
 
   stack_set_name = aws_cloudformation_stack_set.test.name
 }
