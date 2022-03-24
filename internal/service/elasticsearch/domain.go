@@ -692,7 +692,8 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	ds, err := FindDomainByName(conn, d.Get("domain_name").(string))
+	name := d.Get("domain_name").(string)
+	ds, err := FindDomainByName(conn, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Elasticsearch Domain (%s) not found, removing from state", d.Id())
@@ -705,7 +706,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	output, err := conn.DescribeElasticsearchDomainConfig(&elasticsearch.DescribeElasticsearchDomainConfigInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
+		DomainName: aws.String(name),
 	})
 
 	if err != nil {
@@ -729,7 +730,6 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("setting advanced_options: %w", err)
 	}
 
-	d.SetId(aws.StringValue(ds.ARN))
 	d.Set("domain_id", ds.DomainId)
 	d.Set("domain_name", ds.DomainName)
 	d.Set("elasticsearch_version", ds.ElasticsearchVersion)
@@ -980,7 +980,17 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*conns.AWSClient).ElasticsearchConn
+
 	d.Set("domain_name", d.Id())
+
+	ds, err := FindDomainByName(conn, d.Get("domain_name").(string))
+
+	if err != nil {
+		return nil, err
+	}
+
+	d.SetId(aws.StringValue(ds.ARN))
 
 	return []*schema.ResourceData{d}, nil
 }
