@@ -12,6 +12,7 @@ import (
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
+	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -879,9 +880,17 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 				if len(config) == 1 {
 					m := config[0].(map[string]interface{})
 					input.ElasticsearchClusterConfig = expandClusterConfig(m)
+
+					// Work around "ValidationException: Your domain's Elasticsearch version does not support cold storage options. Upgrade to Elasticsearch 7.9 or later.".
+					if want, err := gversion.NewVersion("7.9"); err != nil {
+						if got, err := gversion.NewVersion(d.Get("elasticsearch_version").(string)); err != nil {
+							if got.GreaterThanOrEqual(want) {
+								input.ElasticsearchClusterConfig.ColdStorageOptions = nil
+							}
+						}
+					}
 				}
 			}
-
 		}
 
 		if d.HasChange("snapshot_options") {
