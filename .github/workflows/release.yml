@@ -25,12 +25,23 @@ jobs:
           github_done_column_id: 11513756
           github_release_name: ${{ github.event.release.tag_name }}
           github_token: ${{ secrets.ORGSCOPED_GITHUB_TOKEN }}
+  release-branch:
+    runs-on: ubuntu-latest
+    outputs:
+      branch: ${{ steps.git-branch.outputs.branch }}
+    steps:
+      - id: git-branch
+        run: |
+          branch=$(git branch --contains tags/${{ github.event.release.tag_name }} | xargs)
+          echo ::set-output name=branch::$branch
   changelog-newversion:
       runs-on: ubuntu-latest
+      needs: release-branch
       steps:
         - uses: actions/checkout@v2
           with:
             fetch-depth: 0
+            ref: ${{ needs.release-branch.outputs.branch }}
         - run: |
             CHANGELOG_FILE_NAME="CHANGELOG.md"
             PREVIOUS_RELEASE_TAG=$(git describe --abbrev=0 --match='v*.*.*' --tags)
