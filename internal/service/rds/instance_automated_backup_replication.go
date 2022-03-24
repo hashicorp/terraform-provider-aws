@@ -100,9 +100,17 @@ func resourceInstanceAutomatedBackupReplicationRead(d *schema.ResourceData, meta
 
 	for _, backup := range output.DBInstanceAutomatedBackups {
 		if aws.StringValue(backup.DBInstanceAutomatedBackupsArn) == d.Id() {
-			d.Set("source_db_instance_arn", backup.DBInstanceArn)
-			d.Set("kms_key_id", backup.KmsKeyId)
-			d.Set("retention_period", backup.BackupRetentionPeriod)
+			// Check if the automated backup is retained
+			if aws.StringValue(backup.Status) == dbInstanceAutomatedBackupReplicationRetained {
+				log.Printf("[WARN] RDS instance automated backup replication is retained, removing from state: %s", d.Id())
+				d.SetId("")
+				return nil // If the automated backup is retained, the replication is stopped.
+			} else {
+				d.Set("source_db_instance_arn", backup.DBInstanceArn)
+				d.Set("kms_key_id", backup.KmsKeyId)
+				d.Set("retention_period", backup.BackupRetentionPeriod)
+			}
+
 		} else {
 			return fmt.Errorf("unable to find RDS instance automated backup replication: %s", d.Id())
 		}
@@ -130,12 +138,6 @@ func resourceInstanceAutomatedBackupReplicationDelete(d *schema.ResourceData, me
 			databaseIdentifier = aws.StringValue(backup.DBInstanceIdentifier)
 		} else {
 			return fmt.Errorf("unable to find RDS instance automated backup replication: %s", d.Id())
-		}
-		// Check if the automated backup is retained
-		if aws.StringValue(backup.Status) == dbInstanceAutomatedBackupReplicationRetained {
-			log.Printf("[WARN] RDS instance automated backup replication is retained, removing from state: %s", d.Id())
-			d.SetId("")
-			return nil // If the automated backup is retained, it's 'deleted'
 		}
 	}
 
