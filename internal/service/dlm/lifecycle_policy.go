@@ -68,12 +68,10 @@ func ResourceLifecyclePolicy() *schema.Resource {
 									"exclude_boot_volume": {
 										Type:     schema.TypeBool,
 										Optional: true,
-										Default:  false,
 									},
 									"no_reboot": {
 										Type:     schema.TypeBool,
 										Optional: true,
-										Default:  true,
 									},
 								},
 							},
