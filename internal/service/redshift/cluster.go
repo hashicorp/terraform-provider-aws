@@ -519,21 +519,12 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		d.SetId(aws.StringValue(output.Cluster.ClusterIdentifier))
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating", "backing-up", "modifying", "restoring", "available, prep-for-resize"},
-		Target:     []string{"available"},
-		Refresh:    resourceClusterStateRefreshFunc(d.Id(), conn),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 10 * time.Second,
-	}
-	_, err := stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for Redshift Cluster state to be \"available\": %w", err)
+	if _, err := waitClusterCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for Redshift Cluster (%s) create: %w", d.Id(), err)
 	}
 
-	_, err = waitClusterRelocationStatusResolved(conn, d.Id())
-	if err != nil {
-		return fmt.Errorf("error waiting for Redshift Cluster Availability Zone Relocation Status to resolve: %w", err)
+	if _, err := waitClusterRelocationStatusResolved(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Redshift Cluster (%s) Availability Zone Relocation Status resolve: %w", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("snapshot_copy"); ok {

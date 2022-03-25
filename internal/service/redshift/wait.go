@@ -13,6 +13,30 @@ const (
 	clusterRelocationStatusResolvedTimeout = 1 * time.Minute
 )
 
+func waitClusterCreated(conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			clusterStatusAvailablePrepForResize,
+			clusterStatusBackingUp,
+			clusterStatusCreating,
+			clusterStatusModifying,
+			clusterStatusRestoring,
+		},
+		Target:     []string{clusterStatusAvailable},
+		Refresh:    statusCluster(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*redshift.Cluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitClusterDeleted(conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
