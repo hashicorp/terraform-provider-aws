@@ -400,7 +400,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
       name = "tf-acc-basic"
 
       create_rule {
-		cron_expression = "cron(0 18 ? * WED *)"
+        cron_expression = "cron(0 18 ? * WED *)"
       }
 
       retain_rule {
