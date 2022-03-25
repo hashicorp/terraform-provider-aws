@@ -2,10 +2,14 @@
 
 ENHANCEMENTS:
 
-* internal/service/elasticache/cluster: Add `log_delivery_configuration` argument ([#20068](https://github.com/hashicorp/terraform-provider-aws/issues/20068))
-* internal/service/elasticache/cluster_data_source: Add `log_delivery_configuration` attribute ([#20068](https://github.com/hashicorp/terraform-provider-aws/issues/20068))
-* internal/service/elasticache/replication_group: Add `log_delivery_configuration` argument ([#20068](https://github.com/hashicorp/terraform-provider-aws/issues/20068))
-* internal/service/elasticache/replication_group_data_source: Add `log_delivery_configuration` attribute ([#20068](https://github.com/hashicorp/terraform-provider-aws/issues/20068))
+* data-source/aws_eips: Set `public_ips` for VPC as well as EC2 Classic ([#23859](https://github.com/hashicorp/terraform-provider-aws/issues/23859))
+* data-source/aws_elasticache_cluster: Add `log_delivery_configuration` attribute ([#20068](https://github.com/hashicorp/terraform-provider-aws/issues/20068))
+* data-source/aws_elasticache_replication_group: Add `log_delivery_configuration` attribute ([#20068](https://github.com/hashicorp/terraform-provider-aws/issues/20068))
+* data-source/aws_elasticsearch_domain: Add `cold_storage_options` attribute to the `cluster_config` configuration block ([#19713](https://github.com/hashicorp/terraform-provider-aws/issues/19713))
+* resource/aws_elasticache_cluster: Add `log_delivery_configuration` argument ([#20068](https://github.com/hashicorp/terraform-provider-aws/issues/20068))
+* resource/aws_elasticache_replication_group: Add `log_delivery_configuration` argument ([#20068](https://github.com/hashicorp/terraform-provider-aws/issues/20068))
+* resource/aws_elasticsearch_domain: Add `cold_storage_options` argument to the `cluster_config` configuration block ([#19713](https://github.com/hashicorp/terraform-provider-aws/issues/19713))
+* resource/aws_elasticsearch_domain: Add configurable Create and Delete timeouts ([#19713](https://github.com/hashicorp/terraform-provider-aws/issues/19713))
 * resource/aws_mskconnect_custom_plugin: Implement resource Delete ([#23544](https://github.com/hashicorp/terraform-provider-aws/issues/23544))
 
 BUG FIXES:
