@@ -38,6 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 * `security_group_ids` – List VPC security groups associated with the cache cluster.
 * `parameter_group_name` – Name of the parameter group associated with this cache cluster.
 * `replication_group_id` - The replication group to which this cache cluster belongs.
+* `log_delivery_configuration` - Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log) delivery settings.
 * `maintenance_window` – Specifies the weekly time range for when maintenance
 on the cache cluster is performed.
 * `snapshot_window` - The daily time range (in UTC) during which ElastiCache will

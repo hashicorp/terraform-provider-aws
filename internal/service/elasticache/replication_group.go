@@ -159,6 +159,34 @@ func ResourceReplicationGroup() *schema.Resource {
 					"snapshot_name",
 				},
 			},
+			"log_delivery_configuration": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 2,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"destination_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(elasticache.DestinationType_Values(), false),
+						},
+						"destination": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"log_format": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(elasticache.LogFormat_Values(), false),
+						},
+						"log_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(elasticache.LogType_Values(), false),
+						},
+					},
+				},
+			},
 			"maintenance_window": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -443,6 +471,15 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		params.SnapshotArns = flex.ExpandStringSet(snaps)
 	}
 
+	if v, ok := d.GetOk("log_delivery_configuration"); ok {
+		params.LogDeliveryConfigurations = []*elasticache.LogDeliveryConfigurationRequest{}
+		v := v.(*schema.Set).List()
+		for _, v := range v {
+			logDeliveryConfigurationRequest := expandLogDeliveryConfigurations(v.(map[string]interface{}))
+			params.LogDeliveryConfigurations = append(params.LogDeliveryConfigurations, &logDeliveryConfigurationRequest)
+		}
+	}
+
 	if v, ok := d.GetOk("maintenance_window"); ok {
 		params.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
@@ -655,6 +692,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 			return err
 		}
 
+		d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(rgp.LogDeliveryConfigurations))
 		d.Set("snapshot_window", rgp.SnapshotWindow)
 		d.Set("snapshot_retention_limit", rgp.SnapshotRetentionLimit)
 
@@ -745,6 +783,31 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 			params.CacheSecurityGroupNames = flex.ExpandStringSet(attr)
 			requestUpdate = true
 		}
+	}
+
+	if d.HasChange("log_delivery_configuration") {
+
+		oldLogDeliveryConfig, newLogDeliveryConfig := d.GetChange("log_delivery_configuration")
+
+		params.LogDeliveryConfigurations = []*elasticache.LogDeliveryConfigurationRequest{}
+		logTypesToSubmit := make(map[string]bool)
+
+		currentLogDeliveryConfig := newLogDeliveryConfig.(*schema.Set).List()
+		for _, current := range currentLogDeliveryConfig {
+			logDeliveryConfigurationRequest := expandLogDeliveryConfigurations(current.(map[string]interface{}))
+			logTypesToSubmit[*logDeliveryConfigurationRequest.LogType] = true
+			params.LogDeliveryConfigurations = append(params.LogDeliveryConfigurations, &logDeliveryConfigurationRequest)
+		}
+
+		previousLogDeliveryConfig := oldLogDeliveryConfig.(*schema.Set).List()
+		for _, previous := range previousLogDeliveryConfig {
+			logDeliveryConfigurationRequest := expandEmptyLogDeliveryConfigurations(previous.(map[string]interface{}))
+			//if something was removed, send an empty request
+			if !logTypesToSubmit[*logDeliveryConfigurationRequest.LogType] {
+				params.LogDeliveryConfigurations = append(params.LogDeliveryConfigurations, &logDeliveryConfigurationRequest)
+			}
+		}
+		requestUpdate = true
 	}
 
 	if d.HasChange("maintenance_window") {

@@ -88,6 +88,30 @@ func DataSourceReplicationGroup() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"log_delivery_configuration": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"destination_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"destination": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"log_format": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"log_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"snapshot_window": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -157,6 +181,7 @@ func dataSourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("node_type", rg.CacheNodeType)
 	d.Set("num_node_groups", len(rg.NodeGroups))
 	d.Set("replicas_per_node_group", len(rg.NodeGroups[0].NodeGroupMembers)-1)
+	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(rg.LogDeliveryConfigurations))
 	d.Set("snapshot_window", rg.SnapshotWindow)
 	d.Set("snapshot_retention_limit", rg.SnapshotRetentionLimit)
 	return nil

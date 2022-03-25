@@ -74,6 +74,30 @@ func DataSourceCluster() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
+			"log_delivery_configuration": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"destination_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"destination": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"log_format": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"log_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"maintenance_window": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -181,6 +205,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("replication_group_id", cluster.ReplicationGroupId)
 	}
 
+	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(cluster.LogDeliveryConfigurations))
 	d.Set("maintenance_window", cluster.PreferredMaintenanceWindow)
 	d.Set("snapshot_window", cluster.SnapshotWindow)
 	d.Set("snapshot_retention_limit", cluster.SnapshotRetentionLimit)

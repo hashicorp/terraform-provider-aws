@@ -135,6 +135,34 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"log_delivery_configuration": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 2,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"destination_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(elasticache.DestinationType_Values(), false),
+						},
+						"destination": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"log_format": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(elasticache.LogFormat_Values(), false),
+						},
+						"log_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(elasticache.LogType_Values(), false),
+						},
+					},
+				},
+			},
 			"maintenance_window": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -334,6 +362,15 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		req.SnapshotWindow = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("log_delivery_configuration"); ok {
+		req.LogDeliveryConfigurations = []*elasticache.LogDeliveryConfigurationRequest{}
+		v := v.(*schema.Set).List()
+		for _, v := range v {
+			logDeliveryConfigurationRequest := expandLogDeliveryConfigurations(v.(map[string]interface{}))
+			req.LogDeliveryConfigurations = append(req.LogDeliveryConfigurations, &logDeliveryConfigurationRequest)
+		}
+	}
+
 	if v, ok := d.GetOk("maintenance_window"); ok {
 		req.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
@@ -400,6 +437,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(c.LogDeliveryConfigurations))
 	d.Set("snapshot_window", c.SnapshotWindow)
 	d.Set("snapshot_retention_limit", c.SnapshotRetentionLimit)
 
@@ -521,6 +559,32 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("parameter_group_name") {
 		req.CacheParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("log_delivery_configuration") {
+
+		oldLogDeliveryConfig, newLogDeliveryConfig := d.GetChange("log_delivery_configuration")
+
+		req.LogDeliveryConfigurations = []*elasticache.LogDeliveryConfigurationRequest{}
+		logTypesToSubmit := make(map[string]bool)
+
+		currentLogDeliveryConfig := newLogDeliveryConfig.(*schema.Set).List()
+		for _, current := range currentLogDeliveryConfig {
+			logDeliveryConfigurationRequest := expandLogDeliveryConfigurations(current.(map[string]interface{}))
+			logTypesToSubmit[*logDeliveryConfigurationRequest.LogType] = true
+			req.LogDeliveryConfigurations = append(req.LogDeliveryConfigurations, &logDeliveryConfigurationRequest)
+		}
+
+		previousLogDeliveryConfig := oldLogDeliveryConfig.(*schema.Set).List()
+		for _, previous := range previousLogDeliveryConfig {
+			logDeliveryConfigurationRequest := expandEmptyLogDeliveryConfigurations(previous.(map[string]interface{}))
+			//if something was removed, send an empty request
+			if !logTypesToSubmit[*logDeliveryConfigurationRequest.LogType] {
+				req.LogDeliveryConfigurations = append(req.LogDeliveryConfigurations, &logDeliveryConfigurationRequest)
+			}
+		}
+
 		requestUpdate = true
 	}
 

@@ -68,6 +68,31 @@ resource "aws_elasticache_cluster" "replica" {
 }
 ```
 
+### Redis Log Delivery configuration
+
+```terraform
+resource "aws_elasticache_cluster" "test" {
+  cluster_id        = "mycluster"
+  engine            = "redis"
+  node_type         = "cache.t3.micro"
+  num_cache_nodes   = 1
+  port              = 6379
+  apply_immediately = true
+  log_delivery_configuration {
+    destination      = aws_cloudwatch_log_group.example.name
+    destination_type = "cloudwatch-logs"
+    log_format       = "text"
+    log_type         = "slow-log"
+  }
+  log_delivery_configuration {
+    destination      = aws_kinesis_firehose_delivery_stream.example.name
+    destination_type = "kinesis-firehose"
+    log_format       = "json"
+    log_type         = "engine-log"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -87,6 +112,7 @@ The following arguments are optional:
 See [Describe Cache Engine Versions](https://docs.aws.amazon.com/cli/latest/reference/elasticache/describe-cache-engine-versions.html)
 in the AWS Documentation for supported versions. When `engine` is `redis` and the version is 6 or higher, only the major version can be set, e.g., `6.x`, otherwise, specify the full version desired, e.g., `5.0.6`. The actual engine version used is returned in the attribute `engine_version_actual`, [defined below](#engine_version_actual).
 * `final_snapshot_identifier` - (Optional, Redis only) Name of your final cluster snapshot. If omitted, no final snapshot will be made.
+* `log_delivery_configuration` - (Optional, Redis only) Specifies the destination and format of Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log). See the documentation on [Amazon ElastiCache](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html). See [Log Delivery Configuration](#log-delivery-configuration) below for more details.
 * `maintenance_window` – (Optional) Specifies the weekly time range for when maintenance
 on the cache cluster is performed. The format is `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC).
 The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09:00`.
@@ -113,6 +139,15 @@ In addition to all arguments above, the following attributes are exported:
 * `cluster_address` - (Memcached only) DNS name of the cache cluster without the port appended.
 * `configuration_endpoint` - (Memcached only) Configuration endpoint to allow host discovery.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+
+### Log Delivery Configuration
+
+The `log_delivery_configuration` block allows the streaming of Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log) to CloudWatch Logs or Kinesis Data Firehose. Max of 2 blocks.
+
+* `destination` - Name of either the CloudWatch Logs LogGroup or Kinesis Data Firehose resource.
+* `destination_type` - For CloudWatch Logs use `cloudwatch-logs` or for Kinesis Data Firehose use `kinesis-firehose`.
+* `log_format` - Valid values are `json` or `text`
+* `log_type` - Valid values are  `slow-log` or `engine-log`. Max 1 of each.
 
 ## Import
 
