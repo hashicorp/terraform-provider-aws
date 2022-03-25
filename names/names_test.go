@@ -292,3 +292,43 @@ func TestAWSServiceName(t *testing.T) {
 		})
 	}
 }
+
+func TestServiceHumanFriendly(t *testing.T) {
+	/*testCases := []struct {
+		TestName string
+		Input    string
+		Expected string
+		Error    bool
+	}{
+		{
+			TestName: "empty",
+			Input:    "",
+			Expected: "",
+			Error:    true,
+		},
+		{
+			TestName: Transcribe,
+			Input:    Transcribe,
+			Expected: "Transcribe",
+			Error:    false,
+		},
+		{
+			TestName: Route53Domains,
+			Input:    Route53Domains,
+			Expected: "Route53Domains",
+			Error:    false,
+		},
+		{
+			TestName: "doesnotexist",
+			Input:    "doesnotexist",
+			Expected: "",
+			Error:    true,
+		},
+	}*/
+
+	for _, testCase := range ServiceKeys() {
+		t.Run(testCase, func(t *testing.T) {
+			fmt.Printf("%s,%s,%s,%s\n", testCase, serviceData[testCase].AWSClientName, serviceData[testCase].AWSServiceID, serviceData[testCase].ProviderNameUpper)
+		})
+	}
+}
