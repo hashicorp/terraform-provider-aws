@@ -112,7 +112,7 @@ resource "aws_lambda_function" "test_lambda" {
   runtime       = "nodejs14.x"
 
   ephemeral_storage {
-    size = 10240    # Min 512 MB and the Max 10240 MB
+    size = 10240 # Min 512 MB and the Max 10240 MB
   }
 }
 ```
