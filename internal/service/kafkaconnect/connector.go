@@ -253,7 +253,7 @@ func ResourceConnector() *schema.Resource {
 												},
 												"log_group": {
 													Type:     schema.TypeString,
-													Required: true,
+													Optional: true,
 													ForceNew: true,
 												},
 											},
@@ -268,7 +268,7 @@ func ResourceConnector() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"delivery_stream": {
 													Type:     schema.TypeString,
-													Required: true,
+													Optional: true,
 													ForceNew: true,
 												},
 												"enabled": {
@@ -288,7 +288,7 @@ func ResourceConnector() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"bucket": {
 													Type:     schema.TypeString,
-													Required: true,
+													Optional: true,
 													ForceNew: true,
 												},
 												"enabled": {
@@ -409,6 +409,7 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.WorkerConfiguration = expandWorkerConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	log.Printf("[DEBUG] Creating MSK Connect Connector: %s", input)
 	output, err := conn.CreateConnectorWithContext(ctx, input)
 
 	if err != nil {
@@ -506,6 +507,7 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		CurrentVersion: aws.String(d.Get("version").(string)),
 	}
 
+	log.Printf("[DEBUG] Updating MSK Connect Connector: %s", input)
 	_, err := conn.UpdateConnectorWithContext(ctx, input)
 
 	if err != nil {

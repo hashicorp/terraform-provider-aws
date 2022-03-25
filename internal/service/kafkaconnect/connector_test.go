@@ -76,6 +76,152 @@ func TestAccKafkaConnectConnector_basic(t *testing.T) {
 	})
 }
 
+func TestAccKafkaConnectConnector_disappears(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mskconnect_connector.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy:      testAccCheckConnectorDestroy,
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectorConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectorExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfkafkaconnect.ResourceConnector(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccKafkaConnectConnector_update(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mskconnect_connector.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy:      testAccCheckConnectorDestroy,
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectorAllAttributesConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectorExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "capacity.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.0.max_worker_count", "6"),
+					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.0.mcu_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.0.min_worker_count", "4"),
+					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.0.scale_in_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.0.scale_in_policy.0.cpu_utilization_percentage", "25"),
+					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.0.scale_out_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.0.scale_out_policy.0.cpu_utilization_percentage", "75"),
+					resource.TestCheckResourceAttr(resourceName, "capacity.0.provisioned_capacity.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "connector_configuration.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "connector_configuration.connector.class", "com.github.jcustenborder.kafka.connect.simulator.SimulatorSinkConnector"),
+					resource.TestCheckResourceAttr(resourceName, "connector_configuration.tasks.max", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connector_configuration.topics", "t1"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.apache_kafka_cluster.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "kafka_cluster.0.apache_kafka_cluster.0.bootstrap_servers"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.apache_kafka_cluster.0.vpc.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.apache_kafka_cluster.0.vpc.0.security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.apache_kafka_cluster.0.vpc.0.subnets.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster_client_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster_client_authentication.0.authentication_type", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster_encryption_in_transit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster_encryption_in_transit.0.encryption_type", "TLS"),
+					resource.TestCheckResourceAttr(resourceName, "kafkaconnect_version", "2.7.1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.worker_log_delivery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.worker_log_delivery.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.worker_log_delivery.0.cloudwatch_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "log_delivery.0.worker_log_delivery.0.cloudwatch_logs.0.log_group"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.worker_log_delivery.0.firehose.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.worker_log_delivery.0.firehose.0.delivery_stream", ""),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.worker_log_delivery.0.firehose.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.worker_log_delivery.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.worker_log_delivery.0.s3.0.bucket", ""),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.worker_log_delivery.0.s3.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.worker_log_delivery.0.s3.0.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "plugin.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "plugin.*", map[string]string{
+						"custom_plugin.#": "1",
+					}),
+					resource.TestCheckResourceAttrSet(resourceName, "service_execution_role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "version"),
+					resource.TestCheckResourceAttr(resourceName, "worker_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "worker_configuration.0.arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "worker_configuration.0.revision"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccConnectorAllAttributesCapacityUpdatedConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectorExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "capacity.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "capacity.0.provisioned_capacity.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity.0.provisioned_capacity.0.mcu_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity.0.provisioned_capacity.0.worker_count", "4"),
+					resource.TestCheckResourceAttr(resourceName, "connector_configuration.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "connector_configuration.connector.class", "com.github.jcustenborder.kafka.connect.simulator.SimulatorSinkConnector"),
+					resource.TestCheckResourceAttr(resourceName, "connector_configuration.tasks.max", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connector_configuration.topics", "t1"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.apache_kafka_cluster.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "kafka_cluster.0.apache_kafka_cluster.0.bootstrap_servers"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.apache_kafka_cluster.0.vpc.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.apache_kafka_cluster.0.vpc.0.security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.apache_kafka_cluster.0.vpc.0.subnets.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster_client_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster_client_authentication.0.authentication_type", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster_encryption_in_transit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_cluster_encryption_in_transit.0.encryption_type", "TLS"),
+					resource.TestCheckResourceAttr(resourceName, "kafkaconnect_version", "2.7.1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.worker_log_delivery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.worker_log_delivery.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.worker_log_delivery.0.cloudwatch_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "log_delivery.0.worker_log_delivery.0.cloudwatch_logs.0.log_group"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.worker_log_delivery.0.firehose.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.worker_log_delivery.0.firehose.0.delivery_stream", ""),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.worker_log_delivery.0.firehose.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.worker_log_delivery.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.worker_log_delivery.0.s3.0.bucket", ""),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.worker_log_delivery.0.s3.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery.0.worker_log_delivery.0.s3.0.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "plugin.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "plugin.*", map[string]string{
+						"custom_plugin.#": "1",
+					}),
+					resource.TestCheckResourceAttrSet(resourceName, "service_execution_role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "version"),
+					resource.TestCheckResourceAttr(resourceName, "worker_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "worker_configuration.0.arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "worker_configuration.0.revision"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckConnectorExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -232,6 +378,12 @@ resource "aws_iam_role_policy" "test" {
       "s3:*"
     ],
     "Resource": ["*"]
+  },{
+    "Effect": "Allow",
+    "Action": [
+      "logs:*"
+    ],
+    "Resource": ["*"]
   }]
 }
 EOF
@@ -255,7 +407,6 @@ resource "aws_msk_cluster" "test" {
 func testAccConnectorConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCustomPluginConfig(rName),
-		testAccWorkerConfigurationBasic(rName, "key.converter=hello\nvalue.converter=world"),
 		testAccConnectorBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_mskconnect_connector" "test" {
@@ -309,13 +460,16 @@ resource "aws_mskconnect_connector" "test" {
 `, rName))
 }
 
-/*
-func testAccConnectorConfig(rName string) string {
+func testAccConnectorAllAttributesConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCustomPluginConfig(rName),
-		testAccWorkerConfigurationBasic(rName, "key.converter=hello\nvalue.converter=world"),
+		testAccWorkerConfigurationConfig(rName),
 		testAccConnectorBaseConfig(rName),
 		fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
 resource "aws_mskconnect_connector" "test" {
   name = %[1]q
 
@@ -323,16 +477,16 @@ resource "aws_mskconnect_connector" "test" {
 
   capacity {
     autoscaling {
-      mcu_count        = 1
-      min_worker_count = 1
-      max_worker_count = 2
+      mcu_count        = 2
+      min_worker_count = 4
+      max_worker_count = 6
 
       scale_in_policy {
-        cpu_utilization_percentage = 20
+        cpu_utilization_percentage = 25
       }
 
       scale_out_policy {
-        cpu_utilization_percentage = 80
+        cpu_utilization_percentage = 75
       }
     }
   }
@@ -362,6 +516,23 @@ resource "aws_mskconnect_connector" "test" {
     encryption_type = "TLS"
   }
 
+  log_delivery {
+    worker_log_delivery {
+      cloudwatch_logs {
+        enabled   = true
+        log_group = aws_cloudwatch_log_group.test.name
+      }
+
+      firehose {
+        enabled = false
+      }
+
+      s3 {
+        enabled = false
+      }
+    }
+  }
+
   plugin {
     custom_plugin {
       arn      = aws_mskconnect_custom_plugin.test.arn
@@ -371,48 +542,94 @@ resource "aws_mskconnect_connector" "test" {
 
   service_execution_role_arn = aws_iam_role.test.arn
 
+  worker_configuration {
+    arn      = aws_mskconnect_worker_configuration.test.arn
+    revision = aws_mskconnect_worker_configuration.test.latest_revision
+  }
+
   depends_on = [aws_iam_role_policy.test, aws_vpc_endpoint.test]
 }
 `, rName))
 }
 
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectorExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "capacity.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.0.max_worker_count", "2"),
-					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.0.mcu_count", "1"),
-					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.0.min_worker_count", "1"),
-					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.0.scale_in_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.0.scale_in_policy.0.cpu_utilization_percentage", "20"),
-					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.0.scale_out_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "capacity.0.autoscaling.0.scale_out_policy.0.cpu_utilization_percentage", "80"),
-					resource.TestCheckResourceAttr(resourceName, "capacity.0.provisioned_capacity.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "connector_configuration.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "connector_configuration.connector.class", "com.github.jcustenborder.kafka.connect.simulator.SimulatorSinkConnector"),
-					resource.TestCheckResourceAttr(resourceName, "connector_configuration.tasks.max", "1"),
-					resource.TestCheckResourceAttr(resourceName, "connector_configuration.topics", "1"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.apache_kafka_cluster.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "kafka_cluster.0.apache_kafka_cluster.0.bootstrap_servers"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.apache_kafka_cluster.0.vpc.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.apache_kafka_cluster.0.vpc.0.security_groups.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.apache_kafka_cluster.0.vpc.0.subnets.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_cluster_client_authentication.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_cluster_client_authentication.0.authentication_type", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_cluster_encryption_in_transit.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_cluster_encryption_in_transit.0.encryption_type", "TLS"),
-					resource.TestCheckResourceAttr(resourceName, "kafkaconnect_version", "2.7.1"),
-					resource.TestCheckResourceAttr(resourceName, "log_delivery.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "plugin.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "plugin.*", map[string]string{
-						"custom_plugin.#": "1",
-					}),
-					resource.TestCheckResourceAttrSet(resourceName, "service_execution_role_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "version"),
-					resource.TestCheckResourceAttr(resourceName, "worker_configuration.#", "0"),
-				),
-*/
+func testAccConnectorAllAttributesCapacityUpdatedConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccCustomPluginConfig(rName),
+		testAccWorkerConfigurationConfig(rName),
+		testAccConnectorBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_mskconnect_connector" "test" {
+  name = %[1]q
+
+  kafkaconnect_version = "2.7.1"
+
+  capacity {
+    provisioned_capacity {
+      worker_count = 4
+    }
+  }
+
+  connector_configuration = {
+    "connector.class" = "com.github.jcustenborder.kafka.connect.simulator.SimulatorSinkConnector"
+    "tasks.max"       = "1"
+    "topics"          = "t1"
+  }
+
+  kafka_cluster {
+    apache_kafka_cluster {
+      bootstrap_servers = aws_msk_cluster.test.bootstrap_brokers_tls
+
+      vpc {
+        security_groups = [aws_security_group.test.id]
+        subnets         = [aws_subnet.test1.id, aws_subnet.test2.id, aws_subnet.test3.id]
+      }
+    }
+  }
+
+  kafka_cluster_client_authentication {
+    authentication_type = "NONE"
+  }
+
+  kafka_cluster_encryption_in_transit {
+    encryption_type = "TLS"
+  }
+
+  log_delivery {
+    worker_log_delivery {
+      cloudwatch_logs {
+        enabled   = true
+        log_group = aws_cloudwatch_log_group.test.name
+      }
+
+      firehose {
+        enabled = false
+      }
+
+      s3 {
+        enabled = false
+      }
+    }
+  }
+
+  plugin {
+    custom_plugin {
+      arn      = aws_mskconnect_custom_plugin.test.arn
+      revision = aws_mskconnect_custom_plugin.test.latest_revision
+    }
+  }
+
+  service_execution_role_arn = aws_iam_role.test.arn
+
+  worker_configuration {
+    arn      = aws_mskconnect_worker_configuration.test.arn
+    revision = aws_mskconnect_worker_configuration.test.latest_revision
+  }
+
+  depends_on = [aws_iam_role_policy.test, aws_vpc_endpoint.test]
+}
+`, rName))
+}

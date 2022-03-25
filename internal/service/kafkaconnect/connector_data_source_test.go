@@ -11,8 +11,8 @@ import (
 
 func TestAccKafkaConnectConnectorDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_mskconnect_connect.test"
-	dataSourceName := "data.aws_mskconnect_connect.test"
+	resourceName := "aws_mskconnect_connector.test"
+	dataSourceName := "data.aws_mskconnect_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },

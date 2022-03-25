@@ -149,17 +149,17 @@ The following arguments are supported:
 
 ### cloudwatch_logs Configuration Block
 
-* `enabled` - (Required) Whether log delivery to Amazon CloudWatch Logs is enabled.
+* `enabled` - (Optional) Whether log delivery to Amazon CloudWatch Logs is enabled.
 * `log_group` - (Required) The name of the CloudWatch log group that is the destination for log delivery.
 
 ### firehose Configuration Block
 
-* `delivery_stream` - (Required) The name of the Kinesis Data Firehose delivery stream that is the destination for log delivery.
+* `delivery_stream` - (Optional) The name of the Kinesis Data Firehose delivery stream that is the destination for log delivery.
 * `enabled` - (Required) Specifies whether connector logs get delivered to Amazon Kinesis Data Firehose.
 
 ### s3 Configuration Block
 
-* `bucket` - (Required) The name of the S3 bucket that is the destination for log delivery.
+* `bucket` - (Optional) The name of the S3 bucket that is the destination for log delivery.
 * `enabled` - (Required) Specifies whether connector logs get sent to the specified Amazon S3 destination.
 * `prefix` - (Optional) The S3 prefix that is the destination for log delivery.
 
