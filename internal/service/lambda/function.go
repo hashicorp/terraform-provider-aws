@@ -394,7 +394,6 @@ func hasConfigChanges(d verify.ResourceDiffer) bool {
 		d.HasChange("layers") ||
 		d.HasChange("dead_letter_config") ||
 		d.HasChange("tracing_config") ||
-		d.HasChange("ephemeral_storage") ||
 		d.HasChange("vpc_config.0.security_group_ids") ||
 		d.HasChange("vpc_config.0.subnet_ids") ||
 		d.HasChange("runtime") ||
