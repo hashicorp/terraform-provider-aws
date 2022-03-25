@@ -1030,13 +1030,17 @@ func testAccFirewallPolicy_statefulRuleGroupReferenceManaged(rName string) strin
 		testAccFirewallPolicyStatefulRuleGroupDependencies(rName, 1),
 		fmt.Sprintf(`
 data "aws_region" "current" {}
+
+data "aws_partition" "current" {}
+
 resource "aws_networkfirewall_firewall_policy" "test" {
-  name = %q
+  name = %[1]q
+
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
     stateful_rule_group_reference {
-      resource_arn = "arn:aws:network-firewall:${data.aws_region.current.name}:aws-managed:stateful-rulegroup/MalwareDomainsActionOrder"
+      resource_arn = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.name}:aws-managed:stateful-rulegroup/MalwareDomainsActionOrder"
     }
   }
 }
