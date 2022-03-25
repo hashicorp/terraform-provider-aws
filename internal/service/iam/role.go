@@ -175,36 +175,36 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
-	request := &iam.CreateRoleInput{
+	input := &iam.CreateRoleInput{
 		AssumeRolePolicyDocument: aws.String(assumeRolePolicy),
 		Path:                     aws.String(d.Get("path").(string)),
 		RoleName:                 aws.String(name),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		request.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("max_session_duration"); ok {
-		request.MaxSessionDuration = aws.Int64(int64(v.(int)))
+		input.MaxSessionDuration = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("permissions_boundary"); ok {
-		request.PermissionsBoundary = aws.String(v.(string))
+		input.PermissionsBoundary = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
-		request.Tags = Tags(tags.IgnoreAWS())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	output, err := retryCreateRole(conn, request)
+	output, err := retryCreateRole(conn, input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if request.Tags != nil && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating IAM Role (%s) with tags: %s. Trying create without tags.", name, err)
-		request.Tags = nil
+		input.Tags = nil
 
-		output, err = retryCreateRole(conn, request)
+		output, err = retryCreateRole(conn, input)
 	}
 
 	if err != nil {
@@ -230,7 +230,7 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(roleName)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
-	if request.Tags == nil && len(tags) > 0 && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
+	if input.Tags == nil && len(tags) > 0 && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
 		err := roleUpdateTags(conn, d.Id(), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
@@ -345,7 +345,7 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("assume_role_policy (%s) is invalid JSON: %w", assumeRolePolicy, err)
 		}
 
-		assumeRolePolicyInput := &iam.UpdateAssumeRolePolicyInput{
+		input := &iam.UpdateAssumeRolePolicyInput{
 			RoleName:       aws.String(d.Id()),
 			PolicyDocument: aws.String(assumeRolePolicy),
 		}
@@ -353,7 +353,7 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err = tfresource.RetryWhen(
 			propagationTimeout,
 			func() (interface{}, error) {
-				return conn.UpdateAssumeRolePolicy(assumeRolePolicyInput)
+				return conn.UpdateAssumeRolePolicy(input)
 			},
 			func(err error) (bool, error) {
 				if tfawserr.ErrMessageContains(err, iam.ErrCodeMalformedPolicyDocumentException, "Invalid principal in policy") {
@@ -370,12 +370,12 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("description") {
-		roleDescriptionInput := &iam.UpdateRoleDescriptionInput{
+		input := &iam.UpdateRoleDescriptionInput{
 			RoleName:    aws.String(d.Id()),
 			Description: aws.String(d.Get("description").(string)),
 		}
 
-		_, err := conn.UpdateRoleDescription(roleDescriptionInput)
+		_, err := conn.UpdateRoleDescription(input)
 
 		if err != nil {
 			return fmt.Errorf("error updating IAM Role (%s) description: %w", d.Id(), err)
@@ -383,12 +383,12 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("max_session_duration") {
-		roleMaxDurationInput := &iam.UpdateRoleInput{
+		input := &iam.UpdateRoleInput{
 			RoleName:           aws.String(d.Id()),
 			MaxSessionDuration: aws.Int64(int64(d.Get("max_session_duration").(int))),
 		}
 
-		_, err := conn.UpdateRole(roleMaxDurationInput)
+		_, err := conn.UpdateRole(input)
 
 		if err != nil {
 			return fmt.Errorf("error updating IAM Role (%s) MaxSessionDuration: %s", d.Id(), err)
