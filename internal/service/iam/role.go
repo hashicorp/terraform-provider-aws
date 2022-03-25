@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -42,8 +43,12 @@ func ResourceRole() *schema.Resource {
 			"assume_role_policy": {
 				Type:             schema.TypeString,
 				Required:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 				ValidateFunc:     validation.StringIsJSON,
+				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -163,11 +168,17 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	assumeRolePolicy, err := structure.NormalizeJsonString(d.Get("assume_role_policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("assume_role_policy (%s) is invalid JSON: %w", assumeRolePolicy, err)
+	}
+
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	request := &iam.CreateRoleInput{
+		AssumeRolePolicyDocument: aws.String(assumeRolePolicy),
 		Path:                     aws.String(d.Get("path").(string)),
 		RoleName:                 aws.String(name),
-		AssumeRolePolicyDocument: aws.String(d.Get("assume_role_policy").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -328,12 +339,18 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	if d.HasChange("assume_role_policy") {
-		assumeRolePolicyInput := &iam.UpdateAssumeRolePolicyInput{
-			RoleName:       aws.String(d.Id()),
-			PolicyDocument: aws.String(d.Get("assume_role_policy").(string)),
+		assumeRolePolicy, err := structure.NormalizeJsonString(d.Get("assume_role_policy").(string))
+
+		if err != nil {
+			return fmt.Errorf("assume_role_policy (%s) is invalid JSON: %w", assumeRolePolicy, err)
 		}
 
-		_, err := tfresource.RetryWhen(
+		assumeRolePolicyInput := &iam.UpdateAssumeRolePolicyInput{
+			RoleName:       aws.String(d.Id()),
+			PolicyDocument: aws.String(assumeRolePolicy),
+		}
+
+		_, err = tfresource.RetryWhen(
 			propagationTimeout,
 			func() (interface{}, error) {
 				return conn.UpdateAssumeRolePolicy(assumeRolePolicyInput)
