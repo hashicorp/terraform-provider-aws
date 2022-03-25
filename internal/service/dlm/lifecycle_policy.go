@@ -228,6 +228,38 @@ func ResourceLifecyclePolicy() *schema.Resource {
 											},
 										},
 									},
+									"fast_restore_rule": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"availability_zones": {
+													Type:     schema.TypeSet,
+													Required: true,
+													MinItems: 1,
+													Elem:     &schema.Schema{Type: schema.TypeString}},
+												"count": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntBetween(1, 1000),
+												},
+												"interval": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntAtLeast(1),
+												},
+												"interval_unit": {
+													Type:     schema.TypeString,
+													Optional: true,
+													ValidateFunc: validation.StringInSlice(
+														dlm.RetentionIntervalUnitValues_Values(),
+														false,
+													),
+												},
+											},
+										},
+									},
 									"name": {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -479,6 +511,9 @@ func expandDlmSchedules(cfg []interface{}) []*dlm.Schedule {
 		if v, ok := m["deprecate_rule"]; ok {
 			schedule.DeprecateRule = expandDlmDeprecateRule(v.([]interface{}))
 		}
+		if v, ok := m["fast_restore_rule"]; ok {
+			schedule.FastRestoreRule = expandDlmFastRestoreRule(v.([]interface{}))
+		}
 		if v, ok := m["retain_rule"]; ok {
 			schedule.RetainRule = expandDlmRetainRule(v.([]interface{}))
 		}
@@ -509,6 +544,10 @@ func flattenDlmSchedules(schedules []*dlm.Schedule) []map[string]interface{} {
 
 		if s.DeprecateRule != nil {
 			m["deprecate_rule"] = flattenDlmDeprecateRule(s.DeprecateRule)
+		}
+
+		if s.FastRestoreRule != nil {
+			m["fast_restore_rule"] = flattenDlmFastRestoreRule(s.FastRestoreRule)
 		}
 
 		result[i] = m
@@ -742,11 +781,45 @@ func expandDlmDeprecateRule(cfg []interface{}) *dlm.DeprecateRule {
 	return rule
 }
 
-func flattenDlmDeprecateRule(deprecateRule *dlm.DeprecateRule) []map[string]interface{} {
+func flattenDlmDeprecateRule(rule *dlm.DeprecateRule) []map[string]interface{} {
 	result := make(map[string]interface{})
-	result["count"] = aws.Int64Value(deprecateRule.Count)
-	result["interval_unit"] = aws.StringValue(deprecateRule.IntervalUnit)
-	result["interval"] = aws.Int64Value(deprecateRule.Interval)
+	result["count"] = aws.Int64Value(rule.Count)
+	result["interval_unit"] = aws.StringValue(rule.IntervalUnit)
+	result["interval"] = aws.Int64Value(rule.Interval)
+
+	return []map[string]interface{}{result}
+}
+
+func expandDlmFastRestoreRule(cfg []interface{}) *dlm.FastRestoreRule {
+	if len(cfg) == 0 || cfg[0] == nil {
+		return nil
+	}
+	m := cfg[0].(map[string]interface{})
+	rule := &dlm.FastRestoreRule{
+		AvailabilityZones: flex.ExpandStringSet(m["availability_zones"].(*schema.Set)),
+	}
+
+	if v, ok := m["count"].(int); ok && v > 0 {
+		rule.Count = aws.Int64(int64(v))
+	}
+
+	if v, ok := m["interval"].(int); ok && v > 0 {
+		rule.Interval = aws.Int64(int64(v))
+	}
+
+	if v, ok := m["interval_unit"].(string); ok && v != "" {
+		rule.IntervalUnit = aws.String(v)
+	}
+
+	return rule
+}
+
+func flattenDlmFastRestoreRule(rule *dlm.FastRestoreRule) []map[string]interface{} {
+	result := make(map[string]interface{})
+	result["count"] = aws.Int64Value(rule.Count)
+	result["interval_unit"] = aws.StringValue(rule.IntervalUnit)
+	result["interval"] = aws.Int64Value(rule.Interval)
+	result["availability_zones"] = flex.FlattenStringSet(rule.AvailabilityZones)
 
 	return []map[string]interface{}{result}
 }

@@ -208,6 +208,7 @@ The following arguments are supported:
 * `cross_region_copy_rule` (Optional) - See the [`cross_region_copy_rule`](#cross-region-copy-rule-arguments) block. Max of 3 per schedule.
 * `name` - (Required) A name for the schedule.
 * `deprecate_rule` - (Required) See the [`deprecate_rule`](#deprecate-rule-arguments) block. Max of 1 per schedule.
+* `fast_restore_rule` - (Required) See the [`fast_restore_rule`](#fast-restore-rule-arguments) block. Max of 1 per schedule.
 * `retain_rule` - (Required) See the [`retain_rule`](#retain-rule-arguments) block. Max of 1 per schedule.
 * `tags_to_add` - (Optional) A map of tag keys and their values. DLM lifecycle policies will already tag the snapshot with the tags on the volume. This configuration adds extra tags on top of these.
 * `variable_tags` - (Optional) A map of tag keys and variable values, where the values are determined when the policy is executed. Only `$(instance-id)` or `$(timestamp)` are valid values. Can only be used when `resource_types` is `INSTANCE`.
@@ -224,6 +225,13 @@ The following arguments are supported:
 * `count` - (Optional) Specifies the number of oldest AMIs to deprecate. Must be an integer between `1` and `1000`.
 * `interval` - (Optional) Specifies the period after which to deprecate AMIs created by the schedule. The maximum is 100 years. This is equivalent to 1200 months, 5200 weeks, or 36500 days.
 * `interval_unit` - (Optional) The unit of time for time-based retention. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`.
+
+#### Fast Restore Rule arguments
+
+* `availability_zones` - (Required) The Availability Zones in which to enable fast snapshot restore.
+* `count` - (Optional) The number of snapshots to be enabled with fast snapshot restore. Must be an integer between `1` and `1000`.
+* `interval` - (Optional) The amount of time to enable fast snapshot restore. The maximum is 100 years. This is equivalent to 1200 months, 5200 weeks, or 36500 days.
+* `interval_unit` - (Optional) The unit of time for enabling fast snapshot restore. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`.
 
 #### Retain Rule arguments
 
