@@ -14,6 +14,7 @@ func FindDomainByName(conn *elasticsearch.ElasticsearchService, name string) (*e
 	}
 
 	output, err := conn.DescribeElasticsearchDomain(input)
+
 	if tfawserr.ErrCodeEquals(err, elasticsearch.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,

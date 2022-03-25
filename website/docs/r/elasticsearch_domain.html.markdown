@@ -253,6 +253,7 @@ The following arguments are optional:
 
 ### cluster_config
 
+* `cold_storage_options` - (Optional) Configuration block containing cold storage configuration. Detailed below.
 * `dedicated_master_count` - (Optional) Number of dedicated main nodes in the cluster.
 * `dedicated_master_enabled` - (Optional) Whether dedicated main nodes are enabled for the cluster.
 * `dedicated_master_type` - (Optional) Instance type of the dedicated main nodes in the cluster.
@@ -263,6 +264,10 @@ The following arguments are optional:
 * `warm_type` - (Optional) Instance type for the Elasticsearch cluster's warm nodes. Valid values are `ultrawarm1.medium.elasticsearch`, `ultrawarm1.large.elasticsearch` and `ultrawarm1.xlarge.elasticsearch`. `warm_type` can be only and must be set when `warm_enabled` is set to `true`.
 * `zone_awareness_config` - (Optional) Configuration block containing zone awareness settings. Detailed below.
 * `zone_awareness_enabled` - (Optional) Whether zone awareness is enabled, set to `true` for multi-az deployment. To enable awareness with three Availability Zones, the `availability_zone_count` within the `zone_awareness_config` must be set to `3`.
+
+#### cold_storage_options
+
+* `enabled` - (Optional) Boolean to enable cold storage for an Elasticsearch domain. Defaults to `false`. Master and ultrawarm nodes must be enabled for cold storage.
 
 #### zone_awareness_config
 
@@ -339,7 +344,9 @@ In addition to all arguments above, the following attributes are exported:
 
 `aws_elasticsearch_domain` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
+* `create` - (Optional, Default: `60m`) How long to wait for creation.
 * `update` - (Optional, Default: `60m`) How long to wait for updates.
+* `delete` - (Optional, Default: `90m`) How long to wait for deletion.
 
 ## Import
 
