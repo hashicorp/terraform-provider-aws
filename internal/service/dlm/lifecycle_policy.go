@@ -405,6 +405,9 @@ func resourceLifecyclePolicyDelete(d *schema.ResourceData, meta interface{}) err
 		PolicyId: aws.String(d.Id()),
 	})
 	if err != nil {
+		if tfawserr.ErrCodeEquals(err, dlm.ErrCodeResourceNotFoundException) {
+			return nil
+		}
 		return fmt.Errorf("error deleting DLM Lifecycle Policy (%s): %s", d.Id(), err)
 	}
 
