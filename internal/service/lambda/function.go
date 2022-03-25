@@ -578,6 +578,11 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 			return resource.RetryableError(err)
 		}
 
+		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceConflictException) {
+			log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
+			return resource.RetryableError(err)
+		}
+
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -1132,6 +1137,11 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
+				log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
+				return resource.RetryableError(err)
+			}
+
+			if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceConflictException) {
 				log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
 				return resource.RetryableError(err)
 			}
