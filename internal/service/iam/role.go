@@ -263,9 +263,7 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("arn", role.Arn)
-	if err := d.Set("create_date", role.CreateDate.Format(time.RFC3339)); err != nil {
-		return err
-	}
+	d.Set("create_date", role.CreateDate.Format(time.RFC3339))
 	d.Set("description", role.Description)
 	d.Set("max_session_duration", role.MaxSessionDuration)
 	d.Set("name", role.RoleName)
@@ -276,17 +274,19 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("unique_id", role.RoleId)
 
-	assumeRolePolicy, err := url.QueryUnescape(*role.AssumeRolePolicyDocument)
+	assumeRolePolicy, err := url.QueryUnescape(aws.StringValue(role.AssumeRolePolicyDocument))
+
 	if err != nil {
 		return err
 	}
+
 	policyToSet, err := verify.PolicyToSet(d.Get("assume_role_policy").(string), assumeRolePolicy)
+
 	if err != nil {
 		return err
 	}
-	if err := d.Set("assume_role_policy", policyToSet); err != nil {
-		return err
-	}
+
+	d.Set("assume_role_policy", policyToSet)
 
 	inlinePolicies, err := readRoleInlinePolicies(aws.StringValue(role.RoleName), meta)
 	if err != nil {
