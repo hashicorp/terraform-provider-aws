@@ -1,5 +1,12 @@
 ## 4.8.0 (Unreleased)
 
+BUG FIXES:
+
+* resource/aws_cloudformation_stack_set: Consider `QUEUED` a valid pending state for resource creation ([#22160](https://github.com/hashicorp/terraform-provider-aws/issues/22160))
+* resource/aws_dynamodb_table_item: Allow `item` names to still succeed if they include non-letters ([#14075](https://github.com/hashicorp/terraform-provider-aws/issues/14075))
+
+## 4.8.0 (Unreleased)
+
 ENHANCEMENTS:
 
 * data-source/aws_eips: Set `public_ips` for VPC as well as EC2 Classic ([#23859](https://github.com/hashicorp/terraform-provider-aws/issues/23859))
