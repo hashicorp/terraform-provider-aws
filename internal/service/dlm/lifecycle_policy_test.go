@@ -460,8 +460,8 @@ resource "aws_dlm_lifecycle_policy" "test" {
       }
 
       retain_rule {
-		interval_unit = "DAYS"
-		interval = 1
+        interval_unit = "DAYS"
+        interval = 1
       }
     }
 
