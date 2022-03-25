@@ -189,6 +189,7 @@ The following arguments are supported:
 #### Policy Details arguments
 
 * `resource_types` - (Required) A list of resource types that should be targeted by the lifecycle policy. Valid values are `VOLUME` and `INSTANCE`.
+* `policy_type` - (Optional) The valid target resource types and actions a policy can manage. Specify `EBS_SNAPSHOT_MANAGEMENT` to create a lifecycle policy that manages the lifecycle of Amazon EBS snapshots. Specify `IMAGE_MANAGEMENT` to create a lifecycle policy that manages the lifecycle of EBS-backed AMIs. Specify `EVENT_BASED_POLICY` to create an event-based policy that performs specific actions when a defined event occurs in your AWS account. Default value is `EBS_SNAPSHOT_MANAGEMENT`.
 * `schedule` - (Required) See the [`schedule` configuration](#schedule-arguments) block.
 * `target_tags` (Required) A map of tag keys and their values. Any resources that match the `resource_types` and are tagged with _any_ of these tags will be targeted.
 
@@ -200,6 +201,7 @@ The following arguments are supported:
 * `create_rule` - (Required) See the [`create_rule`](#create-rule-arguments) block. Max of 1 per schedule.
 * `cross_region_copy_rule` (Optional) - See the [`cross_region_copy_rule`](#cross-region-copy-rule-arguments) block. Max of 3 per schedule.
 * `name` - (Required) A name for the schedule.
+* `deprecate_rule` - (Required) See the [`deprecate_rule`](#deprecate-rule-arguments) block. Max of 1 per schedule.
 * `retain_rule` - (Required) See the [`retain_rule`](#retain-rule-arguments) block. Max of 1 per schedule.
 * `tags_to_add` - (Optional) A map of tag keys and their values. DLM lifecycle policies will already tag the snapshot with the tags on the volume. This configuration adds extra tags on top of these.
 
@@ -209,6 +211,12 @@ The following arguments are supported:
 * `interval` - (Optional) How often this lifecycle policy should be evaluated. `1`, `2`,`3`,`4`,`6`,`8`,`12` or `24` are valid values.
 * `interval_unit` - (Optional) The unit for how often the lifecycle policy should be evaluated. `HOURS` is currently the only allowed value and also the default value.
 * `times` - (Optional) A list of times in 24 hour clock format that sets when the lifecycle policy should be evaluated. Max of 1.
+
+#### Deprecate Rule arguments
+
+* `count` - (Optional) Specifies the number of oldest AMIs to deprecate. Must be an integer between `1` and `1000`.
+* `interval` - (Optional) Specifies the period after which to deprecate AMIs created by the schedule. The maximum is 100 years. This is equivalent to 1200 months, 5200 weeks, or 36500 days.
+* `interval_unit` - (Optional) The unit of time for time-based retention. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`.
 
 #### Retain Rule arguments
 

@@ -59,6 +59,12 @@ func ResourceLifecyclePolicy() *schema.Resource {
 								ValidateFunc: validation.StringInSlice(dlm.ResourceTypeValues_Values(), false),
 							},
 						},
+						"policy_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dlm.PolicyTypeValuesEbsSnapshotManagement,
+							ValidateFunc: validation.StringInSlice(dlm.PolicyTypeValues_Values(), false),
+						},
 						"schedule": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -174,6 +180,33 @@ func ResourceLifecyclePolicy() *schema.Resource {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[\w:\-\/\*]+$`), ""),
+												},
+											},
+										},
+									},
+									"deprecate_rule": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"count": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntBetween(1, 1000),
+												},
+												"interval": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntAtLeast(1),
+												},
+												"interval_unit": {
+													Type:     schema.TypeString,
+													Optional: true,
+													ValidateFunc: validation.StringInSlice(
+														dlm.RetentionIntervalUnitValues_Values(),
+														false,
+													),
 												},
 											},
 										},
@@ -365,9 +398,11 @@ func expandDlmPolicyDetails(cfg []interface{}) *dlm.PolicyDetails {
 	if len(cfg) == 0 || cfg[0] == nil {
 		return nil
 	}
-
-	policyDetails := &dlm.PolicyDetails{}
 	m := cfg[0].(map[string]interface{})
+
+	policyDetails := &dlm.PolicyDetails{
+		PolicyType: aws.String(m["policy_type"].(string)),
+	}
 	if v, ok := m["resource_types"]; ok {
 		policyDetails.ResourceTypes = flex.ExpandStringList(v.([]interface{}))
 	}
@@ -386,6 +421,7 @@ func flattenDlmPolicyDetails(policyDetails *dlm.PolicyDetails) []map[string]inte
 	result["resource_types"] = flex.FlattenStringList(policyDetails.ResourceTypes)
 	result["schedule"] = flattenDlmSchedules(policyDetails.Schedules)
 	result["target_tags"] = flattenDlmTags(policyDetails.TargetTags)
+	result["policy_type"] = aws.StringValue(policyDetails.PolicyType)
 
 	return []map[string]interface{}{result}
 }
@@ -407,6 +443,9 @@ func expandDlmSchedules(cfg []interface{}) []*dlm.Schedule {
 		if v, ok := m["name"]; ok {
 			schedule.Name = aws.String(v.(string))
 		}
+		if v, ok := m["deprecate_rule"]; ok {
+			schedule.DeprecateRule = expandDlmDeprecateRule(v.([]interface{}))
+		}
 		if v, ok := m["retain_rule"]; ok {
 			schedule.RetainRule = expandDlmRetainRule(v.([]interface{}))
 		}
@@ -427,6 +466,7 @@ func flattenDlmSchedules(schedules []*dlm.Schedule) []map[string]interface{} {
 		m["create_rule"] = flattenDlmCreateRule(s.CreateRule)
 		m["cross_region_copy_rule"] = flattenDlmCrossRegionCopyRules(s.CrossRegionCopyRules)
 		m["name"] = aws.StringValue(s.Name)
+		m["deprecate_rule"] = flattenDlmDeprecateRule(s.DeprecateRule)
 		m["retain_rule"] = flattenDlmRetainRule(s.RetainRule)
 		m["tags_to_add"] = flattenDlmTags(s.TagsToAdd)
 		result[i] = m
@@ -634,6 +674,37 @@ func flattenDlmRetainRule(retainRule *dlm.RetainRule) []map[string]interface{} {
 	result["count"] = aws.Int64Value(retainRule.Count)
 	result["interval_unit"] = aws.StringValue(retainRule.IntervalUnit)
 	result["interval"] = aws.Int64Value(retainRule.Interval)
+
+	return []map[string]interface{}{result}
+}
+
+func expandDlmDeprecateRule(cfg []interface{}) *dlm.DeprecateRule {
+	if len(cfg) == 0 || cfg[0] == nil {
+		return nil
+	}
+	m := cfg[0].(map[string]interface{})
+	rule := &dlm.DeprecateRule{}
+
+	if v, ok := m["count"].(int); ok && v > 0 {
+		rule.Count = aws.Int64(int64(v))
+	}
+
+	if v, ok := m["interval"].(int); ok && v > 0 {
+		rule.Interval = aws.Int64(int64(v))
+	}
+
+	if v, ok := m["interval_unit"].(string); ok && v != "" {
+		rule.IntervalUnit = aws.String(v)
+	}
+
+	return rule
+}
+
+func flattenDlmDeprecateRule(deprecateRule *dlm.DeprecateRule) []map[string]interface{} {
+	result := make(map[string]interface{})
+	result["count"] = aws.Int64Value(deprecateRule.Count)
+	result["interval_unit"] = aws.StringValue(deprecateRule.IntervalUnit)
+	result["interval"] = aws.Int64Value(deprecateRule.Interval)
 
 	return []map[string]interface{}{result}
 }

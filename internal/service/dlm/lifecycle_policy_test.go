@@ -36,11 +36,13 @@ func TestAccDLMLifecyclePolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "execution_role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.resource_types.0", "VOLUME"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.policy_type", "EBS_SNAPSHOT_MANAGEMENT"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-basic"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.interval", "12"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.interval_unit", "HOURS"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy_details.0.schedule.0.create_rule.0.times.0"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.count", "10"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.deprecate_rule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.target_tags.tf-acc-test", "basic"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -97,6 +99,32 @@ func TestAccDLMLifecyclePolicy_retainInterval(t *testing.T) {
 					checkDlmLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.interval", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.interval_unit", "DAYS"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDLMLifecyclePolicy_deprecate(t *testing.T) {
+	resourceName := "aws_dlm_lifecycle_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dlm.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: dlmLifecyclePolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dlmLifecyclePolicyDeprecateConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkDlmLifecyclePolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.deprecate_rule.0.count", "10"),
 				),
 			},
 			{
@@ -461,7 +489,41 @@ resource "aws_dlm_lifecycle_policy" "test" {
 
       retain_rule {
         interval_unit = "DAYS"
-        interval = 1
+        interval      = 1
+      }
+    }
+
+    target_tags = {
+      tf-acc-test = "basic"
+    }
+  }
+}
+`
+}
+
+func dlmLifecyclePolicyDeprecateConfig(rName string) string {
+	return dlmLifecyclePolicyBaseConfig(rName) + `
+resource "aws_dlm_lifecycle_policy" "test" {
+  description        = "tf-acc-basic"
+  execution_role_arn = aws_iam_role.test.arn
+
+  policy_details {
+    resource_types = ["INSTANCE"]
+    policy_type    = "IMAGE_MANAGEMENT"
+
+    schedule {
+      name = "tf-acc-basic"
+
+      create_rule {
+        interval = 12
+      }
+
+      retain_rule {
+        count = 10
+      }
+
+      deprecate_rule {
+        count = 10
       }
     }
 
