@@ -32,13 +32,14 @@ func ResourceLifecyclePolicy() *schema.Resource {
 				Computed: true,
 			},
 			"description": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile("^[0-9A-Za-z _-]+$"), "see https://docs.aws.amazon.com/cli/latest/reference/dlm/create-lifecycle-policy.html"),
-				//	TODO: https://docs.aws.amazon.com/dlm/latest/APIReference/API_LifecyclePolicy.html#dlm-Type-LifecyclePolicy-Description says it has max length of 500 but doesn't mention the regex but SDK and CLI docs only mention the regex and not max length. Check this
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile("^[0-9A-Za-z _-]+$"), "see https://docs.aws.amazon.com/cli/latest/reference/dlm/create-lifecycle-policy.html"),
+					validation.StringLenBetween(1, 500),
+				),
 			},
 			"execution_role_arn": {
-				// TODO: Make this not required and if it's not provided then use the default service role, creating it if necessary
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -52,11 +53,17 @@ func ResourceLifecyclePolicy() *schema.Resource {
 						"resource_types": {
 							Type:     schema.TypeList,
 							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							MaxItems: 1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(dlm.ResourceTypeValues_Values(), false),
+							},
 						},
 						"schedule": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
+							MinItems: 1,
+							MaxItems: 4,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"copy_tags": {
@@ -71,18 +78,21 @@ func ResourceLifecyclePolicy() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"cron_expression": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringMatch(regexp.MustCompile("^cron\\([^\n]{11,100}\\)$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_CreateRule.html"),
+												},
 												"interval": {
 													Type:         schema.TypeInt,
 													Required:     true,
 													ValidateFunc: validation.IntInSlice([]int{1, 2, 3, 4, 6, 8, 12, 24}),
 												},
 												"interval_unit": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Default:  dlm.IntervalUnitValuesHours,
-													ValidateFunc: validation.StringInSlice([]string{
-														dlm.IntervalUnitValuesHours,
-													}, false),
+													Type:         schema.TypeString,
+													Optional:     true,
+													Default:      dlm.IntervalUnitValuesHours,
+													ValidateFunc: validation.StringInSlice(dlm.IntervalUnitValues_Values(), false),
 												},
 												"times": {
 													Type:     schema.TypeList,
@@ -171,7 +181,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 									"name": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringLenBetween(0, 500),
+										ValidateFunc: validation.StringLenBetween(0, 120),
 									},
 									"retain_rule": {
 										Type:     schema.TypeList,
@@ -204,13 +214,10 @@ func ResourceLifecyclePolicy() *schema.Resource {
 				},
 			},
 			"state": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  dlm.SettablePolicyStateValuesEnabled,
-				ValidateFunc: validation.StringInSlice([]string{
-					dlm.SettablePolicyStateValuesDisabled,
-					dlm.SettablePolicyStateValuesEnabled,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      dlm.SettablePolicyStateValuesEnabled,
+				ValidateFunc: validation.StringInSlice(dlm.SettablePolicyStateValues_Values(), false),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -292,29 +299,24 @@ func resourceLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error
 func resourceLifecyclePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DLMConn
 
-	input := dlm.UpdateLifecyclePolicyInput{
-		PolicyId: aws.String(d.Id()),
-	}
-	updateLifecyclePolicy := false
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := dlm.UpdateLifecyclePolicyInput{
+			PolicyId: aws.String(d.Id()),
+		}
 
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
-		updateLifecyclePolicy = true
-	}
-	if d.HasChange("execution_role_arn") {
-		input.ExecutionRoleArn = aws.String(d.Get("execution_role_arn").(string))
-		updateLifecyclePolicy = true
-	}
-	if d.HasChange("state") {
-		input.State = aws.String(d.Get("state").(string))
-		updateLifecyclePolicy = true
-	}
-	if d.HasChange("policy_details") {
-		input.PolicyDetails = expandDlmPolicyDetails(d.Get("policy_details").([]interface{}))
-		updateLifecyclePolicy = true
-	}
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
+		}
+		if d.HasChange("execution_role_arn") {
+			input.ExecutionRoleArn = aws.String(d.Get("execution_role_arn").(string))
+		}
+		if d.HasChange("state") {
+			input.State = aws.String(d.Get("state").(string))
+		}
+		if d.HasChange("policy_details") {
+			input.PolicyDetails = expandDlmPolicyDetails(d.Get("policy_details").([]interface{}))
+		}
 
-	if updateLifecyclePolicy {
 		log.Printf("[INFO] Updating lifecycle policy %s", d.Id())
 		_, err := conn.UpdateLifecyclePolicy(&input)
 		if err != nil {
@@ -549,8 +551,13 @@ func expandDlmCreateRule(cfg []interface{}) *dlm.CreateRule {
 		Interval:     aws.Int64(int64(c["interval"].(int))),
 		IntervalUnit: aws.String(c["interval_unit"].(string)),
 	}
-	if v, ok := c["times"]; ok {
-		createRule.Times = flex.ExpandStringList(v.([]interface{}))
+
+	if v, ok := c["times"].([]interface{}); ok && len(v) > 0 {
+		createRule.Times = flex.ExpandStringList(v)
+	}
+
+	if v, ok := c["cron_expression"].(string); ok && v != "" {
+		createRule.CronExpression = aws.String(v)
 	}
 
 	return createRule
@@ -565,6 +572,7 @@ func flattenDlmCreateRule(createRule *dlm.CreateRule) []map[string]interface{} {
 	result["interval"] = aws.Int64Value(createRule.Interval)
 	result["interval_unit"] = aws.StringValue(createRule.IntervalUnit)
 	result["times"] = flex.FlattenStringList(createRule.Times)
+	result["cron_expression"] = aws.StringValue(createRule.CronExpression)
 
 	return []map[string]interface{}{result}
 }

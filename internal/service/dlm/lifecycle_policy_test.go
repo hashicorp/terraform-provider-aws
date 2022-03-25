@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfdlm "github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
 )
 
 func TestAccDLMLifecyclePolicy_basic(t *testing.T) {
@@ -203,6 +204,28 @@ func TestAccDLMLifecyclePolicy_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccDLMLifecyclePolicy_disappears(t *testing.T) {
+	resourceName := "aws_dlm_lifecycle_policy.basic"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dlm.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: dlmLifecyclePolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dlmLifecyclePolicyBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkDlmLifecyclePolicyExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdlm.ResourceLifecyclePolicy(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
