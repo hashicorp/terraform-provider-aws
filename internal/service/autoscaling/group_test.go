@@ -739,6 +739,7 @@ func TestAccAutoScalingGroup_ALB_targetGroups(t *testing.T) {
 	var group autoscaling.Group
 	var tg elbv2.TargetGroup
 	var tg2 elbv2.TargetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	testCheck := func(targets []*elbv2.TargetGroup) resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -769,7 +770,7 @@ func TestAccAutoScalingGroup_ALB_targetGroups(t *testing.T) {
 		CheckDestroy: testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_ALB_TargetGroup_pre(),
+				Config: testAccGroupConfig_ALB_TargetGroup_pre(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
 					testAccCheckLBTargetGroupExists("aws_lb_target_group.test", &tg),
@@ -779,7 +780,7 @@ func TestAccAutoScalingGroup_ALB_targetGroups(t *testing.T) {
 			},
 
 			{
-				Config: testAccGroupConfig_ALB_TargetGroup_post_duo(),
+				Config: testAccGroupConfig_ALB_TargetGroup_post_duo(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
 					testAccCheckLBTargetGroupExists("aws_lb_target_group.test", &tg),
@@ -803,7 +804,7 @@ func TestAccAutoScalingGroup_ALB_targetGroups(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccGroupConfig_ALB_TargetGroup_post(),
+				Config: testAccGroupConfig_ALB_TargetGroup_post(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
 					testAccCheckLBTargetGroupExists("aws_lb_target_group.test", &tg),
@@ -3085,9 +3086,10 @@ resource "aws_autoscaling_group" "bar" {
 `)
 }
 
-func testAccGroupConfig_ALB_TargetGroup_pre() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		`
+func testAccGroupConfig_ALB_TargetGroup_pre(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
 
@@ -3097,7 +3099,7 @@ resource "aws_vpc" "default" {
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = "tf-example-alb-tg"
+  name     = %[1]q
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.default.id
@@ -3109,7 +3111,7 @@ resource "aws_subnet" "main" {
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
-    Name = "tf-acc-autoscaling-group-alb-target-group-main"
+    Name = %[1]q
   }
 }
 
@@ -3119,7 +3121,7 @@ resource "aws_subnet" "alt" {
   availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
-    Name = "tf-acc-autoscaling-group-alb-target-group-alt"
+    Name = %[1]q
   }
 }
 
@@ -3156,8 +3158,8 @@ resource "aws_autoscaling_group" "bar" {
 }
 
 resource "aws_security_group" "tf_test_self" {
-  name        = "tf_test_alb_asg"
-  description = "tf_test_alb_asg"
+  name        = %[1]q
+  description = %[1]q
   vpc_id      = aws_vpc.default.id
 
   ingress {
@@ -3168,25 +3170,26 @@ resource "aws_security_group" "tf_test_self" {
   }
 
   tags = {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
+    Name = %[1]q
   }
 }
-`)
+`, rName))
 }
 
-func testAccGroupConfig_ALB_TargetGroup_post() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		`
+func testAccGroupConfig_ALB_TargetGroup_post(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-autoscaling-group-alb-target-group"
+    Name = %[1]q
   }
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = "tf-example-alb-tg"
+  name     = %[1]q
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.default.id
@@ -3198,7 +3201,7 @@ resource "aws_subnet" "main" {
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
-    Name = "tf-acc-autoscaling-group-alb-target-group-main"
+    Name = %[1]q
   }
 }
 
@@ -3208,7 +3211,7 @@ resource "aws_subnet" "alt" {
   availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
-    Name = "tf-acc-autoscaling-group-alb-target-group-alt"
+    Name = "%[1]s-2"
   }
 }
 
@@ -3247,8 +3250,8 @@ resource "aws_autoscaling_group" "bar" {
 }
 
 resource "aws_security_group" "tf_test_self" {
-  name        = "tf_test_alb_asg"
-  description = "tf_test_alb_asg"
+  name        = %[1]q
+  description = %[1]q
   vpc_id      = aws_vpc.default.id
 
   ingress {
@@ -3259,32 +3262,33 @@ resource "aws_security_group" "tf_test_self" {
   }
 
   tags = {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
+    Name = %[1]q
   }
 }
-`)
+`, rName))
 }
 
-func testAccGroupConfig_ALB_TargetGroup_post_duo() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		`
+func testAccGroupConfig_ALB_TargetGroup_post_duo(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-autoscaling-group-alb-target-group"
+    Name = %[1]q
   }
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = "tf-example-alb-tg"
+  name     = %[1]q
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.default.id
 }
 
 resource "aws_lb_target_group" "test_more" {
-  name     = "tf-example-alb-tg-more"
+  name     = format("%%s-%%s", substr(%[1]q, 0, 28), "2")
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.default.id
@@ -3296,7 +3300,7 @@ resource "aws_subnet" "main" {
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
-    Name = "tf-acc-autoscaling-group-alb-target-group-main"
+    Name = %[1]q
   }
 }
 
@@ -3306,7 +3310,7 @@ resource "aws_subnet" "alt" {
   availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
-    Name = "tf-acc-autoscaling-group-alb-target-group-alt"
+    Name = "%[1]s-2"
   }
 }
 
@@ -3348,8 +3352,8 @@ resource "aws_autoscaling_group" "bar" {
 }
 
 resource "aws_security_group" "tf_test_self" {
-  name        = "tf_test_alb_asg"
-  description = "tf_test_alb_asg"
+  name        = %[1]q
+  description = %[1]q
   vpc_id      = aws_vpc.default.id
 
   ingress {
@@ -3360,10 +3364,10 @@ resource "aws_security_group" "tf_test_self" {
   }
 
   tags = {
-    Name = "testAccAWSAutoScalingGroupConfig_ALB_TargetGroup"
+    Name = %[1]q
   }
 }
-`)
+`, rName))
 }
 
 func testAccGroupConfig_TargetGroupARNs(rName string, tgCount int) string {
