@@ -710,7 +710,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
 
       variable_tags = {
         instance_id = "$(instance-id)"
-      } 
+      }
     }
 
     target_tags = {
