@@ -55,7 +55,7 @@ func TestAccDLMLifecyclePolicy_basic(t *testing.T) {
 }
 
 func TestAccDLMLifecyclePolicy_cron(t *testing.T) {
-	resourceName := "aws_dlm_lifecycle_policy.basic"
+	resourceName := "aws_dlm_lifecycle_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -82,7 +82,7 @@ func TestAccDLMLifecyclePolicy_cron(t *testing.T) {
 }
 
 func TestAccDLMLifecyclePolicy_full(t *testing.T) {
-	resourceName := "aws_dlm_lifecycle_policy.full"
+	resourceName := "aws_dlm_lifecycle_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -389,7 +389,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
 
 func dlmLifecyclePolicyCronConfig(rName string) string {
 	return dlmLifecyclePolicyBaseConfig(rName) + `
-resource "aws_dlm_lifecycle_policy" "basic" {
+resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
   execution_role_arn = aws_iam_role.test.arn
 
@@ -418,7 +418,7 @@ resource "aws_dlm_lifecycle_policy" "basic" {
 
 func dlmLifecyclePolicyFullConfig(rName string) string {
 	return dlmLifecyclePolicyBaseConfig(rName) + `
-resource "aws_dlm_lifecycle_policy" "full" {
+resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-full"
   execution_role_arn = aws_iam_role.test.arn
   state              = "ENABLED"
@@ -456,7 +456,7 @@ resource "aws_dlm_lifecycle_policy" "full" {
 
 func dlmLifecyclePolicyFullUpdateConfig(rName string) string {
 	return dlmLifecyclePolicyBaseConfig(rName) + `
-resource "aws_dlm_lifecycle_policy" "full" {
+resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-full-updated"
   execution_role_arn = "${aws_iam_role.test.arn}-doesnt-exist"
   state              = "DISABLED"
