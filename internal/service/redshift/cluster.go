@@ -308,6 +308,8 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -315,8 +317,6 @@ func ResourceCluster() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: customdiff.All(
