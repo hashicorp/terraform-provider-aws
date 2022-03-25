@@ -60,9 +60,11 @@ func WaitForDomainCreation(conn *elasticsearch.ElasticsearchService, domainName 
 			return nil
 		}
 	}
+
 	if err != nil {
-		return fmt.Errorf("Error waiting for Elasticsearch domain to be created: %w", err)
+		return err
 	}
+
 	return nil
 }
 
@@ -91,9 +93,11 @@ func waitForDomainUpdate(conn *elasticsearch.ElasticsearchService, domainName st
 			return nil
 		}
 	}
+
 	if err != nil {
-		return fmt.Errorf("Error waiting for Elasticsearch domain changes to be processed: %w", err)
+		return err
 	}
+
 	return nil
 }
 
@@ -128,8 +132,10 @@ func waitForDomainDelete(conn *elasticsearch.ElasticsearchService, domainName st
 			return nil
 		}
 	}
+
 	if err != nil {
-		return fmt.Errorf("Error waiting for Elasticsearch domain to be deleted: %s", err)
+		return err
 	}
+
 	return nil
 }
