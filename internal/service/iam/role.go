@@ -39,48 +39,20 @@ func ResourceRole() *schema.Resource {
 			State: resourceRoleImport,
 		},
 		Schema: map[string]*schema.Schema{
+			"assume_role_policy": {
+				Type:             schema.TypeString,
+				Required:         true,
+				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				ValidateFunc:     validation.StringIsJSON,
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"unique_id": {
+			"create_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validResourceName(roleNameMaxLen),
-			},
-
-			"name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name"},
-				ValidateFunc:  validResourceName(roleNamePrefixMaxLen),
-			},
-
-			"path": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "/",
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-
-			"permissions_boundary": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -90,35 +62,11 @@ func ResourceRole() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), `must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`),
 				),
 			},
-
-			"assume_role_policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				ValidateFunc:     validation.StringIsJSON,
-			},
-
 			"force_detach_policies": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
-			"create_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"max_session_duration": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      3600,
-				ValidateFunc: validation.IntBetween(3600, 43200),
-			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-
 			"inline_policy": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -149,7 +97,6 @@ func ResourceRole() *schema.Resource {
 					return !inlinePoliciesActualDiff(d)
 				},
 			},
-
 			"managed_policy_arns": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -158,6 +105,46 @@ func ResourceRole() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,
 				},
+			},
+			"max_session_duration": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      3600,
+				ValidateFunc: validation.IntBetween(3600, 43200),
+			},
+			"name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name_prefix"},
+				ValidateFunc:  validResourceName(roleNameMaxLen),
+			},
+			"name_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validResourceName(roleNamePrefixMaxLen),
+			},
+			"path": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "/",
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(0, 512),
+			},
+			"permissions_boundary": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
+			"unique_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 
