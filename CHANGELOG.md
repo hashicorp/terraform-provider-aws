@@ -6,14 +6,21 @@ ENHANCEMENTS:
 * data-source/aws_elasticache_cluster: Add `log_delivery_configuration` attribute ([#20068](https://github.com/hashicorp/terraform-provider-aws/issues/20068))
 * data-source/aws_elasticache_replication_group: Add `log_delivery_configuration` attribute ([#20068](https://github.com/hashicorp/terraform-provider-aws/issues/20068))
 * data-source/aws_elasticsearch_domain: Add `cold_storage_options` attribute to the `cluster_config` configuration block ([#19713](https://github.com/hashicorp/terraform-provider-aws/issues/19713))
+* data-source/aws_lambda_function: Add `ephemeral_storage` attribute ([#23873](https://github.com/hashicorp/terraform-provider-aws/issues/23873))
 * resource/aws_elasticache_cluster: Add `log_delivery_configuration` argument ([#20068](https://github.com/hashicorp/terraform-provider-aws/issues/20068))
 * resource/aws_elasticache_replication_group: Add `log_delivery_configuration` argument ([#20068](https://github.com/hashicorp/terraform-provider-aws/issues/20068))
 * resource/aws_elasticsearch_domain: Add `cold_storage_options` argument to the `cluster_config` configuration block ([#19713](https://github.com/hashicorp/terraform-provider-aws/issues/19713))
 * resource/aws_elasticsearch_domain: Add configurable Create and Delete timeouts ([#19713](https://github.com/hashicorp/terraform-provider-aws/issues/19713))
+* resource/aws_lambda_function: Add `ephemeral_storage` argument ([#23873](https://github.com/hashicorp/terraform-provider-aws/issues/23873))
+* resource/aws_lambda_function: Add error handling for `ResourceConflictException` errors on create and update ([#23879](https://github.com/hashicorp/terraform-provider-aws/issues/23879))
 * resource/aws_mskconnect_custom_plugin: Implement resource Delete ([#23544](https://github.com/hashicorp/terraform-provider-aws/issues/23544))
+* resource/aws_mwaa_environment: Add `schedulers` argument ([#21941](https://github.com/hashicorp/terraform-provider-aws/issues/21941))
+* resource/aws_network_firewall_policy: Allow use of managed rule group arns for network firewall managed rule groups. ([#22355](https://github.com/hashicorp/terraform-provider-aws/issues/22355))
 
 BUG FIXES:
 
+* resource/aws_autoscaling_group: Fix issue where group was not recreated if `initial_lifecycle_hook` changed ([#20708](https://github.com/hashicorp/terraform-provider-aws/issues/20708))
+* resource/aws_cloudfront_distribution: Fix default value of `origin_path` in `origin` block ([#20709](https://github.com/hashicorp/terraform-provider-aws/issues/20709))
 * resource/aws_cloudwatch_event_target: Fix setting `path_parameter_values`. ([#23862](https://github.com/hashicorp/terraform-provider-aws/issues/23862))
 
 ## 4.7.0 (March 24, 2022)
