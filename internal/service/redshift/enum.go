@@ -19,6 +19,7 @@ const (
 	clusterStatusModifying              = "modifying"
 	clusterStatusPaused                 = "paused"
 	clusterStatusRebooting              = "rebooting"
+	clusterStatusRecovering             = "recovering"
 	clusterStatusRenaming               = "renaming"
 	clusterStatusResizing               = "resizing"
 	clusterStatusRestoring              = "restoring"
