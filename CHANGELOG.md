@@ -1,4 +1,17 @@
 ## 4.8.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* internal/service/elasticache/cluster: Add `log_delivery_configuration` argument ([#20068](https://github.com/hashicorp/terraform-provider-aws/issues/20068))
+* internal/service/elasticache/cluster_data_source: Add `log_delivery_configuration` attribute ([#20068](https://github.com/hashicorp/terraform-provider-aws/issues/20068))
+* internal/service/elasticache/replication_group: Add `log_delivery_configuration` argument ([#20068](https://github.com/hashicorp/terraform-provider-aws/issues/20068))
+* internal/service/elasticache/replication_group_data_source: Add `log_delivery_configuration` attribute ([#20068](https://github.com/hashicorp/terraform-provider-aws/issues/20068))
+* resource/aws_mskconnect_custom_plugin: Implement resource Delete ([#23544](https://github.com/hashicorp/terraform-provider-aws/issues/23544))
+
+BUG FIXES:
+
+* resource/aws_cloudwatch_event_target: Fix setting `path_parameter_values`. ([#23862](https://github.com/hashicorp/terraform-provider-aws/issues/23862))
+
 ## 4.7.0 (March 24, 2022)
 
 FEATURES:
