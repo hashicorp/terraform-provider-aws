@@ -439,37 +439,19 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf(`provider.aws: aws_redshift_cluster: %s: "master_username": required field is not set`, d.Get("cluster_identifier").(string))
 		}
 
+		clusterID := d.Get("cluster_identifier").(string)
 		input := &redshift.CreateClusterInput{
-			ClusterIdentifier:                aws.String(d.Get("cluster_identifier").(string)),
-			Port:                             aws.Int64(int64(d.Get("port").(int))),
-			MasterUserPassword:               aws.String(d.Get("master_password").(string)),
-			MasterUsername:                   aws.String(d.Get("master_username").(string)),
-			ClusterVersion:                   aws.String(d.Get("cluster_version").(string)),
-			NodeType:                         aws.String(d.Get("node_type").(string)),
-			DBName:                           aws.String(d.Get("database_name").(string)),
 			AllowVersionUpgrade:              aws.Bool(d.Get("allow_version_upgrade").(bool)),
-			PubliclyAccessible:               aws.Bool(d.Get("publicly_accessible").(bool)),
 			AutomatedSnapshotRetentionPeriod: aws.Int64(int64(d.Get("automated_snapshot_retention_period").(int))),
+			ClusterIdentifier:                aws.String(clusterID),
+			ClusterVersion:                   aws.String(d.Get("cluster_version").(string)),
+			DBName:                           aws.String(d.Get("database_name").(string)),
+			MasterUsername:                   aws.String(d.Get("master_username").(string)),
+			MasterUserPassword:               aws.String(d.Get("master_password").(string)),
+			NodeType:                         aws.String(d.Get("node_type").(string)),
+			Port:                             aws.Int64(int64(d.Get("port").(int))),
+			PubliclyAccessible:               aws.Bool(d.Get("publicly_accessible").(bool)),
 			Tags:                             Tags(tags.IgnoreAWS()),
-		}
-
-		if v := d.Get("number_of_nodes").(int); v > 1 {
-			input.ClusterType = aws.String("multi-node")
-			input.NumberOfNodes = aws.Int64(int64(d.Get("number_of_nodes").(int)))
-		} else {
-			input.ClusterType = aws.String("single-node")
-		}
-
-		if v := d.Get("cluster_security_groups").(*schema.Set); v.Len() > 0 {
-			input.ClusterSecurityGroups = flex.ExpandStringSet(v)
-		}
-
-		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
-			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
-		}
-
-		if v, ok := d.GetOk("cluster_subnet_group_name"); ok {
-			input.ClusterSubnetGroupName = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("availability_zone"); ok {
@@ -480,12 +462,20 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			input.AvailabilityZoneRelocation = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOk("preferred_maintenance_window"); ok {
-			input.PreferredMaintenanceWindow = aws.String(v.(string))
-		}
-
 		if v, ok := d.GetOk("cluster_parameter_group_name"); ok {
 			input.ClusterParameterGroupName = aws.String(v.(string))
+		}
+
+		if v := d.Get("cluster_security_groups").(*schema.Set); v.Len() > 0 {
+			input.ClusterSecurityGroups = flex.ExpandStringSet(v)
+		}
+
+		if v, ok := d.GetOk("cluster_subnet_group_name"); ok {
+			input.ClusterSubnetGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("elastic_ip"); ok {
+			input.ElasticIp = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("encrypted"); ok {
@@ -496,26 +486,36 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			input.EnhancedVpcRouting = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOk("kms_key_id"); ok {
-			input.KmsKeyId = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("elastic_ip"); ok {
-			input.ElasticIp = aws.String(v.(string))
-		}
-
 		if v, ok := d.GetOk("iam_roles"); ok {
 			input.IamRoles = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		log.Printf("[DEBUG] Redshift Cluster create options: %s", input)
+		if v, ok := d.GetOk("kms_key_id"); ok {
+			input.KmsKeyId = aws.String(v.(string))
+		}
+
+		if v := d.Get("number_of_nodes").(int); v > 1 {
+			input.ClusterType = aws.String(clusterTypeMultiNode)
+			input.NumberOfNodes = aws.Int64(int64(d.Get("number_of_nodes").(int)))
+		} else {
+			input.ClusterType = aws.String(clusterTypeSingleNode)
+		}
+
+		if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+			input.PreferredMaintenanceWindow = aws.String(v.(string))
+		}
+
+		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
+		}
+
+		log.Printf("[DEBUG] Creating Redshift Cluster: %s", input)
 		output, err := conn.CreateCluster(input)
 
 		if err != nil {
-			return fmt.Errorf("error creating Redshift Cluster: %w", err)
+			return fmt.Errorf("error creating Redshift Cluster (%s): %w", clusterID, err)
 		}
 
-		log.Printf("[DEBUG]: Cluster create response: %s", output)
 		d.SetId(aws.StringValue(output.Cluster.ClusterIdentifier))
 	}
 
