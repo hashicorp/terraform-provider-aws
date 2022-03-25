@@ -265,6 +265,11 @@ func ResourceLifecyclePolicy() *schema.Resource {
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
+									"variable_tags": {
+										Type:     schema.TypeMap,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
 								},
 							},
 						},
@@ -480,6 +485,10 @@ func expandDlmSchedules(cfg []interface{}) []*dlm.Schedule {
 		if v, ok := m["tags_to_add"]; ok {
 			schedule.TagsToAdd = expandDlmTags(v.(map[string]interface{}))
 		}
+		if v, ok := m["variable_tags"]; ok {
+			schedule.VariableTags = expandDlmTags(v.(map[string]interface{}))
+		}
+
 		schedules[i] = schedule
 	}
 
@@ -496,6 +505,7 @@ func flattenDlmSchedules(schedules []*dlm.Schedule) []map[string]interface{} {
 		m["name"] = aws.StringValue(s.Name)
 		m["retain_rule"] = flattenDlmRetainRule(s.RetainRule)
 		m["tags_to_add"] = flattenDlmTags(s.TagsToAdd)
+		m["variable_tags"] = flattenDlmTags(s.VariableTags)
 
 		if s.DeprecateRule != nil {
 			m["deprecate_rule"] = flattenDlmDeprecateRule(s.DeprecateRule)

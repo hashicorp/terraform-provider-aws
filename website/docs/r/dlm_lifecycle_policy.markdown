@@ -210,6 +210,7 @@ The following arguments are supported:
 * `deprecate_rule` - (Required) See the [`deprecate_rule`](#deprecate-rule-arguments) block. Max of 1 per schedule.
 * `retain_rule` - (Required) See the [`retain_rule`](#retain-rule-arguments) block. Max of 1 per schedule.
 * `tags_to_add` - (Optional) A map of tag keys and their values. DLM lifecycle policies will already tag the snapshot with the tags on the volume. This configuration adds extra tags on top of these.
+* `variable_tags` - (Optional) A map of tag keys and variable values, where the values are determined when the policy is executed. Only `$(instance-id)` or `$(timestamp)` are valid values. Can only be used when `resource_types` is `INSTANCE`.
 
 #### Create Rule arguments
 
