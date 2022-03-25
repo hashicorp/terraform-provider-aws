@@ -85,13 +85,13 @@ func ResourceLifecyclePolicy() *schema.Resource {
 												},
 												"interval": {
 													Type:         schema.TypeInt,
-													Required:     true,
+													Optional:     true,
 													ValidateFunc: validation.IntInSlice([]int{1, 2, 3, 4, 6, 8, 12, 24}),
 												},
 												"interval_unit": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													Default:      dlm.IntervalUnitValuesHours,
+													Computed:     true,
 													ValidateFunc: validation.StringInSlice(dlm.IntervalUnitValues_Values(), false),
 												},
 												"times": {
@@ -547,17 +547,25 @@ func expandDlmCreateRule(cfg []interface{}) *dlm.CreateRule {
 		return nil
 	}
 	c := cfg[0].(map[string]interface{})
-	createRule := &dlm.CreateRule{
-		Interval:     aws.Int64(int64(c["interval"].(int))),
-		IntervalUnit: aws.String(c["interval_unit"].(string)),
-	}
+	createRule := &dlm.CreateRule{}
 
 	if v, ok := c["times"].([]interface{}); ok && len(v) > 0 {
 		createRule.Times = flex.ExpandStringList(v)
 	}
 
+	if v, ok := c["interval"].(int); ok && v > 0 {
+		createRule.Interval = aws.Int64(int64(v))
+	}
+
+	if v, ok := c["interval_unit"].(string); ok && v != "" {
+		createRule.IntervalUnit = aws.String(v)
+	} else {
+		createRule.IntervalUnit = aws.String(dlm.IntervalUnitValuesHours)
+	}
+
 	if v, ok := c["cron_expression"].(string); ok && v != "" {
 		createRule.CronExpression = aws.String(v)
+		createRule.IntervalUnit = nil
 	}
 
 	return createRule
@@ -569,10 +577,19 @@ func flattenDlmCreateRule(createRule *dlm.CreateRule) []map[string]interface{} {
 	}
 
 	result := make(map[string]interface{})
-	result["interval"] = aws.Int64Value(createRule.Interval)
-	result["interval_unit"] = aws.StringValue(createRule.IntervalUnit)
 	result["times"] = flex.FlattenStringList(createRule.Times)
-	result["cron_expression"] = aws.StringValue(createRule.CronExpression)
+
+	if createRule.Interval != nil {
+		result["interval"] = aws.Int64Value(createRule.Interval)
+	}
+
+	if createRule.IntervalUnit != nil {
+		result["interval_unit"] = aws.StringValue(createRule.IntervalUnit)
+	}
+
+	if createRule.CronExpression != nil {
+		result["cron_expression"] = aws.StringValue(createRule.CronExpression)
+	}
 
 	return []map[string]interface{}{result}
 }
