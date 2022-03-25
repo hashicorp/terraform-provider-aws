@@ -59,6 +59,25 @@ func ResourceLifecyclePolicy() *schema.Resource {
 								ValidateFunc: validation.StringInSlice(dlm.ResourceTypeValues_Values(), false),
 							},
 						},
+						"parameters": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"exclude_boot_volume": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
+									"no_reboot": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  true,
+									},
+								},
+							},
+						},
 						"policy_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -399,9 +418,10 @@ func expandDlmPolicyDetails(cfg []interface{}) *dlm.PolicyDetails {
 		return nil
 	}
 	m := cfg[0].(map[string]interface{})
+	policyType := m["policy_type"].(string)
 
 	policyDetails := &dlm.PolicyDetails{
-		PolicyType: aws.String(m["policy_type"].(string)),
+		PolicyType: aws.String(policyType),
 	}
 	if v, ok := m["resource_types"]; ok {
 		policyDetails.ResourceTypes = flex.ExpandStringList(v.([]interface{}))
@@ -411,6 +431,9 @@ func expandDlmPolicyDetails(cfg []interface{}) *dlm.PolicyDetails {
 	}
 	if v, ok := m["target_tags"]; ok {
 		policyDetails.TargetTags = expandDlmTags(v.(map[string]interface{}))
+	}
+	if v, ok := m["parameters"].([]interface{}); ok && len(v) > 0 {
+		policyDetails.Parameters = expandDlmParameters(v, policyType)
 	}
 
 	return policyDetails
@@ -422,6 +445,10 @@ func flattenDlmPolicyDetails(policyDetails *dlm.PolicyDetails) []map[string]inte
 	result["schedule"] = flattenDlmSchedules(policyDetails.Schedules)
 	result["target_tags"] = flattenDlmTags(policyDetails.TargetTags)
 	result["policy_type"] = aws.StringValue(policyDetails.PolicyType)
+
+	if policyDetails.Parameters != nil {
+		result["parameters"] = flattenDlmParameters(policyDetails.Parameters)
+	}
 
 	return []map[string]interface{}{result}
 }
@@ -732,4 +759,35 @@ func flattenDlmTags(tags []*dlm.Tag) map[string]string {
 	}
 
 	return result
+}
+
+func expandDlmParameters(cfg []interface{}, policyType string) *dlm.Parameters {
+	if len(cfg) == 0 || cfg[0] == nil {
+		return nil
+	}
+	m := cfg[0].(map[string]interface{})
+	parameters := &dlm.Parameters{}
+
+	if v, ok := m["exclude_boot_volume"].(bool); ok && policyType == dlm.PolicyTypeValuesEbsSnapshotManagement {
+		parameters.ExcludeBootVolume = aws.Bool(v)
+	}
+
+	if v, ok := m["no_reboot"].(bool); ok && policyType == dlm.PolicyTypeValuesImageManagement {
+		parameters.NoReboot = aws.Bool(v)
+	}
+
+	return parameters
+}
+
+func flattenDlmParameters(parameters *dlm.Parameters) []map[string]interface{} {
+	result := make(map[string]interface{})
+	if parameters.ExcludeBootVolume != nil {
+		result["exclude_boot_volume"] = aws.BoolValue(parameters.ExcludeBootVolume)
+	}
+
+	if parameters.NoReboot != nil {
+		result["no_reboot"] = aws.BoolValue(parameters.NoReboot)
+	}
+
+	return []map[string]interface{}{result}
 }

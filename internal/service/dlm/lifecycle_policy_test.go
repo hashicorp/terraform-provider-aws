@@ -124,7 +124,64 @@ func TestAccDLMLifecyclePolicy_deprecate(t *testing.T) {
 				Config: dlmLifecyclePolicyDeprecateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkDlmLifecyclePolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.deprecate_rule.0.count", "10"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDLMLifecyclePolicy_parameters_instance(t *testing.T) {
+	resourceName := "aws_dlm_lifecycle_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dlm.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: dlmLifecyclePolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dlmLifecyclePolicyParametersInstanceConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkDlmLifecyclePolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.exclude_boot_volume", "false"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.no_reboot", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDLMLifecyclePolicy_parameters_volume(t *testing.T) {
+	resourceName := "aws_dlm_lifecycle_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dlm.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: dlmLifecyclePolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dlmLifecyclePolicyParametersVolumeConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkDlmLifecyclePolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.exclude_boot_volume", "true"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.no_reboot", "true"),
 				),
 			},
 			{
@@ -523,6 +580,74 @@ resource "aws_dlm_lifecycle_policy" "test" {
       }
 
       deprecate_rule {
+        count = 10
+      }
+    }
+
+    target_tags = {
+      tf-acc-test = "basic"
+    }
+  }
+}
+`
+}
+
+func dlmLifecyclePolicyParametersInstanceConfig(rName string) string {
+	return dlmLifecyclePolicyBaseConfig(rName) + `
+resource "aws_dlm_lifecycle_policy" "test" {
+  description        = "tf-acc-basic"
+  execution_role_arn = aws_iam_role.test.arn
+
+  policy_details {
+    resource_types = ["INSTANCE"]
+    policy_type    = "IMAGE_MANAGEMENT"
+
+	parameters {
+      no_reboot = false
+	}
+
+    schedule {
+      name = "tf-acc-basic"
+
+      create_rule {
+        interval = 12
+      }
+
+      retain_rule {
+        count = 10
+      }
+    }
+
+    target_tags = {
+      tf-acc-test = "basic"
+    }
+  }
+}
+`
+}
+
+func dlmLifecyclePolicyParametersVolumeConfig(rName string) string {
+	return dlmLifecyclePolicyBaseConfig(rName) + `
+resource "aws_dlm_lifecycle_policy" "test" {
+  description        = "tf-acc-basic"
+  execution_role_arn = aws_iam_role.test.arn
+
+  policy_details {
+    resource_types = ["INSTANCE"]
+    policy_type    = "EBS_SNAPSHOT_MANAGEMENT"
+
+	parameters {
+      exclude_boot_volume = true
+	}
+
+    schedule {
+      name = "tf-acc-basic"
+
+      create_rule {
+        interval = 12
+      }
+
+      retain_rule {
         count = 10
       }
     }
