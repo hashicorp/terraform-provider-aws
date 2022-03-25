@@ -14,7 +14,7 @@ Manages an EC2 Availability Zone Group, such as updating its opt-in status.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ec2_availability_zone_group" "example" {
   group_name    = "us-west-2-lax-1"
   opt_in_status = "opted-in"
@@ -36,7 +36,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EC2 Availability Zone Groups can be imported using the group name, e.g.
+EC2 Availability Zone Groups can be imported using the group name, e.g.,
 
 ```
 $ terraform import aws_ec2_availability_zone_group.example us-west-2-lax-1

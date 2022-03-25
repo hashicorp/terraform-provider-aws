@@ -12,11 +12,11 @@ Provides a Security Hub member resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_securityhub_account" "example" {}
 
 resource "aws_securityhub_member" "example" {
-  depends_on = ["aws_securityhub_account.example"]
+  depends_on = [aws_securityhub_account.example]
   account_id = "123456789012"
   email      = "example@example.com"
   invite     = true
@@ -33,15 +33,15 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported in addition to the arguments listed above:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the member AWS account (matches `account_id`).
 * `master_id` - The ID of the master Security Hub AWS account.
-* `member_status` - The status of the relationship between the member account and its master account.
+* `member_status` - The status of the member account relationship.
 
 ## Import
 
-Security Hub members can be imported using their account ID, e.g.
+Security Hub members can be imported using their account ID, e.g.,
 
 ```
 $ terraform import aws_securityhub_member.example 123456789012

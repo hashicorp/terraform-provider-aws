@@ -12,7 +12,7 @@ Use this data source to get a list of AMI IDs matching the specified criteria.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ami_ids" "ubuntu" {
   owners = ["099720109477"]
 
@@ -25,7 +25,7 @@ data "aws_ami_ids" "ubuntu" {
 
 ## Argument Reference
 
-* `owners` - (Required) List of AMI owners to limit search. At least 1 value must be specified. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g. `amazon`, `aws-marketplace`, `microsoft`).
+* `owners` - (Required) List of AMI owners to limit search. At least 1 value must be specified. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g., `amazon`, `aws-marketplace`, `microsoft`).
 
 * `executable_users` - (Optional) Limit search to users with *explicit* launch
 permission on  the image. Valid items are the numeric account ID or `self`.

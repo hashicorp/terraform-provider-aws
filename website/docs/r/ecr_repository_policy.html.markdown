@@ -14,13 +14,13 @@ Note that currently only one policy may be applied to a repository.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ecr_repository" "foo" {
   name = "bar"
 }
 
 resource "aws_ecr_repository_policy" "foopolicy" {
-  repository = "${aws_ecr_repository.foo.name}"
+  repository = aws_ecr_repository.foo.name
 
   policy = <<EOF
 {
@@ -69,7 +69,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ECR Repository Policy can be imported using the repository name, e.g.
+ECR Repository Policy can be imported using the repository name, e.g.,
 
 ```
 $ terraform import aws_ecr_repository_policy.example example
