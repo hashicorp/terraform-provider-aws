@@ -188,7 +188,7 @@ The following arguments are supported:
 
 #### Policy Details arguments
 
-* `resource_types` - (Required) A list of resource types that should be targeted by the lifecycle policy. `VOLUME` is currently the only allowed value.
+* `resource_types` - (Required) A list of resource types that should be targeted by the lifecycle policy. Valid values are `VOLUME` and `INSTANCE`.
 * `schedule` - (Required) See the [`schedule` configuration](#schedule-arguments) block.
 * `target_tags` (Required) A map of tag keys and their values. Any resources that match the `resource_types` and are tagged with _any_ of these tags will be targeted.
 
@@ -205,7 +205,8 @@ The following arguments are supported:
 
 #### Create Rule arguments
 
-* `interval` - (Required) How often this lifecycle policy should be evaluated. `1`, `2`,`3`,`4`,`6`,`8`,`12` or `24` are valid values.
+* `cron_expression` - (Optional) The schedule, as a Cron expression. The schedule interval must be between 1 hour and 1 year.
+* `interval` - (Optional) How often this lifecycle policy should be evaluated. `1`, `2`,`3`,`4`,`6`,`8`,`12` or `24` are valid values.
 * `interval_unit` - (Optional) The unit for how often the lifecycle policy should be evaluated. `HOURS` is currently the only allowed value and also the default value.
 * `times` - (Optional) A list of times in 24 hour clock format that sets when the lifecycle policy should be evaluated. Max of 1.
 
