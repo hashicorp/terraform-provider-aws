@@ -181,7 +181,7 @@ func TestAccDLMLifecyclePolicy_parameters_volume(t *testing.T) {
 					checkDlmLifecyclePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.exclude_boot_volume", "true"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.no_reboot", "true"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.no_reboot", "false"),
 				),
 			},
 			{
