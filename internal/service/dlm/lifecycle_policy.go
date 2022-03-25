@@ -466,9 +466,13 @@ func flattenDlmSchedules(schedules []*dlm.Schedule) []map[string]interface{} {
 		m["create_rule"] = flattenDlmCreateRule(s.CreateRule)
 		m["cross_region_copy_rule"] = flattenDlmCrossRegionCopyRules(s.CrossRegionCopyRules)
 		m["name"] = aws.StringValue(s.Name)
-		m["deprecate_rule"] = flattenDlmDeprecateRule(s.DeprecateRule)
 		m["retain_rule"] = flattenDlmRetainRule(s.RetainRule)
 		m["tags_to_add"] = flattenDlmTags(s.TagsToAdd)
+
+		if s.DeprecateRule != nil {
+			m["deprecate_rule"] = flattenDlmDeprecateRule(s.DeprecateRule)
+		}
+
 		result[i] = m
 	}
 
