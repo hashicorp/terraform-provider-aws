@@ -1,5 +1,5 @@
 ```release-note:enhancement
-resource/aws_dlm_lifecycle_policy: Add `policy_details.schedule.cron_expression` argument.
+resource/aws_dlm_lifecycle_policy: Add `policy_details.schedule.create_rule.cron_expression`, `policy_details.schedule.retain_rule.interval`,  `policy_details.schedule.retain_rule.interval_unit` arguments.
 ```
 
 ```release-note:enhancement
