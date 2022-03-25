@@ -602,9 +602,9 @@ resource "aws_dlm_lifecycle_policy" "test" {
     resource_types = ["INSTANCE"]
     policy_type    = "IMAGE_MANAGEMENT"
 
-	parameters {
+    parameters {
       no_reboot = false
-	}
+    }
 
     schedule {
       name = "tf-acc-basic"
@@ -636,9 +636,9 @@ resource "aws_dlm_lifecycle_policy" "test" {
     resource_types = ["INSTANCE"]
     policy_type    = "EBS_SNAPSHOT_MANAGEMENT"
 
-	parameters {
+    parameters {
       exclude_boot_volume = true
-	}
+    }
 
     schedule {
       name = "tf-acc-basic"
