@@ -150,12 +150,13 @@ func ResourceFunction() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"size": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Default:      512,
+							Computed:     true,
 							ValidateFunc: validation.IntBetween(512, 10240),
 						},
 					},
