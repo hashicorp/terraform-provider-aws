@@ -245,6 +245,28 @@ func TestAccLambdaFunctionDataSource_architectures(t *testing.T) {
 	})
 }
 
+func TestAccLambdaFunctionDataSource_ephemeralStorage(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lambda_function.test"
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:  acctest.Providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionEphemeralStorageDataSourceConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ephemeral_storage.#", resourceName, "ephemeral_storage.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ephemeral_storage.0.size", resourceName, "ephemeral_storage.0.size"),
+				),
+			},
+		},
+	})
+}
+
 func testAccFunctionBaseDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "lambda" {
@@ -604,4 +626,23 @@ func testAccImagePreCheck(t *testing.T) {
 	if os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID") == "" {
 		t.Skip("AWS_LAMBDA_IMAGE_LATEST_ID env var must be set for Lambda Function Data Source Image Support acceptance tests.")
 	}
+}
+
+func testAccFunctionEphemeralStorageDataSourceConfig(rName string) string {
+	return testAccFunctionBaseDataSourceConfig(rName) + fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  role          = aws_iam_role.lambda.arn
+  runtime       = "nodejs12.x"
+  ephemeral_storage {
+    size = 1024
+  }
+}
+
+data "aws_lambda_function" "test" {
+  function_name = aws_lambda_function.test.function_name
+}
+`, rName)
 }

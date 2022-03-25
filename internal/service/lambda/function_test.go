@@ -1194,6 +1194,53 @@ func TestAccLambdaFunction_architecturesWithLayer(t *testing.T) {
 	})
 }
 
+func TestAccLambdaFunction_ephemeralStorage(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+	rString := sdkacctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_ephemeral_storage_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_ephemeral_storage_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_ephemeral_storage_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_ephemeral_storage_%s", rString)
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckFunctionDestroy,
+
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWithEphemeralStorage(funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					testAccCheckFunctionInvokeARN(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.0.size", "1024"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+			{
+				Config: testAccWithUpdateEphemeralStorage(funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.0.size", "2048"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLambdaFunction_tracing(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -3596,4 +3643,36 @@ func testAccPreCheckSignerSigningProfile(t *testing.T, platformID string) {
 	if !foundPlatform {
 		t.Skipf("skipping acceptance testing: Signing Platform (%s) not found", platformID)
 	}
+}
+
+func testAccWithEphemeralStorage(funcName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+
+  ephemeral_storage {
+    size = 1024
+  }
+}
+`, funcName)
+}
+
+func testAccWithUpdateEphemeralStorage(funcName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+
+  ephemeral_storage {
+    size = 2048
+  }
+}
+`, funcName)
 }
