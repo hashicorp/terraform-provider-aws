@@ -20,10 +20,10 @@ Association resource. Doing so will cause a conflict of associations and will ov
 
 Basic usage:
 
-```hcl
+```terraform
 resource "aws_vpc_endpoint_subnet_association" "sn_ec2" {
-  vpc_endpoint_id = "${aws_vpc_endpoint.ec2.id}"
-  subnet_id       = "${aws_subnet.sn.id}"
+  vpc_endpoint_id = aws_vpc_endpoint.ec2.id
+  subnet_id       = aws_subnet.sn.id
 }
 ```
 
@@ -37,7 +37,7 @@ The following arguments are supported:
 ### Timeouts
 
 `aws_vpc_endpoint_subnet_association` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `10 minutes`) Used for creating the association
 - `delete` - (Default `10 minutes`) Used for destroying the association
@@ -47,3 +47,12 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the association.
+
+## Import
+
+VPC Endpoint Subnet Associations can be imported using `vpc_endpoint_id` together with `subnet_id`,
+e.g.,
+
+```
+$ terraform import aws_vpc_endpoint_subnet_association.example vpce-aaaaaaaa/subnet-bbbbbbbbbbbbbbbbb
+```

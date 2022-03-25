@@ -12,7 +12,7 @@ Manages an EKS Node Group, which can provision and optionally update an Auto Sca
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_eks_node_group" "example" {
   cluster_name    = aws_eks_cluster.example.name
   node_group_name = "example"
@@ -23,6 +23,10 @@ resource "aws_eks_node_group" "example" {
     desired_size = 1
     max_size     = 1
     min_size     = 1
+  }
+
+  update_config {
+    max_unavailable = 2
   }
 
   # Ensure that IAM Role permissions are created before and deleted after EKS Node Group handling.
@@ -37,9 +41,9 @@ resource "aws_eks_node_group" "example" {
 
 ### Ignoring Changes to Desired Size
 
-You can utilize the generic Terraform resource [lifecycle configuration block](/docs/configuration/resources.html#lifecycle-lifecycle-customizations) with `ignore_changes` to create an EKS Node Group with an initial size of running instances, then ignore any changes to that count caused externally (e.g. Application Autoscaling).
+You can utilize the generic Terraform resource [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` to create an EKS Node Group with an initial size of running instances, then ignore any changes to that count caused externally (e.g., Application Autoscaling).
 
-```hcl
+```terraform
 resource "aws_eks_node_group" "example" {
   # ... other configurations ...
 
@@ -59,7 +63,7 @@ resource "aws_eks_node_group" "example" {
 
 ### Example IAM Role for EKS Node Group
 
-```hcl
+```terraform
 resource "aws_iam_role" "example" {
   name = "eks-node-group-example"
 
@@ -93,7 +97,7 @@ resource "aws_iam_role_policy_attachment" "example-AmazonEC2ContainerRegistryRea
 
 ### Example Subnets for EKS Node Group
 
-```hcl
+```terraform
 data "aws_availability_zones" "available" {
   state = "available"
 }
@@ -115,23 +119,35 @@ resource "aws_subnet" "example" {
 
 The following arguments are required:
 
-* `cluster_name` – (Required) Name of the EKS Cluster.
-* `node_group_name` – (Required) Name of the EKS Node Group.
+* `cluster_name` – (Required) Name of the EKS Cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
 * `node_role_arn` – (Required) Amazon Resource Name (ARN) of the IAM Role that provides permissions for the EKS Node Group.
 * `scaling_config` - (Required) Configuration block with scaling settings. Detailed below.
 * `subnet_ids` – (Required) Identifiers of EC2 Subnets to associate with the EKS Node Group. These subnets must have the following resource tag: `kubernetes.io/cluster/CLUSTER_NAME` (where `CLUSTER_NAME` is replaced with the name of the EKS Cluster).
 
 The following arguments are optional:
 
-* `ami_type` - (Optional) Type of Amazon Machine Image (AMI) associated with the EKS Node Group. Defaults to `AL2_x86_64`. Valid values: `AL2_x86_64`, `AL2_x86_64_GPU`. Terraform will only perform drift detection if a configuration value is provided.
+* `ami_type` - (Optional) Type of Amazon Machine Image (AMI) associated with the EKS Node Group. See the [AWS documentation](https://docs.aws.amazon.com/eks/latest/APIReference/API_Nodegroup.html#AmazonEKS-Type-Nodegroup-amiType) for valid values. Terraform will only perform drift detection if a configuration value is provided.
+* `capacity_type` - (Optional) Type of capacity associated with the EKS Node Group. Valid values: `ON_DEMAND`, `SPOT`. Terraform will only perform drift detection if a configuration value is provided.
 * `disk_size` - (Optional) Disk size in GiB for worker nodes. Defaults to `20`. Terraform will only perform drift detection if a configuration value is provided.
 * `force_update_version` - (Optional) Force version update if existing pods are unable to be drained due to a pod disruption budget issue.
-* `instance_types` - (Optional) Set of instance types associated with the EKS Node Group. Defaults to `["t3.medium"]`. Terraform will only perform drift detection if a configuration value is provided. Currently, the EKS API only accepts a single value in the set.
+* `instance_types` - (Optional) List of instance types associated with the EKS Node Group. Defaults to `["t3.medium"]`. Terraform will only perform drift detection if a configuration value is provided.
 * `labels` - (Optional) Key-value map of Kubernetes labels. Only labels that are applied with the EKS API are managed by this argument. Other Kubernetes labels applied to the EKS Node Group will not be managed.
+* `launch_template` - (Optional) Configuration block with Launch Template settings. Detailed below.
+* `node_group_name` – (Optional) Name of the EKS Node Group. If omitted, Terraform will assign a random, unique name. Conflicts with `node_group_name_prefix`.
+* `node_group_name_prefix` – (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `node_group_name`.
 * `release_version` – (Optional) AMI version of the EKS Node Group. Defaults to latest version for Kubernetes version.
 * `remote_access` - (Optional) Configuration block with remote access settings. Detailed below.
-* `tags` - (Optional) Key-value map of resource tags.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `taint` - (Optional) The Kubernetes taints to be applied to the nodes in the node group. Maximum of 50 taints per node group. Detailed below.
 * `version` – (Optional) Kubernetes version. Defaults to EKS Cluster Kubernetes version. Terraform will only perform drift detection if a configuration value is provided.
+
+### launch_template Configuration Block
+
+~> **NOTE:** Either `id` or `name` must be specified.
+
+* `id` - (Optional) Identifier of the EC2 Launch Template. Conflicts with `name`.
+* `name` - (Optional) Name of the EC2 Launch Template. Conflicts with `id`.
+* `version` - (Required) EC2 Launch Template version number. While the API accepts values like `$Default` and `$Latest`, the API will convert the value to the associated version number (e.g., `1`) on read and Terraform will show a difference on next plan. Using the `default_version` or `latest_version` attribute of the `aws_launch_template` resource or data source is recommended for this argument.
 
 ### remote_access Configuration Block
 
@@ -144,6 +160,19 @@ The following arguments are optional:
 * `max_size` - (Required) Maximum number of worker nodes.
 * `min_size` - (Required) Minimum number of worker nodes.
 
+### taint Configuration Block
+
+* `key` - (Required) The key of the taint. Maximum length of 63.
+* `value` - (Optional) The value of the taint. Maximum length of 63.
+* `effect` - (Required) The effect of the taint. Valid values: `NO_SCHEDULE`, `NO_EXECUTE`, `PREFER_NO_SCHEDULE`.
+
+### update_config Configuration Block
+
+The following arguments are mutually exclusive.
+
+* `max_unavailable` - (Optional) Desired max number of unavailable worker nodes during node group update.
+* `max_unavailable_percentage` - (Optional) Desired max percentage of unavailable worker nodes during node group update.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -154,12 +183,13 @@ In addition to all arguments above, the following attributes are exported:
     * `autoscaling_groups` - List of objects containing information about AutoScaling Groups.
         * `name` - Name of the AutoScaling Group.
     * `remote_access_security_group_id` - Identifier of the remote access EC2 Security Group.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 * `status` - Status of the EKS Node Group.
 
 ## Timeouts
 
 `aws_eks_node_group` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 * `create` - (Default `60 minutes`) How long to wait for the EKS Node Group to be created.
 * `update` - (Default `60 minutes`) How long to wait for the EKS Node Group to be updated. Note that the `update` timeout is used separately for both configuration and version update operations.
@@ -167,7 +197,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EKS Node Groups can be imported using the `cluster_name` and `node_group_name` separated by a colon (`:`), e.g.
+EKS Node Groups can be imported using the `cluster_name` and `node_group_name` separated by a colon (`:`), e.g.,
 
 ```
 $ terraform import aws_eks_node_group.my_node_group my_cluster:my_node_group

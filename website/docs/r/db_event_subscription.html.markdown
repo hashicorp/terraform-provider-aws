@@ -12,7 +12,7 @@ Provides a DB event subscription resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_db_instance" "default" {
   allocated_storage    = 10
   engine               = "mysql"
@@ -31,10 +31,10 @@ resource "aws_sns_topic" "default" {
 
 resource "aws_db_event_subscription" "default" {
   name      = "rds-event-sub"
-  sns_topic = "${aws_sns_topic.default.arn}"
+  sns_topic = aws_sns_topic.default.arn
 
   source_type = "db-instance"
-  source_ids  = ["${aws_db_instance.default.id}"]
+  source_ids  = [aws_db_instance.default.id]
 
   event_categories = [
     "availability",
@@ -62,19 +62,20 @@ The following arguments are supported:
 * `source_type` - (Optional) The type of source that will be generating the events. Valid options are `db-instance`, `db-security-group`, `db-parameter-group`, `db-snapshot`, `db-cluster` or `db-cluster-snapshot`. If not set, all sources will be subscribed to.
 * `event_categories` - (Optional) A list of event categories for a SourceType that you want to subscribe to. See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Events.html or run `aws rds describe-event-categories`.
 * `enabled` - (Optional) A boolean flag to enable/disable the subscription. Defaults to true.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes
+## Attributes Reference
 
-The following additional atttributes are provided:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name of the RDS event notification subscription
 * `arn` - The Amazon Resource Name of the RDS event notification subscription
 * `customer_aws_id` - The AWS customer account associated with the RDS event notification subscription
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_db_event_subscription` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
+`aws_db_event_subscription` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
 configuration options:
 
 - `create` - (Default `40m`) How long to wait for an RDS event notification subscription to be ready.
@@ -83,7 +84,7 @@ configuration options:
 
 ## Import
 
-DB Event Subscriptions can be imported using the `name`, e.g.
+DB Event Subscriptions can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_db_event_subscription.default rds-event-sub

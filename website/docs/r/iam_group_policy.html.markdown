@@ -12,25 +12,25 @@ Provides an IAM policy attached to a group.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_group_policy" "my_developer_policy" {
   name  = "my_developer_policy"
-  group = "${aws_iam_group.my_developers.id}"
+  group = aws_iam_group.my_developers.name
 
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "ec2:Describe*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "ec2:Describe*",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+    ]
+  })
 }
 
 resource "aws_iam_group" "my_developers" {
@@ -52,6 +52,8 @@ assign a random, unique name.
 
 ## Attributes Reference
 
+In addition to all arguments above, the following attributes are exported:
+
 * `id` - The group policy ID.
 * `group` - The group to which this policy applies.
 * `name` - The name of the policy.
@@ -59,7 +61,7 @@ assign a random, unique name.
 
 ## Import
 
-IAM Group Policies can be imported using the `group_name:group_policy_name`, e.g.
+IAM Group Policies can be imported using the `group_name:group_policy_name`, e.g.,
 
 ```
 $ terraform import aws_iam_group_policy.mypolicy group_of_mypolicy_name:mypolicy_name

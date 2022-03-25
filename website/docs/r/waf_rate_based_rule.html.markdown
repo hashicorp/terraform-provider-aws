@@ -12,7 +12,7 @@ Provides a WAF Rate Based Rule Resource
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_waf_ipset" "ipset" {
   name = "tfIPSet"
 
@@ -23,7 +23,7 @@ resource "aws_waf_ipset" "ipset" {
 }
 
 resource "aws_waf_rate_based_rule" "wafrule" {
-  depends_on  = ["aws_waf_ipset.ipset"]
+  depends_on  = [aws_waf_ipset.ipset]
   name        = "tfWAFRule"
   metric_name = "tfWAFRule"
 
@@ -31,7 +31,7 @@ resource "aws_waf_rate_based_rule" "wafrule" {
   rate_limit = 100
 
   predicates {
-    data_id = "${aws_waf_ipset.ipset.id}"
+    data_id = aws_waf_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -47,7 +47,7 @@ The following arguments are supported:
 * `rate_key` - (Required) Valid value is IP.
 * `rate_limit` - (Required) The maximum number of requests, which have an identical value in the field specified by the RateKey, allowed in a five-minute period. Minimum value is 100.
 * `predicates` - (Optional) The objects to include in a rule (documented below).
-* `tags` - (Optional) Key-value map of resource tags
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Nested Blocks
 
@@ -72,10 +72,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF rule.
 * `arn` - Amazon Resource Name (ARN)
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-WAF Rated Based Rule can be imported using the id, e.g.
+WAF Rated Based Rule can be imported using the id, e.g.,
 
 ```
 $ terraform import aws_waf_rate_based_rule.wafrule a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

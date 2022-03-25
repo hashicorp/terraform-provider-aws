@@ -18,13 +18,13 @@ Manages an ECR repository lifecycle policy.
 
 ### Policy on untagged image
 
-```hcl
+```terraform
 resource "aws_ecr_repository" "foo" {
   name = "bar"
 }
 
 resource "aws_ecr_lifecycle_policy" "foopolicy" {
-  repository = "${aws_ecr_repository.foo.name}"
+  repository = aws_ecr_repository.foo.name
 
   policy = <<EOF
 {
@@ -50,13 +50,13 @@ EOF
 
 ### Policy on tagged image
 
-```hcl
+```terraform
 resource "aws_ecr_repository" "foo" {
   name = "bar"
 }
 
 resource "aws_ecr_lifecycle_policy" "foopolicy" {
-  repository = "${aws_ecr_repository.foo.name}"
+  repository = aws_ecr_repository.foo.name
 
   policy = <<EOF
 {
@@ -85,7 +85,7 @@ EOF
 The following arguments are supported:
 
 * `repository` - (Required) Name of the repository to apply the policy.
-* `policy` - (Required) The policy document. This is a JSON formatted string. See more details about [Policy Parameters](http://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html#lifecycle_policy_parameters) in the official AWS docs. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
+* `policy` - (Required) The policy document. This is a JSON formatted string. See more details about [Policy Parameters](http://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html#lifecycle_policy_parameters) in the official AWS docs.
 
 ## Attributes Reference
 
@@ -96,7 +96,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ECR Lifecycle Policy can be imported using the name of the repository, e.g.
+ECR Lifecycle Policy can be imported using the name of the repository, e.g.,
 
 ```
 $ terraform import aws_ecr_lifecycle_policy.example tf-example

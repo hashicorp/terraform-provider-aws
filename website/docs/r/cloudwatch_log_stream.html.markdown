@@ -12,14 +12,14 @@ Provides a CloudWatch Log Stream resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_cloudwatch_log_group" "yada" {
   name = "Yada"
 }
 
 resource "aws_cloudwatch_log_stream" "foo" {
   name           = "SampleLogStream1234"
-  log_group_name = "${aws_cloudwatch_log_group.yada.name}"
+  log_group_name = aws_cloudwatch_log_group.yada.name
 }
 ```
 
@@ -38,7 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cloudwatch Log Stream can be imported using the stream's `log_group_name` and `name`, e.g.
+Cloudwatch Log Stream can be imported using the stream's `log_group_name` and `name`, e.g.,
 
 ```
 $ terraform import aws_cloudwatch_log_stream.foo Yada:SampleLogStream1234

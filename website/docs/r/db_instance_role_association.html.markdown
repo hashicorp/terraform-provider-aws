@@ -17,11 +17,11 @@ Manages an RDS DB Instance association with an IAM Role. Example use cases:
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_db_instance_role_association" "example" {
-  db_instance_identifier = "${aws_db_instance.example.id}"
+  db_instance_identifier = aws_db_instance.example.id
   feature_name           = "S3_INTEGRATION"
-  role_arn               = "${aws_iam_role.example.id}"
+  role_arn               = aws_iam_role.example.arn
 }
 ```
 
@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_db_instance_role_association` can be imported using the DB Instance Identifier and IAM Role ARN separated by a comma (`,`), e.g.
+`aws_db_instance_role_association` can be imported using the DB Instance Identifier and IAM Role ARN separated by a comma (`,`), e.g.,
 
 ```
 $ terraform import aws_db_instance_role_association.example my-db-instance,arn:aws:iam::123456789012:role/my-role

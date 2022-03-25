@@ -15,14 +15,14 @@ outside of your VPC from initiating an IPv6 connection with your instance.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_vpc" "example" {
   cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
 }
 
 resource "aws_egress_only_internet_gateway" "example" {
-  vpc_id = "${aws_vpc.example.id}"
+  vpc_id = aws_vpc.example.id
 
   tags = {
     Name = "main"
@@ -35,17 +35,18 @@ resource "aws_egress_only_internet_gateway" "example" {
 The following arguments are supported:
 
 * `vpc_id` - (Required) The VPC ID to create in.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the egress-only Internet gateway.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-Egress-only Internet gateways can be imported using the `id`, e.g.
+Egress-only Internet gateways can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_egress_only_internet_gateway.example eigw-015e0e244e24dfe8a

@@ -21,7 +21,7 @@ conflict and will overwrite attachments.
 
 ## Example Usage
 
-```hcl
+```terraform
 # Create a new load balancer
 resource "aws_elb" "bar" {
   name               = "foobar-terraform-elb"
@@ -56,7 +56,7 @@ resource "aws_elb" "bar" {
     interval            = 30
   }
 
-  instances                   = ["${aws_instance.foo.id}"]
+  instances                   = [aws_instance.foo.id]
   cross_zone_load_balancing   = true
   idle_timeout                = 400
   connection_draining         = true
@@ -88,7 +88,8 @@ The following arguments are supported:
 * `idle_timeout` - (Optional) The time in seconds that the connection is allowed to be idle. Default: `60`
 * `connection_draining` - (Optional) Boolean to enable connection draining. Default: `false`
 * `connection_draining_timeout` - (Optional) The time in seconds to allow for connections to drain. Default: `300`
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `desync_mitigation_mode` - (Optional) Determines how the load balancer handles requests that might pose a security risk to an application due to HTTP desync. Valid values are `monitor`, `defensive` (default), `strictest`.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Exactly one of `availability_zones` or `subnets` must be specified: this
 determines if the ELB exists in a VPC or in EC2-classic.
@@ -146,10 +147,11 @@ In addition to all arguments above, the following attributes are exported:
   part of your inbound rules for your load balancer's back-end application
   instances. Only available on ELBs launched in a VPC.
 * `zone_id` - The canonical hosted zone ID of the ELB (to be used in a Route 53 Alias record)
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-ELBs can be imported using the `name`, e.g.
+ELBs can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_elb.bar elb-production-12345
