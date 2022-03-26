@@ -2,10 +2,10 @@
 resource/aws_mskconnect_custom_plugin: Implement resource Delete
 ```
 
-```new-resource
+```release-note:new-resource
 aws_mskconnect_connector
 ```
 
-```new-data-source
+```release-note:new-data-source
 aws_mskconnect_connector
 ```
