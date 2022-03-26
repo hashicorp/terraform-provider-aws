@@ -244,7 +244,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 												"location": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													Default:      dlm.LocationValuesCloud,
+													Computed:     true,
 													ValidateFunc: validation.StringInSlice(dlm.LocationValues_Values(), false),
 												},
 												"times": {

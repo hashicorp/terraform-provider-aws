@@ -191,14 +191,14 @@ resource "aws_dlm_lifecycle_policy" "example" {
     action {
       name = "tf-acc-basic"
       cross_region_copy {
-        encryption_configuration {}		  
+        encryption_configuration {}
         retain_rule {
           interval      = 15
           interval_unit = "MONTHS"
         }
 
         target = %[1]q
-	  }
+      }
     }
 
     event_source {
