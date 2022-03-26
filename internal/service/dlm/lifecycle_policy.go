@@ -50,9 +50,123 @@ func ResourceLifecyclePolicy() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"action": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cross_region_copy": {
+										Type:     schema.TypeSet,
+										Required: true,
+										MaxItems: 3,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"encryption_configuration": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"cmk_arn": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: verify.ValidARN,
+															},
+															"encrypted": {
+																Type:     schema.TypeBool,
+																Optional: true,
+																Default:  false,
+															},
+														},
+													},
+												},
+												"retain_rule": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"interval": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+															"interval_unit": {
+																Type:     schema.TypeString,
+																Required: true,
+																ValidateFunc: validation.StringInSlice(
+																	dlm.RetentionIntervalUnitValues_Values(),
+																	false,
+																),
+															},
+														},
+													},
+												},
+												"target": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[\w:\-\/\*]+$`), ""),
+												},
+											},
+										},
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(0, 120),
+											validation.StringMatch(regexp.MustCompile("^[0-9A-Za-z _-]+$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_Action.html"),
+										),
+									},
+								},
+							},
+						},
+						"event_source": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"parameters": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"description_regex": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(0, 1000),
+												},
+												"event_type": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(dlm.EventTypeValues_Values(), false),
+												},
+												"snapshot_owner": {
+													Type:     schema.TypeSet,
+													Required: true,
+													MaxItems: 50,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidAccountID,
+													},
+												},
+											},
+										},
+									},
+									"type": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(dlm.EventSourceValues_Values(), false),
+									},
+								},
+							},
+						},
 						"resource_types": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
@@ -355,7 +469,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 						},
 						"target_tags": {
 							Type:     schema.TypeMap,
-							Required: true,
+							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
@@ -392,12 +506,15 @@ func resourceLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[INFO] Creating DLM lifecycle policy: %s", input)
-	out, err := conn.CreateLifecyclePolicy(&input)
+	out, err := verify.RetryOnAWSCode(dlm.ErrCodeInvalidRequestException, func() (interface{}, error) {
+		return conn.CreateLifecyclePolicy(&input)
+	})
+
 	if err != nil {
 		return fmt.Errorf("error creating DLM Lifecycle Policy: %s", err)
 	}
 
-	d.SetId(aws.StringValue(out.PolicyId))
+	d.SetId(aws.StringValue(out.(*dlm.CreateLifecyclePolicyOutput).PolicyId))
 
 	return resourceLifecyclePolicyRead(d, meta)
 }
@@ -509,17 +626,23 @@ func expandDlmPolicyDetails(cfg []interface{}) *dlm.PolicyDetails {
 	policyDetails := &dlm.PolicyDetails{
 		PolicyType: aws.String(policyType),
 	}
-	if v, ok := m["resource_types"]; ok {
-		policyDetails.ResourceTypes = flex.ExpandStringList(v.([]interface{}))
+	if v, ok := m["resource_types"].([]interface{}); ok && len(v) > 0 {
+		policyDetails.ResourceTypes = flex.ExpandStringList(v)
 	}
 	if v, ok := m["resource_locations"].([]interface{}); ok && len(v) > 0 {
 		policyDetails.ResourceLocations = flex.ExpandStringList(v)
 	}
-	if v, ok := m["schedule"]; ok {
-		policyDetails.Schedules = expandDlmSchedules(v.([]interface{}))
+	if v, ok := m["schedule"].([]interface{}); ok && len(v) > 0 {
+		policyDetails.Schedules = expandDlmSchedules(v)
 	}
-	if v, ok := m["target_tags"]; ok {
-		policyDetails.TargetTags = expandDlmTags(v.(map[string]interface{}))
+	if v, ok := m["action"].([]interface{}); ok && len(v) > 0 {
+		policyDetails.Actions = expandDlmActions(v)
+	}
+	if v, ok := m["event_source"].([]interface{}); ok && len(v) > 0 {
+		policyDetails.EventSource = expandDlmEventSource(v)
+	}
+	if v, ok := m["target_tags"].(map[string]interface{}); ok && len(v) > 0 {
+		policyDetails.TargetTags = expandDlmTags(v)
 	}
 	if v, ok := m["parameters"].([]interface{}); ok && len(v) > 0 {
 		policyDetails.Parameters = expandDlmParameters(v, policyType)
@@ -532,6 +655,8 @@ func flattenDlmPolicyDetails(policyDetails *dlm.PolicyDetails) []map[string]inte
 	result := make(map[string]interface{})
 	result["resource_types"] = flex.FlattenStringList(policyDetails.ResourceTypes)
 	result["resource_locations"] = flex.FlattenStringList(policyDetails.ResourceLocations)
+	result["action"] = flattenDlmActions(policyDetails.Actions)
+	result["event_source"] = flattenDlmEventSource(policyDetails.EventSource)
 	result["schedule"] = flattenDlmSchedules(policyDetails.Schedules)
 	result["target_tags"] = flattenDlmTags(policyDetails.TargetTags)
 	result["policy_type"] = aws.StringValue(policyDetails.PolicyType)
@@ -613,6 +738,184 @@ func flattenDlmSchedules(schedules []*dlm.Schedule) []map[string]interface{} {
 	}
 
 	return result
+}
+
+func expandDlmActions(cfg []interface{}) []*dlm.Action {
+	actions := make([]*dlm.Action, len(cfg))
+	for i, c := range cfg {
+		action := &dlm.Action{}
+		m := c.(map[string]interface{})
+		if v, ok := m["cross_region_copy"].(*schema.Set); ok {
+			action.CrossRegionCopy = expandDlmActionCrossRegionCopyRules(v.List())
+		}
+		if v, ok := m["name"]; ok {
+			action.Name = aws.String(v.(string))
+		}
+
+		actions[i] = action
+	}
+
+	return actions
+}
+
+func flattenDlmActions(actions []*dlm.Action) []map[string]interface{} {
+	result := make([]map[string]interface{}, len(actions))
+	for i, s := range actions {
+		m := make(map[string]interface{})
+
+		m["name"] = aws.StringValue(s.Name)
+
+		if s.CrossRegionCopy != nil {
+			m["cross_region_copy"] = flattenDlmActionCrossRegionCopyRules(s.CrossRegionCopy)
+		}
+
+		result[i] = m
+	}
+
+	return result
+}
+
+func expandDlmActionCrossRegionCopyRules(l []interface{}) []*dlm.CrossRegionCopyAction {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	var rules []*dlm.CrossRegionCopyAction
+
+	for _, tfMapRaw := range l {
+		m, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		rule := &dlm.CrossRegionCopyAction{}
+		if v, ok := m["encryption_configuration"].([]interface{}); ok {
+			rule.EncryptionConfiguration = expandDlmActionCrossRegionCopyRuleEncryptionConfiguration(v)
+		}
+		if v, ok := m["retain_rule"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			rule.RetainRule = expandDlmCrossRegionCopyRuleRetainRule(v)
+		}
+		if v, ok := m["target"].(string); ok && v != "" {
+			rule.Target = aws.String(v)
+		}
+
+		rules = append(rules, rule)
+	}
+
+	return rules
+}
+
+func flattenDlmActionCrossRegionCopyRules(rules []*dlm.CrossRegionCopyAction) []interface{} {
+	if len(rules) == 0 {
+		return []interface{}{}
+	}
+
+	var result []interface{}
+
+	for _, rule := range rules {
+		if rule == nil {
+			continue
+		}
+
+		m := map[string]interface{}{
+			"encryption_configuration": flattenDlmActionCrossRegionCopyRuleEncryptionConfiguration(rule.EncryptionConfiguration),
+			"retain_rule":              flattenDlmCrossRegionCopyRuleRetainRule(rule.RetainRule),
+			"target":                   aws.StringValue(rule.Target),
+		}
+
+		result = append(result, m)
+	}
+
+	return result
+}
+
+func expandDlmActionCrossRegionCopyRuleEncryptionConfiguration(l []interface{}) *dlm.EncryptionConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	config := &dlm.EncryptionConfiguration{
+		Encrypted: aws.Bool(m["encrypted"].(bool)),
+	}
+
+	if v, ok := m["cmk_arn"].(string); ok && v != "" {
+		config.CmkArn = aws.String(v)
+	}
+	return config
+}
+
+func flattenDlmActionCrossRegionCopyRuleEncryptionConfiguration(rule *dlm.EncryptionConfiguration) []interface{} {
+	if rule == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"encrypted": aws.BoolValue(rule.Encrypted),
+		"cmk_arn":   aws.StringValue(rule.CmkArn),
+	}
+
+	return []interface{}{m}
+}
+
+func expandDlmEventSource(l []interface{}) *dlm.EventSource {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	config := &dlm.EventSource{
+		Type: aws.String(m["type"].(string)),
+	}
+
+	if v, ok := m["parameters"].([]interface{}); ok && len(v) > 0 {
+		config.Parameters = expandDlmEventSourceParameters(v)
+	}
+
+	return config
+}
+
+func flattenDlmEventSource(rule *dlm.EventSource) []interface{} {
+	if rule == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"parameters": flattenDlmEventSourceParameters(rule.Parameters),
+		"type":       aws.StringValue(rule.Type),
+	}
+
+	return []interface{}{m}
+}
+
+func expandDlmEventSourceParameters(l []interface{}) *dlm.EventParameters {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	config := &dlm.EventParameters{
+		DescriptionRegex: aws.String(m["description_regex"].(string)),
+		EventType:        aws.String(m["event_type"].(string)),
+		SnapshotOwner:    flex.ExpandStringSet(m["snapshot_owner"].(*schema.Set)),
+	}
+
+	return config
+}
+
+func flattenDlmEventSourceParameters(rule *dlm.EventParameters) []interface{} {
+	if rule == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"description_regex": aws.StringValue(rule.DescriptionRegex),
+		"event_type":        aws.StringValue(rule.EventType),
+		"snapshot_owner":    flex.FlattenStringSet(rule.SnapshotOwner),
+	}
+
+	return []interface{}{m}
 }
 
 func expandDlmCrossRegionCopyRules(l []interface{}) []*dlm.CrossRegionCopyRule {

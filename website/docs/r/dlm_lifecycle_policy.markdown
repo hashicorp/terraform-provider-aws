@@ -176,6 +176,52 @@ resource "aws_dlm_lifecycle_policy" "example" {
 }
 ```
 
+### Example Event Based Policy Usage
+
+```
+data "aws_caller_identity" "current" {}
+
+resource "aws_dlm_lifecycle_policy" "example" {
+  description        = "tf-acc-basic"
+  execution_role_arn = aws_iam_role.example.arn
+
+  policy_details {
+    policy_type = "EVENT_BASED_POLICY"
+
+    action {
+      name = "tf-acc-basic"
+      cross_region_copy {
+        encryption_configuration {}		  
+        retain_rule {
+          interval      = 15
+          interval_unit = "MONTHS"
+        }
+
+        target = %[1]q
+	  }
+    }
+
+    event_source {
+      type = "MANAGED_CWE"
+      parameters {
+        description_regex = "^.*Created for policy: policy-1234567890abcdef0.*$"
+        event_type        = "shareSnapshot"
+        snapshot_owner    = [data.aws_caller_identity.current.account_id]
+      }
+    }
+  }
+}
+
+data "aws_iam_policy" "example" {
+  name = "AWSDataLifecycleManagerServiceRole"
+}
+
+resource "aws_iam_role_policy_attachment" "example" {
+  role       = aws_iam_role.example.id
+  policy_arn = data.aws_iam_policy.example.arn
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -188,14 +234,43 @@ The following arguments are supported:
 
 #### Policy Details arguments
 
-* `resource_types` - (Required) A list of resource types that should be targeted by the lifecycle policy. Valid values are `VOLUME` and `INSTANCE`.
-* `resource_locations` - (Required) The location of the resources to backup. If the source resources are located in an AWS Region, specify `CLOUD`. If the source resources are located on an Outpost in your account, specify `OUTPOST`. If you specify `OUTPOST`, Amazon Data Lifecycle Manager backs up all resources of the specified type with matching target tags across all of the Outposts in your account. Valid values are `CLOUD` and `OUTPOST`.
+* `action` - (Optional) The actions to be performed when the event-based policy is triggered. You can specify only one action per policy. This parameter is required for event-based policies only. If you are creating a snapshot or AMI policy, omit this parameter. See the [`action` configuration](#action-arguments) block.
+* `event_source` - (Optional) The event that triggers the event-based policy. This parameter is required for event-based policies only. If you are creating a snapshot or AMI policy, omit this parameter. See the [`event_source` configuration](#event-source-arguments) block.
+* `resource_types` - (Optional) A list of resource types that should be targeted by the lifecycle policy. Valid values are `VOLUME` and `INSTANCE`.
+* `resource_locations` - (Optional) The location of the resources to backup. If the source resources are located in an AWS Region, specify `CLOUD`. If the source resources are located on an Outpost in your account, specify `OUTPOST`. If you specify `OUTPOST`, Amazon Data Lifecycle Manager backs up all resources of the specified type with matching target tags across all of the Outposts in your account. Valid values are `CLOUD` and `OUTPOST`.
 * `policy_type` - (Optional) The valid target resource types and actions a policy can manage. Specify `EBS_SNAPSHOT_MANAGEMENT` to create a lifecycle policy that manages the lifecycle of Amazon EBS snapshots. Specify `IMAGE_MANAGEMENT` to create a lifecycle policy that manages the lifecycle of EBS-backed AMIs. Specify `EVENT_BASED_POLICY` to create an event-based policy that performs specific actions when a defined event occurs in your AWS account. Default value is `EBS_SNAPSHOT_MANAGEMENT`.
 * `parameters` - (Optional) A set of optional parameters for snapshot and AMI lifecycle policies. See the [`parameters` configuration](#parameters-arguments) block.
-* `schedule` - (Required) See the [`schedule` configuration](#schedule-arguments) block.
-* `target_tags` (Required) A map of tag keys and their values. Any resources that match the `resource_types` and are tagged with _any_ of these tags will be targeted.
+* `schedule` - (Optional) See the [`schedule` configuration](#schedule-arguments) block.
+* `target_tags` (Optional) A map of tag keys and their values. Any resources that match the `resource_types` and are tagged with _any_ of these tags will be targeted.
 
 ~> Note: You cannot have overlapping lifecycle policies that share the same `target_tags`. Terraform is unable to detect this at plan time but it will fail during apply.
+
+#### Action arguments
+
+* `cross_region_copy` - (Optional) The rule for copying shared snapshots across Regions. See the [`cross_region_copy` configuration](#acion-cross-region-copy-arguments) block.
+* `name` - (Optional) A descriptive name for the action.
+
+##### Action Cross Region Copy Rule arguments
+
+* `encryption_configuration` - (Required) The encryption settings for the copied snapshot. See the [`encryption_configuration`](#encryption-configuration-arguments) block. Max of 1 per action.
+* `retain_rule` - (Required) Specifies the retention rule for cross-Region snapshot copies. See the [`retain_rule`](#cross-region-copy-rule-retain-rule-arguments) block. Max of 1 per action.
+* `target` - (Required) The target Region or the Amazon Resource Name (ARN) of the target Outpost for the snapshot copies.
+
+###### Encryption Configuration arguments
+
+* `cmk_arn` - (Optional) The Amazon Resource Name (ARN) of the AWS KMS key to use for EBS encryption. If this parameter is not specified, the default KMS key for the account is used.
+* `encrypted` - (Required) To encrypt a copy of an unencrypted snapshot when encryption by default is not enabled, enable encryption using this parameter. Copies of encrypted snapshots are encrypted, even if this parameter is false or when encryption by default is not enabled.
+
+#### Event Source arguments
+
+* `parameters` - (Required) Information about the event. See the [`parameters` configuration](#event-source-parameters-arguments) block.
+* `type` - (Required) The source of the event. Currently only managed CloudWatch Events rules are supported. Valid values are `MANAGED_CWE`.
+
+##### Event Source Parameters arguments
+
+* `description_regex` - (Required) The snapshot description that can trigger the policy. The description pattern is specified using a regular expression. The policy runs only if a snapshot with a description that matches the specified pattern is shared with your account.
+* `event_type` - (Required) The type of event. Currently, only `shareSnapshot` events are supported.
+* `snapshot_owner` - (Required) The IDs of the AWS accounts that can trigger policy by sharing snapshots with your account. The policy only runs if one of the specified AWS accounts shares a snapshot with your account.
 
 #### Parameters arguments
 
