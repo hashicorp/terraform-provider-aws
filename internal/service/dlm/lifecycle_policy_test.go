@@ -165,6 +165,33 @@ func TestAccDLMLifecyclePolicy_fastRestore(t *testing.T) {
 	})
 }
 
+func TestAccDLMLifecyclePolicy_shareRule(t *testing.T) {
+	resourceName := "aws_dlm_lifecycle_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dlm.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: dlmLifecyclePolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dlmLifecyclePolicyShareRuleConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkDlmLifecyclePolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.share_rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "policy_details.0.schedule.0.share_rule.0.target_accounts.0", "data.aws_caller_identity.current", "account_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccDLMLifecyclePolicy_parameters_instance(t *testing.T) {
 	resourceName := "aws_dlm_lifecycle_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -673,6 +700,42 @@ resource "aws_dlm_lifecycle_policy" "test" {
       fast_restore_rule {
         availability_zones = data.aws_availability_zones.available.names
         count              = 10
+      }
+    }
+
+    target_tags = {
+      tf-acc-test = "basic"
+    }
+  }
+}
+`
+}
+
+func dlmLifecyclePolicyShareRuleConfig(rName string) string {
+	return dlmLifecyclePolicyBaseConfig(rName) + `
+data "aws_caller_identity" "current" {}
+
+resource "aws_dlm_lifecycle_policy" "test" {
+  description        = "tf-acc-basic"
+  execution_role_arn = aws_iam_role.test.arn
+
+  policy_details {
+    resource_types = ["VOLUME"]
+    policy_type    = "EBS_SNAPSHOT_MANAGEMENT"
+
+    schedule {
+      name = "tf-acc-basic"
+
+      create_rule {
+        interval = 12
+      }
+
+      retain_rule {
+        count = 10
+      }
+
+      share_rule {
+        target_accounts = [data.aws_caller_identity.current.account_id]
       }
     }
 

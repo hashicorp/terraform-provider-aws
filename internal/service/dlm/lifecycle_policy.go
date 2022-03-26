@@ -238,7 +238,8 @@ func ResourceLifecyclePolicy() *schema.Resource {
 													Type:     schema.TypeSet,
 													Required: true,
 													MinItems: 1,
-													Elem:     &schema.Schema{Type: schema.TypeString}},
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
 												"count": {
 													Type:         schema.TypeInt,
 													Optional:     true,
@@ -282,6 +283,37 @@ func ResourceLifecyclePolicy() *schema.Resource {
 													ValidateFunc: validation.IntAtLeast(1),
 												},
 												"interval_unit": {
+													Type:     schema.TypeString,
+													Optional: true,
+													ValidateFunc: validation.StringInSlice(
+														dlm.RetentionIntervalUnitValues_Values(),
+														false,
+													),
+												},
+											},
+										},
+									},
+									"share_rule": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"target_accounts": {
+													Type:     schema.TypeSet,
+													Required: true,
+													MinItems: 1,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidAccountID,
+													},
+												},
+												"unshare_interval": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntAtLeast(1),
+												},
+												"unshare_interval_unit": {
 													Type:     schema.TypeString,
 													Optional: true,
 													ValidateFunc: validation.StringInSlice(
@@ -514,6 +546,9 @@ func expandDlmSchedules(cfg []interface{}) []*dlm.Schedule {
 		if v, ok := m["fast_restore_rule"]; ok {
 			schedule.FastRestoreRule = expandDlmFastRestoreRule(v.([]interface{}))
 		}
+		if v, ok := m["share_rule"]; ok {
+			schedule.ShareRules = expandDlmShareRule(v.([]interface{}))
+		}
 		if v, ok := m["retain_rule"]; ok {
 			schedule.RetainRule = expandDlmRetainRule(v.([]interface{}))
 		}
@@ -548,6 +583,10 @@ func flattenDlmSchedules(schedules []*dlm.Schedule) []map[string]interface{} {
 
 		if s.FastRestoreRule != nil {
 			m["fast_restore_rule"] = flattenDlmFastRestoreRule(s.FastRestoreRule)
+		}
+
+		if s.ShareRules != nil {
+			m["share_rule"] = flattenDlmShareRule(s.ShareRules)
 		}
 
 		result[i] = m
@@ -822,6 +861,62 @@ func flattenDlmFastRestoreRule(rule *dlm.FastRestoreRule) []map[string]interface
 	result["availability_zones"] = flex.FlattenStringSet(rule.AvailabilityZones)
 
 	return []map[string]interface{}{result}
+}
+
+func expandDlmShareRule(cfg []interface{}) []*dlm.ShareRule {
+	if len(cfg) == 0 || cfg[0] == nil {
+		return nil
+	}
+
+	rules := make([]*dlm.ShareRule, 0)
+
+	for _, shareRule := range cfg {
+		m := shareRule.(map[string]interface{})
+
+		rule := &dlm.ShareRule{
+			TargetAccounts: flex.ExpandStringSet(m["target_accounts"].(*schema.Set)),
+		}
+
+		if v, ok := m["unshare_interval"].(int); ok && v > 0 {
+			rule.UnshareInterval = aws.Int64(int64(v))
+		}
+
+		if v, ok := m["unshare_interval_unit"].(string); ok && v != "" {
+			rule.UnshareIntervalUnit = aws.String(v)
+		}
+
+		rules = append(rules, rule)
+	}
+
+	return rules
+}
+
+func flattenDlmShareRule(rules []*dlm.ShareRule) []map[string]interface{} {
+	values := make([]map[string]interface{}, 0)
+
+	for _, v := range rules {
+		rule := make(map[string]interface{})
+
+		if v == nil {
+			return nil
+		}
+
+		if v.TargetAccounts != nil {
+			rule["target_accounts"] = flex.FlattenStringSet(v.TargetAccounts)
+		}
+
+		if v.UnshareIntervalUnit != nil {
+			rule["unshare_interval_unit"] = aws.StringValue(v.UnshareIntervalUnit)
+		}
+
+		if v.UnshareInterval != nil {
+			rule["unshare_interval"] = aws.Int64Value(v.UnshareInterval)
+		}
+
+		values = append(values, rule)
+	}
+
+	return values
 }
 
 func expandDlmTags(m map[string]interface{}) []*dlm.Tag {
