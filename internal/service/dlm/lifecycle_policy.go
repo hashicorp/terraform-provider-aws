@@ -59,6 +59,16 @@ func ResourceLifecyclePolicy() *schema.Resource {
 								ValidateFunc: validation.StringInSlice(dlm.ResourceTypeValues_Values(), false),
 							},
 						},
+						"resource_locations": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(dlm.ResourceLocationValues_Values(), false),
+							},
+						},
 						"parameters": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -116,6 +126,12 @@ func ResourceLifecyclePolicy() *schema.Resource {
 													Optional:     true,
 													Computed:     true,
 													ValidateFunc: validation.StringInSlice(dlm.IntervalUnitValues_Values(), false),
+												},
+												"location": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Default:      dlm.LocationValuesCloud,
+													ValidateFunc: validation.StringInSlice(dlm.LocationValues_Values(), false),
 												},
 												"times": {
 													Type:     schema.TypeList,
@@ -496,6 +512,9 @@ func expandDlmPolicyDetails(cfg []interface{}) *dlm.PolicyDetails {
 	if v, ok := m["resource_types"]; ok {
 		policyDetails.ResourceTypes = flex.ExpandStringList(v.([]interface{}))
 	}
+	if v, ok := m["resource_locations"].([]interface{}); ok && len(v) > 0 {
+		policyDetails.ResourceLocations = flex.ExpandStringList(v)
+	}
 	if v, ok := m["schedule"]; ok {
 		policyDetails.Schedules = expandDlmSchedules(v.([]interface{}))
 	}
@@ -512,6 +531,7 @@ func expandDlmPolicyDetails(cfg []interface{}) *dlm.PolicyDetails {
 func flattenDlmPolicyDetails(policyDetails *dlm.PolicyDetails) []map[string]interface{} {
 	result := make(map[string]interface{})
 	result["resource_types"] = flex.FlattenStringList(policyDetails.ResourceTypes)
+	result["resource_locations"] = flex.FlattenStringList(policyDetails.ResourceLocations)
 	result["schedule"] = flattenDlmSchedules(policyDetails.Schedules)
 	result["target_tags"] = flattenDlmTags(policyDetails.TargetTags)
 	result["policy_type"] = aws.StringValue(policyDetails.PolicyType)
@@ -730,6 +750,10 @@ func expandDlmCreateRule(cfg []interface{}) *dlm.CreateRule {
 		createRule.Interval = aws.Int64(int64(v))
 	}
 
+	if v, ok := c["location"].(string); ok && v != "" {
+		createRule.Location = aws.String(v)
+	}
+
 	if v, ok := c["interval_unit"].(string); ok && v != "" {
 		createRule.IntervalUnit = aws.String(v)
 	} else {
@@ -758,6 +782,10 @@ func flattenDlmCreateRule(createRule *dlm.CreateRule) []map[string]interface{} {
 
 	if createRule.IntervalUnit != nil {
 		result["interval_unit"] = aws.StringValue(createRule.IntervalUnit)
+	}
+
+	if createRule.Location != nil {
+		result["location"] = aws.StringValue(createRule.Location)
 	}
 
 	if createRule.CronExpression != nil {
