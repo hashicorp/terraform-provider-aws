@@ -1,11 +1,16 @@
-## 4.8.0 (Unreleased)
+## 4.9.0 (Unreleased)
 
 BUG FIXES:
 
 * resource/aws_cloudformation_stack_set: Consider `QUEUED` a valid pending state for resource creation ([#22160](https://github.com/hashicorp/terraform-provider-aws/issues/22160))
 * resource/aws_dynamodb_table_item: Allow `item` names to still succeed if they include non-letters ([#14075](https://github.com/hashicorp/terraform-provider-aws/issues/14075))
 
-## 4.8.0 (Unreleased)
+## 4.8.0 (March 25, 2022)
+
+FEATURES:
+
+* **New Data Source:** `aws_mskconnect_connector` ([#23792](https://github.com/hashicorp/terraform-provider-aws/issues/23544))
+* **New Resource:** `aws_mskconnect_connector` ([#23765](https://github.com/hashicorp/terraform-provider-aws/issues/23544))
 
 ENHANCEMENTS:
 
