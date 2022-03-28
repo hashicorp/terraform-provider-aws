@@ -356,7 +356,11 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 
 	// conditionally revoke rules first before attempting to delete the group
 	if v := d.Get("revoke_rules_on_delete").(bool); v {
-		if err := forceRevokeSecurityGroupRules(conn, d); err != nil {
+		if err := forceRevokeSecurityGroupRules(conn, d.Id()); err != nil {
+			if tfawserr.ErrCodeEquals(err, ErrCodeInvalidGroupNotFound) {
+				return nil
+			}
+
 			return err
 		}
 	}
@@ -383,11 +387,12 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-// Revoke all ingress/egress rules that a Security Group has
-func forceRevokeSecurityGroupRules(conn *ec2.EC2, d *schema.ResourceData) error {
-	group, err := FindSecurityGroupByID(conn, d.Id())
+// forceRevokeSecurityGroupRules revokes all of the specified Security Group's ingress & egress rules.
+func forceRevokeSecurityGroupRules(conn *ec2.EC2, id string) error {
+	group, err := FindSecurityGroupByID(conn, id)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading Security Group (%s): %w", id, err)
 	}
 
 	if len(group.IpPermissions) > 0 {
@@ -402,7 +407,7 @@ func forceRevokeSecurityGroupRules(conn *ec2.EC2, d *schema.ResourceData) error 
 		_, err = conn.RevokeSecurityGroupIngress(req)
 
 		if err != nil {
-			return fmt.Errorf("error revoking Security Group (%s) rules: %w", aws.StringValue(group.GroupId), err)
+			return fmt.Errorf("error revoking Security Group (%s) ingress rules: %w", id, err)
 		}
 	}
 
@@ -414,7 +419,7 @@ func forceRevokeSecurityGroupRules(conn *ec2.EC2, d *schema.ResourceData) error 
 		_, err = conn.RevokeSecurityGroupEgress(req)
 
 		if err != nil {
-			return fmt.Errorf("error revoking Security Group (%s) rules: %w", aws.StringValue(group.GroupId), err)
+			return fmt.Errorf("error revoking Security Group (%s) egress rules: %w", id, err)
 		}
 	}
 
