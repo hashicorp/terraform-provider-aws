@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -14,14 +15,25 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+const (
+	dbInstanceAutomatedBackupReplicationRetained = "retained"
+)
+
 func TestAccRDSInstanceAutomatedBackupReplication_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance_automated_backup_replication.test"
 
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckInstanceAutomatedBackupReplicationDestroy,
@@ -42,13 +54,20 @@ func TestAccRDSInstanceAutomatedBackupReplication_basic(t *testing.T) {
 }
 
 func TestAccRDSInstanceAutomatedBackupReplication_retentionPeriod(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance_automated_backup_replication.test"
 
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckInstanceAutomatedBackupReplicationDestroy,
@@ -69,13 +88,20 @@ func TestAccRDSInstanceAutomatedBackupReplication_retentionPeriod(t *testing.T) 
 }
 
 func TestAccRDSInstanceAutomatedBackupReplication_kmsEncrypted(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance_automated_backup_replication.test"
 
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckInstanceAutomatedBackupReplicationDestroy,
@@ -182,29 +208,32 @@ func testAccCheckInstanceAutomatedBackupReplicationDestroy(s *terraform.State) e
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_db_instance_automated_backup_replication" {
+		if rs.Type != "aws_rds_cluster" {
 			continue
 		}
 
-		input := &rds.DescribeDBInstanceAutomatedBackupsInput{
-			DBInstanceAutomatedBackupsArn: &rs.Primary.ID,
+		// Try to find the Group
+		var err error
+		resp, err := conn.DescribeDBInstanceAutomatedBackups(
+			&rds.DescribeDBInstanceAutomatedBackupsInput{
+				DBInstanceAutomatedBackupsArn: aws.String(rs.Primary.ID),
+			})
+
+		if err == nil {
+			if len(resp.DBInstanceAutomatedBackups) != 0 &&
+				*resp.DBInstanceAutomatedBackups[0].DBInstanceAutomatedBackupsArn == rs.Primary.ID {
+				return fmt.Errorf("DB Instance Automated Backup still exists, %s", rs.Primary.ID)
+			}
 		}
 
-		output, err := conn.DescribeDBInstanceAutomatedBackups(input)
-
-		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceAutomatedBackupNotFoundFault) {
-			continue
+		// Return nil if the cluster is already destroyed
+		if awsErr, ok := err.(awserr.Error); ok {
+			if awsErr.Code() == rds.ErrCodeDBInstanceAutomatedBackupNotFoundFault {
+				return nil
+			}
 		}
 
-		if err != nil {
-			return err
-		}
-
-		if output == nil {
-			continue
-		}
-
-		return fmt.Errorf("RDS instance backup replication %q still exists", rs.Primary.ID)
+		return err
 	}
 
 	return nil
