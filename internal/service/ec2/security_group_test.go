@@ -542,12 +542,12 @@ func TestAccEC2SecurityGroup_basicEC2Classic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupClassicDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupEC2ClassicDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityGroupEC2ClassicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupClassicExists(resourceName, &group),
+					testAccCheckSecurityGroupEC2ClassicExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
@@ -711,9 +711,10 @@ func TestAccEC2SecurityGroup_namePrefixTerraform(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroup_allowAll(t *testing.T) {
+func TestAccEC2SecurityGroup_tags(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -722,7 +723,53 @@ func TestAccEC2SecurityGroup_allowAll(t *testing.T) {
 		CheckDestroy: testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityGroupConfig_allowAll,
+				Config: testAccSecurityGroupConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+			},
+			{
+				Config: testAccSecurityGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccSecurityGroupConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2SecurityGroup_allowAll(t *testing.T) {
+	var group ec2.SecurityGroup
+	resourceName := "aws_security_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecurityGroupAllowAllConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
 				),
@@ -1719,52 +1766,6 @@ func TestAccEC2SecurityGroup_invalidCIDRBlock(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroup_tags(t *testing.T) {
-	var group ec2.SecurityGroup
-	resourceName := "aws_security_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecurityGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSecurityGroupTags1Config(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
-			},
-			{
-				Config: testAccSecurityGroupTags2Config(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccSecurityGroupTags1Config(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccEC2SecurityGroup_cidrAndGroups(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
@@ -1853,12 +1854,12 @@ func TestAccEC2SecurityGroup_ingressWithCIDRAndSGsClassic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupClassicDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupEC2ClassicDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityGroupConfig_ingressWithCIDRAndSGs_classic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupClassicExists(resourceName, &group),
+					testAccCheckSecurityGroupEC2ClassicExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
@@ -2361,9 +2362,11 @@ func testAccCheckSecurityGroupDestroy(s *terraform.State) error {
 		}
 
 		_, err := tfec2.FindSecurityGroupByID(conn, rs.Primary.ID)
+
 		if tfresource.NotFound(err) {
 			continue
 		}
+
 		if err != nil {
 			return err
 		}
@@ -2374,7 +2377,7 @@ func testAccCheckSecurityGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckSecurityGroupClassicDestroy(s *terraform.State) error {
+func testAccCheckSecurityGroupEC2ClassicDestroy(s *terraform.State) error {
 	conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -2383,20 +2386,22 @@ func testAccCheckSecurityGroupClassicDestroy(s *terraform.State) error {
 		}
 
 		_, err := tfec2.FindSecurityGroupByID(conn, rs.Primary.ID)
+
 		if tfresource.NotFound(err) {
 			continue
 		}
+
 		if err != nil {
 			return err
 		}
 
-		return fmt.Errorf("Security Group (%s) still exists.", rs.Primary.ID)
+		return fmt.Errorf("EC2 Classic Security Group (%s) still exists.", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckSecurityGroupExists(n string, group *ec2.SecurityGroup) resource.TestCheckFunc {
+func testAccCheckSecurityGroupExists(n string, v *ec2.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -2404,26 +2409,24 @@ func testAccCheckSecurityGroupExists(n string, group *ec2.SecurityGroup) resourc
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Security Group is set")
+			return fmt.Errorf("No Security Group ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		sg, err := tfec2.FindSecurityGroupByID(conn, rs.Primary.ID)
-		if tfresource.NotFound(err) {
-			return fmt.Errorf("Security Group (%s) not found: %w", rs.Primary.ID, err)
-		}
+		output, err := tfec2.FindSecurityGroupByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*group = *sg
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckSecurityGroupClassicExists(n string, group *ec2.SecurityGroup) resource.TestCheckFunc {
+func testAccCheckSecurityGroupEC2ClassicExists(n string, v *ec2.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -2431,20 +2434,18 @@ func testAccCheckSecurityGroupClassicExists(n string, group *ec2.SecurityGroup) 
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Security Group is set")
+			return fmt.Errorf("No EC2 Classic Security Group ID is set")
 		}
 
 		conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).EC2Conn
 
-		sg, err := tfec2.FindSecurityGroupByID(conn, rs.Primary.ID)
-		if tfresource.NotFound(err) {
-			return fmt.Errorf("Security Group (%s) not found: %w", rs.Primary.ID, err)
-		}
+		output, err := tfec2.FindSecurityGroupByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*group = *sg
+		*v = *output
 
 		return nil
 	}
@@ -2800,6 +2801,49 @@ resource "aws_security_group" "test" {
   vpc_id      = aws_vpc.test.id
 }
 `, rName, namePrefix)
+}
+
+func testAccSecurityGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccSecurityGroupConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccSecurityGroupRuleLimitConfig(egressStartIndex, egressRulesCount int) string {
@@ -3324,51 +3368,6 @@ resource "aws_security_group" "test2" {
 }
 `
 
-func testAccSecurityGroupTags1Config(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.test.id
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccSecurityGroupTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.test.id
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
 const testAccSecurityGroupDefaultEgressConfig = `
 resource "aws_vpc" "tf_sg_egress_test" {
   cidr_block = "10.0.0.0/16"
@@ -3660,9 +3659,7 @@ resource "aws_security_group" "test" {
 `
 
 func testAccSecurityGroupConfig_ingressWithCIDRAndSGs_classic(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigEC2ClassicRegionProvider(),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigEC2ClassicRegionProvider(), fmt.Sprintf(`
 resource "aws_security_group" "test2" {
   name        = "%[1]s-2"
   description = "Used in the terraform acceptance tests"
@@ -3748,19 +3745,23 @@ resource "aws_security_group" "nat" {
 }
 `
 
-const testAccSecurityGroupConfig_allowAll = `
+func testAccSecurityGroupAllowAllConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-allow-all"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
-  name        = "allow_all"
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.foo.id
+  name   = %[1]q
+  vpc_id = aws_vpc.foo.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group_rule" "allow_all" {
@@ -3782,7 +3783,8 @@ resource "aws_security_group_rule" "allow_all-1" {
   self              = true
   security_group_id = aws_security_group.test.id
 }
-`
+`, rName)
+}
 
 const testAccSecurityGroupConfig_sourceSecurityGroup = `
 resource "aws_vpc" "foo" {
