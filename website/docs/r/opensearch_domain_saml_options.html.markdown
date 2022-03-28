@@ -16,8 +16,8 @@ Manages SAML authentication options for an AWS OpenSearch Domain.
 
 ```terraform
 resource "aws_opensearch_domain" "example" {
-  domain_name           = "example"
-  engine_version = "1.5"
+  domain_name    = "example"
+  engine_version = "OpenSearch_1.1"
 
   cluster_config {
     instance_type = "r4.large.search"
@@ -52,7 +52,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `saml_options` - (Optional) The SAML authentication options for an AWS OpenSearch Domain.
+* `saml_options` - (Optional) SAML authentication options for an AWS OpenSearch Domain.
 
 ### saml_options
 
@@ -67,14 +67,14 @@ The following arguments are optional:
 
 #### idp
 
-* `entity_id` - (Required) The unique Entity ID of the application in SAML Identity Provider.
-* `metadata_content` - (Required) The Metadata of the SAML application in xml format.
+* `entity_id` - (Required) Unique Entity ID of the application in SAML Identity Provider.
+* `metadata_content` - (Required) Metadata of the SAML application in xml format.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The name of the domain the SAML options are associated with.
+* `id` - Name of the domain the SAML options are associated with.
 
 ## Import
 

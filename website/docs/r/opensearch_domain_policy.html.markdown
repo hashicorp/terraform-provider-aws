@@ -8,14 +8,14 @@ description: |-
 
 # Resource: aws_opensearch_domain_policy
 
-Allows setting policy to an OpenSearch domain while referencing domain attributes (e.g., ARN)
+Allows setting policy to an OpenSearch domain while referencing domain attributes (e.g., ARN).
 
 ## Example Usage
 
 ```terraform
 resource "aws_opensearch_domain" "example" {
-  domain_name           = "tf-test"
-  engine_version = "2.3"
+  domain_name    = "tf-test"
+  engine_version = "OpenSearch_1.1"
 }
 
 resource "aws_opensearch_domain_policy" "main" {
@@ -44,8 +44,8 @@ POLICIES
 
 The following arguments are supported:
 
-* `domain_name` - (Required) Name of the domain.
 * `access_policies` - (Optional) IAM policy document specifying the access policies for the domain
+* `domain_name` - (Required) Name of the domain.
 
 ## Attributes Reference
 

@@ -236,7 +236,7 @@ The following arguments are optional:
 
 ### auto_tune_options
 
-* `desired_state` - (Required) The Auto-Tune desired state for the domain. Valid values: `ENABLED` or `DISABLED`.
+* `desired_state` - (Required) Auto-Tune desired state for the domain. Valid values: `ENABLED` or `DISABLED`.
 * `maintenance_schedule` - (Required if `rollback_on_disable` is set to `DEFAULT_ROLLBACK`) Configuration block for Auto-Tune maintenance windows. Can be specified multiple times for each maintenance window. Detailed below.
 * `rollback_on_disable` - (Optional) Whether to roll back to default Auto-Tune settings when disabling Auto-Tune. Valid values: `DEFAULT_ROLLBACK` or `NO_ROLLBACK`.
 
@@ -249,7 +249,7 @@ The following arguments are optional:
 ##### duration
 
 * `value` - (Required) An integer specifying the value of the duration of an Auto-Tune maintenance window.
-* `unit` - (Required) The unit of time specifying the duration of an Auto-Tune maintenance window. Valid values: `HOURS`.
+* `unit` - (Required) Unit of time specifying the duration of an Auto-Tune maintenance window. Valid values: `HOURS`.
 
 ### cluster_config
 
