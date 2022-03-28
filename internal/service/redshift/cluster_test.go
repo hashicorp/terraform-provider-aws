@@ -547,7 +547,7 @@ func TestAccRedshiftCluster_changeAvailabilityZone_availabilityZoneRelocationNot
 			},
 			{
 				Config:      testAccClusterConfig_updateAvailabilityZone_availabilityZoneRelocationNotSet(rName, 1),
-				ExpectError: regexp.MustCompile(`cannot change availability_zone if availability_zone_relocation_enabled is not true`),
+				ExpectError: regexp.MustCompile("cannot change `availability_zone` if `availability_zone_relocation_enabled` is not true"),
 			},
 		},
 	})
@@ -663,7 +663,7 @@ func TestAccRedshiftCluster_availabilityZoneRelocation_publiclyAccessible(t *tes
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccClusterConfig_availabilityZoneRelocation_publiclyAccessible(rName),
-				ExpectError: regexp.MustCompile(`availability_zone_relocation_enabled can not be true when publicly_accessible is true`),
+				ExpectError: regexp.MustCompile("`availability_zone_relocation_enabled` cannot be true when `publicly_accessible` is true"),
 			},
 		},
 	})

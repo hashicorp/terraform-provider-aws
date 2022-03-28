@@ -1,5 +1,13 @@
 package redshift
 
+const (
+	clusterAvailabilityStatusAvailable   = "Available"
+	clusterAvailabilityStatusFailed      = "Failed"
+	clusterAvailabilityStatusMaintenance = "Maintenance"
+	clusterAvailabilityStatusModifying   = "Modifying"
+	clusterAvailabilityStatusUnavailable = "Unavailable"
+)
+
 // https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html#rs-mgmt-cluster-status.
 //nolint:deadcode,varcheck // These constants are missing from the AWS SDK
 const (
