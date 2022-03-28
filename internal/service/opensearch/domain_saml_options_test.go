@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccOpenSearchDomainSamlOptions_basic(t *testing.T) {
+func TestAccOpenSearchDomainSAMLOptions_basic(t *testing.T) {
 	var domain opensearchservice.DomainStatus
 
 	rName := sdkacctest.RandomWithPrefix("acc-test")
@@ -50,7 +50,7 @@ func TestAccOpenSearchDomainSamlOptions_basic(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomainSamlOptions_disappears(t *testing.T) {
+func TestAccOpenSearchDomainSAMLOptions_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("opensearch-master-user")
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
@@ -75,7 +75,7 @@ func TestAccOpenSearchDomainSamlOptions_disappears(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomainSamlOptions_disappears_Domain(t *testing.T) {
+func TestAccOpenSearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("opensearch-master-user")
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
@@ -101,7 +101,7 @@ func TestAccOpenSearchDomainSamlOptions_disappears_Domain(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomainSamlOptions_Update(t *testing.T) {
+func TestAccOpenSearchDomainSAMLOptions_Update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("opensearch-master-user")
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
@@ -135,7 +135,7 @@ func TestAccOpenSearchDomainSamlOptions_Update(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomainSamlOptions_Disabled(t *testing.T) {
+func TestAccOpenSearchDomainSAMLOptions_Disabled(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("opensearch-master-user")
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())

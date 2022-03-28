@@ -352,7 +352,7 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(ds.ARN))
 
 	if ds.AccessPolicies != nil && aws.StringValue(ds.AccessPolicies) != "" {
-		policies, err := structure.NormalizeJsonString(*ds.AccessPolicies)
+		policies, err := structure.NormalizeJsonString(aws.StringValue(ds.AccessPolicies))
 		if err != nil {
 			return fmt.Errorf("access policies contain an invalid JSON: %w", err)
 		}
