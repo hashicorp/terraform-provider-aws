@@ -814,6 +814,7 @@ func TestAccEC2SecurityGroup_sourceSecurityGroup(t *testing.T) {
 func TestAccEC2SecurityGroup_ipRangeAndSecurityGroupWithSameRules(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -822,7 +823,7 @@ func TestAccEC2SecurityGroup_ipRangeAndSecurityGroupWithSameRules(t *testing.T) 
 		CheckDestroy: testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityGroupConfig_IPRangeAndSecurityGroupWithSameRules,
+				Config: testAccSecurityGroupIPRangeAndSecurityGroupWithSameRulesConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
 				),
@@ -3846,24 +3847,33 @@ resource "aws_security_group_rule" "allow_test3" {
 `, rName)
 }
 
-const testAccSecurityGroupConfig_IPRangeAndSecurityGroupWithSameRules = `
-resource "aws_vpc" "foo" {
+func testAccSecurityGroupIPRangeAndSecurityGroupWithSameRulesConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-import-ip-range-and-sg"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
-  name   = "test group 1"
-  vpc_id = aws_vpc.foo.id
-}
-
-resource "aws_security_group" "test2" {
-  name   = "test group 2"
-  vpc_id = aws_vpc.foo.id
-}
+	name   = "%[1]s-1"
+	vpc_id = aws_vpc.test.id
+  
+	tags = {
+	  Name = %[1]q
+	}
+  }
+  
+  resource "aws_security_group" "test2" {
+	name   = "%[1]s-2"
+	vpc_id = aws_vpc.test.id
+  
+	tags = {
+	  Name = %[1]q
+	}
+  }
 
 resource "aws_security_group_rule" "allow_security_group" {
   type      = "ingress"
@@ -3894,7 +3904,8 @@ resource "aws_security_group_rule" "allow_ipv6_cidr_block" {
   ipv6_cidr_blocks  = ["::/0"]
   security_group_id = aws_security_group.test.id
 }
-`
+`, rName)
+}
 
 const testAccSecurityGroupConfig_IPRangesWithSameRules = `
 resource "aws_vpc" "foo" {
