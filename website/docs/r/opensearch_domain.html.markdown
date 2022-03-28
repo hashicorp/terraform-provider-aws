@@ -8,7 +8,24 @@ description: |-
 
 # Resource: aws_opensearch_domain
 
-Manages an AWS OpenSearch Domain.
+Manages an Amazon OpenSearch Domain.
+
+## Elasticsearch vs. OpenSearch
+
+Amazon OpenSearch Service is the successor to Amazon Elasticsearch Service and supports OpenSearch and legacy Elasticsearch OSS (up to 7.10, the final open source version of the software).
+
+OpenSearch Domain configurations are similar in many ways to Elasticsearch Domain configurations. However, there are important differences including these:
+
+* OpenSearch has `engine_version` while Elasticsearch has `elastisearch_version`
+* Versions are specified differently - _e.g._, `Elastisearch_7.10` with OpenSearch vs. `7.10` for Elasticsearch.
+* `instance_type` argument values end in `search` for OpenSearch vs. `elasticsearch` for Elasticsearch (_e.g._, `t2.micro.search` vs. `t2.micro.elasticsearch`).
+* The AWS-managed service-linked role for OpenSearch is called `AWSServiceRoleForAmazonOpenSearchService` instead of `AWSServiceRoleForAmazonElasticsearchService` for Elasticsearch.
+
+There are also some potentially unexpected similarities in configurations:
+
+* ARNs for both are prefaced with `arn:aws:es:`.
+* Both OpenSearch and Elasticsearch use assume role policies that refer to the `Principal` `Service` as `es.amazonaws.com`.
+* IAM policy actions, such as those you will find in `access_policies`, are prefaced with `es:` for both.
 
 ## Example Usage
 
@@ -107,7 +124,7 @@ resource "aws_opensearch_domain" "example" {
 }
 ```
 
-### VPC based ES
+### VPC based OpenSearch
 
 ```terraform
 variable "vpc" {}
@@ -116,14 +133,14 @@ variable "domain" {
   default = "tf-test"
 }
 
-data "aws_vpc" "selected" {
+data "aws_vpc" "example" {
   tags = {
     Name = var.vpc
   }
 }
 
-data "aws_subnet_ids" "selected" {
-  vpc_id = data.aws_vpc.selected.id
+data "aws_subnet_ids" "example" {
+  vpc_id = data.aws_vpc.example.id
 
   tags = {
     Tier = "private"
@@ -134,10 +151,10 @@ data "aws_region" "current" {}
 
 data "aws_caller_identity" "current" {}
 
-resource "aws_security_group" "es" {
+resource "aws_security_group" "example" {
   name        = "${var.vpc}-opensearch-${var.domain}"
   description = "Managed by Terraform"
-  vpc_id      = data.aws_vpc.selected.id
+  vpc_id      = data.aws_vpc.example.id
 
   ingress {
     from_port = 443
@@ -145,16 +162,16 @@ resource "aws_security_group" "es" {
     protocol  = "tcp"
 
     cidr_blocks = [
-      data.aws_vpc.selected.cidr_block,
+      data.aws_vpc.example.cidr_block,
     ]
   }
 }
 
-resource "aws_iam_service_linked_role" "es" {
-  aws_service_name = "es.amazonaws.com"
+resource "aws_iam_service_linked_role" "example" {
+  aws_service_name = "opensearchservice.amazonaws.com"
 }
 
-resource "aws_opensearch_domain" "es" {
+resource "aws_opensearch_domain" "example" {
   domain_name    = var.domain
   engine_version = "OpenSearch_1.0"
 
@@ -165,11 +182,11 @@ resource "aws_opensearch_domain" "es" {
 
   vpc_options {
     subnet_ids = [
-      data.aws_subnet_ids.selected.ids[0],
-      data.aws_subnet_ids.selected.ids[1],
+      data.aws_subnet_ids.example.ids[0],
+      data.aws_subnet_ids.example.ids[1],
     ]
 
-    security_group_ids = [aws_security_group.es.id]
+    security_group_ids = [aws_security_group.example.id]
   }
 
   advanced_options = {
@@ -194,7 +211,7 @@ CONFIG
     Domain = "TestDomain"
   }
 
-  depends_on = [aws_iam_service_linked_role.es]
+  depends_on = [aws_iam_service_linked_role.example]
 }
 ```
 
@@ -214,18 +231,18 @@ The following arguments are optional:
 * `cognito_options` - (Optional) Configuration block for authenticating Kibana with Cognito. Detailed below.
 * `domain_endpoint_options` - (Optional) Configuration block for domain endpoint HTTP(S) related options. Detailed below.
 * `ebs_options` - (Optional) Configuration block for EBS related options, may be required based on chosen [instance size](https://aws.amazon.com/opensearch-service/pricing/). Detailed below.
-* `engine_version` - (Optional) String of format `Elasticsearch_X.Y` or `OpenSearch_X.Y` to specify the engine version for the Amazon OpenSearch Service domain. For example, `OpenSearch_1.0` or `Elasticsearch_7.9`. See [Creating and managing Amazon OpenSearch Service domains](http://docs.aws.amazon.com/opensearch-service/latest/developerguide/createupdatedomains.html#createdomains). Defaults to `OpenSearch_1.1`.
-* `encrypt_at_rest` - (Optional) Configuration block for encrypt at rest options. Only available for [certain instance types](http://docs.aws.amazon.com/opensearch-service/latest/developerguide/aes-supported-instance-types.html). Detailed below.
+* `engine_version` - (Optional) Either `Elasticsearch_X.Y` or `OpenSearch_X.Y` to specify the engine version for the Amazon OpenSearch Service domain. For example, `OpenSearch_1.0` or `Elasticsearch_7.9`. See [Creating and managing Amazon OpenSearch Service domains](http://docs.aws.amazon.com/opensearch-service/latest/developerguide/createupdatedomains.html#createdomains). Defaults to `OpenSearch_1.1`.
+* `encrypt_at_rest` - (Optional) Configuration block for encrypt at rest options. Only available for [certain instance types](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/encryption-at-rest.html). Detailed below.
 * `log_publishing_options` - (Optional) Configuration block for publishing slow and application logs to CloudWatch Logs. This block can be declared multiple times, for each log_type, within the same resource. Detailed below.
 * `node_to_node_encryption` - (Optional) Configuration block for node-to-node encryption options. Detailed below.
-* `snapshot_options` - (Optional) Configuration block for snapshot related options. Detailed below. DEPRECATED. For domains running OpenSearch 5.3 and later, Amazon ES takes hourly automated snapshots, making this setting irrelevant. For domains running earlier versions of OpenSearch, Amazon ES takes daily automated snapshots.
+* `snapshot_options` - (Optional) Configuration block for snapshot related options. Detailed below. DEPRECATED. For domains running OpenSearch 5.3 and later, Amazon OpenSearch takes hourly automated snapshots, making this setting irrelevant. For domains running earlier versions, OpenSearch takes daily automated snapshots.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `vpc_options` - (Optional) Configuration block for VPC related options. Adding or removing this configuration forces a new resource ([documentation](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/es-vpc.html#es-vpc-limitations)). Detailed below.
+* `vpc_options` - (Optional) Configuration block for VPC related options. Adding or removing this configuration forces a new resource ([documentation](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/vpc.html)). Detailed below.
 
 ### advanced_security_options
 
 * `enabled` - (Required, Forces new resource) Whether advanced security is enabled.
-* `internal_user_database_enabled` - (Optional, Default: false) Whether the internal user database is enabled. If not set, defaults to `false` by the AWS API.
+* `internal_user_database_enabled` - (Optional) Whether the internal user database is enabled. Default is `false`.
 * `master_user_options` - (Optional) Configuration block for the main user. Detailed below.
 
 #### master_user_options
@@ -277,7 +294,7 @@ The following arguments are optional:
 
 AWS documentation: [Amazon Cognito Authentication for Kibana](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/es-cognito-auth.html)
 
-* `enabled` - (Optional, Default: false) Whether Amazon Cognito authentication with Kibana is enabled or not.
+* `enabled` - (Optional) Whether Amazon Cognito authentication with Kibana is enabled or not. Default is `false`.
 * `identity_pool_id` - (Required) ID of the Cognito Identity Pool to use.
 * `role_arn` - (Required) ARN of the IAM role that has the AmazonOpenSearchServiceCognitoAccess policy attached.
 * `user_pool_id` - (Required) ID of the Cognito User Pool to use.
@@ -345,7 +362,7 @@ In addition to all arguments above, the following attributes are exported:
 `aws_opensearch_domain` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 * `create` - (Optional, Default: `60m`) How long to wait for creation.
-* `update` - (Optional, Default: `60m`) How long to wait for updates.
+* `update` - (Optional, Default: `180m`) How long to wait for updates.
 * `delete` - (Optional, Default: `90m`) How long to wait for deletion.
 
 ## Import

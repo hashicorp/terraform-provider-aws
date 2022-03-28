@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
+	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -19,13 +20,13 @@ func TestAccOpenSearchDomainPolicy_basic(t *testing.T) {
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Action": "opensearch:*",
+            "Action": "es:*",
             "Principal": "*",
             "Effect": "Allow",
             "Condition": {
                 "IpAddress": {"aws:SourceIp": "127.0.0.1/32"}
             },
-            "Resource": aws_opensearch_domain.example.arn
+            "Resource": "${aws_opensearch_domain.test.arn}"
         }
     ]
 }`
@@ -33,7 +34,7 @@ func TestAccOpenSearchDomainPolicy_basic(t *testing.T) {
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Action": "opensearch:*",
+            "Action": "es:*",
             "Principal": "*",
             "Effect": "Allow",
             "Condition": {
@@ -54,8 +55,8 @@ func TestAccOpenSearchDomainPolicy_basic(t *testing.T) {
 			{
 				Config: testAccDomainPolicyConfig(ri, policy),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists("aws_opensearch_domain.example", &domain),
-					resource.TestCheckResourceAttr("aws_opensearch_domain.example", "engine_version", "OpenSearch_1.1"),
+					testAccCheckDomainExists("aws_opensearch_domain.test", &domain),
+					resource.TestCheckResourceAttr("aws_opensearch_domain.test", "engine_version", "OpenSearch_1.1"),
 					func(s *terraform.State) error {
 						awsClient := acctest.Provider.Meta().(*conns.AWSClient)
 						expectedArn, err := buildDomainARN(name, awsClient.Partition, awsClient.AccountID, awsClient.Region)
@@ -64,7 +65,7 @@ func TestAccOpenSearchDomainPolicy_basic(t *testing.T) {
 						}
 						expectedPolicy := fmt.Sprintf(expectedPolicyTpl, expectedArn)
 
-						return testAccCheckPolicyMatch("aws_opensearch_domain_policy.main", "access_policies", expectedPolicy)(s)
+						return testAccCheckPolicyMatch("aws_opensearch_domain_policy.test", "access_policies", expectedPolicy)(s)
 					},
 				),
 			},
@@ -72,12 +73,41 @@ func TestAccOpenSearchDomainPolicy_basic(t *testing.T) {
 	})
 }
 
+func testAccCheckPolicyMatch(resource, attr, expectedPolicy string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resource]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resource)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		given, ok := rs.Primary.Attributes[attr]
+		if !ok {
+			return fmt.Errorf("Attribute %q not found for %q", attr, resource)
+		}
+
+		areEquivalent, err := awspolicy.PoliciesAreEquivalent(given, expectedPolicy)
+		if err != nil {
+			return fmt.Errorf("Comparing AWS Policies failed: %s", err)
+		}
+
+		if !areEquivalent {
+			return fmt.Errorf("AWS policies differ.\nGiven: %s\nExpected: %s", given, expectedPolicy)
+		}
+
+		return nil
+	}
+}
+
 func buildDomainARN(name, partition, accId, region string) (string, error) {
 	if partition == "" {
-		return "", fmt.Errorf("Unable to construct ES Domain ARN because of missing AWS partition")
+		return "", fmt.Errorf("Unable to construct OpenSearch Domain ARN because of missing AWS partition")
 	}
 	if accId == "" {
-		return "", fmt.Errorf("Unable to construct ES Domain ARN because of missing AWS Account ID")
+		return "", fmt.Errorf("Unable to construct OpenSearch Domain ARN because of missing AWS Account ID")
 	}
 	// arn:aws:es:us-west-2:187416307283:domain/example-name
 	return fmt.Sprintf("arn:%s:es:%s:%s:domain/%s", partition, region, accId, name), nil
@@ -85,7 +115,7 @@ func buildDomainARN(name, partition, accId, region string) (string, error) {
 
 func testAccDomainPolicyConfig(randInt int, policy string) string {
 	return fmt.Sprintf(`
-resource "aws_opensearch_domain" "example" {
+resource "aws_opensearch_domain" "test" {
   domain_name    = "tf-test-%d"
   engine_version = "OpenSearch_1.1"
 
@@ -99,8 +129,8 @@ resource "aws_opensearch_domain" "example" {
   }
 }
 
-resource "aws_opensearch_domain_policy" "main" {
-  domain_name = aws_opensearch_domain.example.domain_name
+resource "aws_opensearch_domain_policy" "test" {
+  domain_name = aws_opensearch_domain.test.domain_name
 
   access_policies = <<POLICIES
 %s

@@ -117,7 +117,7 @@ resource "aws_opensearch_domain" "test" {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Action": "opensearch:*",
+      "Action": "es:*",
       "Principal": "*",
       "Effect": "Allow",
       "Resource": "arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${local.domain_substr}/*",
@@ -260,7 +260,7 @@ resource "aws_opensearch_domain" "test" {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Action": "opensearch:*",
+      "Action": "es:*",
       "Principal": "*",
       "Effect": "Allow",
       "Resource": "arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${local.domain_substr}/*"

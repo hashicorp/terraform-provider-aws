@@ -3,6 +3,7 @@ package opensearch
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
@@ -23,6 +24,11 @@ func ResourceDomainSAMLOptions() *schema.Resource {
 				d.Set("domain_name", d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Update: schema.DefaultTimeout(180 * time.Minute),
+			Delete: schema.DefaultTimeout(90 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -149,7 +155,7 @@ func resourceDomainSAMLOptionsPut(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(domainName)
 
-	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string)); err != nil {
+	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return fmt.Errorf("error waiting for OpenSearch Domain SAML Options update (%s) to succeed: %w", d.Id(), err)
 	}
 
@@ -173,7 +179,7 @@ func resourceDomainSAMLOptionsDelete(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[DEBUG] Waiting for OpenSearch domain SAML Options %q to be deleted", d.Get("domain_name").(string))
 
-	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string)); err != nil {
+	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for OpenSearch Domain SAML Options (%s) to be deleted: %w", d.Id(), err)
 	}
 

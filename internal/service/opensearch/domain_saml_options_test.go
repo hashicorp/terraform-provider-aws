@@ -21,8 +21,8 @@ func TestAccOpenSearchDomainSAMLOptions_basic(t *testing.T) {
 	rUserName := sdkacctest.RandomWithPrefix("opensearch-master-user")
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 
-	resourceName := "aws_opensearch_domain_saml_options.main"
-	esDomainResourceName := "aws_opensearch_domain.example"
+	resourceName := "aws_opensearch_domain_saml_options.test"
+	esDomainResourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -55,8 +55,8 @@ func TestAccOpenSearchDomainSAMLOptions_disappears(t *testing.T) {
 	rUserName := sdkacctest.RandomWithPrefix("opensearch-master-user")
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 
-	resourceName := "aws_opensearch_domain_saml_options.main"
-	esDomainResourceName := "aws_opensearch_domain.example"
+	resourceName := "aws_opensearch_domain_saml_options.test"
+	esDomainResourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -80,8 +80,8 @@ func TestAccOpenSearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 	rUserName := sdkacctest.RandomWithPrefix("opensearch-master-user")
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 
-	resourceName := "aws_opensearch_domain_saml_options.main"
-	esDomainResourceName := "aws_opensearch_domain.example"
+	resourceName := "aws_opensearch_domain_saml_options.test"
+	esDomainResourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -106,8 +106,8 @@ func TestAccOpenSearchDomainSAMLOptions_Update(t *testing.T) {
 	rUserName := sdkacctest.RandomWithPrefix("opensearch-master-user")
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 
-	resourceName := "aws_opensearch_domain_saml_options.main"
-	esDomainResourceName := "aws_opensearch_domain.example"
+	resourceName := "aws_opensearch_domain_saml_options.test"
+	esDomainResourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -140,8 +140,8 @@ func TestAccOpenSearchDomainSAMLOptions_Disabled(t *testing.T) {
 	rUserName := sdkacctest.RandomWithPrefix("opensearch-master-user")
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 
-	resourceName := "aws_opensearch_domain_saml_options.main"
-	esDomainResourceName := "aws_opensearch_domain.example"
+	resourceName := "aws_opensearch_domain_saml_options.test"
+	esDomainResourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -217,11 +217,11 @@ func testAccCheckESDomainSAMLOptions(esResource string, samlOptionsResource stri
 
 func testAccDomainSAMLOptionsConfig(userName, domainName, idpEntityId string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_user" "es_master_user" {
+resource "aws_iam_user" "test" {
   name = %[1]q
 }
 
-resource "aws_opensearch_domain" "example" {
+resource "aws_opensearch_domain" "test" {
   domain_name    = %[2]q
   engine_version = "Elasticsearch_7.10"
 
@@ -234,7 +234,7 @@ resource "aws_opensearch_domain" "example" {
     enabled                        = true
     internal_user_database_enabled = false
     master_user_options {
-      master_user_arn = aws_iam_user.es_master_user.arn
+      master_user_arn = aws_iam_user.test.arn
     }
   }
 
@@ -258,8 +258,8 @@ resource "aws_opensearch_domain" "example" {
   }
 }
 
-resource "aws_opensearch_domain_saml_options" "main" {
-  domain_name = aws_opensearch_domain.example.domain_name
+resource "aws_opensearch_domain_saml_options" "test" {
+  domain_name = aws_opensearch_domain.test.domain_name
 
   saml_options {
     enabled = true
@@ -274,11 +274,11 @@ resource "aws_opensearch_domain_saml_options" "main" {
 
 func testAccDomainSAMLOptionsConfigUpdate(userName, domainName, idpEntityId string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_user" "es_master_user" {
+resource "aws_iam_user" "test" {
   name = %[1]q
 }
 
-resource "aws_opensearch_domain" "example" {
+resource "aws_opensearch_domain" "test" {
   domain_name    = %[2]q
   engine_version = "Elasticsearch_7.10"
 
@@ -291,7 +291,7 @@ resource "aws_opensearch_domain" "example" {
     enabled                        = true
     internal_user_database_enabled = false
     master_user_options {
-      master_user_arn = aws_iam_user.es_master_user.arn
+      master_user_arn = aws_iam_user.test.arn
     }
   }
 
@@ -315,8 +315,8 @@ resource "aws_opensearch_domain" "example" {
   }
 }
 
-resource "aws_opensearch_domain_saml_options" "main" {
-  domain_name = aws_opensearch_domain.example.domain_name
+resource "aws_opensearch_domain_saml_options" "test" {
+  domain_name = aws_opensearch_domain.test.domain_name
 
   saml_options {
     enabled = true
@@ -332,11 +332,11 @@ resource "aws_opensearch_domain_saml_options" "main" {
 
 func testAccDomainSAMLOptionsConfigDisabled(userName string, domainName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_user" "es_master_user" {
+resource "aws_iam_user" "test" {
   name = %[1]q
 }
 
-resource "aws_opensearch_domain" "example" {
+resource "aws_opensearch_domain" "test" {
   domain_name    = %[2]q
   engine_version = "Elasticsearch_7.10"
 
@@ -349,7 +349,7 @@ resource "aws_opensearch_domain" "example" {
     enabled                        = true
     internal_user_database_enabled = false
     master_user_options {
-      master_user_arn = aws_iam_user.es_master_user.arn
+      master_user_arn = aws_iam_user.test.arn
     }
   }
 
@@ -373,8 +373,8 @@ resource "aws_opensearch_domain" "example" {
   }
 }
 
-resource "aws_opensearch_domain_saml_options" "main" {
-  domain_name = aws_opensearch_domain.example.domain_name
+resource "aws_opensearch_domain_saml_options" "test" {
+  domain_name = aws_opensearch_domain.test.domain_name
 
   saml_options {
     enabled = false

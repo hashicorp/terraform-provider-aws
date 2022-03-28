@@ -13,8 +13,6 @@ import (
 const (
 	domainUpgradeSuccessMinTimeout = 10 * time.Second
 	domainUpgradeSuccessDelay      = 30 * time.Second
-	domainRetryTimeout             = 60 * time.Minute
-	domainDeleteRetryTimeout       = 90 * time.Minute
 )
 
 // UpgradeSucceeded waits for an Upgrade to return Success
@@ -37,9 +35,9 @@ func waitUpgradeSucceeded(conn *opensearchservice.OpenSearchService, name string
 	return nil, err
 }
 
-func WaitForDomainCreation(conn *opensearchservice.OpenSearchService, domainName string) error {
+func WaitForDomainCreation(conn *opensearchservice.OpenSearchService, domainName string, timeout time.Duration) error {
 	var out *opensearchservice.DomainStatus
-	err := resource.Retry(domainRetryTimeout, func() *resource.RetryError {
+	err := resource.Retry(timeout, func() *resource.RetryError {
 		var err error
 		out, err = FindDomainByName(conn, domainName)
 		if err != nil {
@@ -68,9 +66,9 @@ func WaitForDomainCreation(conn *opensearchservice.OpenSearchService, domainName
 	return nil
 }
 
-func waitForDomainUpdate(conn *opensearchservice.OpenSearchService, domainName string) error {
+func waitForDomainUpdate(conn *opensearchservice.OpenSearchService, domainName string, timeout time.Duration) error {
 	var out *opensearchservice.DomainStatus
-	err := resource.Retry(domainRetryTimeout, func() *resource.RetryError {
+	err := resource.Retry(timeout, func() *resource.RetryError {
 		var err error
 		out, err = FindDomainByName(conn, domainName)
 		if err != nil {
@@ -99,9 +97,9 @@ func waitForDomainUpdate(conn *opensearchservice.OpenSearchService, domainName s
 	return nil
 }
 
-func waitForDomainDelete(conn *opensearchservice.OpenSearchService, domainName string) error {
+func waitForDomainDelete(conn *opensearchservice.OpenSearchService, domainName string, timeout time.Duration) error {
 	var out *opensearchservice.DomainStatus
-	err := resource.Retry(domainDeleteRetryTimeout, func() *resource.RetryError {
+	err := resource.Retry(timeout, func() *resource.RetryError {
 		var err error
 		out, err = FindDomainByName(conn, domainName)
 

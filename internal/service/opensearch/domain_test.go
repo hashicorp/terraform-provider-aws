@@ -337,7 +337,7 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 						t.Fatal(err)
 					}
 
-					err = tfopensearch.WaitForDomainCreation(conn, rName[:28])
+					err = tfopensearch.WaitForDomainCreation(conn, rName[:28], 60*time.Minute)
 					if err != nil {
 						t.Fatal(err)
 					}
@@ -345,9 +345,7 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 				Config: testAccDomainConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
-					resource.TestCheckResourceAttr(
-						resourceName, "engine_version", "OpenSearch_1.1"),
-				),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "OpenSearch_1.1")),
 				ExpectError: regexp.MustCompile(`domain .+ already exists`),
 			},
 		},
@@ -1969,7 +1967,7 @@ resource "aws_opensearch_domain" "test" {
       Principal = {
         AWS = aws_iam_role.test.arn
       }
-      Action   = "opensearch:*"
+      Action   = "es:*"
       Resource = "arn:${data.aws_partition.current.partition}:es:*"
     }]
   })
@@ -2015,7 +2013,7 @@ resource "aws_opensearch_domain" "test" {
           aws_iam_role.test2.arn,
         ]
       }
-      Action   = "opensearch:*"
+      Action   = "es:*"
       Resource = "arn:${data.aws_partition.current.partition}:es:*"
     }]
   })
@@ -2066,7 +2064,7 @@ resource "aws_opensearch_domain" "test" {
           aws_iam_role.test.arn,
         ]
       }
-      Action   = "opensearch:*"
+      Action   = "es:*"
       Resource = "arn:${data.aws_partition.current.partition}:es:*"
     }]
   })
@@ -2646,7 +2644,6 @@ resource "aws_cloudwatch_log_resource_policy" "test" {
       Effect = "Allow"
       Principal = {
         Service = [
-          "opensearchservice.${data.aws_partition.current.dns_suffix}",
           "es.${data.aws_partition.current.dns_suffix}",
         ]
       }

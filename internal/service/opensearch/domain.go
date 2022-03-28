@@ -36,7 +36,9 @@ func ResourceDomain() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(60 * time.Minute),
 			Update: schema.DefaultTimeout(180 * time.Minute),
+			Delete: schema.DefaultTimeout(90 * time.Minute),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -668,7 +670,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(out.DomainStatus.ARN))
 
 	log.Printf("[DEBUG] Waiting for OpenSearch domain %q to be created", d.Id())
-	if err := WaitForDomainCreation(conn, d.Get("domain_name").(string)); err != nil {
+	if err := WaitForDomainCreation(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for OpenSearch Domain (%s) to be created: %w", d.Id(), err)
 	}
 
@@ -933,7 +935,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		if err := waitForDomainUpdate(conn, d.Get("domain_name").(string)); err != nil {
+		if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for OpenSearch Domain Update (%s) to succeed: %w", d.Id(), err)
 		}
 
@@ -981,7 +983,7 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Waiting for OpenSearch domain %q to be deleted", domainName)
-	if err := waitForDomainDelete(conn, d.Get("domain_name").(string)); err != nil {
+	if err := waitForDomainDelete(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for OpenSearch Domain (%s) to be deleted: %w", d.Id(), err)
 	}
 

@@ -50,3 +50,10 @@ The following arguments are supported:
 ## Attributes Reference
 
 No additional attributes are exported.
+
+## Timeouts
+
+`aws_opensearch_domain_policy` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+* `update` - (Optional, Default: `180m`) How long to wait for updates.
+* `delete` - (Optional, Default: `90m`) How long to wait for deletion.
