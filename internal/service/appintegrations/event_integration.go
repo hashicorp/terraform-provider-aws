@@ -22,6 +22,7 @@ func ResourceEventIntegration() *schema.Resource {
 		CreateContext: resourceEventIntegrationCreate,
 		ReadContext:   resourceEventIntegrationRead,
 		UpdateContext: resourceEventIntegrationUpdate,
+		DeleteContext: resourceEventIntegrationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -180,6 +181,22 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	return resourceEventIntegrationRead(ctx, d, meta)
+}
+
+func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn
+
+	name := d.Id()
+
+	_, err := conn.DeleteEventIntegrationWithContext(ctx, &appintegrationsservice.DeleteEventIntegrationInput{
+		Name: aws.String(name),
+	})
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error deleting EventIntegration (%s): %w", d.Id(), err))
+	}
+
+	return nil
 }
 
 func expandEventFilter(eventFilter []interface{}) *appintegrationsservice.EventFilter {
