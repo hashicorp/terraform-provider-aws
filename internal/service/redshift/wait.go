@@ -18,7 +18,7 @@ const (
 
 func waitClusterCreated(conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{clusterAvailabilityStatusModifying},
+		Pending:    []string{clusterAvailabilityStatusModifying, clusterAvailabilityStatusUnavailable},
 		Target:     []string{clusterAvailabilityStatusAvailable},
 		Refresh:    statusClusterAvailability(conn, id),
 		Timeout:    timeout,

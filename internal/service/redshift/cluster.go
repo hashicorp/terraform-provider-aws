@@ -396,6 +396,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("number_of_nodes"); ok {
+			input.NumberOfNodes = aws.Int64(int64(v.(int)))
+		}
+
 		if v, ok := d.GetOk("owner_account"); ok {
 			input.OwnerAccount = aws.String(v.(string))
 		}
