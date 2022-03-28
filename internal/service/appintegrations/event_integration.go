@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/appintegrationsservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,7 +19,8 @@ import (
 
 func ResourceEventIntegration() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: resourceEventIntegrationRead,
+		CreateContext: resourceEventIntegrationCreate,
+		ReadContext:   resourceEventIntegrationRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -64,6 +66,45 @@ func ResourceEventIntegration() *schema.Resource {
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
+}
+
+func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	name := d.Get("name").(string)
+
+	input := &appintegrationsservice.CreateEventIntegrationInput{
+		ClientToken:    aws.String(resource.UniqueId()),
+		EventBridgeBus: aws.String(d.Get("eventbridge_bus").(string)),
+		EventFilter:    expandEventFilter(d.Get("event_filter").([]interface{})),
+		Name:           aws.String(name),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	log.Printf("[DEBUG] Creating AppIntegrations Event Integration %s", input)
+	output, err := conn.CreateEventIntegrationWithContext(ctx, input)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error creating AppIntegrations Event Integration (%s): %w", name, err))
+	}
+
+	if output == nil {
+		return diag.FromErr(fmt.Errorf("error creating AppIntegrations Event Integration (%s): empty output", name))
+	}
+
+	// Name is unique
+	d.SetId(name)
+
+	return resourceEventIntegrationRead(ctx, d, meta)
 }
 
 func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -112,6 +153,23 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return nil
+}
+
+func expandEventFilter(eventFilter []interface{}) *appintegrationsservice.EventFilter {
+	if len(eventFilter) == 0 || eventFilter[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := eventFilter[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &appintegrationsservice.EventFilter{
+		Source: aws.String(tfMap["source"].(string)),
+	}
+
+	return result
 }
 
 func flattenEventFilter(eventFilter *appintegrationsservice.EventFilter) []interface{} {
