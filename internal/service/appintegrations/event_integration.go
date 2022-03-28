@@ -21,6 +21,7 @@ func ResourceEventIntegration() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceEventIntegrationCreate,
 		ReadContext:   resourceEventIntegrationRead,
+		UpdateContext: resourceEventIntegrationUpdate,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -153,6 +154,32 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return nil
+}
+
+func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn
+
+	name := d.Id()
+
+	if d.HasChange("description") {
+		_, err := conn.UpdateEventIntegrationWithContext(ctx, &appintegrationsservice.UpdateEventIntegrationInput{
+			Name:        aws.String(name),
+			Description: aws.String(d.Get("description").(string)),
+		})
+
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating EventIntegration (%s): %w", d.Id(), err))
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
+		}
+	}
+
+	return resourceEventIntegrationRead(ctx, d, meta)
 }
 
 func expandEventFilter(eventFilter []interface{}) *appintegrationsservice.EventFilter {
