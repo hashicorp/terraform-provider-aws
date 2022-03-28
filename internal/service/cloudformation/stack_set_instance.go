@@ -425,29 +425,3 @@ func expandCloudFormationDeploymentTargets(l []interface{}) *cloudformation.Depl
 
 	return dt
 }
-
-func expandCloudFormationOperationPreferences(d *schema.ResourceData) *cloudformation.StackSetOperationPreferences {
-
-	operationPreferences := &cloudformation.StackSetOperationPreferences{}
-
-	if v, ok := d.GetOk("operation_preferences.0.failure_tolerance_count"); ok {
-		operationPreferences.FailureToleranceCount = aws.Int64(int64(v.(int)))
-	}
-	if v, ok := d.GetOk("operation_preferences.0.failure_tolerance_percentage"); ok {
-		operationPreferences.FailureTolerancePercentage = aws.Int64(int64(v.(int)))
-	}
-	if v, ok := d.GetOk("operation_preferences.0.max_concurrent_count"); ok {
-		operationPreferences.MaxConcurrentCount = aws.Int64(int64(v.(int)))
-	}
-	if v, ok := d.GetOk("operation_preferences.0.max_concurrent_percentage"); ok {
-		operationPreferences.MaxConcurrentPercentage = aws.Int64(int64(v.(int)))
-	}
-	if v, ok := d.GetOk("operation_preferences.0.region_concurrency_type"); ok {
-		operationPreferences.RegionConcurrencyType = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("operation_preferences.0.region_order"); ok {
-		operationPreferences.RegionOrder = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	return operationPreferences
-}
