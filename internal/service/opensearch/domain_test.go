@@ -2755,7 +2755,7 @@ data "aws_iam_policy_document" "test" {
     effect  = "Allow"
 
     principals {
-      type        = "Service"
+      type = "Service"
       identifiers = [
         "es.${data.aws_partition.current.dns_suffix}",
       ]
