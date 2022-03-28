@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfappintegrations "github.com/hashicorp/terraform-provider-aws/internal/service/appintegrations"
 )
 
 func TestAccEventIntegration_basic(t *testing.T) {
@@ -65,6 +66,38 @@ func TestAccEventIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Event Integration"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEventIntegration_disappears(t *testing.T) {
+	var eventIntegration appintegrationsservice.GetEventIntegrationOutput
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	description := "disappears"
+	resourceName := "aws_appintegrations_event_integration.test"
+
+	key := "EVENT_BRIDGE_PARTNER_EVENT_SOURCE_NAME"
+	var sourceName string
+	sourceName = os.Getenv(key)
+	if sourceName == "" {
+		sourceName = "aws.partner/examplepartner.com"
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckEventIntegrationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventIntegrationConfig_basic(rName, description, sourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventIntegrationExists(resourceName, &eventIntegration),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappintegrations.ResourceEventIntegration(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
