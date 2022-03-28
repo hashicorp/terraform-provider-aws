@@ -7,3 +7,7 @@ plugin "aws" {
 rule "aws_acm_certificate_lifecycle" {
   enabled = false
 }
+
+rule "aws_route_not_specified_target" {
+  enabled = false
+}
