@@ -109,6 +109,7 @@ Managed Workflows for Apache Airflow (MWAA)
 Neptune
 Network Firewall
 Network Manager
+OpenSearch
 OpsWorks
 Organizations
 Outposts
