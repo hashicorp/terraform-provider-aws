@@ -36,7 +36,7 @@ func ResourceDomain() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Update: schema.DefaultTimeout(60 * time.Minute),
+			Update: schema.DefaultTimeout(180 * time.Minute),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -639,10 +639,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 			if tfawserr.ErrMessageContains(err, "ValidationException", "Domain is still being deleted") {
 				return resource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Amazon Elasticsearch must be allowed to use the passed role") {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Amazon OpenSearch must be allowed to use the passed role") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "Amazon OpenSearch Service must be allowed to use the passed role") {
 				return resource.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, "ValidationException", "The passed role has not propagated yet") {
@@ -651,16 +648,10 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 			if tfawserr.ErrMessageContains(err, "ValidationException", "Authentication error") {
 				return resource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Unauthorized Operation: Elasticsearch must be authorised to describe") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "Unauthorized Operation: OpenSearch Service must be authorised to describe") {
 				return resource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Unauthorized Operation: OpenSearch must be authorised to describe") {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "The passed role must authorize Amazon Elasticsearch to describe") {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "The passed role must authorize Amazon OpenSearch to describe") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "The passed role must authorize Amazon OpenSearch Service to describe") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
