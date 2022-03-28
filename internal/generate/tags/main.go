@@ -788,6 +788,8 @@ func awsServiceName(s string) (string, error) {
 	switch s {
 	case "amp":
 		return "prometheusservice", nil
+	case "appintegrations":
+		return "appintegrationsservice", nil
 	case "cloudcontrol":
 		return "cloudcontrolapi", nil
 	case "cognitoidp":
@@ -823,6 +825,8 @@ func awsServiceNameUpper(s string) (string, error) {
 		return awsServiceNames["prometheusservice"], nil
 	case "appautoscaling":
 		return awsServiceNames["applicationautoscaling"], nil
+	case "appintegrations":
+		return awsServiceNames["appintegrationsservice"], nil
 	case "cloudcontrol":
 		return awsServiceNames["cloudcontrolapi"], nil
 	case "cognitoidp":
@@ -870,7 +874,7 @@ func init() {
 	awsServiceNames["apigatewayv2"] = "ApiGatewayV2"
 	awsServiceNames["appconfig"] = "AppConfig"
 	awsServiceNames["appflow"] = "AppFlow"
-	awsServiceNames["appintegrations"] = "AppIntegrations"
+	awsServiceNames["appintegrationsservice"] = "AppIntegrationsService"
 	awsServiceNames["applicationautoscaling"] = "ApplicationAutoScaling"
 	awsServiceNames["applicationcostprofiler"] = "ApplicationCostProfiler"
 	awsServiceNames["applicationdiscovery"] = "ApplicationDiscovery"
