@@ -1356,7 +1356,7 @@ func testAccCheckDomainExists(n string, domain *opensearchservice.DomainStatus) 
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ES Domain ID is set")
+			return fmt.Errorf("No OpenSearch Domain ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn
@@ -1389,7 +1389,7 @@ func testAccCheckDomainNotRecreated(i, j *opensearchservice.DomainStatus) resour
 		}
 
 		if !aws.TimeValue(iConfig.DomainConfig.ClusterConfig.Status.CreationDate).Equal(aws.TimeValue(jConfig.DomainConfig.ClusterConfig.Status.CreationDate)) {
-			return fmt.Errorf("ES Domain was recreated")
+			return fmt.Errorf("OpenSearch Domain was recreated")
 		}
 
 		return nil
