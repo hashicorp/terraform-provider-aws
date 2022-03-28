@@ -368,6 +368,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 													Type:     schema.TypeSet,
 													Required: true,
 													MinItems: 1,
+													MaxItems: 10,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
 												"count": {

@@ -604,7 +604,7 @@ EOF
 }
 
 func dlmLifecyclePolicyBasicConfig(rName string) string {
-	return dlmLifecyclePolicyBaseConfig(rName) + `
+	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
   execution_role_arn = aws_iam_role.test.arn
@@ -629,11 +629,11 @@ resource "aws_dlm_lifecycle_policy" "test" {
     }
   }
 }
-`
+`)
 }
 
 func dlmLifecyclePolicyEventConfig(rName string) string {
-	return dlmLifecyclePolicyBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
 data "aws_iam_policy" "test" {
@@ -675,11 +675,11 @@ resource "aws_dlm_lifecycle_policy" "test" {
     }
   }
 }
-`, acctest.AlternateRegion())
+`, acctest.AlternateRegion()))
 }
 
 func dlmLifecyclePolicyCronConfig(rName string) string {
-	return dlmLifecyclePolicyBaseConfig(rName) + `
+	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
   execution_role_arn = aws_iam_role.test.arn
@@ -704,11 +704,11 @@ resource "aws_dlm_lifecycle_policy" "test" {
     }
   }
 }
-`
+`)
 }
 
 func dlmLifecyclePolicyRetainIntervalConfig(rName string) string {
-	return dlmLifecyclePolicyBaseConfig(rName) + `
+	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
   execution_role_arn = aws_iam_role.test.arn
@@ -734,11 +734,11 @@ resource "aws_dlm_lifecycle_policy" "test" {
     }
   }
 }
-`
+`)
 }
 
 func dlmLifecyclePolicyDeprecateConfig(rName string) string {
-	return dlmLifecyclePolicyBaseConfig(rName) + `
+	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
   execution_role_arn = aws_iam_role.test.arn
@@ -768,13 +768,11 @@ resource "aws_dlm_lifecycle_policy" "test" {
     }
   }
 }
-`
+`)
 }
 
 func dlmLifecyclePolicyFastRestoreConfig(rName string) string {
-	return dlmLifecyclePolicyBaseConfig(rName) + `
-data "aws_availability_zones" "available" {}
-
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), dlmLifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
   execution_role_arn = aws_iam_role.test.arn
@@ -805,11 +803,11 @@ resource "aws_dlm_lifecycle_policy" "test" {
     }
   }
 }
-`
+`)
 }
 
 func dlmLifecyclePolicyShareRuleConfig(rName string) string {
-	return dlmLifecyclePolicyBaseConfig(rName) + `
+	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), `
 data "aws_caller_identity" "current" {}
 
 resource "aws_dlm_lifecycle_policy" "test" {
@@ -841,11 +839,11 @@ resource "aws_dlm_lifecycle_policy" "test" {
     }
   }
 }
-`
+`)
 }
 
 func dlmLifecyclePolicyParametersInstanceConfig(rName string) string {
-	return dlmLifecyclePolicyBaseConfig(rName) + `
+	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
   execution_role_arn = aws_iam_role.test.arn
@@ -875,11 +873,11 @@ resource "aws_dlm_lifecycle_policy" "test" {
     }
   }
 }
-`
+`)
 }
 
 func dlmLifecyclePolicyParametersVolumeConfig(rName string) string {
-	return dlmLifecyclePolicyBaseConfig(rName) + `
+	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
   execution_role_arn = aws_iam_role.test.arn
@@ -909,11 +907,11 @@ resource "aws_dlm_lifecycle_policy" "test" {
     }
   }
 }
-`
+`)
 }
 
 func dlmLifecyclePolicyVariableTagsConfig(rName string) string {
-	return dlmLifecyclePolicyBaseConfig(rName) + `
+	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
   execution_role_arn = aws_iam_role.test.arn
@@ -943,11 +941,11 @@ resource "aws_dlm_lifecycle_policy" "test" {
     }
   }
 }
-`
+`)
 }
 
 func dlmLifecyclePolicyFullConfig(rName string) string {
-	return dlmLifecyclePolicyBaseConfig(rName) + `
+	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-full"
   execution_role_arn = aws_iam_role.test.arn
@@ -981,11 +979,11 @@ resource "aws_dlm_lifecycle_policy" "test" {
     }
   }
 }
-`
+`)
 }
 
 func dlmLifecyclePolicyFullUpdateConfig(rName string) string {
-	return dlmLifecyclePolicyBaseConfig(rName) + `
+	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), `
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-full-updated"
   execution_role_arn = "${aws_iam_role.test.arn}-doesnt-exist"
@@ -1019,7 +1017,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
     }
   }
 }
-`
+`)
 }
 
 func dlmLifecyclePolicyConfigCrossRegionCopyRule(rName string) string {
@@ -1161,7 +1159,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
 }
 
 func dlmLifecyclePolicyConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return dlmLifecyclePolicyBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), fmt.Sprintf(`
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -1190,11 +1188,11 @@ resource "aws_dlm_lifecycle_policy" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func dlmLifecyclePolicyConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return dlmLifecyclePolicyBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(dlmLifecyclePolicyBaseConfig(rName), fmt.Sprintf(`
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -1224,5 +1222,5 @@ resource "aws_dlm_lifecycle_policy" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
