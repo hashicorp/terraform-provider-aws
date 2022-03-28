@@ -58,7 +58,7 @@ func TestAccOpenSearchDomainPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_opensearch_domain.example", "engine_version", "OpenSearch_1.1"),
 					func(s *terraform.State) error {
 						awsClient := acctest.Provider.Meta().(*conns.AWSClient)
-						expectedArn, err := buildESDomainArn(name, awsClient.Partition, awsClient.AccountID, awsClient.Region)
+						expectedArn, err := buildDomainARN(name, awsClient.Partition, awsClient.AccountID, awsClient.Region)
 						if err != nil {
 							return err
 						}
@@ -72,15 +72,15 @@ func TestAccOpenSearchDomainPolicy_basic(t *testing.T) {
 	})
 }
 
-func buildESDomainArn(name, partition, accId, region string) (string, error) {
+func buildDomainARN(name, partition, accId, region string) (string, error) {
 	if partition == "" {
 		return "", fmt.Errorf("Unable to construct ES Domain ARN because of missing AWS partition")
 	}
 	if accId == "" {
 		return "", fmt.Errorf("Unable to construct ES Domain ARN because of missing AWS Account ID")
 	}
-	// arn:aws:opensearch:us-west-2:187416307283:domain/example-name
-	return fmt.Sprintf("arn:%s:opensearch:%s:%s:domain/%s", partition, region, accId, name), nil
+	// arn:aws:es:us-west-2:187416307283:domain/example-name
+	return fmt.Sprintf("arn:%s:es:%s:%s:domain/%s", partition, region, accId, name), nil
 }
 
 func testAccDomainPolicyConfig(randInt int, policy string) string {

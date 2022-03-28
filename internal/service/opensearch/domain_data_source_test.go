@@ -15,18 +15,18 @@ func TestAccOpenSearchDomainDataSource_Data_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	datasourceName := "data.aws_opensearch_domain.test"
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleOpenSearch(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
 		ErrorCheck: acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainWithDataSourceConfig(rInt, autoTuneStartAtTime),
+				Config: testAccDomainWithDataSourceConfig(rName, autoTuneStartAtTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "processing", "false"),
 					resource.TestCheckResourceAttrPair(datasourceName, "engine_version", resourceName, "engine_version"),
@@ -57,18 +57,18 @@ func TestAccOpenSearchDomainDataSource_Data_advanced(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	datasourceName := "data.aws_opensearch_domain.test"
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleOpenSearch(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
 		ErrorCheck: acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainAdvancedWithDataSourceConfig(rInt, autoTuneStartAtTime),
+				Config: testAccDomainAdvancedWithDataSourceConfig(rName, autoTuneStartAtTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "engine_version", resourceName, "engine_version"),
 					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.#", resourceName, "auto_tune_options.#"),
@@ -96,20 +96,20 @@ func TestAccOpenSearchDomainDataSource_Data_advanced(t *testing.T) {
 	})
 }
 
-func testAccDomainWithDataSourceConfig(rInt int, autoTuneStartAtTime string) string {
+func testAccDomainWithDataSourceConfig(rName, autoTuneStartAtTime string) string {
 	return fmt.Sprintf(`
-locals {
-  random_name = "test-opensearch-%d"
-}
-
 data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
 
 data "aws_caller_identity" "current" {}
 
+locals {
+  domain_substr = substr(%[1]q, 0, 28)
+}
+
 resource "aws_opensearch_domain" "test" {
-  domain_name    = local.random_name
+  domain_name    = local.domain_substr
   engine_version = "Elasticsearch_7.10"
 
   access_policies = <<POLICY
@@ -120,7 +120,7 @@ resource "aws_opensearch_domain" "test" {
       "Action": "opensearch:*",
       "Principal": "*",
       "Effect": "Allow",
-      "Resource": "arn:${data.aws_partition.current.partition}:opensearch:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${local.random_name}/*",
+      "Resource": "arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${local.domain_substr}/*",
       "Condition": {
         "IpAddress": {
           "aws:SourceIp": [
@@ -137,7 +137,7 @@ POLICY
     desired_state = "ENABLED"
 
     maintenance_schedule {
-      start_at = "%s"
+      start_at = %[2]q
       duration {
         value = "2"
         unit  = "HOURS"
@@ -175,27 +175,25 @@ POLICY
 data "aws_opensearch_domain" "test" {
   domain_name = aws_opensearch_domain.test.domain_name
 }
-		`, rInt, autoTuneStartAtTime)
+`, rName, autoTuneStartAtTime)
 }
 
-func testAccDomainAdvancedWithDataSourceConfig(rInt int, autoTuneStartAtTime string) string {
-	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
+func testAccDomainAdvancedWithDataSourceConfig(rName, autoTuneStartAtTime string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
 
 data "aws_caller_identity" "current" {}
 
-locals {
-  random_name = "test-opensearch-%d"
-}
-
 resource "aws_cloudwatch_log_group" "test" {
-  name = local.random_name
+  name = %[1]q
 }
 
 resource "aws_cloudwatch_log_resource_policy" "test" {
-  policy_name = local.random_name
+  policy_name = %[1]q
 
   policy_document = <<CONFIG
 {
@@ -204,7 +202,7 @@ resource "aws_cloudwatch_log_resource_policy" "test" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "opensearch.${data.aws_partition.current.dns_suffix}"
+        "Service": "opensearchservice.${data.aws_partition.current.dns_suffix}"
       },
       "Action": [
         "logs:PutLogEvents",
@@ -235,7 +233,7 @@ resource "aws_subnet" "test2" {
 }
 
 resource "aws_security_group" "test" {
-  name   = local.random_name
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
 }
 
@@ -249,8 +247,12 @@ resource "aws_security_group_rule" "test" {
   security_group_id = aws_security_group.test.id
 }
 
+locals {
+  domain_substr = substr(%[1]q, 0, 28)
+}
+
 resource "aws_opensearch_domain" "test" {
-  domain_name    = local.random_name
+  domain_name    = local.domain_substr
   engine_version = "Elasticsearch_6.7"
 
   access_policies = <<POLICY
@@ -261,7 +263,7 @@ resource "aws_opensearch_domain" "test" {
       "Action": "opensearch:*",
       "Principal": "*",
       "Effect": "Allow",
-      "Resource": "arn:${data.aws_partition.current.partition}:opensearch:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${local.random_name}/*"
+      "Resource": "arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${local.domain_substr}/*"
     }
   ]
 }
@@ -271,7 +273,7 @@ POLICY
     desired_state = "ENABLED"
 
     maintenance_schedule {
-      start_at = "%s"
+      start_at = %[2]q
       duration {
         value = "2"
         unit  = "HOURS"
@@ -326,12 +328,12 @@ POLICY
   }
 
   tags = {
-    Domain = "TestDomain"
+    Domain = %[1]q
   }
 }
 
 data "aws_opensearch_domain" "test" {
   domain_name = aws_opensearch_domain.test.domain_name
 }
-`, rInt, autoTuneStartAtTime)
+`, rName, autoTuneStartAtTime))
 }
