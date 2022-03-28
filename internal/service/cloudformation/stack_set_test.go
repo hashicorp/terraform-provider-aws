@@ -270,7 +270,7 @@ func TestAccCloudFormationStackSet_name(t *testing.T) {
 	})
 }
 
-func testAccCloudFormationStackSetInstance_operationPreferences(t *testing.T) {
+func TestAccCloudFormationStackSetInstance_operationPreferences(t *testing.T) {
 	var stackSet cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack_set.test"
