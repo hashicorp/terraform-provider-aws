@@ -42,6 +42,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/dax"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
