@@ -719,6 +719,7 @@ func Provider() *schema.Provider {
 
 			"aws_memorydb_parameter_group": memorydb.DataSourceParameterGroup(),
 			"aws_memorydb_subnet_group":    memorydb.DataSourceSubnetGroup(),
+			"aws_memorydb_user":            memorydb.DataSourceUser(),
 
 			"aws_mq_broker": mq.DataSourceBroker(),
 
