@@ -1,0 +1,178 @@
+From 3b746aea0705138741f3761081c19cb03c855728 Mon Sep 17 00:00:00 2001
+From: dchernivetsky <dchernivetsky@paxos.com>
+Date: Mon, 28 Mar 2022 13:58:17 -0400
+Subject: [PATCH] [n/a] regex match statement
+
+---
+ internal/service/wafv2/flex.go    | 36 +++++++++++++++++++++++++++++++
+ internal/service/wafv2/schemas.go | 22 +++++++++++++++++++
+ internal/service/wafv2/web_acl.go | 10 +++++++++
+ 3 files changed, 68 insertions(+)
+
+diff --git a/internal/service/wafv2/flex.go b/internal/service/wafv2/flex.go
+index fe456c742e..5396187d0e 100644
+--- a/internal/service/wafv2/flex.go
++++ b/internal/service/wafv2/flex.go
+@@ -310,6 +310,10 @@ func expandStatement(m map[string]interface{}) *wafv2.Statement {
+ 		statement.OrStatement = expandOrStatement(v.([]interface{}))
+ 	}
+ 
++	if v, ok := m["regex_match_statement"]; ok {
++		statement.RegexMatchStatement = expandRegexMatchStatement(v.([]interface{}))
++	}
++
+ 	if v, ok := m["regex_pattern_set_reference_statement"]; ok {
+ 		statement.RegexPatternSetReferenceStatement = expandRegexPatternSetReferenceStatement(v.([]interface{}))
+ 	}
+@@ -556,6 +560,20 @@ func expandOrStatement(l []interface{}) *wafv2.OrStatement {
+ 	}
+ }
+ 
++func expandRegexMatchStatement(l []interface{}) *wafv2.RegexMatchStatement {
++	if len(l) == 0 || l[0] == nil {
++		return nil
++	}
++
++	m := l[0].(map[string]interface{})
++
++	return &wafv2.RegexMatchStatement{
++		RegexString:         aws.String(m["regex_string"].(string)),
++		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]interface{})),
++		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
++	}
++}
++
+ func expandRegexPatternSetReferenceStatement(l []interface{}) *wafv2.RegexPatternSetReferenceStatement {
+ 	if len(l) == 0 || l[0] == nil {
+ 		return nil
+@@ -826,6 +844,10 @@ func flattenStatement(s *wafv2.Statement) map[string]interface{} {
+ 		m["or_statement"] = flattenOrStatement(s.OrStatement)
+ 	}
+ 
++	if s.RegexMatchStatement != nil {
++		m["regex_match_statement"] = flattenRegexMatchStatement(s.RegexMatchStatement)
++	}
++
+ 	if s.RegexPatternSetReferenceStatement != nil {
+ 		m["regex_pattern_set_reference_statement"] = flattenRegexPatternSetReferenceStatement(s.RegexPatternSetReferenceStatement)
+ 	}
+@@ -1035,6 +1057,20 @@ func flattenOrStatement(a *wafv2.OrStatement) interface{} {
+ 	return []interface{}{m}
+ }
+ 
++func flattenRegexMatchStatement(r *wafv2.RegexMatchStatement) interface{} {
++	if r == nil {
++		return []interface{}{}
++	}
++
++	m := map[string]interface{}{
++		"regex_string":        aws.StringValue(r.RegexString),
++		"field_to_match":      flattenFieldToMatch(r.FieldToMatch),
++		"text_transformation": flattenTextTransformations(r.TextTransformations),
++	}
++
++	return []interface{}{m}
++}
++
+ func flattenRegexPatternSetReferenceStatement(r *wafv2.RegexPatternSetReferenceStatement) interface{} {
+ 	if r == nil {
+ 		return []interface{}{}
+diff --git a/internal/service/wafv2/schemas.go b/internal/service/wafv2/schemas.go
+index 27f122812e..b0028e1aa2 100644
+--- a/internal/service/wafv2/schemas.go
++++ b/internal/service/wafv2/schemas.go
+@@ -67,6 +67,7 @@ func rootStatementSchema(level int) *schema.Schema {
+ 				"not_statement":                         statementSchema(level - 1),
+ 				"or_statement":                          statementSchema(level - 1),
+ 				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
++				"regex_match_statement":                 regexMatchStatementSchema(),
+ 				"size_constraint_statement":             sizeConstraintSchema(),
+ 				"sqli_match_statement":                  sqliMatchStatementSchema(),
+ 				"xss_match_statement":                   xssMatchStatementSchema(),
+@@ -96,6 +97,7 @@ func statementSchema(level int) *schema.Schema {
+ 								"not_statement":                         statementSchema(level - 1),
+ 								"or_statement":                          statementSchema(level - 1),
+ 								"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
++								"regex_match_statement":                 regexMatchStatementSchema(),
+ 								"size_constraint_statement":             sizeConstraintSchema(),
+ 								"sqli_match_statement":                  sqliMatchStatementSchema(),
+ 								"xss_match_statement":                   xssMatchStatementSchema(),
+@@ -123,6 +125,7 @@ func statementSchema(level int) *schema.Schema {
+ 							"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
+ 							"label_match_statement":                 labelMatchStatementSchema(),
+ 							"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
++							"regex_match_statement":                 regexMatchStatementSchema(),
+ 							"size_constraint_statement":             sizeConstraintSchema(),
+ 							"sqli_match_statement":                  sqliMatchStatementSchema(),
+ 							"xss_match_statement":                   xssMatchStatementSchema(),
+@@ -252,6 +255,25 @@ func labelMatchStatementSchema() *schema.Schema {
+ 	}
+ }
+ 
++func regexMatchStatementSchema() *schema.Schema {
++	return &schema.Schema{
++		Type:     schema.TypeList,
++		Optional: true,
++		MaxItems: 1,
++		Elem: &schema.Resource{
++			Schema: map[string]*schema.Schema{
++				"regex_string": {
++					Type:         schema.TypeString,
++					Required:     true,
++					ValidateFunc: validation.StringLenBetween(1, 512),
++				},
++				"field_to_match":      fieldToMatchSchema(),
++				"text_transformation": textTransformationSchema(),
++			},
++		},
++	}
++}
++
+ func regexPatternSetReferenceStatementSchema() *schema.Schema {
+ 	return &schema.Schema{
+ 		Type:     schema.TypeList,
+diff --git a/internal/service/wafv2/web_acl.go b/internal/service/wafv2/web_acl.go
+index 5b1f592922..a645bd6961 100644
+--- a/internal/service/wafv2/web_acl.go
++++ b/internal/service/wafv2/web_acl.go
+@@ -381,6 +381,7 @@ func webACLRootStatementSchema(level int) *schema.Schema {
+ 				"not_statement":                         statementSchema(level),
+ 				"or_statement":                          statementSchema(level),
+ 				"rate_based_statement":                  wafv2RateBasedStatementSchema(level),
++				"regex_match_statement":                 regexMatchStatementSchema(),
+ 				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
+ 				"rule_group_reference_statement":        wafv2RuleGroupReferenceStatementSchema(),
+ 				"size_constraint_statement":             sizeConstraintSchema(),
+@@ -476,6 +477,7 @@ func wafv2ScopeDownStatementSchema(level int) *schema.Schema {
+ 				"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
+ 				"not_statement":                         statementSchema(level),
+ 				"or_statement":                          statementSchema(level),
++				"regex_match_statement":                 regexMatchStatementSchema(),
+ 				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
+ 				"size_constraint_statement":             sizeConstraintSchema(),
+ 				"sqli_match_statement":                  sqliMatchStatementSchema(),
+@@ -632,6 +634,10 @@ func expandWebACLStatement(m map[string]interface{}) *wafv2.Statement {
+ 		statement.RateBasedStatement = expandRateBasedStatement(v.([]interface{}))
+ 	}
+ 
++	if v, ok := m["regex_match_statement"]; ok {
++		statement.RegexMatchStatement = expandRegexMatchStatement(v.([]interface{}))
++	}
++
+ 	if v, ok := m["regex_pattern_set_reference_statement"]; ok {
+ 		statement.RegexPatternSetReferenceStatement = expandRegexPatternSetReferenceStatement(v.([]interface{}))
+ 	}
+@@ -792,6 +798,10 @@ func flattenWebACLStatement(s *wafv2.Statement) map[string]interface{} {
+ 		m["rate_based_statement"] = flattenRateBasedStatement(s.RateBasedStatement)
+ 	}
+ 
++	if s.RegexMatchStatement != nil {
++		m["regex_match_statement"] = flattenRegexMatchStatement(s.RegexMatchStatement)
++	}
++
+ 	if s.RegexPatternSetReferenceStatement != nil {
+ 		m["regex_pattern_set_reference_statement"] = flattenRegexPatternSetReferenceStatement(s.RegexPatternSetReferenceStatement)
+ 	}
+-- 
+2.24.3 (Apple Git-128)
+

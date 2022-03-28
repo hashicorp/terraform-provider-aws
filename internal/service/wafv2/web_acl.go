@@ -381,6 +381,7 @@ func webACLRootStatementSchema(level int) *schema.Schema {
 				"not_statement":                         statementSchema(level),
 				"or_statement":                          statementSchema(level),
 				"rate_based_statement":                  wafv2RateBasedStatementSchema(level),
+				"regex_match_statement":                 regexMatchStatementSchema(),
 				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
 				"rule_group_reference_statement":        wafv2RuleGroupReferenceStatementSchema(),
 				"size_constraint_statement":             sizeConstraintSchema(),
@@ -476,6 +477,7 @@ func wafv2ScopeDownStatementSchema(level int) *schema.Schema {
 				"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
 				"not_statement":                         statementSchema(level),
 				"or_statement":                          statementSchema(level),
+				"regex_match_statement":                 regexMatchStatementSchema(),
 				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
 				"size_constraint_statement":             sizeConstraintSchema(),
 				"sqli_match_statement":                  sqliMatchStatementSchema(),
@@ -630,6 +632,10 @@ func expandWebACLStatement(m map[string]interface{}) *wafv2.Statement {
 
 	if v, ok := m["rate_based_statement"]; ok {
 		statement.RateBasedStatement = expandRateBasedStatement(v.([]interface{}))
+	}
+
+	if v, ok := m["regex_match_statement"]; ok {
+		statement.RegexMatchStatement = expandRegexMatchStatement(v.([]interface{}))
 	}
 
 	if v, ok := m["regex_pattern_set_reference_statement"]; ok {
@@ -790,6 +796,10 @@ func flattenWebACLStatement(s *wafv2.Statement) map[string]interface{} {
 
 	if s.RateBasedStatement != nil {
 		m["rate_based_statement"] = flattenRateBasedStatement(s.RateBasedStatement)
+	}
+
+	if s.RegexMatchStatement != nil {
+		m["regex_match_statement"] = flattenRegexMatchStatement(s.RegexMatchStatement)
 	}
 
 	if s.RegexPatternSetReferenceStatement != nil {

@@ -67,6 +67,7 @@ func rootStatementSchema(level int) *schema.Schema {
 				"not_statement":                         statementSchema(level - 1),
 				"or_statement":                          statementSchema(level - 1),
 				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
+				"regex_match_statement":                 regexMatchStatementSchema(),
 				"size_constraint_statement":             sizeConstraintSchema(),
 				"sqli_match_statement":                  sqliMatchStatementSchema(),
 				"xss_match_statement":                   xssMatchStatementSchema(),
@@ -96,6 +97,7 @@ func statementSchema(level int) *schema.Schema {
 								"not_statement":                         statementSchema(level - 1),
 								"or_statement":                          statementSchema(level - 1),
 								"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
+								"regex_match_statement":                 regexMatchStatementSchema(),
 								"size_constraint_statement":             sizeConstraintSchema(),
 								"sqli_match_statement":                  sqliMatchStatementSchema(),
 								"xss_match_statement":                   xssMatchStatementSchema(),
@@ -123,6 +125,7 @@ func statementSchema(level int) *schema.Schema {
 							"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
 							"label_match_statement":                 labelMatchStatementSchema(),
 							"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
+							"regex_match_statement":                 regexMatchStatementSchema(),
 							"size_constraint_statement":             sizeConstraintSchema(),
 							"sqli_match_statement":                  sqliMatchStatementSchema(),
 							"xss_match_statement":                   xssMatchStatementSchema(),
@@ -247,6 +250,25 @@ func labelMatchStatementSchema() *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.StringInSlice(wafv2.LabelMatchScope_Values(), false),
 				},
+			},
+		},
+	}
+}
+
+func regexMatchStatementSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"regex_string": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 512),
+				},
+				"field_to_match":      fieldToMatchSchema(),
+				"text_transformation": textTransformationSchema(),
 			},
 		},
 	}
