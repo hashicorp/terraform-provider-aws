@@ -1348,16 +1348,6 @@ func testAccCheckAdvancedSecurityOptions(enabled bool, userDbEnabled bool, statu
 	}
 }
 
-func testAccCheckCognitoOptions(enabled bool, status *opensearchservice.DomainStatus) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conf := status.CognitoOptions
-		if *conf.Enabled != enabled {
-			return fmt.Errorf("CognitoOptions not set properly. Given: %t, Expected: %t", *conf.Enabled, enabled)
-		}
-		return nil
-	}
-}
-
 func testAccCheckDomainExists(n string, domain *opensearchservice.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
