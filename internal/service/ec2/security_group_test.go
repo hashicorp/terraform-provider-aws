@@ -868,6 +868,7 @@ func TestAccEC2SecurityGroup_ipRangesWithSameRules(t *testing.T) {
 func TestAccEC2SecurityGroup_egressMode(t *testing.T) {
 	var securityGroup1, securityGroup2, securityGroup3 ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -876,7 +877,7 @@ func TestAccEC2SecurityGroup_egressMode(t *testing.T) {
 		CheckDestroy: testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityGroupEgressModeBlocksConfig(),
+				Config: testAccSecurityGroupEgressModeBlocksConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &securityGroup1),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "2"),
@@ -889,14 +890,14 @@ func TestAccEC2SecurityGroup_egressMode(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 			{
-				Config: testAccSecurityGroupEgressModeNoBlocksConfig(),
+				Config: testAccSecurityGroupEgressModeNoBlocksConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &securityGroup2),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "2"),
 				),
 			},
 			{
-				Config: testAccSecurityGroupEgressModeZeroedConfig(),
+				Config: testAccSecurityGroupEgressModeZeroedConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &securityGroup3),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
@@ -909,6 +910,7 @@ func TestAccEC2SecurityGroup_egressMode(t *testing.T) {
 func TestAccEC2SecurityGroup_ingressMode(t *testing.T) {
 	var securityGroup1, securityGroup2, securityGroup3 ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -917,7 +919,7 @@ func TestAccEC2SecurityGroup_ingressMode(t *testing.T) {
 		CheckDestroy: testAccCheckNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityGroupIngressModeBlocksConfig(),
+				Config: testAccSecurityGroupIngressModeBlocksConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &securityGroup1),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
@@ -930,14 +932,14 @@ func TestAccEC2SecurityGroup_ingressMode(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 			{
-				Config: testAccSecurityGroupIngressModeNoBlocksConfig(),
+				Config: testAccSecurityGroupIngressModeNoBlocksConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &securityGroup2),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
 				),
 			},
 			{
-				Config: testAccSecurityGroupIngressModeZeroedConfig(),
+				Config: testAccSecurityGroupIngressModeZeroedConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &securityGroup3),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
@@ -4286,19 +4288,21 @@ resource "aws_security_group" "test" {
 }
 `
 
-func testAccSecurityGroupEgressModeBlocksConfig() string {
-	return `
+func testAccSecurityGroupEgressModeBlocksConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-egress-config-mode"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
+  name = %[1]q
+
   tags = {
-    Name = "terraform-testacc-security-group-egress-config-mode"
+    Name = %[1]q
   }
 
   vpc_id = aws_vpc.test.id
@@ -4317,64 +4321,70 @@ resource "aws_security_group" "test" {
     to_port     = 0
   }
 }
-`
+`, rName)
 }
 
-func testAccSecurityGroupEgressModeNoBlocksConfig() string {
-	return `
+func testAccSecurityGroupEgressModeNoBlocksConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-egress-config-mode"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
+  name = %[1]q
+
   tags = {
-    Name = "terraform-testacc-security-group-egress-config-mode"
+    Name = %[1]q
   }
 
   vpc_id = aws_vpc.test.id
 }
-`
+`, rName)
 }
 
-func testAccSecurityGroupEgressModeZeroedConfig() string {
-	return `
+func testAccSecurityGroupEgressModeZeroedConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-egress-config-mode"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+
   egress = []
 
-  tags = {
-    Name = "terraform-testacc-security-group-egress-config-mode"
-  }
-
   vpc_id = aws_vpc.test.id
 }
-`
+`, rName)
 }
 
-func testAccSecurityGroupIngressModeBlocksConfig() string {
-	return `
+func testAccSecurityGroupIngressModeBlocksConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-ingress-config-mode"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
+  name = %[1]q
+
   tags = {
-    Name = "terraform-testacc-security-group-ingress-config-mode"
+    Name = %[1]q
   }
 
   vpc_id = aws_vpc.test.id
@@ -4393,47 +4403,51 @@ resource "aws_security_group" "test" {
     to_port     = 0
   }
 }
-`
+`, rName)
 }
 
-func testAccSecurityGroupIngressModeNoBlocksConfig() string {
-	return `
+func testAccSecurityGroupIngressModeNoBlocksConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-ingress-config-mode"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
+  name = %[1]q
+
   tags = {
-    Name = "terraform-testacc-security-group-ingress-config-mode"
+    Name = %[1]q
   }
 
   vpc_id = aws_vpc.test.id
 }
-`
+`, rName)
 }
 
-func testAccSecurityGroupIngressModeZeroedConfig() string {
-	return `
+func testAccSecurityGroupIngressModeZeroedConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-ingress-config-mode"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+
   ingress = []
 
-  tags = {
-    Name = "terraform-testacc-security-group-ingress-config-mode"
-  }
-
   vpc_id = aws_vpc.test.id
 }
-`
+`, rName)
 }
