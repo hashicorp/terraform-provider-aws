@@ -321,12 +321,6 @@ func ResourceCluster() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if !diff.Get("skip_final_snapshot").(bool) && diff.Get("final_snapshot_identifier").(string) == "" {
-					return errors.New("`final_snapshot_identifier` must be set when `skip_final_snapshot` is false")
-				}
-				return nil
-			},
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				if diff.Get("availability_zone_relocation_enabled").(bool) && diff.Get("publicly_accessible").(bool) {
 					return errors.New("`availability_zone_relocation_enabled` cannot be true when `publicly_accessible` is true")
 				}
@@ -865,9 +859,18 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
+	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
 	input := &redshift.DeleteClusterInput{
 		ClusterIdentifier:        aws.String(d.Id()),
-		SkipFinalClusterSnapshot: aws.Bool(d.Get("skip_final_snapshot").(bool)),
+		SkipFinalClusterSnapshot: aws.Bool(skipFinalSnapshot),
+	}
+
+	if !skipFinalSnapshot {
+		if v, ok := d.GetOk("final_snapshot_identifier"); ok {
+			input.FinalClusterSnapshotIdentifier = aws.String(v.(string))
+		} else {
+			return fmt.Errorf("Redshift Cluster Instance FinalSnapshotIdentifier is required when a final snapshot is required")
+		}
 	}
 
 	log.Printf("[DEBUG] Deleting Redshift Cluster: %s", d.Id())
