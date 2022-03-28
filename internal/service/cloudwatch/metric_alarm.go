@@ -106,6 +106,10 @@ func ResourceMetricAlarm() *schema.Resource {
 										Type:     schema.TypeInt,
 										Required: true,
 									},
+									"region": {
+										Type:     schema.TypeString,
+										Required: false,
+									},
 									"stat": {
 										Type:     schema.TypeString,
 										Required: true,
