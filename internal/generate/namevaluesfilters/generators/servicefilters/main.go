@@ -29,6 +29,7 @@ var sliceServiceNames = []string{
 	"imagebuilder",
 	"licensemanager",
 	"neptune",
+	"opensearchservice",
 	"rds",
 	"resourcegroupstaggingapi",
 	"route53resolver",
