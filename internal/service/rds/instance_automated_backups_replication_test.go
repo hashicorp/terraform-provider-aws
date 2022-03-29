@@ -15,13 +15,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccRDSInstanceAutomatedBackupReplication_basic(t *testing.T) {
+func TestAccRDSInstanceAutomatedBackupsReplication_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_db_instance_automated_backup_replication.test"
+	resourceName := "aws_db_instance_automated_backups_replication.test"
 
 	var providers []*schema.Provider
 
@@ -32,12 +32,12 @@ func TestAccRDSInstanceAutomatedBackupReplication_basic(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckInstanceAutomatedBackupReplicationDestroy,
+		CheckDestroy:      testAccCheckInstanceAutomatedBackupsReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceAutomatedBackupReplicationConfig(rName),
+				Config: testAccInstanceAutomatedBackupsReplicationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceAutomatedBackupReplicationExist(resourceName),
+					testAccCheckInstanceAutomatedBackupsReplicationExist(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "retention_period", "7"),
 				),
 			},
@@ -50,13 +50,13 @@ func TestAccRDSInstanceAutomatedBackupReplication_basic(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstanceAutomatedBackupReplication_retentionPeriod(t *testing.T) {
+func TestAccRDSInstanceAutomatedBackupsReplication_retentionPeriod(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_db_instance_automated_backup_replication.test"
+	resourceName := "aws_db_instance_automated_backups_replication.test"
 
 	var providers []*schema.Provider
 
@@ -67,12 +67,12 @@ func TestAccRDSInstanceAutomatedBackupReplication_retentionPeriod(t *testing.T) 
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckInstanceAutomatedBackupReplicationDestroy,
+		CheckDestroy:      testAccCheckInstanceAutomatedBackupsReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceAutomatedBackupReplicationConfig_retentionPeriod(rName),
+				Config: testAccInstanceAutomatedBackupReplicationsRetentionPeriodConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceAutomatedBackupReplicationExist(resourceName),
+					testAccCheckInstanceAutomatedBackupsReplicationExist(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "retention_period", "14"),
 				),
 			},
@@ -85,13 +85,13 @@ func TestAccRDSInstanceAutomatedBackupReplication_retentionPeriod(t *testing.T) 
 	})
 }
 
-func TestAccRDSInstanceAutomatedBackupReplication_kmsEncrypted(t *testing.T) {
+func TestAccRDSInstanceAutomatedBackupsReplication_kmsEncrypted(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_db_instance_automated_backup_replication.test"
+	resourceName := "aws_db_instance_automated_backups_replication.test"
 
 	var providers []*schema.Provider
 
@@ -102,12 +102,12 @@ func TestAccRDSInstanceAutomatedBackupReplication_kmsEncrypted(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckInstanceAutomatedBackupReplicationDestroy,
+		CheckDestroy:      testAccCheckInstanceAutomatedBackupsReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceAutomatedBackupReplicationConfig_kmsEncrypted(rName),
+				Config: testAccInstanceAutomatedBackupsReplicationKMSEncryptedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceAutomatedBackupReplicationExist(resourceName),
+					testAccCheckInstanceAutomatedBackupsReplicationExist(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "retention_period", "7"),
 				),
 			},
@@ -120,10 +120,8 @@ func TestAccRDSInstanceAutomatedBackupReplication_kmsEncrypted(t *testing.T) {
 	})
 }
 
-func testAccInstanceAutomatedBackupReplicationConfig(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(2),
-		fmt.Sprintf(`
+func testAccInstanceAutomatedBackupsReplicationConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   allocated_storage       = 10
   identifier              = %[1]q
@@ -139,16 +137,14 @@ resource "aws_db_instance" "test" {
   provider = "awsalternate"
 }
 
-resource "aws_db_instance_automated_backup_replication" "test" {
+resource "aws_db_instance_automated_backups_replication" "test" {
   source_db_instance_arn = aws_db_instance.test.arn
 }
 `, rName))
 }
 
-func testAccInstanceAutomatedBackupReplicationConfig_retentionPeriod(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(2),
-		fmt.Sprintf(`
+func testAccInstanceAutomatedBackupReplicationsRetentionPeriodConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   allocated_storage       = 10
   identifier              = %[1]q
@@ -164,17 +160,15 @@ resource "aws_db_instance" "test" {
   provider = "awsalternate"
 }
 
-resource "aws_db_instance_automated_backup_replication" "test" {
+resource "aws_db_instance_automated_backups_replication" "test" {
   source_db_instance_arn = aws_db_instance.test.arn
   retention_period       = 14
 }
 `, rName))
 }
 
-func testAccInstanceAutomatedBackupReplicationConfig_kmsEncrypted(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(2),
-		fmt.Sprintf(`
+func testAccInstanceAutomatedBackupsReplicationKMSEncryptedConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = %[1]q
 }
@@ -195,14 +189,14 @@ resource "aws_db_instance" "test" {
   provider = "awsalternate"
 }
 
-resource "aws_db_instance_automated_backup_replication" "test" {
+resource "aws_db_instance_automated_backups_replication" "test" {
   source_db_instance_arn = aws_db_instance.test.arn
   kms_key_id             = aws_kms_key.test.arn
 }
 `, rName))
 }
 
-func testAccCheckInstanceAutomatedBackupReplicationExist(n string) resource.TestCheckFunc {
+func testAccCheckInstanceAutomatedBackupsReplicationExist(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -210,7 +204,7 @@ func testAccCheckInstanceAutomatedBackupReplicationExist(n string) resource.Test
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No RDS instance automated backup replication ID is set")
+			return fmt.Errorf("No RDS instance automated backups replication ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
@@ -225,11 +219,11 @@ func testAccCheckInstanceAutomatedBackupReplicationExist(n string) resource.Test
 	}
 }
 
-func testAccCheckInstanceAutomatedBackupReplicationDestroy(s *terraform.State) error {
+func testAccCheckInstanceAutomatedBackupsReplicationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_db_instance_automated_backup_replication" {
+		if rs.Type != "aws_db_instance_automated_backups_replication" {
 			continue
 		}
 
@@ -243,7 +237,7 @@ func testAccCheckInstanceAutomatedBackupReplicationDestroy(s *terraform.State) e
 			return err
 		}
 
-		return fmt.Errorf("RDS instance automated backup replication %s still exists", rs.Primary.ID)
+		return fmt.Errorf("RDS instance automated backups replication %s still exists", rs.Primary.ID)
 	}
 
 	return nil

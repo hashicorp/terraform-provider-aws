@@ -100,7 +100,7 @@ func statusDBInstanceAutomatedBackup(conn *rds.RDS, arn string) resource.StateRe
 
 // statusDBInstanceHasAutomatedBackup returns whether or not a database instance has a specified automated backup.
 // The connection must be valid for the database instance's Region.
-func statusDBInstanceHasAutomatedBackup(conn *rds.RDS, dbInstanceID, dbInstanceAutomatedBackupARN string) resource.StateRefreshFunc {
+func statusDBInstanceHasAutomatedBackup(conn *rds.RDS, dbInstanceID, dbInstanceAutomatedBackupsARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDBInstanceByID(conn, dbInstanceID)
 
@@ -113,7 +113,7 @@ func statusDBInstanceHasAutomatedBackup(conn *rds.RDS, dbInstanceID, dbInstanceA
 		}
 
 		for _, v := range output.DBInstanceAutomatedBackupsReplications {
-			if aws.StringValue(v.DBInstanceAutomatedBackupsArn) == dbInstanceAutomatedBackupARN {
+			if aws.StringValue(v.DBInstanceAutomatedBackupsArn) == dbInstanceAutomatedBackupsARN {
 				return output, strconv.FormatBool(true), nil
 			}
 		}

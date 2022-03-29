@@ -220,11 +220,11 @@ func waitDBInstanceAutomatedBackupCreated(conn *rds.RDS, arn string, timeout tim
 
 // waitDBInstanceAutomatedBackupDeleted waits for a specified automated backup to be deleted from a database instance.
 // The connection must be valid for the database instance's Region.
-func waitDBInstanceAutomatedBackupDeleted(conn *rds.RDS, dbInstanceID, dbInstanceAutomatedBackupARN string, timeout time.Duration) (*rds.DBInstance, error) {
+func waitDBInstanceAutomatedBackupDeleted(conn *rds.RDS, dbInstanceID, dbInstanceAutomatedBackupsARN string, timeout time.Duration) (*rds.DBInstance, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{strconv.FormatBool(true)},
 		Target:  []string{strconv.FormatBool(false)},
-		Refresh: statusDBInstanceHasAutomatedBackup(conn, dbInstanceID, dbInstanceAutomatedBackupARN),
+		Refresh: statusDBInstanceHasAutomatedBackup(conn, dbInstanceID, dbInstanceAutomatedBackupsARN),
 		Timeout: timeout,
 	}
 

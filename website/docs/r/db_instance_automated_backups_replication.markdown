@@ -1,12 +1,12 @@
 ---
 subcategory: "RDS"
 layout: "aws"
-page_title: "AWS: aws_db_instance_automated_backup_replication"
+page_title: "AWS: aws_db_instance_automated_backups_replication"
 description: |-
   Enables replication of automated backups to a different AWS Region.
 ---
 
-# Resource: aws_db_instance_automated_backup_replication
+# Resource: aws_db_instance_automated_backups_replication
 
 Manage cross-region replication of automated backups to a different AWS Region. Documentation for cross-region automated backup replication can be found at:
 
@@ -17,7 +17,7 @@ Manage cross-region replication of automated backups to a different AWS Region. 
 ## Example Usage
 
 ```terraform
-resource "aws_db_instance_automated_backup_replication" "default" {
+resource "aws_db_instance_automated_backups_replication" "default" {
   source_db_instance_arn = "arn:aws:rds:us-west-2:123456789012:db:mydatabase"
   retention_period       = 14
 }
@@ -26,7 +26,7 @@ resource "aws_db_instance_automated_backup_replication" "default" {
 ## Encrypting the automated backup with KMS
 
 ```terraform
-resource "aws_db_instance_automated_backup_replication" "default" {
+resource "aws_db_instance_automated_backups_replication" "default" {
   source_db_instance_arn = "arn:aws:rds:us-west-2:123456789012:db:mydatabase"
   kms_key_id             = "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"
 }
@@ -64,7 +64,7 @@ resource "aws_kms_key" "default" {
   provider = "aws.replica"
 }
 
-resource "aws_db_instance_automated_backup_replication" "default" {
+resource "aws_db_instance_automated_backups_replication" "default" {
   source_db_instance_arn = aws_db_instance.default.arn
   kms_key_id             = aws_kms_key.default.arn
 
@@ -89,8 +89,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-RDS instance automated backup replication can be imported using the `arn`, e.g.,
+RDS instance automated backups replication can be imported using the `arn`, e.g.,
 
 ```
-$ terraform import aws_db_instance_automated_backup_replication.default arn:aws:rds:us-east-1:123456789012:auto-backup:ab-faaa2mgdj1vmp4xflr7yhsrmtbtob7ltrzzz2my
+$ terraform import aws_db_instance_automated_backups_replication.default arn:aws:rds:us-east-1:123456789012:auto-backup:ab-faaa2mgdj1vmp4xflr7yhsrmtbtob7ltrzzz2my
 ```

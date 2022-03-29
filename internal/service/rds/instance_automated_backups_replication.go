@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceInstanceAutomatedBackupReplication() *schema.Resource {
+func ResourceInstanceAutomatedBackupsReplication() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceInstanceAutomatedBackupReplicationCreate,
-		Read:   resourceInstanceAutomatedBackupReplicationRead,
-		Delete: resourceInstanceAutomatedBackupReplicationDelete,
+		Create: resourceInstanceAutomatedBackupsReplicationCreate,
+		Read:   resourceInstanceAutomatedBackupsReplicationRead,
+		Delete: resourceInstanceAutomatedBackupsReplicationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -52,7 +52,7 @@ func ResourceInstanceAutomatedBackupReplication() *schema.Resource {
 	}
 }
 
-func resourceInstanceAutomatedBackupReplicationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceAutomatedBackupsReplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	input := &rds.StartDBInstanceAutomatedBackupsReplicationInput{
@@ -68,11 +68,11 @@ func resourceInstanceAutomatedBackupReplicationCreate(d *schema.ResourceData, me
 		input.PreSignedUrl = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Starting RDS instance automated backup replication: %s", input)
+	log.Printf("[DEBUG] Starting RDS instance automated backups replication: %s", input)
 	output, err := conn.StartDBInstanceAutomatedBackupsReplication(input)
 
 	if err != nil {
-		return fmt.Errorf("error starting RDS instance automated backup replication: %w", err)
+		return fmt.Errorf("error starting RDS instance automated backups replication: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.DBInstanceAutomatedBackup.DBInstanceAutomatedBackupsArn))
@@ -81,22 +81,22 @@ func resourceInstanceAutomatedBackupReplicationCreate(d *schema.ResourceData, me
 		return fmt.Errorf("error waiting for DB instance automated backup (%s) create: %w", d.Id(), err)
 	}
 
-	return resourceInstanceAutomatedBackupReplicationRead(d, meta)
+	return resourceInstanceAutomatedBackupsReplicationRead(d, meta)
 }
 
-func resourceInstanceAutomatedBackupReplicationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceAutomatedBackupsReplicationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	backup, err := FindDBInstanceAutomatedBackupByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] RDS instance automated backup replication %s not found, removing from state", d.Id())
+		log.Printf("[WARN] RDS instance automated backup %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading RDS instance automated backup replication (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading RDS instance automated backup (%s): %w", d.Id(), err)
 	}
 
 	d.Set("kms_key_id", backup.KmsKeyId)
@@ -106,7 +106,7 @@ func resourceInstanceAutomatedBackupReplicationRead(d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceInstanceAutomatedBackupReplicationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceAutomatedBackupsReplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	backup, err := FindDBInstanceAutomatedBackupByARN(conn, d.Id())
@@ -116,7 +116,7 @@ func resourceInstanceAutomatedBackupReplicationDelete(d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading RDS instance automated backup replication (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading RDS instance automated backup (%s): %w", d.Id(), err)
 	}
 
 	dbInstanceID := aws.StringValue(backup.DBInstanceIdentifier)
@@ -126,13 +126,13 @@ func resourceInstanceAutomatedBackupReplicationDelete(d *schema.ResourceData, me
 		return err
 	}
 
-	log.Printf("[DEBUG] Stopping RDS instance automated backup replication: %s", d.Id())
+	log.Printf("[DEBUG] Stopping RDS instance automated backups replication: %s", d.Id())
 	_, err = conn.StopDBInstanceAutomatedBackupsReplication(&rds.StopDBInstanceAutomatedBackupsReplicationInput{
 		SourceDBInstanceArn: aws.String(d.Get("source_db_instance_arn").(string)),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error stopping RDS instance automated backup replication (%s): %w", d.Id(), err)
+		return fmt.Errorf("error stopping RDS instance automated backups replication (%s): %w", d.Id(), err)
 	}
 
 	// Create a new client to the source region.
