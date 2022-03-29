@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -13,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccRDSInstanceAutomatedBackupReplication_basic(t *testing.T) {
@@ -37,6 +37,7 @@ func TestAccRDSInstanceAutomatedBackupReplication_basic(t *testing.T) {
 			{
 				Config: testAccInstanceAutomatedBackupReplicationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceAutomatedBackupReplicationExist(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "retention_period", "7"),
 				),
 			},
@@ -71,6 +72,7 @@ func TestAccRDSInstanceAutomatedBackupReplication_retentionPeriod(t *testing.T) 
 			{
 				Config: testAccInstanceAutomatedBackupReplicationConfig_retentionPeriod(rName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceAutomatedBackupReplicationExist(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "retention_period", "14"),
 				),
 			},
@@ -105,6 +107,7 @@ func TestAccRDSInstanceAutomatedBackupReplication_kmsEncrypted(t *testing.T) {
 			{
 				Config: testAccInstanceAutomatedBackupReplicationConfig_kmsEncrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceAutomatedBackupReplicationExist(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "retention_period", "7"),
 				),
 			},
@@ -132,12 +135,12 @@ resource "aws_db_instance" "test" {
   password                = "mustbeeightcharacters"
   backup_retention_period = 7
   skip_final_snapshot     = true
+
+  provider = "awsalternate"
 }
 
 resource "aws_db_instance_automated_backup_replication" "test" {
   source_db_instance_arn = aws_db_instance.test.arn
-
-  provider = "awsalternate"
 }
 `, rName))
 }
@@ -157,13 +160,13 @@ resource "aws_db_instance" "test" {
   password                = "mustbeeightcharacters"
   backup_retention_period = 7
   skip_final_snapshot     = true
+
+  provider = "awsalternate"
 }
 
 resource "aws_db_instance_automated_backup_replication" "test" {
   source_db_instance_arn = aws_db_instance.test.arn
   retention_period       = 14
-
-  provider = "awsalternate"
 }
 `, rName))
 }
@@ -174,7 +177,6 @@ func testAccInstanceAutomatedBackupReplicationConfig_kmsEncrypted(rName string) 
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = %[1]q
-  provider    = "awsalternate"
 }
 
 resource "aws_db_instance" "test" {
@@ -189,47 +191,59 @@ resource "aws_db_instance" "test" {
   backup_retention_period = 7
   storage_encrypted       = true
   skip_final_snapshot     = true
+
+  provider = "awsalternate"
 }
 
 resource "aws_db_instance_automated_backup_replication" "test" {
   source_db_instance_arn = aws_db_instance.test.arn
   kms_key_id             = aws_kms_key.test.arn
-
-  provider = "awsalternate"
 }
 `, rName))
+}
+
+func testAccCheckInstanceAutomatedBackupReplicationExist(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No RDS instance automated backup replication ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+
+		_, err := tfrds.FindDBInstanceAutomatedBackupByARN(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckInstanceAutomatedBackupReplicationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_rds_cluster" {
+		if rs.Type != "aws_db_instance_automated_backup_replication" {
 			continue
 		}
 
-		// Try to find the Group
-		var err error
-		resp, err := conn.DescribeDBInstanceAutomatedBackups(
-			&rds.DescribeDBInstanceAutomatedBackupsInput{
-				DBInstanceAutomatedBackupsArn: aws.String(rs.Primary.ID),
-			})
+		_, err := tfrds.FindDBInstanceAutomatedBackupByARN(conn, rs.Primary.ID)
 
-		if err == nil {
-			if len(resp.DBInstanceAutomatedBackups) != 0 &&
-				*resp.DBInstanceAutomatedBackups[0].DBInstanceAutomatedBackupsArn == rs.Primary.ID {
-				return fmt.Errorf("DB Instance Automated Backup still exists, %s", rs.Primary.ID)
-			}
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		// Return nil if the cluster is already destroyed
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == rds.ErrCodeDBInstanceAutomatedBackupNotFoundFault {
-				return nil
-			}
+		if err != nil {
+			return err
 		}
 
-		return err
+		return fmt.Errorf("RDS instance automated backup replication %s still exists", rs.Primary.ID)
 	}
 
 	return nil

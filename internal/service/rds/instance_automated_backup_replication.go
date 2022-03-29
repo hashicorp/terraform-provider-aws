@@ -6,14 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-)
-
-const (
-	dbInstanceAutomatedBackupReplicationRetained = "retained"
 )
 
 func ResourceInstanceAutomatedBackupReplication() *schema.Resource {
@@ -54,26 +50,25 @@ func resourceInstanceAutomatedBackupReplicationCreate(d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	input := &rds.StartDBInstanceAutomatedBackupsReplicationInput{
-		SourceDBInstanceArn:   aws.String(d.Get("source_db_instance_arn").(string)),
 		BackupRetentionPeriod: aws.Int64(int64(d.Get("retention_period").(int))),
+		SourceDBInstanceArn:   aws.String(d.Get("source_db_instance_arn").(string)),
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Starting RDS instance automated backup replication for: %s", *input.SourceDBInstanceArn)
-
+	log.Printf("[DEBUG] Creating RDS instance automated backup replication: %s", input)
 	output, err := conn.StartDBInstanceAutomatedBackupsReplication(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating RDS instance automated backup replication: %s", err)
+		return fmt.Errorf("error creating RDS instance automated backup replication: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.DBInstanceAutomatedBackup.DBInstanceAutomatedBackupsArn))
 
 	if _, err := waitDBInstanceAutomatedBackupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutDefault)); err != nil {
-		return fmt.Errorf("error waiting for DB instance automated backup (%s) creation: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for DB instance automated backup (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceInstanceAutomatedBackupReplicationRead(d, meta)
@@ -82,39 +77,21 @@ func resourceInstanceAutomatedBackupReplicationCreate(d *schema.ResourceData, me
 func resourceInstanceAutomatedBackupReplicationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
-	input := &rds.DescribeDBInstanceAutomatedBackupsInput{
-		DBInstanceAutomatedBackupsArn: aws.String(d.Id()),
-	}
+	backup, err := FindDBInstanceAutomatedBackupByARN(conn, d.Id())
 
-	output, err := conn.DescribeDBInstanceAutomatedBackups(input)
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceAutomatedBackupNotFoundFault) {
-		log.Printf("[WARN] RDS instance automated backup replication not found, removing from state: %s", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] RDS instance automated backup replication %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading RDS instance automated backup replication: %s", err)
+		return fmt.Errorf("error reading RDS instance automated backup replication (%s): %w", d.Id(), err)
 	}
 
-	for _, backup := range output.DBInstanceAutomatedBackups {
-		if aws.StringValue(backup.DBInstanceAutomatedBackupsArn) == d.Id() {
-			// Check if the automated backup is retained
-			if aws.StringValue(backup.Status) == dbInstanceAutomatedBackupReplicationRetained {
-				log.Printf("[WARN] RDS instance automated backup replication is retained, removing from state: %s", d.Id())
-				d.SetId("")
-				return nil // If the automated backup is retained, the replication is stopped.
-			} else {
-				d.Set("source_db_instance_arn", backup.DBInstanceArn)
-				d.Set("kms_key_id", backup.KmsKeyId)
-				d.Set("retention_period", backup.BackupRetentionPeriod)
-			}
-
-		} else {
-			return fmt.Errorf("unable to find RDS instance automated backup replication: %s", d.Id())
-		}
-	}
+	d.Set("kms_key_id", backup.KmsKeyId)
+	d.Set("retention_period", backup.BackupRetentionPeriod)
+	d.Set("source_db_instance_arn", backup.DBInstanceArn)
 
 	return nil
 }
