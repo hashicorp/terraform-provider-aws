@@ -908,7 +908,7 @@ into Terraform.
     - Run the following then submit the pull request:
 
   ```sh
-  go test ./aws
+  make test
   go mod tidy
   ```
 
