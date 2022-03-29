@@ -894,9 +894,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Redshift Cluster (%s): %w", d.Id(), err)
 	}
 
-	_, err = waitClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-
-	if err != nil {
+	if _, err := waitClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Redshift Cluster (%s) delete: %w", d.Id(), err)
 	}
 

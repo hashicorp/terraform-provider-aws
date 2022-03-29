@@ -55,7 +55,7 @@ func waitClusterDeleted(conn *redshift.Redshift, id string, timeout time.Duratio
 	return nil, err
 }
 
-func waitClusterUpdated(conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
+func waitClusterUpdated(conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{clusterAvailabilityStatusMaintenance, clusterAvailabilityStatusModifying, clusterAvailabilityStatusUnavailable},
 		Target:  []string{clusterAvailabilityStatusAvailable},
