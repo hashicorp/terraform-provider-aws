@@ -80,9 +80,9 @@ func statusDBInstance(conn *rds.RDS, id string) resource.StateRefreshFunc {
 	}
 }
 
-func statusDBInstanceAutomatedBackup(conn *rds.RDS, id string) resource.StateRefreshFunc {
+func statusDBInstanceAutomatedBackup(conn *rds.RDS, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDBInstanceAutomatedBackupByID(conn, id)
+		output, err := FindDBInstanceAutomatedBackupByARN(conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

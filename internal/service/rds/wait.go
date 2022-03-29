@@ -237,8 +237,8 @@ func waitDBClusterInstanceDeleted(conn *rds.RDS, id string, timeout time.Duratio
 
 func waitDBInstanceAutomatedBackupAvailable(conn *rds.RDS, arn string, timeout time.Duration) (*rds.DBInstanceAutomatedBackup, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{InstanceAutomatedBackupPending},
-		Target:  []string{InstanceAutomatedBackupReplicating},
+		Pending: []string{InstanceAutomatedBackupStatusPending},
+		Target:  []string{InstanceAutomatedBackupStatusReplicating},
 		Refresh: statusDBInstanceAutomatedBackup(conn, arn),
 		Timeout: timeout,
 	}

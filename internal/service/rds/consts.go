@@ -38,8 +38,9 @@ const (
 )
 
 const (
-	InstanceAutomatedBackupPending     = "pending"
-	InstanceAutomatedBackupReplicating = "replicating"
+	InstanceAutomatedBackupStatusPending     = "pending"
+	InstanceAutomatedBackupStatusReplicating = "replicating"
+	InstanceAutomatedBackupStatusRetained    = "retained"
 )
 
 const (

@@ -190,11 +190,36 @@ func FindEventSubscriptionByID(conn *rds.RDS, id string) (*rds.EventSubscription
 	return output.EventSubscriptionsList[0], nil
 }
 
-func FindDBInstanceAutomatedBackupByID(conn *rds.RDS, id string) (*rds.DBInstanceAutomatedBackup, error) {
+func FindDBInstanceAutomatedBackupByARN(conn *rds.RDS, arn string) (*rds.DBInstanceAutomatedBackup, error) {
 	input := &rds.DescribeDBInstanceAutomatedBackupsInput{
-		DBInstanceAutomatedBackupsArn: aws.String(id),
+		DBInstanceAutomatedBackupsArn: aws.String(arn),
 	}
 
+	output, err := FindDBInstanceAutomatedBackup(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := aws.StringValue(output.Status); status == InstanceAutomatedBackupStatusRetained {
+		// If the automated backup is retained, the replication is stopped.
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.DBInstanceAutomatedBackupsArn) != arn {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindDBInstanceAutomatedBackup(conn *rds.RDS, input *rds.DescribeDBInstanceAutomatedBackupsInput) (*rds.DBInstanceAutomatedBackup, error) {
 	output, err := conn.DescribeDBInstanceAutomatedBackups(input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceAutomatedBackupNotFoundFault) {
@@ -204,7 +229,7 @@ func FindDBInstanceAutomatedBackupByID(conn *rds.RDS, id string) (*rds.DBInstanc
 		}
 	}
 
-	if output == nil || len(output.DBInstanceAutomatedBackups) == 0 {
+	if output == nil || len(output.DBInstanceAutomatedBackups) == 0 || output.DBInstanceAutomatedBackups[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
