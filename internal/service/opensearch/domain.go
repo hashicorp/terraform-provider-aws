@@ -128,6 +128,10 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"auto_tune_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -146,10 +150,9 @@ func ResourceDomain() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"start_at": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.IsRFC3339Time,
+									"cron_expression_for_recurrence": {
+										Type:     schema.TypeString,
+										Required: true,
 									},
 									"duration": {
 										Type:     schema.TypeList,
@@ -157,21 +160,22 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"value": {
-													Type:     schema.TypeInt,
-													Required: true,
-												},
 												"unit": {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(opensearchservice.TimeUnit_Values(), false),
 												},
+												"value": {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
 											},
 										},
 									},
-									"cron_expression_for_recurrence": {
-										Type:     schema.TypeString,
-										Required: true,
+									"start_at": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.IsRFC3339Time,
 									},
 								},
 							},
@@ -185,21 +189,108 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"domain_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-z][0-9a-z\-]{2,27}$`),
-					"must start with a lowercase alphabet and be at least 3 and no more than 28 characters long."+
-						" Valid characters are a-z (lowercase letters), 0-9, and - (hyphen)."),
-			},
-			"arn": {
-				Type:     schema.TypeString,
+			"cluster_config": {
+				Type:     schema.TypeList,
+				Optional: true,
 				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"dedicated_master_count": {
+							Type:             schema.TypeInt,
+							Optional:         true,
+							DiffSuppressFunc: isDedicatedMasterDisabled,
+						},
+						"dedicated_master_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"dedicated_master_type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: isDedicatedMasterDisabled,
+						},
+						"instance_count": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  1,
+						},
+						"instance_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      opensearchservice.OpenSearchPartitionInstanceTypeM3MediumSearch,
+							ValidateFunc: validation.StringInSlice(opensearchservice.OpenSearchPartitionInstanceType_Values(), false),
+						},
+						"warm_count": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(2, 150),
+						},
+						"warm_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"warm_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								opensearchservice.OpenSearchWarmPartitionInstanceTypeUltrawarm1MediumSearch,
+								opensearchservice.OpenSearchWarmPartitionInstanceTypeUltrawarm1LargeSearch,
+								"ultrawarm1.xlarge.search",
+							}, false),
+						},
+						"zone_awareness_config": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							MaxItems:         1,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"availability_zone_count": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      2,
+										ValidateFunc: validation.IntInSlice([]int{2, 3}),
+									},
+								},
+							},
+						},
+						"zone_awareness_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
 			},
-			"domain_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"cognito_options": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				ForceNew:         false,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"identity_pool_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"user_pool_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
 			},
 			"domain_endpoint_options": {
 				Type:     schema.TypeList,
@@ -208,22 +299,6 @@ func ResourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enforce_https": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"tls_security_policy": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice(opensearchservice.TLSSecurityPolicy_Values(), false),
-						},
-						"custom_endpoint_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
 						"custom_endpoint": {
 							Type:             schema.TypeString,
 							Optional:         true,
@@ -235,16 +310,36 @@ func ResourceDomain() *schema.Resource {
 							ValidateFunc:     verify.ValidARN,
 							DiffSuppressFunc: isCustomEndpointDisabled,
 						},
+						"custom_endpoint_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"enforce_https": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"tls_security_policy": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(opensearchservice.TLSSecurityPolicy_Values(), false),
+						},
 					},
 				},
 			},
-			"endpoint": {
+			"domain_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kibana_endpoint": {
+			"domain_name": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-z][0-9a-z\-]{2,27}$`),
+					"must start with a lowercase alphabet and be at least 3 and no more than 28 characters long."+
+						" Valid characters are a-z (lowercase letters), 0-9, and - (hyphen)."),
 			},
 			"ebs_options": {
 				Type:     schema.TypeList,
@@ -296,6 +391,42 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
+			"endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"engine_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "OpenSearch_1.1",
+			},
+			"kibana_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"log_publishing_options": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cloudwatch_log_group_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"log_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(opensearchservice.LogType_Values(), false),
+						},
+					},
+				},
+			},
 			"node_to_node_encryption": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -307,80 +438,6 @@ func ResourceDomain() *schema.Resource {
 							Type:     schema.TypeBool,
 							Required: true,
 							ForceNew: true,
-						},
-					},
-				},
-			},
-			"cluster_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"dedicated_master_count": {
-							Type:             schema.TypeInt,
-							Optional:         true,
-							DiffSuppressFunc: isDedicatedMasterDisabled,
-						},
-						"dedicated_master_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"dedicated_master_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: isDedicatedMasterDisabled,
-						},
-						"instance_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  1,
-						},
-						"instance_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      opensearchservice.OpenSearchPartitionInstanceTypeM3MediumSearch,
-							ValidateFunc: validation.StringInSlice(opensearchservice.OpenSearchPartitionInstanceType_Values(), false),
-						},
-						"zone_awareness_config": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							MaxItems:         1,
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"availability_zone_count": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      2,
-										ValidateFunc: validation.IntInSlice([]int{2, 3}),
-									},
-								},
-							},
-						},
-						"zone_awareness_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"warm_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"warm_count": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(2, 150),
-						},
-						"warm_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								opensearchservice.OpenSearchWarmPartitionInstanceTypeUltrawarm1MediumSearch,
-								opensearchservice.OpenSearchWarmPartitionInstanceTypeUltrawarm1LargeSearch,
-								"ultrawarm1.xlarge.search",
-							}, false),
 						},
 					},
 				},
@@ -399,6 +456,8 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"vpc_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -431,66 +490,6 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"log_publishing_options": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"log_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(opensearchservice.LogType_Values(), false),
-						},
-						"cloudwatch_log_group_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-					},
-				},
-			},
-			"engine_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "OpenSearch_1.1",
-			},
-			"cognito_options": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				ForceNew:         false,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"user_pool_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"identity_pool_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
