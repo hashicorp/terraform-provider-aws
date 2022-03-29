@@ -15,10 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-const (
-	dbInstanceAutomatedBackupReplicationRetained = "retained"
-)
-
 func TestAccRDSInstanceAutomatedBackupReplication_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
