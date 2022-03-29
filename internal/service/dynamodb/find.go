@@ -2,7 +2,6 @@ package dynamodb
 
 import (
 	"context"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
@@ -118,4 +117,21 @@ func FindDynamoDBTTLRDescriptionByTableName(conn *dynamodb.DynamoDB, tableName s
 	}
 
 	return output.TimeToLiveDescription, nil
+}
+
+func FindContributorInsights(ctx context.Context, conn *dynamodb.DynamoDB, tableName, indexName string) (*dynamodb.DescribeContributorInsightsOutput, error) {
+	input := &dynamodb.DescribeContributorInsightsInput{
+		TableName: aws.String(tableName),
+	}
+
+	if indexName != "" {
+		input.IndexName = aws.String(indexName)
+	}
+
+	output, err := conn.DescribeContributorInsightsWithContext(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }

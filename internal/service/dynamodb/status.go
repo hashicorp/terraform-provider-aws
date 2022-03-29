@@ -184,3 +184,23 @@ func statusDynamoDBTableSES(conn *dynamodb.DynamoDB, tableName string) resource.
 		return table, aws.StringValue(table.SSEDescription.Status), nil
 	}
 }
+
+func statusContributorInsights(ctx context.Context, conn *dynamodb.DynamoDB, tableName, indexName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		insight, err := FindContributorInsights(ctx, conn, tableName, indexName)
+
+		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if insight == nil {
+			return nil, "", nil
+		}
+
+		return insight, aws.StringValue(insight.ContributorInsightsStatus), nil
+	}
+}
