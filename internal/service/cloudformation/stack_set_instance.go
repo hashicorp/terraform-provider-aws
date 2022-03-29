@@ -190,7 +190,7 @@ func resourceStackSetInstanceCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.OperationPreferences = expandCloudFormationOperationPreferences(d)
+		input.OperationPreferences = expandCloudFormationOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating CloudFormation StackSet Instance: %s", input)
@@ -339,7 +339,7 @@ func resourceStackSetInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.OperationPreferences = expandCloudFormationOperationPreferences(d)
+			input.OperationPreferences = expandCloudFormationOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating CloudFormation StackSet Instance: %s", input)

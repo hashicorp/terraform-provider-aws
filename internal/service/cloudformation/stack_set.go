@@ -337,7 +337,7 @@ func resourceStackSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.OperationPreferences = expandCloudFormationOperationPreferences(d)
+		input.OperationPreferences = expandCloudFormationOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("parameters"); ok {

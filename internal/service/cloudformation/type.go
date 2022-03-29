@@ -313,30 +313,33 @@ func expandCloudformationLoggingConfig(tfMap map[string]interface{}) *cloudforma
 	return apiObject
 }
 
-func expandCloudFormationOperationPreferences(d *schema.ResourceData) *cloudformation.StackSetOperationPreferences {
-
-	operationPreferences := &cloudformation.StackSetOperationPreferences{}
-
-	if v, ok := d.GetOk("operation_preferences.0.failure_tolerance_count"); ok {
-		operationPreferences.FailureToleranceCount = aws.Int64(int64(v.(int)))
-	}
-	if v, ok := d.GetOk("operation_preferences.0.failure_tolerance_percentage"); ok {
-		operationPreferences.FailureTolerancePercentage = aws.Int64(int64(v.(int)))
-	}
-	if v, ok := d.GetOk("operation_preferences.0.max_concurrent_count"); ok {
-		operationPreferences.MaxConcurrentCount = aws.Int64(int64(v.(int)))
-	}
-	if v, ok := d.GetOk("operation_preferences.0.max_concurrent_percentage"); ok {
-		operationPreferences.MaxConcurrentPercentage = aws.Int64(int64(v.(int)))
-	}
-	if v, ok := d.GetOk("operation_preferences.0.region_concurrency_type"); ok {
-		operationPreferences.RegionConcurrencyType = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("operation_preferences.0.region_order"); ok {
-		operationPreferences.RegionOrder = flex.ExpandStringSet(v.(*schema.Set))
+func expandCloudFormationOperationPreferences(tfMap map[string]interface{}) *cloudformation.StackSetOperationPreferences {
+	if tfMap == nil {
+		return nil
 	}
 
-	return operationPreferences
+	apiObject := &cloudformation.StackSetOperationPreferences{}
+
+	if v, ok := tfMap["failure_tolerance_count"].(int); ok {
+		apiObject.FailureToleranceCount = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["failure_tolerance_percentage"].(int); ok {
+		apiObject.FailureTolerancePercentage = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["max_concurrent_count"].(int); ok {
+		apiObject.MaxConcurrentCount = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["max_concurrent_percentage"].(int); ok {
+		apiObject.MaxConcurrentPercentage = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["region_concurrency_type"].(string); ok && v != "" {
+		apiObject.RegionConcurrencyType = aws.String(v)
+	}
+	if v, ok := tfMap["region_order"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.RegionOrder = flex.ExpandStringSet(v)
+	}
+
+	return apiObject
 }
 
 func flattenCloudformationLoggingConfig(apiObject *cloudformation.LoggingConfig) map[string]interface{} {
