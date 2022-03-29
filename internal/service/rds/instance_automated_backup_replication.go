@@ -68,7 +68,7 @@ func resourceInstanceAutomatedBackupReplicationCreate(d *schema.ResourceData, me
 
 	d.SetId(aws.StringValue(output.DBInstanceAutomatedBackup.DBInstanceAutomatedBackupsArn))
 
-	if _, err := waitDBInstanceAutomatedBackupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutDefault)); err != nil {
+	if _, err := waitDBInstanceAutomatedBackupCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for DB instance automated backup (%s) create: %w", d.Id(), err)
 	}
 
@@ -110,7 +110,7 @@ func resourceInstanceAutomatedBackupReplicationDelete(d *schema.ResourceData, me
 		return fmt.Errorf("error reading RDS instance automated backup replication (%s): %w", d.Id(), err)
 	}
 
-	databaseID := aws.StringValue(backup.DBInstanceIdentifier)
+	dbInstanceID := aws.StringValue(backup.DBInstanceIdentifier)
 	sourceDatabaseARN, err := arn.Parse(aws.StringValue(backup.DBInstanceArn))
 
 	if err != nil {
@@ -132,9 +132,8 @@ func resourceInstanceAutomatedBackupReplicationDelete(d *schema.ResourceData, me
 		sourceDatabaseConn = rds.New(meta.(*conns.AWSClient).Session, aws.NewConfig().WithRegion(sourceDatabaseARN.Region))
 	}
 
-	// Wait for the source database to be available after the replication is stopped.
-	if _, err := waitDBInstanceAvailable(sourceDatabaseConn, databaseID, d.Timeout(schema.TimeoutDefault)); err != nil {
-		return fmt.Errorf("error waiting for DB Instance (%s) to become available: %w", databaseID, err)
+	if _, err := waitDBInstanceAutomatedBackupDeleted(sourceDatabaseConn, dbInstanceID, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for DB instance automated backup (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil

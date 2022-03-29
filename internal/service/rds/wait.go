@@ -1,6 +1,7 @@
 package rds
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -177,41 +178,6 @@ func waitDBInstanceDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rd
 	return nil, err
 }
 
-func waitDBInstanceAvailable(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			InstanceStatusBackingUp,
-			InstanceStatusConfiguringEnhancedMonitoring,
-			InstanceStatusConfiguringLogExports,
-			InstanceStatusCreating,
-			InstanceStatusDeleting,
-			InstanceStatusIncompatibleParameters,
-			InstanceStatusIncompatibleRestore,
-			InstanceStatusModifying,
-			InstanceStatusStarting,
-			InstanceStatusStopping,
-			InstanceStatusStorageFull,
-			InstanceStatusStorageOptimization,
-		},
-		Target: []string{
-			InstanceStatusAvailable,
-		},
-		Refresh:                   statusDBInstance(conn, id),
-		Timeout:                   timeout,
-		MinTimeout:                10 * time.Second,
-		Delay:                     30 * time.Second,
-		ContinuousTargetOccurence: 3,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*rds.DBInstance); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
 func waitDBClusterInstanceDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
@@ -235,7 +201,7 @@ func waitDBClusterInstanceDeleted(conn *rds.RDS, id string, timeout time.Duratio
 	return nil, err
 }
 
-func waitDBInstanceAutomatedBackupAvailable(conn *rds.RDS, arn string, timeout time.Duration) (*rds.DBInstanceAutomatedBackup, error) {
+func waitDBInstanceAutomatedBackupCreated(conn *rds.RDS, arn string, timeout time.Duration) (*rds.DBInstanceAutomatedBackup, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{InstanceAutomatedBackupStatusPending},
 		Target:  []string{InstanceAutomatedBackupStatusReplicating},
@@ -246,6 +212,25 @@ func waitDBInstanceAutomatedBackupAvailable(conn *rds.RDS, arn string, timeout t
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*rds.DBInstanceAutomatedBackup); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// waitDBInstanceAutomatedBackupDeleted waits for a specified automated backup to be deleted from a database instance.
+// The connection must be valid for the database instance's Region.
+func waitDBInstanceAutomatedBackupDeleted(conn *rds.RDS, dbInstanceID, dbInstanceAutomatedBackupARN string, timeout time.Duration) (*rds.DBInstance, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{strconv.FormatBool(true)},
+		Target:  []string{strconv.FormatBool(false)},
+		Refresh: statusDBInstanceHasAutomatedBackup(conn, dbInstanceID, dbInstanceAutomatedBackupARN),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*rds.DBInstance); ok {
 		return output, err
 	}
 
