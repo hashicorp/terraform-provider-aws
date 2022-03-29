@@ -1146,7 +1146,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
     launch_template_configuration {
       default            = false
       launch_template_id = aws_launch_template.test.id
-	  account_id         = data.aws_caller_identity.current.account_id
+      account_id         = data.aws_caller_identity.current.account_id
     }
 
     region = data.aws_region.current.name
@@ -1165,24 +1165,24 @@ resource "aws_launch_template" "test" {
 }
 
 resource "aws_imagebuilder_distribution_configuration" "test" {
-	name = %[1]q
-  
-	distribution {
-	  launch_template_configuration {
-		default            = false
-		launch_template_id = aws_launch_template.test.id
-		account_id         = %[2]q
-	  }
+  name = %[1]q
+
+  distribution {
+    launch_template_configuration {
+      default            = false
+      launch_template_id = aws_launch_template.test.id
+      account_id         = %[2]q
+    }
 
     ami_distribution_configuration {
       launch_permission {
         user_ids = [%[2]q]
       }
     }
-  
-	  region = data.aws_region.current.name
-	}
+
+    region = data.aws_region.current.name
   }
+}
   `, rName, accountId)
 }
 
