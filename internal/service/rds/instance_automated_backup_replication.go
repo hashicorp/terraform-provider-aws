@@ -31,6 +31,11 @@ func ResourceInstanceAutomatedBackupReplication() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"pre_signed_url": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"retention_period": {
 				Type:     schema.TypeInt,
 				ForceNew: true,
@@ -57,6 +62,10 @@ func resourceInstanceAutomatedBackupReplicationCreate(d *schema.ResourceData, me
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("pre_signed_url"); ok {
+		input.PreSignedUrl = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Starting RDS instance automated backup replication: %s", input)
