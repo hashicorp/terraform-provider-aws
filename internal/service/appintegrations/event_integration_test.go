@@ -62,7 +62,7 @@ func TestAccEventIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge_bus", "default"),
 					resource.TestCheckResourceAttr(resourceName, "event_filter.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_filter.0.source", "aws.partner/examplepartner.com"),
+					resource.TestCheckResourceAttr(resourceName, "event_filter.0.source", sourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Event Integration"),
 				),
