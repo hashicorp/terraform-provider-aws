@@ -27,12 +27,6 @@ func ResourceInstanceAutomatedBackupReplication() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"source_db_instance_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
 			"kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -45,6 +39,12 @@ func ResourceInstanceAutomatedBackupReplication() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 				Default:  7,
+			},
+			"source_db_instance_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 		},
 	}
