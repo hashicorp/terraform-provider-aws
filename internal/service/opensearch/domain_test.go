@@ -205,7 +205,7 @@ func TestAccOpenSearchDomain_Cluster_zoneAwareness(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomain_warm(t *testing.T) {
+func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 	var domain opensearchservice.DomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opensearch_domain.test"
@@ -262,7 +262,7 @@ func TestAccOpenSearchDomain_warm(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomain_withDedicatedMaster(t *testing.T) {
+func TestAccOpenSearchDomain_Cluster_dedicatedMaster(t *testing.T) {
 	var domain opensearchservice.DomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opensearch_domain.test"
@@ -299,6 +299,46 @@ func TestAccOpenSearchDomain_withDedicatedMaster(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccOpenSearchDomain_Cluster_update(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var input opensearchservice.DomainStatus
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_ClusterUpdate(rName, 2, 22),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &input),
+					testAccCheckNumberOfInstances(2, &input),
+					testAccCheckSnapshotHour(22, &input),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName[:28],
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_ClusterUpdate(rName, 4, 23),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &input),
+					testAccCheckNumberOfInstances(4, &input),
+					testAccCheckSnapshotHour(23, &input),
+				),
+			},
+		}})
 }
 
 func TestAccOpenSearchDomain_duplicate(t *testing.T) {
@@ -416,7 +456,7 @@ func TestAccOpenSearchDomain_complex(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomain_vpc(t *testing.T) {
+func TestAccOpenSearchDomain_VPC_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -482,7 +522,7 @@ func TestAccOpenSearchDomain_VPC_update(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomain_internetToVPCEndpoint(t *testing.T) {
+func TestAccOpenSearchDomain_VPC_internetToVPCEndpoint(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -519,7 +559,7 @@ func TestAccOpenSearchDomain_internetToVPCEndpoint(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomain_AutoTuneOptions(t *testing.T) {
+func TestAccOpenSearchDomain_autoTuneOptions(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -743,7 +783,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_searchSlowLogs(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomain_LogPublishingOptions_esApplicationLogs(t *testing.T) {
+func TestAccOpenSearchDomain_LogPublishingOptions_applicationLogs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -815,7 +855,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomain_cognitoOptionsCreateAndRemove(t *testing.T) {
+func TestAccOpenSearchDomain_CognitoOptions_createAndRemove(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -858,7 +898,7 @@ func TestAccOpenSearchDomain_cognitoOptionsCreateAndRemove(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomain_cognitoOptionsUpdate(t *testing.T) {
+func TestAccOpenSearchDomain_CognitoOptions_update(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -901,7 +941,7 @@ func TestAccOpenSearchDomain_cognitoOptionsUpdate(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomain_policy(t *testing.T) {
+func TestAccOpenSearchDomain_Policy_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -932,7 +972,7 @@ func TestAccOpenSearchDomain_policy(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomain_policyIgnoreEquivalent(t *testing.T) {
+func TestAccOpenSearchDomain_Policy_ignoreEquivalent(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -961,7 +1001,7 @@ func TestAccOpenSearchDomain_policyIgnoreEquivalent(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomain_EncryptAtRestDefault_key(t *testing.T) {
+func TestAccOpenSearchDomain_Encryption_atRestDefaultKey(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -993,7 +1033,7 @@ func TestAccOpenSearchDomain_EncryptAtRestDefault_key(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomain_EncryptAtRestSpecify_key(t *testing.T) {
+func TestAccOpenSearchDomain_Encryption_atRestSpecifyKey(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1025,7 +1065,7 @@ func TestAccOpenSearchDomain_EncryptAtRestSpecify_key(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomain_nodeToNodeEncryption(t *testing.T) {
+func TestAccOpenSearchDomain_Encryption_nodeToNode(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1107,47 +1147,7 @@ func TestAccOpenSearchDomain_tags(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomain_update(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var input opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_opensearch_domain.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDomainConfig_ClusterUpdate(rName, 2, 22),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &input),
-					testAccCheckNumberOfInstances(2, &input),
-					testAccCheckSnapshotHour(22, &input),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateId:     rName[:28],
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccDomainConfig_ClusterUpdate(rName, 4, 23),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &input),
-					testAccCheckNumberOfInstances(4, &input),
-					testAccCheckSnapshotHour(23, &input),
-				),
-			},
-		}})
-}
-
-func TestAccOpenSearchDomain_UpdateVolume_type(t *testing.T) {
+func TestAccOpenSearchDomain_VolumeType_update(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1195,7 +1195,7 @@ func TestAccOpenSearchDomain_UpdateVolume_type(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13867
-func TestAccOpenSearchDomain_WithVolumeType_missing(t *testing.T) {
+func TestAccOpenSearchDomain_VolumeType_missing(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1233,7 +1233,7 @@ func TestAccOpenSearchDomain_WithVolumeType_missing(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomain_Update_version(t *testing.T) {
+func TestAccOpenSearchDomain_versionUpdate(t *testing.T) {
 	var domain1, domain2, domain3 opensearchservice.DomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opensearch_domain.test"
@@ -2213,7 +2213,7 @@ resource "aws_opensearch_domain" "test" {
     volume_size = 10
   }
 
-  engine_version = "OpenSearch_1.1"
+  engine_version = "Elasticsearch_2.3"
 }
 `, rName)
 }
