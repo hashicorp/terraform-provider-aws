@@ -40,18 +40,13 @@ func TestAccCloudFormationStackSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "execution_role_name", "AWSCloudFormationStackSetExecutionRole"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "permission_model", "SELF_MANAGED"),
 					resource.TestMatchResourceAttr(resourceName, "stack_set_id", regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "template_body", testAccStackSetTemplateBodyVPC(rName)+"\n"),
 					resource.TestCheckNoResourceAttr(resourceName, "template_url"),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "0"),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "0"),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "0"),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
 				),
 			},
 			{
@@ -61,7 +56,6 @@ func TestAccCloudFormationStackSet_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"call_as",
 					"template_url",
-					"operation_preferences",
 				},
 			},
 		},
@@ -118,7 +112,6 @@ func TestAccCloudFormationStackSet_administrationRoleARN(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"call_as",
 					"template_url",
-					"operation_preferences",
 				},
 			},
 			{
@@ -158,7 +151,6 @@ func TestAccCloudFormationStackSet_description(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"call_as",
 					"template_url",
-					"operation_preferences",
 				},
 			},
 			{
@@ -198,7 +190,6 @@ func TestAccCloudFormationStackSet_executionRoleName(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"call_as",
 					"template_url",
-					"operation_preferences",
 				},
 			},
 			{
@@ -255,7 +246,6 @@ func TestAccCloudFormationStackSet_name(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"call_as",
 					"template_url",
-					"operation_preferences",
 				},
 			},
 			{
@@ -333,7 +323,6 @@ func TestAccCloudFormationStackSet_parameters(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"call_as",
 					"template_url",
-					"operation_preferences",
 				},
 			},
 			{
@@ -395,7 +384,6 @@ func TestAccCloudFormationStackSet_Parameters_default(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"call_as",
 					"template_url",
-					"operation_preferences",
 				},
 			},
 			{
@@ -449,7 +437,6 @@ func TestAccCloudFormationStackSet_Parameters_noEcho(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"call_as",
 					"template_url",
-					"operation_preferences",
 				},
 			},
 			{
@@ -501,7 +488,6 @@ func TestAccCloudFormationStackSet_PermissionModel_serviceManaged(t *testing.T) 
 				ImportStateVerifyIgnore: []string{
 					"call_as",
 					"template_url",
-					"operation_preferences",
 				},
 			},
 		},
@@ -534,7 +520,6 @@ func TestAccCloudFormationStackSet_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"call_as",
 					"template_url",
-					"operation_preferences",
 				},
 			},
 			{
@@ -591,7 +576,6 @@ func TestAccCloudFormationStackSet_templateBody(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"call_as",
 					"template_url",
-					"operation_preferences",
 				},
 			},
 			{
@@ -632,7 +616,6 @@ func TestAccCloudFormationStackSet_templateURL(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"call_as",
 					"template_url",
-					"operation_preferences",
 				},
 			},
 			{
