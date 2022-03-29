@@ -19,7 +19,6 @@ const (
 	deleteTableTimeout                         = 10 * time.Minute
 	pitrUpdateTimeout                          = 30 * time.Second
 	ttlUpdateTimeout                           = 30 * time.Second
-	updateContributorInsightsTimeout           = 5 * time.Minute
 )
 
 func waitDynamoDBKinesisStreamingDestinationActive(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) error {

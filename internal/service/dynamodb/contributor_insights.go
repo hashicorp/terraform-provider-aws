@@ -28,10 +28,12 @@ func ResourceContributorInsights() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"index_name": {
 				Type:     schema.TypeString,
+				ForceNew: true,
 				Optional: true,
 			},
 			"table_name": {
 				Type:     schema.TypeString,
+				ForceNew: true,
 				Required: true,
 			},
 			"status": {
