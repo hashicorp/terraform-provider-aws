@@ -89,13 +89,6 @@ The following arguments are supported:
 * `auto_deployment` - (Optional) Configuration block containing the auto-deployment model for your StackSet. This can only be defined when using the `SERVICE_MANAGED` permission model.
     * `enabled` - (Optional) Whether or not auto-deployment is enabled.
     * `retain_stacks_on_account_removal` - (Optional) Whether or not to retain stacks when the account is removed.
-* `operation_preferences` - (Optional) Configuration block containing the opertional-preferences model for your StackSet.
-    * `failure_tolerance_count` - (Optional) The number of accounts, per Region, for which this operation can fail before AWS CloudFormation stops the operation in that Region. If the operation is stopped in a Region, AWS CloudFormation doesn't attempt the operation in any subsequent Regions.
-    * `failure_tolerance_percentage` - (Optional) The percentage of accounts, per Region, for which this stack operation can fail before AWS CloudFormation stops the operation in that Region. If the operation is stopped in a Region, AWS CloudFormation doesn't attempt the operation in any subsequent Regions.
-    * `max_concurrent_count` - (Optional) The maximum number of accounts in which to perform this operation at one time. This is dependent on the value of FailureToleranceCount. MaxConcurrentCount is at most one more than the FailureToleranceCount.
-    * `max_concurrent_percentage` - (Optional) The maximum percentage of accounts in which to perform this operation at one time.
-    * `region_concurrency_type` - (Optional) The concurrency type of deploying StackSets operations in Regions, could be in parallel or one Region at a time.
-    * `region_order` - (Optional) The order of the Regions where you want to perform the stack operation.
 * `name` - (Required) Name of the StackSet. The name must be unique in the region where you create your StackSet. The name can contain only alphanumeric characters (case-sensitive) and hyphens. It must start with an alphabetic character and cannot be longer than 128 characters.
 * `capabilities` - (Optional) A list of capabilities. Valid values: `CAPABILITY_IAM`, `CAPABILITY_NAMED_IAM`, `CAPABILITY_AUTO_EXPAND`.
 * `description` - (Optional) Description of the StackSet.

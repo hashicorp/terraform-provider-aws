@@ -67,41 +67,6 @@ func ResourceStackSet() *schema.Resource {
 					},
 				},
 			},
-			"operation_preferences": {
-				Type:     schema.TypeList,
-				MinItems: 1,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"failure_tolerance_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"failure_tolerance_percentage": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"max_concurrent_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"max_concurrent_percentage": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"region_concurrency_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"region_order": {
-							Type:     schema.TypeList,
-							Optional: true,
-						},
-					},
-				},
-			},
 			"call_as": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -357,10 +322,6 @@ func resourceStackSetUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.AutoDeployment = expandAutoDeployment(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("operation_preferences"); ok {
-		input.OperationPreferences = expandOperationPreferences(v.([]interface{}))
-	}
-
 	log.Printf("[DEBUG] Updating CloudFormation StackSet: %s", input)
 	output, err := conn.UpdateStackSet(input)
 
@@ -413,25 +374,6 @@ func expandAutoDeployment(l []interface{}) *cloudformation.AutoDeployment {
 	}
 
 	return autoDeployment
-}
-
-func expandOperationPreferences(l []interface{}) *cloudformation.StackSetOperationPreferences {
-	if len(l) == 0 {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	operationPreferences := &cloudformation.StackSetOperationPreferences{
-		FailureToleranceCount:      aws.Int64(m["failure_tolerance_count"].(int64)),
-		FailureTolerancePercentage: aws.Int64(m["failure_tolerance_percentage"].(int64)),
-		MaxConcurrentCount:         aws.Int64(m["max_concurrent_count"].(int64)),
-		MaxConcurrentPercentage:    aws.Int64(m["max_concurrent_percentage"].(int64)),
-		RegionConcurrencyType:      aws.String(m["region_concurrency_type"].(string)),
-		RegionOrder:                aws.StringSlice([]string{m["region_order"].(string)}),
-	}
-
-	return operationPreferences
 }
 
 func flattenStackSetAutoDeploymentResponse(autoDeployment *cloudformation.AutoDeployment) []map[string]interface{} {

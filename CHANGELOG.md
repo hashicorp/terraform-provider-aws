@@ -5,10 +5,6 @@ BUG FIXES:
 * resource/aws_cloudformation_stack_set: Consider `QUEUED` a valid pending state for resource creation ([#22160](https://github.com/hashicorp/terraform-provider-aws/issues/22160))
 * resource/aws_dynamodb_table_item: Allow `item` names to still succeed if they include non-letters ([#14075](https://github.com/hashicorp/terraform-provider-aws/issues/14075))
 
-ENHANCEMENTS:
-
-* resource/aws_cloudformation_stack: add support for `operation_preferences`
-
 ## 4.8.0 (Unreleased)
 
 ENHANCEMENTS:
