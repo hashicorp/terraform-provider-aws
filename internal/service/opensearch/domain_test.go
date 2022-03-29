@@ -1716,7 +1716,8 @@ resource "aws_opensearch_domain" "test" {
 func testAccDomainConfig_ClusterConfig_ZoneAwarenessConfig_AvailabilityZoneCount(rName string, availabilityZoneCount int) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name    = substr(%[1]q, 0, 28)
+  engine_version = "Elasticsearch_1.5"
 
   cluster_config {
     instance_type          = "t2.small.search"
@@ -1739,7 +1740,8 @@ resource "aws_opensearch_domain" "test" {
 func testAccDomainConfig_ClusterConfig_ZoneAwarenessEnabled(rName string, zoneAwarenessEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name    = substr(%[1]q, 0, 28)
+  engine_version = "Elasticsearch_1.5"
 
   cluster_config {
     instance_type          = "t2.small.search"
