@@ -79,6 +79,11 @@ func ResourceAccount() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]{1,64}$`), "must consist of uppercase letters, lowercase letters, digits with no spaces, and any of the following characters"),
 			},
+			"close_account_on_deletion": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -276,11 +281,21 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
-	input := &organizations.CloseAccount{
-		AccountId: aws.String(d.Id()),
+	close_account := d.Get("close_account_on_deletion").(bool)
+	var err error = nil
+	if close_account {
+		input := &organizations.CloseAccountInput{
+			AccountId: aws.String(d.Id()),
+		}
+		log.Printf("[DEBUG] Deleting AWS account: %s", input)
+		_, err = conn.CloseAccount(input)
+	} else {
+		input := &organizations.RemoveAccountFromOrganizationInput{
+			AccountId: aws.String(d.Id()),
+		}
+		log.Printf("[DEBUG] Removing AWS account from organization: %s", input)
+		_, err = conn.RemoveAccountFromOrganization(input)
 	}
-	log.Printf("[DEBUG] Removing AWS account from organization: %s", input)
-	_, err := conn.CloseAccount(input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAccountNotFoundException) {
 			return nil
