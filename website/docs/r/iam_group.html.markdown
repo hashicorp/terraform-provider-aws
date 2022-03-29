@@ -10,6 +10,8 @@ description: |-
 
 Provides an IAM group.
 
+~> **NOTE on user management:** Using `aws_iam_group_membership` or `aws_iam_user_group_membership` resources in addition to manually managing user/group membership using the console may lead to configuration drift or conflicts. For this reason, it's recommended to either manage membership entirely with Terraform or entirely within the AWS console.
+
 ## Example Usage
 
 ```terraform

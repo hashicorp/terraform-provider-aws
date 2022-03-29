@@ -46,13 +46,14 @@ resource "aws_dynamodb_table" "example" {
 
 ## Argument Reference
 
+~> **Note:** Names included in `item` are represented internally with everything but letters removed. There is the possibility of collisions if two names, once filtered, are the same. For example, the names `your-name-here` and `yournamehere` will overlap and cause an error.
+
 The following arguments are supported:
 
-* `table_name` - (Required) The name of the table to contain the item.
 * `hash_key` - (Required) Hash key to use for lookups and identification of the item
+* `item` - (Required) JSON representation of a map of attribute name/value pairs, one for each attribute. Only the primary key attributes are required; you can optionally provide other attribute name-value pairs for the item.
 * `range_key` - (Optional) Range key to use for lookups and identification of the item. Required if there is range key defined in the table.
-* `item` - (Required) JSON representation of a map of attribute name/value pairs, one for each attribute.
-  Only the primary key attributes are required; you can optionally provide other attribute name-value pairs for the item.
+* `table_name` - (Required) Name of the table to contain the item.
 
 ## Attributes Reference
 

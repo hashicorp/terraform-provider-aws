@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccElasticsearchDomainSamlOptions_basic(t *testing.T) {
+func TestAccElasticsearchDomainSAMLOptions_basic(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 
 	rName := sdkacctest.RandomWithPrefix("acc-test")
@@ -50,7 +50,7 @@ func TestAccElasticsearchDomainSamlOptions_basic(t *testing.T) {
 	})
 }
 
-func TestAccElasticsearchDomainSamlOptions_disappears(t *testing.T) {
+func TestAccElasticsearchDomainSAMLOptions_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
@@ -75,7 +75,7 @@ func TestAccElasticsearchDomainSamlOptions_disappears(t *testing.T) {
 	})
 }
 
-func TestAccElasticsearchDomainSamlOptions_disappears_Domain(t *testing.T) {
+func TestAccElasticsearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
@@ -101,7 +101,7 @@ func TestAccElasticsearchDomainSamlOptions_disappears_Domain(t *testing.T) {
 	})
 }
 
-func TestAccElasticsearchDomainSamlOptions_Update(t *testing.T) {
+func TestAccElasticsearchDomainSAMLOptions_Update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
@@ -135,7 +135,7 @@ func TestAccElasticsearchDomainSamlOptions_Update(t *testing.T) {
 	})
 }
 
-func TestAccElasticsearchDomainSamlOptions_Disabled(t *testing.T) {
+func TestAccElasticsearchDomainSAMLOptions_Disabled(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
