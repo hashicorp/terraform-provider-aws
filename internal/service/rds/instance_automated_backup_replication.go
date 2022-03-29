@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -58,11 +59,11 @@ func resourceInstanceAutomatedBackupReplicationCreate(d *schema.ResourceData, me
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating RDS instance automated backup replication: %s", input)
+	log.Printf("[DEBUG] Starting RDS instance automated backup replication: %s", input)
 	output, err := conn.StartDBInstanceAutomatedBackupsReplication(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating RDS instance automated backup replication: %w", err)
+		return fmt.Errorf("error starting RDS instance automated backup replication: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.DBInstanceAutomatedBackup.DBInstanceAutomatedBackupsArn))
@@ -97,53 +98,43 @@ func resourceInstanceAutomatedBackupReplicationRead(d *schema.ResourceData, meta
 }
 
 func resourceInstanceAutomatedBackupReplicationDelete(d *schema.ResourceData, meta interface{}) error {
-	var sourceDatabaseRegion string
-	var databaseIdentifier string
-
 	conn := meta.(*conns.AWSClient).RDSConn
 
-	describeInput := &rds.DescribeDBInstanceAutomatedBackupsInput{
-		DBInstanceAutomatedBackupsArn: aws.String(d.Id()),
-	}
+	backup, err := FindDBInstanceAutomatedBackupByARN(conn, d.Id())
 
-	describeOutput, err := conn.DescribeDBInstanceAutomatedBackups(describeInput)
-
-	// Get and set the region of the source database and database identifier
-	for _, backup := range describeOutput.DBInstanceAutomatedBackups {
-		if aws.StringValue(backup.DBInstanceAutomatedBackupsArn) == d.Id() {
-			sourceDatabaseRegion = aws.StringValue(backup.Region)
-			databaseIdentifier = aws.StringValue(backup.DBInstanceIdentifier)
-		} else {
-			return fmt.Errorf("unable to find RDS instance automated backup replication: %s", d.Id())
-		}
+	if tfresource.NotFound(err) {
+		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading RDS instance automated backup replication: %s", err)
+		return fmt.Errorf("error reading RDS instance automated backup replication (%s): %w", d.Id(), err)
 	}
 
-	// Initiate a stop of the replication process
-	input := &rds.StopDBInstanceAutomatedBackupsReplicationInput{
+	databaseID := aws.StringValue(backup.DBInstanceIdentifier)
+	sourceDatabaseARN, err := arn.Parse(aws.StringValue(backup.DBInstanceArn))
+
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[DEBUG] Stopping RDS instance automated backup replication: %s", d.Id())
+	_, err = conn.StopDBInstanceAutomatedBackupsReplication(&rds.StopDBInstanceAutomatedBackupsReplicationInput{
 		SourceDBInstanceArn: aws.String(d.Get("source_db_instance_arn").(string)),
-	}
-
-	log.Printf("[DEBUG] Stopping RDS instance automated backup replication for: %s", *input.SourceDBInstanceArn)
-
-	_, err = conn.StopDBInstanceAutomatedBackupsReplication(input)
+	})
 
 	if err != nil {
-		return fmt.Errorf("error stopping RDS instance automated backup replication: %s", err)
+		return fmt.Errorf("error stopping RDS instance automated backup replication (%s): %w", d.Id(), err)
 	}
 
-	// Create a new client to the source region
+	// Create a new client to the source region.
 	sourceDatabaseConn := conn
-	if sourceDatabaseRegion != meta.(*conns.AWSClient).Region {
-		sourceDatabaseConn = rds.New(meta.(*conns.AWSClient).Session, aws.NewConfig().WithRegion(sourceDatabaseRegion))
+	if sourceDatabaseARN.Region != meta.(*conns.AWSClient).Region {
+		sourceDatabaseConn = rds.New(meta.(*conns.AWSClient).Session, aws.NewConfig().WithRegion(sourceDatabaseARN.Region))
 	}
 
-	// Wait for the source database to be available after the replication is stopped
-	if _, err := waitDBInstanceAvailable(sourceDatabaseConn, databaseIdentifier, d.Timeout(schema.TimeoutDefault)); err != nil {
-		return fmt.Errorf("error waiting for DB Instance (%s) delete: %w", *input.SourceDBInstanceArn, err)
+	// Wait for the source database to be available after the replication is stopped.
+	if _, err := waitDBInstanceAvailable(sourceDatabaseConn, databaseID, d.Timeout(schema.TimeoutDefault)); err != nil {
+		return fmt.Errorf("error waiting for DB Instance (%s) to become available: %w", databaseID, err)
 	}
 
 	return nil
