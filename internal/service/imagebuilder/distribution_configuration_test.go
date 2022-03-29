@@ -1119,7 +1119,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
     launch_template_configuration {
       default            = true
       launch_template_id = aws_launch_template.test.id
-	  account_id         = data.aws_caller_identity.current.account_id
+      account_id         = data.aws_caller_identity.current.account_id
     }
 
     region = data.aws_region.current.name
