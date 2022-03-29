@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_db_instance_automated_backups_replication
+```
