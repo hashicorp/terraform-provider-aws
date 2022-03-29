@@ -38,6 +38,7 @@ func TestAccImageBuilderDistributionConfigurationDataSource_arn(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.launch_template_configuration.#", resourceName, "distribution.0.launch_template_configuration.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.launch_template_configuration.0.default", resourceName, "distribution.0.launch_template_configuration.0.default"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.launch_template_configuration.0.launch_template_id", resourceName, "distribution.0.launch_template_configuration.0.launch_template_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.launch_template_configuration.0.account_id", resourceName, "distribution.0.launch_template_configuration.0.account_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 				),
@@ -71,6 +72,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
     }
 
     launch_template_configuration {
+	  account_id         = data.aws_caller_identity.member.account_id
       default            = false
       launch_template_id = aws_launch_template.test.id
     }
