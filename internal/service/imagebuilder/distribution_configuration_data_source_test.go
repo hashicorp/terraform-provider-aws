@@ -51,6 +51,8 @@ func testAccDistributionConfigurationARNDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
+data "aws_caller_identity" "current" {}
+
 resource "aws_launch_template" "test" {
   instance_type = "t2.micro"
   name          = %[1]q
@@ -72,7 +74,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
     }
 
     launch_template_configuration {
-      account_id         = data.aws_caller_identity.member.account_id
+      account_id         = data.aws_caller_identity.current.account_id
       default            = false
       launch_template_id = aws_launch_template.test.id
     }
