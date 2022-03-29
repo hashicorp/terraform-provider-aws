@@ -339,9 +339,10 @@ func ResourceDomain() *schema.Resource {
 							Default:  1,
 						},
 						"instance_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  opensearchservice.OpenSearchPartitionInstanceTypeM3MediumSearch,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      opensearchservice.OpenSearchPartitionInstanceTypeM3MediumSearch,
+							ValidateFunc: validation.StringInSlice(opensearchservice.OpenSearchPartitionInstanceType_Values(), false),
 						},
 						"zone_awareness_config": {
 							Type:             schema.TypeList,
