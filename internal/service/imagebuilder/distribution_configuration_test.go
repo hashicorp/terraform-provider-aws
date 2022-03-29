@@ -624,6 +624,18 @@ func TestAccImageBuilderDistributionConfiguration_Distribution_launchTemplateCon
 					resource.TestCheckResourceAttrPair(resourceName, "distribution.0.launch_template_configuration.0.launch_template_id", launchTemplateResourceName, "id"),
 				),
 			},
+			{
+				Config: testAccDistributionConfigurationDistributionLaunchTemplateConfigurationLaunchTemplateIDAccountIDConfig(rName, "111111111111"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionConfigurationExists(resourceName),
+					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.0.default", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "distribution.0.launch_template_configuration.0.launch_template_id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.0.account_id", "111111111111"),
+				),
+			},
 		},
 	})
 }
@@ -1093,6 +1105,8 @@ func testAccDistributionConfigurationDistributionLaunchTemplateConfigurationLaun
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
+data "aws_caller_identity" "current" {}
+
 resource "aws_launch_template" "test" {
   instance_type = "t2.micro"
   name          = %[1]q
@@ -1105,6 +1119,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
     launch_template_configuration {
       default            = true
       launch_template_id = aws_launch_template.test.id
+      account_id         = data.aws_caller_identity.current.account_id
     }
 
     region = data.aws_region.current.name
@@ -1114,6 +1129,33 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
 }
 
 func testAccDistributionConfigurationDistributionLaunchTemplateConfigurationLaunchTemplateIDNonDefaultConfig(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_launch_template" "test" {
+  instance_type = "t2.micro"
+  name          = %[1]q
+}
+
+resource "aws_imagebuilder_distribution_configuration" "test" {
+  name = %[1]q
+
+  distribution {
+    launch_template_configuration {
+      default            = false
+      launch_template_id = aws_launch_template.test.id
+      account_id         = data.aws_caller_identity.current.account_id
+    }
+
+    region = data.aws_region.current.name
+  }
+}
+`, rName)
+}
+
+func testAccDistributionConfigurationDistributionLaunchTemplateConfigurationLaunchTemplateIDAccountIDConfig(rName string, accountId string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -1129,12 +1171,19 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
     launch_template_configuration {
       default            = false
       launch_template_id = aws_launch_template.test.id
+      account_id         = %[2]q
+    }
+
+    ami_distribution_configuration {
+      launch_permission {
+        user_ids = [%[2]q]
+      }
     }
 
     region = data.aws_region.current.name
   }
 }
-`, rName)
+  `, rName, accountId)
 }
 
 func testAccDistributionConfigurationDistributionLicenseConfigurationARNs1Config(rName string) string {

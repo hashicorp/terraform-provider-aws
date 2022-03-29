@@ -98,6 +98,7 @@ The following arguments are optional:
 ### launch_template_configuration
 
 * `default` - (Optional) Indicates whether to set the specified Amazon EC2 launch template as the default launch template. Defaults to `true`.
+* `account_id` - The account ID that this configuration applies to.
 * `launch_template_id` - (Required) The ID of the Amazon EC2 launch template to use.
 
 ## Attributes Reference
