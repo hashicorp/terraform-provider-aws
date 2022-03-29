@@ -547,7 +547,7 @@ func TestAccRedshiftCluster_changeAvailabilityZone_availabilityZoneRelocationNot
 			},
 			{
 				Config:      testAccClusterConfig_updateAvailabilityZone_availabilityZoneRelocationNotSet(rName, 1),
-				ExpectError: regexp.MustCompile(`cannot change availability_zone if availability_zone_relocation_enabled is not true`),
+				ExpectError: regexp.MustCompile("cannot change `availability_zone` if `availability_zone_relocation_enabled` is not true"),
 			},
 		},
 	})
@@ -663,7 +663,55 @@ func TestAccRedshiftCluster_availabilityZoneRelocation_publiclyAccessible(t *tes
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccClusterConfig_availabilityZoneRelocation_publiclyAccessible(rName),
-				ExpectError: regexp.MustCompile(`availability_zone_relocation_enabled can not be true when publicly_accessible is true`),
+				ExpectError: regexp.MustCompile("`availability_zone_relocation_enabled` cannot be true when `publicly_accessible` is true"),
+			},
+		},
+	})
+}
+
+func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
+	var v redshift.Cluster
+	resourceName := "aws_redshift_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDestroyClusterSnapshot(rName),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterCreateSnapshotConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "dc2.8xlarge"),
+					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "2"),
+				),
+			},
+			// Apply a configuration without the source cluster to ensure final snapshot creation.
+			{
+				Config: acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
+			},
+			{
+				Config: testAccClusterRestoreFromSnapshotConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.1"),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "dc2.large"),
+					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "8"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_snapshot_identifier",
+					"master_password",
+					"skip_final_snapshot",
+					"snapshot_identifier",
+				},
 			},
 		},
 	})
@@ -1485,6 +1533,37 @@ resource "aws_redshift_cluster" "test" {
 
   publicly_accessible                  = true
   availability_zone_relocation_enabled = true
+}
+`, rName))
+}
+
+func testAccClusterCreateSnapshotConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier        = %[1]q
+  availability_zone         = data.aws_availability_zones.available.names[0]
+  database_name             = "mydb"
+  master_username           = "foo_test"
+  master_password           = "Mustbe8characters"
+  node_type                 = "dc2.8xlarge"
+  number_of_nodes           = 2
+  final_snapshot_identifier = %[1]q
+}
+`, rName))
+}
+
+func testAccClusterRestoreFromSnapshotConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier  = %[1]q
+  snapshot_identifier = %[1]q
+  availability_zone   = data.aws_availability_zones.available.names[1]
+  database_name       = "mydb"
+  master_username     = "foo_test"
+  master_password     = "Mustbe8characters"
+  node_type           = "dc2.large"
+  number_of_nodes     = 8
+  skip_final_snapshot = true
 }
 `, rName))
 }
