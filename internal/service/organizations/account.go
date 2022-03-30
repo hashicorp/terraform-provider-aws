@@ -281,7 +281,7 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
-	var err error = nil
+	var err error
 	if d.Get("close_on_deletion").(bool) {
 		input := &organizations.CloseAccountInput{
 			AccountId: aws.String(d.Id()),
