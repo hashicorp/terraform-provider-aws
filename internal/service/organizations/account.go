@@ -276,11 +276,11 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
-	input := &organizations.RemoveAccountFromOrganizationInput{
+	input := &organizations.CloseAccount{
 		AccountId: aws.String(d.Id()),
 	}
 	log.Printf("[DEBUG] Removing AWS account from organization: %s", input)
-	_, err := conn.RemoveAccountFromOrganization(input)
+	_, err := conn.CloseAccount(input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAccountNotFoundException) {
 			return nil
