@@ -548,6 +548,7 @@ func init() {
 	awsServiceNames["networkfirewall"] = "NetworkFirewall"
 	awsServiceNames["networkmanager"] = "NetworkManager"
 	awsServiceNames["nimblestudio"] = "NimbleStudio"
+	awsServiceNames["opensearchservice"] = "OpenSearchService"
 	awsServiceNames["opsworks"] = "OpsWorks"
 	awsServiceNames["opsworkscm"] = "OpsWorksCM"
 	awsServiceNames["organizations"] = "Organizations"

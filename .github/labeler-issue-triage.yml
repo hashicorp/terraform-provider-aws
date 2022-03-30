@@ -276,6 +276,8 @@ service/networkfirewall:
   - '((\*|-) ?`?|(data|resource) "?)aws_networkfirewall_'
 service/networkmanager:
   - '((\*|-) ?`?|(data|resource) "?)aws_networkmanager_'
+service/opensearch:
+  - '((\*|-) ?`?|(data|resource) "?)aws_opensearch_'
 service/opsworks:
   - '((\*|-) ?`?|(data|resource) "?)aws_opsworks_'
 service/organizations:

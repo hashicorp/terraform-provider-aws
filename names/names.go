@@ -192,6 +192,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/aws/aws-sdk-go/service/nimblestudio"
+	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/opsworkscm"
 	"github.com/aws/aws-sdk-go/service/organizations"
@@ -471,6 +472,7 @@ const (
 	NetworkFirewall               = "networkfirewall"
 	NetworkManager                = "networkmanager"
 	NimbleStudio                  = "nimblestudio"
+	OpenSearch                    = "opensearch"
 	OpsWorks                      = "opsworks"
 	OpsWorksCM                    = "opsworkscm"
 	Organizations                 = "organizations"
@@ -768,6 +770,7 @@ func init() {
 	serviceData[NetworkFirewall] = &ServiceDatum{AWSClientName: "NetworkFirewall", AWSServiceName: networkfirewall.ServiceName, AWSEndpointsID: networkfirewall.EndpointsID, AWSServiceID: networkfirewall.ServiceID, ProviderNameUpper: "NetworkFirewall", HCLKeys: []string{"networkfirewall"}}
 	serviceData[NetworkManager] = &ServiceDatum{AWSClientName: "NetworkManager", AWSServiceName: networkmanager.ServiceName, AWSEndpointsID: networkmanager.EndpointsID, AWSServiceID: networkmanager.ServiceID, ProviderNameUpper: "NetworkManager", HCLKeys: []string{"networkmanager"}}
 	serviceData[NimbleStudio] = &ServiceDatum{AWSClientName: "NimbleStudio", AWSServiceName: nimblestudio.ServiceName, AWSEndpointsID: nimblestudio.EndpointsID, AWSServiceID: nimblestudio.ServiceID, ProviderNameUpper: "NimbleStudio", HCLKeys: []string{"nimblestudio"}}
+	serviceData[OpenSearch] = &ServiceDatum{AWSClientName: "OpenSearchService", AWSServiceName: opensearchservice.ServiceName, AWSEndpointsID: opensearchservice.EndpointsID, AWSServiceID: opensearchservice.ServiceID, ProviderNameUpper: "OpenSearch", HCLKeys: []string{"opensearch", "opensearchservice"}}
 	serviceData[OpsWorks] = &ServiceDatum{AWSClientName: "OpsWorks", AWSServiceName: opsworks.ServiceName, AWSEndpointsID: opsworks.EndpointsID, AWSServiceID: opsworks.ServiceID, ProviderNameUpper: "OpsWorks", HCLKeys: []string{"opsworks"}}
 	serviceData[OpsWorksCM] = &ServiceDatum{AWSClientName: "OpsWorksCM", AWSServiceName: opsworkscm.ServiceName, AWSEndpointsID: opsworkscm.EndpointsID, AWSServiceID: opsworkscm.ServiceID, ProviderNameUpper: "OpsWorksCM", HCLKeys: []string{"opsworkscm"}}
 	serviceData[Organizations] = &ServiceDatum{AWSClientName: "Organizations", AWSServiceName: organizations.ServiceName, AWSEndpointsID: organizations.EndpointsID, AWSServiceID: organizations.ServiceID, ProviderNameUpper: "Organizations", HCLKeys: []string{"organizations"}}

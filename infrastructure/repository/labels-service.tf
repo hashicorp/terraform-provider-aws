@@ -154,6 +154,7 @@ variable "service_labels" {
     "neptune",
     "networkfirewall",
     "networkmanager",
+    "opensearch",
     "opsworks",
     "opsworkscm",
     "organizations",

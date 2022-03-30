@@ -475,6 +475,9 @@ service/networkfirewall:
 service/networkmanager:
   - 'internal/service/networkmanager/**/*'
   - 'website/**/networkmanager_*'
+service/opensearch:
+  - 'internal/service/opensearch/**/*'
+  - 'website/**/opensearch_*'
 service/opsworks:
   - 'internal/service/opsworks/**/*'
   - 'website/**/opsworks_*'

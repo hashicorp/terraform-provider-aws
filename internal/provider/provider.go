@@ -120,6 +120,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/outposts"
@@ -737,6 +738,8 @@ func Provider() *schema.Provider {
 			"aws_networkmanager_links":           networkmanager.DataSourceLinks(),
 			"aws_networkmanager_site":            networkmanager.DataSourceSite(),
 			"aws_networkmanager_sites":           networkmanager.DataSourceSites(),
+
+			"aws_opensearch_domain": opensearch.DataSourceDomain(),
 
 			"aws_organizations_delegated_administrators": organizations.DataSourceDelegatedAdministrators(),
 			"aws_organizations_delegated_services":       organizations.DataSourceDelegatedServices(),
@@ -1624,6 +1627,10 @@ func Provider() *schema.Provider {
 			"aws_networkmanager_site":                                     networkmanager.ResourceSite(),
 			"aws_networkmanager_transit_gateway_connect_peer_association": networkmanager.ResourceTransitGatewayConnectPeerAssociation(),
 			"aws_networkmanager_transit_gateway_registration":             networkmanager.ResourceTransitGatewayRegistration(),
+
+			"aws_opensearch_domain":              opensearch.ResourceDomain(),
+			"aws_opensearch_domain_policy":       opensearch.ResourceDomainPolicy(),
+			"aws_opensearch_domain_saml_options": opensearch.ResourceDomainSAMLOptions(),
 
 			"aws_opsworks_application":       opsworks.ResourceApplication(),
 			"aws_opsworks_custom_layer":      opsworks.ResourceCustomLayer(),
