@@ -210,8 +210,12 @@ object SetUp : BuildType({
             scriptContent = File("./scripts/setup_goenv.sh").readText()
         }
         script {
-            name = "Run unit tests"
+            name = "Run provider unit tests"
             scriptContent = File("./scripts/provider_tests/unit_tests.sh").readText()
+        }
+        script {
+            name = "Run provider acceptance tests"
+            scriptContent = File("./scripts/provider_tests/acceptance_tests.sh").readText()
         }
         script {
             name = "Pre-Sweeper"
