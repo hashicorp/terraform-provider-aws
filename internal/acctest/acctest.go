@@ -679,7 +679,10 @@ func PreCheckOrganizationsAccount(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error describing AWS Organization: %s", err)
 	}
-	t.Skip("skipping tests; this AWS account must not be an existing member of an AWS Organization")
+	_, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_SKIP_PRECHECK")
+	if !ok {
+		t.Skip("skipping tests; this AWS account must not be an existing member of an AWS Organization")
+	}
 }
 
 func PreCheckOrganizationsEnabled(t *testing.T) {
