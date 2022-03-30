@@ -14,8 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccAccount_basic(t *testing.T) {
-	acctest.Skip(t, "AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
+func TestAccAccount_basic(t *testing.T) {
 
 	var account organizations.Account
 
@@ -58,8 +57,7 @@ func testAccAccount_basic(t *testing.T) {
 	})
 }
 
-func testAccAccount_ParentID(t *testing.T) {
-	acctest.Skip(t, "AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
+func TestAccAccount_ParentID(t *testing.T) {
 
 	var account organizations.Account
 
@@ -105,9 +103,7 @@ func testAccAccount_ParentID(t *testing.T) {
 	})
 }
 
-func testAccAccount_Tags(t *testing.T) {
-	acctest.Skip(t, "AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
-
+func TestAccAccount_Tags(t *testing.T) {
 	var account organizations.Account
 
 	orgsEmailDomain, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
@@ -222,8 +218,9 @@ func testAccCheckAccountExists(n string, a *organizations.Account) resource.Test
 func testAccAccountConfig(name, email string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_account" "test" {
-  name  = "%s"
-  email = "%s"
+  name  			= "%s"
+  email 			= "%s"
+  close_on_deletion = true
 }
 `, name, email)
 }
@@ -243,9 +240,10 @@ resource "aws_organizations_organizational_unit" "test2" {
 }
 
 resource "aws_organizations_account" "test" {
-  name      = %[1]q
-  email     = %[2]q
-  parent_id = aws_organizations_organizational_unit.test1.id
+  name      		= %[1]q
+  email     		= %[2]q
+  parent_id 		= aws_organizations_organizational_unit.test1.id
+  close_on_deletion = true
 }
 `, name, email)
 }
@@ -265,9 +263,10 @@ resource "aws_organizations_organizational_unit" "test2" {
 }
 
 resource "aws_organizations_account" "test" {
-  name      = %[1]q
-  email     = %[2]q
-  parent_id = aws_organizations_organizational_unit.test2.id
+  name      	    = %[1]q
+  email     	    = %[2]q
+  parent_id 	    = aws_organizations_organizational_unit.test2.id
+  close_on_deletion = true
 }
 `, name, email)
 }
@@ -277,8 +276,9 @@ func testAccAccountTags1Config(name, email, tagKey1, tagValue1 string) string {
 resource "aws_organizations_organization" "test" {}
 
 resource "aws_organizations_account" "test" {
-  name  = %[1]q
-  email = %[2]q
+  name  			= %[1]q
+  email 			= %[2]q
+  close_on_deletion = true
 
   tags = {
     %[3]q = %[4]q
@@ -292,8 +292,9 @@ func testAccAccountTags2Config(name, email, tagKey1, tagValue1, tagKey2, tagValu
 resource "aws_organizations_organization" "test" {}
 
 resource "aws_organizations_account" "test" {
-  name  = %[1]q
-  email = %[2]q
+  name  			= %[1]q
+  email 			= %[2]q
+  close_on_deletion = true
 
   tags = {
     %[3]q = %[4]q
