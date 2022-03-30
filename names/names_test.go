@@ -56,6 +56,9 @@ func TestServicesForDirectories(t *testing.T) {
 	nonExisting := []string{
 		"alexaforbusiness",
 		"amplifybackend",
+		"amplifyuibuilder",
+		"apigatewaymanagementapi",
+		"appconfigdata",
 		"appflow",
 		"appintegrations",
 		"applicationcostprofiler",
@@ -64,7 +67,13 @@ func TestServicesForDirectories(t *testing.T) {
 		"appregistry",
 		"auditmanager",
 		"augmentedairuntime",
+		"backupgateway",
+		"billingconductor",
 		"braket",
+		"ce",
+		"chimesdkidentity",
+		"chimesdkmeetings",
+		"chimesdkmessaging",
 		"clouddirectory",
 		"cloudsearchdomain",
 		"cloudwatchrum",
@@ -74,14 +83,21 @@ func TestServicesForDirectories(t *testing.T) {
 		"cognitosync",
 		"comprehend",
 		"comprehendmedical",
+		"computeoptimizer",
 		"connectcontactlens",
 		"connectparticipant",
 		"costexplorer",
+		"customerprofiles",
+		"databrew",
 		"devopsguru",
+		"discovery",
+		"drs",
 		"dynamodbstreams",
+		"ebs",
 		"ec2instanceconnect",
 		"elasticinference",
 		"emrcontainers",
+		"evidently",
 		"finspace",
 		"finspacedata",
 		"fis",
@@ -94,20 +110,26 @@ func TestServicesForDirectories(t *testing.T) {
 		"health",
 		"healthlake",
 		"honeycode",
+		"inspector2",
 		"iot1clickdevices",
 		"iot1clickprojects",
+		"iotdata",
 		"iotdataplane",
 		"iotdeviceadvisor",
 		"ioteventsdata",
 		"iotfleethub",
+		"iotjobsdata",
 		"iotjobsdataplane",
 		"iotsecuretunneling",
 		"iotsitewise",
 		"iotthingsgraph",
+		"iottwinmaker",
 		"iotwireless",
+		"ivs",
 		"kendra",
 		"kinesisvideoarchivedmedia",
 		"kinesisvideomedia",
+		"kinesisvideosignaling",
 		"kinesisvideosignalingchannels",
 		"lexmodelsv2",
 		"lexruntime",
@@ -116,6 +138,7 @@ func TestServicesForDirectories(t *testing.T) {
 		"lookoutequipment",
 		"lookoutforvision",
 		"lookoutmetrics",
+		"lookoutvision",
 		"machinelearning",
 		"managedblockchain",
 		"marketplacecatalog",
@@ -125,14 +148,19 @@ func TestServicesForDirectories(t *testing.T) {
 		"mediapackagevod",
 		"mediastoredata",
 		"mediatailor",
+		"mgh",
 		"mgn",
 		"migrationhub",
 		"migrationhubconfig",
+		"migrationhubrefactorspaces",
+		"migrationhubstrategy",
 		"mobile",
 		"mobileanalytics",
 		"mturk",
+		"nimble",
 		"nimblestudio",
 		"opsworkscm",
+		"panorama",
 		"personalize",
 		"personalizeevents",
 		"personalizeruntime",
@@ -142,17 +170,25 @@ func TestServicesForDirectories(t *testing.T) {
 		"polly",
 		"proton",
 		"qldbsession",
+		"rbin",
 		"rdsdata",
 		"redshiftdata",
 		"rekognition",
+		"resiliencehub",
 		"robomaker",
+		"route53recoverycluster",
+		"rum",
+		"sagemakera2iruntime",
+		"sagemakeredge",
 		"sagemakeredgemanager",
 		"sagemakerfeaturestoreruntime",
 		"sagemakerruntime",
 		"savingsplans",
+		"servicecatalogappregistry",
 		"sesv2",
 		"sms",
 		"snowball",
+		"snowdevicemanagement",
 		"ssmcontacts",
 		"ssmincidents",
 		"sso",
@@ -163,10 +199,13 @@ func TestServicesForDirectories(t *testing.T) {
 		"transcribe",
 		"transcribestreaming",
 		"translate",
+		"voiceid",
 		"wellarchitected",
+		"wisdom",
 		"workdocs",
 		"workmail",
 		"workmailmessageflow",
+		"workspacesweb",
 	}
 
 	for _, testCase := range ProviderPackages() {
@@ -241,7 +280,7 @@ func TestProviderNameUpper(t *testing.T) {
 	}
 }
 
-func TestAWSServiceName(t *testing.T) {
+func TestFullHumanFriendly(t *testing.T) {
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -257,26 +296,38 @@ func TestAWSServiceName(t *testing.T) {
 		{
 			TestName: Transcribe,
 			Input:    Transcribe,
-			Expected: "Transcribe",
+			Expected: "Amazon Transcribe",
 			Error:    false,
 		},
 		{
-			TestName: AppAutoScaling,
-			Input:    AppAutoScaling,
-			Expected: "AppAutoScaling",
+			TestName: Synthetics,
+			Input:    Synthetics,
+			Expected: "Amazon CloudWatch Synthetics",
 			Error:    false,
 		},
 		{
-			TestName: DMS,
-			Input:    DMS,
-			Expected: "DMS",
+			TestName: "alias",
+			Input:    "cloudwatchevidently",
+			Expected: "Amazon CloudWatch Evidently",
 			Error:    false,
+		},
+		{
+			TestName: DRS,
+			Input:    DRS,
+			Expected: "AWS Elastic Disaster Recovery",
+			Error:    false,
+		},
+		{
+			TestName: "doesnotexist",
+			Input:    "doesnotexist",
+			Expected: "",
+			Error:    true,
 		},
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
-			got, err := ProviderNameUpper(testCase.Input)
+			got, err := FullHumanFriendly(testCase.Input)
 
 			if err != nil && !testCase.Error {
 				t.Errorf("got error (%s), expected no error", err)
@@ -289,46 +340,6 @@ func TestAWSServiceName(t *testing.T) {
 			if got != testCase.Expected {
 				t.Errorf("got %s, expected %s", got, testCase.Expected)
 			}
-		})
-	}
-}
-
-func TestServiceHumanFriendly(t *testing.T) {
-	/*testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: Transcribe,
-			Input:    Transcribe,
-			Expected: "Transcribe",
-			Error:    false,
-		},
-		{
-			TestName: Route53Domains,
-			Input:    Route53Domains,
-			Expected: "Route53Domains",
-			Error:    false,
-		},
-		{
-			TestName: "doesnotexist",
-			Input:    "doesnotexist",
-			Expected: "",
-			Error:    true,
-		},
-	}*/
-
-	for _, testCase := range ProviderPackages() {
-		t.Run(testCase, func(t *testing.T) {
-			fmt.Printf("%s,%s,%s,%s\n", testCase, serviceData[testCase].GoV1ClientName, serviceData[testCase].ServiceID, serviceData[testCase].ProviderNameUpper)
 		})
 	}
 }

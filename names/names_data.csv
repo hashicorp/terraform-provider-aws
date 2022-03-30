@@ -308,7 +308,7 @@ secretsmanager,secretsmanager,secretsmanager,secretsmanager,secretsmanager,secre
 securityhub,securityhub,securityhub,securityhub,securityhub,securityhub,securityhub,SecurityHub,securityhub,SecurityHub,Security Hub,AWS,,,,
 serverlessrepo,serverlessrepo,serverlessapplicationrepository,serverlessapplicationrepository,serverlessrepo,serverlessrepo,serverlessrepo,ServerlessRepo,serverlessrepo;serverlessapprepo;serverlessapplicationrepository,ServerlessApplicationRepository,Serverless Application Repository,AWS,,,,
 servicecatalog,servicecatalog,servicecatalog,servicecatalog,servicecatalog,servicecatalog,servicecatalog,ServiceCatalog,servicecatalog,ServiceCatalog,Service Catalog,AWS,,,,
-servicecatalog-appregistry,servicecatalogappregistry,appregistry,servicecatalogappregistry,,servicecatalogappregistry,servicecatalogappregistry,ServiceCatalogAppRegistry,"servicecatalogappregistry,appregistry",AppRegistry,Service Catalog AppRegistry,AWS,,,,
+servicecatalog-appregistry,servicecatalogappregistry,appregistry,servicecatalogappregistry,,servicecatalogappregistry,servicecatalogappregistry,ServiceCatalogAppRegistry,servicecatalogappregistry;appregistry,AppRegistry,Service Catalog AppRegistry,AWS,,,,
 servicediscovery,servicediscovery,servicediscovery,servicediscovery,servicediscovery,servicediscovery,servicediscovery,ServiceDiscovery,servicediscovery,ServiceDiscovery,Cloud Map,AWS,,,,
 service-quotas,servicequotas,servicequotas,servicequotas,servicequotas,servicequotas,servicequotas,ServiceQuotas,servicequotas,ServiceQuotas,Service Quotas,,,,,
 ses,ses,ses,ses,ses,ses,ses,SES,ses,SES,Simple Email Service (SES),Amazon,,,,
