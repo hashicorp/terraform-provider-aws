@@ -2,7 +2,9 @@ package dynamodb
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -66,9 +68,10 @@ func resourceContributorInsightsCreate(ctx context.Context, d *schema.ResourceDa
 		return diag.Errorf("creating dynamodb ContributorInsights for table (%s): %s", d.Get("table_name").(string), err)
 	}
 
-	d.SetId(aws.StringValue(out.TableName))
+	id := encodeContributorInsightsID(aws.StringValue(out.TableName), indexName, meta.(*conns.AWSClient).AccountID)
+	d.SetId(id)
 
-	if err := waitContributorInsightsCreated(ctx, conn, d.Id(), indexName, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := waitContributorInsightsCreated(ctx, conn, aws.StringValue(out.TableName), indexName, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for dynamodb ContributorInsights (%s) create: %s", d.Id(), err)
 	}
 
@@ -83,7 +86,12 @@ func resourceContributorInsightsRead(ctx context.Context, d *schema.ResourceData
 		indexName = v.(string)
 	}
 
-	out, err := FindContributorInsights(ctx, conn, d.Id(), indexName)
+	tableName, indexName, _, err := decodeContributorInsightsID(d.Id())
+	if err != nil {
+		return diag.Errorf("unable to decode ContributorInsights ID (%s): %s", d.Id(), err)
+	}
+
+	out, err := FindContributorInsights(ctx, conn, tableName, indexName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DynamoDB ContributorInsights (%s) not found, removing from state", d.Id())
@@ -107,18 +115,21 @@ func resourceContributorInsightsDelete(ctx context.Context, d *schema.ResourceDa
 
 	log.Printf("[INFO] Deleting DynamoDB ContributorInsights %s", d.Id())
 
+	tableName, indexName, _, err := decodeContributorInsightsID(d.Id())
+	if err != nil {
+		return diag.Errorf("unable to decode DynamoDB ContributorInsights ID (%s): %s", d.Id(), err)
+	}
+
 	in := &dynamodb.UpdateContributorInsightsInput{
 		ContributorInsightsAction: aws.String(dynamodb.ContributorInsightsActionDisable),
-		TableName:                 aws.String(d.Id()),
+		TableName:                 aws.String(tableName),
 	}
 
-	var indexName string
-	if v, ok := d.GetOk("index_name"); ok {
-		indexName = v.(string)
-		in.IndexName = aws.String(v.(string))
+	if indexName != "" {
+		in.IndexName = aws.String(indexName)
 	}
 
-	_, err := conn.UpdateContributorInsightsWithContext(ctx, in)
+	_, err = conn.UpdateContributorInsightsWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 		return nil
@@ -128,9 +139,40 @@ func resourceContributorInsightsDelete(ctx context.Context, d *schema.ResourceDa
 		return diag.Errorf("deleting DynamoDB ContributorInsights (%s): %s", d.Id(), err)
 	}
 
-	if err := waitContributorInsightsDeleted(ctx, conn, d.Id(), indexName, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := waitContributorInsightsDeleted(ctx, conn, tableName, indexName, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("waiting for DynamoDB ContributorInsights (%s) to be deleted: %s", d.Id(), err)
 	}
 
 	return nil
+}
+
+func encodeContributorInsightsID(tableName, indexName, accountID string) string {
+	if indexName != "" {
+		return fmt.Sprintf("%s-%s/%s", tableName, indexName, accountID)
+	}
+
+	return fmt.Sprintf("%s/%s", tableName, accountID)
+}
+
+func decodeContributorInsightsID(id string) (string, string, string, error) {
+	idParts := strings.Split(id, "/")
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return "", "", "", fmt.Errorf("expected ID in the form of table_name/account_id, given: %q", id)
+	}
+
+	var tableName, indexName, accountID string
+
+	tableName = idParts[0]
+	if strings.Contains(tableName, "-") {
+		parts := strings.Split(tableName, "-")
+		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+			return "", "", "", fmt.Errorf("expected ID in the form of table_name-index_name, given: %q", id)
+		}
+		tableName = parts[0]
+		indexName = parts[1]
+	}
+
+	accountID = idParts[1]
+
+	return tableName, indexName, accountID, nil
 }
