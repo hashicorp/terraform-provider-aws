@@ -23,11 +23,11 @@ func TestAccBackupReportPlanDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccReportPlanDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`Error getting Backup Report Plan`),
+				Config:      testAccReportPlanDataSourceNonExistentConfig,
+				ExpectError: regexp.MustCompile(`error reading Backup Report Plan`),
 			},
 			{
-				Config: testAccReportPlanDataSourceConfig_basic(rName, rName2),
+				Config: testAccReportPlanDataSourceConfig(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "creation_time", resourceName, "creation_time"),
@@ -48,13 +48,13 @@ func TestAccBackupReportPlanDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccReportPlanDataSourceConfig_nonExistent = `
+const testAccReportPlanDataSourceNonExistentConfig = `
 data "aws_backup_report_plan" "test" {
   name = "tf_acc_test_does_not_exist"
 }
 `
 
-func testAccReportPlanDataSourceConfig_basic(rName, rName2 string) string {
+func testAccReportPlanDataSourceConfig(rName, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q

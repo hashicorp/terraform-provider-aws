@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -92,34 +91,29 @@ func dataSourceReportPlanRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
+	reportPlan, err := FindReportPlanByName(conn, name)
 
-	resp, err := conn.DescribeReportPlan(&backup.DescribeReportPlanInput{
-		ReportPlanName: aws.String(name),
-	})
 	if err != nil {
-		return fmt.Errorf("Error getting Backup Report Plan: %w", err)
+		return fmt.Errorf("error reading Backup Report Plan (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.ReportPlan.ReportPlanName))
+	d.SetId(aws.StringValue(reportPlan.ReportPlanName))
 
-	d.Set("arn", resp.ReportPlan.ReportPlanArn)
-	d.Set("deployment_status", resp.ReportPlan.DeploymentStatus)
-	d.Set("description", resp.ReportPlan.ReportPlanDescription)
-	d.Set("name", resp.ReportPlan.ReportPlanName)
+	d.Set("arn", reportPlan.ReportPlanArn)
+	d.Set("creation_time", reportPlan.CreationTime.Format(time.RFC3339))
+	d.Set("deployment_status", reportPlan.DeploymentStatus)
+	d.Set("description", reportPlan.ReportPlanDescription)
+	d.Set("name", reportPlan.ReportPlanName)
 
-	if err := d.Set("creation_time", resp.ReportPlan.CreationTime.Format(time.RFC3339)); err != nil {
-		return fmt.Errorf("error setting creation_time: %s", err)
-	}
-
-	if err := d.Set("report_delivery_channel", flattenReportDeliveryChannel(resp.ReportPlan.ReportDeliveryChannel)); err != nil {
+	if err := d.Set("report_delivery_channel", flattenReportDeliveryChannel(reportPlan.ReportDeliveryChannel)); err != nil {
 		return fmt.Errorf("error setting report_delivery_channel: %w", err)
 	}
 
-	if err := d.Set("report_setting", flattenReportSetting(resp.ReportPlan.ReportSetting)); err != nil {
-		return fmt.Errorf("error setting report_delivery_channel: %w", err)
+	if err := d.Set("report_setting", flattenReportSetting(reportPlan.ReportSetting)); err != nil {
+		return fmt.Errorf("error setting report_setting: %w", err)
 	}
 
-	tags, err := ListTags(conn, aws.StringValue(resp.ReportPlan.ReportPlanArn))
+	tags, err := ListTags(conn, aws.StringValue(reportPlan.ReportPlanArn))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Backup Report Plan (%s): %w", d.Id(), err)
