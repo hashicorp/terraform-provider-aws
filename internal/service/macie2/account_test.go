@@ -13,7 +13,7 @@ import (
 	tfmacie2 "github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 )
 
-func testAccAccount_basic(t *testing.T) {
+func TestAccAccount_basic(t *testing.T) {
 	var macie2Output macie2.GetMacieSessionOutput
 	resourceName := "aws_macie2_account.test"
 
