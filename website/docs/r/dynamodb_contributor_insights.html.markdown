@@ -25,9 +25,9 @@ The following arguments are supported:
 * `table_name` - (Required) The name of the table to attach contributor insight
 * `index_name` - (Optional) The global secondary index name
 
-## Atrriibute Reference
+## Attribute Reference
 
-In addition to all arguments above, teh following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `status` - The contributor insights status
 
