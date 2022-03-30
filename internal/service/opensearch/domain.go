@@ -217,10 +217,9 @@ func ResourceDomain() *schema.Resource {
 							Default:  1,
 						},
 						"instance_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      opensearchservice.OpenSearchPartitionInstanceTypeM3MediumSearch,
-							ValidateFunc: validation.StringInSlice(opensearchservice.OpenSearchPartitionInstanceType_Values(), false),
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  opensearchservice.OpenSearchPartitionInstanceTypeM3MediumSearch,
 						},
 						"warm_count": {
 							Type:         schema.TypeInt,
