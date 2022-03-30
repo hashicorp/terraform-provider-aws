@@ -107,16 +107,17 @@ func resourceContributorInsightsDelete(ctx context.Context, d *schema.ResourceDa
 
 	log.Printf("[INFO] Deleting DynamoDB ContributorInsights %s", d.Id())
 
-	var indexName string
-	if v, ok := d.GetOk("index_name"); ok {
-		indexName = v.(string)
-	}
-
 	in := &dynamodb.UpdateContributorInsightsInput{
 		ContributorInsightsAction: aws.String(dynamodb.ContributorInsightsActionDisable),
 		TableName:                 aws.String(d.Id()),
-		IndexName:                 aws.String(indexName),
 	}
+
+	var indexName string
+	if v, ok := d.GetOk("index_name"); ok {
+		indexName = v.(string)
+		in.IndexName = aws.String(v.(string))
+	}
+
 	_, err := conn.UpdateContributorInsightsWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
