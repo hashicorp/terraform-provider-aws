@@ -81,12 +81,7 @@ func resourceContributorInsightsCreate(ctx context.Context, d *schema.ResourceDa
 func resourceContributorInsightsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
-	var indexName string
-	if v, ok := d.GetOk("index_name"); ok {
-		indexName = v.(string)
-	}
-
-	tableName, indexName, _, err := decodeContributorInsightsID(d.Id())
+	tableName, indexName, err := decodeContributorInsightsID(d.Id())
 	if err != nil {
 		return diag.Errorf("unable to decode ContributorInsights ID (%s): %s", d.Id(), err)
 	}
@@ -115,7 +110,7 @@ func resourceContributorInsightsDelete(ctx context.Context, d *schema.ResourceDa
 
 	log.Printf("[INFO] Deleting DynamoDB ContributorInsights %s", d.Id())
 
-	tableName, indexName, _, err := decodeContributorInsightsID(d.Id())
+	tableName, indexName, err := decodeContributorInsightsID(d.Id())
 	if err != nil {
 		return diag.Errorf("unable to decode DynamoDB ContributorInsights ID (%s): %s", d.Id(), err)
 	}
@@ -154,25 +149,23 @@ func encodeContributorInsightsID(tableName, indexName, accountID string) string 
 	return fmt.Sprintf("%s/%s", tableName, accountID)
 }
 
-func decodeContributorInsightsID(id string) (string, string, string, error) {
+func decodeContributorInsightsID(id string) (string, string, error) {
 	idParts := strings.Split(id, "/")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return "", "", "", fmt.Errorf("expected ID in the form of table_name/account_id, given: %q", id)
+		return "", "", fmt.Errorf("expected ID in the form of table_name/account_id, given: %q", id)
 	}
 
-	var tableName, indexName, accountID string
+	var tableName, indexName string
 
 	tableName = idParts[0]
 	if strings.Contains(tableName, "-") {
 		parts := strings.Split(tableName, "-")
 		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-			return "", "", "", fmt.Errorf("expected ID in the form of table_name-index_name, given: %q", id)
+			return "", "", fmt.Errorf("expected ID in the form of table_name-index_name, given: %q", id)
 		}
 		tableName = parts[0]
 		indexName = parts[1]
 	}
 
-	accountID = idParts[1]
-
-	return tableName, indexName, accountID, nil
+	return tableName, indexName, nil
 }
