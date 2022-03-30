@@ -1,4 +1,5 @@
 import jetbrains.buildServer.configs.kotlin.v2019_2.*
+import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.golang
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildSteps.script
 import jetbrains.buildServer.configs.kotlin.v2019_2.triggers.schedule
 import java.io.File
@@ -220,6 +221,12 @@ object SetUp : BuildType({
         script {
             name = "Pre-Sweeper"
             scriptContent = File("./scripts/sweeper.sh").readText()
+        }
+    }
+
+    features {
+        golang {
+            testFormat = "json"
         }
     }
 })

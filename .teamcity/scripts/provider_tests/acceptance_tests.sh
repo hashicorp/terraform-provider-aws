@@ -15,4 +15,4 @@ TF_ACC=1 go test \
     ./internal/tfresource/... \
     ./internal/vault/... \
     ./internal/verify/... \
-    -v -count=1 -parallel "%ACCTEST_PARALLELISM%" -timeout=0
+    -json -v -count=1 -parallel "%ACCTEST_PARALLELISM%" -timeout=0

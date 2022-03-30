@@ -14,4 +14,5 @@ go test \
     ./internal/tags/... \
     ./internal/tfresource/... \
     ./internal/vault/... \
-    ./internal/verify/...
+    ./internal/verify/... \
+    -json
