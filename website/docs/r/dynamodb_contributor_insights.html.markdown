@@ -18,14 +18,14 @@ resource "aws_dynamodb_contributor_insights" "test" {
 }
 ```
 
-## ArgumentReference
+## Argument Reference
 
 The following arguments are supported:
 
 * `table_name` - (Required) The name of the table to attach contributor insight
 * `index_name` - (Optional) The global secondary index name
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
