@@ -21,6 +21,11 @@ func init() {
 		F:    sweepFramework,
 	})
 
+	resource.AddTestSweepers("aws_backup_report_plan", &resource.Sweeper{
+		Name: "aws_backup_report_plan",
+		F:    sweepReportPlan,
+	})
+
 	resource.AddTestSweepers("aws_backup_vault_lock_configuration", &resource.Sweeper{
 		Name: "aws_backup_vault_lock_configuration",
 		F:    sweepVaultLockConfiguration,
@@ -84,6 +89,48 @@ func sweepFramework(region string) error {
 
 	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Backup Frameworks for %s: %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepReportPlan(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("Error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).BackupConn
+	input := &backup.ListReportPlansInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = conn.ListReportPlansPages(input, func(page *backup.ListReportPlansOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, reportPlan := range page.ReportPlans {
+			r := ResourceReportPlan()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(reportPlan.ReportPlanName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Backup Report Plans sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Backup Report Plans for %s: %w", region, err))
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Backup Report Plans for %s: %w", region, err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
