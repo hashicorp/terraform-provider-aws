@@ -385,7 +385,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "elasticsearch_version", "1.5"),
 				),
-				ExpectError: regexp.MustCompile(`domain .+ already exists`),
+				ExpectError: regexp.MustCompile(`Elasticsearch Domain .+ already exists`),
 			},
 		},
 	})
