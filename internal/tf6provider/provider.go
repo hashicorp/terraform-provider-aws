@@ -11,6 +11,7 @@ func New() tfsdk.Provider {
 	return &provider{}
 }
 
+// provider represents a Terraform Protocol v6 provider.
 type provider struct{}
 
 func (p *provider) Configure(ctx context.Context, request tfsdk.ConfigureProviderRequest, response *tfsdk.ConfigureProviderResponse) {

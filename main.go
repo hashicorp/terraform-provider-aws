@@ -5,11 +5,14 @@ import (
 	"flag"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5/tf5server"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-mux/tf6to5server"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/tf6provider"
 )
 
 func main() {
@@ -17,10 +20,21 @@ func main() {
 	flag.Parse()
 
 	ctx := context.Background()
-	providers := []func() tfprotov5.ProviderServer{
-		func() tfprotov5.ProviderServer {
-			return schema.NewGRPCProviderServer(provider.Provider())
+
+	downgradedProvider, err := tf6to5server.DowngradeServer(
+		ctx,
+		func() tfprotov6.ProviderServer {
+			return tfsdk.NewProtocol6Server(tf6provider.New())
 		},
+	)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	providers := []func() tfprotov5.ProviderServer{
+		func() tfprotov5.ProviderServer { return downgradedProvider },
+		provider.Provider().GRPCProvider,
 	}
 
 	muxServer, err := tf5muxserver.NewMuxServer(ctx, providers...)
