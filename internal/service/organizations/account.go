@@ -79,7 +79,7 @@ func ResourceAccount() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]{1,64}$`), "must consist of uppercase letters, lowercase letters, digits with no spaces, and any of the following characters"),
 			},
-			"close_account_on_deletion": {
+			"close_on_deletion": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -281,9 +281,8 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
-	close_account := d.Get("close_account_on_deletion").(bool)
 	var err error = nil
-	if close_account {
+	if d.Get("close_on_deletion").(bool) {
 		input := &organizations.CloseAccountInput{
 			AccountId: aws.String(d.Id()),
 		}
