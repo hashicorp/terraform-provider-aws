@@ -1232,6 +1232,13 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 			if tfawserr.ErrMessageContains(r.Error, fms.ErrCodeInvalidOperationException, "Your AWS Organization is currently onboarding with AWS Firewall Manager and cannot be offboarded.") {
 				r.Retryable = aws.Bool(true)
 			}
+		// System problems can arise during FMS policy updates (maybe also creation),
+		// so we set the following operation as retryable.
+		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23946
+		case "PutPolicy":
+			if tfawserr.ErrCodeEquals(r.Error, fms.ErrCodeInternalErrorException) {
+				r.Retryable = aws.Bool(true)
+			}
 		}
 	})
 
