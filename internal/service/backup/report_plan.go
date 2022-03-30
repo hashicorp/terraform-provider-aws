@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -23,6 +24,7 @@ func ResourceReportPlan() *schema.Resource {
 		Read:   resourceReportPlanRead,
 		Update: resourceReportPlanUpdate,
 		Delete: resourceReportPlanDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -159,40 +161,38 @@ func resourceReportPlanRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.DescribeReportPlan(&backup.DescribeReportPlanInput{
-		ReportPlanName: aws.String(d.Id()),
-	})
+	reportPlan, err := FindReportPlanByName(conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Backup Report Plan (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Backup Report Plan %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
 		return fmt.Errorf("error reading Backup Report Plan (%s): %w", d.Id(), err)
 	}
 
-	d.Set("arn", resp.ReportPlan.ReportPlanArn)
-	d.Set("deployment_status", resp.ReportPlan.DeploymentStatus)
-	d.Set("description", resp.ReportPlan.ReportPlanDescription)
-	d.Set("name", resp.ReportPlan.ReportPlanName)
+	d.Set("arn", reportPlan.ReportPlanArn)
+	d.Set("creation_time", reportPlan.CreationTime.Format(time.RFC3339))
+	d.Set("deployment_status", reportPlan.DeploymentStatus)
+	d.Set("description", reportPlan.ReportPlanDescription)
+	d.Set("name", reportPlan.ReportPlanName)
 
-	if err := d.Set("creation_time", resp.ReportPlan.CreationTime.Format(time.RFC3339)); err != nil {
-		return fmt.Errorf("error setting creation_time: %s", err)
-	}
-
-	if err := d.Set("report_delivery_channel", flattenReportDeliveryChannel(resp.ReportPlan.ReportDeliveryChannel)); err != nil {
+	if err := d.Set("report_delivery_channel", flattenReportDeliveryChannel(reportPlan.ReportDeliveryChannel)); err != nil {
 		return fmt.Errorf("error setting report_delivery_channel: %w", err)
 	}
 
-	if err := d.Set("report_setting", flattenReportSetting(resp.ReportPlan.ReportSetting)); err != nil {
-		return fmt.Errorf("error setting report_delivery_channel: %w", err)
+	if err := d.Set("report_setting", flattenReportSetting(reportPlan.ReportSetting)); err != nil {
+		return fmt.Errorf("error setting report_setting: %w", err)
 	}
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
+
 	if err != nil {
 		return fmt.Errorf("error listing tags for Backup Report Plan (%s): %w", d.Id(), err)
 	}
+
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
@@ -339,4 +339,25 @@ func flattenReportSetting(reportSetting *backup.ReportSetting) []interface{} {
 	}
 
 	return []interface{}{values}
+}
+
+func FindReportPlanByName(conn *backup.Backup, name string) (*backup.ReportPlan, error) {
+	input := &backup.DescribeReportPlanInput{
+		ReportPlanName: aws.String(name),
+	}
+
+	output, err := conn.DescribeReportPlan(input)
+
+	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil || output.ReportPlan == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ReportPlan, nil
 }
