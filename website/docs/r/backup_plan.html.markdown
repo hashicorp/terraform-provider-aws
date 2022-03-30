@@ -20,7 +20,7 @@ resource "aws_backup_plan" "example" {
     rule_name         = "tf_example_backup_rule"
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
-    
+
     lifecycle {
       delete_after = 14
     }
