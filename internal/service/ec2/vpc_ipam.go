@@ -60,6 +60,10 @@ func ResourceVPCIpam() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"cascade": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -209,6 +213,10 @@ func resourceVPCIpamDelete(d *schema.ResourceData, meta interface{}) error {
 		IpamId: aws.String(d.Id()),
 	}
 
+	if v, ok := d.GetOk("cascade"); ok {
+		input.Cascade = aws.Bool(v.(bool))
+	}
+
 	log.Printf("[DEBUG] Deleting IPAM: %s", d.Id())
 	_, err := conn.DeleteIpam(input)
 	if err != nil {
@@ -263,7 +271,7 @@ func WaitIpamAvailable(conn *ec2.EC2, ipamId string, timeout time.Duration) (*ec
 
 func WaiterIpamDeleted(conn *ec2.EC2, ipamId string, timeout time.Duration) (*ec2.Ipam, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.IpamStateCreateComplete, ec2.IpamStateModifyComplete},
+		Pending: []string{ec2.IpamStateCreateComplete, ec2.IpamStateModifyComplete, ec2.IpamStateDeleteInProgress},
 		Target:  []string{InvalidIpamIdNotFound},
 		Refresh: statusIpamStatus(conn, ipamId),
 		Timeout: timeout,

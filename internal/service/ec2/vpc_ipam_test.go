@@ -96,6 +96,36 @@ func TestAccVPCIpam_modify(t *testing.T) {
 	})
 }
 
+func TestAccVPCIpam_cascade(t *testing.T) {
+	resourceName := "aws_vpc_ipam.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckVPCIpamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCIpamCascade(),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ec2", regexp.MustCompile(`ipam/ipam-[\da-f]+$`)),
+					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scope_count", "2"),
+					resource.TestMatchResourceAttr(resourceName, "private_default_scope_id", regexp.MustCompile(`^ipam-scope-[\da-f]+`)),
+					resource.TestMatchResourceAttr(resourceName, "public_default_scope_id", regexp.MustCompile(`^ipam-scope-[\da-f]+`)),
+					testAccCheckVPCIpamScopeCreate(resourceName),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"cascade"},
+			},
+		},
+	})
+}
+
 func TestAccVPCIpam_tags(t *testing.T) {
 	resourceName := "aws_vpc_ipam.test"
 
@@ -157,6 +187,24 @@ func testAccCheckVPCIpamDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccCheckVPCIpamScopeCreate(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_vpc_ipam" {
+				continue
+			}
+			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+			input := &ec2.CreateIpamScopeInput{
+				ClientToken: aws.String(resource.UniqueId()),
+				IpamId:      aws.String(rs.Primary.ID),
+			}
+			_, err := conn.CreateIpamScope(input)
+			return err
+		}
+		return fmt.Errorf("could not create VPC IPAM Scope")
+	}
+}
+
 const testAccVPCIpamBase = `
 data "aws_region" "current" {}
 
@@ -167,6 +215,20 @@ resource "aws_vpc_ipam" "test" {
   }
 }
 `
+
+func testAccVPCIpamCascade() string {
+	return `
+data "aws_region" "current" {}
+
+resource "aws_vpc_ipam" "test" {
+  description = "test"
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
+  cascade = true
+}
+	`
+}
 
 const testAccVPCIpamBaseAlternateDescription = `
 data "aws_region" "current" {}
