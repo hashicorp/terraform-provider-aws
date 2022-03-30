@@ -22,7 +22,7 @@ type TemplateData struct {
 	ServicePackage  string
 	Service         string
 	ServiceLower    string
-	AWSServiceName  string
+	ServiceName     string
 }
 
 func toSnakeCase(upper string, snakeName string) string {
@@ -63,13 +63,13 @@ func Create(resName, snakeName string, comments, force bool) error {
 		return fmt.Errorf("file (%s) already exists and force is not set", filename)
 	}
 
-	s, err := names.ServiceProviderNameUpper(servicePackage)
+	s, err := names.ProviderNameUpper(servicePackage)
 
 	if err != nil {
 		return fmt.Errorf("error getting service connection name: %w", err)
 	}
 
-	sn, err := names.AWSServiceName(servicePackage)
+	sn, err := names.FullHumanFriendly(servicePackage)
 
 	if err != nil {
 		return fmt.Errorf("error getting AWS service name: %w", err)
@@ -81,7 +81,7 @@ func Create(resName, snakeName string, comments, force bool) error {
 		ServicePackage:  servicePackage,
 		Service:         s,
 		ServiceLower:    strings.ToLower(s),
-		AWSServiceName:  sn,
+		ServiceName:     sn,
 	}
 
 	return writeTemplate("newres", filename, templateData)

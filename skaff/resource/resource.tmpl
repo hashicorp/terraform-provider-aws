@@ -198,11 +198,11 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 	out, err := conn.Create{{ .Resource }}WithContext(ctx, in)
 
 	if err != nil {
-		return diag.Errorf("creating {{ .AWSServiceName }} {{ .Resource }} (%s): %s", d.Get("name").(string), err)
+		return diag.Errorf("creating {{ .ServiceName }} {{ .Resource }} (%s): %s", d.Get("name").(string), err)
 	}
 
 	if out == nil || out.{{ .Resource }} == nil {
-		return diag.Errorf("creating {{ .AWSServiceName }} {{ .Resource }} (%s): empty output", d.Get("name").(string))
+		return diag.Errorf("creating {{ .ServiceName }} {{ .Resource }} (%s): empty output", d.Get("name").(string))
 	}
 	{{ if .IncludeComments }}
 	// TIP: 4. Set the minimum arguments and/or attributes for the Read function to
@@ -213,7 +213,7 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 	// TIP: 5. Use a waiter to wait for create to complete
 	{{- end }}
 	if _, err := wait{{ .Resource }}Created(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for {{ .AWSServiceName }} {{ .Resource }} (%s) create: %s", d.Id(), err)
+		return diag.Errorf("waiting for {{ .ServiceName }} {{ .Resource }} (%s) create: %s", d.Id(), err)
 	}
 	{{ if .IncludeComments }}
 	// TIP: 6. Call the Read function in the Create return

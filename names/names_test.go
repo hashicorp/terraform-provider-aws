@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestServiceForHCLKey(t *testing.T) {
+func TestProviderPackageForAlias(t *testing.T) {
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -35,7 +35,7 @@ func TestServiceForHCLKey(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
-			got, err := ServiceForHCLKey(testCase.Input)
+			got, err := ProviderPackageForAlias(testCase.Input)
 
 			if err != nil && !testCase.Error {
 				t.Errorf("got error (%s), expected no error", err)
@@ -169,7 +169,7 @@ func TestServicesForDirectories(t *testing.T) {
 		"workmailmessageflow",
 	}
 
-	for _, testCase := range ServiceKeys() {
+	for _, testCase := range ProviderPackages() {
 		t.Run(testCase, func(t *testing.T) {
 			wd, err := os.Getwd()
 			if err != nil {
@@ -189,7 +189,7 @@ func TestServicesForDirectories(t *testing.T) {
 	}
 }
 
-func TestServiceProviderNameUpper(t *testing.T) {
+func TestProviderNameUpper(t *testing.T) {
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -224,7 +224,7 @@ func TestServiceProviderNameUpper(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
-			got, err := ServiceProviderNameUpper(testCase.Input)
+			got, err := ProviderNameUpper(testCase.Input)
 
 			if err != nil && !testCase.Error {
 				t.Errorf("got error (%s), expected no error", err)
@@ -276,7 +276,7 @@ func TestAWSServiceName(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
-			got, err := ServiceProviderNameUpper(testCase.Input)
+			got, err := ProviderNameUpper(testCase.Input)
 
 			if err != nil && !testCase.Error {
 				t.Errorf("got error (%s), expected no error", err)
@@ -326,9 +326,9 @@ func TestServiceHumanFriendly(t *testing.T) {
 		},
 	}*/
 
-	for _, testCase := range ServiceKeys() {
+	for _, testCase := range ProviderPackages() {
 		t.Run(testCase, func(t *testing.T) {
-			fmt.Printf("%s,%s,%s,%s\n", testCase, serviceData[testCase].AWSClientName, serviceData[testCase].AWSServiceID, serviceData[testCase].ProviderNameUpper)
+			fmt.Printf("%s,%s,%s,%s\n", testCase, serviceData[testCase].GoV1ClientName, serviceData[testCase].ServiceID, serviceData[testCase].ProviderNameUpper)
 		})
 	}
 }

@@ -869,10 +869,10 @@ into Terraform.
         - The constant value is the same as the name but all lowercase (_e.g._, `DynamoDB = "dynamodb"`).
     - In `internal/conns/conns.go`: Add a new entry to the `serviceData` map:
         1. The entry key is the string constant created above
-        2. The `AWSClientName` is the exact name of the return type of the `New()` method of the service. For example, see the `New()` method in the [Application Auto Scaling documentation](https://docs.aws.amazon.com/sdk-for-go/api/service/applicationautoscaling/#New).
-        3. For `AWSServiceName`, `AWSEndpointsID`, and `AWSServiceID`, directly reference the AWS Go SDK service package for the values. For example, `accessanalyzer.ServiceName`, `accessanalyzer.EndpointsID`, and `accessanalyzer.ServiceID` respectively.
+        2. The `GoV1ClientName` is the exact name of the return type of the `New()` method of the service. For example, see the `New()` method in the [Application Auto Scaling documentation](https://docs.aws.amazon.com/sdk-for-go/api/service/applicationautoscaling/#New).
+        3. For `ServiceName`, `EndpointsID`, and `ServiceID`, directly reference the AWS Go SDK service package for the values. For example, `accessanalyzer.ServiceName`, `accessanalyzer.EndpointsID`, and `accessanalyzer.ServiceID` respectively.
         4. `ProviderNameUpper` is the exact same as the constant _name_ (_not_ value) as described above.
-        5. In most cases, the `HCLKeys` slice will have one element, an all-lowercase string that matches the AWS SDK Go service name and provider constant value, described above. However, when these diverge, it may be helpful to add additional elements. Practitioners can use any of these names in the provider configuration when customizing service endpoints.
+        5. In most cases, the `Aliases` slice will have one element, an all-lowercase string that matches the AWS SDK Go service name and provider constant value, described above. However, when these diverge, it may be helpful to add additional elements. Practitioners can use any of these names in the provider configuration when customizing service endpoints.
     - In `internal/conns/conns.go`: Add a new import for the AWS Go SDK code. E.g.
     `github.com/aws/aws-sdk-go/service/quicksight`
     - In `internal/conns/conns.go`: Add a new `{ServiceName}Conn` field to the `AWSClient`
