@@ -1,0 +1,3 @@
+```release-note:note
+data-source/aws_iam_policy_document: The `source_json` and `override_json` attributes have been deprecated. Use the `source_policy_documents` and `override_policy_documents` attributes respectively instead.
+```

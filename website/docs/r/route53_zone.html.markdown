@@ -84,6 +84,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The Amazon Resource Name (ARN) of the Hosted Zone.
 * `zone_id` - The Hosted Zone ID. This can be referenced by zone records.
 * `name_servers` - A list of name servers in associated (or default) delegation set.
   Find more about delegation sets in [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/actions-on-reusable-delegation-sets.html).
@@ -91,7 +92,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route53 Zones can be imported using the `zone id`, e.g.
+Route53 Zones can be imported using the `zone id`, e.g.,
 
 ```
 $ terraform import aws_route53_zone.myzone Z1D633PJN98FT9

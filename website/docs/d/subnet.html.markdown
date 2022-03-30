@@ -55,7 +55,7 @@ The arguments of this data source act as filters for querying the available subn
 The following arguments are optional:
 
 * `availability_zone` - (Optional) Availability zone where the subnet must reside.
-* `availability_zone_id` - (Optional) ID of the Availability Zone for the subnet.
+* `availability_zone_id` - (Optional) ID of the Availability Zone for the subnet. This argument is not supported in all regions or partitions. If necessary, use `availability_zone` instead.
 * `cidr_block` - (Optional) CIDR block of the desired subnet.
 * `default_for_az` - (Optional) Whether the desired subnet must be the default subnet for its associated availability zone.
 * `filter` - (Optional) Configuration block. Detailed below.
@@ -82,8 +82,13 @@ In addition to the attributes above, the following attributes are exported:
 * `assign_ipv6_address_on_creation` - Whether an IPv6 address is assigned on creation.
 * `available_ip_address_count` - Available IP addresses of the subnet.
 * `customer_owned_ipv4_pool` - Identifier of customer owned IPv4 address pool.
+* `enable_dns64` - Indicates whether DNS queries made to the Amazon-provided DNS Resolver in this subnet return synthetic IPv6 addresses for IPv4-only destinations.
+* `enable_resource_name_dns_aaaa_record_on_launch` - Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records.
+* `enable_resource_name_dns_a_record_on_launch` - Indicates whether to respond to DNS queries for instance hostnames with DNS A records.
 * `ipv6_cidr_block_association_id` - Association ID of the IPv6 CIDR block.
+* `ipv6_native` - Indicates whether this is an IPv6-only subnet.
 * `map_customer_owned_ip_on_launch` - Whether customer owned IP addresses are assigned on network interface creation.
 * `map_public_ip_on_launch` - Whether public IP addresses are assigned on instance launch.
 * `outpost_arn` - ARN of the Outpost.
 * `owner_id` - ID of the AWS account that owns the subnet.
+* `private_dns_hostname_type_on_launch` - The type of hostnames assigned to instances in the subnet at launch.

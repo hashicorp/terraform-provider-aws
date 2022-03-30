@@ -33,3 +33,10 @@ The following arguments are required:
 ## Attributes Reference
 
 No additional attributes are exported.
+
+## Timeouts
+
+`aws_vpn_gateway_route_propagation` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `2 minutes`) Used for propagation creation
+- `delete` - (Default `2 minutes`) Used for propagation deletion

@@ -10,6 +10,12 @@ description: |-
 
 Provides a managed prefix list resource.
 
+~> **NOTE on Managed Prefix Lists and Managed Prefix List Entries:** Terraform
+currently provides both a standalone [Managed Prefix List Entry resource](ec2_managed_prefix_list_entry.html) (a single entry),
+and a Managed Prefix List resource with entries defined in-line. At this time you
+cannot use a Managed Prefix List with in-line rules in conjunction with any Managed
+Prefix List Entry resources. Doing so will cause a conflict of entries and will overwrite entries.
+
 ~> **NOTE on `max_entries`:** When you reference a Prefix List in a resource,
 the maximum number of entries for the prefix lists counts as the same number of rules
 or entries for the resource. For example, if you create a prefix list with a maximum
@@ -48,7 +54,7 @@ The following arguments are supported:
 
 * `address_family` - (Required, Forces new resource) Address family (`IPv4` or `IPv6`) of this prefix list.
 * `entry` - (Optional) Configuration block for prefix list entry. Detailed below. Different entries may have overlapping CIDR blocks, but a particular CIDR should not be duplicated.
-* `max_entries` - (Required, Forces new resource) Maximum number of entries that this prefix list can contain.
+* `max_entries` - (Required) Maximum number of entries that this prefix list can contain.
 * `name` - (Required) Name of this resource. The name must not start with `com.amazonaws`.
 * `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -69,7 +75,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Prefix Lists can be imported using the `id`, e.g.
+Prefix Lists can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_ec2_managed_prefix_list.default pl-0570a1d2d725c16be

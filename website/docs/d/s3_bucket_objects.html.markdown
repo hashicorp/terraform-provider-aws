@@ -8,9 +8,11 @@ description: |-
 
 # Data Source: aws_s3_bucket_objects
 
+~> **NOTE:** The `aws_s3_bucket_objects` data source is DEPRECATED and will be removed in a future version! Use `aws_s3_objects` instead, where new features and fixes will be added.
+
 ~> **NOTE on `max_keys`:** Retrieving very large numbers of keys can adversely affect Terraform's performance.
 
-The bucket-objects data source returns keys (i.e., file names) and other metadata about objects in an S3 bucket.
+The objects data source returns keys (i.e., file names) and other metadata about objects in an S3 bucket.
 
 ## Example Usage
 
@@ -21,7 +23,7 @@ data "aws_s3_bucket_objects" "my_objects" {
   bucket = "ourcorp"
 }
 
-data "aws_s3_bucket_object" "object_info" {
+data "aws_s3_object" "object_info" {
   count  = length(data.aws_s3_bucket_objects.my_objects.keys)
   key    = element(data.aws_s3_bucket_objects.my_objects.keys, count.index)
   bucket = data.aws_s3_bucket_objects.my_objects.bucket

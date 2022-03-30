@@ -356,7 +356,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Kinesis Analytics Application can be imported by using ARN, e.g.
+Kinesis Analytics Application can be imported by using ARN, e.g.,
 
 ```
 $ terraform import aws_kinesis_analytics_application.example arn:aws:kinesisanalytics:us-west-2:1234567890:application/example

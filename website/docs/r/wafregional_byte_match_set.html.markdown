@@ -59,7 +59,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WAF Regional Byte Match Set can be imported using the id, e.g.
+WAF Regional Byte Match Set can be imported using the id, e.g.,
 
 ```
 $ terraform import aws_wafregional_byte_match_set.byte_set a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

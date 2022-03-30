@@ -36,7 +36,7 @@ resource "aws_default_network_acl" "default" {
     protocol   = -1
     rule_no    = 100
     action     = "allow"
-    cidr_block = aws_vpc.mainvpc.cidr_block
+    cidr_block = "0.0.0.0/0"
     from_port  = 0
     to_port    = 0
   }
@@ -163,7 +163,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Default Network ACLs can be imported using the `id`, e.g.
+Default Network ACLs can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_default_network_acl.sample acl-7aaabd18

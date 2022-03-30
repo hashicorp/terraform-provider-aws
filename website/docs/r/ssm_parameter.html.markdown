@@ -57,7 +57,7 @@ resource "aws_ssm_parameter" "secret" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the parameter. If the name contains a path (e.g. any forward slashes (`/`)), it must be fully qualified with a leading forward slash (`/`). For additional requirements and constraints, see the [AWS SSM User Guide](https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-parameter-name-constraints.html).
+* `name` - (Required) The name of the parameter. If the name contains a path (e.g., any forward slashes (`/`)), it must be fully qualified with a leading forward slash (`/`). For additional requirements and constraints, see the [AWS SSM User Guide](https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-parameter-name-constraints.html).
 * `type` - (Required) The type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
 * `value` - (Required) The value of the parameter. This value is always marked as sensitive in the Terraform plan output, regardless of `type`. In Terraform CLI version 0.15 and later, this may require additional configuration handling for certain scenarios. For more information, see the [Terraform v0.15 Upgrade Guide](https://www.terraform.io/upgrade-guides/0-15.html#sensitive-output-values).
 * `description` - (Optional) The description of the parameter.
@@ -83,7 +83,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SSM Parameters can be imported using the `parameter store name`, e.g.
+SSM Parameters can be imported using the `parameter store name`, e.g.,
 
 ```
 $ terraform import aws_ssm_parameter.my_param /my_path/my_paramname

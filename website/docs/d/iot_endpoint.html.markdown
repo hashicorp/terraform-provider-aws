@@ -36,7 +36,7 @@ resource "kubernetes_pod" "agent" {
 
 ## Argument Reference
 
-* `endpoint_type` - (Optional) Endpoint type. Valid values: `iot:CredentialProvider`, `iot:Data`, `iot:Data-ATS`, `iot:Job`.
+* `endpoint_type` - (Optional) Endpoint type. Valid values: `iot:CredentialProvider`, `iot:Data`, `iot:Data-ATS`, `iot:Jobs`.
 
 ## Attributes Reference
 
@@ -45,4 +45,4 @@ resource "kubernetes_pod" "agent" {
     * `iot:CredentialsProvider`: `IDENTIFIER.credentials.iot.REGION.amazonaws.com`
     * `iot:Data`: `IDENTIFIER.iot.REGION.amazonaws.com`
     * `iot:Data-ATS`: `IDENTIFIER-ats.iot.REGION.amazonaws.com`
-    * `iot:Job`: `IDENTIFIER.jobs.iot.REGION.amazonaws.com`
+    * `iot:Jobs`: `IDENTIFIER.jobs.iot.REGION.amazonaws.com`

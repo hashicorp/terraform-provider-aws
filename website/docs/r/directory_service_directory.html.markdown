@@ -165,7 +165,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DirectoryService directories can be imported using the directory `id`, e.g.
+DirectoryService directories can be imported using the directory `id`, e.g.,
 
 ```
 $ terraform import aws_directory_service_directory.sample d-926724cf57

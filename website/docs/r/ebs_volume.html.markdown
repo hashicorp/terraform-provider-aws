@@ -47,13 +47,13 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The volume ID (e.g. vol-59fcb34e).
-* `arn` - The volume ARN (e.g. arn:aws:ec2:us-east-1:0123456789012:volume/vol-59fcb34e).
+* `id` - The volume ID (e.g., vol-59fcb34e).
+* `arn` - The volume ARN (e.g., arn:aws:ec2:us-east-1:0123456789012:volume/vol-59fcb34e).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-EBS Volumes can be imported using the `id`, e.g.
+EBS Volumes can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_ebs_volume.id vol-049df61146c4d7901

@@ -44,13 +44,13 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The AWS member account can be imported by using the `account_id`, e.g.
+The AWS member account can be imported by using the `account_id`, e.g.,
 
 ```
 $ terraform import aws_organizations_account.my_org 111111111111
 ```
 
-Certain resource arguments, like `role_name`, do not have an Organizations API method for reading the information after account creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.
+Certain resource arguments, like `role_name`, do not have an Organizations API method for reading the information after account creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.,
 
 ```terraform
 resource "aws_organizations_account" "account" {

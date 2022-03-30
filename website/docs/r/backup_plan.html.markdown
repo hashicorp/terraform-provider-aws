@@ -20,6 +20,10 @@ resource "aws_backup_plan" "example" {
     rule_name         = "tf_example_backup_rule"
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
+
+    lifecycle {
+      delete_after = 14
+    }
   }
 
   advanced_backup_setting {
@@ -82,7 +86,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Backup Plan can be imported using the `id`, e.g.
+Backup Plan can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_backup_plan.test <id>

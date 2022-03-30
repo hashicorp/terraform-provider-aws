@@ -1,47 +1,75 @@
 archives:
   - files:
-      - none*
+      # Ensure only built binary is archived
+      - 'none*'
     format: zip
     name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
 before:
   hooks:
-    - go mod download
+    - 'go mod download'
 builds:
-  - binary: '{{ .ProjectName }}_{{ .Version }}'
+  - # Binary naming only required for Terraform CLI 0.12
+    binary: '{{ .ProjectName }}_v{{ .Version }}_x5'
+    env:
+      - CGO_ENABLED=0
     flags:
       - -trimpath
-    goarch:
-      - '386'
-      - amd64
-      - arm
-      - arm64
     goos:
       - darwin
       - freebsd
       - linux
       - windows
+    goarch:
+      - '386'
+      - amd64
+      - arm
+      - arm64
     ignore:
-      - goarch: '386'
-        goos: darwin
+      - goarch: arm
+        goos: windows
+      - goarch: arm64
+        goos: freebsd
+      - goarch: arm64
+        goos: windows
     ldflags:
       - -s -w -X version.ProviderVersion={{.Version}}
     mod_timestamp: '{{ .CommitTimestamp }}'
-changelog:
-  skip: true
 checksum:
-  name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
   algorithm: sha256
-env:
-  - CGO_ENABLED=0
+  extra_files:
+    - glob: 'terraform-registry-manifest.json'
+      name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
+  name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
+publishers:
+  - checksum: true
+    # Terraform CLI 0.10 - 0.11 perform discovery via HTTP headers on releases.hashicorp.com
+    # For providers which have existed since those CLI versions, exclude
+    # discovery by setting the protocol version headers to 5.
+    cmd: hc-releases upload-file {{ abs .ArtifactPath }} -header=x-terraform-protocol-version=5 -header=x-terraform-protocol-versions=5.0 -upload-name={{ .ArtifactName }}
+    env:
+      - AWS_ACCESS_KEY_ID={{ .Env.AWS_ACCESS_KEY_ID }}
+      - AWS_SECRET_ACCESS_KEY={{ .Env.AWS_SECRET_ACCESS_KEY }}
+      - AWS_SESSION_TOKEN={{ .Env.AWS_SESSION_TOKEN }}
+    extra_files:
+      - glob: 'terraform-registry-manifest.json'
+        name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
+    name: hc-releases
+    signature: true
 release:
-  disable: true
+  extra_files:
+    - glob: 'terraform-registry-manifest.json'
+      name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
+  ids:
+    - none
 signs:
-  - artifacts: checksum
-    args:
-      - "--batch"
-      - "--local-user"
-      - "{{ .Env.GPG_FINGERPRINT }}" # set this environment variable for your signing key
-      - "--output"
-      - "${signature}"
-      - "--detach-sign"
-      - "${artifact}"
+  - args: ["sign", "--dearmor", "--file", "${artifact}", "--out", "${signature}"]
+    artifacts: checksum
+    cmd: signore
+    signature: ${artifact}.sig
+  - args: ["sign", "--dearmor", "--file", "${artifact}", "--out", "${signature}"]
+    artifacts: checksum
+    cmd: signore
+    id: key-id
+    signature: ${artifact}.72D7468F.sig
+snapshot:
+  name_template: "{{ .Tag }}-next"

@@ -46,7 +46,7 @@ Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
 
 ## Import
 
- Route 53 Resolver query logging configurations can be imported using the Route 53 Resolver query logging configuration ID, e.g.
+ Route 53 Resolver query logging configurations can be imported using the Route 53 Resolver query logging configuration ID, e.g.,
 
 ```
 $ terraform import aws_route53_resolver_query_log_config.example rqlc-92edc3b1838248bf

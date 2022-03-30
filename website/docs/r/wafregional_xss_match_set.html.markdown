@@ -51,7 +51,7 @@ The following arguments are supported:
 #### `field_to_match`
 
 * `data` - (Optional) When the value of `type` is `HEADER`, enter the name of the header that you want the WAF to search, for example, `User-Agent` or `Referer`. If the value of `type` is any other value, omit `data`.
-* `type` - (Required) The part of the web request that you want AWS WAF to search for a specified string. e.g. `HEADER` or `METHOD`
+* `type` - (Required) The part of the web request that you want AWS WAF to search for a specified stringE.g., `HEADER` or `METHOD`
 
 ## Attributes Reference
 
@@ -61,7 +61,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AWS WAF Regional XSS Match can be imported using the `id`, e.g.
+AWS WAF Regional XSS Match can be imported using the `id`, e.g.,
 
 ```sh
 $ terraform import aws_wafregional_xss_match_set.example 12345abcde

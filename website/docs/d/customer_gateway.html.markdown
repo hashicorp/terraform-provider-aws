@@ -47,8 +47,9 @@ The following arguments are supported:
 In addition to the arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the customer gateway.
-* `bgp_asn` - (Optional) The gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN).
-* `device_name` - (Optional) A name for the customer gateway device.
-* `ip_address` - (Optional) The IP address of the gateway's Internet-routable external interface.
+* `bgp_asn` - The gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN).
+* `certificate_arn` - The Amazon Resource Name (ARN) for the customer gateway certificate.
+* `device_name` - A name for the customer gateway device.
+* `ip_address` - The IP address of the gateway's Internet-routable external interface.
 * `tags` - Map of key-value pairs assigned to the gateway.
-* `type` - (Optional) The type of customer gateway. The only type AWS supports at this time is "ipsec.1".
+* `type` - The type of customer gateway. The only type AWS supports at this time is "ipsec.1".

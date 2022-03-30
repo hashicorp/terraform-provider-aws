@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_instance: Add `placement_partition_number` argument
+```
+
+```release-note:enhancement
+data-source/aws_instance: Add `placement_partition_number` attribute
+```

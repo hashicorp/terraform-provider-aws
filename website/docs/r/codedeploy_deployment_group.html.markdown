@@ -359,7 +359,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeDeploy Deployment Groups can be imported by their `app_name`, a colon, and `deployment_group_name`, e.g.
+CodeDeploy Deployment Groups can be imported by their `app_name`, a colon, and `deployment_group_name`, e.g.,
 
 ```
 $ terraform import aws_codedeploy_deployment_group.example my-application:my-deployment-group

@@ -174,7 +174,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-VPC Peering Connection Options can be imported using the `vpc peering id`, e.g.
+VPC Peering Connection Options can be imported using the `vpc peering id`, e.g.,
 
 ```
 $ terraform import aws_vpc_peering_connection_options.foo pcx-111aaa111

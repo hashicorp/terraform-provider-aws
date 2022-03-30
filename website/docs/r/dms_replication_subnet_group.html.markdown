@@ -50,7 +50,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Replication subnet groups can be imported using the `replication_subnet_group_id`, e.g.
+Replication subnet groups can be imported using the `replication_subnet_group_id`, e.g.,
 
 ```
 $ terraform import aws_dms_replication_subnet_group.test test-dms-replication-subnet-group-tf

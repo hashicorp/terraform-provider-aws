@@ -60,7 +60,7 @@ No additional attributes are exported.
 
 ## Import
 
-Directory Service Log Subscriptions can be imported using the directory id, e.g.
+Directory Service Log Subscriptions can be imported using the directory id, e.g.,
 
 ```
 $ terraform import aws_directory_service_log_subscription.msad d-1234567890

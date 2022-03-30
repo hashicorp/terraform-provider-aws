@@ -111,7 +111,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EKS add-on can be imported using the `cluster_name` and `addon_name` separated by a colon (`:`), e.g.
+EKS add-on can be imported using the `cluster_name` and `addon_name` separated by a colon (`:`), e.g.,
 
 ```
 $ terraform import aws_eks_addon.my_eks_addon my_cluster_name:my_addon_name

@@ -187,10 +187,10 @@ A `production_branch` block supports the following attributes:
 
 ## Import
 
-Amplify App can be imported using Amplify App ID (appId), e.g.
+Amplify App can be imported using Amplify App ID (appId), e.g.,
 
 ```
 $ terraform import aws_amplify_app.example d2ypk4k47z8u6
 ```
 
-App ID can be obtained from App ARN (e.g. `arn:aws:amplify:us-east-1:12345678:apps/d2ypk4k47z8u6`).
+App ID can be obtained from App ARN (e.g., `arn:aws:amplify:us-east-1:12345678:apps/d2ypk4k47z8u6`).

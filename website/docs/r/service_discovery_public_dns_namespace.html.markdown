@@ -38,7 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Service Discovery Public DNS Namespace can be imported using the namespace ID, e.g.
+Service Discovery Public DNS Namespace can be imported using the namespace ID, e.g.,
 
 ```
 $ terraform import aws_service_discovery_public_dns_namespace.example 0123456789

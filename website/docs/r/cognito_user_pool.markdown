@@ -76,7 +76,7 @@ The following arguments are optional:
 * `email_configuration` - (Optional) Configuration block for configuring email. [Detailed below](#email_configuration).
 * `email_verification_message` - (Optional) String representing the email verification message. Conflicts with `verification_message_template` configuration block `email_message` argument.
 * `email_verification_subject` - (Optional) String representing the email verification subject. Conflicts with `verification_message_template` configuration block `email_subject` argument.
-* `lambda_config` - (Optional) Configuration block for the AWS Lambda triggers associated with the user pool. [Detailed below](#lambda_configuration).
+* `lambda_config` - (Optional) Configuration block for the AWS Lambda triggers associated with the user pool. [Detailed below](#lambda_config).
 * `mfa_configuration` - (Optional) Multi-Factor Authentication (MFA) configuration for the User Pool. Defaults of `OFF`. Valid values are `OFF` (MFA Tokens are not required), `ON` (MFA is required for all users to sign in; requires at least one of `sms_configuration` or `software_token_mfa_configuration` to be configured), or `OPTIONAL` (MFA Will be required only for individual users who have MFA Enabled; requires at least one of `sms_configuration` or `software_token_mfa_configuration` to be configured).
 * `password_policy` - (Optional) Configuration blocked for information about the user pool password policy. [Detailed below](#password_policy).
 * `schema` - (Optional) Configuration block for the schema attributes of a user pool. [Detailed below](#schema). Schema attributes from the [standard attribute set](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes) only need to be specified if they are different from the default configuration. Attributes can be added, but not modified or removed. Maximum of 50 attributes.
@@ -116,7 +116,7 @@ The following arguments are optional:
 
 * `configuration_set` - (Optional) Email configuration set name from SES.
 * `email_sending_account` - (Optional) Email delivery method to use. `COGNITO_DEFAULT` for the default email functionality built into Cognito or `DEVELOPER` to use your Amazon SES configuration.
-* `from_email_address` - (Optional) Sender’s email address or sender’s display name with their email address (e.g. `john@example.com`, `John Smith <john@example.com>` or `\"John Smith Ph.D.\" <john@example.com>`). Escaped double quotes are required around display names that contain certain characters as specified in [RFC 5322](https://tools.ietf.org/html/rfc5322).
+* `from_email_address` - (Optional) Sender’s email address or sender’s display name with their email address (e.g., `john@example.com`, `John Smith <john@example.com>` or `\"John Smith Ph.D.\" <john@example.com>`). Escaped double quotes are required around display names that contain certain characters as specified in [RFC 5322](https://tools.ietf.org/html/rfc5322).
 * `reply_to_email_address` - (Optional) REPLY-TO email address.
 * `source_arn` - (Optional) ARN of the SES verified email identity to to use. Required if `email_sending_account` is set to `DEVELOPER`.
 
@@ -143,7 +143,7 @@ The following arguments are optional:
 
 #### custom_sms_sender
 
-* `lambda_arn` - (Required) he Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to send SMS notifications to users.
+* `lambda_arn` - (Required) The Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to send SMS notifications to users.
 * `lambda_version` - (Required) The Lambda version represents the signature of the "request" attribute in the "event" information Amazon Cognito passes to your custom SMS Lambda function. The only supported value is `V1_0`.
 
 ### password_policy
@@ -157,7 +157,7 @@ The following arguments are optional:
 
 ### schema
 
-~> **NOTE:** When defining an `attribute_data_type` of `String` or `Number`, the respective attribute constraints configuration block (e.g `string_attribute_constraints` or `number_attribute_contraints`) is **required** to prevent recreation of the Terraform resource. This requirement is true for both standard (e.g. name, email) and custom schema attributes.
+~> **NOTE:** When defining an `attribute_data_type` of `String` or `Number`, the respective attribute constraints configuration block (e.g `string_attribute_constraints` or `number_attribute_constraints`) is **required** to prevent recreation of the Terraform resource. This requirement is true for both standard (e.g., name, email) and custom schema attributes.
 
 * `attribute_data_type` - (Required) Attribute data type. Must be one of `Boolean`, `Number`, `String`, `DateTime`.
 * `developer_only_attribute` - (Optional) Whether the attribute type is developer only.
@@ -244,8 +244,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cognito User Pools can be imported using the `id`, e.g.
+Cognito User Pools can be imported using the `id`, e.g.,
 
 ```
-$ terraform import aws_cognito_user_pool.pool <id>
+$ terraform import aws_cognito_user_pool.pool us-west-2_abc123
 ```

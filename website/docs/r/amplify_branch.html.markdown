@@ -53,7 +53,7 @@ resource "aws_amplify_branch" "master" {
 
 ### Notifications
 
-Amplify Console uses CloudWatch Events and SNS for email notifications.  To implement the same functionality, you need to set `enable_notification` in a `aws_amplify_branch` resource, as well as creating a CloudWatch Events Rule, a SNS topic, and SNS subscriptions.
+Amplify Console uses EventBridge (formerly known as CloudWatch Events) and SNS for email notifications.  To implement the same functionality, you need to set `enable_notification` in a `aws_amplify_branch` resource, as well as creating an EventBridge Rule, an SNS topic, and SNS subscriptions.
 
 ```terraform
 resource "aws_amplify_app" "example" {
@@ -68,7 +68,7 @@ resource "aws_amplify_branch" "master" {
   enable_notification = true
 }
 
-# CloudWatch Events Rule for Amplify notifications
+# EventBridge Rule for Amplify notifications
 
 resource "aws_cloudwatch_event_rule" "amplify_app_master" {
   name        = "amplify-${aws_amplify_app.app.id}-${aws_amplify_branch.master.branch_name}-branch-notification"
@@ -162,7 +162,7 @@ The following arguments are supported:
 * `display_name` - (Optional) The display name for a branch. This is used as the default domain prefix.
 * `enable_auto_build` - (Optional) Enables auto building for the branch.
 * `enable_basic_auth` - (Optional) Enables basic authorization for the branch.
-* `enable_notifications` - (Optional) Enables notifications for the branch.
+* `enable_notification` - (Optional) Enables notifications for the branch.
 * `enable_performance_mode` - (Optional) Enables performance mode for the branch.
 * `enable_pull_request_preview` - (Optional) Enables pull request previews for this branch.
 * `environment_variables` - (Optional) The environment variables for the branch.
@@ -185,7 +185,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Amplify branch can be imported using `app_id` and `branch_name`, e.g.
+Amplify branch can be imported using `app_id` and `branch_name`, e.g.,
 
 ```
 $ terraform import aws_amplify_branch.master d2ypk4k47z8u6/master

@@ -45,7 +45,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DB Subnet groups can be imported using the `name`, e.g.
+DB Subnet groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_db_subnet_group.default production-subnet-group

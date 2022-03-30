@@ -61,7 +61,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Redshift Parameter Groups can be imported using the `name`, e.g.
+Redshift Parameter Groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_redshift_parameter_group.paramgroup1 parameter-group-test-terraform
