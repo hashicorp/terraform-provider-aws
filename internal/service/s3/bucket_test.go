@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -219,6 +220,43 @@ func TestAccS3Bucket_Basic_forceDestroyWithObjectLockEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					testAccCheckBucketAddObjectsWithLegalHold(resourceName, "data.txt", "prefix/more_data.txt"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Basic_acceleration(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withAcceleration(bucketName, s3.BucketAccelerateStatusEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "acceleration_status", s3.BucketAccelerateStatusEnabled),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+			{
+				Config: testAccBucketConfig_withAcceleration(bucketName, s3.BucketAccelerateStatusSuspended),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "acceleration_status", s3.BucketAccelerateStatusSuspended),
 				),
 			},
 		},
@@ -1273,6 +1311,15 @@ resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
 }
 `, bucketName)
+}
+
+func testAccBucketConfig_withAcceleration(bucketName, acceleration string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket              = %[1]q
+  acceleration_status = %[2]q
+}
+`, bucketName, acceleration)
 }
 
 func testAccBucketConfig_withACL(bucketName, acl string) string {
