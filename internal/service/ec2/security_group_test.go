@@ -1057,6 +1057,7 @@ func TestAccEC2SecurityGroup_ruleGathering(t *testing.T) {
 func TestAccEC2SecurityGroup_forceRevokeRulesTrue(t *testing.T) {
 	var primary ec2.SecurityGroup
 	var secondary ec2.SecurityGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.primary"
 	resourceName2 := "aws_security_group.secondary"
 
@@ -1075,7 +1076,7 @@ func TestAccEC2SecurityGroup_forceRevokeRulesTrue(t *testing.T) {
 			// create the configuration with 2 security groups, then create a
 			// dependency cycle such that they cannot be deleted
 			{
-				Config: testAccSecurityGroupConfig_revoke_base,
+				Config: testAccSecurityGroupRevokeBaseConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &primary),
 					testAccCheckSecurityGroupExists(resourceName2, &secondary),
@@ -1092,14 +1093,13 @@ func TestAccEC2SecurityGroup_forceRevokeRulesTrue(t *testing.T) {
 			// groups removed. Terraform tries to destroy them but cannot. Expect a
 			// DependencyViolation error
 			{
-				Config:      testAccSecurityGroupConfig_revoke_base_removed,
+				Config:      testAccSecurityGroupRevokeBaseRemovedConfig(rName),
 				ExpectError: regexp.MustCompile("DependencyViolation"),
 			},
 			// Restore the config (a no-op plan) but also remove the dependencies
 			// between the groups with testRemoveCycle
 			{
-				Config: testAccSecurityGroupConfig_revoke_base,
-				// ExpectError: regexp.MustCompile("DependencyViolation"),
+				Config: testAccSecurityGroupRevokeBaseConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &primary),
 					testAccCheckSecurityGroupExists(resourceName2, &secondary),
@@ -1108,7 +1108,7 @@ func TestAccEC2SecurityGroup_forceRevokeRulesTrue(t *testing.T) {
 			},
 			// Again try to apply the config with the sgs removed; it should work
 			{
-				Config: testAccSecurityGroupConfig_revoke_base_removed,
+				Config: testAccSecurityGroupRevokeBaseRemovedConfig(rName),
 			},
 			////
 			// now test with revoke_rules_on_delete
@@ -1118,7 +1118,7 @@ func TestAccEC2SecurityGroup_forceRevokeRulesTrue(t *testing.T) {
 			// configuration, each Security Group has `revoke_rules_on_delete`
 			// specified, and should delete with no issue
 			{
-				Config: testAccSecurityGroupConfig_revoke_true,
+				Config: testAccSecurityGroupRevokeTrueConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &primary),
 					testAccCheckSecurityGroupExists(resourceName2, &secondary),
@@ -1128,7 +1128,7 @@ func TestAccEC2SecurityGroup_forceRevokeRulesTrue(t *testing.T) {
 			// Again try to apply the config with the sgs removed; it should work,
 			// because we've told the SGs to forcefully revoke their rules first
 			{
-				Config: testAccSecurityGroupConfig_revoke_base_removed,
+				Config: testAccSecurityGroupRevokeBaseRemovedConfig(rName),
 			},
 		},
 	})
@@ -1137,6 +1137,7 @@ func TestAccEC2SecurityGroup_forceRevokeRulesTrue(t *testing.T) {
 func TestAccEC2SecurityGroup_forceRevokeRulesFalse(t *testing.T) {
 	var primary ec2.SecurityGroup
 	var secondary ec2.SecurityGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.primary"
 	resourceName2 := "aws_security_group.secondary"
 
@@ -1157,7 +1158,7 @@ func TestAccEC2SecurityGroup_forceRevokeRulesFalse(t *testing.T) {
 			// Groups are configured to explicitly not revoke rules on delete,
 			// `revoke_rules_on_delete = false`
 			{
-				Config: testAccSecurityGroupConfig_revoke_false,
+				Config: testAccSecurityGroupRevokeFalseConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &primary),
 					testAccCheckSecurityGroupExists(resourceName2, &secondary),
@@ -1175,13 +1176,13 @@ func TestAccEC2SecurityGroup_forceRevokeRulesFalse(t *testing.T) {
 			// Terraform tries to destroy them but cannot. Expect a
 			// DependencyViolation error
 			{
-				Config:      testAccSecurityGroupConfig_revoke_base_removed,
+				Config:      testAccSecurityGroupRevokeBaseRemovedConfig(rName),
 				ExpectError: regexp.MustCompile("DependencyViolation"),
 			},
 			// Restore the config (a no-op plan) but also remove the dependencies
 			// between the groups with testRemoveCycle
 			{
-				Config: testAccSecurityGroupConfig_revoke_false,
+				Config: testAccSecurityGroupRevokeFalseConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &primary),
 					testAccCheckSecurityGroupExists(resourceName2, &secondary),
@@ -1190,7 +1191,7 @@ func TestAccEC2SecurityGroup_forceRevokeRulesFalse(t *testing.T) {
 			},
 			// Again try to apply the config with the sgs removed; it should work
 			{
-				Config: testAccSecurityGroupConfig_revoke_base_removed,
+				Config: testAccSecurityGroupRevokeBaseRemovedConfig(rName),
 			},
 		},
 	})
@@ -3020,113 +3021,115 @@ resource "aws_security_group" "test" {
 }
 `
 
-const testAccSecurityGroupConfig_revoke_base_removed = `
-resource "aws_vpc" "sg-race-revoke" {
+func testAccSecurityGroupRevokeBaseRemovedConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-revoke"
+    Name = %[1]q
   }
 }
-`
+`, rName)
+}
 
-const testAccSecurityGroupConfig_revoke_base = `
-resource "aws_vpc" "sg-race-revoke" {
+func testAccSecurityGroupRevokeBaseConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-revoke"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "primary" {
-  name        = "tf-acc-sg-race-revoke-primary"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.sg-race-revoke.id
+  name   = "%[1]s-primary"
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-revoke-test-primary"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "secondary" {
-  name        = "tf-acc-sg-race-revoke-secondary"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.sg-race-revoke.id
+  name   = "%[1]s-secondary"
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-revoke-test-secondary"
+    Name = %[1]q
   }
 }
-`
+`, rName)
+}
 
-const testAccSecurityGroupConfig_revoke_false = `
-resource "aws_vpc" "sg-race-revoke" {
+func testAccSecurityGroupRevokeFalseConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-revoke"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "primary" {
-  name        = "tf-acc-sg-race-revoke-primary"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.sg-race-revoke.id
+  name   = "%[1]s-primary"
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-revoke-test-primary"
+    Name = %[1]q
   }
 
   revoke_rules_on_delete = false
 }
 
 resource "aws_security_group" "secondary" {
-  name        = "tf-acc-sg-race-revoke-secondary"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.sg-race-revoke.id
+  name   = "%[1]s-secondary"
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-revoke-test-secondary"
+    Name = %[1]q
   }
 
   revoke_rules_on_delete = false
 }
-`
+`, rName)
+}
 
-const testAccSecurityGroupConfig_revoke_true = `
-resource "aws_vpc" "sg-race-revoke" {
+func testAccSecurityGroupRevokeTrueConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-revoke"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "primary" {
-  name        = "tf-acc-sg-race-revoke-primary"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.sg-race-revoke.id
+  name   = "%[1]s-primary"
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-revoke-test-primary"
+    Name = %[1]q
   }
 
   revoke_rules_on_delete = true
 }
 
 resource "aws_security_group" "secondary" {
-  name        = "tf-acc-sg-race-revoke-secondary"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.sg-race-revoke.id
+  name   = "%[1]s-secondary"
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-revoke-test-secondary"
+    Name = %[1]q
   }
 
   revoke_rules_on_delete = true
 }
-`
+`, rName)
+}
 
 const testAccSecurityGroupChangeConfig = `
 resource "aws_vpc" "foo" {
