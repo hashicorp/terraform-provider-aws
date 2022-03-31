@@ -36,6 +36,10 @@ Configuring with both will cause inconsistencies and may overwrite configuration
 or with the deprecated parameter `logging` in the resource `aws_s3_bucket`.
 Configuring with both will cause inconsistencies and may overwrite configuration.
 
+~> **NOTE on S3 Bucket Versioning Configuration:** S3 Bucket versioning can be configured in either the standalone resource [`aws_s3_bucket_versioning`](s3_bucket_versioning.html.markdown)
+or with the deprecated parameter `versioning` in the resource `aws_s3_bucket`.
+Configuring with both will cause inconsistencies and may overwrite configuration.
+
 ## Example Usage
 
 ### Private Bucket w/ Tags
@@ -83,8 +87,19 @@ resource "aws_s3_bucket" "b" {
 
 ### Using versioning
 
-The `versioning` argument is read-only as of version 4.0 of the Terraform AWS Provider.
-See the [`aws_s3_bucket_versioning` resource](s3_bucket_versioning.html.markdown) for configuration details.
+-> **NOTE:** The parameter `versioning` is deprecated.
+Use the resource [`aws_s3_bucket_versioning`](s3_bucket_versioning.html.markdown) instead.
+
+```terraform
+resource "aws_s3_bucket" "b" {
+  bucket = "my-tf-test-bucket"
+  acl    = "private"
+
+  versioning {
+    enabled = true
+  }
+}
+```
 
 ### Enable Logging
 
@@ -244,6 +259,7 @@ The following arguments are supported:
   Use the resource [`aws_s3_bucket_logging`](s3_bucket_logging.html.markdown) instead.
 * `object_lock_enabled` - (Optional, Default:`false`, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled.
 * `object_lock_configuration` - (Optional) A configuration of [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html). See [Object Lock Configuration](#object-lock-configuration) below.
+* `versioning` - (Optional, **Deprecated**) A configuration of the [S3 bucket versioning state](https://docs.aws.amazon.com/AmazonS3/latest/dev/Versioning.html). See [Versioning](#versioning) below for details. Terraform will only perform drift detection if a configuration value is provided. Use the resource [`aws_s3_bucket_versioning`](s3_bucket_versioning.html.markdown) instead.
 * `tags` - (Optional) A map of tags to assign to the bucket. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### CORS Rule
@@ -336,6 +352,15 @@ The `object_lock_configuration` configuration block supports the following argum
 
 * `object_lock_enabled` - (Optional, **Deprecated**) Indicates whether this bucket has an Object Lock configuration enabled. Valid value is `Enabled`. Use the top-level argument `object_lock_enabled` instead.
 
+### Versioning
+
+~> **NOTE:** Currently, changes to the `versioning` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes of versioning state to an S3 bucket, use the `aws_s3_bucket_versioning` resource instead. If you use `versioning` on an `aws_s3_bucket`, Terraform will assume management over the versioning state of the S3 bucket, treating additional versioning state changes as drift. For this reason, `versioning` cannot be mixed with the external `aws_s3_bucket_versioning` resource for a given S3 bucket.
+
+The `versioning` configuration block supports the following arguments:
+
+* `enabled` - (Optional) Enable versioning. Once you version-enable a bucket, it can never return to an unversioned state. You can, however, suspend versioning on that bucket.
+* `mfa_delete` - (Optional) Enable MFA delete for either `Change the versioning state of your bucket` or `Permanently delete an object version`. Default is `false`. This cannot be used to toggle this setting but is available to allow managed buckets to reflect the state in AWS
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -388,9 +413,6 @@ In addition to all arguments above, the following attributes are exported:
             * `sse_algorithm` - (required) The server-side encryption algorithm used.
         * `bucket_key_enabled` - (Optional) Whether an [Amazon S3 Bucket Key](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) is used for SSE-KMS.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
-* `versioning` - The [versioning](https://docs.aws.amazon.com/AmazonS3/latest/dev/Versioning.html) state of the bucket.
-    * `enabled` - Whether versioning is enabled.
-    * `mfa_delete` - Whether MFA delete is enabled.
 * `website` - The website configuration, if configured.
     * `error_document` - The name of the error document for the website.
     * `index_document` - The name of the index document for the website.
