@@ -48,12 +48,12 @@ publishers:
     env:
       - HC_RELEASES_HOST={{ .Env.HC_RELEASES_HOST }}
       - HC_RELEASES_KEY={{ .Env.HC_RELEASES_KEY }}
-    dir: "{{ dir .ArtifactPath }}"
     cmd: |
-      hc-releases upload -file={{ .ArtifactName }} -product={{ .ProjectName }} -version={{ .Version }} -header=x-terraform-protocol-version=5 -header=x-terraform-protocol-versions=5.0
-    extra_files:
-      - glob: 'terraform-registry-manifest.json'
-        name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
+      hc-releases upload -product {{ .ProjectName }} -version {{ .Version }} -file={{ .ArtifactPath }} -header=x-terraform-protocol-version=5 -header=x-terraform-protocol-versions=5.0
+    # Commenting this out since these are not supported for launch
+    # extra_files:
+    #   - glob: 'terraform-registry-manifest.json'
+    #     name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
     name: upload
     signature: true
 release:
