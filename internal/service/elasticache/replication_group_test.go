@@ -3148,8 +3148,8 @@ resource "aws_elasticache_replication_group" "test" {
 func testAccReplicationGroupConfig_Validation_GlobalReplicationGroupIdAndNodeType(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
-		testAccElasticacheVpcBaseWithProvider(rName, "test", acctest.ProviderName, 1),
-		testAccElasticacheVpcBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 1),
+		testAccVPCBaseWithProvider(rName, "test", acctest.ProviderName, 1),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 1),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   provider = aws
@@ -3193,8 +3193,8 @@ resource "aws_elasticache_replication_group" "primary" {
 func testAccReplicationGroupConfig_GlobalReplicationGroupId_Basic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
-		testAccElasticacheVpcBaseWithProvider(rName, "test", acctest.ProviderName, 1),
-		testAccElasticacheVpcBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 1),
+		testAccVPCBaseWithProvider(rName, "test", acctest.ProviderName, 1),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 1),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = "%[1]s-s"
@@ -3232,8 +3232,8 @@ resource "aws_elasticache_replication_group" "primary" {
 func testAccReplicationGroupConfig_GlobalReplicationGroupId_Full(rName string, numCacheClusters int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
-		testAccElasticacheVpcBaseWithProvider(rName, "test", acctest.ProviderName, 2),
-		testAccElasticacheVpcBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 2),
+		testAccVPCBaseWithProvider(rName, "test", acctest.ProviderName, 2),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 2),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = "%[1]s-s"
@@ -3284,8 +3284,8 @@ resource "aws_elasticache_replication_group" "primary" {
 func testAccReplicationGroupConfig_GlobalReplicationGroupId_ClusterMode(rName string, primaryReplicaCount, secondaryReplicaCount int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
-		testAccElasticacheVpcBaseWithProvider(rName, "test", acctest.ProviderName, 2),
-		testAccElasticacheVpcBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 2),
+		testAccVPCBaseWithProvider(rName, "test", acctest.ProviderName, 2),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 2),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = "%[1]s-s"
@@ -3334,8 +3334,8 @@ resource "aws_elasticache_replication_group" "primary" {
 func testAccReplicationGroupConfig_GlobalReplicationGroupId_ClusterMode_NumNodeGroupsOnSecondary(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
-		testAccElasticacheVpcBaseWithProvider(rName, "test", acctest.ProviderName, 2),
-		testAccElasticacheVpcBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 2),
+		testAccVPCBaseWithProvider(rName, "test", acctest.ProviderName, 2),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 2),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = "%[1]s-s"
