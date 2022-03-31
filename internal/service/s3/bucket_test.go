@@ -43,7 +43,7 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	region := acctest.Region()
 	hostedZoneID, _ := tfs3.HostedZoneIDForRegion(region)
-	resourceName := "aws_s3_bucket.bucket"
+	resourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -159,7 +159,7 @@ func TestAccS3Bucket_Basic_namePrefix(t *testing.T) {
 }
 
 func TestAccS3Bucket_Basic_forceDestroy(t *testing.T) {
-	resourceName := "aws_s3_bucket.bucket"
+	resourceName := "aws_s3_bucket.test"
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -185,7 +185,7 @@ func TestAccS3Bucket_Basic_forceDestroy(t *testing.T) {
 // to not contain these extra slashes, out-of-band handling and other AWS
 // services may create keys with extra slashes (empty "directory" prefixes).
 func TestAccS3Bucket_Basic_forceDestroyWithEmptyPrefixes(t *testing.T) {
-	resourceName := "aws_s3_bucket.bucket"
+	resourceName := "aws_s3_bucket.test"
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -206,7 +206,7 @@ func TestAccS3Bucket_Basic_forceDestroyWithEmptyPrefixes(t *testing.T) {
 }
 
 func TestAccS3Bucket_Basic_forceDestroyWithObjectLockEnabled(t *testing.T) {
-	resourceName := "aws_s3_bucket.bucket"
+	resourceName := "aws_s3_bucket.test"
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -268,7 +268,7 @@ func TestAccS3Bucket_Basic_acceleration(t *testing.T) {
 // See https://github.com/hashicorp/terraform/pull/2925
 func TestAccS3Bucket_disappears(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	resourceName := "aws_s3_bucket.bucket"
+	resourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -312,7 +312,7 @@ func TestAccS3Bucket_Tags_basic(t *testing.T) {
 }
 
 func TestAccS3Bucket_Tags_withNoSystemTags(t *testing.T) {
-	resourceName := "aws_s3_bucket.bucket"
+	resourceName := "aws_s3_bucket.test"
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -371,7 +371,7 @@ func TestAccS3Bucket_Tags_withNoSystemTags(t *testing.T) {
 }
 
 func TestAccS3Bucket_Tags_withSystemTags(t *testing.T) {
-	resourceName := "aws_s3_bucket.bucket"
+	resourceName := "aws_s3_bucket.test"
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 
 	var stackID string
@@ -456,7 +456,7 @@ func TestAccS3Bucket_Tags_withSystemTags(t *testing.T) {
 }
 
 func TestAccS3Bucket_Tags_ignoreTags(t *testing.T) {
-	resourceName := "aws_s3_bucket.bucket"
+	resourceName := "aws_s3_bucket.test"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -494,6 +494,211 @@ func TestAccS3Bucket_Tags_ignoreTags(t *testing.T) {
 						"Key2":       "BBB",
 						"Key3":       "CCC",
 					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Manage_lifecycleBasic(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withLifecycle(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.#", "6"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.id", "id1"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.prefix", "path1/"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.days", "365"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.date", ""),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.expired_object_delete_marker", "false"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.transition.*", map[string]string{
+						"date":          "",
+						"days":          "30",
+						"storage_class": "STANDARD_IA",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.transition.*", map[string]string{
+						"date":          "",
+						"days":          "60",
+						"storage_class": "INTELLIGENT_TIERING",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.transition.*", map[string]string{
+						"date":          "",
+						"days":          "90",
+						"storage_class": "ONEZONE_IA",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.transition.*", map[string]string{
+						"date":          "",
+						"days":          "120",
+						"storage_class": "GLACIER",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.transition.*", map[string]string{
+						"date":          "",
+						"days":          "210",
+						"storage_class": "DEEP_ARCHIVE",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.1.id", "id2"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.1.prefix", "path2/"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.1.expiration.0.date", "2016-01-12"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.1.expiration.0.days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.1.expiration.0.expired_object_delete_marker", "false"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.2.id", "id3"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.2.prefix", "path3/"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.2.transition.*", map[string]string{
+						"days": "0",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.3.id", "id4"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.3.prefix", "path4/"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.3.tags.tagKey", "tagValue"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.3.tags.terraform", "hashicorp"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.4.id", "id5"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.4.tags.tagKey", "tagValue"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.4.tags.terraform", "hashicorp"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.4.transition.*", map[string]string{
+						"days":          "0",
+						"storage_class": "GLACIER",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.5.id", "id6"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.5.tags.tagKey", "tagValue"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.5.transition.*", map[string]string{
+						"days":          "0",
+						"storage_class": "GLACIER",
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+			},
+			{
+				Config: testAccBucketConfig_Basic(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Manage_lifecycleExpireMarkerOnly(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withLifecycleExpireMarker(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.id", "id1"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.prefix", "path1/"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.date", ""),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.expired_object_delete_marker", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+			},
+			{
+				Config: testAccBucketConfig_Basic(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+				),
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11420
+func TestAccS3Bucket_Manage_lifecycleRuleExpirationEmptyBlock(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withLifecycleRuleExpirationEmptyConfigurationBlock(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+				),
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/15138
+func TestAccS3Bucket_Manage_lifecycleRuleAbortIncompleteMultipartUploadDaysNoExpiration(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withLifecycleRuleAbortIncompleteMultipartUploadDays(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Manage_lifecycleRemove(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withLifecycle(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.#", "6"),
+				),
+			},
+			{
+				Config: testAccBucketConfig_Basic(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					// As Lifecycle Rule is a Computed field, removing them from terraform will not
+					// trigger an update to remove them from the S3 bucket.
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.#", "6"),
 				),
 			},
 		},
@@ -647,7 +852,7 @@ func TestAccS3Bucket_Manage_objectLockWithVersioning_deprecatedEnabled(t *testin
 
 func TestAccS3Bucket_Security_updateACL(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	resourceName := "aws_s3_bucket.bucket"
+	resourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -681,7 +886,7 @@ func TestAccS3Bucket_Security_updateACL(t *testing.T) {
 
 func TestAccS3Bucket_Security_updateGrant(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	resourceName := "aws_s3_bucket.bucket"
+	resourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -741,7 +946,7 @@ func TestAccS3Bucket_Security_updateGrant(t *testing.T) {
 
 func TestAccS3Bucket_Security_aclToGrant(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	resourceName := "aws_s3_bucket.bucket"
+	resourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -771,7 +976,7 @@ func TestAccS3Bucket_Security_aclToGrant(t *testing.T) {
 
 func TestAccS3Bucket_Security_grantToACL(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	resourceName := "aws_s3_bucket.bucket"
+	resourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1496,7 +1701,7 @@ func testAccCheckBucketCheckTags(n string, expectedTags map[string]string) resou
 
 func testAccBucketConfig_Basic(bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 `, bucketName)
@@ -1513,7 +1718,7 @@ resource "aws_s3_bucket" "test" {
 
 func testAccBucketConfig_withACL(bucketName, acl string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
   acl    = %[2]q
 }
@@ -1569,7 +1774,7 @@ func testAccBucketConfig_withGrants(bucketName string) string {
 	return fmt.Sprintf(`
 data "aws_canonical_user_id" "current" {}
 
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
   grant {
@@ -1585,7 +1790,7 @@ func testAccBucketConfig_withUpdatedGrants(bucketName string) string {
 	return fmt.Sprintf(`
 data "aws_canonical_user_id" "current" {}
 
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
   grant {
@@ -1603,15 +1808,172 @@ resource "aws_s3_bucket" "bucket" {
 `, bucketName)
 }
 
+func testAccBucketConfig_withLifecycle(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  acl    = "private"
+
+  lifecycle_rule {
+    id      = "id1"
+    prefix  = "path1/"
+    enabled = true
+
+    expiration {
+      days = 365
+    }
+
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    transition {
+      days          = 60
+      storage_class = "INTELLIGENT_TIERING"
+    }
+
+    transition {
+      days          = 90
+      storage_class = "ONEZONE_IA"
+    }
+
+    transition {
+      days          = 120
+      storage_class = "GLACIER"
+    }
+
+    transition {
+      days          = 210
+      storage_class = "DEEP_ARCHIVE"
+    }
+  }
+
+  lifecycle_rule {
+    id      = "id2"
+    prefix  = "path2/"
+    enabled = true
+
+    expiration {
+      date = "2016-01-12"
+    }
+  }
+
+  lifecycle_rule {
+    id      = "id3"
+    prefix  = "path3/"
+    enabled = true
+
+    transition {
+      days          = 0
+      storage_class = "GLACIER"
+    }
+  }
+
+  lifecycle_rule {
+    id      = "id4"
+    prefix  = "path4/"
+    enabled = true
+
+    tags = {
+      "tagKey"    = "tagValue"
+      "terraform" = "hashicorp"
+    }
+
+    expiration {
+      date = "2016-01-12"
+    }
+  }
+
+  lifecycle_rule {
+    id      = "id5"
+    enabled = true
+
+    tags = {
+      "tagKey"    = "tagValue"
+      "terraform" = "hashicorp"
+    }
+
+    transition {
+      days          = 0
+      storage_class = "GLACIER"
+    }
+  }
+
+  lifecycle_rule {
+    id      = "id6"
+    enabled = true
+
+    tags = {
+      "tagKey" = "tagValue"
+    }
+
+    transition {
+      days          = 0
+      storage_class = "GLACIER"
+    }
+  }
+}
+`, bucketName)
+}
+
+func testAccBucketConfig_withLifecycleExpireMarker(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  acl    = "private"
+
+  lifecycle_rule {
+    id      = "id1"
+    prefix  = "path1/"
+    enabled = true
+
+    expiration {
+      expired_object_delete_marker = "true"
+    }
+  }
+}
+`, bucketName)
+}
+
+func testAccBucketConfig_withLifecycleRuleExpirationEmptyConfigurationBlock(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  lifecycle_rule {
+    enabled = true
+    id      = "id1"
+
+    expiration {}
+  }
+}
+`, rName)
+}
+
+func testAccBucketConfig_withLifecycleRuleAbortIncompleteMultipartUploadDays(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  lifecycle_rule {
+    abort_incomplete_multipart_upload_days = 7
+    enabled                                = true
+    id                                     = "id1"
+  }
+}
+`, rName)
+}
+
 func testAccBucketConfig_withNoTags(bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = false
 }
 
 resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 `, bucketName)
@@ -1619,7 +1981,7 @@ resource "aws_s3_bucket_acl" "test" {
 
 func testAccBucketConfig_withTags(bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = false
 
@@ -1631,7 +1993,7 @@ resource "aws_s3_bucket" "bucket" {
 }
 
 resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 `, bucketName)
@@ -1639,7 +2001,7 @@ resource "aws_s3_bucket_acl" "test" {
 
 func testAccBucketConfig_withUpdatedTags(bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = false
 
@@ -1652,7 +2014,7 @@ resource "aws_s3_bucket" "bucket" {
 }
 
 resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 `, bucketName)
@@ -1824,13 +2186,13 @@ resource "aws_s3_bucket_versioning" "test" {
 
 func testAccBucketConfig_forceDestroy(bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket        = "%s"
   force_destroy = true
 }
 
 resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 `, bucketName)
@@ -1838,7 +2200,7 @@ resource "aws_s3_bucket_acl" "test" {
 
 func testAccBucketConfig_forceDestroyWithObjectLockEnabled(bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket        = "%s"
   force_destroy = true
 
@@ -1846,12 +2208,12 @@ resource "aws_s3_bucket" "bucket" {
 }
 
 resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 
 resource "aws_s3_bucket_versioning" "bucket" {
-  bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.test.id
   versioning_configuration {
     status = "Enabled"
   }
