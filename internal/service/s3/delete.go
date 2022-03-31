@@ -34,28 +34,29 @@ func (self *objectVersionDeleter) DeleteAll(ctx context.Context) error {
 type deleteVersionListIterator struct {
 	Bucket    *string
 	Paginator request.Pagination
+	key       string
 	objects   []*s3.ObjectVersion
 }
 
 func NewDeleteVersionListIterator(conn *s3.S3, bucket, key string) s3manager.BatchDeleteIterator {
-	input := &s3.ListObjectVersionsInput{
-		Bucket: aws.String(bucket),
-	}
-
-	if key != "" {
-		input.Prefix = aws.String(key)
-	}
-
 	return &deleteVersionListIterator{
-		Bucket: input.Bucket,
+		Bucket: aws.String(bucket),
 		Paginator: request.Pagination{
 			NewRequest: func() (*request.Request, error) {
-				inputCopy := *input
-				request, _ := conn.ListObjectVersionsRequest(&inputCopy)
+				input := &s3.ListObjectVersionsInput{
+					Bucket: aws.String(bucket),
+				}
+
+				if key != "" {
+					input.Prefix = aws.String(key)
+				}
+
+				request, _ := conn.ListObjectVersionsRequest(input)
 
 				return request, nil
 			},
 		},
+		key: key,
 	}
 }
 
@@ -65,7 +66,19 @@ func (iter *deleteVersionListIterator) Next() bool {
 	}
 
 	if len(iter.objects) == 0 && iter.Paginator.Next() {
-		iter.objects = iter.Paginator.Page().(*s3.ListObjectVersionsOutput).Versions
+		if iter.key == "" {
+			iter.objects = iter.Paginator.Page().(*s3.ListObjectVersionsOutput).Versions
+		} else {
+			// ListObjectVersions uses Prefix as an argument but we use Key.
+			// Ignore any object versions that do not have the required Key.
+			for _, v := range iter.Paginator.Page().(*s3.ListObjectVersionsOutput).Versions {
+				if iter.key != aws.StringValue(v.Key) {
+					continue
+				}
+
+				iter.objects = append(iter.objects, v)
+			}
+		}
 	}
 
 	return len(iter.objects) > 0
