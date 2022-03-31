@@ -1199,6 +1199,7 @@ func TestAccEC2SecurityGroup_forceRevokeRulesFalse(t *testing.T) {
 
 func TestAccEC2SecurityGroup_ipv6(t *testing.T) {
 	var group ec2.SecurityGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1208,11 +1209,10 @@ func TestAccEC2SecurityGroup_ipv6(t *testing.T) {
 		CheckDestroy: testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityGroupIPv6Config,
+				Config: testAccSecurityGroupIPv6Config(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "name", "terraform_acceptance_test_example"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Used in the terraform acceptance tests"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						"cidr_blocks.#":      "0",
@@ -1443,6 +1443,7 @@ func TestAccEC2SecurityGroup_multiIngress(t *testing.T) {
 
 func TestAccEC2SecurityGroup_change(t *testing.T) {
 	var group ec2.SecurityGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1452,7 +1453,7 @@ func TestAccEC2SecurityGroup_change(t *testing.T) {
 		CheckDestroy: testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityGroupConfig,
+				Config: testAccSecurityGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
 				),
@@ -1464,10 +1465,45 @@ func TestAccEC2SecurityGroup_change(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 			{
-				Config: testAccSecurityGroupChangeConfig,
+				Config: testAccSecurityGroupChangeConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
-					testAccCheckSecurityGroupAttributesChanged(&group),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+						"cidr_blocks.#":      "1",
+						"cidr_blocks.0":      "10.0.0.0/8",
+						"description":        "",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "8000",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"cidr_blocks.#":      "1",
+						"cidr_blocks.0":      "10.0.0.0/8",
+						"description":        "",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "9000",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"cidr_blocks.#":      "2",
+						"cidr_blocks.0":      "0.0.0.0/0",
+						"cidr_blocks.1":      "10.0.0.0/8",
+						"description":        "",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "8000",
+					}),
 				),
 			},
 		},
@@ -2630,69 +2666,6 @@ func testAccCheckSecurityGroupIngressPrefixListAttributes(group *ec2.SecurityGro
 	}
 }
 
-func testAccCheckSecurityGroupAttributesChanged(group *ec2.SecurityGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		p := []*ec2.IpPermission{
-			{
-				FromPort:   aws.Int64(80),
-				ToPort:     aws.Int64(9000),
-				IpProtocol: aws.String("tcp"),
-				IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("10.0.0.0/8")}},
-			},
-			{
-				FromPort:   aws.Int64(80),
-				ToPort:     aws.Int64(8000),
-				IpProtocol: aws.String("tcp"),
-				IpRanges: []*ec2.IpRange{
-					{
-						CidrIp: aws.String("0.0.0.0/0"),
-					},
-					{
-						CidrIp: aws.String("10.0.0.0/8"),
-					},
-				},
-			},
-		}
-
-		if *group.GroupName != "terraform_acceptance_test_example" {
-			return fmt.Errorf("Bad name: %s", *group.GroupName)
-		}
-
-		if *group.Description != "Used in the terraform acceptance tests" {
-			return fmt.Errorf("Bad description: %s", *group.Description)
-		}
-
-		// Compare our ingress
-		if len(group.IpPermissions) != 2 {
-			return fmt.Errorf(
-				"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-				group.IpPermissions,
-				p)
-		}
-
-		if *group.IpPermissions[0].ToPort == 8000 {
-			group.IpPermissions[1], group.IpPermissions[0] =
-				group.IpPermissions[0], group.IpPermissions[1]
-		}
-
-		if len(group.IpPermissions[1].IpRanges) > 1 {
-			if *group.IpPermissions[1].IpRanges[0].CidrIp != "0.0.0.0/0" {
-				group.IpPermissions[1].IpRanges[0], group.IpPermissions[1].IpRanges[1] =
-					group.IpPermissions[1].IpRanges[1], group.IpPermissions[1].IpRanges[0]
-			}
-		}
-
-		if !reflect.DeepEqual(group.IpPermissions, p) {
-			return fmt.Errorf(
-				"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-				group.IpPermissions,
-				p)
-		}
-
-		return nil
-	}
-}
-
 func testAccCheckSecurityGroupExistsWithoutDefault(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -2964,19 +2937,19 @@ resource "aws_security_group" "test" {
 }
 `
 
-const testAccSecurityGroupIPv6Config = `
-resource "aws_vpc" "foo" {
+func testAccSecurityGroupIPv6Config(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-ipv6"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
-  name        = "terraform_acceptance_test_example"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.foo.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     protocol         = "6"
@@ -2993,24 +2966,25 @@ resource "aws_security_group" "test" {
   }
 
   tags = {
-    Name = "tf-acc-test"
+    Name = %[1]q
   }
 }
-`
+`, rName)
+}
 
-const testAccSecurityGroupConfig = `
-resource "aws_vpc" "foo" {
+func testAccSecurityGroupConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
-  name        = "terraform_acceptance_test_example"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.foo.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     protocol    = "6"
@@ -3018,8 +2992,13 @@ resource "aws_security_group" "test" {
     to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`
+`, rName)
+}
 
 func testAccSecurityGroupRevokeBaseRemovedConfig(rName string) string {
 	return fmt.Sprintf(`
@@ -3131,19 +3110,19 @@ resource "aws_security_group" "secondary" {
 `, rName)
 }
 
-const testAccSecurityGroupChangeConfig = `
-resource "aws_vpc" "foo" {
+func testAccSecurityGroupChangeConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-change"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
-  name        = "terraform_acceptance_test_example"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.foo.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     protocol    = "tcp"
@@ -3165,8 +3144,13 @@ resource "aws_security_group" "test" {
     to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`
+`, rName)
+}
 
 func testAccSecurityGroupRuleDescriptionConfig(egressDescription, ingressDescription string) string {
 	return fmt.Sprintf(`
