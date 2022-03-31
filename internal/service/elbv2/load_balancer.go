@@ -532,7 +532,25 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		log.Printf("[DEBUG] ALB Modify Load Balancer Attributes Request: %#v", input)
-		_, err := conn.ModifyLoadBalancerAttributes(input)
+
+		// Not all attributes are supported in all partitions (e.g., ISO)
+		var err error
+		for {
+			_, err = conn.ModifyLoadBalancerAttributes(input)
+			if err == nil {
+				break
+			}
+
+			re := regexp.MustCompile(`attribute key '([^']+)' is not recognized`)
+			if sm := re.FindStringSubmatch(err.Error()); sm != nil && len(sm) > 1 {
+				log.Printf("[WARN] failed to modify Load Balancer (%s), unsupported attribute (%s): %s", d.Id(), sm[1], err)
+				input.Attributes = removeAttribute(input.Attributes, sm[1])
+				continue
+			}
+
+			break
+		}
+
 		if err != nil {
 			return fmt.Errorf("failure configuring LB attributes: %w", err)
 		}
@@ -656,6 +674,17 @@ func resourceLoadBalancerDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	return nil
+}
+
+func removeAttribute(attributes []*elbv2.LoadBalancerAttribute, key string) []*elbv2.LoadBalancerAttribute {
+	for i, a := range attributes {
+		if aws.StringValue(a.Key) == key {
+			return append(attributes[:i], attributes[i+1:]...)
+		}
+	}
+
+	log.Printf("[WARN] Unable to remove attribute %s from Load Balancer attributes: not found", key)
+	return attributes
 }
 
 // ALB automatically creates ENI(s) on creation
