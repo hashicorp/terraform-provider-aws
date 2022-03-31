@@ -235,20 +235,20 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"logging": {
-				Type:       schema.TypeSet,
+				Type:       schema.TypeList,
+				Optional:   true,
 				Computed:   true,
+				MaxItems:   1,
 				Deprecated: "Use the aws_s3_bucket_logging resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"target_bucket": {
-							Type:       schema.TypeString,
-							Computed:   true,
-							Deprecated: "Use the aws_s3_bucket_logging resource instead",
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"target_prefix": {
-							Type:       schema.TypeString,
-							Computed:   true,
-							Deprecated: "Use the aws_s3_bucket_logging resource instead",
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 					},
 				},
@@ -782,6 +782,12 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("lifecycle_rule") {
 		if err := resourceBucketInternalLifecycleUpdate(conn, d); err != nil {
 			return fmt.Errorf("error updating S3 Bucket (%s) Lifecycle Rules: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("logging") {
+		if err := resourceBucketInternalLoggingUpdate(conn, d); err != nil {
+			return fmt.Errorf("error updating S3 Bucket (%s) Logging: %w", d.Id(), err)
 		}
 	}
 
@@ -1754,6 +1760,36 @@ func resourceBucketInternalLifecycleUpdate(conn *s3.S3, d *schema.ResourceData) 
 
 	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 		return conn.PutBucketLifecycleConfiguration(input)
+	})
+
+	return err
+}
+
+func resourceBucketInternalLoggingUpdate(conn *s3.S3, d *schema.ResourceData) error {
+	logging := d.Get("logging").([]interface{})
+	loggingStatus := &s3.BucketLoggingStatus{}
+
+	if len(logging) > 0 {
+		c := logging[0].(map[string]interface{})
+
+		loggingEnabled := &s3.LoggingEnabled{}
+		if val, ok := c["target_bucket"].(string); ok {
+			loggingEnabled.TargetBucket = aws.String(val)
+		}
+		if val, ok := c["target_prefix"].(string); ok {
+			loggingEnabled.TargetPrefix = aws.String(val)
+		}
+
+		loggingStatus.LoggingEnabled = loggingEnabled
+	}
+
+	input := &s3.PutBucketLoggingInput{
+		Bucket:              aws.String(d.Id()),
+		BucketLoggingStatus: loggingStatus,
+	}
+
+	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		return conn.PutBucketLogging(input)
 	})
 
 	return err
