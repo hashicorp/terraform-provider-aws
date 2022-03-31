@@ -50,6 +50,9 @@ type config struct {
 	// DefaultTags                    *defaultTagsConfig `tfsdk:"default_tags"`
 	// IgnoreTags                     *ignoreTagsConfig `tfsdk:"ignore_tags"`
 
+	assumeRole       *assumeRoleConfig
+	defaultTags      *defaultTagsConfig
+	ignoreTags       *ignoreTagsConfig
 	terraformVersion string
 }
 
@@ -92,6 +95,51 @@ func (p *provider) Configure(ctx context.Context, request tfsdk.ConfigureProvide
 
 	if !request.Config.Raw.IsFullyKnown() {
 		response.Diagnostics.AddError("Unknown Value", "An attribute value is not yet known")
+	}
+
+	// Read assume_role.
+	var assumeRoleConfigs []assumeRoleConfig
+
+	diags = config.AssumeRole.ElementsAs(ctx, &assumeRoleConfigs, true)
+
+	if diags.HasError() {
+		response.Diagnostics.Append(diags...)
+
+		return
+	}
+
+	if len(assumeRoleConfigs) > 0 {
+		config.assumeRole = &assumeRoleConfigs[0]
+	}
+
+	// Read defalt_tags.
+	var defaultTagsConfigs []defaultTagsConfig
+
+	diags = config.DefaultTags.ElementsAs(ctx, &defaultTagsConfigs, true)
+
+	if diags.HasError() {
+		response.Diagnostics.Append(diags...)
+
+		return
+	}
+
+	if len(defaultTagsConfigs) > 0 {
+		config.defaultTags = &defaultTagsConfigs[0]
+	}
+
+	// Read ignore_tags.
+	var ignoreTagsConfigs []ignoreTagsConfig
+
+	diags = config.IgnoreTags.ElementsAs(ctx, &ignoreTagsConfigs, true)
+
+	if diags.HasError() {
+		response.Diagnostics.Append(diags...)
+
+		return
+	}
+
+	if len(ignoreTagsConfigs) > 0 {
+		config.ignoreTags = &ignoreTagsConfigs[0]
 	}
 
 	config.terraformVersion = request.TerraformVersion
@@ -378,4 +426,9 @@ func endpointsBlock() tfsdk.Block {
 		Attributes:  endpointsAttributes,
 		NestingMode: tfsdk.BlockNestingModeSet,
 	}
+}
+
+// Implemented by types.List, types.Set and types.Map.
+type aggregateValue interface {
+	ElementsAs(ctx context.Context, target interface{}, allowUnhandled bool) diag.Diagnostics
 }
