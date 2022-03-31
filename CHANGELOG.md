@@ -27,6 +27,7 @@ ENHANCEMENTS:
 * resource/aws_s3_bucket: Update `acl` and `grant` parameters to be configurable. Please refer to the documentation for details on drift detection and potential conflicts when configuring these parameters with the standalone `aws_s3_bucket_acl` resource. ([#23798](https://github.com/hashicorp/terraform-provider-aws/issues/23798))
 * resource/aws_s3_bucket: Update `cors_rule` parameter to be configurable. Please refer to the documentation for details on drift detection and potential conflicts when configuring this parameter with the standalone `aws_s3_bucket_cors_configuration` resource. ([#23817](https://github.com/hashicorp/terraform-provider-aws/issues/23817))
 * resource/aws_s3_bucket: Update `lifecycle_rule` parameter to be configurable. Please refer to the documentation for details on drift detection and potential conflicts when configuring this parameter with the standalone `aws_s3_bucket_lifecycle_configuration` resource. ([#23818](https://github.com/hashicorp/terraform-provider-aws/issues/23818))
+* resource/aws_s3_bucket: Update `logging` parameter to be configurable. Please refer to the documentation for details on drift detection and potential conflicts when configuring this parameter with the standalone `aws_s3_bucket_logging` resource. ([#23819](https://github.com/hashicorp/terraform-provider-aws/issues/23819))
 * resource/aws_vpc_ipam: add `cascade` argument ([#23973](https://github.com/hashicorp/terraform-provider-aws/issues/23973))
 
 BUG FIXES:
