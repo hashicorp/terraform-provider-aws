@@ -7,3 +7,15 @@ const (
 	frameworkStatusFailed             = "FAILED"
 	frameworkStatusUpdateInProgress   = "UPDATE_IN_PROGRESS"
 )
+
+const (
+	reportDeliveryFormatCSV  = "CSV"
+	reportDeliveryFormatJSON = "JSON"
+)
+
+func reportDeliveryFormat_Values() []string {
+	return []string{
+		reportDeliveryFormatCSV,
+		reportDeliveryFormatJSON,
+	}
+}
