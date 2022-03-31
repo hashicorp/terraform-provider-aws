@@ -126,10 +126,10 @@ The following arguments are supported:
 
 The `grant` configuration block supports the following arguments:
 
-* `id` - (optional) Canonical user id to grant for. Used only when `type` is `CanonicalUser`.
-* `type` - (required) - Type of grantee to apply for. Valid values are `CanonicalUser` and `Group`. `AmazonCustomerByEmail` is not supported.
-* `permissions` - (required) List of permissions to apply for grantee. Valid values are `READ`, `WRITE`, `READ_ACP`, `WRITE_ACP`, `FULL_CONTROL`.
-* `uri` - (optional) Uri address to grant for. Used only when `type` is `Group`.
+* `id` - (Optional) Canonical user id to grant for. Used only when `type` is `CanonicalUser`.
+* `type` - (Required) Type of grantee to apply for. Valid values are `CanonicalUser` and `Group`. `AmazonCustomerByEmail` is not supported.
+* `permissions` - (Required) List of permissions to apply for grantee. Valid values are `READ`, `WRITE`, `READ_ACP`, `WRITE_ACP`, `FULL_CONTROL`.
+* `uri` - (Optional) Uri address to grant for. Used only when `type` is `Group`.
 
 ### Object Lock Configuration
 
