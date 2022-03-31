@@ -9,6 +9,13 @@ const (
 )
 
 const (
+	reportPlanDeploymentStatusCompleted        = "COMPLETED"
+	reportPlanDeploymentStatusCreateInProgress = "CREATE_IN_PROGRESS"
+	reportPlanDeploymentStatusDeleteInProgress = "DELETE_IN_PROGRESS"
+	reportPlanDeploymentStatusUpdateInProgress = "UPDATE_IN_PROGRESS"
+)
+
+const (
 	reportDeliveryChannelFormatCSV  = "CSV"
 	reportDeliveryChannelFormatJSON = "JSON"
 )

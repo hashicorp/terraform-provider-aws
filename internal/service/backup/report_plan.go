@@ -119,7 +119,6 @@ func resourceReportPlanCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
-
 	input := &backup.CreateReportPlanInput{
 		IdempotencyToken:      aws.String(resource.UniqueId()),
 		ReportDeliveryChannel: expandReportDeliveryChannel(d.Get("report_delivery_channel").([]interface{})),
@@ -135,14 +134,19 @@ func resourceReportPlanCreate(d *schema.ResourceData, meta interface{}) error {
 		input.ReportPlanTags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating Backup Report Plan: %#v", input)
-	resp, err := conn.CreateReportPlan(input)
+	log.Printf("[DEBUG] Creating Backup Report Plan: %s", input)
+	output, err := conn.CreateReportPlan(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating Backup Report Plan: %w", err)
+		return fmt.Errorf("error creating Backup Report Plan (%s): %w", name, err)
 	}
 
-	// Set ID with the name since the name is unique for the report plan
-	d.SetId(aws.StringValue(resp.ReportPlanName))
+	// Set ID with the name since the name is unique for the report plan.
+	d.SetId(aws.StringValue(output.ReportPlanName))
+
+	if _, err := waitReportPlanCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for Backup Report Plan (%s) create: %w", d.Id(), err)
+	}
 
 	return resourceReportPlanRead(d, meta)
 }
@@ -201,7 +205,7 @@ func resourceReportPlanRead(d *schema.ResourceData, meta interface{}) error {
 func resourceReportPlanUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
-	if d.HasChanges("description", "report_delivery_channel", "report_plan_description", "report_setting") {
+	if d.HasChangesExcept("tags_all", "tags") {
 		input := &backup.UpdateReportPlanInput{
 			IdempotencyToken:      aws.String(resource.UniqueId()),
 			ReportDeliveryChannel: expandReportDeliveryChannel(d.Get("report_delivery_channel").([]interface{})),
@@ -210,15 +214,21 @@ func resourceReportPlanUpdate(d *schema.ResourceData, meta interface{}) error {
 			ReportSetting:         expandReportSetting(d.Get("report_setting").([]interface{})),
 		}
 
-		log.Printf("[DEBUG] Updating Backup Report Plan: %#v", input)
+		log.Printf("[DEBUG] Updating Backup Report Plan: %s", input)
 		_, err := conn.UpdateReportPlan(input)
+
 		if err != nil {
 			return fmt.Errorf("error updating Backup Report Plan (%s): %w", d.Id(), err)
+		}
+
+		if _, err := waitReportPlanUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for Backup Report Plan (%s) update: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
+
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags for Backup Report Plan (%s): %w", d.Id(), err)
 		}
@@ -230,13 +240,17 @@ func resourceReportPlanUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceReportPlanDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
-	input := &backup.DeleteReportPlanInput{
+	log.Printf("[DEBUG] Deleting Backup Report Plan: %s", d.Id())
+	_, err := conn.DeleteReportPlan(&backup.DeleteReportPlanInput{
 		ReportPlanName: aws.String(d.Id()),
+	})
+
+	if err != nil {
+		return fmt.Errorf("error deleting Backup Report Plan (%s): %w", d.Id(), err)
 	}
 
-	_, err := conn.DeleteReportPlan(input)
-	if err != nil {
-		return fmt.Errorf("error deleting Backup Report Plan: %s", err)
+	if _, err := waitReportPlanDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for Backup Report Plan (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
@@ -351,4 +365,71 @@ func FindReportPlanByName(conn *backup.Backup, name string) (*backup.ReportPlan,
 	}
 
 	return output.ReportPlan, nil
+}
+
+func statusReportPlanDeployment(conn *backup.Backup, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindReportPlanByName(conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.DeploymentStatus), nil
+	}
+}
+
+func waitReportPlanCreated(conn *backup.Backup, name string, timeout time.Duration) (*backup.ReportPlan, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{reportPlanDeploymentStatusCreateInProgress},
+		Target:  []string{reportPlanDeploymentStatusCompleted},
+		Timeout: timeout,
+		Refresh: statusReportPlanDeployment(conn, name),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*backup.ReportPlan); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitReportPlanDeleted(conn *backup.Backup, name string, timeout time.Duration) (*backup.ReportPlan, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{reportPlanDeploymentStatusDeleteInProgress},
+		Target:  []string{},
+		Timeout: timeout,
+		Refresh: statusReportPlanDeployment(conn, name),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*backup.ReportPlan); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitReportPlanUpdated(conn *backup.Backup, name string, timeout time.Duration) (*backup.ReportPlan, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{reportPlanDeploymentStatusUpdateInProgress},
+		Target:  []string{reportPlanDeploymentStatusCompleted},
+		Timeout: timeout,
+		Refresh: statusReportPlanDeployment(conn, name),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*backup.ReportPlan); ok {
+		return output, err
+	}
+
+	return nil, err
 }
