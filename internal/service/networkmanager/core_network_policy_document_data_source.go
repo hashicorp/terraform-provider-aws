@@ -24,21 +24,59 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 
-			// "core_network_configuration": {
-			// 	Type:     schema.TypeList,
-			// 	Optional: true,
-			// 	MaxItems: 1,
-			// 	Elem: &schema.Resource{
-			// 		Schema: map[string]*schema.Schema{
-			// 			"asn_ranges": {
-			// 				Type:          schema.TypeList,
-			// 				Optional:      true,
-			// 				Elem:          &schema.Schema{Type: schema.TypeString},
-			// 			},
-			// 		},
-			// 	},
-			// 	DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			// },
+			"core_network_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"asn_ranges": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							// validate like <asn>-<asn> ?
+						},
+						"vpn_ecmp_support": {
+							Type:     schema.TypeBool,
+							Default:  false,
+							Optional: true,
+						},
+						"edge_locations": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"location": {
+										Type:     schema.TypeString,
+										Required: true,
+										// a-z, 0-9
+										// ValidateFunc: validation.StringInSlice([]string{"Allow", "Deny"}, false),
+									},
+									"asn": {
+										Type:     schema.TypeInt,
+										Default:  false,
+										Optional: true,
+										// validate asn-like
+									},
+									"inside_cidr_blocks": {
+										Type:     schema.TypeList,
+										Optional: true,
+										// validate either ipv4 or 6?
+										Elem: &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"inside_cidr_blocks": {
+							Type:     schema.TypeList,
+							Optional: true,
+							// validate either ipv4 or 6?
+							Elem: &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+				// DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+			},
 			"json": {
 				Type:     schema.TypeString,
 				Computed: true,
