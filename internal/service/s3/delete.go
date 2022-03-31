@@ -31,9 +31,10 @@ func (self *objectVersionDeleter) DeleteAll(ctx context.Context) error {
 
 // listIterator is intended to be embedded inside iterators.
 type listIterator struct {
-	bucket    string
-	key       string
-	paginator request.Pagination
+	bucket                    string
+	bypassGovernanceRetention bool
+	key                       string
+	paginator                 request.Pagination
 }
 
 // deleteVersionListIterator implements s3manager.BatchDeleteIterator.
@@ -44,12 +45,13 @@ type deleteObjectVersionListIterator struct {
 	objects []*s3.ObjectVersion
 }
 
-func NewDeleteObjectVersionListIterator(conn *s3.S3, bucket, key string) s3manager.BatchDeleteIterator {
+func NewDeleteObjectVersionListIterator(conn *s3.S3, bucket, key string, bypassGovernanceRetention bool) s3manager.BatchDeleteIterator {
 	return &deleteObjectVersionListIterator{
 		listIterator: listIterator{
-			bucket:    bucket,
-			key:       key,
-			paginator: listObjectVersionsPaginator(conn, bucket, key),
+			bucket:                    bucket,
+			bypassGovernanceRetention: bypassGovernanceRetention,
+			key:                       key,
+			paginator:                 listObjectVersionsPaginator(conn, bucket, key),
 		},
 	}
 }
@@ -85,9 +87,10 @@ func (iter *deleteObjectVersionListIterator) Err() error {
 func (iter *deleteObjectVersionListIterator) DeleteObject() s3manager.BatchDeleteObject {
 	return s3manager.BatchDeleteObject{
 		Object: &s3.DeleteObjectInput{
-			Bucket:    aws.String(iter.listIterator.bucket),
-			Key:       iter.objects[0].Key,
-			VersionId: iter.objects[0].VersionId,
+			Bucket:                    aws.String(iter.listIterator.bucket),
+			BypassGovernanceRetention: aws.Bool(iter.listIterator.bypassGovernanceRetention),
+			Key:                       iter.objects[0].Key,
+			VersionId:                 iter.objects[0].VersionId,
 		},
 	}
 }
@@ -100,12 +103,13 @@ type deleteDeleteMarkerListIterator struct {
 	deleteMarkers []*s3.DeleteMarkerEntry
 }
 
-func NewDeleteDeletMarkerListIterator(conn *s3.S3, bucket, key string) s3manager.BatchDeleteIterator {
+func NewDeleteDeleteMarkerListIterator(conn *s3.S3, bucket, key string, bypassGovernanceRetention bool) s3manager.BatchDeleteIterator {
 	return &deleteDeleteMarkerListIterator{
 		listIterator: listIterator{
-			bucket:    bucket,
-			key:       key,
-			paginator: listObjectVersionsPaginator(conn, bucket, key),
+			bucket:                    bucket,
+			bypassGovernanceRetention: bypassGovernanceRetention,
+			key:                       key,
+			paginator:                 listObjectVersionsPaginator(conn, bucket, key),
 		},
 	}
 }
@@ -141,9 +145,10 @@ func (iter *deleteDeleteMarkerListIterator) Err() error {
 func (iter *deleteDeleteMarkerListIterator) DeleteObject() s3manager.BatchDeleteObject {
 	return s3manager.BatchDeleteObject{
 		Object: &s3.DeleteObjectInput{
-			Bucket:    aws.String(iter.listIterator.bucket),
-			Key:       iter.deleteMarkers[0].Key,
-			VersionId: iter.deleteMarkers[0].VersionId,
+			Bucket:                    aws.String(iter.listIterator.bucket),
+			BypassGovernanceRetention: aws.Bool(iter.listIterator.bypassGovernanceRetention),
+			Key:                       iter.deleteMarkers[0].Key,
+			VersionId:                 iter.deleteMarkers[0].VersionId,
 		},
 	}
 }
