@@ -46,7 +46,6 @@ func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "1"),
@@ -54,6 +53,7 @@ func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttr(resourceName, "data_tiering_enabled", "false"),
 				),
 			},
@@ -210,7 +210,6 @@ func TestAccElastiCacheReplicationGroup_updateDescription(t *testing.T) {
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_group_description", "test description"),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 				),
 			},
 			{
@@ -225,7 +224,6 @@ func TestAccElastiCacheReplicationGroup_updateDescription(t *testing.T) {
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_group_description", "updated description"),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 				),
 			},
 		},
@@ -455,7 +453,6 @@ func TestAccElastiCacheReplicationGroup_vpc(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "1"),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttr(resourceName, "preferred_cache_cluster_azs.#", "1"),
 				),
 			},
@@ -489,7 +486,6 @@ func TestAccElastiCacheReplicationGroup_depecatedAvailabilityZones_vpc(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "1"),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "1"),
 				),
 			},
@@ -2379,7 +2375,6 @@ resource "aws_elasticache_replication_group" "test" {
   node_type                     = "cache.t3.small"
   port                          = 6379
   apply_immediately             = true
-  auto_minor_version_upgrade    = false
   maintenance_window            = "tue:06:30-tue:07:30"
   snapshot_window               = "01:00-02:00"
 }
@@ -2432,7 +2427,6 @@ resource "aws_elasticache_replication_group" "test" {
   node_type                     = "cache.t3.small"
   port                          = 6379
   apply_immediately             = true
-  auto_minor_version_upgrade    = false
   maintenance_window            = "tue:06:30-tue:07:30"
   snapshot_window               = "01:00-02:00"
   snapshot_retention_limit      = 2
@@ -2476,7 +2470,6 @@ resource "aws_elasticache_replication_group" "test" {
   node_type                     = "cache.t3.small"
   port                          = 6379
   apply_immediately             = true
-  auto_minor_version_upgrade    = true
 }
 `, rName)
 }
@@ -2489,7 +2482,6 @@ resource "aws_elasticache_replication_group" "test" {
   node_type                     = "cache.t3.small"
   port                          = 6379
   apply_immediately             = true
-  auto_minor_version_upgrade    = true
   maintenance_window            = "wed:03:00-wed:06:00"
   snapshot_window               = "01:00-02:00"
 }
@@ -2534,7 +2526,6 @@ resource "aws_elasticache_replication_group" "test" {
   node_type                     = "cache.t3.small"
   port                          = 6379
   apply_immediately             = true
-  auto_minor_version_upgrade    = false
   maintenance_window            = "tue:06:30-tue:07:30"
   snapshot_window               = "01:00-02:00"
   transit_encryption_enabled    = true
@@ -2557,7 +2548,6 @@ resource "aws_elasticache_replication_group" "test" {
   subnet_group_name             = aws_elasticache_subnet_group.test.name
   security_group_ids            = [aws_security_group.test.id]
   preferred_cache_cluster_azs   = [data.aws_availability_zones.available.names[0]]
-  auto_minor_version_upgrade    = false
 }
 
 resource "aws_elasticache_subnet_group" "test" {
@@ -2594,7 +2584,6 @@ resource "aws_elasticache_replication_group" "test" {
   subnet_group_name             = aws_elasticache_subnet_group.test.name
   security_group_ids            = [aws_security_group.test.id]
   availability_zones            = [data.aws_availability_zones.available.names[0]]
-  auto_minor_version_upgrade    = false
 }
 
 resource "aws_elasticache_subnet_group" "test" {
@@ -3075,7 +3064,6 @@ resource "aws_elasticache_replication_group" "test" {
   number_cache_clusters         = %[2]d
   port                          = 6379
   apply_immediately             = true
-  auto_minor_version_upgrade    = false
   maintenance_window            = "tue:06:30-tue:07:30"
   snapshot_window               = "01:00-02:00"
 
@@ -3099,7 +3087,6 @@ resource "aws_elasticache_replication_group" "test" {
   number_cache_clusters         = %[2]d
   port                          = 6379
   apply_immediately             = true
-  auto_minor_version_upgrade    = false
   maintenance_window            = "tue:06:30-tue:07:30"
   snapshot_window               = "01:00-02:00"
 
@@ -3394,7 +3381,6 @@ resource "aws_elasticache_replication_group" "test" {
   port                          = 6379
   subnet_group_name             = aws_elasticache_subnet_group.test.name
   security_group_ids            = [aws_security_group.test.id]
-  auto_minor_version_upgrade    = false
 }
 
 resource "aws_elasticache_subnet_group" "test" {
@@ -3508,7 +3494,6 @@ resource "aws_elasticache_replication_group" "test" {
   node_type                     = "cache.t3.small"
   port                          = 6379
   apply_immediately             = true
-  auto_minor_version_upgrade    = false
   maintenance_window            = "tue:06:30-tue:07:30"
   snapshot_window               = "01:00-02:00"
   parameter_group_name          = tobool("%[2]t") ? "default.redis6.x.cluster.on" : "default.redis6.x"
