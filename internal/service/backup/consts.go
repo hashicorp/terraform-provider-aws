@@ -9,13 +9,13 @@ const (
 )
 
 const (
-	reportDeliveryFormatCSV  = "CSV"
-	reportDeliveryFormatJSON = "JSON"
+	reportDeliveryChannelFormatCSV  = "CSV"
+	reportDeliveryChannelFormatJSON = "JSON"
 )
 
-func reportDeliveryFormat_Values() []string {
+func reportDeliveryChannelFormat_Values() []string {
 	return []string{
-		reportDeliveryFormatCSV,
-		reportDeliveryFormatJSON,
+		reportDeliveryChannelFormatCSV,
+		reportDeliveryChannelFormatJSON,
 	}
 }

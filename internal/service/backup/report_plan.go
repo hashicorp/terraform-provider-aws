@@ -64,7 +64,7 @@ func ResourceReportPlan() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(reportDeliveryFormat_Values(), false),
+								ValidateFunc: validation.StringInSlice(reportDeliveryChannelFormat_Values(), false),
 							},
 						},
 						"s3_bucket_name": {
