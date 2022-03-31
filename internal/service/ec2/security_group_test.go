@@ -951,7 +951,7 @@ func TestAccEC2SecurityGroup_ingressMode(t *testing.T) {
 
 func TestAccEC2SecurityGroup_ruleGathering(t *testing.T) {
 	var group ec2.SecurityGroup
-	sgName := fmt.Sprintf("tf-acc-security-group-%s", sdkacctest.RandString(7))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -961,10 +961,10 @@ func TestAccEC2SecurityGroup_ruleGathering(t *testing.T) {
 		CheckDestroy: testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityGroupConfig_ruleGathering(sgName),
+				Config: testAccSecurityGroupRuleGatheringConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "name", sgName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						"cidr_blocks.#":      "0",
@@ -4082,30 +4082,30 @@ resource "aws_security_group" "test" {
 }
 `
 
-func testAccSecurityGroupConfig_ruleGathering(sgName string) string {
+func testAccSecurityGroupRuleGatheringConfig(rName string) string {
 	return fmt.Sprintf(`
-variable "name" {
-  default = "%s"
-}
-
 data "aws_region" "current" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = var.name
+    Name = %[1]q
   }
 }
 
-resource "aws_route_table" "default" {
+resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id          = aws_vpc.test.id
   service_name    = "com.amazonaws.${data.aws_region.current.name}.s3"
-  route_table_ids = [aws_route_table.default.id]
+  route_table_ids = [aws_route_table.test.id]
 
   policy = <<POLICY
 {
@@ -4121,24 +4121,37 @@ resource "aws_vpc_endpoint" "test" {
   ]
 }
 POLICY
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "source1" {
-  name        = "${var.name}-source1"
-  description = "terraform acceptance test for security group as source1"
-  vpc_id      = aws_vpc.test.id
+  name   = "%[1]s-source1"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "source2" {
-  name        = "${var.name}-source2"
-  description = "terraform acceptance test for security group as source2"
-  vpc_id      = aws_vpc.test.id
+  name   = "%[1]s-source2"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test" {
-  name        = var.name
-  description = "terraform acceptance test for security group"
-  vpc_id      = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 
   ingress {
     protocol    = "tcp"
@@ -4204,7 +4217,7 @@ resource "aws_security_group" "test" {
     description     = "egress for vpc endpoints"
   }
 }
-`, sgName)
+`, rName)
 }
 
 const testAccSecurityGroupConfig_rulesDropOnError_Init = `
