@@ -542,7 +542,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 			}
 
 			re := regexp.MustCompile(`attribute key ('|")?([^'" ]+)('|")? is not recognized`)
-			if sm := re.FindStringSubmatch(err.Error()); sm != nil && len(sm) > 1 {
+			if sm := re.FindStringSubmatch(err.Error()); len(sm) > 1 {
 				log.Printf("[WARN] failed to modify Load Balancer (%s), unsupported attribute (%s): %s", d.Id(), sm[2], err)
 				input.Attributes = removeAttribute(input.Attributes, sm[2])
 				continue
