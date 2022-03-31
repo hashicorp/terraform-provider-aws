@@ -33,6 +33,7 @@ ENHANCEMENTS:
 * resource/aws_iot_authorizer: Add `enable_caching_for_http` argument ([#23993](https://github.com/hashicorp/terraform-provider-aws/issues/23993))
 * resource/aws_lambda_permission: Add `principal_org_id` argument. ([#24001](https://github.com/hashicorp/terraform-provider-aws/issues/24001))
 * resource/aws_mq_broker: Add validation to `broker_name` and `security_groups` arguments ([#18088](https://github.com/hashicorp/terraform-provider-aws/issues/18088))
+* resource/aws_s3_bucket: Update `acl` and `grant` parameters to be configurable. Please refer to the documentation for details on drift detection and potential conflicts when configuring these parameters with the standalone `aws_s3_bucket_acl` resource. ([#23798](https://github.com/hashicorp/terraform-provider-aws/issues/23798))
 * resource/aws_route: Add `core_network_arn` argument ([#24024](https://github.com/hashicorp/terraform-provider-aws/issues/24024))
 * resource/aws_route_table: Add `core_network_arn` argument to the `route` configuration block ([#24024](https://github.com/hashicorp/terraform-provider-aws/issues/24024))
 * resource/aws_vpc_ipam: add `cascade` argument ([#23973](https://github.com/hashicorp/terraform-provider-aws/issues/23973))
