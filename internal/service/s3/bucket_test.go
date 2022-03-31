@@ -1192,6 +1192,35 @@ func TestAccS3Bucket_Security_corsSingleMethodAndEmptyOrigin(t *testing.T) {
 	})
 }
 
+func TestAccS3Bucket_Security_logging(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withLogging(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "logging.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "logging.0.target_bucket", "aws_s3_bucket.log_bucket", "id"),
+					resource.TestCheckResourceAttr(resourceName, "logging.0.target_prefix", "log/"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+			},
+		},
+	})
+}
+
 func TestBucketName(t *testing.T) {
 	validDnsNames := []string{
 		"foobar",
@@ -1963,6 +1992,25 @@ resource "aws_s3_bucket" "test" {
   }
 }
 `, rName)
+}
+
+func testAccBucketConfig_withLogging(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "log_bucket" {
+  bucket = "%[1]s-log"
+  acl    = "log-delivery-write"
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  acl    = "private"
+
+  logging {
+    target_bucket = aws_s3_bucket.log_bucket.id
+    target_prefix = "log/"
+  }
+}
+`, bucketName)
 }
 
 func testAccBucketConfig_withNoTags(bucketName string) string {

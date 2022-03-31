@@ -32,6 +32,10 @@ Configuring with both will cause inconsistencies and may overwrite configuration
 or with the deprecated parameter `lifecycle_rule` in the resource `aws_s3_bucket`.
 Configuring with both will cause inconsistencies and may overwrite configuration.
 
+~> **NOTE on S3 Bucket Logging Configuration:** S3 Bucket logging can be configured in either the standalone resource [`aws_s3_bucket_logging`](s3_bucket_logging.html.markdown)
+or with the deprecated parameter `logging` in the resource `aws_s3_bucket`.
+Configuring with both will cause inconsistencies and may overwrite configuration.
+
 ## Example Usage
 
 ### Private Bucket w/ Tags
@@ -84,10 +88,25 @@ See the [`aws_s3_bucket_versioning` resource](s3_bucket_versioning.html.markdown
 
 ### Enable Logging
 
-The `logging` argument is read-only as of version 4.0 of the Terraform AWS Provider.
-See the [`aws_s3_bucket_logging` resource](s3_bucket_logging.html.markdown) for configuration details.
+-> **NOTE:** The parameter `logging` is deprecated.
+Use the resource [`aws_s3_bucket_logging`](s3_bucket_logging.html.markdown) instead.
 
-### Using object lifecycle
+```terraform
+resource "aws_s3_bucket" "log_bucket" {
+  bucket = "my-tf-log-bucket"
+  acl    = "log-delivery-write"
+}
+
+resource "aws_s3_bucket" "b" {
+  bucket = "my-tf-test-bucket"
+  acl    = "private"
+
+  logging {
+    target_bucket = aws_s3_bucket.log_bucket.id
+    target_prefix = "log/"
+  }
+}
+```
 
 ### Using object lifecycle
 
@@ -221,6 +240,8 @@ The following arguments are supported:
 * `force_destroy` - (Optional, Default:`false`) A boolean that indicates all objects (including any [locked objects](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html)) should be deleted from the bucket so that the bucket can be destroyed without error. These objects are *not* recoverable.
 * `lifecycle_rule` - (Optional, **Deprecated**) A configuration of [object lifecycle management](http://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html). See [Lifecycle Rule](#lifecycle-rule) below for details. Terraform will only perform drift detection if a configuration value is provided.
   Use the resource [`aws_s3_bucket_lifecycle_configuration`](s3_bucket_lifecycle_configuration.html) instead.
+* `logging` - (Optional, **Deprecated**) A configuration of [S3 bucket logging](https://docs.aws.amazon.com/AmazonS3/latest/UG/ManagingBucketLogging.html) parameters. See [Logging](#logging) below for details. Terraform will only perform drift detection if a configuration value is provided.
+  Use the resource [`aws_s3_bucket_logging`](s3_bucket_logging.html.markdown) instead.
 * `object_lock_enabled` - (Optional, Default:`false`, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled.
 * `object_lock_configuration` - (Optional) A configuration of [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html). See [Object Lock Configuration](#object-lock-configuration) below.
 * `tags` - (Optional) A map of tags to assign to the bucket. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -295,6 +316,15 @@ The `noncurrent_version_transition` configuration supports the following argumen
 * `days` - (Required) Specifies the number of days noncurrent object versions transition.
 * `storage_class` - (Required) Specifies the Amazon S3 [storage class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Transition.html#AmazonS3-Type-Transition-StorageClass) to which you want the object to transition.
 
+### Logging
+
+~> **NOTE:** Currently, changes to the `logging` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes of logging parameters to an S3 bucket, use the `aws_s3_bucket_logging` resource instead. If you use `logging` on an `aws_s3_bucket`, Terraform will assume management over the full set of logging parameters for the S3 bucket, treating additional logging parameters as drift. For this reason, `logging` cannot be mixed with the external `aws_s3_bucket_logging` resource for a given S3 bucket.
+
+The `logging` configuration block supports the following arguments:
+
+* `target_bucket` - (Required) The name of the bucket that will receive the log objects.
+* `target_prefix` - (Optional) To specify a key prefix for log objects.
+
 ### Object Lock Configuration
 
 ~> **NOTE:** You can only **enable** S3 Object Lock for **new** buckets. If you need to **enable** S3 Object Lock for an **existing** bucket, please contact AWS Support.
@@ -315,9 +345,6 @@ In addition to all arguments above, the following attributes are exported:
 * `bucket_domain_name` - The bucket domain name. Will be of format `bucketname.s3.amazonaws.com`.
 * `bucket_regional_domain_name` - The bucket region-specific domain name. The bucket domain name including the region name, please refer [here](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region) for format. Note: The AWS CloudFront allows specifying S3 region-specific endpoint when creating S3 origin, it will prevent [redirect issues](https://forums.aws.amazon.com/thread.jspa?threadID=216814) from CloudFront to S3 Origin URL.
 * `hosted_zone_id` - The [Route 53 Hosted Zone ID](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints) for this bucket's region.
-* `logging` - The [logging parameters](https://docs.aws.amazon.com/AmazonS3/latest/UG/ManagingBucketLogging.html) for the bucket.
-    * `target_bucket` - The name of the bucket that receives the log objects.
-    * `target_prefix` - The prefix for all log object keys/
 * `object_lock_configuration` - The [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html) configuration.
     * `rule` - The Object Lock rule in place for this bucket.
         * `default_retention` - The default retention period applied to new objects placed in this bucket.
