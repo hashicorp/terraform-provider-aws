@@ -1251,20 +1251,17 @@ func TestAccEC2SecurityGroup_ipv6(t *testing.T) {
 
 func TestAccEC2SecurityGroup_self(t *testing.T) {
 	var group ec2.SecurityGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test"
 
 	checkSelf := func(s *terraform.State) (err error) {
-		defer func() {
-			if e := recover(); e != nil {
-				err = fmt.Errorf("bad: %#v", group)
-			}
-		}()
-
-		if *group.IpPermissions[0].UserIdGroupPairs[0].GroupId != *group.GroupId {
-			return fmt.Errorf("bad: %#v", group)
+		if len(group.IpPermissions) > 0 &&
+			len(group.IpPermissions[0].UserIdGroupPairs) > 0 &&
+			aws.StringValue(group.IpPermissions[0].UserIdGroupPairs[0].GroupId) == aws.StringValue(group.GroupId) {
+			return nil
 		}
 
-		return nil
+		return fmt.Errorf("Security Group does not contain \"self\" rule: %#v", group)
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1274,11 +1271,9 @@ func TestAccEC2SecurityGroup_self(t *testing.T) {
 		CheckDestroy: testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityGroupSelfConfig,
+				Config: testAccSecurityGroupSelfConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "name", "terraform_acceptance_test_example"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Used in the terraform acceptance tests"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"protocol":  "tcp",
 						"from_port": "80",
@@ -3190,19 +3185,19 @@ resource "aws_security_group" "test" {
 `, ingressDescription, egressDescription)
 }
 
-const testAccSecurityGroupSelfConfig = `
-resource "aws_vpc" "foo" {
+func testAccSecurityGroupSelfConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-self"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
-  name        = "terraform_acceptance_test_example"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.foo.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     protocol  = "tcp"
@@ -3218,7 +3213,8 @@ resource "aws_security_group" "test" {
     cidr_blocks = ["10.0.0.0/8"]
   }
 }
-`
+`, rName)
+}
 
 const testAccSecurityGroupVPCConfig = `
 resource "aws_vpc" "foo" {
