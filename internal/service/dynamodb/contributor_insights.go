@@ -21,6 +21,9 @@ func ResourceContributorInsights() *schema.Resource {
 		CreateWithoutTimeout: resourceContributorInsightsCreate,
 		ReadWithoutTimeout:   resourceContributorInsightsRead,
 		DeleteWithoutTimeout: resourceContributorInsightsDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -68,7 +71,7 @@ func resourceContributorInsightsCreate(ctx context.Context, d *schema.ResourceDa
 		return diag.Errorf("creating dynamodb ContributorInsights for table (%s): %s", d.Get("table_name").(string), err)
 	}
 
-	id := encodeContributorInsightsID(aws.StringValue(out.TableName), indexName, meta.(*conns.AWSClient).AccountID)
+	id := EncodeContributorInsightsID(aws.StringValue(out.TableName), indexName, meta.(*conns.AWSClient).AccountID)
 	d.SetId(id)
 
 	if err := waitContributorInsightsCreated(ctx, conn, aws.StringValue(out.TableName), indexName, d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -81,7 +84,7 @@ func resourceContributorInsightsCreate(ctx context.Context, d *schema.ResourceDa
 func resourceContributorInsightsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
-	tableName, indexName, err := decodeContributorInsightsID(d.Id())
+	tableName, indexName, err := DecodeContributorInsightsID(d.Id())
 	if err != nil {
 		return diag.Errorf("unable to decode ContributorInsights ID (%s): %s", d.Id(), err)
 	}
@@ -110,7 +113,7 @@ func resourceContributorInsightsDelete(ctx context.Context, d *schema.ResourceDa
 
 	log.Printf("[INFO] Deleting DynamoDB ContributorInsights %s", d.Id())
 
-	tableName, indexName, err := decodeContributorInsightsID(d.Id())
+	tableName, indexName, err := DecodeContributorInsightsID(d.Id())
 	if err != nil {
 		return diag.Errorf("unable to decode DynamoDB ContributorInsights ID (%s): %s", d.Id(), err)
 	}
@@ -141,31 +144,18 @@ func resourceContributorInsightsDelete(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func encodeContributorInsightsID(tableName, indexName, accountID string) string {
-	if indexName != "" {
-		return fmt.Sprintf("%s-%s/%s", tableName, indexName, accountID)
-	}
-
-	return fmt.Sprintf("%s/%s", tableName, accountID)
+func EncodeContributorInsightsID(tableName, indexName, accountID string) string {
+	return fmt.Sprintf("name:%s/index:%s/%s", tableName, indexName, accountID)
 }
 
-func decodeContributorInsightsID(id string) (string, string, error) {
+func DecodeContributorInsightsID(id string) (string, string, error) {
 	idParts := strings.Split(id, "/")
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+	if len(idParts) != 3 || idParts[0] == "" || idParts[2] == "" {
 		return "", "", fmt.Errorf("expected ID in the form of table_name/account_id, given: %q", id)
 	}
 
-	var tableName, indexName string
-
-	tableName = idParts[0]
-	if strings.Contains(tableName, "-") {
-		parts := strings.Split(tableName, "-")
-		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-			return "", "", fmt.Errorf("expected ID in the form of table_name-index_name, given: %q", id)
-		}
-		tableName = parts[0]
-		indexName = parts[1]
-	}
+	tableName := strings.TrimPrefix(idParts[0], "name:")
+	indexName := strings.TrimPrefix(idParts[1], "index:")
 
 	return tableName, indexName, nil
 }

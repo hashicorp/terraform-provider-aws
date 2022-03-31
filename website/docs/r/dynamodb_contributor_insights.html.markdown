@@ -22,7 +22,7 @@ resource "aws_dynamodb_contributor_insights" "test" {
 
 The following arguments are supported:
 
-* `table_name` - (Required) The name of the table to attach contributor insight
+* `table_name` - (Required) The name of the table to enable contributor insights
 * `index_name` - (Optional) The global secondary index name
 
 ## Attributes Reference
