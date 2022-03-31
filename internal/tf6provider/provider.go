@@ -45,13 +45,9 @@ type config struct {
 	UseDualStackEndpoint           types.Bool   `tfsdk:"use_dualstack_endpoint"`
 	UseFIPSEndpoint                types.Bool   `tfsdk:"use_fips_endpoint"`
 
-	// TODO
-	// AssumeRole                     *assumeRoleConfig  `tfsdk:"assume_role"`
-	// DefaultTags                    *defaultTagsConfig `tfsdk:"default_tags"`
-	// IgnoreTags                     *ignoreTagsConfig `tfsdk:"ignore_tags"`
-
 	assumeRole       *assumeRoleConfig
 	defaultTags      *defaultTagsConfig
+	endpoints        map[string]string
 	ignoreTags       *ignoreTagsConfig
 	terraformVersion string
 }
@@ -85,9 +81,7 @@ type provider struct {
 func (p *provider) Configure(ctx context.Context, request tfsdk.ConfigureProviderRequest, response *tfsdk.ConfigureProviderResponse) {
 	var config config
 
-	diags := request.Config.Get(ctx, &config)
-
-	if diags.HasError() {
+	if diags := request.Config.Get(ctx, &config); diags.HasError() {
 		response.Diagnostics.Append(diags...)
 
 		return
@@ -100,9 +94,7 @@ func (p *provider) Configure(ctx context.Context, request tfsdk.ConfigureProvide
 	// Read assume_role.
 	var assumeRoleConfigs []assumeRoleConfig
 
-	diags = config.AssumeRole.ElementsAs(ctx, &assumeRoleConfigs, true)
-
-	if diags.HasError() {
+	if diags := config.AssumeRole.ElementsAs(ctx, &assumeRoleConfigs, true); diags.HasError() {
 		response.Diagnostics.Append(diags...)
 
 		return
@@ -112,12 +104,10 @@ func (p *provider) Configure(ctx context.Context, request tfsdk.ConfigureProvide
 		config.assumeRole = &assumeRoleConfigs[0]
 	}
 
-	// Read defalt_tags.
+	// Read default_tags.
 	var defaultTagsConfigs []defaultTagsConfig
 
-	diags = config.DefaultTags.ElementsAs(ctx, &defaultTagsConfigs, true)
-
-	if diags.HasError() {
+	if diags := config.DefaultTags.ElementsAs(ctx, &defaultTagsConfigs, true); diags.HasError() {
 		response.Diagnostics.Append(diags...)
 
 		return
@@ -130,9 +120,7 @@ func (p *provider) Configure(ctx context.Context, request tfsdk.ConfigureProvide
 	// Read ignore_tags.
 	var ignoreTagsConfigs []ignoreTagsConfig
 
-	diags = config.IgnoreTags.ElementsAs(ctx, &ignoreTagsConfigs, true)
-
-	if diags.HasError() {
+	if diags := config.IgnoreTags.ElementsAs(ctx, &ignoreTagsConfigs, true); diags.HasError() {
 		response.Diagnostics.Append(diags...)
 
 		return
@@ -140,6 +128,35 @@ func (p *provider) Configure(ctx context.Context, request tfsdk.ConfigureProvide
 
 	if len(ignoreTagsConfigs) > 0 {
 		config.ignoreTags = &ignoreTagsConfigs[0]
+	}
+
+	// Read endpoints.
+	var endpoints []types.Object
+
+	if diags := config.Endpoints.ElementsAs(ctx, &endpoints, true); diags.HasError() {
+		response.Diagnostics.Append(diags...)
+
+		return
+	}
+
+	if len(endpoints) > 0 {
+		config.endpoints = make(map[string]string)
+
+		for k, v := range endpoints[0].Attrs {
+			var ep *string
+
+			if diags := tfsdk.ValueAs(ctx, v, &ep); diags.HasError() {
+				response.Diagnostics.Append(diags...)
+
+				return
+			}
+
+			if ep == nil {
+				continue
+			}
+
+			config.endpoints[k] = *ep
+		}
 	}
 
 	config.terraformVersion = request.TerraformVersion
@@ -426,9 +443,4 @@ func endpointsBlock() tfsdk.Block {
 		Attributes:  endpointsAttributes,
 		NestingMode: tfsdk.BlockNestingModeSet,
 	}
-}
-
-// Implemented by types.List, types.Set and types.Map.
-type aggregateValue interface {
-	ElementsAs(ctx context.Context, target interface{}, allowUnhandled bool) diag.Diagnostics
 }
