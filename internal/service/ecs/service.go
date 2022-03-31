@@ -550,14 +550,14 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] ECS service created: %s", aws.StringValue(output.Service.ServiceArn))
 	d.SetId(aws.StringValue(output.Service.ServiceArn))
 
+	cluster := aws.StringValue(output.Service.ClusterArn)
 	if d.Get("wait_for_steady_state").(bool) {
-		cluster := ""
-		if v, ok := d.GetOk("cluster"); ok {
-			cluster = v.(string)
-		}
-
 		if err := waitServiceStable(conn, d.Id(), cluster); err != nil {
 			return fmt.Errorf("error waiting for ECS service (%s) to become ready: %w", d.Id(), err)
+		}
+	} else {
+		if _, err := waitServiceDescribeReady(conn, d.Id(), cluster); err != nil {
+			return fmt.Errorf("error waiting for ECS service (%s) to become active: %w", d.Id(), err)
 		}
 	}
 
@@ -969,8 +969,10 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
+		cluster := d.Get("cluster").(string)
+
 		input := &ecs.UpdateServiceInput{
-			Cluster:            aws.String(d.Get("cluster").(string)),
+			Cluster:            aws.String(cluster),
 			ForceNewDeployment: aws.Bool(d.Get("force_new_deployment").(bool)),
 			Service:            aws.String(d.Id()),
 		}
@@ -1111,13 +1113,12 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.Get("wait_for_steady_state").(bool) {
-			cluster := ""
-			if v, ok := d.GetOk("cluster"); ok {
-				cluster = v.(string)
-			}
-
 			if err := waitServiceStable(conn, d.Id(), cluster); err != nil {
 				return fmt.Errorf("error waiting for ECS service (%s) to become ready: %w", d.Id(), err)
+			}
+		} else {
+			if _, err := waitServiceDescribeReady(conn, d.Id(), cluster); err != nil {
+				return fmt.Errorf("error waiting for ECS service (%s) to become active: %w", d.Id(), err)
 			}
 		}
 	}
