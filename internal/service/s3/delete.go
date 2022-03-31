@@ -2,31 +2,46 @@ package s3
 
 import (
 	"context"
+	"errors"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 )
 
 const (
 	deleteBatchSize = 500
 )
 
-type objectVersionDeleter struct {
-	batchDelete         *s3manager.BatchDelete
-	batchDeleteIterator s3manager.BatchDeleteIterator
-}
+// emptyBucket empties the specified S3 bucket by deleting all object versions and delete markers.
+// If `force` is `true` then S3 Object Lock governance mode restrictions are bypassed and
+// an attempt is made to remove any S3 Object Lock legal holds.
+func emptyBucket(ctx context.Context, conn *s3.S3, bucket string, force bool) error {
+	deleter := s3manager.NewBatchDeleteWithClient(conn, func(o *s3manager.BatchDelete) { o.BatchSize = deleteBatchSize })
 
-func NewObjectVersionDeleter(conn *s3.S3, bucket, key string) *objectVersionDeleter {
-	return &objectVersionDeleter{
-		batchDelete:         s3manager.NewBatchDeleteWithClient(conn, func(o *s3manager.BatchDelete) { o.BatchSize = deleteBatchSize }),
-		batchDeleteIterator: NewDeleteObjectVersionListIterator(conn, bucket, key),
+	// First attempt to delete all object versions.
+	objectVersionIterator := NewDeleteObjectVersionListIterator(conn, bucket, "", force)
+	err := deleter.Delete(ctx, objectVersionIterator)
+
+	if err != nil {
+		if !force {
+			return err
+		}
+
+		var batchErr *s3manager.BatchError
+
+		if errors.As(err, &batchErr) {
+			for _, v := range batchErr.Errors {
+				if tfawserr.ErrCodeEquals(v.OrigErr, "AccessDenied") {
+
+				}
+			}
+		}
 	}
-}
 
-func (self *objectVersionDeleter) DeleteAll(ctx context.Context) error {
-	return self.batchDelete.Delete(ctx, self.batchDeleteIterator)
+	return nil
 }
 
 // listIterator is intended to be embedded inside iterators.
