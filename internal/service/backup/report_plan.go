@@ -97,16 +97,10 @@ func ResourceReportPlan() *schema.Resource {
 						},
 						// A report plan template cannot be updated
 						"report_template": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"RESOURCE_COMPLIANCE_REPORT",
-								"CONTROL_COMPLIANCE_REPORT",
-								"BACKUP_JOB_REPORT",
-								"COPY_JOB_REPORT",
-								"RESTORE_JOB_REPORT",
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(reportSettingTemplate_Values(), false),
 						},
 					},
 				},

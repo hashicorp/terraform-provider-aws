@@ -19,3 +19,21 @@ func reportDeliveryChannelFormat_Values() []string {
 		reportDeliveryChannelFormatJSON,
 	}
 }
+
+const (
+	reportSettingTemplateBackupJobReport          = "BACKUP_JOB_REPORT"
+	reportSettingTemplateControlComplianceReport  = "CONTROL_COMPLIANCE_REPORT"
+	reportSettingTemplateCopyJobReport            = "COPY_JOB_REPORT"
+	reportSettingTemplateResourceComplianceReport = "RESOURCE_COMPLIANCE_REPORT"
+	reportSettingTemplateRestoreJobReport         = "RESTORE_JOB_REPORT"
+)
+
+func reportSettingTemplate_Values() []string {
+	return []string{
+		reportSettingTemplateBackupJobReport,
+		reportSettingTemplateControlComplianceReport,
+		reportSettingTemplateCopyJobReport,
+		reportSettingTemplateResourceComplianceReport,
+		reportSettingTemplateRestoreJobReport,
+	}
+}
