@@ -13,10 +13,87 @@ func New() tfsdk.Provider {
 	return &provider{}
 }
 
+type config struct {
+	AccessKey                      types.String       `tfsdk:"access_key"`
+	AssumeRole                     *assumeRoleConfig  `tfsdk:"assume_role"`
+	AllowedAccountIDs              types.Set          `tfsdk:"allowed_account_ids"`
+	CustomCABundle                 types.String       `tfsdk:"custom_ca_bundle"`
+	DefaultTags                    *defaultTagsConfig `tfsdk:"default_tags"`
+	EC2MetadataServiceEndpoint     types.String       `tfsdk:"ec2_metadata_service_endpoint"`
+	EC2MetadataServiceEndpointMode types.String       `tfsdk:"ec2_metadata_service_endpoint_mode"`
+	ForbiddenAccountIDs            types.Set          `tfsdk:"forbidden_account_ids"`
+	HTTPProxy                      types.String       `tfsdk:"http_proxy"`
+	IgnoreTags                     *ignoreTagsConfig  `tfsdk:"ignore_tags"`
+	Insecure                       types.Bool         `tfsdk:"insecure"`
+	MaxRetries                     types.Int64        `tfsdk:"max_retries"`
+	Profile                        types.String       `tfsdk:"profile"`
+	Region                         types.String       `tfsdk:"region"`
+	S3ForcePathStyle               types.Bool         `tfsdk:"s3_force_path_style"`
+	S3UsePathStyle                 types.Bool         `tfsdk:"s3_use_path_style"`
+	SecretKey                      types.String       `tfsdk:"secret_key"`
+	SharedConfigFiles              types.List         `tfsdk:"shared_config_files"`
+	SharedCredentialsFile          types.String       `tfsdk:"shared_credentials_file"`
+	SharedCredentialsFiles         types.List         `tfsdk:"shared_credentials_files"`
+	SkipCredentialsValidation      types.Bool         `tfsdk:"skip_credentials_validation"`
+	SkipGetEC2Platforms            types.Bool         `tfsdk:"skip_get_ec2_platforms"`
+	SkipMetadataAPICheck           types.Bool         `tfsdk:"skip_metadata_api_check"`
+	SkipRegionValidation           types.Bool         `tfsdk:"skip_region_validation"`
+	SkipRequestingAccountID        types.Bool         `tfsdk:"skip_requesting_account_id"`
+	STSRegion                      types.String       `tfsdk:"sts_region"`
+	Token                          types.String       `tfsdk:"token"`
+	UseDualStackEndpoint           types.Bool         `tfsdk:"use_dualstack_endpoint"`
+	UseFIPSEndpoint                types.Bool         `tfsdk:"use_fips_endpoint"`
+
+	// TODO
+	// Endpoints map[string]string `tfsdk:"endpoints"`
+
+	terraformVersion string
+}
+
+type assumeRoleConfig struct {
+	Duration          Duration     `tfsdk:"duration"`
+	DurationSeconds   types.Int64  `tfsdk:"duration_seconds"`
+	ExternalID        types.String `tfsdk:"external_id"`
+	Policy            types.String `tfsdk:"policy"`
+	PolicyARNs        types.Set    `tfsdk:"policy_arns"`
+	RoleARN           types.String `tfsdk:"role_arn"`
+	SessionName       types.String `tfsdk:"session_name"`
+	Tags              types.Map    `tfsdk:"tags"`
+	TransitiveTagKeys types.Set    `tfsdk:"transitive_tag_keys"`
+}
+
+type defaultTagsConfig struct {
+	Tags types.Map `tfsdk:"tags"`
+}
+
+type ignoreTagsConfig struct {
+	Keys        types.Set `tfsdk:"keys"`
+	KeyPrefixes types.Set `tfsdk:"key_prefixes"`
+}
+
 // provider represents a Terraform Protocol v6 provider.
-type provider struct{}
+type provider struct {
+	config *config
+}
 
 func (p *provider) Configure(ctx context.Context, request tfsdk.ConfigureProviderRequest, response *tfsdk.ConfigureProviderResponse) {
+	var config config
+
+	diags := request.Config.Get(ctx, &config)
+
+	if diags.HasError() {
+		response.Diagnostics.Append(diags...)
+
+		return
+	}
+
+	if !request.Config.Raw.IsFullyKnown() {
+		response.Diagnostics.AddError("Unknown Value", "An attribute value is not yet known")
+	}
+
+	config.terraformVersion = request.TerraformVersion
+
+	p.config = &config
 }
 
 func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSourceType, diag.Diagnostics) {
