@@ -12,7 +12,8 @@ Version 4.0.0 of the AWS provider for Terraform is a major release and includes 
 
 We previously marked most of the changes we outline in this guide as deprecated in the Terraform plan/apply output throughout previous provider releases. You can find these changes, including deprecation notices, in the [Terraform AWS Provider CHANGELOG](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md).
 
-~> **NOTE:** Version 4.0.0 of the AWS Provider introduces significant changes to the `aws_s3_bucket` resource. See [S3 Bucket Refactor](#s3-bucket-refactor) for more details.
+~> **NOTE:** Versions 4.0.0 through v4.8.0 of the AWS Provider introduce significant breaking changes to the `aws_s3_bucket` resource. See [S3 Bucket Refactor](#s3-bucket-refactor) for more details.
+We recommend upgrading to v4.9.0 or later of the AWS Provider instead, where only non-breaking changes and deprecation notices are introduced to the `aws_s3_bucket`. See  [Changes to S3 Bucket Drift Detection](#changes-to-s3-bucket-drift-detection) for additional considerations when upgrading to v4.9.0 or later.
 
 ~> **NOTE:** Version 4.0.0 of the AWS Provider introduces changes to the precedence of some authentication and configuration parameters.
 These changes bring the provider in line with the AWS CLI and SDKs.
@@ -29,7 +30,8 @@ Upgrade topics:
 - [Provider Version Configuration](#provider-version-configuration)
 - [Changes to Authentication](#changes-to-authentication)
 - [New Provider Arguments](#new-provider-arguments)
-- [S3 Bucket Refactor](#s3-bucket-refactor)
+- [Changes to S3 Bucket Drift Detection](#changes-to-s3-bucket-drift-detection) (**Applicable to v4.9.0 and later of the AWS Provider**)
+- [S3 Bucket Refactor](#s3-bucket-refactor) (**Only applicable to v4.0.0 through v4.8.0 of the AWS Provider**)
     - [`acceleration_status` Argument](#acceleration_status-argument)
     - [`acl` Argument](#acl-argument)
     - [`cors_rule` Argument](#cors_rule-argument)
@@ -195,7 +197,138 @@ provider "aws" {
 
 Note that the provider can only resolve FIPS endpoints where AWS provides FIPS support. Support depends on the service and may include `us-east-1`, `us-east-2`, `us-west-1`, `us-west-2`, `us-gov-east-1`, `us-gov-west-1`, and `ca-central-1`. For more information, see [Federal Information Processing Standard (FIPS) 140-2](https://aws.amazon.com/compliance/fips/).
 
+## Changes to S3 Bucket Drift Detection
+
+~> **NOTE:** This only applies to v4.9.0 and later of the AWS Provider.
+
+~> **NOTE:** If you are migrating from v3.75.x of the AWS Provider and you have already adopted the standalone S3 bucket resources (e.g. `aws_s3_bucket_lifecycle_configuration`),
+a [`lifecycle` configuration block to ignore changes](https://www.terraform.io/language/meta-arguments/lifecycle#ignore_changes) to the internal parameters of the source `aws_s3_bucket` resources will no longer be necessary and can be removed upon upgrade.
+
+~> **NOTE:** In the next major version, v5.0, the parameters listed below will be removed entirely from the `aws_s3_bucket` resource.
+For this reason, a deprecation notice is printed in the Terraform CLI for each of the parameters when used in a configuration.
+
+To remediate the breaking changes introduced to the `aws_s3_bucket` resource in v4.0.0 of the AWS Provider,
+v4.9.0 and later retain the same configuration parameters of the `aws_s3_bucket` resource as in v3.x and functionality of the `aws_s3_bucket` resource only differs from v3.x
+in that Terraform will only perform drift detection for each of the following parameters if a configuration value is provided:
+
+* `acceleration_status`
+* `acl`
+* `cors_rule`
+* `grant`
+* `lifecycle_rule`
+* `logging`
+* `object_lock_configuration`
+* `policy`
+* `replication_configuration`
+* `request_payer`
+* `server_side_encryption_configuration`
+* `versioning`
+* `website`
+
+Thus, if one of these parameters was once configured and then is entirely removed from an `aws_s3_bucket` resource configuration,
+Terraform will not pick up on these changes on a subsequent `terraform plan` or `terraform apply`.
+
+For example, given the following configuration with a single `cors_rule`:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "POST"]
+    allowed_origins = ["https://s3-website-test.hashicorp.com"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
+```
+
+When updated to the following configuration without a `cors_rule`:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+}
+```
+
+Terraform CLI with v4.9.0 of the AWS Provider will report back:
+
+```shell
+aws_s3_bucket.example: Refreshing state... [id=yournamehere]
+...
+No changes. Your infrastructure matches the configuration.
+```
+
+With that said, to manage changes to these parameters in the `aws_s3_bucket` resource, practitioners should configure each parameter's respective standalone resource
+and perform updates directly on those new configurations. The parameters are mapped to the standalone resources as follows:
+
+| `aws_s3_bucket` Parameter              | Standalone Resource                                  |
+|----------------------------------------|------------------------------------------------------|
+| `acceleration_status`                  | `aws_s3_bucket_accelerate_configuration`             |
+| `acl`                                  | `aws_s3_bucket_acl`                                  |
+| `cors_rule`                            | `aws_s3_bucket_cors_configuration`                   |
+| `grant`                                | `aws_s3_bucket_acl`                                  |
+| `lifecycle_rule`                       | `aws_s3_bucket_lifecycle_configuration`              |
+| `logging`                              | `aws_s3_bucket_logging`                              |
+| `object_lock_configuration`            | `aws_s3_bucket_object_lock_configuration`            |
+| `policy`                               | `aws_s3_bucket_policy`                               |
+| `replication_configuration`            | `aws_s3_bucket_replication_configuration`            |
+| `request_payer`                        | `aws_s3_bucket_request_payment_configuration`        |
+| `server_side_encryption_configuration` | `aws_s3_bucket_server_side_encryption_configuration` |
+| `versioning`                           | `aws_s3_bucket_versioning`                           |
+| `website`                              | `aws_s3_bucket_website_configuration`                |
+
+Going back to the earlier example, given the following configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "POST"]
+    allowed_origins = ["https://s3-website-test.hashicorp.com"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
+```
+
+Practitioners can upgrade to v4.9.0 and then introduce the standalone `aws_s3_bucket_cors_configuration` resource, e.g.
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_cors_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+  
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "POST"]
+    allowed_origins = ["https://s3-website-test.hashicorp.com"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
+```
+
+Depending on the tools available to you, the above configuration can either be directly applied with Terraform or the standalone resource
+can be imported into Terraform state. Please refer to each standalone resource's _Import_ documentation for the proper syntax.
+
+Once the standalone resource(s) are managed by Terraform, updates/removal can be performed as needed.
+
 ## S3 Bucket Refactor
+
+~> **NOTE:** This only applies to v4.0.0 through v4.8.0 of the AWS Provider, which introduce significant breaking
+changes to the `aws_s3_bucket` resource. We recommend upgrading to v4.9.0 of the AWS Provider instead. See the section above, [Changes to S3 Bucket Drift Detection](#changes-to-s3-bucket-drift-detection), for additional upgrade considerations.
 
 To help distribute the management of S3 bucket settings via independent resources, various arguments and attributes in the `aws_s3_bucket` resource have become **read-only**.
 
@@ -1513,7 +1646,7 @@ resource and remove `versioning` and its nested arguments in the `aws_s3_bucket`
     }
   }
   ```
-  
+
 * If migrating from an earlier version of Terraform AWS Provider:
 
   ```terraform
