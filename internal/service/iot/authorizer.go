@@ -41,6 +41,11 @@ func ResourceAuthorizer() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"enable_caching_for_http": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -50,11 +55,6 @@ func ResourceAuthorizer() *schema.Resource {
 				),
 			},
 			"signing_disabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"enable_http_caching": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -90,9 +90,9 @@ func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &iot.CreateAuthorizerInput{
 		AuthorizerFunctionArn: aws.String(d.Get("authorizer_function_arn").(string)),
 		AuthorizerName:        aws.String(name),
+		EnableCachingForHttp:  aws.Bool(d.Get("enable_caching_for_http").(bool)),
 		SigningDisabled:       aws.Bool(d.Get("signing_disabled").(bool)),
 		Status:                aws.String(d.Get("status").(string)),
-		EnableCachingForHttp:  aws.Bool(d.Get("enable_http_caching").(bool)),
 	}
 
 	if v, ok := d.GetOk("token_key_name"); ok {
@@ -132,12 +132,12 @@ func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", authorizer.AuthorizerArn)
 	d.Set("authorizer_function_arn", authorizer.AuthorizerFunctionArn)
+	d.Set("enable_caching_for_http", authorizer.EnableCachingForHttp)
 	d.Set("name", authorizer.AuthorizerName)
 	d.Set("signing_disabled", authorizer.SigningDisabled)
 	d.Set("status", authorizer.Status)
 	d.Set("token_key_name", authorizer.TokenKeyName)
 	d.Set("token_signing_public_keys", aws.StringValueMap(authorizer.TokenSigningPublicKeys))
-	d.Set("enable_http_caching", authorizer.EnableCachingForHttp)
 
 	return nil
 }
@@ -153,6 +153,10 @@ func resourceAuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.AuthorizerFunctionArn = aws.String(d.Get("authorizer_function_arn").(string))
 	}
 
+	if d.HasChange("enable_caching_for_http") {
+		input.EnableCachingForHttp = aws.Bool(d.Get("enable_caching_for_http").(bool))
+	}
+
 	if d.HasChange("status") {
 		input.Status = aws.String(d.Get("status").(string))
 	}
@@ -163,10 +167,6 @@ func resourceAuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("token_signing_public_keys") {
 		input.TokenSigningPublicKeys = flex.ExpandStringMap(d.Get("token_signing_public_keys").(map[string]interface{}))
-	}
-
-	if d.HasChange("enable_http_caching") {
-		input.EnableCachingForHttp = aws.Bool(d.Get("enable_http_caching").(bool))
 	}
 
 	log.Printf("[INFO] Updating IoT Authorizer: %s", input)
