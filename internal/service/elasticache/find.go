@@ -180,7 +180,7 @@ func FindGlobalReplicationGroupMemberByID(conn *elasticache.ElastiCache, globalR
 	}
 }
 
-func FindElastiCacheUserByID(conn *elasticache.ElastiCache, userID string) (*elasticache.User, error) {
+func FindUserByID(conn *elasticache.ElastiCache, userID string) (*elasticache.User, error) {
 	input := &elasticache.DescribeUsersInput{
 		UserId: aws.String(userID),
 	}
@@ -204,7 +204,7 @@ func FindElastiCacheUserByID(conn *elasticache.ElastiCache, userID string) (*ela
 	}
 }
 
-func FindElastiCacheUserGroupByID(conn *elasticache.ElastiCache, groupID string) (*elasticache.UserGroup, error) {
+func FindUserGroupByID(conn *elasticache.ElastiCache, groupID string) (*elasticache.UserGroup, error) {
 	input := &elasticache.DescribeUserGroupsInput{
 		UserGroupId: aws.String(groupID),
 	}

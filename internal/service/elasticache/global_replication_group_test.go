@@ -318,9 +318,9 @@ resource "aws_elasticache_replication_group" "test" {
 func testAccGlobalReplicationGroupConfig_MultipleSecondaries(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
-		testAccElasticacheVpcBaseWithProvider(rName, "primary", acctest.ProviderName, 1),
-		testAccElasticacheVpcBaseWithProvider(rName, "alternate", acctest.ProviderNameAlternate, 1),
-		testAccElasticacheVpcBaseWithProvider(rName, "third", acctest.ProviderNameThird, 1),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderName, 1),
+		testAccVPCBaseWithProvider(rName, "alternate", acctest.ProviderNameAlternate, 1),
+		testAccVPCBaseWithProvider(rName, "third", acctest.ProviderNameThird, 1),
 		fmt.Sprintf(`
 resource "aws_elasticache_global_replication_group" "test" {
   provider = aws
@@ -373,9 +373,9 @@ resource "aws_elasticache_replication_group" "third" {
 func testAccReplicationGroupConfig_ReplaceSecondary_DifferentRegion_Setup(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
-		testAccElasticacheVpcBaseWithProvider(rName, "primary", acctest.ProviderName, 1),
-		testAccElasticacheVpcBaseWithProvider(rName, "secondary", acctest.ProviderNameAlternate, 1),
-		testAccElasticacheVpcBaseWithProvider(rName, "third", acctest.ProviderNameThird, 1),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderName, 1),
+		testAccVPCBaseWithProvider(rName, "secondary", acctest.ProviderNameAlternate, 1),
+		testAccVPCBaseWithProvider(rName, "third", acctest.ProviderNameThird, 1),
 		fmt.Sprintf(`
 resource "aws_elasticache_global_replication_group" "test" {
   provider = aws
@@ -416,9 +416,9 @@ resource "aws_elasticache_replication_group" "secondary" {
 func testAccReplicationGroupConfig_ReplaceSecondary_DifferentRegion_Move(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
-		testAccElasticacheVpcBaseWithProvider(rName, "primary", acctest.ProviderName, 1),
-		testAccElasticacheVpcBaseWithProvider(rName, "secondary", acctest.ProviderNameAlternate, 1),
-		testAccElasticacheVpcBaseWithProvider(rName, "third", acctest.ProviderNameThird, 1),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderName, 1),
+		testAccVPCBaseWithProvider(rName, "secondary", acctest.ProviderNameAlternate, 1),
+		testAccVPCBaseWithProvider(rName, "third", acctest.ProviderNameThird, 1),
 		fmt.Sprintf(`
 resource "aws_elasticache_global_replication_group" "test" {
   provider = aws
@@ -481,7 +481,7 @@ resource "aws_elasticache_replication_group" "test" {
 `, rName)
 }
 
-func testAccElasticacheVpcBaseWithProvider(rName, name, provider string, subnetCount int) string {
+func testAccVPCBaseWithProvider(rName, name, provider string, subnetCount int) string {
 	return acctest.ConfigCompose(
 		testAccAvailableAZsNoOptInConfigWithProvider(name, provider),
 		fmt.Sprintf(`
