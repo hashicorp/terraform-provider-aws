@@ -1,6 +1,7 @@
 package s3
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -162,32 +164,47 @@ func ResourceBucket() *schema.Resource {
 
 			"website": {
 				Type:       schema.TypeList,
+				Optional:   true,
 				Computed:   true,
-				Deprecated: "Use the aws_s3_bucket_website_configuration resource",
+				MaxItems:   1,
+				Deprecated: "Use the aws_s3_bucket_website_configuration resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"index_document": {
-							Type:       schema.TypeString,
-							Computed:   true,
-							Deprecated: "Use the aws_s3_bucket_website_configuration resource",
+							Type:     schema.TypeString,
+							Optional: true,
+							ExactlyOneOf: []string{
+								"website.0.index_document",
+								"website.0.redirect_all_requests_to",
+							},
 						},
 
 						"error_document": {
-							Type:       schema.TypeString,
-							Computed:   true,
-							Deprecated: "Use the aws_s3_bucket_website_configuration resource",
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 
 						"redirect_all_requests_to": {
-							Type:       schema.TypeString,
-							Computed:   true,
-							Deprecated: "Use the aws_s3_bucket_website_configuration resource",
+							Type: schema.TypeString,
+							ExactlyOneOf: []string{
+								"website.0.index_document",
+								"website.0.redirect_all_requests_to",
+							},
+							ConflictsWith: []string{
+								"website.0.error_document",
+								"website.0.routing_rules",
+							},
+							Optional: true,
 						},
 
 						"routing_rules": {
-							Type:       schema.TypeString,
-							Computed:   true,
-							Deprecated: "Use the aws_s3_bucket_website_configuration resource",
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringIsJSON,
+							StateFunc: func(v interface{}) string {
+								json, _ := structure.NormalizeJsonString(v)
+								return json
+							},
 						},
 					},
 				},
@@ -813,6 +830,12 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 			if err := resourceBucketInternalVersioningUpdate(conn, d.Id(), expandVersioning(v)); err != nil {
 				return fmt.Errorf("error updating S3 Bucket (%s) Versioning: %w", d.Id(), err)
 			}
+		}
+	}
+
+	if d.HasChange("website") {
+		if err := resourceBucketInternalWebsiteUpdate(conn, d); err != nil {
+			return fmt.Errorf("error updating S3 Bucket (%s) Website: %w", d.Id(), err)
 		}
 	}
 
@@ -1841,6 +1864,45 @@ func resourceBucketInternalVersioningUpdate(conn *s3.S3, bucket string, versioni
 	return err
 }
 
+func resourceBucketInternalWebsiteUpdate(conn *s3.S3, d *schema.ResourceData) error {
+	ws := d.Get("website").([]interface{})
+
+	if len(ws) == 0 {
+		input := &s3.DeleteBucketWebsiteInput{
+			Bucket: aws.String(d.Id()),
+		}
+
+		_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+			return conn.DeleteBucketWebsite(input)
+		})
+
+		if err != nil {
+			return fmt.Errorf("error deleting S3 Bucket (%s) Website: %w", d.Id(), err)
+		}
+
+		d.Set("website_endpoint", "")
+		d.Set("website_domain", "")
+
+		return nil
+	}
+
+	websiteConfig, err := expandWebsiteConfiguration(ws)
+	if err != nil {
+		return fmt.Errorf("error expanding S3 Bucket (%s) website configuration: %w", d.Id(), err)
+	}
+
+	input := &s3.PutBucketWebsiteInput{
+		Bucket:               aws.String(d.Id()),
+		WebsiteConfiguration: websiteConfig,
+	}
+
+	_, err = verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		return conn.PutBucketWebsite(input)
+	})
+
+	return err
+}
+
 ///////////////////////////////////////////// Expand and Flatten functions /////////////////////////////////////////////
 
 // Cors Rule functions
@@ -2496,6 +2558,64 @@ func flattenVersioning(versioning *s3.GetBucketVersioningOutput) []interface{} {
 }
 
 // Website functions
+
+func expandWebsiteConfiguration(l []interface{}) (*s3.WebsiteConfiguration, error) {
+	if len(l) == 0 || l[0] == nil {
+		return nil, nil
+	}
+
+	website, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil, nil
+	}
+
+	websiteConfiguration := &s3.WebsiteConfiguration{}
+
+	if v, ok := website["index_document"].(string); ok && v != "" {
+		websiteConfiguration.IndexDocument = &s3.IndexDocument{
+			Suffix: aws.String(v),
+		}
+	}
+
+	if v, ok := website["error_document"].(string); ok && v != "" {
+		websiteConfiguration.ErrorDocument = &s3.ErrorDocument{
+			Key: aws.String(v),
+		}
+	}
+
+	if v, ok := website["redirect_all_requests_to"].(string); ok && v != "" {
+		redirect, err := url.Parse(v)
+		if err == nil && redirect.Scheme != "" {
+			var redirectHostBuf bytes.Buffer
+			redirectHostBuf.WriteString(redirect.Host)
+			if redirect.Path != "" {
+				redirectHostBuf.WriteString(redirect.Path)
+			}
+			if redirect.RawQuery != "" {
+				redirectHostBuf.WriteString("?")
+				redirectHostBuf.WriteString(redirect.RawQuery)
+			}
+			websiteConfiguration.RedirectAllRequestsTo = &s3.RedirectAllRequestsTo{
+				HostName: aws.String(redirectHostBuf.String()),
+				Protocol: aws.String(redirect.Scheme),
+			}
+		} else {
+			websiteConfiguration.RedirectAllRequestsTo = &s3.RedirectAllRequestsTo{
+				HostName: aws.String(v),
+			}
+		}
+	}
+
+	if v, ok := website["routing_rules"].(string); ok && v != "" {
+		var unmarshaledRules []*s3.RoutingRule
+		if err := json.Unmarshal([]byte(v), &unmarshaledRules); err != nil {
+			return nil, err
+		}
+		websiteConfiguration.RoutingRules = unmarshaledRules
+	}
+
+	return websiteConfiguration, nil
+}
 
 func flattenBucketWebsite(ws *s3.GetBucketWebsiteOutput) ([]interface{}, error) {
 	if ws == nil {
