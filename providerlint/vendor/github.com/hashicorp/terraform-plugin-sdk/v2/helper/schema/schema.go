@@ -33,9 +33,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-// Schema is used to describe the structure of a value.
+// Schema describes the structure and type information of a value, whether
+// sourced from configuration, plan, or state data. Schema is used in Provider
+// and Resource types (for managed resources and data resources) and is
+// fundamental to the implementations of ResourceData and ResourceDiff.
 //
-// Read the documentation of the struct elements for important details.
+// The Type field must always be set. At least one of Required, Optional,
+// Optional and Computed, or Computed must be enabled unless the Schema is
+// directly an implementation of an Elem field of another Schema.
 type Schema struct {
 	// Type is the type of the value and must be one of the ValueType values.
 	//
@@ -73,14 +78,37 @@ type Schema struct {
 	// behavior, and SchemaConfigModeBlock is not permitted.
 	ConfigMode SchemaConfigMode
 
-	// If one of these is set, then this item can come from the configuration.
-	// Both cannot be set. If Optional is set, the value is optional. If
-	// Required is set, the value is required.
-	//
-	// One of these must be set if the value is not computed. That is:
-	// value either comes from the config, is computed, or is both.
-	Optional bool
+	// Required indicates whether the practitioner must enter a value in the
+	// configuration for this attribute. Required cannot be used with Computed
+	// Default, DefaultFunc, DiffSuppressFunc, DiffSuppressOnRefresh,
+	// InputDefault, Optional, or StateFunc. At least one of Required,
+	// Optional, Optional and Computed, or Computed must be enabled.
 	Required bool
+
+	// Optional indicates whether the practitioner can choose to not enter
+	// a value in the configuration for this attribute. Optional cannot be used
+	// with Required.
+	//
+	// If also using Default or DefaultFunc, Computed should also be enabled,
+	// otherwise Terraform can output warning logs or "inconsistent result
+	// after apply" errors.
+	Optional bool
+
+	// Computed indicates whether the provider may return its own value for
+	// this attribute or not. Computed cannot be used with Required. If
+	// Required and Optional are both false, the attribute will be considered
+	// "read only" for the practitioner, with only the provider able to set
+	// its value.
+	Computed bool
+
+	// ForceNew indicates whether a change in this value requires the
+	// replacement (destroy and create) of the managed resource instance,
+	// rather than an in-place update. This field is only valid when the
+	// encapsulating Resource is a managed resource.
+	//
+	// If conditional replacement logic is needed, use the Resource type
+	// CustomizeDiff field to call the ResourceDiff type ForceNew method.
+	ForceNew bool
 
 	// If this is non-nil, the provided function will be used during diff
 	// of this field. If this is nil, a default diff for the type of the
@@ -129,29 +157,34 @@ type Schema struct {
 	// for existing providers if activated everywhere all at once.
 	DiffSuppressOnRefresh bool
 
-	// If this is non-nil, then this will be a default value that is used
-	// when this item is not set in the configuration.
+	// Default indicates a value to set if this attribute is not set in the
+	// configuration. Default cannot be used with DefaultFunc or Required.
+	// Default is only supported if the Type is TypeBool, TypeFloat, TypeInt,
+	// or TypeString. Default cannot be used if the Schema is directly an
+	// implementation of an Elem field of another Schema, such as trying to
+	// set a default value for a TypeList or TypeSet.
 	//
-	// DefaultFunc can be specified to compute a dynamic default.
-	// Only one of Default or DefaultFunc can be set. If DefaultFunc is
-	// used then its return value should be stable to avoid generating
-	// confusing/perpetual diffs.
+	// Changing either Default can be a breaking change, especially if the
+	// attribute has ForceNew enabled. If a default needs to change to align
+	// with changing assumptions in an upstream API, then it may be necessary
+	// to also implement resource state upgrade functionality to change the
+	// state to match or update read operation logic to align with the new
+	// default.
+	Default interface{}
+
+	// DefaultFunc can be specified to compute a dynamic default when this
+	// attribute is not set in the configuration. DefaultFunc cannot be used
+	// with Default. For legacy reasons, DefaultFunc can be used with Required
+	// attributes in a Provider schema, which will prompt practitioners for
+	// input if the result of this function is nil.
 	//
-	// Changing either Default or the return value of DefaultFunc can be
-	// a breaking change, especially if the attribute in question has
-	// ForceNew set. If a default needs to change to align with changing
-	// assumptions in an upstream API then it may be necessary to also use
-	// the MigrateState function on the resource to change the state to match,
-	// or have the Read function adjust the state value to align with the
-	// new default.
-	//
-	// If Required is true above, then Default cannot be set. DefaultFunc
-	// can be set with Required. If the DefaultFunc returns nil, then there
-	// will be no default and the user will be asked to fill it in.
-	//
-	// If either of these is set, then the user won't be asked for input
-	// for this key if the default is not nil.
-	Default     interface{}
+	// The return value should be stable to avoid generating confusing
+	// plan differences. Changing the return value can be a breaking change,
+	// especially if ForceNew is enabled. If a default needs to change to align
+	// with changing assumptions in an upstream API, then it may be necessary
+	// to also implement resource state upgrade functionality to change the
+	// state to match or update read operation logic to align with the new
+	// default.
 	DefaultFunc SchemaDefaultFunc
 
 	// Description is used as the description for docs, the language server and
@@ -164,85 +197,125 @@ type Schema struct {
 	// asked for. If Input is asked, this will be the default value offered.
 	InputDefault string
 
-	// The fields below relate to diffs.
-	//
-	// If Computed is true, then the result of this value is computed
-	// (unless specified by config) on creation.
-	//
-	// If ForceNew is true, then a change in this resource necessitates
-	// the creation of a new resource.
-	//
 	// StateFunc is a function called to change the value of this before
 	// storing it in the state (and likewise before comparing for diffs).
 	// The use for this is for example with large strings, you may want
 	// to simply store the hash of it.
-	Computed  bool
-	ForceNew  bool
 	StateFunc SchemaStateFunc
 
-	// The following fields are only set for a TypeList, TypeSet, or TypeMap.
+	// Elem represents the element type for a TypeList, TypeSet, or TypeMap
+	// attribute or block. The only valid types are *Schema and *Resource.
+	// Only TypeList and TypeSet support *Resource.
 	//
-	// Elem represents the element type. For a TypeMap, it must be a *Schema
-	// with a Type that is one of the primitives: TypeString, TypeBool,
-	// TypeInt, or TypeFloat. Otherwise it may be either a *Schema or a
-	// *Resource. If it is *Schema, the element type is just a simple value.
-	// If it is *Resource, the element type is a complex structure,
-	// potentially managed via its own CRUD actions on the API.
+	// If the Elem is a *Schema, the surrounding Schema represents a single
+	// attribute with a single element type for underlying elements. In
+	// practitioner configurations, an equals sign (=) is required to set
+	// the value. Refer to the following documentation:
+	//
+	//   https://www.terraform.io/docs/language/syntax/configuration.html
+	//
+	// The underlying *Schema is only required to implement Type. ValidateFunc
+	// or ValidateDiagFunc can be used to validate each element value.
+	//
+	// If the Elem is a *Resource, the surrounding Schema represents a
+	// configuration block. Blocks can contain underlying attributes or blocks.
+	// In practitioner configurations, an equals sign (=) cannot be used to
+	// set the value. Blocks are instead repeated as necessary, or require
+	// the use of dynamic block expressions. Refer to the following
+	// documentation:
+	//
+	//   https://www.terraform.io/docs/language/syntax/configuration.html
+	//   https://www.terraform.io/docs/language/expressions/dynamic-blocks.html
+	//
+	// The underlying *Resource must only implement the Schema field.
 	Elem interface{}
 
-	// The following fields are only set for a TypeList or TypeSet.
-	//
 	// MaxItems defines a maximum amount of items that can exist within a
-	// TypeSet or TypeList. Specific use cases would be if a TypeSet is being
-	// used to wrap a complex structure, however more than one instance would
-	// cause instability.
-	//
+	// TypeSet or TypeList.
+	MaxItems int
+
 	// MinItems defines a minimum amount of items that can exist within a
-	// TypeSet or TypeList. Specific use cases would be if a TypeSet is being
-	// used to wrap a complex structure, however less than one instance would
-	// cause instability.
+	// TypeSet or TypeList.
 	//
 	// If the field Optional is set to true then MinItems is ignored and thus
 	// effectively zero.
-	MaxItems int
 	MinItems int
 
-	// The following fields are only valid for a TypeSet type.
-	//
-	// Set defines a function to determine the unique ID of an item so that
-	// a proper set can be built.
+	// Set defines custom hash algorithm for each TypeSet element. If not
+	// defined, the SDK implements a default hash algorithm based on the
+	// underlying structure and type information of the Elem field.
 	Set SchemaSetFunc
 
 	// ComputedWhen is a set of queries on the configuration. Whenever any
 	// of these things is changed, it will require a recompute (this requires
 	// that Computed is set to true).
 	//
-	// NOTE: This currently does not work.
+	// Deprecated: This functionality is not implemented and this field
+	// declaration should be removed.
 	ComputedWhen []string
 
-	// ConflictsWith is a set of schema keys that conflict with this schema.
-	// This will only check that they're set in the _config_. This will not
-	// raise an error for a malfunctioning resource that sets a conflicting
-	// key.
+	// ConflictsWith is a set of attribute paths, including this attribute,
+	// whose configurations cannot be set simultaneously. This implements the
+	// validation logic declaratively within the schema and can trigger earlier
+	// in Terraform operations, rather than using create or update logic which
+	// only triggers during apply.
 	//
-	// ExactlyOneOf is a set of schema keys that, when set, only one of the
-	// keys in that list can be specified. It will error if none are
-	// specified as well.
-	//
-	// AtLeastOneOf is a set of schema keys that, when set, at least one of
-	// the keys in that list must be specified.
-	//
-	// RequiredWith is a set of schema keys that must be set simultaneously.
+	// Only absolute attribute paths, ones starting with top level attribute
+	// names, are supported. Attribute paths cannot be accurately declared
+	// for TypeList (if MaxItems is greater than 1), TypeMap, or TypeSet
+	// attributes. To reference an attribute under a single configuration block
+	// (TypeList with Elem of *Resource and MaxItems of 1), the syntax is
+	// "parent_block_name.0.child_attribute_name".
 	ConflictsWith []string
-	ExactlyOneOf  []string
-	AtLeastOneOf  []string
-	RequiredWith  []string
 
-	// When Deprecated is set, this attribute is deprecated.
+	// ExactlyOneOf is a set of attribute paths, including this attribute,
+	// where only one attribute out of all specified can be configured. It will
+	// return a validation error if none are specified as well. This implements
+	// the validation logic declaratively within the schema and can trigger
+	// earlier in Terraform operations, rather than using create or update
+	// logic which only triggers during apply.
 	//
-	// A deprecated field still works, but will probably stop working in near
-	// future. This string is the message shown to the user with instructions on
-	// how to address the deprecation.
+	// Only absolute attribute paths, ones starting with top level attribute
+	// names, are supported. Attribute paths cannot be accurately declared
+	// for TypeList (if MaxItems is greater than 1), TypeMap, or TypeSet
+	// attributes. To reference an attribute under a single configuration block
+	// (TypeList with Elem of *Resource and MaxItems of 1), the syntax is
+	// "parent_block_name.0.child_attribute_name".
+	ExactlyOneOf []string
+
+	// AtLeastOneOf is a set of attribute paths, including this attribute,
+	// in which at least one of the attributes must be configured. This
+	// implements the validation logic declaratively within the schema and can
+	// trigger earlier in Terraform operations, rather than using create or
+	// update logic which only triggers during apply.
+	//
+	// Only absolute attribute paths, ones starting with top level attribute
+	// names, are supported. Attribute paths cannot be accurately declared
+	// for TypeList (if MaxItems is greater than 1), TypeMap, or TypeSet
+	// attributes. To reference an attribute under a single configuration block
+	// (TypeList with Elem of *Resource and MaxItems of 1), the syntax is
+	// "parent_block_name.0.child_attribute_name".
+	AtLeastOneOf []string
+
+	// RequiredWith is a set of attribute paths, including this attribute,
+	// that must be set simultaneously. This implements the validation logic
+	// declaratively within the schema and can trigger earlier in Terraform
+	// operations, rather than using create or update logic which only triggers
+	// during apply.
+	//
+	// Only absolute attribute paths, ones starting with top level attribute
+	// names, are supported. Attribute paths cannot be accurately declared
+	// for TypeList (if MaxItems is greater than 1), TypeMap, or TypeSet
+	// attributes. To reference an attribute under a single configuration block
+	// (TypeList with Elem of *Resource and MaxItems of 1), the syntax is
+	// "parent_block_name.0.child_attribute_name".
+	RequiredWith []string
+
+	// Deprecated indicates the message to include in a warning diagnostic to
+	// practitioners when this attribute is configured. Typically this is used
+	// to signal that this attribute will be removed in the future and provide
+	// next steps to the practitioner, such as using a different attribute,
+	// different resource, or if it should just be removed.
 	Deprecated string
 
 	// ValidateFunc allows individual fields to define arbitrary validation
@@ -278,9 +351,28 @@ type Schema struct {
 	ValidateDiagFunc SchemaValidateDiagFunc
 
 	// Sensitive ensures that the attribute's value does not get displayed in
-	// logs or regular output. It should be used for passwords or other
-	// secret fields. Future versions of Terraform may encrypt these
-	// values.
+	// the Terraform user interface output. It should be used for password or
+	// other values which should be hidden.
+	//
+	// Terraform does not support conditional sensitivity, so if the value may
+	// only be sensitive in certain scenarios, a pragmatic choice will be
+	// necessary upfront of whether or not to always hide the value. Some
+	// providers may opt to split up resources based on sensitivity, to ensure
+	// that practitioners without sensitive values do not have values
+	// unnecessarily hidden.
+	//
+	// Terraform does not support passing sensitivity from configurations to
+	// providers. For example, if a sensitive value is configured via another
+	// attribute, this attribute is not marked Sensitive, and the value is used
+	// in this attribute value, the sensitivity is not transitive. The value
+	// will be displayed as normal.
+	//
+	// Sensitive values propagate when referenced in other parts of a
+	// configuration unless the nonsensitive() configuration function is used.
+	// Certain configuration usage may also expand the sensitivity. For
+	// example, including the sensitive value in a set may mark the whole set
+	// as sensitive. Any outputs containing a sensitive value must enable the
+	// output sensitive argument.
 	Sensitive bool
 }
 
@@ -2153,8 +2245,19 @@ func (m schemaMap) validatePrimitive(
 		// decode a float as an integer.
 
 		// the config shims only use int for integral number values
+		// also accept a string, just as the TypeBool and TypeFloat cases do
 		if v, ok := raw.(int); ok {
 			decoded = v
+		} else if _, ok := raw.(string); ok {
+			var n int
+			if err := mapstructure.WeakDecode(raw, &n); err != nil {
+				return append(diags, diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       err.Error(),
+					AttributePath: path,
+				})
+			}
+			decoded = n
 		} else {
 			return append(diags, diag.Diagnostic{
 				Severity:      diag.Error,
@@ -2163,7 +2266,7 @@ func (m schemaMap) validatePrimitive(
 			})
 		}
 	case TypeFloat:
-		// Verify that we can parse this as an int
+		// Verify that we can parse this as a float
 		var n float64
 		if err := mapstructure.WeakDecode(raw, &n); err != nil {
 			return append(diags, diag.Diagnostic{
