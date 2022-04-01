@@ -122,9 +122,12 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"policy": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "Use the aws_s3_bucket_policy resource instead",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				Deprecated:       "Use the aws_s3_bucket_policy resource instead",
+				ValidateFunc:     validation.StringIsJSON,
+				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 			},
 
 			"cors_rule": {
@@ -781,6 +784,12 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Note: Order of argument updates below is important
+
+	if d.HasChange("policy") {
+		if err := resourceBucketInternalPolicyUpdate(conn, d); err != nil {
+			return fmt.Errorf("error updating S3 Bucket (%s) Policy: %w", d.Id(), err)
+		}
+	}
 
 	if d.HasChange("cors_rule") {
 		if err := resourceBucketInternalCorsUpdate(conn, d); err != nil {
@@ -1867,6 +1876,50 @@ func resourceBucketInternalObjectLockConfigurationUpdate(conn *s3.S3, d *schema.
 	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 		return conn.PutObjectLockConfiguration(req)
 	})
+
+	return err
+}
+
+func resourceBucketInternalPolicyUpdate(conn *s3.S3, d *schema.ResourceData) error {
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is an invalid JSON: %w", policy, err)
+	}
+
+	if policy == "" {
+		_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+			return conn.DeleteBucketPolicy(&s3.DeleteBucketPolicyInput{
+				Bucket: aws.String(d.Id()),
+			})
+		})
+
+		if err != nil {
+			return fmt.Errorf("error deleting S3 Bucket (%s) policy: %w", d.Id(), err)
+		}
+
+		return nil
+	}
+
+	params := &s3.PutBucketPolicyInput{
+		Bucket: aws.String(d.Id()),
+		Policy: aws.String(policy),
+	}
+
+	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err := conn.PutBucketPolicy(params)
+		if tfawserr.ErrCodeEquals(err, ErrCodeMalformedPolicy, s3.ErrCodeNoSuchBucket) {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.PutBucketPolicy(params)
+	}
 
 	return err
 }
