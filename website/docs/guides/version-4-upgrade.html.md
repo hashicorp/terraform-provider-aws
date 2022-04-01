@@ -325,6 +325,1004 @@ can be imported into Terraform state. Please refer to each standalone resource's
 
 Once the standalone resource(s) are managed by Terraform, updates/removal can be performed as needed.
 
+The following sections depict standalone resource adoption per individual parameter. Standalone resource adoption is not required to upgrade but is recommended to ensure drift is detected by Terraform.
+The examples below are by no means exhaustive. The aim is to provide important concepts when migrating to a standalone resource whose parameters may not entirely align with the corresponding parameter in the `aws_s3_bucket` resource.
+
+### Migrating to `aws_s3_bucket_accelerate_configuration`
+
+Given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+  acceleration_status = "Enabled"
+}
+```
+
+Update the configuration to:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_accelerate_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+  status = "Enabled"
+}
+```
+
+### Migrating to `aws_s3_bucket_acl`
+
+#### With `acl`
+
+Given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+  acl    = "private"
+
+  # ... other configuration ...
+}
+```
+
+Update the configuration to:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.example.id
+  acl    = "private"
+}
+```
+
+#### With `grant`
+
+Given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+  grant {
+    id          = data.aws_canonical_user_id.current_user.id
+    type        = "CanonicalUser"
+    permissions = ["FULL_CONTROL"]
+  }
+
+  grant {
+    type        = "Group"
+    permissions = ["READ_ACP", "WRITE"]
+    uri         = "http://acs.amazonaws.com/groups/s3/LogDelivery"
+  }
+}
+```
+
+Update the configuration to:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  access_control_policy {
+    grant {
+      grantee {
+        id   = data.aws_canonical_user_id.current_user.id
+        type = "CanonicalUser"
+      }
+      permission = "FULL_CONTROL"
+    }
+
+    grant {
+      grantee {
+        type = "Group"
+        uri  = "http://acs.amazonaws.com/groups/s3/LogDelivery"
+      }
+      permission = "READ_ACP"
+    }
+
+    grant {
+      grantee {
+        type = "Group"
+        uri  = "http://acs.amazonaws.com/groups/s3/LogDelivery"
+      }
+      permission = "WRITE"
+    }
+
+    owner {
+      id = data.aws_canonical_user_id.current_user.id
+    }
+  }
+}
+```
+
+### Migrating to `aws_s3_bucket_cors_configuration`
+
+Given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "POST"]
+    allowed_origins = ["https://s3-website-test.hashicorp.com"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
+```
+
+Update the configuration to:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_cors_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "POST"]
+    allowed_origins = ["https://s3-website-test.hashicorp.com"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
+```
+
+### Migrating to `aws_s3_bucket_lifecycle_configuration`
+
+#### For Lifecycle Rules with no `prefix` previously configured
+
+~> **Note:** When configuring the `rule.filter` configuration block in the new `aws_s3_bucket_lifecycle_configuration` resource, use the AWS CLI s3api [get-bucket-lifecycle-configuration](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/s3api/get-bucket-lifecycle-configuration.html)
+to get the source bucket's lifecycle configuration and determine if the `Filter` is configured as `"Filter" : {}` or `"Filter" : { "Prefix": "" }`.
+If AWS returns the former, configure `rule.filter` as `filter {}`. Otherwise, neither a `rule.filter` nor `rule.prefix` parameter should be configured as shown here:
+
+Given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  lifecycle_rule {
+    id      = "Keep previous version 30 days, then in Glacier another 60"
+    enabled = true
+
+    noncurrent_version_transition {
+      days          = 30
+      storage_class = "GLACIER"
+    }
+
+    noncurrent_version_expiration {
+      days = 90
+    }
+  }
+
+  lifecycle_rule {
+    id                                     = "Delete old incomplete multi-part uploads"
+    enabled                                = true
+    abort_incomplete_multipart_upload_days = 7
+  }
+}
+```
+
+Update the configuration to:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  rule {
+    id     = "Keep previous version 30 days, then in Glacier another 60"
+    status = "Enabled"
+
+    noncurrent_version_transition {
+      noncurrent_days = 30
+      storage_class   = "GLACIER"
+    }
+
+    noncurrent_version_expiration {
+      noncurrent_days = 90
+    }
+  }
+
+  rule {
+    id     = "Delete old incomplete multi-part uploads"
+    status = "Enabled"
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+}
+```
+
+#### For Lifecycle Rules with `prefix` previously configured as an empty string
+
+Given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  lifecycle_rule {
+    id      = "log-expiration"
+    enabled = true
+    prefix  = ""
+
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    transition {
+      days          = 180
+      storage_class = "GLACIER"
+    }
+  }
+}
+```
+
+Update the configuration to:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  rule {
+    id     = "log-expiration"
+    status = "Enabled"
+
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    transition {
+      days          = 180
+      storage_class = "GLACIER"
+    }
+  }
+}
+```
+
+#### For Lifecycle Rules with `prefix`
+
+Given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  lifecycle_rule {
+    id      = "log-expiration"
+    enabled = true
+    prefix  = "foobar"
+
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    transition {
+      days          = 180
+      storage_class = "GLACIER"
+    }
+  }
+}
+```
+
+Update the configuration to:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  rule {
+    id     = "log-expiration"
+    status = "Enabled"
+
+    filter {
+      prefix = "foobar"
+    }
+
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    transition {
+      days          = 180
+      storage_class = "GLACIER"
+    }
+  }
+}
+```
+
+#### For Lifecycle Rules with `prefix` and `tags`
+
+Given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+  lifecycle_rule {
+    id      = "log"
+    enabled = true
+    prefix = "log/"
+
+    tags = {
+      rule      = "log"
+      autoclean = "true"
+    }
+
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    transition {
+      days          = 60
+      storage_class = "GLACIER"
+    }
+
+    expiration {
+      days = 90
+    }
+  }
+
+  lifecycle_rule {
+    id      = "tmp"
+    prefix  = "tmp/"
+    enabled = true
+
+    expiration {
+      date = "2022-12-31"
+    }
+  }
+}
+```
+
+Update the configuration to:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  rule {
+    id     = "log"
+    status = "Enabled"
+
+    filter {
+      and {
+        prefix = "log/"
+
+        tags = {
+          rule      = "log"
+          autoclean = "true"
+        }
+      }
+    }
+
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    transition {
+      days          = 60
+      storage_class = "GLACIER"
+    }
+
+    expiration {
+      days = 90
+    }
+  }
+
+  rule {
+    id = "tmp"
+
+    filter {
+      prefix  = "tmp/"
+    }
+
+    expiration {
+      date = "2022-12-31T00:00:00Z"
+    }
+
+    status = "Enabled"
+  }
+}
+```
+
+### Migrating to `aws_s3_bucket_logging`
+
+Given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "log_bucket" {
+  # ... other configuration ...
+  bucket = "example-log-bucket"
+}
+
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+  logging {
+    target_bucket = aws_s3_bucket.log_bucket.id
+    target_prefix = "log/"
+  }
+}
+```
+
+Update the configuration to:
+
+```terraform
+resource "aws_s3_bucket" "log_bucket" {
+  bucket = "example-log-bucket"
+
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_logging" "example" {
+  bucket        = aws_s3_bucket.example.id
+  target_bucket = aws_s3_bucket.log_bucket.id
+  target_prefix = "log/"
+}
+```
+
+### Migrating to `aws_s3_bucket_object_lock_configuration`
+
+Given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+  object_lock_configuration {
+    object_lock_enabled = "Enabled"
+
+    rule {
+      default_retention {
+        mode = "COMPLIANCE"
+        days = 3
+      }
+    }
+  }
+}
+```
+
+Update the configuration to:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_object_lock_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  rule {
+    default_retention {
+      mode = "COMPLIANCE"
+      days = 3
+    }
+  }
+}
+```
+
+### Migrating to `aws_s3_bucket_policy`
+
+Given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+  policy = <<EOF
+{
+  "Id": "Policy1446577137248",
+  "Statement": [
+    {
+      "Action": "s3:PutObject",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${data.aws_elb_service_account.current.arn}"
+      },
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::example/*",
+      "Sid": "Stmt1446575236270"
+    }
+  ],
+  "Version": "2012-10-17"
+}
+EOF
+}
+```
+
+Update the configuration to:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_policy" "example" {
+  bucket = aws_s3_bucket.accesslogs_bucket.id
+  policy = <<EOF
+{
+  "Id": "Policy1446577137248",
+  "Statement": [
+    {
+      "Action": "s3:PutObject",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${data.aws_elb_service_account.current.arn}"
+      },
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::example/*",
+      "Sid": "Stmt1446575236270"
+    }
+  ],
+  "Version": "2012-10-17"
+}
+EOF
+}
+```
+
+### Migrating to `aws_s3_bucket_replication_configuration`
+
+Given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  provider = aws.central
+  bucket   = "yournamehere"
+
+  # ... other configuration ...
+
+  replication_configuration {
+    role = aws_iam_role.replication.arn
+    rules {
+      id     = "foobar"
+      status = "Enabled"
+      filter {
+        tags = {}
+      }
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "STANDARD"
+        replication_time {
+          status  = "Enabled"
+          minutes = 15
+        }
+        metrics {
+          status  = "Enabled"
+          minutes = 15
+        }
+      }
+    }
+  }
+}
+```
+
+Update the configuration to:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  provider = aws.central
+  bucket   = "yournamehere"
+
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_replication_configuration" "example" {
+  bucket = aws_s3_bucket.source.id
+  role   = aws_iam_role.replication.arn
+
+  rule {
+    id     = "foobar"
+    status = "Enabled"
+
+    filter {}
+
+    delete_marker_replication {
+      status = "Enabled"
+    }
+
+    destination {
+      bucket        = aws_s3_bucket.destination.arn
+      storage_class = "STANDARD"
+
+      replication_time {
+        status = "Enabled"
+        time {
+          minutes = 15
+        }
+      }
+
+      metrics {
+        status = "Enabled"
+        event_threshold {
+          minutes = 15
+        }
+      }
+    }
+  }
+}
+```
+
+### Migrating to `aws_s3_bucket_request_payment_configuration`
+
+Given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+  request_payer = "Requester"
+}
+```
+
+Update the configuration to:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_request_payment_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+  payer  = "Requester"
+}
+```
+
+### Migrating to `aws_s3_bucket_server_side_encryption_configuration`
+
+Given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = aws_kms_key.mykey.arn
+        sse_algorithm     = "aws:kms"
+      }
+    }
+  }
+}
+```
+
+Update the configuration to:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.mykey.arn
+      sse_algorithm     = "aws:kms"
+    }
+  }
+}
+```
+
+### Migrating to `aws_s3_bucket_versioning`
+
+~> **NOTE:** As `aws_s3_bucket_versioning` is a separate resource, any S3 objects for which versioning is important (_e.g._, a truststore for mutual TLS authentication) must implicitly or explicitly depend on the `aws_s3_bucket_versioning` resource. Otherwise, the S3 objects may be created before versioning has been set. [See below](#ensure-objects-depend-on-versioning) for an example. Also note that AWS recommends waiting 15 minutes after enabling versioning on a bucket before putting or deleting objects in/from the bucket.
+
+#### Buckets With Versioning Enabled
+
+Given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+  versioning {
+    enabled = true
+  }
+}
+```
+
+Update the configuration to:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_versioning" "example" {
+  bucket = aws_s3_bucket.example.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+```
+
+#### Buckets With Versioning Disabled or Suspended
+
+Depending on the version of the Terraform AWS Provider you are migrating from, the interpretation of `versioning.enabled = false`
+in your `aws_s3_bucket` resource will differ and thus the migration to the `aws_s3_bucket_versioning` resource will also differ as follows.
+
+If you are migrating from the Terraform AWS Provider `v3.70.0` or later:
+
+* For new S3 buckets, `enabled = false` is synonymous to `Disabled`.
+* For existing S3 buckets, `enabled = false` is synonymous to `Suspended`.
+
+If you are migrating from an earlier version of the Terraform AWS Provider:
+
+* For both new and existing S3 buckets, `enabled = false` is synonymous to `Suspended`.
+
+Given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+  versioning {
+    enabled = false
+  }
+}
+```
+
+Update the configuration to one of the following:
+
+* If migrating from Terraform AWS Provider `v3.70.0` or later and bucket versioning was never enabled:
+
+  ```terraform
+  resource "aws_s3_bucket" "example" {
+    bucket = "yournamehere"
+  
+    # ... other configuration ...
+  }
+  
+  resource "aws_s3_bucket_versioning" "example" {
+    bucket = aws_s3_bucket.example.id
+    versioning_configuration {
+      status = "Disabled"
+    }
+  }
+  ```
+
+* If migrating from Terraform AWS Provider `v3.70.0` or later and bucket versioning was enabled at one point:
+
+  ```terraform
+  resource "aws_s3_bucket" "example" {
+    bucket = "yournamehere"
+  
+    # ... other configuration ...
+  }
+  
+  resource "aws_s3_bucket_versioning" "example" {
+    bucket = aws_s3_bucket.example.id
+    versioning_configuration {
+      status = "Suspended"
+    }
+  }
+  ```
+
+* If migrating from an earlier version of Terraform AWS Provider:
+
+  ```terraform
+  resource "aws_s3_bucket" "example" {
+    bucket = "yournamehere"
+  
+    # ... other configuration ...
+  }
+  
+  resource "aws_s3_bucket_versioning" "example" {
+    bucket = aws_s3_bucket.example.id
+    versioning_configuration {
+      status = "Suspended"
+    }
+  }
+  ```
+
+#### Ensure Objects Depend on Versioning
+
+When you create an object whose `version_id` you need and an `aws_s3_bucket_versioning` resource in the same configuration, you are more likely to have success by ensuring the `s3_object` depends either implicitly (see below) or explicitly (i.e., using `depends_on = [aws_s3_bucket_versioning.example]`) on the `aws_s3_bucket_versioning` resource.
+
+~> **NOTE:** For critical and/or production S3 objects, do not create a bucket, enable versioning, and create an object in the bucket within the same configuration. Doing so will not allow the AWS-recommended 15 minutes between enabling versioning and writing to the bucket.
+
+This example shows the `aws_s3_object.example` depending implicitly on the versioning resource through the reference to `aws_s3_bucket_versioning.example.bucket` to define `bucket`:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yotto"
+}
+
+resource "aws_s3_bucket_versioning" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "example" {
+  bucket = aws_s3_bucket_versioning.example.bucket
+  key    = "droeloe"
+  source = "example.txt"
+}
+```
+
+### Migrating to `aws_s3_bucket_website_configuration`
+
+Given this previous configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+  website {
+    index_document = "index.html"
+    error_document = "error.html"
+  }
+}
+```
+
+Update the configuration to:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_website_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  index_document {
+    suffix = "index.html"
+  }
+
+  error_document {
+    key = "error.html"
+  }
+}
+```
+
+Given this previous configuration that uses the `aws_s3_bucket` parameter `website_domain` with `aws_route53_record`:
+
+```terraform
+resource "aws_route53_zone" "main" {
+  name = "domain.test"
+}
+
+resource "aws_s3_bucket" "website" {
+  # ... other configuration ...
+  website {
+    index_document = "index.html"
+    error_document = "error.html"
+  }
+}
+
+resource "aws_route53_record" "alias" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "www"
+  type    = "A"
+
+  alias {
+    zone_id                = aws_s3_bucket.website.hosted_zone_id
+    name                   = aws_s3_bucket.website.website_domain
+    evaluate_target_health = true
+  }
+}
+```
+
+Update the configuration to use the `aws_s3_bucket_website_configuration` resource and its `website_domain` parameter:
+
+```terraform
+resource "aws_route53_zone" "main" {
+  name = "domain.test"
+}
+
+resource "aws_s3_bucket" "website" {
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_website_configuration" "example" {
+  bucket = aws_s3_bucket.website.id
+
+  index_document {
+    suffix = "index.html"
+  }
+}
+
+resource "aws_route53_record" "alias" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "www"
+  type    = "A"
+
+  alias {
+    zone_id                = aws_s3_bucket.website.hosted_zone_id
+    name                   = aws_s3_bucket_website_configuration.example.website_domain
+    evaluate_target_health = true
+  }
+}
+```
+
 ## S3 Bucket Refactor
 
 ~> **NOTE:** This only applies to v4.0.0 through v4.8.0 of the AWS Provider, which introduce significant breaking
