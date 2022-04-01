@@ -11,10 +11,10 @@ const (
 )
 
 type CoreNetworkPolicyDoc struct {
-	Version                  string                                       `json:",omitempty"`
-	Id                       string                                       `json:",omitempty"`
-	Segments                 []*CoreNetworkPolicySegment                  `json:"Segment"`
-	CoreNetworkConfiguration []*CoreNetworkPolicyCoreNetworkConfiguration `json:"CoreNetworkConfiguration"`
+	Version                  string                                     `json:",omitempty"`
+	Id                       string                                     `json:",omitempty"`
+	Segments                 []*CoreNetworkPolicySegment                `json:"Segments"`
+	CoreNetworkConfiguration *CoreNetworkPolicyCoreNetworkConfiguration `json:"CoreNetworkConfiguration"`
 }
 
 type CoreNetworkPolicySegment struct {
@@ -27,16 +27,15 @@ type CoreNetworkPolicySegment struct {
 }
 
 type CoreNetworkPolicyCoreNetworkConfiguration struct {
-	AsnRanges                   string
-	VPNEcmpSupport              interface{}     `json:"AllowFilter,omitempty"`
-	EdgeLocations               []*EdgeLocation `json:"EdgeLocations,omitempty"`
-	InsideCidrBlocks            bool            `json:"IsolateAttachments,omitempty"`
-	RequireAttachmentAcceptance bool            `json:"RequireAttachmentAcceptance,omitempty"`
+	AsnRanges        interface{}
+	VPNEcmpSupport   bool            `json:"VPNEcmpSupport,omitempty"`
+	EdgeLocations    []*EdgeLocation `json:"EdgeLocations,omitempty"`
+	InsideCidrBlocks interface{}     `json:"InsideCidrBlocks,omitempty"`
 }
 
 type EdgeLocation struct {
 	Location         string
-	Asn              int         `json:"AllowFilter,omitempty"`
+	Asn              int         `json:"Asn,omitempty"`
 	InsideCidrBlocks interface{} `json:"InsideCidrBlocks,omitempty"`
 }
 

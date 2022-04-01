@@ -24,61 +24,51 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 
-			"core_network_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"asn_ranges": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							// validate like <asn>-<asn> ?
-						},
-						"vpn_ecmp_support": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							Optional: true,
-						},
-						"edge_locations": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 17,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"location": {
-										Type:     schema.TypeString,
-										Required: true,
-										// a-z, 0-9
-										// ValidateFunc: validation.StringInSlice([]string{"Allow", "Deny"}, false),
-									},
-									"asn": {
-										Type:     schema.TypeInt,
-										Default:  false,
-										Optional: true,
-										// validate asn-like
-									},
-									"inside_cidr_blocks": {
-										Type:     schema.TypeList,
-										Optional: true,
-										// validate either ipv4 or 6?
-										Elem: &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"inside_cidr_blocks": {
-							Type:     schema.TypeList,
-							Optional: true,
-							// validate either ipv4 or 6?
-							Elem: &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-				// DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
+			// "core_network_configuration": {
+			// 	Type:     schema.TypeList,
+			// 	Optional: true,
+			// 	MaxItems: 1,
+			// 	Elem: &schema.Resource{
+			// 		Schema: map[string]*schema.Schema{
+			// 			"asn_ranges": setOfString,
+			// 			"vpn_ecmp_support": {
+			// 				Type:     schema.TypeBool,
+			// 				Default:  false,
+			// 				Optional: true,
+			// 			},
+			// 			// "inside_cidr_blocks": setOfString,
+			// 			// 	"edge_locations": {
+			// 			// 		Type:     schema.TypeList,
+			// 			// 		Required: true,
+			// 			// 		MinItems: 1,
+			// 			// 		MaxItems: 17,
+			// 			// 		Elem: &schema.Resource{
+			// 			// 			Schema: map[string]*schema.Schema{
+			// 			// 				"location": {
+			// 			// 					Type:     schema.TypeString,
+			// 			// 					Required: true,
+			// 			// 					// a-z, 0-9
+			// 			// 					// ValidateFunc: validation.StringInSlice([]string{"Allow", "Deny"}, false),
+			// 			// 				},
+			// 			// 				"asn": {
+			// 			// 					Type:     schema.TypeInt,
+			// 			// 					Default:  false,
+			// 			// 					Optional: true,
+			// 			// 					// validate asn-like
+			// 			// 				},
+			// 			// 				"inside_cidr_blocks": {
+			// 			// 					Type:     schema.TypeList,
+			// 			// 					Optional: true,
+			// 			// 					// validate either ipv4 or 6?
+			// 			// 					Elem: &schema.Schema{Type: schema.TypeString},
+			// 			// 				},
+			// 			// 			},
+			// 			// 		},
+			// 			// 	},
+			// 		},
+			// 	},
+			// 	// DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+			// },
 			"json": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -127,6 +117,7 @@ func dataSourceCoreNetworkPolicyDocumentRead(d *schema.ResourceData, meta interf
 
 	doc := &CoreNetworkPolicyDoc{
 		Version: d.Get("version").(string),
+		// CoreNetworkConfiguration: expandDataCoreNetworkPolicyNetworkConfiguration(d.Get("core_network_configuration").([]interface{})),
 	}
 
 	// TODO: segments is required
@@ -179,3 +170,63 @@ func dataSourceCoreNetworkPolicyDocumentRead(d *schema.ResourceData, meta interf
 
 	return nil
 }
+
+// func expandDataCoreNetworkPolicyNetworkConfiguration(cfg []interface{}) *CoreNetworkPolicyCoreNetworkConfiguration {
+// 	c := cfg[0].(map[string]interface{})
+
+// 	nc := &CoreNetworkPolicyCoreNetworkConfiguration{}
+
+// 	// nc.AsnRanges = CoreNetworkPolicyDecodeConfigStringList(cfg["asn_ranges"])
+// 	// asn_ranges = ["test", "test2"]
+// 	if ranges := c["asn_ranges"].(*schema.Set).List(); len(ranges) > 0 {
+// 		nc.AsnRanges = CoreNetworkPolicyDecodeConfigStringList(ranges)
+// 	}
+
+// 	// if cidrs := c["inside_cidr_blocks"].(*schema.Set).List(); len(cidrs) > 0 {
+// 	// 	nc.InsideCidrBlocks = CoreNetworkPolicyDecodeConfigStringList(cidrs)
+// 	// }
+
+// 	// eL, err := expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(c["edge_locations"].([]interface{}))
+
+// 	// if err != nil {
+// 	// 	// TODO
+// 	// 	return nil
+// 	// }
+
+// 	// nc.EdgeLocations = eL
+
+// 	return nc
+
+// }
+
+// func expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(tfList []interface{}) ([]*EdgeLocation, error) {
+// 	edgeLocations := make([]*EdgeLocation, len(tfList))
+// 	locMap := make(map[string]struct{})
+
+// 	for i, edgeLocationsRaw := range tfList {
+
+// 		cfgEdgeLocation, ok := edgeLocationsRaw.(map[string]interface{})
+// 		edgeLocation := &EdgeLocation{}
+
+// 		if !ok {
+// 			continue
+// 		}
+
+// 		location := cfgEdgeLocation["location"].(string)
+
+// 		if _, ok := locMap[location]; ok {
+// 			return nil, fmt.Errorf("duplicate Location (%s). Remove the Location or ensure the Location is unique.", location)
+// 		}
+// 		edgeLocation.Location = location
+// 		if len(edgeLocation.Location) > 0 {
+// 			locMap[edgeLocation.Location] = struct{}{}
+// 		}
+
+// 		if v, ok := cfgEdgeLocation["asn"]; ok {
+// 			edgeLocation.Asn = v.(int)
+// 		}
+
+// 		edgeLocations[i] = edgeLocation
+// 	}
+// 	return edgeLocations, nil
+// }
