@@ -120,52 +120,44 @@ resource "aws_iam_role_policy_attachment" "iot_fleet_provisioning_registration" 
 	policy_arn = "arn:aws:iam::aws:policy/service-role/AWSIoTThingsRegistration"
 }
 
-data "aws_iam_policy_document" "device_policy" {
-  statement {
-    actions   = ["iot:Subscribe"]
-    resources = ["*"]
-  }
-}
-
-resource "aws_iot_policy" "device_policy" {
-  name   = "DevicePolicy"
-  policy = data.aws_iam_policy_document.device_policy.json
-}
-
 resource "aws_iot_provisioning_template" "fleet" {
 	template_name         = "%s"
 	description           = "My provisioning template"
 	provisioning_role_arn = aws_iam_role.iot_fleet_provisioning.arn
 
-  template_body = jsonencode({
-    Parameters = {
-      "AWS::IoT::Certificate::Id" = { Type = "String" }
-      SerialNumber                = { Type = "String" }
-		}
-
-    Resources = {
-      certificate = {
-        Properties = {
-          CertificateId = { Ref = "AWS::IoT::Certificate::Id" }
-          Status        = "Active"
-        }
-
-        Type = "AWS::IoT::Certificate"
-      }
-
-      policy = {
-        Properties = {
-          PolicyName = aws_iot_policy.device_policy.name
-        }
-
-        Type = "AWS::IoT::Policy"
-      }
+  template_body = <<EOF
+{
+  "Parameters": {
+    "SerialNumber": {
+      "Type": "String"
+    },
+    "AWS::IoT::Certificate::Id": {
+      "Type": "String"
     }
-  })
+  },
+  "Resources": {
+    "certificate": {
+      "Properties": {
+        "CertificateId": {
+          "Ref": "AWS::IoT::Certificate::Id"
+        },
+        "Status": "Active"
+      },
+      "Type": "AWS::IoT::Certificate"
+    },
+    "policy": {
+      "Properties": {
+        "PolicyDocument": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Effect\": \"Allow\",\n      \"Action\": \"iot:*\",\n      \"Resource\": \"*\"\n    }\n  ]\n}"
+      },
+      "Type": "AWS::IoT::Policy"
+    }
+  }
+}
+EOF
 }
 `, rName)
 }
 
 func testAccAWSIoTProvisioningTemplateConfigTemplateBodyUpdate(rName string) string {
-	return strings.ReplaceAll(testAccAWSIoTProvisioningTemplateConfigInitialState(rName), "Active", "Inactive")
+	return strings.ReplaceAll(testAccAWSIoTProvisioningTemplateConfigInitialState(rName), "Allow", "Deny")
 }
