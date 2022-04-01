@@ -110,8 +110,8 @@ data "aws_iam_policy_document" "iot_assume_role_policy" {
 }
 
 resource "aws_iam_role" "iot_fleet_provisioning" {
-	name               = "IoTProvisioningServiceRole"
-	path               = "/service-role/"
+	name = "IoTProvisioningServiceRole"
+	path = "/service-role/"
 	assume_role_policy = data.aws_iam_policy_document.iot_assume_role_policy.json
 }
 

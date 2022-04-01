@@ -3,12 +3,12 @@ subcategory: "IoT"
 layout: "aws"
 page_title: "AWS: aws_iot_provisioning_template"
 description: |-
-  Creates an IoT fleet provisioning template.
+  Creates an IoT Fleet Provisioning template.
 ---
 
 # Resource: aws_iot_provisioning_template
 
-Creates an IoT fleet provisioning template. For more info, see the AWS documentation on [fleet provisioning](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html).
+Creates an IoT Fleet Provisioning template. For more info, see the AWS documentation on [Fleet Provisioning](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html).
 
 ~> **NOTE:** The fleet provisioning feature is in beta and is subject to change.
 
@@ -27,8 +27,8 @@ resource "aws_iam_policy_document" "iot_assume_role_policy" {
 }
 
 resource "aws_iam_role" "iot_fleet_provisioning" {
-  name               = "IoTProvisioningServiceRole"
-  path               = "/service-role/"
+  name = "IoTProvisioningServiceRole"
+  path = "/service-role/"
   assume_role_policy = data.aws_iam_policy_document.iot_assume_role_policy.json
 }
 
