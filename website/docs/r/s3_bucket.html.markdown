@@ -36,6 +36,10 @@ Configuring with both will cause inconsistencies and may overwrite configuration
 or with the deprecated parameter `logging` in the resource `aws_s3_bucket`.
 Configuring with both will cause inconsistencies and may overwrite configuration.
 
+~> **NOTE on S3 Bucket Object Lock Configuration:** S3 Bucket Object Lock can be configured in either the standalone resource [`aws_s3_bucket_object_lock_configuration`](s3_bucket_object_lock_configuration.html)
+or with the deprecated parameter `object_lock_configuration` in the resource `aws_s3_bucket`.
+Configuring with both will cause inconsistencies and may overwrite configuration.
+
 ~> **NOTE on S3 Bucket Policy Configuration:** S3 Bucket Policy can be configured in either the standalone resource [`aws_s3_bucket_policy`](s3_bucket_policy.html)
 or with the deprecated parameter `policy` in the resource `aws_s3_bucket`.
 Configuring with both will cause inconsistencies and may overwrite configuration.
@@ -245,10 +249,27 @@ resource "aws_s3_bucket" "versioning_bucket" {
 
 ### Using object lock configuration
 
-The `object_lock_configuration.rule` argument is read-only as of version 4.0 of the Terraform AWS Provider.
-To **enable** Object Lock on a **new** bucket, use the `object_lock_enabled` argument in **this** resource. See [Object Lock Configuration](#object-lock-configuration) below for details.
-To configure the default retention rule of the Object Lock configuration, see the [`aws_s3_bucket_object_lock_configuration` resource](s3_bucket_object_lock_configuration.html.markdown) for configuration details.
+-> **NOTE:** The parameter `object_lock_configuration` is deprecated.
+To **enable** Object Lock on a **new** bucket, use the `object_lock_enabled` argument in **this** resource.
+To configure the default retention rule of the Object Lock configuration use the resource [`aws_s3_bucket_object_lock_configuration` resource](s3_bucket_object_lock_configuration.html.markdown) instead.
 To **enable** Object Lock on an **existing** bucket, please contact AWS Support and refer to the [Object lock configuration for an existing bucket](s3_bucket_object_lock_configuration.html.markdown#object-lock-configuration-for-an-existing-bucket) example for more details.
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "my-tf-example-bucket"
+
+  object_lock_configuration {
+    object_lock_enabled = "Enabled"
+
+    rule {
+      default_retention {
+        mode = "COMPLIANCE"
+        days = 5
+      }
+    }
+  }
+}
+```
 
 ### Using replication configuration
 
@@ -445,7 +466,9 @@ The following arguments are supported:
 * `logging` - (Optional, **Deprecated**) A configuration of [S3 bucket logging](https://docs.aws.amazon.com/AmazonS3/latest/UG/ManagingBucketLogging.html) parameters. See [Logging](#logging) below for details. Terraform will only perform drift detection if a configuration value is provided.
   Use the resource [`aws_s3_bucket_logging`](s3_bucket_logging.html.markdown) instead.
 * `object_lock_enabled` - (Optional, Default:`false`, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled.
-* `object_lock_configuration` - (Optional) A configuration of [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html). See [Object Lock Configuration](#object-lock-configuration) below.
+* `object_lock_configuration` - (Optional, **Deprecated**) A configuration of [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html). See [Object Lock Configuration](#object-lock-configuration) below for details.
+  Terraform wil only perform drift detection if a configuration value is provided.
+  Use the `object_lock_enabled` parameter and the resource [`aws_s3_bucket_object_lock_configuration`](s3_bucket_object_lock_configuration.html.markdown) instead.
 * `policy` - (Optional, **Deprecated**) A valid [bucket policy](https://docs.aws.amazon.com/AmazonS3/latest/dev/example-bucket-policies.html) JSON document. Note that if the policy document is not specific enough (but still valid), Terraform may view the policy as constantly changing in a `terraform plan`. In this case, please make sure you use the verbose/specific version of the policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
   Terraform will only perform drift detection if a configuration value is provided.
   Use the resource [`aws_s3_bucket_policy`](s3_bucket_policy.html) instead.
@@ -548,11 +571,29 @@ The `logging` configuration block supports the following arguments:
 ~> **NOTE:** You can only **enable** S3 Object Lock for **new** buckets. If you need to **enable** S3 Object Lock for an **existing** bucket, please contact AWS Support.
 When you create a bucket with S3 Object Lock enabled, Amazon S3 automatically enables versioning for the bucket.
 Once you create a bucket with S3 Object Lock enabled, you can't disable Object Lock or suspend versioning for the bucket.
-To configure the default retention rule of the Object Lock configuration, see the [`aws_s3_bucket_object_lock_configuration` resource](s3_bucket_object_lock_configuration.html.markdown) for configuration details.
 
-The `object_lock_configuration` configuration block supports the following argument:
+~> **NOTE:** Currently, changes to the `object_lock_configuration` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes of Object Lock settings to an S3 bucket, use the `aws_s3_bucket_object_lock_configuration` resource instead. If you use `object_lock_configuration` on an `aws_s3_bucket`, Terraform will assume management over the full set of Object Lock configuration parameters for the S3 bucket, treating additional Object Lock configuration parameters as drift. For this reason, `object_lock_configuration` cannot be mixed with the external `aws_s3_bucket_object_lock_configuration` resource for a given S3 bucket.
+
+The `object_lock_configuration` configuration block supports the following arguments:
 
 * `object_lock_enabled` - (Optional, **Deprecated**) Indicates whether this bucket has an Object Lock configuration enabled. Valid value is `Enabled`. Use the top-level argument `object_lock_enabled` instead.
+* `rule` - (Optional) The Object Lock rule in place for this bucket ([documented below](#rule)).
+
+#### Rule
+
+The `rule` configuration block supports the following argument:
+
+* `default_retention` - (Required) The default retention period that you want to apply to new objects placed in this bucket ([documented below](#default-retention)).
+
+#### Default Retention
+
+The `default_retention` configuration block supports the following arguments:
+
+~> **NOTE:** Either `days` or `years` must be specified, but not both.
+
+* `mode` - (Required) The default Object Lock retention mode you want to apply to new objects placed in this bucket. Valid values are `GOVERNANCE` and `COMPLIANCE`.
+* `days` - (Optional) The number of days that you want to specify for the default retention period.
+* `years` - (Optional) The number of years that you want to specify for the default retention period.
 
 ### Replication Configuration
 
@@ -678,12 +719,6 @@ In addition to all arguments above, the following attributes are exported:
 * `bucket_domain_name` - The bucket domain name. Will be of format `bucketname.s3.amazonaws.com`.
 * `bucket_regional_domain_name` - The bucket region-specific domain name. The bucket domain name including the region name, please refer [here](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region) for format. Note: The AWS CloudFront allows specifying S3 region-specific endpoint when creating S3 origin, it will prevent [redirect issues](https://forums.aws.amazon.com/thread.jspa?threadID=216814) from CloudFront to S3 Origin URL.
 * `hosted_zone_id` - The [Route 53 Hosted Zone ID](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints) for this bucket's region.
-* `object_lock_configuration` - The [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html) configuration.
-    * `rule` - The Object Lock rule in place for this bucket.
-        * `default_retention` - The default retention period applied to new objects placed in this bucket.
-            * `mode` - The default Object Lock retention mode applied to new objects placed in this bucket.
-            * `days` - The number of days specified for the default retention period.
-            * `years` - The number of years specified for the default retention period.
 * `region` - The AWS region this bucket resides in.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `website_endpoint` - The website endpoint, if the bucket is configured with a website. If not, this will be an empty string.

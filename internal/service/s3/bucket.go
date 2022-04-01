@@ -628,52 +628,56 @@ func ResourceBucket() *schema.Resource {
 				Optional:      true,
 				Computed:      true, // Can be removed when object_lock_configuration.0.object_lock_enabled is removed
 				ForceNew:      true,
-				ConflictsWith: []string{"object_lock_configuration.0.object_lock_enabled"},
+				ConflictsWith: []string{"object_lock_configuration"},
 			},
 
 			"object_lock_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
+				Type:       schema.TypeList,
+				Optional:   true,
+				Computed:   true,
+				MaxItems:   1,
+				Deprecated: "Use the top-level parameter object_lock_enabled and the aws_s3_bucket_object_lock_configuration resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"object_lock_enabled": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(s3.ObjectLockEnabled_Values(), false),
-							Deprecated:   "Use the top-level parameter object_lock_enabled instead",
+							Type:          schema.TypeString,
+							Optional:      true,
+							ForceNew:      true,
+							ConflictsWith: []string{"object_lock_enabled"},
+							ValidateFunc:  validation.StringInSlice(s3.ObjectLockEnabled_Values(), false),
+							Deprecated:    "Use the top-level parameter object_lock_enabled instead",
 						},
 
 						"rule": {
 							Type:       schema.TypeList,
-							Computed:   true,
+							Optional:   true,
 							Deprecated: "Use the aws_s3_bucket_object_lock_configuration resource instead",
+							MaxItems:   1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"default_retention": {
-										Type:       schema.TypeList,
-										Computed:   true,
-										Deprecated: "Use the aws_s3_bucket_object_lock_configuration resource instead",
+										Type:     schema.TypeList,
+										Required: true,
+										MinItems: 1,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"mode": {
-													Type:       schema.TypeString,
-													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_object_lock_configuration resource instead",
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(s3.ObjectLockRetentionMode_Values(), false),
 												},
 
 												"days": {
-													Type:       schema.TypeInt,
-													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_object_lock_configuration resource instead",
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntAtLeast(1),
 												},
 
 												"years": {
-													Type:       schema.TypeInt,
-													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_object_lock_configuration resource instead",
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntAtLeast(1),
 												},
 											},
 										},
@@ -2438,6 +2442,28 @@ func expandS3ObjectLockConfiguration(vConf []interface{}) *s3.ObjectLockConfigur
 
 	if vObjectLockEnabled, ok := mConf["object_lock_enabled"].(string); ok && vObjectLockEnabled != "" {
 		conf.ObjectLockEnabled = aws.String(vObjectLockEnabled)
+	}
+
+	if vRule, ok := mConf["rule"].([]interface{}); ok && len(vRule) > 0 {
+		mRule := vRule[0].(map[string]interface{})
+
+		if vDefaultRetention, ok := mRule["default_retention"].([]interface{}); ok && len(vDefaultRetention) > 0 && vDefaultRetention[0] != nil {
+			mDefaultRetention := vDefaultRetention[0].(map[string]interface{})
+
+			conf.Rule = &s3.ObjectLockRule{
+				DefaultRetention: &s3.DefaultRetention{},
+			}
+
+			if vMode, ok := mDefaultRetention["mode"].(string); ok && vMode != "" {
+				conf.Rule.DefaultRetention.Mode = aws.String(vMode)
+			}
+			if vDays, ok := mDefaultRetention["days"].(int); ok && vDays > 0 {
+				conf.Rule.DefaultRetention.Days = aws.Int64(int64(vDays))
+			}
+			if vYears, ok := mDefaultRetention["years"].(int); ok && vYears > 0 {
+				conf.Rule.DefaultRetention.Years = aws.Int64(int64(vYears))
+			}
+		}
 	}
 
 	return conf
