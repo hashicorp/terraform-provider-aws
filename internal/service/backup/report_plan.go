@@ -360,6 +360,10 @@ func FindReportPlanByName(conn *backup.Backup, name string) (*backup.ReportPlan,
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	if output == nil || output.ReportPlan == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
