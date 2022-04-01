@@ -234,6 +234,11 @@ func providerAccountID(provo *schema.Provider) string {
 	return client.AccountID
 }
 
+// CheckDestroyNoop is a TestCheckFunc to be used as a TestCase's CheckDestroy when no such check can be made.
+func CheckDestroyNoop(_ *terraform.State) error {
+	return nil
+}
+
 // CheckResourceAttrAccountID ensures the Terraform state exactly matches the account ID
 func CheckResourceAttrAccountID(resourceName, attributeName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
