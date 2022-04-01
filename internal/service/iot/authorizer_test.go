@@ -36,6 +36,7 @@ func TestAccIoTAuthorizer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "token_key_name", "Token-Header-1"),
 					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "token_signing_public_keys.Key1"),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_caching", "true"),
 				),
 			},
 			{
@@ -124,6 +125,7 @@ func TestAccIoTAuthorizer_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "token_key_name", "Token-Header-1"),
 					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "token_signing_public_keys.Key1"),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_caching", "true"),
 				),
 			},
 			{
@@ -138,6 +140,7 @@ func TestAccIoTAuthorizer_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "token_signing_public_keys.Key1"),
 					resource.TestCheckResourceAttrSet(resourceName, "token_signing_public_keys.Key2"),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_caching", "false"),
 				),
 			},
 		},
@@ -232,6 +235,7 @@ resource "aws_iot_authorizer" "test" {
   name                    = %[1]q
   authorizer_function_arn = aws_lambda_function.test.arn
   token_key_name          = "Token-Header-1"
+  enable_http_caching     = true
 
   token_signing_public_keys = {
     Key1 = "${file("test-fixtures/iot-authorizer-signing-key.pem")}"
@@ -248,6 +252,7 @@ resource "aws_iot_authorizer" "test" {
   signing_disabled        = false
   token_key_name          = "Token-Header-2"
   status                  = "INACTIVE"
+  enable_http_caching     = false
 
   token_signing_public_keys = {
     Key1 = "${file("test-fixtures/iot-authorizer-signing-key.pem")}"
