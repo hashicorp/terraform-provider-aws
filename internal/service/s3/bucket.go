@@ -571,39 +571,39 @@ func ResourceBucket() *schema.Resource {
 
 			"server_side_encryption_configuration": {
 				Type:       schema.TypeList,
+				MaxItems:   1,
+				Optional:   true,
 				Computed:   true,
 				Deprecated: "Use the aws_s3_bucket_server_side_encryption_configuration resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"rule": {
-							Type:       schema.TypeList,
-							Computed:   true,
-							Deprecated: "Use the aws_s3_bucket_server_side_encryption_configuration resource instead",
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"apply_server_side_encryption_by_default": {
-										Type:       schema.TypeList,
-										Computed:   true,
-										Deprecated: "Use the aws_s3_bucket_server_side_encryption_configuration resource instead",
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"kms_master_key_id": {
-													Type:       schema.TypeString,
-													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_server_side_encryption_configuration resource instead",
+													Type:     schema.TypeString,
+													Optional: true,
 												},
 												"sse_algorithm": {
-													Type:       schema.TypeString,
-													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_server_side_encryption_configuration resource instead",
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(s3.ServerSideEncryption_Values(), false),
 												},
 											},
 										},
 									},
 									"bucket_key_enabled": {
-										Type:       schema.TypeBool,
-										Computed:   true,
-										Deprecated: "Use the aws_s3_bucket_server_side_encryption_configuration resource instead",
+										Type:     schema.TypeBool,
+										Optional: true,
 									},
 								},
 							},
@@ -813,6 +813,12 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("object_lock_configuration") {
 		if err := resourceBucketInternalObjectLockConfigurationUpdate(conn, d); err != nil {
 			return fmt.Errorf("error updating S3 Bucket (%s) Object Lock configuration: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("server_side_encryption_configuration") {
+		if err := resourceBucketInternalServerSideEncryptionConfigurationUpdate(conn, d); err != nil {
+			return fmt.Errorf("error updating S3 Bucket (%s) Server-side Encryption configuration: %w", d.Id(), err)
 		}
 	}
 
@@ -1847,6 +1853,70 @@ func resourceBucketInternalObjectLockConfigurationUpdate(conn *s3.S3, d *schema.
 	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 		return conn.PutObjectLockConfiguration(req)
 	})
+
+	return err
+}
+
+func resourceBucketInternalServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
+	serverSideEncryptionConfiguration := d.Get("server_side_encryption_configuration").([]interface{})
+
+	if len(serverSideEncryptionConfiguration) == 0 {
+		input := &s3.DeleteBucketEncryptionInput{
+			Bucket: aws.String(d.Id()),
+		}
+
+		_, err := conn.DeleteBucketEncryption(input)
+
+		if err != nil {
+			return fmt.Errorf("error removing S3 Bucket (%s) Server-side Encryption: %w", d.Id(), err)
+		}
+
+		return nil
+	}
+
+	c := serverSideEncryptionConfiguration[0].(map[string]interface{})
+
+	rc := &s3.ServerSideEncryptionConfiguration{}
+
+	rcRules := c["rule"].([]interface{})
+	var rules []*s3.ServerSideEncryptionRule
+	for _, v := range rcRules {
+		rr := v.(map[string]interface{})
+		rrDefault := rr["apply_server_side_encryption_by_default"].([]interface{})
+		sseAlgorithm := rrDefault[0].(map[string]interface{})["sse_algorithm"].(string)
+		kmsMasterKeyId := rrDefault[0].(map[string]interface{})["kms_master_key_id"].(string)
+		rcDefaultRule := &s3.ServerSideEncryptionByDefault{
+			SSEAlgorithm: aws.String(sseAlgorithm),
+		}
+		if kmsMasterKeyId != "" {
+			rcDefaultRule.KMSMasterKeyID = aws.String(kmsMasterKeyId)
+		}
+		rcRule := &s3.ServerSideEncryptionRule{
+			ApplyServerSideEncryptionByDefault: rcDefaultRule,
+		}
+
+		if val, ok := rr["bucket_key_enabled"].(bool); ok {
+			rcRule.BucketKeyEnabled = aws.Bool(val)
+		}
+
+		rules = append(rules, rcRule)
+	}
+
+	rc.Rules = rules
+
+	input := &s3.PutBucketEncryptionInput{
+		Bucket:                            aws.String(d.Id()),
+		ServerSideEncryptionConfiguration: rc,
+	}
+
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(
+		propagationTimeout,
+		func() (interface{}, error) {
+			return conn.PutBucketEncryption(input)
+		},
+		s3.ErrCodeNoSuchBucket,
+		ErrCodeOperationAborted,
+	)
 
 	return err
 }

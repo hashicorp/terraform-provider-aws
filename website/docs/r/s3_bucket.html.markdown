@@ -36,6 +36,10 @@ Configuring with both will cause inconsistencies and may overwrite configuration
 or with the deprecated parameter `logging` in the resource `aws_s3_bucket`.
 Configuring with both will cause inconsistencies and may overwrite configuration.
 
+~> **NOTE on S3 Bucket Server Side Encryption Configuration:** S3 Bucket Server Side Encryption can be configured in either the standalone resource [`aws_s3_bucket_server_side_encryption_configuration`](s3_bucket_server_side_encryption_configuration.html)
+or with the deprecated parameter `server_side_encryption_configuration` in the resource `aws_s3_bucket`.
+Configuring with both will cause inconsistencies and may overwrite configuration.
+
 ~> **NOTE on S3 Bucket Versioning Configuration:** S3 Bucket versioning can be configured in either the standalone resource [`aws_s3_bucket_versioning`](s3_bucket_versioning.html.markdown)
 or with the deprecated parameter `versioning` in the resource `aws_s3_bucket`.
 Configuring with both will cause inconsistencies and may overwrite configuration.
@@ -241,8 +245,28 @@ See the [`aws_s3_bucket_replication_configuration` resource](s3_bucket_replicati
 
 ### Enable Default Server Side Encryption
 
-The `server_side_encryption_configuration` argument is read-only as of version 4.0 of the Terraform AWS Provider.
-See the [`aws_s3_bucket_server_side_encryption_configuration` resource](s3_bucket_server_side_encryption_configuration.html.markdown) for configuration details.
+-> **NOTE:** The parameter `server_side_encryption_configuration` is deprecated.
+Use the resource [`aws_s3_bucket_server_side_encryption_configuration`](s3_bucket_server_side_encryption_configuration.html) instead.
+
+```terraform
+resource "aws_kms_key" "mykey" {
+  description             = "This key is used to encrypt bucket objects"
+  deletion_window_in_days = 10
+}
+
+resource "aws_s3_bucket" "mybucket" {
+  bucket = "mybucket"
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = aws_kms_key.mykey.arn
+        sse_algorithm     = "aws:kms"
+      }
+    }
+  }
+}
+```
 
 ### Using ACL policy grants
 
@@ -287,6 +311,9 @@ The following arguments are supported:
   Use the resource [`aws_s3_bucket_logging`](s3_bucket_logging.html.markdown) instead.
 * `object_lock_enabled` - (Optional, Default:`false`, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled.
 * `object_lock_configuration` - (Optional) A configuration of [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html). See [Object Lock Configuration](#object-lock-configuration) below.
+* `server_side_encryption_configuration` - (Optional, **Deprecated**) A configuration of [server-side encryption configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html). See [Server Side Encryption Configuration](#server-side-encryption-configuration) below for details.
+  Terraform will only perform drift detection if a configuration value is provided.
+  Use the resource [`aws_s3_bucket_server_side_encryption_configuration`](s3_bucket_server_side_encryption_configuration.html) instead.
 * `versioning` - (Optional, **Deprecated**) A configuration of the [S3 bucket versioning state](https://docs.aws.amazon.com/AmazonS3/latest/dev/Versioning.html). See [Versioning](#versioning) below for details. Terraform will only perform drift detection if a configuration value is provided. Use the resource [`aws_s3_bucket_versioning`](s3_bucket_versioning.html.markdown) instead.
 * `website` - (Optional, **Deprecated**) A configuration of the [S3 bucket website](https://docs.aws.amazon.com/AmazonS3/latest/userguide/WebsiteHosting.html). See [Website](#website) below for details. Terraform will only perform drift detection if a configuration value is provided.
   Use the resource [`aws_s3_bucket_website_configuration`](s3_bucket_website_configuration.html.markdown) instead.
@@ -382,6 +409,24 @@ The `object_lock_configuration` configuration block supports the following argum
 
 * `object_lock_enabled` - (Optional, **Deprecated**) Indicates whether this bucket has an Object Lock configuration enabled. Valid value is `Enabled`. Use the top-level argument `object_lock_enabled` instead.
 
+### Server Side Encryption Configuration
+
+~> **NOTE:** Currently, changes to the `server_side_encryption_configuration` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes in encryption of an S3 bucket, use the `aws_s3_bucket_server_side_encryption_configuration` resource instead. If you use `server_side_encryption_configuration` on an `aws_s3_bucket`, Terraform will assume management over the encryption configuration for the S3 bucket, treating additional encryption changes as drift. For this reason, `server_side_encryption_configuration` cannot be mixed with the external `aws_s3_bucket_server_side_encryption_configuration` resource for a given S3 bucket.
+
+The `server_side_encryption_configuration` configuration block supports the following argument:
+
+* `rule` - (Required) A single object for server-side encryption by default configuration. (documented below)
+
+The `rule` configuration block supports the following arguments:
+
+* `apply_server_side_encryption_by_default` - (Required) A single object for setting server-side encryption by default. (documented below)
+* `bucket_key_enabled` - (Optional) Whether or not to use [Amazon S3 Bucket Keys](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) for SSE-KMS.
+
+The `apply_server_side_encryption_by_default` configuration block supports the following arguments:
+
+* `sse_algorithm` - (Required) The server-side encryption algorithm to use. Valid values are `AES256` and `aws:kms`
+* `kms_master_key_id` - (Optional) The AWS KMS master key ID used for the SSE-KMS encryption. This can only be used when you set the value of `sse_algorithm` as `aws:kms`. The default `aws/s3` AWS KMS master key is used if this element is absent while the `sse_algorithm` is `aws:kms`.
+
 ### Versioning
 
 ~> **NOTE:** Currently, changes to the `versioning` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes of versioning state to an S3 bucket, use the `aws_s3_bucket_versioning` resource instead. If you use `versioning` on an `aws_s3_bucket`, Terraform will assume management over the versioning state of the S3 bucket, treating additional versioning state changes as drift. For this reason, `versioning` cannot be mixed with the external `aws_s3_bucket_versioning` resource for a given S3 bucket.
@@ -448,12 +493,6 @@ In addition to all arguments above, the following attributes are exported:
                 * `enabled` - Whether this criteria is enabled.
         * `status` - The status of the rule.
 * `request_payer` - Either `BucketOwner` or `Requester` that pays for the download and request fees.
-* `server_side_encryption_configuration` - The [server-side encryption configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html).
-    * `rule` - (required) Information about a particular server-side encryption configuration rule.
-        * `apply_server_side_encryption_by_default` - The default server-side encryption applied to new objects in the bucket.
-            * `kms_master_key_id` - (optional) The AWS KMS master key ID used for the SSE-KMS encryption.
-            * `sse_algorithm` - (required) The server-side encryption algorithm used.
-        * `bucket_key_enabled` - (Optional) Whether an [Amazon S3 Bucket Key](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) is used for SSE-KMS.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `website_endpoint` - The website endpoint, if the bucket is configured with a website. If not, this will be an empty string.
 * `website_domain` - The domain of the website endpoint, if the bucket is configured with a website. If not, this will be an empty string. This is used to create Route 53 alias records.
