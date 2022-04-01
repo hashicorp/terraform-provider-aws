@@ -162,7 +162,7 @@ func resourceIndexingConfigurationPut(ctx context.Context, d *schema.ResourceDat
 	}
 
 	log.Printf("[DEBUG] Updating IoT Indexing Configuration: %s", input)
-	_, err := conn.UpdateIndexingConfiguration(input)
+	_, err := conn.UpdateIndexingConfigurationWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("error updating IoT Indexing Configuration: %s", err)
@@ -176,7 +176,7 @@ func resourceIndexingConfigurationPut(ctx context.Context, d *schema.ResourceDat
 func resourceIndexingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).IoTConn
 
-	output, err := conn.GetIndexingConfiguration(&iot.GetIndexingConfigurationInput{})
+	output, err := conn.GetIndexingConfigurationWithContext(ctx, &iot.GetIndexingConfigurationInput{})
 
 	if err != nil {
 		return diag.Errorf("error reading IoT Indexing Configuration: %s", err)
