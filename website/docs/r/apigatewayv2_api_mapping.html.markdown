@@ -40,7 +40,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_apigatewayv2_api_mapping` can be imported by using the API mapping identifier and domain name, e.g.
+`aws_apigatewayv2_api_mapping` can be imported by using the API mapping identifier and domain name, e.g.,
 
 ```
 $ terraform import aws_apigatewayv2_api_mapping.example 1122334/ws-api.example.com

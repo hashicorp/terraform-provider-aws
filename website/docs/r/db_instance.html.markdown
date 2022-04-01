@@ -74,7 +74,7 @@ documentation](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_Crea
 
 The following arguments are supported:
 
-* `allocated_storage` - (Required unless a `snapshot_identifier` or `replicate_source_db` is provided) The allocated storage in gibibytes. If `max_allocated_storage` is configured, this argument represents the initial storage allocation and differences from the configuration will be ignored automatically when Storage Autoscaling occurs.
+* `allocated_storage` - (Required unless a `snapshot_identifier` or `replicate_source_db` is provided) The allocated storage in gibibytes. If `max_allocated_storage` is configured, this argument represents the initial storage allocation and differences from the configuration will be ignored automatically when Storage Autoscaling occurs. If `replicate_source_db` is set, the value is ignored during the creation of the instance.
 * `allow_major_version_upgrade` - (Optional) Indicates that major version
 upgrades are allowed. Changing this parameter does not result in an outage and
 the change is asynchronously applied as soon as possible.
@@ -97,6 +97,7 @@ encoding in Oracle and Microsoft SQL instances (collation). This can't be change
 Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html)
 or [Server-Level Collation for Microsoft SQL Server](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.SQLServer.CommonDBATasks.Collation.html) for more information.
 * `copy_tags_to_snapshot` – (Optional, boolean) Copy all Instance `tags` to snapshots. Default is `false`.
+* `db_name` - (Optional) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica.
 * `db_subnet_group_name` - (Optional) Name of [DB subnet group](/docs/providers/aws/r/db_subnet_group.html). DB instance will
 be created in the VPC associated with the DB subnet group. If unspecified, will
 be created in the `default` VPC, or in EC2 Classic, if available. When working
@@ -110,16 +111,16 @@ for additional read replica contraints.
 * `domain_iam_role_name` - (Optional, but required if domain is provided) The name of the IAM role to be used when making API calls to the Directory Service.
 * `enabled_cloudwatch_logs_exports` - (Optional) Set of log types to enable for exporting to CloudWatch logs. If omitted, no logs will be exported. Valid values (depending on `engine`). MySQL and MariaDB: `audit`, `error`, `general`, `slowquery`. PostgreSQL: `postgresql`, `upgrade`. MSSQL: `agent` , `error`. Oracle: `alert`, `audit`, `listener`, `trace`.
 * `engine` - (Required unless a `snapshot_identifier` or `replicate_source_db`
-is provided) The database engine to use.  For supported values, see the Engine parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
+is provided) The database engine to use.  For supported values, see the Engine parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Cannot be specified for a replica.
 Note that for Amazon Aurora instances the engine must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine'.
 For information on the difference between the available Aurora MySQL engines
 see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Updates.20180206.html)
 in the Amazon RDS User Guide.
 * `engine_version` - (Optional) The engine version to use. If `auto_minor_version_upgrade`
-is enabled, you can provide a prefix of the version such as `5.7` (for `5.7.10`) and
-this attribute will ignore differences in the patch version automatically (e.g. `5.7.17`).
+is enabled, you can provide a prefix of the version such as `5.7` (for `5.7.10`).
+The actual engine version used is returned in the attribute `engine_version_actual`, [defined below](#engine_version_actual).
 For supported values, see the EngineVersion parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
-Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'.
+Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'. Cannot be specified for a replica.
 * `final_snapshot_identifier` - (Optional) The name of your final DB snapshot
 when this DB instance is deleted. Must be provided if `skip_final_snapshot` is
 set to `false`. The value must begin with a letter, only contain alphanumeric characters and hyphens, and not end with a hyphen or contain two consecutive hyphens. Must not be provided when deleting a read replica.
@@ -135,7 +136,7 @@ identifier beginning with the specified prefix. Conflicts with `identifier`.
 storage_type of "io1".
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. If creating an
 encrypted replica, set this to the destination KMS ARN.
-* `license_model` - (Optional, but required for some DB engines, i.e. Oracle
+* `license_model` - (Optional, but required for some DB engines, i.e., Oracle
 SE1) License model information for this DB instance.
 * `maintenance_window` - (Optional) The window to perform maintenance in.
 Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00". See [RDS
@@ -153,7 +154,9 @@ information on the [AWS
 Documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html)
 what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `multi_az` - (Optional) Specifies if the RDS instance is multi-AZ
-* `name` - (Optional) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case.
+* `name` - (Optional, **Deprecated** use `db_name` instead) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica.
+* `nchar_character_set_name` - (Optional, Forces new resource) The national character set is used in the NCHAR, NVARCHAR2, and NCLOB data types for Oracle instances. This can't be changed. See [Oracle Character Sets
+Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html).
 * `option_group_name` - (Optional) Name of the DB option group to associate.
 * `parameter_group_name` - (Optional) Name of the DB parameter group to
 associate.
@@ -166,6 +169,8 @@ logs, and it will be stored in the state file.
 * `port` - (Optional) The port on which the DB accepts connections.
 * `publicly_accessible` - (Optional) Bool to control if instance is publicly
 accessible. Default is `false`.
+* `replica_mode` - (Optional) Specifies whether the replica is in either `mounted` or `open-read-only` mode. This attribute
+is only supported by Oracle instances. Oracle replicas operate in `open-read-only` mode unless otherwise specified. See [Working with Oracle Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-read-replicas.html) for more information.
 * `replicate_source_db` - (Optional) Specifies that this resource is a Replicate
 database, and to use this value as the source database. This correlates to the
 `identifier` of another Amazon RDS Database to replicate (if replicating within
@@ -202,9 +207,10 @@ creation. See [MSSQL User
 Guide](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_SQLServer.html#SQLServer.Concepts.General.TimeZone)
 for more information.
 * `username` - (Required unless a `snapshot_identifier` or `replicate_source_db`
-is provided) Username for the master DB user.
+is provided) Username for the master DB user. Cannot be specified for a replica.
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to
 associate.
+* `customer_owned_ip_enabled` - (Optional) Indicates whether to enable a customer-owned IP address (CoIP) for an RDS on Outposts DB instance. See [CoIP for RDS on Outposts](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-on-outposts.html#rds-on-outposts.coip) for more information.
 
 ~> **NOTE:** Removing the `replicate_source_db` attribute from an existing RDS
 Replicate database managed by Terraform will promote the database to a fully
@@ -219,8 +225,9 @@ This setting does not apply to `aurora-mysql` or `aurora-postgresql` DB engines.
 The `restore_to_point_in_time` block supports the following arguments:
 
 * `restore_time` - (Optional) The date and time to restore from. Value must be a time in Universal Coordinated Time (UTC) format and must be before the latest restorable time for the DB instance. Cannot be specified with `use_latest_restorable_time`.
-* `source_db_instance_identifier` - (Optional) The identifier of the source DB instance from which to restore. Must match the identifier of an existing DB instance. Required if `source_dbi_resource_id` is not specified.
-* `source_dbi_resource_id` - (Optional) The resource ID of the source DB instance from which to restore. Required if `source_db_instance_identifier` is not specified.
+* `source_db_instance_identifier` - (Optional) The identifier of the source DB instance from which to restore. Must match the identifier of an existing DB instance. Required if `source_db_instance_automated_backups_arn` or `source_dbi_resource_id` is not specified.
+* `source_db_instance_automated_backups_arn` - (Optional) The ARN of the automated backup from which to restore. Required if `source_db_instance_identifier` or `source_dbi_resource_id` is not specified.
+* `source_dbi_resource_id` - (Optional) The resource ID of the source DB instance from which to restore. Required if `source_db_instance_identifier` or `source_db_instance_automated_backups_arn` is not specified.
 * `use_latest_restorable_time` - (Optional) A boolean value that indicates whether the DB instance is restored from the latest backup time. Defaults to `false`. Cannot be specified with `restore_time`.
 
 ### S3 Import Options
@@ -275,11 +282,12 @@ In addition to all arguments above, the following attributes are exported:
 * `backup_window` - The backup window.
 * `ca_cert_identifier` - Specifies the identifier of the CA certificate for the
 DB instance.
+* `db_name` - The database name.
 * `domain` - The ID of the Directory Service Active Directory domain the instance is joined to
 * `domain_iam_role_name` - The name of the IAM role to be used when making API calls to the Directory Service.
 * `endpoint` - The connection endpoint in `address:port` format.
 * `engine` - The database engine.
-* `engine_version` - The database engine version.
+* `engine_version_actual` - The running version of the database.
 * `hosted_zone_id` - The canonical hosted zone ID of the DB instance (to be used
 in a Route 53 Alias record).
 * `id` - The RDS instance ID.
@@ -301,7 +309,7 @@ On Oracle and Microsoft SQL instances the following is exported additionally:
 
 ## Import
 
-DB Instances can be imported using the `identifier`, e.g.
+DB Instances can be imported using the `identifier`, e.g.,
 
 ```
 $ terraform import aws_db_instance.default mydb-rds-instance

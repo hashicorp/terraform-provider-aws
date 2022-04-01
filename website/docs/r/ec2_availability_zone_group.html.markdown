@@ -36,7 +36,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EC2 Availability Zone Groups can be imported using the group name, e.g.
+EC2 Availability Zone Groups can be imported using the group name, e.g.,
 
 ```
 $ terraform import aws_ec2_availability_zone_group.example us-west-2-lax-1

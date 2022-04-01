@@ -39,6 +39,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The Amazon Resource Name (ARN) of the Delegation Set.
 * `id` - The delegation set ID
 * `name_servers` - A list of authoritative name servers for the hosted zone
   (effectively a list of NS records).
@@ -47,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route53 Delegation Sets can be imported using the `delegation set id`, e.g.
+Route53 Delegation Sets can be imported using the `delegation set id`, e.g.,
 
 ```
 $ terraform import aws_route53_delegation_set.set1 N1PA6795SAMPLE

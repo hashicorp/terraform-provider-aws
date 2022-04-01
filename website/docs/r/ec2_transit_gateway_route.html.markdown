@@ -49,7 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_ec2_transit_gateway_route` can be imported by using the EC2 Transit Gateway Route Table, an underscore, and the destination, e.g.
+`aws_ec2_transit_gateway_route` can be imported by using the EC2 Transit Gateway Route Table, an underscore, and the destination, e.g.,
 
 ```
 $ terraform import aws_ec2_transit_gateway_route.example tgw-rtb-12345678_0.0.0.0/0

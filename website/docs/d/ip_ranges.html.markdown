@@ -40,7 +40,7 @@ resource "aws_security_group" "from_europe" {
 
 * `regions` - (Optional) Filter IP ranges by regions (or include all regions, if
 omitted). Valid items are `global` (for `cloudfront`) as well as all AWS regions
-(e.g. `eu-central-1`)
+(e.g., `eu-central-1`)
 
 * `services` - (Required) Filter IP ranges by services. Valid items are `amazon`
 (for amazon.com), `amazon_connect`, `api_gateway`, `cloud9`, `cloudfront`,
@@ -57,9 +57,9 @@ CIDR blocks, Terraform will fail.
 
 * `cidr_blocks` - The lexically ordered list of CIDR blocks.
 * `ipv6_cidr_blocks` - The lexically ordered list of IPv6 CIDR blocks.
-* `create_date` - The publication time of the IP ranges (e.g. `2016-08-03-23-46-05`).
+* `create_date` - The publication time of the IP ranges (e.g., `2016-08-03-23-46-05`).
 * `sync_token` - The publication time of the IP ranges, in Unix epoch time format
-  (e.g. `1470267965`).
+  (e.g., `1470267965`).
 
 [1]: https://docs.aws.amazon.com/general/latest/gr/aws-ip-ranges.html
 [2]: https://docs.aws.amazon.com/general/latest/gr/aws-ip-ranges.html#aws-ip-syntax

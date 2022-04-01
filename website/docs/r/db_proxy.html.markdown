@@ -79,7 +79,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DB proxies can be imported using the `name`, e.g.
+DB proxies can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_db_proxy.example example

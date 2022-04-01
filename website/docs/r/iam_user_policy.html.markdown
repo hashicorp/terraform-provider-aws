@@ -61,7 +61,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IAM User Policies can be imported using the `user_name:user_policy_name`, e.g.
+IAM User Policies can be imported using the `user_name:user_policy_name`, e.g.,
 
 ```
 $ terraform import aws_iam_user_policy.mypolicy user_of_mypolicy_name:mypolicy_name

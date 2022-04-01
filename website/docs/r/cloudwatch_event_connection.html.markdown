@@ -53,7 +53,7 @@ resource "aws_cloudwatch_event_connection" "test" {
 resource "aws_cloudwatch_event_connection" "test" {
   name               = "ngrok-connection"
   description        = "A connection description"
-  authorization_type = "BASIC"
+  authorization_type = "OAUTH_CLIENT_CREDENTIALS"
 
   auth_parameters {
     oauth {
@@ -160,7 +160,7 @@ The following arguments are supported:
 
 `oauth` support the following:
 
-* `authorization_endpoint` - (Required) A username for the authorization.
+* `authorization_endpoint` - (Required) The URL to the authorization endpoint.
 * `http_method` - (Required) A password for the authorization. Created and stored in AWS Secrets Manager.
 * `client_parameters` - (Required) Contains the client parameters for OAuth authorization. Contains the following two parameters.
     * `client_id` - (Required) The client ID for the credentials to use for authorization. Created and stored in AWS Secrets Manager.
@@ -194,7 +194,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EventBridge Connection can be imported using the `name`, e.g.
+EventBridge Connection can be imported using the `name`, e.g.,
 
 ```console
 $ terraform import aws_cloudwatch_event_connection.test ngrok-connection

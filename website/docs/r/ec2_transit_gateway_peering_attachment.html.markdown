@@ -77,7 +77,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_ec2_transit_gateway_peering_attachment` can be imported by using the EC2 Transit Gateway Attachment identifier, e.g.
+`aws_ec2_transit_gateway_peering_attachment` can be imported by using the EC2 Transit Gateway Attachment identifier, e.g.,
 
 ```sh
 terraform import aws_ec2_transit_gateway_peering_attachment.example tgw-attach-12345678

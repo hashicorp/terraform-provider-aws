@@ -146,7 +146,7 @@ In addition to all arguments above, the following attributes are exported:
 * `not_after` - Date and time after which the certificate authority is not valid. Only available after the certificate authority certificate has been imported.
 * `not_before` - Date and time before which the certificate authority is not valid. Only available after the certificate authority certificate has been imported.
 * `serial` - Serial number of the certificate authority. Only available after the certificate authority certificate has been imported.
-* `status` - Status of the certificate authority.
+* `status` - (**Deprecated** use the `enabled` attribute instead) Status of the certificate authority.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
@@ -158,7 +158,7 @@ configuration options:
 
 ## Import
 
-`aws_acmpca_certificate_authority` can be imported by using the certificate authority Amazon Resource Name (ARN), e.g.
+`aws_acmpca_certificate_authority` can be imported by using the certificate authority Amazon Resource Name (ARN), e.g.,
 
 ```
 $ terraform import aws_acmpca_certificate_authority.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012

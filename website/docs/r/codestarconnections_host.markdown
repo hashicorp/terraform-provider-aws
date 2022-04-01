@@ -48,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeStar Host can be imported using the ARN, e.g.
+CodeStar Host can be imported using the ARN, e.g.,
 
 ```
 $ terraform import aws_codestarconnections_host.example-host arn:aws:codestar-connections:us-west-1:0123456789:host/79d4d357-a2ee-41e4-b350-2fe39ae59448

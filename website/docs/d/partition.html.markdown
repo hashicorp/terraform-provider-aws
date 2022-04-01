@@ -37,7 +37,7 @@ There are no arguments available for this data source.
 
 ## Attributes Reference
 
-* `dns_suffix` - Base DNS domain name for the current partition (e.g. `amazonaws.com` in AWS Commercial, `amazonaws.com.cn` in AWS China).
-* `id` - Identifier of the current partition (e.g. `aws` in AWS Commercial, `aws-cn` in AWS China).
-* `partition` - Identifier of the current partition (e.g. `aws` in AWS Commercial, `aws-cn` in AWS China).
-* `reverse_dns_prefix` - Prefix of service names (e.g. `com.amazonaws` in AWS Commercial, `cn.com.amazonaws` in AWS China).
+* `dns_suffix` - Base DNS domain name for the current partition (e.g., `amazonaws.com` in AWS Commercial, `amazonaws.com.cn` in AWS China).
+* `id` - Identifier of the current partition (e.g., `aws` in AWS Commercial, `aws-cn` in AWS China).
+* `partition` - Identifier of the current partition (e.g., `aws` in AWS Commercial, `aws-cn` in AWS China).
+* `reverse_dns_prefix` - Prefix of service names (e.g., `com.amazonaws` in AWS Commercial, `cn.com.amazonaws` in AWS China).

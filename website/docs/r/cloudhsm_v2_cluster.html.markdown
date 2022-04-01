@@ -87,3 +87,11 @@ In addition to all arguments above, the following attributes are exported:
 
 [1]: https://docs.aws.amazon.com/cloudhsm/latest/userguide/introduction.html
 [2]: https://docs.aws.amazon.com/cloudhsm/latest/APIReference/Welcome.html
+
+## Import
+
+CloudHSM v2 Clusters can be imported using the `cluster id`, e.g.,
+
+```
+$ terraform import aws_cloudhsm_v2_cluster.test_cluster cluster-aeb282a201
+```

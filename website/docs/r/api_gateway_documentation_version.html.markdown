@@ -48,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-API Gateway documentation versions can be imported using `REST-API-ID/VERSION`, e.g.
+API Gateway documentation versions can be imported using `REST-API-ID/VERSION`, e.g.,
 
 ```
 $ terraform import aws_api_gateway_documentation_version.example 5i4e1ko720/example-version

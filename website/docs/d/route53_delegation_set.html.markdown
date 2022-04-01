@@ -24,9 +24,11 @@ data "aws_route53_delegation_set" "dset" {
 
 ## Argument Reference
 
+
 * `id` - (Required) The Hosted Zone id of the desired delegation set.
 
 The following attribute is additionally exported:
 
+* `arn` - The Amazon Resource Name (ARN) of the Delegation Set.
 * `caller_reference` - Caller Reference of the delegation set.
 * `name_servers` - The list of DNS name servers for the delegation set.

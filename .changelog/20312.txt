@@ -1,0 +1,7 @@
+```release-note:bug
+aws/resource_aws_cloudwatch_event_rule: Correctly handle ARN in `event_bus_name` argument
+```
+
+```release-note:bug
+aws/resource_aws_cloudwatch_event_target: Correctly handle ARN in `event_bus_name` argument
+```

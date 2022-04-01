@@ -40,7 +40,7 @@ The following Arguments are supported
 * `name` - (Required) The name of the resource share to retrieve.
 * `resource_owner` (Required) The owner of the resource share. Valid values are SELF or OTHER-ACCOUNTS
 
-* `filter` - (Optional) A filter used to scope the list e.g. by tags. See [related docs] (https://docs.aws.amazon.com/ram/latest/APIReference/API_TagFilter.html).
+* `filter` - (Optional) A filter used to scope the list e.g., by tags. See [related docs] (https://docs.aws.amazon.com/ram/latest/APIReference/API_TagFilter.html).
     * `name` - (Required) The name of the tag key to filter on.
     * `values` - (Required) The value of the tag key.
 

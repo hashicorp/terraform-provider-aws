@@ -47,7 +47,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_ec2_local_gateway_route_table_vpc_association` can be imported by using the Local Gateway Route Table VPC Association identifier, e.g.
+`aws_ec2_local_gateway_route_table_vpc_association` can be imported by using the Local Gateway Route Table VPC Association identifier, e.g.,
 
 ```
 $ terraform import aws_ec2_local_gateway_route_table_vpc_association.example lgw-vpc-assoc-1234567890abcdef

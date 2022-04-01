@@ -33,11 +33,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN assigned by AWS for this provider.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
-* `valid_until` - The expiration date and time for the SAML provider in RFC1123 format, e.g. `Mon, 02 Jan 2006 15:04:05 MST`.
+* `valid_until` - The expiration date and time for the SAML provider in RFC1123 format, e.g., `Mon, 02 Jan 2006 15:04:05 MST`.
 
 ## Import
 
-IAM SAML Providers can be imported using the `arn`, e.g.
+IAM SAML Providers can be imported using the `arn`, e.g.,
 
 ```
 $ terraform import aws_iam_saml_provider.default arn:aws:iam::123456789012:saml-provider/SAMLADFS

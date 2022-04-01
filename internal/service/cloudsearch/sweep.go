@@ -1,0 +1,63 @@
+//go:build sweep
+// +build sweep
+
+package cloudsearch
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudsearch"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+)
+
+func init() {
+	resource.AddTestSweepers("aws_cloudsearch_domain", &resource.Sweeper{
+		Name: "aws_cloudsearch_domain",
+		F:    sweepDomains,
+	})
+}
+
+func sweepDomains(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).CloudSearchConn
+	input := &cloudsearch.DescribeDomainsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	domains, err := conn.DescribeDomains(input)
+
+	for _, domain := range domains.DomainStatusList {
+		if aws.BoolValue(domain.Deleted) {
+			continue
+		}
+
+		r := ResourceDomain()
+		d := r.Data(nil)
+		d.SetId(aws.StringValue(domain.DomainName))
+
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudSearch Domain sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CloudSearch Domains (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping CloudSearch Domains (%s): %w", region, err)
+	}
+
+	return nil
+}

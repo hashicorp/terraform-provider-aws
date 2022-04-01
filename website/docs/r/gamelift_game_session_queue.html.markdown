@@ -60,7 +60,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Gamelift Game Session Queues can be imported by their `name`, e.g.
+Gamelift Game Session Queues can be imported by their `name`, e.g.,
 
 ```
 $ terraform import aws_gamelift_game_session_queue.example example

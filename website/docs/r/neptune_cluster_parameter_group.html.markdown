@@ -53,7 +53,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Neptune Cluster Parameter Groups can be imported using the `name`, e.g.
+Neptune Cluster Parameter Groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_neptune_cluster_parameter_group.cluster_pg production-pg-1

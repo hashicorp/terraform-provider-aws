@@ -10,7 +10,7 @@ description: |-
 
 Provides an SNS topic policy resource
 
-~> **NOTE:** If a Principal is specified as just an AWS account ID rather than an ARN, AWS silently converts it to the ARN for the root user, causing future terraform plans to differ. To avoid this problem, just specify the full ARN, e.g. `arn:aws:iam::123456789012:root`
+~> **NOTE:** If a Principal is specified as just an AWS account ID rather than an ARN, AWS silently converts it to the ARN for the root user, causing future terraform plans to differ. To avoid this problem, just specify the full ARN, e.g., `arn:aws:iam::123456789012:root`
 
 ## Example Usage
 
@@ -81,7 +81,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SNS Topic Policy can be imported using the topic ARN, e.g.
+SNS Topic Policy can be imported using the topic ARN, e.g.,
 
 ```
 $ terraform import aws_sns_topic_policy.user_updates arn:aws:sns:us-west-2:0123456789012:my-topic

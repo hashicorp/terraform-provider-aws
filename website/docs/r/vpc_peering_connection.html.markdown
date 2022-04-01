@@ -108,7 +108,7 @@ The following arguments are supported:
    Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `peer_vpc_id` - (Required) The ID of the VPC with which you are creating the VPC Peering Connection.
 * `vpc_id` - (Required) The ID of the requester VPC.
-* `auto_accept` - (Optional) Accept the peering (both VPCs need to be in the same AWS account).
+* `auto_accept` - (Optional) Accept the peering (both VPCs need to be in the same AWS account and region).
 * `peer_region` - (Optional) The region of the accepter VPC of the VPC Peering Connection. `auto_accept` must be `false`,
 and use the `aws_vpc_peering_connection_accepter` to manage the accepter side.
 * `accepter` (Optional) - An optional configuration block that allows for [VPC Peering Connection](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options to be set for the VPC that accepts
@@ -123,9 +123,7 @@ the peering connection (a maximum of one).
 must have support for the DNS hostnames enabled. This can be done using the [`enable_dns_hostnames`](vpc.html#enable_dns_hostnames) attribute in the [`aws_vpc`](vpc.html) resource. See [Using DNS with Your VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-dns.html) user guide for more information.
 
 * `allow_remote_vpc_dns_resolution` - (Optional) Allow a local VPC to resolve public DNS hostnames to
-private IP addresses when queried from instances in the peer VPC. This is
-[not supported](https://docs.aws.amazon.com/vpc/latest/peering/modify-peering-connections.html) for
-inter-region VPC peering.
+private IP addresses when queried from instances in the peer VPC.
 * `allow_classic_link_to_remote_vpc` - (Optional) Allow a local linked EC2-Classic instance to communicate
 with instances in a peer VPC. This enables an outbound communication from the local ClassicLink connection
 to the remote VPC.
@@ -152,13 +150,13 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Notes
 
-If both VPCs are not in the same AWS account do not enable the `auto_accept` attribute.
+If both VPCs are not in the same AWS account and region do not enable the `auto_accept` attribute.
 The accepter can manage its side of the connection using the `aws_vpc_peering_connection_accepter` resource
 or accept the connection manually using the AWS Management Console, AWS CLI, through SDKs, etc.
 
 ## Import
 
-VPC Peering resources can be imported using the `vpc peering id`, e.g.
+VPC Peering resources can be imported using the `vpc peering id`, e.g.,
 
 ```sh
 $ terraform import aws_vpc_peering_connection.test_connection pcx-111aaa111

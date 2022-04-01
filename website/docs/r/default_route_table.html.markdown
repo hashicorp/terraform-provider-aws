@@ -97,9 +97,16 @@ In addition to all arguments above, the following attributes are exported:
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `vpc_id` - ID of the VPC.
 
+## Timeouts
+
+`aws_default_route_table` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `2 minutes`) Used for route creation
+- `update` - (Default `2 minutes`) Used for route creation
+
 ## Import
 
-Default VPC route tables can be imported using the `vpc_id`, e.g.
+Default VPC route tables can be imported using the `vpc_id`, e.g.,
 
 ```
 $ terraform import aws_default_route_table.example vpc-33cc44dd

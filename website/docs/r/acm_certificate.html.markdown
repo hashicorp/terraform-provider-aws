@@ -131,7 +131,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ARN of the certificate
 * `arn` - The ARN of the certificate
 * `domain_name` - The domain name for which the certificate is issued
-* `domain_validation_options` - Set of domain validation objects which can be used to complete certificate validation. Can have more than one element, e.g. if SANs are defined. Only set if `DNS`-validation was used.
+* `domain_validation_options` - Set of domain validation objects which can be used to complete certificate validation. Can have more than one element, e.g., if SANs are defined. Only set if `DNS`-validation was used.
 * `status` - Status of the certificate.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `validation_emails` - A list of addresses that received a validation E-Mail. Only set if `EMAIL`-validation was used.
@@ -147,7 +147,7 @@ Domain validation objects export the following attributes:
 
 ## Import
 
-Certificates can be imported using their ARN, e.g.
+Certificates can be imported using their ARN, e.g.,
 
 ```
 $ terraform import aws_acm_certificate.cert arn:aws:acm:eu-central-1:123456789012:certificate/7e7a28d2-163f-4b8f-b9cd-822f96c08d6a

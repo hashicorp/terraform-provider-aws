@@ -56,7 +56,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Event subscriptions can be imported using the `name`, e.g.
+Event subscriptions can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_dms_event_subscription.test my-awesome-event-subscription

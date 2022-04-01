@@ -42,7 +42,7 @@ resource "aws_s3_bucket_inventory" "test" {
 }
 ```
 
-### Add inventory configuration with S3 bucket object prefix
+### Add inventory configuration with S3 object prefix
 
 ```terraform
 resource "aws_s3_bucket" "test" {
@@ -88,8 +88,7 @@ The following arguments are supported:
 * `destination` - (Required) Contains information about where to publish the inventory results (documented below).
 * `enabled` - (Optional, Default: `true`) Specifies whether the inventory is enabled or disabled.
 * `filter` - (Optional) Specifies an inventory filter. The inventory only includes objects that meet the filter's criteria (documented below).
-* `optional_fields` - (Optional) List of optional fields that are included in the inventory results.
-Valid values: `Size`, `LastModifiedDate`, `StorageClass`, `ETag`, `IsMultipartUploaded`, `ReplicationStatus`, `EncryptionStatus`, `ObjectLockRetainUntilDate`, `ObjectLockMode`, `ObjectLockLegalHoldStatus`, `IntelligentTieringAccessTier`.
+* `optional_fields` - (Optional) List of optional fields that are included in the inventory results. Please refer to the S3 [documentation](https://docs.aws.amazon.com/AmazonS3/latest/API/API_InventoryConfiguration.html#AmazonS3-Type-InventoryConfiguration-OptionalFields) for more details.
 
 The `filter` configuration supports the following:
 
@@ -126,7 +125,7 @@ No additional attributes are exported.
 
 ## Import
 
-S3 bucket inventory configurations can be imported using `bucket:inventory`, e.g.
+S3 bucket inventory configurations can be imported using `bucket:inventory`, e.g.,
 
 ```sh
 $ terraform import aws_s3_bucket_inventory.my-bucket-entire-bucket my-bucket:EntireBucket

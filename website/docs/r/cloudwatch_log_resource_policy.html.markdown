@@ -78,7 +78,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudWatch log resource policies can be imported using the policy name, e.g.
+CloudWatch log resource policies can be imported using the policy name, e.g.,
 
 ```
 $ terraform import aws_cloudwatch_log_resource_policy.MyPolicy MyPolicy

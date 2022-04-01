@@ -70,7 +70,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Redshift Event Subscriptions can be imported using the `name`, e.g.
+Redshift Event Subscriptions can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_redshift_event_subscription.default redshift-event-sub
