@@ -26,9 +26,10 @@ func testAccIndexingConfiguration_basic(t *testing.T) {
 	resourceName := "aws_iot_indexing_configuration.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexingConfigurationConfig,
@@ -59,9 +60,10 @@ func testAccIndexingConfiguration_allAttributes(t *testing.T) {
 	resourceName := "aws_iot_indexing_configuration.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexingConfigurationAllAttributesConfig,
