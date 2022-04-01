@@ -12,7 +12,7 @@ description: |-
 
 Basic usage:
 
-```hcl
+```terraform
 resource "aws_worklink_fleet" "example" {
   name = "terraform-example"
 }
@@ -20,7 +20,7 @@ resource "aws_worklink_fleet" "example" {
 
 Network Configuration Usage:
 
-```hcl
+```terraform
 resource "aws_worklink_fleet" "example" {
   name = "terraform-example"
 
@@ -34,7 +34,7 @@ resource "aws_worklink_fleet" "example" {
 
 Identity Provider Configuration Usage:
 
-```hcl
+```terraform
 resource "aws_worklink_fleet" "test" {
   name = "tf-worklink-fleet"
 
@@ -60,7 +60,7 @@ The following arguments are supported:
 
 **network** requires the following:
 
-~> **NOTE:** `network` is cannot removed without forece recreating by `terraform taint`.
+~> **NOTE:** `network` cannot be removed without force recreating by `terraform taint`.
 
 * `vpc_id` - (Required) The VPC ID with connectivity to associated websites.
 * `subnet_ids` - (Required) A list of subnet IDs used for X-ENI connections from Amazon WorkLink rendering containers.
@@ -68,7 +68,7 @@ The following arguments are supported:
 
 **identity_provider** requires the following:
 
-~> **NOTE:** `identity_provider` is cannot removed without forece recreating by `terraform taint`.
+~> **NOTE:** `identity_provider` cannot be removed without force recreating by `terraform taint`.
 
 * `type` - (Required) The type of identity provider.
 * `saml_metadata` - (Required) The SAML metadata document provided by the customer’s identity provider.
@@ -85,7 +85,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WorkLink can be imported using the ARN, e.g.
+WorkLink can be imported using the ARN, e.g.,
 
 ```
 $ terraform import aws_worklink_fleet.test arn:aws:worklink::123456789012:fleet/example

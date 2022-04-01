@@ -3,7 +3,7 @@ subcategory: "CloudFormation"
 layout: "aws"
 page_title: "AWS: aws_cloudformation_export"
 description: |-
-    Provides metadata of a CloudFormation Export (e.g. Cross Stack References)
+    Provides metadata of a CloudFormation Export (e.g., Cross Stack References)
 ---
 
 # Data Source: aws_cloudformation_export
@@ -15,7 +15,7 @@ exports specified in the [Output](http://docs.aws.amazon.com/AWSCloudFormation/l
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_cloudformation_export" "subnet_id" {
   name = "mySubnetIdExportName"
 }

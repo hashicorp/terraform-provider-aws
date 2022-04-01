@@ -8,20 +8,22 @@ description: |-
 
 # Data Source: aws_s3_bucket_objects
 
+~> **NOTE:** The `aws_s3_bucket_objects` data source is DEPRECATED and will be removed in a future version! Use `aws_s3_objects` instead, where new features and fixes will be added.
+
 ~> **NOTE on `max_keys`:** Retrieving very large numbers of keys can adversely affect Terraform's performance.
 
-The bucket-objects data source returns keys (i.e., file names) and other metadata about objects in an S3 bucket.
+The objects data source returns keys (i.e., file names) and other metadata about objects in an S3 bucket.
 
 ## Example Usage
 
 The following example retrieves a list of all object keys in an S3 bucket and creates corresponding Terraform object data sources:
 
-```hcl
+```terraform
 data "aws_s3_bucket_objects" "my_objects" {
   bucket = "ourcorp"
 }
 
-data "aws_s3_bucket_object" "object_info" {
+data "aws_s3_object" "object_info" {
   count  = length(data.aws_s3_bucket_objects.my_objects.keys)
   key    = element(data.aws_s3_bucket_objects.my_objects.keys, count.index)
   bucket = data.aws_s3_bucket_objects.my_objects.bucket
@@ -46,4 +48,5 @@ In addition to all arguments above, the following attributes are exported:
 
 * `keys` - List of strings representing object keys
 * `common_prefixes` - List of any keys between `prefix` and the next occurrence of `delimiter` (i.e., similar to subdirectories of the `prefix` "directory"); the list is only returned when you specify `delimiter`
+* `id` - S3 Bucket.
 * `owners` - List of strings representing object owner IDs (see `fetch_owner` above)

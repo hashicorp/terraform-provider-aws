@@ -19,9 +19,11 @@ Using a VPC Peering Connection Options resource decouples management of the conn
 management of the VPC Peering Connection and allows options to be set correctly in cross-region and
 cross-account scenarios.
 
-Basic usage:
+## Example Usage
 
-```hcl
+### Basic Usage
+
+```terraform
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
 }
@@ -50,9 +52,9 @@ resource "aws_vpc_peering_connection_options" "foo" {
 }
 ```
 
-Basic cross-account usage:
+### Cross-Account Usage
 
-```hcl
+```terraform
 provider "aws" {
   alias = "requester"
 
@@ -172,7 +174,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-VPC Peering Connection Options can be imported using the `vpc peering id`, e.g.
+VPC Peering Connection Options can be imported using the `vpc peering id`, e.g.,
 
 ```
 $ terraform import aws_vpc_peering_connection_options.foo pcx-111aaa111

@@ -15,7 +15,7 @@ Provides a Cognito Resource Server.
 
 ### Create a basic resource server
 
-```hcl
+```terraform
 resource "aws_cognito_user_pool" "pool" {
   name = "pool"
 }
@@ -30,7 +30,7 @@ resource "aws_cognito_resource_server" "resource" {
 
 ### Create a resource server with sample-scope
 
-```hcl
+```terraform
 resource "aws_cognito_user_pool" "pool" {
   name = "pool"
 }
@@ -61,16 +61,16 @@ The following arguments are supported:
 * `scope_name` - (Required) The scope name.
 * `scope_description` - (Required) The scope description.
 
-## Attribute Reference
+## Attributes Reference
 
-In addition to the arguments, which are exported, the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `scope_identifiers` - A list of all scopes configured for this resource server in the format identifier/scope_name.
 
 ## Import
 
-`aws_cognito_resource_server` can be imported using their User Pool ID and Identifier, e.g.
+`aws_cognito_resource_server` can be imported using their User Pool ID and Identifier, e.g.,
 
 ```
-$ terraform import aws_cognito_resource_server.example xxx_yyyyy|https://example.com
+$ terraform import aws_cognito_resource_server.example us-west-2_abc123:https://example.com
 ```

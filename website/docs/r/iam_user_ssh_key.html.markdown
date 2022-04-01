@@ -12,7 +12,7 @@ Uploads an SSH public key and associates it with the specified IAM user.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_user" "user" {
   name = "test-user"
   path = "/"
@@ -43,7 +43,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SSH public keys can be imported using the `username`, `ssh_public_key_id`, and `encoding` e.g.
+SSH public keys can be imported using the `username`, `ssh_public_key_id`, and `encoding` e.g.,
 
 ```
 $ terraform import aws_iam_user_ssh_key.user user:APKAJNCNNJICVN7CFKCA:SSH

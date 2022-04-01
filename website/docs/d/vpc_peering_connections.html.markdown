@@ -16,7 +16,7 @@ the data source, as noted in [issue 4149](https://github.com/hashicorp/terraform
 
 ## Example Usage
 
-```hcl
+```terraform
 # Declare the data source
 data "aws_vpc_peering_connections" "pcs" {
   filter {
@@ -54,4 +54,5 @@ which take the following arguments:
 
 All of the argument attributes except `filter` are also exported as result attributes.
 
+* `id` - AWS Region.
 * `ids` - The IDs of the VPC Peering Connections.

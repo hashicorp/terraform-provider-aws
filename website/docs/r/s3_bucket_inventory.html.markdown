@@ -14,7 +14,7 @@ Provides a S3 bucket [inventory configuration](https://docs.aws.amazon.com/Amazo
 
 ### Add inventory configuration
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "test" {
   bucket = "my-tf-test-bucket"
 }
@@ -42,9 +42,9 @@ resource "aws_s3_bucket_inventory" "test" {
 }
 ```
 
-### Add inventory configuration with S3 bucket object prefix
+### Add inventory configuration with S3 object prefix
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "test" {
   bucket = "my-tf-test-bucket"
 }
@@ -88,8 +88,7 @@ The following arguments are supported:
 * `destination` - (Required) Contains information about where to publish the inventory results (documented below).
 * `enabled` - (Optional, Default: `true`) Specifies whether the inventory is enabled or disabled.
 * `filter` - (Optional) Specifies an inventory filter. The inventory only includes objects that meet the filter's criteria (documented below).
-* `optional_fields` - (Optional) List of optional fields that are included in the inventory results.
-Valid values: `Size`, `LastModifiedDate`, `StorageClass`, `ETag`, `IsMultipartUploaded`, `ReplicationStatus`, `EncryptionStatus`, `ObjectLockRetainUntilDate`, `ObjectLockMode`, `ObjectLockLegalHoldStatus`, `IntelligentTieringAccessTier`.
+* `optional_fields` - (Optional) List of optional fields that are included in the inventory results. Please refer to the S3 [documentation](https://docs.aws.amazon.com/AmazonS3/latest/API/API_InventoryConfiguration.html#AmazonS3-Type-InventoryConfiguration-OptionalFields) for more details.
 
 The `filter` configuration supports the following:
 
@@ -120,9 +119,13 @@ The `sse_kms` configuration supports the following:
 
 * `key_id` - (Required) The ARN of the KMS customer master key (CMK) used to encrypt the inventory file.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
-S3 bucket inventory configurations can be imported using `bucket:inventory`, e.g.
+S3 bucket inventory configurations can be imported using `bucket:inventory`, e.g.,
 
 ```sh
 $ terraform import aws_s3_bucket_inventory.my-bucket-entire-bucket my-bucket:EntireBucket

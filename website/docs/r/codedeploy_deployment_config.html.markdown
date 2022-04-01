@@ -14,7 +14,7 @@ Provides a CodeDeploy deployment config for an application
 
 ### Server Usage
 
-```hcl
+```terraform
 resource "aws_codedeploy_deployment_config" "foo" {
   deployment_config_name = "test-deployment-config"
 
@@ -56,7 +56,7 @@ resource "aws_codedeploy_deployment_group" "foo" {
 
 ### Lambda Usage
 
-```hcl
+```terraform
 resource "aws_codedeploy_deployment_config" "foo" {
   deployment_config_name = "test-deployment-config"
   compute_platform       = "Lambda"
@@ -131,8 +131,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeDeploy Deployment Configurations can be imported using the `deployment_config_name`, e.g.
+CodeDeploy Deployment Configurations can be imported using the `deployment_config_name`, e.g.,
 
 ```
-$ terraform import aws_codedeploy_app.example my-deployment-config
+$ terraform import aws_codedeploy_deployment_config.example my-deployment-config
 ```

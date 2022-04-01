@@ -15,7 +15,7 @@ For information about function aliases, see [CreateAlias][2] and [AliasRoutingCo
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_lambda_alias" "test_lambda_alias" {
   name             = "my_alias"
   description      = "a sample description"
@@ -44,6 +44,8 @@ For **routing_config** the following attributes are supported:
 
 ## Attributes Reference
 
+In addition to all arguments above, the following attributes are exported:
+
 * `arn` - The Amazon Resource Name (ARN) identifying your Lambda function alias.
 * `invoke_arn` - The ARN to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`
 
@@ -53,7 +55,7 @@ For **routing_config** the following attributes are supported:
 
 ## Import
 
-Lambda Function Aliases can be imported using the `function_name/alias`, e.g.
+Lambda Function Aliases can be imported using the `function_name/alias`, e.g.,
 
 ```
 $ terraform import aws_lambda_alias.test_lambda_alias my_test_lambda_function/my_alias

@@ -16,7 +16,7 @@ The following example retrieves a list of VPC Ids with a custom tag of `service`
 
 The following shows outputing all VPC Ids.
 
-```hcl
+```terraform
 data "aws_vpcs" "foo" {
   tags = {
     service = "production"
@@ -30,7 +30,7 @@ output "foo" {
 
 An example use case would be interpolate the `aws_vpcs` output into `count` of an aws_flow_log resource.
 
-```hcl
+```terraform
 data "aws_vpcs" "foo" {}
 
 data "aws_vpc" "foo" {
@@ -70,4 +70,5 @@ which take the following arguments:
 
 ## Attributes Reference
 
-* `ids` - A list of all the VPC Ids found. This data source will fail if none are found.
+* `id` - AWS Region.
+* `ids` - A list of all the VPC Ids found.

@@ -12,7 +12,7 @@ Provides a Route 53 Resolver query logging configuration association resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_route53_resolver_query_log_config_association" "example" {
   resolver_query_log_config_id = aws_route53_resolver_query_log_config.example.id
   resource_id                  = aws_vpc.example.id
@@ -34,7 +34,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
- Route 53 Resolver query logging configuration associations can be imported using the Route 53 Resolver query logging configuration association ID, e.g.
+ Route 53 Resolver query logging configuration associations can be imported using the Route 53 Resolver query logging configuration association ID, e.g.,
 
 ```
 $ terraform import aws_route53_resolver_query_log_config_association.example rqlca-b320624fef3c4d70

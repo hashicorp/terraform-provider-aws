@@ -12,7 +12,7 @@ Manages a SES Identity Policy. More information about SES Sending Authorization 
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ses_domain_identity" "example" {
   domain = "example.com"
 }
@@ -44,9 +44,13 @@ The following arguments are supported:
 * `name` - (Required) Name of the policy.
 * `policy` - (Required) JSON string of the policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
-SES Identity Policies can be imported using the identity and policy name, separated by a pipe character (`|`), e.g.
+SES Identity Policies can be imported using the identity and policy name, separated by a pipe character (`|`), e.g.,
 
 ```
 $ terraform import aws_ses_identity_policy.example 'example.com|example'

@@ -12,7 +12,7 @@ Provides a CloudWatch Dashboard resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_cloudwatch_dashboard" "main" {
   dashboard_name = "my-dashboard"
 
@@ -63,7 +63,7 @@ The following arguments are supported:
 * `dashboard_name` - (Required) The name of the dashboard.
 * `dashboard_body` - (Required) The detailed information about the dashboard, including what widgets are included and their location on the dashboard. You can read more about the body structure in the [documentation](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/CloudWatch-Dashboard-Body-Structure.html).
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
@@ -71,7 +71,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudWatch dashboards can be imported using the `dashboard_name`, e.g.
+CloudWatch dashboards can be imported using the `dashboard_name`, e.g.,
 
 ```
 $ terraform import aws_cloudwatch_dashboard.sample <dashboard_name>

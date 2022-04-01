@@ -10,7 +10,7 @@ description: |-
 
 Version 3.0.0 of the AWS provider for Terraform is a major release and includes some changes that you will need to consider when upgrading. This guide is intended to help with that process and focuses only on changes from version 2.X to version 3.0.0. See the [Version 2 Upgrade Guide](/docs/providers/aws/guides/version-2-upgrade.html) for information about upgrading from 1.X to version 2.0.0.
 
-Most of the changes outlined in this guide have been previously marked as deprecated in the Terraform plan/apply output throughout previous provider releases. These changes, such as deprecation notices, can always be found in the [Terraform AWS Provider CHANGELOG](https://github.com/terraform-providers/terraform-provider-aws/blob/master/CHANGELOG.md).
+Most of the changes outlined in this guide have been previously marked as deprecated in the Terraform plan/apply output throughout previous provider releases. These changes, such as deprecation notices, can always be found in the [Terraform AWS Provider CHANGELOG](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md).
 
 ~> **NOTE:** Version 3.0.0 and later of the AWS Provider can only be automatically installed on Terraform 0.12 and later.
 
@@ -67,7 +67,7 @@ It is recommended to use [version constraints when configuring Terraform provide
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 provider "aws" {
   # ... other configuration ...
 
@@ -77,7 +77,7 @@ provider "aws" {
 
 Update to latest 3.X version:
 
-```hcl
+```terraform
 provider "aws" {
   # ... other configuration ...
 
@@ -92,23 +92,23 @@ provider "aws" {
 Previously, the provider preferred credentials in the following order:
 
 - Static credentials (those defined in the Terraform configuration)
-- Environment variables (e.g. `AWS_ACCESS_KEY_ID` or `AWS_PROFILE`)
-- Shared credentials file (e.g. `~/.aws/credentials`)
+- Environment variables (e.g., `AWS_ACCESS_KEY_ID` or `AWS_PROFILE`)
+- Shared credentials file (e.g., `~/.aws/credentials`)
 - EC2 Instance Metadata Service
 - Default AWS Go SDK handling (shared configuration, CodeBuild/ECS/EKS)
 
 The provider now prefers the following credential ordering:
 
 - Static credentials (those defined in the Terraform configuration)
-- Environment variables (e.g. `AWS_ACCESS_KEY_ID` or `AWS_PROFILE`)
-- Shared credentials and/or configuration file (e.g. `~/.aws/credentials` and `~/.aws/config`)
+- Environment variables (e.g., `AWS_ACCESS_KEY_ID` or `AWS_PROFILE`)
+- Shared credentials and/or configuration file (e.g., `~/.aws/credentials` and `~/.aws/config`)
 - Default AWS Go SDK handling (shared configuration, CodeBuild/ECS/EKS, EC2 Instance Metadata Service)
 
 This means workarounds of disabling the EC2 Instance Metadata Service handling to enable CodeBuild/ECS/EKS credentials or to enable other credential methods such as `credential_process` in the AWS shared configuration are no longer necessary.
 
 ### Shared Configuration File Automatically Enabled
 
-The `AWS_SDK_LOAD_CONFIG` environment variable is no longer necessary for the provider to automatically load the AWS shared configuration file (e.g. `~/.aws/config`).
+The `AWS_SDK_LOAD_CONFIG` environment variable is no longer necessary for the provider to automatically load the AWS shared configuration file (e.g., `~/.aws/config`).
 
 ### Removal of AWS_METADATA_TIMEOUT Environment Variable Usage
 
@@ -122,7 +122,7 @@ The [custom service endpoints](custom-service-endpoints.html) for Kinesis Analyt
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 provider "aws" {
   # ... potentially other configuration ...
 
@@ -137,7 +137,7 @@ provider "aws" {
 
 An updated configuration:
 
-```hcl
+```terraform
 provider "aws" {
   # ... potentially other configuration ...
 
@@ -158,7 +158,7 @@ Switch your Terraform configuration to the `exclude_names` attribute instead.
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 data "aws_availability_zones" "example" {
   blacklisted_names = ["us-west-2d"]
 }
@@ -166,7 +166,7 @@ data "aws_availability_zones" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 data "aws_availability_zones" "example" {
   exclude_names = ["us-west-2d"]
 }
@@ -178,7 +178,7 @@ Switch your Terraform configuration to the `exclude_zone_ids` attribute instead.
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 data "aws_availability_zones" "example" {
   blacklisted_zone_ids = ["usw2-az4"]
 }
@@ -186,7 +186,7 @@ data "aws_availability_zones" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 data "aws_availability_zones" "example" {
   exclude_zone_ids = ["usw2-az4"]
 }
@@ -200,7 +200,7 @@ Switch your Terraform configuration to the `result` attribute with the [`jsondec
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 # In Terraform 0.11 and earlier, the result_map attribute can be used
 # to convert a result JSON string to a map of string keys to string values.
 output "lambda_result" {
@@ -210,7 +210,7 @@ output "lambda_result" {
 
 An updated configuration:
 
-```hcl
+```terraform
 # In Terraform 0.12 and later, the jsondecode() function can be used
 # to convert a result JSON string to native Terraform types.
 output "lambda_result" {
@@ -237,14 +237,14 @@ Configuration that depend on the previous behavior will need to be updated.
 
 ### Removal of trailing period in domain_name argument
 
-Previously the data-source returned the Resolver Rule Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g. ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Resolver Rule Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
+Previously the data-source returned the Resolver Rule Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g., ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Resolver Rule Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
 While the returned value will omit the trailing period, use of configurations with trailing periods will not be interrupted.
 
 ## Data Source: aws_route53_zone
 
 ### Removal of trailing period in name argument
 
-Previously the data-source returned the Hosted Zone Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g. ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Hosted Zone Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
+Previously the data-source returned the Hosted Zone Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g., ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Hosted Zone Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
 While the returned value will omit the trailing period, use of configurations with trailing periods will not be interrupted.
 
 ## Resource: aws_acm_certificate
@@ -267,11 +267,11 @@ resources that the for_each depends on.
 
 The `domain_validation_options` attribute is now a set type and the resource will attempt to populate the information necessary during the planning phase to handle the above situation in most environments without workarounds. This change also prevents Terraform from showing unexpected differences if the API returns the results in varying order.
 
-Configuration references to this attribute will likely require updates since sets cannot be indexed (e.g. `domain_validation_options[0]` or the older `domain_validation_options.0.` syntax will return errors). If the `domain_validation_options` list previously contained only a single element like the two examples just shown, it may be possible to wrap these references using the [`tolist()` function](/docs/configuration/functions/tolist.html) (e.g. `tolist(aws_acm_certificate.example.domain_validation_options)[0]`) as a quick configuration update, however given the complexity and workarounds required with the previous `domain_validation_options` attribute implementation, different environments will require different configuration updates and migration steps. Below is a more advanced example. Further questions on potential update steps can be submitted to the [community forums](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33).
+Configuration references to this attribute will likely require updates since sets cannot be indexed (e.g., `domain_validation_options[0]` or the older `domain_validation_options.0.` syntax will return errors). If the `domain_validation_options` list previously contained only a single element like the two examples just shown, it may be possible to wrap these references using the [`tolist()` function](https://www.terraform.io/docs/configuration/functions/tolist.html) (e.g., `tolist(aws_acm_certificate.example.domain_validation_options)[0]`) as a quick configuration update, however given the complexity and workarounds required with the previous `domain_validation_options` attribute implementation, different environments will require different configuration updates and migration steps. Below is a more advanced example. Further questions on potential update steps can be submitted to the [community forums](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33).
 
 For example, given this previous configuration using a `count` based resource approach that may have been used in certain environments:
 
-```hcl
+```terraform
 data "aws_route53_zone" "public_root_domain" {
   name = var.public_root_domain
 }
@@ -301,7 +301,6 @@ resource "aws_acm_certificate_validation" "existing" {
   certificate_arn         = aws_acm_certificate.existing.arn
   validation_record_fqdns = aws_route53_record.existing[*].fqdn
 }
-
 ```
 
 It will receive errors like the below after upgrading:
@@ -318,9 +317,9 @@ Error: Invalid index
 This value does not have any indices.
 ```
 
-Since the `domain_validation_options` attribute changed from a list to a set and sets cannot be indexed in Terraform, the recommendation is to update the configuration to use the more stable [resource `for_each` support](/docs/configuration/resources.html#for_each-multiple-resource-instances-defined-by-a-map-or-set-of-strings) instead of [`count`](/docs/configuration/resources.html#count-multiple-resource-instances-by-count). Note the slight change in the `validation_record_fqdns` syntax as well.
+Since the `domain_validation_options` attribute changed from a list to a set and sets cannot be indexed in Terraform, the recommendation is to update the configuration to use the more stable [resource `for_each` support](https://www.terraform.io/docs/configuration/meta-arguments/for_each.html) instead of [`count`](https://www.terraform.io/docs/configuration/meta-arguments/count.html). Note the slight change in the `validation_record_fqdns` syntax as well.
 
-```hcl
+```terraform
 resource "aws_route53_record" "existing" {
   for_each = {
     for dvo in aws_acm_certificate.existing.domain_validation_options : dvo.domain_name => {
@@ -480,11 +479,11 @@ Terraform will perform the following actions:
 Plan: 5 to add, 0 to change, 5 to destroy.
 ```
 
-Due to the type of configuration change, Terraform does not know that the previous `aws_route53_record` resources (indexed by number in the existing state) and the new resources (indexed by domain names in the updated configuration) are equivalent. Typically in this situation, the [`terraform state mv` command](/docs/commands/state/mv.html) can be used to reduce the plan to show no changes. This is done by associating the count index (e.g. `[1]`) with the equivalent domain name index (e.g. `["existing2.example.com"]`), making one of the four commands to fix the above example: `terraform state mv 'aws_route53_record.existing[1]' 'aws_route53_record.existing["existing2.example.com"]'`. It is recommended to use this `terraform state mv` update process where possible to reduce chances of unexpected behaviors or changes in an environment.
+Due to the type of configuration change, Terraform does not know that the previous `aws_route53_record` resources (indexed by number in the existing state) and the new resources (indexed by domain names in the updated configuration) are equivalent. Typically in this situation, the [`terraform state mv` command](https://www.terraform.io/docs/commands/state/mv.html) can be used to reduce the plan to show no changes. This is done by associating the count index (e.g., `[1]`) with the equivalent domain name index (e.g., `["existing2.example.com"]`), making one of the four commands to fix the above example: `terraform state mv 'aws_route53_record.existing[1]' 'aws_route53_record.existing["existing2.example.com"]'`. It is recommended to use this `terraform state mv` update process where possible to reduce chances of unexpected behaviors or changes in an environment.
 
 If using `terraform state mv` to reduce the plan to show no changes, no additional steps are required.
 
-In larger or more complex environments though, this process can be tedius to match the old resource address to the new resource address and run all the necessary `terraform state mv` commands. Instead, since the `aws_route53_record` resource implements the `allow_overwrite = true` argument, it is possible to just remove the old `aws_route53_record` resources from the Terraform state using the [`terraform state rm` command](/docs/commands/state/rm.html). In this case, Terraform will leave the existing records in Route 53 and plan to just overwrite the existing validation records with the same exact (previous) values.
+In larger or more complex environments though, this process can be tedius to match the old resource address to the new resource address and run all the necessary `terraform state mv` commands. Instead, since the `aws_route53_record` resource implements the `allow_overwrite = true` argument, it is possible to just remove the old `aws_route53_record` resources from the Terraform state using the [`terraform state rm` command](https://www.terraform.io/docs/commands/state/rm.html). In this case, Terraform will leave the existing records in Route 53 and plan to just overwrite the existing validation records with the same exact (previous) values.
 
 -> This guide is showing the simpler `terraform state rm` option below as a potential shortcut in this specific situation, however in most other cases `terraform state mv` is required to change from `count` based resources to `for_each` based resources and properly match the existing Terraform state to the updated Terraform configuration.
 
@@ -580,9 +579,99 @@ Plan: 5 to add, 0 to change, 1 to destroy.
 
 Once applied, no differences should be shown and no additional steps should be necessary.
 
+Alternatively, if you are referencing a subset of `domain_validation_options`, there is another method of upgrading from v2 to v3 without having to move state. Given the scenario below...
+
+```
+data "aws_route53_zone" "public_root_domain" {
+  name = var.public_root_domain
+}
+
+resource "aws_acm_certificate" "existing" {
+  domain_name = "existing.${var.public_root_domain}"
+  subject_alternative_names = [
+    "existing1.${var.public_root_domain}",
+    "existing2.${var.public_root_domain}",
+    "existing3.${var.public_root_domain}",
+  ]
+  validation_method = "DNS"
+}
+
+resource "aws_route53_record" "existing_1" {
+  allow_overwrite = true
+  name            = aws_acm_certificate.existing.domain_validation_options[0].resource_record_name
+  records         = [aws_acm_certificate.existing.domain_validation_options[0].resource_record_value]
+  ttl             = 60
+  type            = aws_acm_certificate.existing.domain_validation_options[0].resource_record_type
+  zone_id         = data.aws_route53_zone.public_root_domain.zone_id
+}
+
+resource "aws_acm_certificate_validation" "existing_1" {
+  certificate_arn         = aws_acm_certificate.existing.arn
+  validation_record_fqdns = aws_route53_record.existing_1.fqdn
+}
+
+resource "aws_route53_record" "existing_3" {
+  allow_overwrite = true
+  name            = aws_acm_certificate.existing.domain_validation_options[2].resource_record_name
+  records         = [aws_acm_certificate.existing.domain_validation_options[2].resource_record_value]
+  ttl             = 60
+  type            = aws_acm_certificate.existing.domain_validation_options[2].resource_record_type
+  zone_id         = data.aws_route53_zone.public_root_domain.zone_id
+}
+
+resource "aws_acm_certificate_validation" "existing_3" {
+  certificate_arn         = aws_acm_certificate.existing.arn
+  validation_record_fqdns = aws_route53_record.existing_3.fqdn
+}
+```
+
+You can perform a conversion of the new `domain_validation_options` object into a map, to allow you to perform a lookup by the domain name in place of an index number.
+
+```
+locals {
+  existing_domain_validation_options = {
+    for dvo in aws_acm_certificate.cloudfront_cert.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+}
+
+resource "aws_route53_record" "existing_1" {
+  allow_overwrite = true
+  name            = local.existing_domain_validation_options["existing1.${var.public_root_domain}"].name
+  records         = [local.existing_domain_validation_options["existing1.${var.public_root_domain}"].record]
+  ttl             = 60
+  type            = local.existing_domain_validation_options["existing1.${var.public_root_domain}"].type
+  zone_id         = data.aws_route53_zone.public_root_domain.zone_id
+}
+
+resource "aws_acm_certificate_validation" "existing_1" {
+  certificate_arn         = aws_acm_certificate.existing.arn
+  validation_record_fqdns = aws_route53_record.existing_1.fqdn
+}
+
+resource "aws_route53_record" "existing_3" {
+  allow_overwrite = true
+  name            = local.existing_domain_validation_options["existing3.${var.public_root_domain}"].name
+  records         = [local.existing_domain_validation_options["existing3.${var.public_root_domain}"].record]
+  ttl             = 60
+  type            = local.existing_domain_validation_options["existing3.${var.public_root_domain}"].type
+  zone_id         = data.aws_route53_zone.public_root_domain.zone_id
+}
+
+resource "aws_acm_certificate_validation" "existing_3" {
+  certificate_arn         = aws_acm_certificate.existing.arn
+  validation_record_fqdns = aws_route53_record.existing_3.fqdn
+}
+```
+
+Performing a plan against these resources will not cause any change in state, since underlying resources have not changed.
+
 ### subject_alternative_names Changed from List to Set
 
-Previously the `subject_alternative_names` argument was stored in the Terraform state as an ordered list while the API returned information in an unordered manner. The attribute is now configured as a set instead of a list. Certain Terraform configuration language features distinguish between these two attribute types such as not being able to index a set (e.g. `aws_acm_certificate.example.subject_alternative_names[0]` is no longer a valid reference). Depending on the implementation details of a particular configuration using `subject_alternative_names` as a reference, possible solutions include changing references to using `for`/`for_each` or using the `tolist()` function as a temporary workaround to keep the previous behavior until an appropriate configuration (properly using the unordered set) can be determined. Usage questions can be submitted to the [community forums](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33).
+Previously the `subject_alternative_names` argument was stored in the Terraform state as an ordered list while the API returned information in an unordered manner. The attribute is now configured as a set instead of a list. Certain Terraform configuration language features distinguish between these two attribute types such as not being able to index a set (e.g., `aws_acm_certificate.example.subject_alternative_names[0]` is no longer a valid reference). Depending on the implementation details of a particular configuration using `subject_alternative_names` as a reference, possible solutions include changing references to using `for`/`for_each` or using the `tolist()` function as a temporary workaround to keep the previous behavior until an appropriate configuration (properly using the unordered set) can be determined. Usage questions can be submitted to the [community forums](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33).
 
 ### certificate_body, certificate_chain, and private_key Arguments No Longer Stored as Hash
 
@@ -602,11 +691,11 @@ Specifying both the `availability_zones` and `vpc_zone_identifier` arguments pre
 
 ### Drift detection enabled for `load_balancers` and `target_group_arns` arguments
 
-If you previously set one of these arguments to an empty list to enable drift detection (e.g. when migrating an ASG from ELB to ALB), this can be updated as follows.
+If you previously set one of these arguments to an empty list to enable drift detection (e.g., when migrating an ASG from ELB to ALB), this can be updated as follows.
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_autoscaling_group" "example" {
   # ... other configuration ...
   load_balancers    = []
@@ -616,18 +705,18 @@ resource "aws_autoscaling_group" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_autoscaling_group" "example" {
   # ... other configuration ...
   target_group_arns = [aws_lb_target_group.example.arn]
 }
 ```
 
-If `aws_autoscaling_attachment` resources reference your ASG configurations, you will need to add the [`lifecycle` configuration block](/docs/configuration/resources.html#lifecycle-lifecycle-customizations) with an `ignore_changes` argument to prevent Terraform non-empty plans (i.e. forcing resource update) during the next state refresh.
+If `aws_autoscaling_attachment` resources reference your ASG configurations, you will need to add the [`lifecycle` configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with an `ignore_changes` argument to prevent Terraform non-empty plans (i.e., forcing resource update) during the next state refresh.
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_autoscaling_attachment" "example" {
   autoscaling_group_name = aws_autoscaling_group.example.id
   elb                    = aws_elb.example.id
@@ -640,7 +729,7 @@ resource "aws_autoscaling_group" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_autoscaling_attachment" "example" {
   autoscaling_group_name = aws_autoscaling_group.example.id
   elb                    = aws_elb.example.id
@@ -686,7 +775,7 @@ Previously, the resource returned the Amazon Resource Name (ARN) directly from t
 
 Workarounds, such as using `replace()` as shown below, should be removed:
 
-```hcl
+```terraform
 resource "aws_cloudwatch_log_group" "example" {
   name = "example"
 }
@@ -698,7 +787,7 @@ resource "aws_datasync_task" "example" {
 
 Removing the `:*` suffix is a breaking change for some configurations. Fix these configurations using string interpolations as demonstrated below. For example, this configuration is now broken:
 
-```hcl
+```terraform
 data "aws_iam_policy_document" "ad-log-policy" {
   statement {
     actions = [
@@ -717,7 +806,7 @@ data "aws_iam_policy_document" "ad-log-policy" {
 
 An updated configuration:
 
-```hcl
+```terraform
 data "aws_iam_policy_document" "ad-log-policy" {
   statement {
     actions = [
@@ -746,7 +835,7 @@ For example, given this previous configuration:
 $ GITHUB_TOKEN=<token> terraform apply
 ```
 
-```hcl
+```terraform
 resource "aws_codepipeline" "example" {
   # ... other configuration ...
 
@@ -777,7 +866,7 @@ The configuration could be updated as follows:
 $ TF_VAR_github_token=<token> terraform apply
 ```
 
-```hcl
+```terraform
 variable "github_token" {}
 
 resource "aws_codepipeline" "example" {
@@ -813,7 +902,7 @@ The Cognito API previously deprecated the `admin_create_user_config` configurati
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_cognito_user_pool" "example" {
   # ... other configuration ...
 
@@ -827,7 +916,7 @@ resource "aws_cognito_user_pool" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_cognito_user_pool" "example" {
   # ... other configuration ...
 
@@ -843,7 +932,7 @@ resource "aws_cognito_user_pool" "example" {
 
 ### Removal of Automatic aws_dx_gateway_association Import
 
-Previously when importing the `aws_dx_gateway` resource with the [`terraform import` command](/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_dx_gateway_association` resource(s) as well. This automatic resource import has been removed. Use the [`aws_dx_gateway_association` resource import](/docs/providers/aws/r/dx_gateway_association.html#import) to import those resources separately.
+Previously when importing the `aws_dx_gateway` resource with the [`terraform import` command](https://www.terraform.io/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_dx_gateway_association` resource(s) as well. This automatic resource import has been removed. Use the [`aws_dx_gateway_association` resource import](/docs/providers/aws/r/dx_gateway_association.html#import) to import those resources separately.
 
 ## Resource: aws_dx_gateway_association
 
@@ -853,7 +942,7 @@ Switch your Terraform configuration to the `associated_gateway_id` argument inst
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_dx_gateway_association" "example" {
   # ... other configuration ...
   vpn_gateway_id = aws_vpn_gateway.example.id
@@ -862,7 +951,7 @@ resource "aws_dx_gateway_association" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_dx_gateway_association" "example" {
   # ... other configuration ...
   associated_gateway_id = aws_vpn_gateway.example.id
@@ -877,7 +966,7 @@ Switch your Terraform configuration to the `associated_gateway_id` argument inst
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_dx_gateway_association_proposal" "example" {
   # ... other configuration ...
   vpn_gateway_id = aws_vpn_gateway.example.id
@@ -886,7 +975,7 @@ resource "aws_dx_gateway_association_proposal" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_dx_gateway_association_proposal" "example" {
   # ... other configuration ...
   associated_gateway_id = aws_vpn_gateway.example.id
@@ -914,7 +1003,7 @@ Switch your Terraform configuration to the `core_instance_group` configuration b
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_emr_cluster" "example" {
   # ... other configuration ...
 
@@ -924,7 +1013,7 @@ resource "aws_emr_cluster" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_emr_cluster" "example" {
   # ... other configuration ...
 
@@ -942,7 +1031,7 @@ Switch your Terraform configuration to the `core_instance_group` configuration b
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_emr_cluster" "example" {
   # ... other configuration ...
 
@@ -952,7 +1041,7 @@ resource "aws_emr_cluster" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_emr_cluster" "example" {
   # ... other configuration ...
 
@@ -968,7 +1057,7 @@ Switch your Terraform configuration to the `master_instance_group` and `core_ins
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_emr_cluster" "example" {
   # ... other configuration ...
 
@@ -993,7 +1082,7 @@ resource "aws_emr_cluster" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_emr_cluster" "example" {
   # ... other configuration ...
 
@@ -1020,7 +1109,7 @@ Switch your Terraform configuration to the `master_instance_group` configuration
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_emr_cluster" "example" {
   # ... other configuration ...
 
@@ -1030,7 +1119,7 @@ resource "aws_emr_cluster" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_emr_cluster" "example" {
   # ... other configuration ...
 
@@ -1048,7 +1137,7 @@ The Glue API has deprecated the `allocated_capacity` argument. Switch your Terra
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_glue_job" "example" {
   # ... other configuration ...
 
@@ -1058,7 +1147,7 @@ resource "aws_glue_job" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_glue_job" "example" {
   # ... other configuration ...
 
@@ -1070,7 +1159,11 @@ resource "aws_glue_job" "example" {
 
 ### ses_smtp_password Attribute Removal
 
-In many regions today and in all regions after October 1, 2020, the [SES API will only accept version 4 signatures](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/using-ses-api-authentication.html). If referencing the `ses_smtp_password` attribute, switch your Terraform configuration to the `ses_smtp_password_v4` attribute instead. Please note that this signature is based on the region of the Terraform AWS Provider. If you need the SES v4 password in multiple regions, it may require using [multiple provider instances](/docs/configuration/providers.html#alias-multiple-provider-instances).
+In many regions today and in all regions after October 1, 2020, the [SES API will only accept version 4 signatures](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/using-ses-api-authentication.html). If referencing the `ses_smtp_password` attribute, switch your Terraform configuration to the `ses_smtp_password_v4` attribute instead. Please note that this signature is based on the region of the Terraform AWS Provider. If you need the SES v4 password in multiple regions, it may require using [multiple provider instances](https://www.terraform.io/docs/configuration/providers.html#alias-multiple-provider-configurations).
+
+Depending on when the `aws_iam_access_key` resource was created, it may not have a `ses_smtp_password_v4` attribute for you to use. If this is the case you will need to [taint](/docs/commands/taint.html) the resource so that it can be recreated with the new value.
+
+Alternatively, you can stage the change by creating a new `aws_iam_access_key` resource and change any downstream dependencies to use the new `ses_smtp_password_v4` attribute. Once dependents have been updated with the new resource you can remove the old one.
 
 ## Resource: aws_iam_instance_profile
 
@@ -1080,7 +1173,7 @@ Switch your Terraform configuration to the `role` argument instead.
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_iam_instance_profile" "example" {
   # ... other configuration ...
 
@@ -1090,7 +1183,7 @@ resource "aws_iam_instance_profile" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_iam_instance_profile" "example" {
   # ... other configuration ...
 
@@ -1125,7 +1218,7 @@ The `network_interfaces.delete_on_termination` argument is now of type `string`,
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_launch_template" "example" {
   # ... other configuration ...
 
@@ -1139,7 +1232,7 @@ resource "aws_launch_template" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_launch_template" "example" {
   # ... other configuration ...
 
@@ -1159,7 +1252,7 @@ Switch your Terraform configuration to use the `host_header` or `path_pattern` c
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_lb_listener_rule" "example" {
   # ... other configuration ...
 
@@ -1172,7 +1265,7 @@ resource "aws_lb_listener_rule" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_lb_listener_rule" "example" {
   # ... other configuration ...
 
@@ -1192,7 +1285,7 @@ A few weeks after general availability launch and initial release of the `aws_ms
 
 To continue using the old default when it was previously not configured, add or modify this configuration:
 
-```hcl
+```terraform
 resource "aws_msk_cluster" "example" {
   # ... other configuration ...
 
@@ -1218,21 +1311,21 @@ Previously when the `min_capacity` argument in a `scaling_configuration` block w
 
 ### Removal of trailing period in domain_name argument
 
-Previously the resource returned the Resolver Rule Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g. ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Resolver Rule Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
+Previously the resource returned the Resolver Rule Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g., ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Resolver Rule Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
 While the returned value will omit the trailing period, use of configurations with trailing periods will not be interrupted.
 
 ## Resource: aws_route53_zone
 
 ### Removal of trailing period in name argument
 
-Previously the resource returned the Hosted Zone Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g. ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Hosted Zone Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
+Previously the resource returned the Hosted Zone Domain Name directly from the API, which included a `.` suffix. This proves difficult when many other AWS services do not accept this trailing period (e.g., ACM Certificate). This period is now automatically removed. For example, when the attribute would previously return a Hosted Zone Domain Name such as `example.com.`, the attribute now will be returned as `example.com`.
 While the returned value will omit the trailing period, use of configurations with trailing periods will not be interrupted.
 
 ## Resource: aws_s3_bucket
 
 ### Removal of Automatic aws_s3_bucket_policy Import
 
-Previously when importing the `aws_s3_bucket` resource with the [`terraform import` command](/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_s3_bucket_policy` resource as well. This automatic resource import has been removed. Use the [`aws_s3_bucket_policy` resource import](/docs/providers/aws/r/s3_bucket_policy.html#import) to import that resource separately.
+Previously when importing the `aws_s3_bucket` resource with the [`terraform import` command](https://www.terraform.io/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_s3_bucket_policy` resource as well. This automatic resource import has been removed. Use the [`aws_s3_bucket_policy` resource import](/docs/providers/aws/r/s3_bucket_policy.html#import) to import that resource separately.
 
 ### region Attribute Is Now Read-Only
 
@@ -1240,7 +1333,7 @@ The `region` attribute is no longer configurable, but it remains as a read-only 
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "example" {
   # ... other configuration ...
 
@@ -1250,7 +1343,7 @@ resource "aws_s3_bucket" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "example" {
   # ... other configuration ...
 }
@@ -1264,7 +1357,7 @@ The `filter` configuration block no longer supports the empty block `{}` and req
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_s3_bucket_metric" "example" {
   # ... other configuration ...
 
@@ -1274,7 +1367,7 @@ resource "aws_s3_bucket_metric" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_s3_bucket_metric" "example" {
   # ... other configuration ...
 }
@@ -1284,7 +1377,7 @@ resource "aws_s3_bucket_metric" "example" {
 
 ### Removal of Automatic aws_security_group_rule Import
 
-Previously when importing the `aws_security_group` resource with the [`terraform import` command](/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_security_group_rule` resource(s) as well. This automatic resource import has been removed. Use the [`aws_security_group_rule` resource import](/docs/providers/aws/r/security_group_rule.html#import) to import those resources separately.
+Previously when importing the `aws_security_group` resource with the [`terraform import` command](https://www.terraform.io/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_security_group_rule` resource(s) as well. This automatic resource import has been removed. Use the [`aws_security_group_rule` resource import](/docs/providers/aws/r/security_group_rule.html#import) to import those resources separately.
 
 ## Resource: aws_sns_platform_application
 
@@ -1296,7 +1389,7 @@ Previously when the `platform_credential` and `platform_principal` arguments wer
 
 ### valid_until Argument No Longer Uses 24 Hour Default
 
-Previously when the `valid_until` argument was not configured, the resource would default to a 24 hour request. This behavior has been removed and allows for non-expiring requests. To recreate the old behavior, the [`time_offset` resource](/docs/providers/time/r/offset.html) can potentially be used.
+Previously when the `valid_until` argument was not configured, the resource would default to a 24 hour request. This behavior has been removed and allows for non-expiring requests. To recreate the old behavior, the [`time_offset` resource](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/offset) can potentially be used.
 
 ## Resource: aws_ssm_maintenance_window_task
 
@@ -1306,7 +1399,7 @@ Switch your Terraform configuration to the `task_invocation_parameters` configur
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_ssm_maintenance_window_task" "example" {
   # ... other configuration ...
 
@@ -1319,7 +1412,7 @@ resource "aws_ssm_maintenance_window_task" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_ssm_maintenance_window_task" "example" {
   # ... other configuration ...
 
@@ -1342,7 +1435,7 @@ Switch your Terraform configuration to the `task_invocation_parameters` configur
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_ssm_maintenance_window_task" "example" {
   # ... other configuration ...
 
@@ -1355,7 +1448,7 @@ resource "aws_ssm_maintenance_window_task" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_ssm_maintenance_window_task" "example" {
   # ... other configuration ...
 

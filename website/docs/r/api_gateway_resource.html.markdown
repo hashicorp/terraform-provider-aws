@@ -12,7 +12,7 @@ Provides an API Gateway Resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_api_gateway_rest_api" "MyDemoAPI" {
   name        = "MyDemoAPI"
   description = "This is my API for demonstration purposes"
@@ -42,7 +42,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_api_gateway_resource` can be imported using `REST-API-ID/RESOURCE-ID`, e.g.
+`aws_api_gateway_resource` can be imported using `REST-API-ID/RESOURCE-ID`, e.g.,
 
 ```
 $ terraform import aws_api_gateway_resource.example 12345abcde/67890fghij

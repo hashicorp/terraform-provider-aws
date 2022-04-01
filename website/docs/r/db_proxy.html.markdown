@@ -12,7 +12,7 @@ Provides an RDS DB proxy resource. For additional information, see the [RDS User
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_db_proxy" "example" {
   name                   = "example"
   debug_logging          = false
@@ -50,8 +50,7 @@ The following arguments are supported:
 * `role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role that the proxy uses to access secrets in AWS Secrets Manager.
 * `vpc_security_group_ids` - (Optional) One or more VPC security group IDs to associate with the new proxy.
 * `vpc_subnet_ids` - (Required) One or more VPC subnet IDs to associate with the new proxy.
-describe-db-parameters.html) after initial creation of the group.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 `auth` blocks support the following:
 
@@ -68,18 +67,19 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The Amazon Resource Name (ARN) for the proxy.
 * `arn` - The Amazon Resource Name (ARN) for the proxy.
 * `endpoint` - The endpoint that you can use to connect to the proxy. You include the endpoint value in the connection string for a database client application.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ### Timeouts
 
-`aws_db_proxy` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+`aws_db_proxy` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `30 minutes`) Used for creating DB proxies.
 - `update` - (Default `30 minutes`) Used for modifying DB proxies.
-- `delete` - (Default `30 minutes`) Used for destroying DB proxies.
+- `delete` - (Default `60 minutes`) Used for destroying DB proxies.
 
 ## Import
 
-DB proxies can be imported using the `name`, e.g.
+DB proxies can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_db_proxy.example example

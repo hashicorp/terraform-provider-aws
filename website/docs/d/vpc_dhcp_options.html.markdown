@@ -14,7 +14,7 @@ Retrieve information about an EC2 DHCP Options configuration.
 
 ### Lookup by DHCP Options ID
 
-```hcl
+```terraform
 data "aws_vpc_dhcp_options" "example" {
   dhcp_options_id = "dopts-12345678"
 }
@@ -22,7 +22,7 @@ data "aws_vpc_dhcp_options" "example" {
 
 ### Lookup by Filter
 
-```hcl
+```terraform
 data "aws_vpc_dhcp_options" "example" {
   filter {
     name   = "key"
@@ -52,7 +52,7 @@ For more information about filtering, see the [EC2 API documentation](https://do
 
 * `arn` - The ARN of the DHCP Options Set.
 * `dhcp_options_id` - EC2 DHCP Options ID
-* `domain_name` - The suffix domain name to used when resolving non Fully Qualified Domain Names. e.g. the `search` value in the `/etc/resolv.conf` file.
+* `domain_name` - The suffix domain name to used when resolving non Fully Qualified Domain NamesE.g., the `search` value in the `/etc/resolv.conf` file.
 * `domain_name_servers` - List of name servers.
 * `id` - EC2 DHCP Options ID
 * `netbios_name_servers` - List of NETBIOS name servers.

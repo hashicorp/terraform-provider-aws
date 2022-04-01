@@ -14,7 +14,7 @@ Provides an AWS App Mesh virtual service resource.
 
 ### Virtual Node Provider
 
-```hcl
+```terraform
 resource "aws_appmesh_virtual_service" "servicea" {
   name      = "servicea.simpleapp.local"
   mesh_name = aws_appmesh_mesh.simple.id
@@ -31,7 +31,7 @@ resource "aws_appmesh_virtual_service" "servicea" {
 
 ### Virtual Router Provider
 
-```hcl
+```terraform
 resource "aws_appmesh_virtual_service" "servicea" {
   name      = "servicea.simpleapp.local"
   mesh_name = aws_appmesh_mesh.simple.id
@@ -50,11 +50,11 @@ resource "aws_appmesh_virtual_service" "servicea" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name to use for the virtual service.
-* `mesh_name` - (Required) The name of the service mesh in which to create the virtual service.
+* `name` - (Required) The name to use for the virtual service. Must be between 1 and 255 characters in length.
+* `mesh_name` - (Required) The name of the service mesh in which to create the virtual service. Must be between 1 and 255 characters in length.
 * `mesh_owner` - (Optional) The AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `spec` - (Required) The virtual service specification to apply.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `spec` object supports the following:
 
@@ -67,11 +67,11 @@ The `provider` object supports the following:
 
 The `virtual_node` object supports the following:
 
-* `virtual_node_name` - (Required) The name of the virtual node that is acting as a service provider.
+* `virtual_node_name` - (Required) The name of the virtual node that is acting as a service provider. Must be between 1 and 255 characters in length.
 
 The `virtual_router` object supports the following:
 
-* `virtual_router_name` - (Required) The name of the virtual router that is acting as a service provider.
+* `virtual_router_name` - (Required) The name of the virtual router that is acting as a service provider. Must be between 1 and 255 characters in length.
 
 ## Attributes Reference
 
@@ -82,11 +82,12 @@ In addition to all arguments above, the following attributes are exported:
 * `created_date` - The creation date of the virtual service.
 * `last_updated_date` - The last update date of the virtual service.
 * `resource_owner` - The resource owner's AWS account ID.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
 App Mesh virtual services can be imported using `mesh_name` together with the virtual service's `name`,
-e.g.
+e.g.,
 
 ```
 $ terraform import aws_appmesh_virtual_service.servicea simpleapp/servicea.simpleapp.local
