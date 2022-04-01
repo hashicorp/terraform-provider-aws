@@ -1510,6 +1510,7 @@ func Provider() *schema.Provider {
 			"aws_iot_certificate":                iot.ResourceCertificate(),
 			"aws_iot_policy":                     iot.ResourcePolicy(),
 			"aws_iot_policy_attachment":          iot.ResourcePolicyAttachment(),
+			"aws_iot_provisioning_template":      iot.ResourceProvisioningTemplate(),
 			"aws_iot_role_alias":                 iot.ResourceRoleAlias(),
 			"aws_iot_thing":                      iot.ResourceThing(),
 			"aws_iot_thing_group":                iot.ResourceThingGroup(),
