@@ -352,10 +352,9 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	if version != "" {
 		req.EngineVersion = aws.String(version)
 	}
+
 	if v, ok := d.GetOk("auto_minor_version_upgrade"); ok {
-		if v, null, _ := nullable.Bool(v.(string)).Value(); null {
-			req.AutoMinorVersionUpgrade = aws.Bool(true)
-		} else {
+		if v, null, _ := nullable.Bool(v.(string)).Value(); !null {
 			req.AutoMinorVersionUpgrade = aws.Bool(v)
 		}
 	}
@@ -639,11 +638,10 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		req.EngineVersion = aws.String(d.Get("engine_version").(string))
 		requestUpdate = true
 	}
+
 	if d.HasChange("auto_minor_version_upgrade") {
 		v := d.Get("auto_minor_version_upgrade")
-		if v, null, _ := nullable.Bool(v.(string)).Value(); null {
-			req.AutoMinorVersionUpgrade = aws.Bool(true)
-		} else {
+		if v, null, _ := nullable.Bool(v.(string)).Value(); !null {
 			req.AutoMinorVersionUpgrade = aws.Bool(v)
 		}
 		requestUpdate = true
