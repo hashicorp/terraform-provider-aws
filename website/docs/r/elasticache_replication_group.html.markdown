@@ -175,7 +175,9 @@ The following arguments are optional:
 * `apply_immediately` - (Optional) Specifies whether any modifications are applied immediately, or during the next maintenance window. Default is `false`.
 * `at_rest_encryption_enabled` - (Optional) Whether to enable encryption at rest.
 * `auth_token` - (Optional) Password used to access a password protected server. Can be specified only if `transit_encryption_enabled = true`.
-* `auto_minor_version_upgrade` - (Optional) Specifies whether a minor engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window. This parameter is currently not supported by the AWS API. Defaults to `true`.
+* `auto_minor_version_upgrade` - (Optional) Specifies whether minor version engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window.
+  Only supported for engine type `"redis"` and if the engine version is 6 or higher.
+  Defaults to `true`.
 * `automatic_failover_enabled` - (Optional) Specifies whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails. If enabled, `number_cache_clusters` must be greater than 1. Must be enabled for Redis (cluster mode enabled) replication groups. Defaults to `false`.
 * `availability_zones` - (Optional, **Deprecated** use `preferred_cache_cluster_azs` instead) List of EC2 availability zones in which the replication group's cache clusters will be created. The order of the availability zones in the list is not considered.
 * `cluster_mode` - (Optional, **Deprecated** use root-level `num_node_groups` and `replicas_per_node_group` instead) Create a native Redis cluster. `automatic_failover_enabled` must be set to true. Cluster Mode documented below. Only 1 `cluster_mode` block is allowed. Note that configuring this block does not enable cluster mode, i.e., data sharding, this requires using a parameter group that has the parameter `cluster-enabled` set to true.
