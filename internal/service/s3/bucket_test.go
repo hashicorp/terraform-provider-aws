@@ -298,6 +298,40 @@ func TestAccS3Bucket_Basic_keyEnabled(t *testing.T) {
 	})
 }
 
+func TestAccS3Bucket_Basic_requestPayer(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withRequestPayer(bucketName, s3.PayerBucketOwner),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "request_payer", s3.PayerBucketOwner),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+			},
+			{
+				Config: testAccBucketConfig_withRequestPayer(bucketName, s3.PayerRequester),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "request_payer", s3.PayerRequester),
+				),
+			},
+		},
+	})
+}
+
 // Test TestAccS3Bucket_disappears is designed to fail with a "plan
 // not empty" error in Terraform, to check against regressions.
 // See https://github.com/hashicorp/terraform/pull/2925
@@ -4168,6 +4202,15 @@ resource "aws_s3_bucket" "source" {
   }
 }
 `, bucketName))
+}
+
+func testAccBucketConfig_withRequestPayer(bucketName, requestPayer string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  request_payer = %[2]q
+}
+`, bucketName, requestPayer)
 }
 
 func testAccBucketConfig_withVersioning(bucketName string, enabled bool) string {
