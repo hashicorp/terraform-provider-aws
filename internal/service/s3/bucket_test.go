@@ -785,7 +785,7 @@ func TestAccS3Bucket_Manage_objectLock(t *testing.T) {
 		CheckDestroy: testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectLockEnabledNoDefaultRetention(bucketName),
+				Config: testAccBucketConfig_ObjectLockEnabledNoDefaultRetention(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", "true"),
@@ -799,6 +799,17 @@ func TestAccS3Bucket_Manage_objectLock(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+			{
+				Config: testAccBucketConfig_ObjectLockEnabledWithDefaultRetention(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.object_lock_enabled", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.rule.0.default_retention.0.mode", "COMPLIANCE"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.rule.0.default_retention.0.days", "3"),
+				),
 			},
 		},
 	})
@@ -815,7 +826,7 @@ func TestAccS3Bucket_Manage_objectLock_deprecatedEnabled(t *testing.T) {
 		CheckDestroy: testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectLockEnabledNoDefaultRetention_deprecatedEnabled(bucketName),
+				Config: testAccBucketConfig_ObjectLockEnabledNoDefaultRetention_deprecatedEnabled(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", "true"),
@@ -845,7 +856,7 @@ func TestAccS3Bucket_Manage_objectLock_migrate(t *testing.T) {
 		CheckDestroy: testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectLockEnabledNoDefaultRetention_deprecatedEnabled(bucketName),
+				Config: testAccBucketConfig_ObjectLockEnabledNoDefaultRetention_deprecatedEnabled(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", "true"),
@@ -854,7 +865,7 @@ func TestAccS3Bucket_Manage_objectLock_migrate(t *testing.T) {
 				),
 			},
 			{
-				Config:   testAccObjectLockEnabledNoDefaultRetention(bucketName),
+				Config:   testAccBucketConfig_ObjectLockEnabledNoDefaultRetention(bucketName),
 				PlanOnly: true,
 			},
 		},
@@ -4480,7 +4491,7 @@ resource "aws_s3_bucket_acl" "test6" {
 `, randInt)
 }
 
-func testAccObjectLockEnabledNoDefaultRetention(bucketName string) string {
+func testAccBucketConfig_ObjectLockEnabledNoDefaultRetention(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -4490,7 +4501,26 @@ resource "aws_s3_bucket" "test" {
 `, bucketName)
 }
 
-func testAccObjectLockEnabledNoDefaultRetention_deprecatedEnabled(bucketName string) string {
+func testAccBucketConfig_ObjectLockEnabledWithDefaultRetention(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  object_lock_configuration {
+    object_lock_enabled = "Enabled"
+
+    rule {
+      default_retention {
+        mode = "COMPLIANCE"
+        days = 3
+      }
+    }
+  }
+}
+`, bucketName)
+}
+
+func testAccBucketConfig_ObjectLockEnabledNoDefaultRetention_deprecatedEnabled(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
