@@ -15,7 +15,7 @@ Creates an IoT fleet provisioning template. For more info, see the AWS documenta
 ## Example Usage
 
 ```hcl
-data "aws_iam_policy_document" "iot_assume_role_policy" {
+resource "aws_iam_policy_document" "iot_assume_role_policy" {
   statement {
     actions = ["sts:AssumeRole"]
 
