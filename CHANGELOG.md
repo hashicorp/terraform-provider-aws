@@ -22,9 +22,16 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_elasticache_cluster: Allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#23979](https://github.com/hashicorp/terraform-provider-aws/issues/23979))
 * resource/aws_backup_report_plan: Wait for asynchronous lifecycle operations to complete ([#23967](https://github.com/hashicorp/terraform-provider-aws/issues/23967))
 * resource/aws_cloudformation_stack_set: Consider `QUEUED` a valid pending state for resource creation ([#22160](https://github.com/hashicorp/terraform-provider-aws/issues/22160))
 * resource/aws_dynamodb_table_item: Allow `item` names to still succeed if they include non-letters ([#14075](https://github.com/hashicorp/terraform-provider-aws/issues/14075))
+* resource/aws_elasticache_cluster: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#23979](https://github.com/hashicorp/terraform-provider-aws/issues/23979))
+* resource/aws_elasticache_parameter_group: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#23979](https://github.com/hashicorp/terraform-provider-aws/issues/23979))
+* resource/aws_elasticache_replication_group: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#23979](https://github.com/hashicorp/terraform-provider-aws/issues/23979))
+* resource/aws_elasticache_subnet_group: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#23979](https://github.com/hashicorp/terraform-provider-aws/issues/23979))
+* resource/aws_elasticache_user: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#23979](https://github.com/hashicorp/terraform-provider-aws/issues/23979))
+* resource/aws_elasticache_user_group: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO) ([#23979](https://github.com/hashicorp/terraform-provider-aws/issues/23979))
 * resource/aws_elasticsearch_domain_saml_option: Fix difference caused by `subject_key` default not matching AWS default; old and new defaults are equivalent ([#20892](https://github.com/hashicorp/terraform-provider-aws/issues/20892))
 * resource/aws_lb: Fix attribute key not recognized issue preventing creation in ISO-B regions ([#23972](https://github.com/hashicorp/terraform-provider-aws/issues/23972))
 * resource/aws_redshift_cluster: Correctly use `number_of_nodes` argument value when restoring from snapshot ([#13203](https://github.com/hashicorp/terraform-provider-aws/issues/13203))
