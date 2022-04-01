@@ -11,9 +11,10 @@ const (
 )
 
 type CoreNetworkPolicyDoc struct {
-	Version  string                      `json:",omitempty"`
-	Id       string                      `json:",omitempty"`
-	Segments []*CoreNetworkPolicySegment `json:"Segment"`
+	Version                  string                                       `json:",omitempty"`
+	Id                       string                                       `json:",omitempty"`
+	Segments                 []*CoreNetworkPolicySegment                  `json:"Segment"`
+	CoreNetworkConfiguration []*CoreNetworkPolicyCoreNetworkConfiguration `json:"CoreNetworkConfiguration"`
 }
 
 type CoreNetworkPolicySegment struct {
@@ -23,6 +24,20 @@ type CoreNetworkPolicySegment struct {
 	EdgeLocations               interface{} `json:"EdgeLocations,omitempty"`
 	IsolateAttachments          bool        `json:"IsolateAttachments,omitempty"`
 	RequireAttachmentAcceptance bool        `json:"RequireAttachmentAcceptance,omitempty"`
+}
+
+type CoreNetworkPolicyCoreNetworkConfiguration struct {
+	AsnRanges                   string
+	VPNEcmpSupport              interface{}     `json:"AllowFilter,omitempty"`
+	EdgeLocations               []*EdgeLocation `json:"EdgeLocations,omitempty"`
+	InsideCidrBlocks            bool            `json:"IsolateAttachments,omitempty"`
+	RequireAttachmentAcceptance bool            `json:"RequireAttachmentAcceptance,omitempty"`
+}
+
+type EdgeLocation struct {
+	Location         string
+	Asn              int         `json:"AllowFilter,omitempty"`
+	InsideCidrBlocks interface{} `json:"InsideCidrBlocks,omitempty"`
 }
 
 type CoreNetworkPolicySegmentPrincipal struct {

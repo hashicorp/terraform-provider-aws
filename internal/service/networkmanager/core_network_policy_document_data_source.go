@@ -32,7 +32,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"asn_ranges": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							// validate like <asn>-<asn> ?
 						},
@@ -43,7 +43,9 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 						},
 						"edge_locations": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
+							MinItems: 1,
+							MaxItems: 17,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"location": {
@@ -127,6 +129,7 @@ func dataSourceCoreNetworkPolicyDocumentRead(d *schema.ResourceData, meta interf
 		Version: d.Get("version").(string),
 	}
 
+	// TODO: segments is required
 	if cfgSgmts, hasCfgSgmts := d.GetOk("segments"); hasCfgSgmts {
 		var cfgSgmtIntf = cfgSgmts.([]interface{})
 		Sgmts := make([]*CoreNetworkPolicySegment, len(cfgSgmtIntf))
@@ -157,56 +160,12 @@ func dataSourceCoreNetworkPolicyDocumentRead(d *schema.ResourceData, meta interf
 			if b, ok := cfgSgmt["isolate_attachments"]; ok {
 				sgmt.IsolateAttachments = b.(bool)
 			}
-
-			// if resources := cfgSgmt["resources"].(*schema.Set).List(); len(resources) > 0 {
-			// 	var err error
-			// 	sgmt.Resources, err = dataSourcePolicyDocumentReplaceVarsInList(
-			// 		iamPolicyDecodeConfigStringList(resources), doc.Version,
-			// 	)
-			// 	if err != nil {
-			// 		return fmt.Errorf("error reading resources: %w", err)
-			// 	}
-			// }
-			// if notResources := cfgSgmt["not_resources"].(*schema.Set).List(); len(notResources) > 0 {
-			// 	var err error
-			// 	sgmt.NotResources, err = dataSourcePolicyDocumentReplaceVarsInList(
-			// 		iamPolicyDecodeConfigStringList(notResources), doc.Version,
-			// 	)
-			// 	if err != nil {
-			// 		return fmt.Errorf("error reading not_resources: %w", err)
-			// 	}
-			// }
-
-			// if principals := cfgSgmt["principals"].(*schema.Set).List(); len(principals) > 0 {
-			// 	var err error
-			// 	sgmt.Principals, err = dataSourcePolicyDocumentMakePrincipals(principals, doc.Version)
-			// 	if err != nil {
-			// 		return fmt.Errorf("error reading principals: %w", err)
-			// 	}
-			// }
-
-			// if notPrincipals := cfgSgmt["not_principals"].(*schema.Set).List(); len(notPrincipals) > 0 {
-			// 	var err error
-			// 	sgmt.NotPrincipals, err = dataSourcePolicyDocumentMakePrincipals(notPrincipals, doc.Version)
-			// 	if err != nil {
-			// 		return fmt.Errorf("error reading not_principals: %w", err)
-			// 	}
-			// }
-
-			// if conditions := cfgSgmt["condition"].(*schema.Set).List(); len(conditions) > 0 {
-			// 	var err error
-			// 	sgmt.Conditions, err = dataSourcePolicyDocumentMakeConditions(conditions, doc.Version)
-			// 	if err != nil {
-			// 		return fmt.Errorf("error reading condition: %w", err)
-			// 	}
-			// }
-
 			Sgmts[i] = sgmt
 		}
 
 		doc.Segments = Sgmts
-
 	}
+
 	mergedDoc.Merge(doc)
 	jsonDoc, err := json.MarshalIndent(mergedDoc, "", "  ")
 	if err != nil {
