@@ -403,100 +403,105 @@ func ResourceBucket() *schema.Resource {
 
 			"replication_configuration": {
 				Type:       schema.TypeList,
+				Optional:   true,
 				Computed:   true,
+				MaxItems:   1,
 				Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"role": {
-							Type:       schema.TypeString,
-							Computed:   true,
-							Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"rules": {
-							Type:       schema.TypeSet,
-							Computed:   true,
-							Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+							Type:     schema.TypeSet,
+							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": {
-										Type:       schema.TypeString,
-										Computed:   true,
-										Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 255),
 									},
 									"destination": {
-										Type:       schema.TypeList,
-										Computed:   true,
-										Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										MinItems: 1,
+										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"account_id": {
-													Type:       schema.TypeString,
-													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidAccountID,
 												},
 												"bucket": {
-													Type:       schema.TypeString,
-													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: verify.ValidARN,
 												},
 												"storage_class": {
-													Type:       schema.TypeString,
-													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(s3.StorageClass_Values(), false),
 												},
 												"replica_kms_key_id": {
-													Type:       schema.TypeString,
-													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+													Type:     schema.TypeString,
+													Optional: true,
 												},
 												"access_control_translation": {
-													Type:       schema.TypeList,
-													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 1,
+													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"owner": {
-																Type:       schema.TypeString,
-																Computed:   true,
-																Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringInSlice(s3.OwnerOverride_Values(), false),
 															},
 														},
 													},
 												},
 												"replication_time": {
-													Type:       schema.TypeList,
-													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"minutes": {
-																Type:       schema.TypeInt,
-																Computed:   true,
-																Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+																Type:         schema.TypeInt,
+																Optional:     true,
+																Default:      15,
+																ValidateFunc: validation.IntBetween(15, 15),
 															},
 															"status": {
-																Type:       schema.TypeString,
-																Computed:   true,
-																Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+																Type:         schema.TypeString,
+																Optional:     true,
+																Default:      s3.ReplicationTimeStatusEnabled,
+																ValidateFunc: validation.StringInSlice(s3.ReplicationTimeStatus_Values(), false),
 															},
 														},
 													},
 												},
 												"metrics": {
-													Type:       schema.TypeList,
-													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"minutes": {
-																Type:       schema.TypeInt,
-																Computed:   true,
-																Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+																Type:         schema.TypeInt,
+																Optional:     true,
+																Default:      15,
+																ValidateFunc: validation.IntBetween(10, 15),
 															},
 															"status": {
-																Type:       schema.TypeString,
-																Computed:   true,
-																Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+																Type:         schema.TypeString,
+																Optional:     true,
+																Default:      s3.MetricsStatusEnabled,
+																ValidateFunc: validation.StringInSlice(s3.MetricsStatus_Values(), false),
 															},
 														},
 													},
@@ -505,21 +510,22 @@ func ResourceBucket() *schema.Resource {
 										},
 									},
 									"source_selection_criteria": {
-										Type:       schema.TypeList,
-										Computed:   true,
-										Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"sse_kms_encrypted_objects": {
-													Type:       schema.TypeList,
-													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 1,
+													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"enabled": {
-																Type:       schema.TypeBool,
-																Computed:   true,
-																Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+																Type:     schema.TypeBool,
+																Required: true,
 															},
 														},
 													},
@@ -528,39 +534,39 @@ func ResourceBucket() *schema.Resource {
 										},
 									},
 									"prefix": {
-										Type:       schema.TypeString,
-										Computed:   true,
-										Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 1024),
 									},
 									"status": {
-										Type:       schema.TypeString,
-										Computed:   true,
-										Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(s3.ReplicationRuleStatus_Values(), false),
 									},
 									"priority": {
-										Type:       schema.TypeInt,
-										Computed:   true,
-										Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+										Type:     schema.TypeInt,
+										Optional: true,
 									},
 									"filter": {
-										Type:       schema.TypeList,
-										Computed:   true,
-										Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"prefix": {
-													Type:       schema.TypeString,
-													Computed:   true,
-													Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringLenBetween(0, 1024),
 												},
-												"tags": tftags.TagsSchemaComputedDeprecated("Use the aws_s3_bucket_replication_configuration resource instead"),
+												"tags": tftags.TagsSchema(),
 											},
 										},
 									},
 									"delete_marker_replication_status": {
-										Type:       schema.TypeString,
-										Computed:   true,
-										Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice([]string{s3.DeleteMarkerReplicationStatusEnabled}, false),
 									},
 								},
 							},
@@ -774,17 +780,7 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("acceleration_status") {
-		if err := resourceBucketInternalAccelerationUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating S3 Bucket (%s) Acceleration Status: %w", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("acl") && !d.IsNewResource() {
-		if err := resourceBucketInternalACLUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating S3 Bucket (%s) ACL: %w", d.Id(), err)
-		}
-	}
+	// Note: Order of argument updates below is important
 
 	if d.HasChange("cors_rule") {
 		if err := resourceBucketInternalCorsUpdate(conn, d); err != nil {
@@ -792,33 +788,9 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("grant") {
-		if err := resourceBucketInternalGrantsUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating S3 Bucket (%s) Grants: %w", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("lifecycle_rule") {
-		if err := resourceBucketInternalLifecycleUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating S3 Bucket (%s) Lifecycle Rules: %w", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("logging") {
-		if err := resourceBucketInternalLoggingUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating S3 Bucket (%s) Logging: %w", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("object_lock_configuration") {
-		if err := resourceBucketInternalObjectLockConfigurationUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating S3 Bucket (%s) Object Lock configuration: %w", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("server_side_encryption_configuration") {
-		if err := resourceBucketInternalServerSideEncryptionConfigurationUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating S3 Bucket (%s) Server-side Encryption configuration: %w", d.Id(), err)
+	if d.HasChange("website") {
+		if err := resourceBucketInternalWebsiteUpdate(conn, d); err != nil {
+			return fmt.Errorf("error updating S3 Bucket (%s) Website: %w", d.Id(), err)
 		}
 	}
 
@@ -839,9 +811,51 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("website") {
-		if err := resourceBucketInternalWebsiteUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating S3 Bucket (%s) Website: %w", d.Id(), err)
+	if d.HasChange("acl") && !d.IsNewResource() {
+		if err := resourceBucketInternalACLUpdate(conn, d); err != nil {
+			return fmt.Errorf("error updating S3 Bucket (%s) ACL: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("grant") {
+		if err := resourceBucketInternalGrantsUpdate(conn, d); err != nil {
+			return fmt.Errorf("error updating S3 Bucket (%s) Grants: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("logging") {
+		if err := resourceBucketInternalLoggingUpdate(conn, d); err != nil {
+			return fmt.Errorf("error updating S3 Bucket (%s) Logging: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("lifecycle_rule") {
+		if err := resourceBucketInternalLifecycleUpdate(conn, d); err != nil {
+			return fmt.Errorf("error updating S3 Bucket (%s) Lifecycle Rules: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("acceleration_status") {
+		if err := resourceBucketInternalAccelerationUpdate(conn, d); err != nil {
+			return fmt.Errorf("error updating S3 Bucket (%s) Acceleration Status: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("replication_configuration") {
+		if err := resourceBucketInternalReplicationConfigurationUpdate(conn, d); err != nil {
+			return fmt.Errorf("error updating S3 Bucket (%s) Replication configuration: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("server_side_encryption_configuration") {
+		if err := resourceBucketInternalServerSideEncryptionConfigurationUpdate(conn, d); err != nil {
+			return fmt.Errorf("error updating S3 Bucket (%s) Server-side Encryption configuration: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("object_lock_configuration") {
+		if err := resourceBucketInternalObjectLockConfigurationUpdate(conn, d); err != nil {
+			return fmt.Errorf("error updating S3 Bucket (%s) Object Lock configuration: %w", d.Id(), err)
 		}
 	}
 
@@ -1857,6 +1871,60 @@ func resourceBucketInternalObjectLockConfigurationUpdate(conn *s3.S3, d *schema.
 	return err
 }
 
+func resourceBucketInternalReplicationConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
+	replicationConfiguration := d.Get("replication_configuration").([]interface{})
+
+	if len(replicationConfiguration) == 0 {
+		input := &s3.DeleteBucketReplicationInput{
+			Bucket: aws.String(d.Id()),
+		}
+
+		_, err := conn.DeleteBucketReplication(input)
+
+		if err != nil {
+			return fmt.Errorf("error removing S3 Bucket (%s) Replication: %w", d.Id(), err)
+		}
+
+		return nil
+	}
+
+	hasVersioning := false
+	// Validate that bucket versioning is enabled
+	if versioning, ok := d.GetOk("versioning"); ok {
+		v := versioning.([]interface{})
+
+		if v[0].(map[string]interface{})["enabled"].(bool) {
+			hasVersioning = true
+		}
+	}
+
+	if !hasVersioning {
+		return fmt.Errorf("versioning must be enabled to allow S3 bucket replication")
+	}
+
+	input := &s3.PutBucketReplicationInput{
+		Bucket:                   aws.String(d.Id()),
+		ReplicationConfiguration: expandBucketReplicationConfiguration(replicationConfiguration),
+	}
+
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err := conn.PutBucketReplication(input)
+		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, ErrCodeInvalidRequest, "Versioning must be 'Enabled' on the bucket") {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.PutBucketReplication(input)
+	}
+
+	return err
+}
+
 func resourceBucketInternalServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	serverSideEncryptionConfiguration := d.Get("server_side_encryption_configuration").([]interface{})
 
@@ -2324,6 +2392,185 @@ func flattenS3ObjectLockConfiguration(conf *s3.ObjectLockConfiguration) []interf
 }
 
 // Replication Configuration functions
+
+func expandBucketReplicationConfiguration(l []interface{}) *s3.ReplicationConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	rc := &s3.ReplicationConfiguration{}
+
+	if val, ok := tfMap["role"].(string); ok {
+		rc.Role = aws.String(val)
+	}
+
+	if v, ok := tfMap["rules"].(*schema.Set); ok && v.Len() > 0 {
+		rc.Rules = expandBucketReplicationConfigurationRules(v.List())
+	}
+
+	return rc
+}
+
+func expandBucketReplicationConfigurationRules(l []interface{}) []*s3.ReplicationRule {
+	var rules []*s3.ReplicationRule
+
+	for _, tfMapRaw := range l {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		rcRule := &s3.ReplicationRule{}
+
+		if status, ok := tfMap["status"].(string); ok && status != "" {
+			rcRule.Status = aws.String(status)
+		} else {
+			continue
+		}
+
+		if v, ok := tfMap["id"].(string); ok && v != "" {
+			rcRule.ID = aws.String(v)
+		}
+
+		if v, ok := tfMap["destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			rcRule.Destination = expandBucketReplicationConfigurationRulesDestination(v)
+		} else {
+			rcRule.Destination = &s3.Destination{}
+		}
+
+		if v, ok := tfMap["source_selection_criteria"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			rcRule.SourceSelectionCriteria = expandBucketReplicationConfigurationRulesSourceSelectionCriteria(v)
+		}
+
+		if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			// XML schema V2.
+			rcRule.Priority = aws.Int64(int64(tfMap["priority"].(int)))
+
+			rcRule.Filter = &s3.ReplicationRuleFilter{}
+
+			filter := v[0].(map[string]interface{})
+			tags := Tags(tftags.New(filter["tags"]).IgnoreAWS())
+
+			if len(tags) > 0 {
+				rcRule.Filter.And = &s3.ReplicationRuleAndOperator{
+					Prefix: aws.String(filter["prefix"].(string)),
+					Tags:   tags,
+				}
+			} else {
+				rcRule.Filter.Prefix = aws.String(filter["prefix"].(string))
+			}
+
+			if dmr, ok := tfMap["delete_marker_replication_status"].(string); ok && dmr != "" {
+				rcRule.DeleteMarkerReplication = &s3.DeleteMarkerReplication{
+					Status: aws.String(dmr),
+				}
+			} else {
+				rcRule.DeleteMarkerReplication = &s3.DeleteMarkerReplication{
+					Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
+				}
+			}
+		} else {
+			// XML schema V1.
+			rcRule.Prefix = aws.String(tfMap["prefix"].(string))
+		}
+
+		rules = append(rules, rcRule)
+	}
+
+	return rules
+}
+
+func expandBucketReplicationConfigurationRulesDestination(l []interface{}) *s3.Destination {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	ruleDestination := &s3.Destination{}
+
+	if v, ok := tfMap["bucket"].(string); ok {
+		ruleDestination.Bucket = aws.String(v)
+	}
+
+	if v, ok := tfMap["storage_class"].(string); ok && v != "" {
+		ruleDestination.StorageClass = aws.String(v)
+	}
+
+	if v, ok := tfMap["replica_kms_key_id"].(string); ok && v != "" {
+		ruleDestination.EncryptionConfiguration = &s3.EncryptionConfiguration{
+			ReplicaKmsKeyID: aws.String(v),
+		}
+	}
+
+	if v, ok := tfMap["account_id"].(string); ok && v != "" {
+		ruleDestination.Account = aws.String(v)
+	}
+
+	if v, ok := tfMap["access_control_translation"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		aclTranslationValues := v[0].(map[string]interface{})
+		ruleAclTranslation := &s3.AccessControlTranslation{}
+		ruleAclTranslation.Owner = aws.String(aclTranslationValues["owner"].(string))
+		ruleDestination.AccessControlTranslation = ruleAclTranslation
+	}
+
+	// replication metrics (required for RTC)
+	if v, ok := tfMap["metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		metricsConfig := &s3.Metrics{}
+		metricsValues := v[0].(map[string]interface{})
+		metricsConfig.EventThreshold = &s3.ReplicationTimeValue{}
+		metricsConfig.Status = aws.String(metricsValues["status"].(string))
+		metricsConfig.EventThreshold.Minutes = aws.Int64(int64(metricsValues["minutes"].(int)))
+		ruleDestination.Metrics = metricsConfig
+	}
+
+	// replication time control (RTC)
+	if v, ok := tfMap["replication_time"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		rtcValues := v[0].(map[string]interface{})
+		rtcConfig := &s3.ReplicationTime{}
+		rtcConfig.Status = aws.String(rtcValues["status"].(string))
+		rtcConfig.Time = &s3.ReplicationTimeValue{}
+		rtcConfig.Time.Minutes = aws.Int64(int64(rtcValues["minutes"].(int)))
+		ruleDestination.ReplicationTime = rtcConfig
+	}
+
+	return ruleDestination
+}
+
+func expandBucketReplicationConfigurationRulesSourceSelectionCriteria(l []interface{}) *s3.SourceSelectionCriteria {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	ruleSsc := &s3.SourceSelectionCriteria{}
+
+	if v, ok := tfMap["sse_kms_encrypted_objects"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		sseKmsValues := v[0].(map[string]interface{})
+		sseKmsEncryptedObjects := &s3.SseKmsEncryptedObjects{}
+
+		if sseKmsValues["enabled"].(bool) {
+			sseKmsEncryptedObjects.Status = aws.String(s3.SseKmsEncryptedObjectsStatusEnabled)
+		} else {
+			sseKmsEncryptedObjects.Status = aws.String(s3.SseKmsEncryptedObjectsStatusDisabled)
+		}
+		ruleSsc.SseKmsEncryptedObjects = sseKmsEncryptedObjects
+	}
+
+	return ruleSsc
+}
 
 func flattenBucketReplicationConfiguration(r *s3.ReplicationConfiguration) []interface{} {
 	if r == nil {
