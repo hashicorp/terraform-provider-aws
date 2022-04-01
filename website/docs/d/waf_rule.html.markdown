@@ -1,7 +1,7 @@
 ---
+subcategory: "WAF"
 layout: "aws"
 page_title: "AWS: aws_waf_rule"
-sidebar_current: "docs-aws-datasource-waf-rule"
 description: |-
   Retrieves an AWS WAF rule id.
 ---
@@ -12,7 +12,7 @@ description: |-
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_waf_rule" "example" {
   name = "tfWAFRule"
 }

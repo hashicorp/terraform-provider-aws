@@ -1,7 +1,7 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_db_snapshot"
-sidebar_current: "docs-aws-datasource-db-snapshot"
 description: |-
   Get information on a DB Snapshot.
 ---
@@ -15,7 +15,7 @@ See the [`aws_db_cluster_snapshot` data source](/docs/providers/aws/d/db_cluster
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_db_instance" "prod" {
   allocated_storage    = 10
   engine               = "mysql"
@@ -29,7 +29,7 @@ resource "aws_db_instance" "prod" {
 }
 
 data "aws_db_snapshot" "latest_prod_snapshot" {
-  db_instance_identifier = "${aws_db_instance.prod.id}"
+  db_instance_identifier = aws_db_instance.prod.id
   most_recent            = true
 }
 
@@ -37,15 +37,17 @@ data "aws_db_snapshot" "latest_prod_snapshot" {
 resource "aws_db_instance" "dev" {
   instance_class      = "db.t2.micro"
   name                = "mydbdev"
-  snapshot_identifier = "${data.aws_db_snapshot.latest_prod_snapshot.id}"
+  snapshot_identifier = data.aws_db_snapshot.latest_prod_snapshot.id
 
   lifecycle {
-    ignore_changes = ["snapshot_identifier"]
+    ignore_changes = [snapshot_identifier]
   }
 }
 ```
 
 ## Argument Reference
+
+~> **NOTE:** One of either `db_instance_identifier` or `db_snapshot_identifier` is required.
 
 The following arguments are supported:
 
@@ -58,7 +60,7 @@ recent Snapshot.
 
 * `snapshot_type` - (Optional) The type of snapshots to be returned. If you don't specify a SnapshotType
 value, then both automated and manual snapshots are returned. Shared and public DB snapshots are not
-included in the returned results by default. Possible values are, `automated`, `manual`, `shared` and `public`.
+included in the returned results by default. Possible values are, `automated`, `manual`, `shared`, `public` and `awsbackup`.
 
 * `include_shared` - (Optional) Set this value to true to include shared manual DB snapshots from other
 AWS accounts that this AWS account has been given permission to copy or restore, otherwise set this value to false.

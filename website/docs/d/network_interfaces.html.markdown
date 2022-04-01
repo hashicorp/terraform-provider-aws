@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_network_interfaces"
-sidebar_current: "docs-aws-datasource-network-interfaces"
 description: |-
     Provides a list of network interface ids
 ---
@@ -12,17 +12,17 @@ description: |-
 
 The following shows outputing all network interface ids in a region.
 
-```hcl
+```terraform
 data "aws_network_interfaces" "example" {}
 
 output "example" {
-  value = "${data.aws_network_interfaces.example.ids}"
+  value = data.aws_network_interfaces.example.ids
 }
 ```
 
 The following example retrieves a list of all network interface ids with a custom tag of `Name` set to a value of `test`.
 
-```hcl
+```terraform
 data "aws_network_interfaces" "example" {
   tags = {
     Name = "test"
@@ -30,29 +30,29 @@ data "aws_network_interfaces" "example" {
 }
 
 output "example1" {
-  value = "${data.aws_network_interfaces.example.ids}"
+  value = data.aws_network_interfaces.example.ids
 }
 ```
 
 The following example retrieves a network interface ids which associated
 with specific subnet.
 
-```hcl
+```terraform
 data "aws_network_interfaces" "example" {
   filter {
     name   = "subnet-id"
-    values = ["${aws_subnet.test.id}"]
+    values = [aws_subnet.test.id]
   }
 }
 
 output "example" {
-  value = "${data.aws_network_interfaces.example.ids}"
+  value = data.aws_network_interfaces.example.ids
 }
 ```
 
 ## Argument Reference
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) A map of tags, each pair of which must exactly match
   a pair on the desired network interfaces.
 
 * `filter` - (Optional) Custom filter block as described below.
@@ -67,5 +67,6 @@ which take the following arguments:
 
 ## Attributes Reference
 
-* `ids` - A list of all the network interface ids found. This data source will fail if none are found.
+* `id` - AWS Region.
+* `ids` - A list of all the network interface ids found.
 

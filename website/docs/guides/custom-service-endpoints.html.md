@@ -1,7 +1,7 @@
 ---
+subcategory: ""
 layout: "aws"
 page_title: "Terraform AWS Provider Custom Service Endpoint Configuration"
-sidebar_current: "docs-aws-guide-custom-service-endpoint"
 description: |-
   Configuring the Terraform AWS Provider to connect to custom AWS service endpoints and AWS compatible solutions.
 ---
@@ -26,9 +26,9 @@ This guide outlines how to get started with customizing endpoints, the available
 
 ## Getting Started with Custom Endpoints
 
-To configure the Terraform AWS Provider to use customized endpoints, it can be done within `provider` declarations using the `endpoints` configuration block, e.g.
+To configure the Terraform AWS Provider to use customized endpoints, it can be done within `provider` declarations using the `endpoints` configuration block, e.g.,
 
-```hcl
+```terraform
 provider "aws" {
   # ... potentially other provider configuration ...
 
@@ -43,136 +43,314 @@ If multiple, different Terraform AWS Provider configurations are required, see t
 
 ## Available Endpoint Customizations
 
-The Terraform AWS Provider allows the following endpoints to be customized:
+The Terraform AWS Provider allows the following endpoints to be customized.
 
+**Note:** The Provider allows some service endpoints to be customized despite not supporting those services.
+
+**Note:** For backward compatibility, some endpoints can be assigned using multiple service "keys" (_e.g._, `dms`, `databasemigration`, or `databasemigrationservice`). If you use more than one equivalent service key in your configuration, the provider will use the _first_ endpoint value set. For example, in the configuration below we have set the DMS service endpoints using both `dms` and `databasemigration`. The provider will set the endpoint to whichever appears first. Subsequent values are ignored.
+
+```terraform
+provider "aws" {
+  endpoints {
+    dms               = "http://this.value.will.be.used.com"
+    databasemigration = "http://this.value.will.be.ignored.com"
+  }
+}
+```
+
+<!-- markdownlint-disable no-inline-html -->
+<!--
+    The division splits this long list into multiple columns without manually
+    maintaining a table. The terraform.io Markdown parser previously allowed
+    for Markdown within HTML elements, however the Terraform Registry parser
+    is more accurate/strict, so we use raw HTML to maintain this list.
+-->
 <div style="column-width: 14em;">
-
-- `acm`
-- `acmpca`
-- `amplify`
-- `apigateway`
-- `applicationautoscaling`
-- `applicationinsights`
-- `appmesh`
-- `appstream`
-- `appsync`
-- `athena`
-- `autoscaling`
-- `autoscalingplans`
-- `backup`
-- `batch`
-- `budgets`
-- `cloud9`
-- `cloudformation`
-- `cloudfront`
-- `cloudhsm`
-- `cloudsearch`
-- `cloudtrail`
-- `cloudwatch`
-- `cloudwatchevents`
-- `cloudwatchlogs`
-- `codebuild`
-- `codecommit`
-- `codedeploy`
-- `codepipeline`
-- `cognitoidentity`
-- `cognitoidp`
-- `configservice`
-- `cur`
-- `datapipeline`
-- `datasync`
-- `dax`
-- `devicefarm`
-- `directconnect`
-- `dlm`
-- `dms`
-- `docdb`
-- `ds`
-- `dynamodb`
-- `ec2`
-- `ecr`
-- `ecs`
-- `efs`
-- `eks`
-- `elasticache`
-- `elasticbeanstalk`
-- `elastictranscoder`
-- `elb`
-- `emr`
-- `es`
-- `firehose`
-- `fms`
-- `fsx`
-- `gamelift`
-- `glacier`
-- `globalaccelerator`
-- `glue`
-- `guardduty`
-- `iam`
-- `inspector`
-- `iot`
-- `iotevents`
-- `kafka`
-- `kinesis_analytics` (**DEPRECATED** Use `kinesisanalytics` instead)
-- `kinesis`
-- `kinesisanalytics`
-- `kinesisvideo`
-- `kms`
-- `lakeformation`
-- `lambda`
-- `lexmodels`
-- `licensemanager`
-- `lightsail`
-- `macie`
-- `managedblockchain`
-- `mediaconnect`
-- `mediaconvert`
-- `medialive`
-- `mediapackage`
-- `mediastore`
-- `mediastoredata`
-- `mq`
-- `neptune`
-- `opsworks`
-- `organizations`
-- `personalize`
-- `pinpoint`
-- `pricing`
-- `quicksight`
-- `r53` (**DEPRECATED** Use `route53` instead)
-- `ram`
-- `rds`
-- `redshift`
-- `resourcegroups`
-- `route53`
-- `route53resolver`
-- `s3`
-- `s3control`
-- `sagemaker`
-- `sdb`
-- `secretsmanager`
-- `securityhub`
-- `serverlessrepo`
-- `servicecatalog`
-- `servicediscovery`
-- `servicequotas`
-- `ses`
-- `shield`
-- `sns`
-- `sqs`
-- `ssm`
-- `stepfunctions`
-- `storagegateway`
-- `sts`
-- `swf`
-- `transfer`
-- `waf`
-- `wafregional`
-- `worklink`
-- `workspaces`
-- `xray`
-
+<ul>
+  <li><code>accessanalyzer</code></li>
+  <li><code>account</code></li>
+  <li><code>acm</code></li>
+  <li><code>acmpca</code></li>
+  <li><code>alexaforbusiness</code></li>
+  <li><code>amp</code> (or <code>prometheus</code>, <code>prometheusservice</code>)</li>
+  <li><code>amplify</code></li>
+  <li><code>amplifybackend</code></li>
+  <li><code>apigateway</code></li>
+  <li><code>apigatewayv2</code></li>
+  <li><code>appautoscaling</code> (or <code>applicationautoscaling</code>)</li>
+  <li><code>appconfig</code></li>
+  <li><code>appflow</code></li>
+  <li><code>appintegrations</code> (or <code>appintegrationsservice</code>)</li>
+  <li><code>applicationcostprofiler</code></li>
+  <li><code>applicationdiscovery</code> (or <code>applicationdiscoveryservice</code>)</li>
+  <li><code>applicationinsights</code></li>
+  <li><code>appmesh</code></li>
+  <li><code>appregistry</code></li>
+  <li><code>apprunner</code></li>
+  <li><code>appstream</code></li>
+  <li><code>appsync</code></li>
+  <li><code>athena</code></li>
+  <li><code>auditmanager</code></li>
+  <li><code>augmentedairuntime</code></li>
+  <li><code>autoscaling</code></li>
+  <li><code>autoscalingplans</code></li>
+  <li><code>backup</code></li>
+  <li><code>batch</code></li>
+  <li><code>braket</code></li>
+  <li><code>budgets</code></li>
+  <li><code>chime</code></li>
+  <li><code>cloud9</code></li>
+  <li><code>cloudcontrolapi</code> (or <code>cloudcontrol</code>)</li>
+  <li><code>clouddirectory</code></li>
+  <li><code>cloudformation</code></li>
+  <li><code>cloudfront</code></li>
+  <li><code>cloudhsm</code> (or <code>cloudhsmv2</code>)</li>
+  <li><code>cloudsearch</code></li>
+  <li><code>cloudsearchdomain</code></li>
+  <li><code>cloudtrail</code></li>
+  <li><code>cloudwatch</code></li>
+  <li><code>cloudwatchlogs</code></li>
+  <li><code>cloudwatchrum</code></li>
+  <li><code>codeartifact</code></li>
+  <li><code>codebuild</code></li>
+  <li><code>codecommit</code></li>
+  <li><code>codedeploy</code></li>
+  <li><code>codeguruprofiler</code></li>
+  <li><code>codegurureviewer</code></li>
+  <li><code>codepipeline</code></li>
+  <li><code>codestar</code></li>
+  <li><code>codestarconnections</code></li>
+  <li><code>codestarnotifications</code></li>
+  <li><code>cognitoidentity</code></li>
+  <li><code>cognitoidp</code> (or <code>cognitoidentityprovider</code>)</li>
+  <li><code>cognitosync</code></li>
+  <li><code>comprehend</code></li>
+  <li><code>comprehendmedical</code></li>
+  <li><code>configservice</code> (or <code>config</code>)</li>
+  <li><code>connect</code></li>
+  <li><code>connectcontactlens</code></li>
+  <li><code>connectparticipant</code></li>
+  <li><code>costexplorer</code></li>
+  <li><code>cur</code> (or <code>costandusagereportservice</code>)</li>
+  <li><code>dataexchange</code></li>
+  <li><code>datapipeline</code></li>
+  <li><code>datasync</code></li>
+  <li><code>dax</code></li>
+  <li><code>detective</code></li>
+  <li><code>devicefarm</code></li>
+  <li><code>devopsguru</code></li>
+  <li><code>directconnect</code></li>
+  <li><code>dlm</code></li>
+  <li><code>dms</code> (or <code>databasemigration</code>, <code>databasemigrationservice</code>)</li>
+  <li><code>docdb</code></li>
+  <li><code>ds</code></li>
+  <li><code>dynamodb</code></li>
+  <li><code>dynamodbstreams</code></li>
+  <li><code>ec2</code></li>
+  <li><code>ec2instanceconnect</code></li>
+  <li><code>ecr</code></li>
+  <li><code>ecrpublic</code></li>
+  <li><code>ecs</code></li>
+  <li><code>efs</code></li>
+  <li><code>eks</code></li>
+  <li><code>elasticache</code></li>
+  <li><code>elasticbeanstalk</code></li>
+  <li><code>elasticinference</code></li>
+  <li><code>es</code> (or <code>elasticsearch</code>, <code>elasticsearchservice</code>)</li>
+  <li><code>elastictranscoder</code></li>
+  <li><code>elb</code></li>
+  <li><code>elbv2</code></li>
+  <li><code>emr</code></li>
+  <li><code>emrcontainers</code></li>
+  <li><code>eventbridge</code> (or <code>cloudwatchevents</code>, <code>events</code>)</li>
+  <li><code>finspace</code></li>
+  <li><code>finspacedata</code></li>
+  <li><code>firehose</code></li>
+  <li><code>fis</code></li>
+  <li><code>fms</code></li>
+  <li><code>forecast</code> (or <code>forecastservice</code>)</li>
+  <li><code>forecastquery</code> (or <code>forecastqueryservice</code>)</li>
+  <li><code>frauddetector</code></li>
+  <li><code>fsx</code></li>
+  <li><code>gamelift</code></li>
+  <li><code>glacier</code></li>
+  <li><code>globalaccelerator</code></li>
+  <li><code>glue</code></li>
+  <li><code>gluedatabrew</code></li>
+  <li><code>grafana</code> (or <code>managedgrafana</code>, <code>amg</code>)</li>
+  <li><code>greengrass</code></li>
+  <li><code>greengrassv2</code></li>
+  <li><code>groundstation</code></li>
+  <li><code>guardduty</code></li>
+  <li><code>health</code></li>
+  <li><code>healthlake</code></li>
+  <li><code>honeycode</code></li>
+  <li><code>iam</code></li>
+  <li><code>identitystore</code></li>
+  <li><code>imagebuilder</code></li>
+  <li><code>inspector</code></li>
+  <li><code>iot</code></li>
+  <li><code>iot1clickdevices</code> (or <code>iot1clickdevicesservice</code>)</li>
+  <li><code>iot1clickprojects</code></li>
+  <li><code>iotanalytics</code></li>
+  <li><code>iotdataplane</code></li>
+  <li><code>iotdeviceadvisor</code></li>
+  <li><code>iotevents</code></li>
+  <li><code>ioteventsdata</code></li>
+  <li><code>iotfleethub</code></li>
+  <li><code>iotjobsdataplane</code></li>
+  <li><code>iotsecuretunneling</code></li>
+  <li><code>iotsitewise</code></li>
+  <li><code>iotthingsgraph</code></li>
+  <li><code>iotwireless</code></li>
+  <li><code>kafka</code></li>
+  <li><code>kafkaconnect</code></li>
+  <li><code>kendra</code></li>
+  <li><code>keyspaces</code></li>
+  <li><code>kinesis</code></li>
+  <li><code>kinesisanalytics</code></li>
+  <li><code>kinesisanalyticsv2</code></li>
+  <li><code>kinesisvideo</code></li>
+  <li><code>kinesisvideoarchivedmedia</code></li>
+  <li><code>kinesisvideomedia</code></li>
+  <li><code>kinesisvideosignalingchannels</code></li>
+  <li><code>kms</code></li>
+  <li><code>lakeformation</code></li>
+  <li><code>lambda</code></li>
+  <li><code>lexmodels</code> (or <code>lexmodelbuilding</code>, <code>lexmodelbuildingservice</code>)</li>
+  <li><code>lexmodelsv2</code></li>
+  <li><code>lexruntime</code> (or <code>lexruntimeservice</code>)</li>
+  <li><code>lexruntimev2</code></li>
+  <li><code>licensemanager</code></li>
+  <li><code>lightsail</code></li>
+  <li><code>location</code></li>
+  <li><code>lookoutequipment</code></li>
+  <li><code>lookoutforvision</code></li>
+  <li><code>lookoutmetrics</code></li>
+  <li><code>machinelearning</code></li>
+  <li><code>macie</code></li>
+  <li><code>macie2</code></li>
+  <li><code>managedblockchain</code></li>
+  <li><code>marketplacecatalog</code></li>
+  <li><code>marketplacecommerceanalytics</code></li>
+  <li><code>marketplaceentitlement</code> (or <code>marketplaceentitlementservice</code>)</li>
+  <li><code>marketplacemetering</code></li>
+  <li><code>mediaconnect</code></li>
+  <li><code>mediaconvert</code></li>
+  <li><code>medialive</code></li>
+  <li><code>mediapackage</code></li>
+  <li><code>mediapackagevod</code></li>
+  <li><code>mediastore</code></li>
+  <li><code>mediastoredata</code></li>
+  <li><code>mediatailor</code></li>
+  <li><code>memorydb</code></li>
+  <li><code>mgn</code></li>
+  <li><code>migrationhub</code></li>
+  <li><code>migrationhubconfig</code></li>
+  <li><code>mobile</code></li>
+  <li><code>mobileanalytics</code></li>
+  <li><code>mq</code></li>
+  <li><code>mturk</code></li>
+  <li><code>mwaa</code></li>
+  <li><code>neptune</code></li>
+  <li><code>networkfirewall</code></li>
+  <li><code>networkmanager</code></li>
+  <li><code>nimblestudio</code></li>
+  <li><code>opsworks</code></li>
+  <li><code>opsworkscm</code></li>
+  <li><code>organizations</code></li>
+  <li><code>outposts</code></li>
+  <li><code>personalize</code></li>
+  <li><code>personalizeevents</code></li>
+  <li><code>personalizeruntime</code></li>
+  <li><code>pi</code></li>
+  <li><code>pinpoint</code></li>
+  <li><code>pinpointemail</code></li>
+  <li><code>pinpointsmsvoice</code></li>
+  <li><code>polly</code></li>
+  <li><code>pricing</code></li>
+  <li><code>proton</code></li>
+  <li><code>qldb</code></li>
+  <li><code>qldbsession</code></li>
+  <li><code>quicksight</code></li>
+  <li><code>ram</code></li>
+  <li><code>rds</code></li>
+  <li><code>rdsdata</code> (or <code>rdsdataservice</code>)</li>
+  <li><code>redshift</code></li>
+  <li><code>redshiftdata</code></li>
+  <li><code>rekognition</code></li>
+  <li><code>resourcegroups</code></li>
+  <li><code>resourcegroupstaggingapi</code> (or <code>resourcegroupstagging</code>)</li>
+  <li><code>robomaker</code></li>
+  <li><code>route53</code></li>
+  <li><code>route53domains</code></li>
+  <li><code>route53recoverycontrolconfig</code></li>
+  <li><code>route53recoveryreadiness</code></li>
+  <li><code>route53resolver</code></li>
+  <li><code>s3</code></li>
+  <li><code>s3control</code></li>
+  <li><code>s3outposts</code></li>
+  <li><code>sagemaker</code></li>
+  <li><code>sagemakeredgemanager</code></li>
+  <li><code>sagemakerfeaturestoreruntime</code></li>
+  <li><code>sagemakerruntime</code></li>
+  <li><code>savingsplans</code></li>
+  <li><code>schemas</code></li>
+  <li><code>secretsmanager</code></li>
+  <li><code>securityhub</code></li>
+  <li><code>serverlessrepo</code> (or <code>serverlessapprepo</code>, <code>serverlessapplicationrepository</code>)</li>
+  <li><code>servicecatalog</code></li>
+  <li><code>servicediscovery</code></li>
+  <li><code>servicequotas</code></li>
+  <li><code>ses</code></li>
+  <li><code>sesv2</code></li>
+  <li><code>stepfunctions</code> (or <code>sfn</code>)</li>
+  <li><code>shield</code></li>
+  <li><code>signer</code></li>
+  <li><code>sdb</code> (or <code>simpledb</code>)</li>
+  <li><code>sms</code></li>
+  <li><code>snowball</code></li>
+  <li><code>sns</code></li>
+  <li><code>sqs</code></li>
+  <li><code>ssm</code></li>
+  <li><code>ssmcontacts</code></li>
+  <li><code>ssmincidents</code></li>
+  <li><code>sso</code></li>
+  <li><code>ssoadmin</code></li>
+  <li><code>ssooidc</code></li>
+  <li><code>storagegateway</code></li>
+  <li><code>sts</code></li>
+  <li><code>support</code></li>
+  <li><code>swf</code></li>
+  <li><code>synthetics</code></li>
+  <li><code>textract</code></li>
+  <li><code>timestreamquery</code></li>
+  <li><code>timestreamwrite</code></li>
+  <li><code>transcribe</code> (or <code>transcribeservice</code>)</li>
+  <li><code>transcribestreaming</code> (or <code>transcribestreamingservice</code>)</li>
+  <li><code>transfer</code></li>
+  <li><code>translate</code></li>
+  <li><code>waf</code></li>
+  <li><code>wafregional</code></li>
+  <li><code>wafv2</code></li>
+  <li><code>wellarchitected</code></li>
+  <li><code>workdocs</code></li>
+  <li><code>worklink</code></li>
+  <li><code>workmail</code></li>
+  <li><code>workmailmessageflow</code></li>
+  <li><code>workspaces</code></li>
+  <li><code>xray</code></li>
+</ul>
 </div>
+<!-- markdownlint-enable no-inline-html -->
+
+As a convenience, for compatibility with the [Terraform S3 Backend](https://www.terraform.io/language/settings/backends/s3),
+the following service endpoints can be configured using environment variables:
+
+* DynamoDB: `TF_AWS_DYNAMODB_ENDPOINT` (or **Deprecated** `AWS_DYNAMODB_ENDPOINT`)
+* IAM: `TF_AWS_IAM_ENDPOINT` (or **Deprecated** `AWS_IAM_ENDPOINT`)
+* S3: `TF_AWS_S3_ENDPOINT` (or **Deprecated** `AWS_S3_ENDPOINT`)
+* STS: `TF_AWS_STS_ENDPOINT` (or **Deprecated** `AWS_STS_ENDPOINT`)
 
 ## Connecting to Local AWS Compatible Solutions
 
@@ -184,7 +362,7 @@ The Amazon DynamoDB service offers a downloadable version for writing and testin
 
 An example provider configuration:
 
-```hcl
+```terraform
 provider "aws" {
   access_key                  = "mock_access_key"
   region                      = "us-east-1"
@@ -205,7 +383,7 @@ provider "aws" {
 
 An example provider configuration:
 
-```hcl
+```terraform
 provider "aws" {
   access_key                  = "mock_access_key"
   region                      = "us-east-1"
@@ -216,25 +394,25 @@ provider "aws" {
   skip_requesting_account_id  = true
 
   endpoints {
-    apigateway     = "http://localhost:4567"
-    cloudformation = "http://localhost:4581"
-    cloudwatch     = "http://localhost:4582"
-    dynamodb       = "http://localhost:4569"
-    es             = "http://localhost:4578"
-    firehose       = "http://localhost:4573"
-    iam            = "http://localhost:4593"
-    kinesis        = "http://localhost:4568"
-    lambda         = "http://localhost:4574"
-    r53            = "http://localhost:4580"
-    redshift       = "http://localhost:4577"
-    s3             = "http://localhost:4572"
-    secretsmanager = "http://localhost:4584"
-    ses            = "http://localhost:4579"
-    sns            = "http://localhost:4575"
-    sqs            = "http://localhost:4576"
-    ssm            = "http://localhost:4583"
-    stepfunctions  = "http://localhost:4585"
-    sts            = "http://localhost:4592"
+    apigateway     = "http://localhost:4566"
+    cloudformation = "http://localhost:4566"
+    cloudwatch     = "http://localhost:4566"
+    dynamodb       = "http://localhost:4566"
+    es             = "http://localhost:4566"
+    firehose       = "http://localhost:4566"
+    iam            = "http://localhost:4566"
+    kinesis        = "http://localhost:4566"
+    lambda         = "http://localhost:4566"
+    route53        = "http://localhost:4566"
+    redshift       = "http://localhost:4566"
+    s3             = "http://localhost:4566"
+    secretsmanager = "http://localhost:4566"
+    ses            = "http://localhost:4566"
+    sns            = "http://localhost:4566"
+    sqs            = "http://localhost:4566"
+    ssm            = "http://localhost:4566"
+    stepfunctions  = "http://localhost:4566"
+    sts            = "http://localhost:4566"
   }
 }
 ```

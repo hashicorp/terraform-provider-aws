@@ -1,0 +1,161 @@
+
+ACM PCA
+ACM
+API Gateway (REST APIs)
+API Gateway v2 (WebSocket and HTTP APIs)
+Access Analyzer
+Account
+Amplify Console
+AppConfig
+AppIntegrations
+AppMesh
+App Runner
+AppSync
+AppStream
+Application Autoscaling
+Athena
+Audit Manager
+Autoscaling
+Autoscaling Plans
+Amazon Managed Service for Prometheus (AMP)
+Backup
+Batch
+Budgets
+Chime
+Cloud9
+Cloud Control API
+CloudFormation
+CloudFront
+CloudHSM v2
+CloudSearch
+CloudTrail
+CloudWatch
+CloudWatch RUM
+CodeArtifact
+CodeBuild
+CodeCommit
+CodeDeploy
+CodePipeline
+CodeStar Connections
+CodeStar Notifications
+Cognito
+Config
+Connect
+Cost and Usage Report
+Data Exchange
+Data Lifecycle Manager (DLM)
+DataPipeline
+DataSync
+Database Migration Service (DMS)
+Detective
+Device Farm
+Direct Connect
+Directory Service
+DocumentDB
+DynamoDB Accelerator (DAX)
+DynamoDB
+EC2
+ECR
+ECR Public
+ECS
+EFS
+EKS
+ElastiCache
+Elastic Beanstalk
+Elastic Load Balancing (ELB Classic)
+Elastic Load Balancing v2 (ALB/NLB)
+Elastic Map Reduce (EMR)
+Elastic Map Reduce Containers
+Elastic Transcoder
+Elasticsearch
+EventBridge (CloudWatch Events)
+EventBridge Schemas
+File System (FSx)
+Firewall Manager (FMS)
+Gamelift
+Glacier
+Global Accelerator
+Glue
+Grafana
+GuardDuty
+IAM
+Identity Store
+Image Builder
+Inspector
+IoT
+Keyspaces
+Kinesis
+Kinesis Data Analytics (SQL Applications)
+Kinesis Data Analytics v2 (SQL and Flink Applications)
+Kinesis Firehose
+Kinesis Video
+KMS
+Lake Formation
+Lambda
+Lex
+License Manager
+Lightsail
+Location Service
+MQ
+Macie
+Macie Classic
+Managed Streaming for Kafka (MSK)
+Kafka Connect (MSK Connect)
+MediaConvert
+MediaPackage
+MediaStore
+MemoryDB
+Managed Workflows for Apache Airflow (MWAA)
+Neptune
+Network Firewall
+Network Manager
+OpenSearch
+OpsWorks
+Organizations
+Outposts
+Pinpoint
+Pricing
+Quantum Ledger Database (QLDB)
+QuickSight
+RAM
+RDS
+Redshift
+Resource Groups
+Resource Groups Tagging API
+Route53 Domains
+Route53 Recovery Control Config
+Route53 Recovery Readiness
+Route53 Resolver
+Route53
+S3
+S3 Control
+S3 Outposts
+SES
+SNS
+SQS
+SSM
+SSO Admin
+SWF
+Sagemaker
+Secrets Manager
+Security Hub
+Serverless Application Repository
+Service Catalog
+Service Discovery
+Service Quotas
+Shield
+SimpleDB
+Signer
+Step Function (SFN)
+Storage Gateway
+Synthetics
+Timestream Write
+Transfer
+VPC
+WAF Regional
+WAF
+WAFv2
+WorkLink
+WorkMail
+WorkSpaces
+XRay

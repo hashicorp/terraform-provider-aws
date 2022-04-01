@@ -1,7 +1,7 @@
 ---
+subcategory: "SNS"
 layout: "aws"
 page_title: "AWS: aws_sns_platform_application"
-sidebar_current: "docs-aws-resource-sns-platform-application"
 description: |-
   Provides an SNS platform application resource.
 ---
@@ -14,7 +14,7 @@ Provides an SNS platform application resource
 
 ### Apple Push Notification Service (APNS)
 
-```hcl
+```terraform
 resource "aws_sns_platform_application" "apns_application" {
   name                = "apns_application"
   platform            = "APNS"
@@ -25,7 +25,7 @@ resource "aws_sns_platform_application" "apns_application" {
 
 ### Google Cloud Messaging (GCM)
 
-```hcl
+```terraform
 resource "aws_sns_platform_application" "gcm_application" {
   name                = "gcm_application"
   platform            = "GCM"
@@ -61,7 +61,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SNS platform applications can be imported using the ARN, e.g.
+SNS platform applications can be imported using the ARN, e.g.,
 
 ```
 $ terraform import aws_sns_platform_application.gcm_application arn:aws:sns:us-west-2:0123456789012:app/GCM/gcm_application

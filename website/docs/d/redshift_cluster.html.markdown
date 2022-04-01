@@ -1,7 +1,7 @@
 ---
+subcategory: "Redshift"
 layout: "aws"
 page_title: "AWS: aws_redshift_cluster"
-sidebar_current: "docs-aws-datasource-redshift-cluster"
 description: |-
     Provides details about a specific redshift cluster
 ---
@@ -12,31 +12,31 @@ Provides details about a specific redshift cluster.
 
 ## Example Usage
 
-```hcl
-data "aws_redshift_cluster" "test_cluster" {
-  cluster_identifier = "test-cluster"
+```terraform
+data "aws_redshift_cluster" "example" {
+  cluster_identifier = "example-cluster"
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
-  name        = "terraform-kinesis-firehose-test-stream"
+resource "aws_kinesis_firehose_delivery_stream" "example_stream" {
+  name        = "terraform-kinesis-firehose-example-stream"
   destination = "redshift"
 
   s3_configuration {
-    role_arn           = "${aws_iam_role.firehose_role.arn}"
-    bucket_arn         = "${aws_s3_bucket.bucket.arn}"
+    role_arn           = aws_iam_role.firehose_role.arn
+    bucket_arn         = aws_s3_bucket.bucket.arn
     buffer_size        = 10
     buffer_interval    = 400
     compression_format = "GZIP"
   }
 
   redshift_configuration {
-    role_arn           = "${aws_iam_role.firehose_role.arn}"
-    cluster_jdbcurl    = "jdbc:redshift://${data.aws_redshift_cluster.test_cluster.endpoint}/${data.aws_redshift_cluster.test_cluster.database_name}"
-    username           = "testuser"
-    password           = "T3stPass"
-    data_table_name    = "test-table"
+    role_arn           = aws_iam_role.firehose_role.arn
+    cluster_jdbcurl    = "jdbc:redshift://${data.aws_redshift_cluster.example.endpoint}/${data.aws_redshift_cluster.example.database_name}"
+    username           = "exampleuser"
+    password           = "Exampl3Pass"
+    data_table_name    = "example-table"
     copy_options       = "delimiter '|'" # the default delimiter
-    data_table_columns = "test-col"
+    data_table_columns = "example-col"
   }
 }
 ```
@@ -54,6 +54,7 @@ In addition to all arguments above, the following attributes are exported:
 * `allow_version_upgrade` - Whether major version upgrades can be applied during maintenance period
 * `automated_snapshot_retention_period` - The backup retention period
 * `availability_zone` - The availability zone of the cluster
+* `availability_zone_relocation_enabled` - Indicates whether the cluster is able to be relocated to another availability zone.
 * `bucket_name` - The name of the S3 bucket where the log files are to be stored
 * `cluster_identifier` - The cluster identifier
 * `cluster_parameter_group_name` - The name of the parameter group to be associated with this cluster

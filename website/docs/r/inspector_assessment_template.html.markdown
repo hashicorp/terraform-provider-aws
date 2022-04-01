@@ -1,7 +1,7 @@
 ---
+subcategory: "Inspector"
 layout: "aws"
 page_title: "AWS: aws_inspector_assessment_template"
-sidebar_current: "docs-aws-resource-inspector-assessment-template"
 description: |-
   Provides a Inspector assessment template.
 ---
@@ -12,10 +12,10 @@ Provides a Inspector assessment template
 
 ## Example Usage
 
-```hcl
-resource "aws_inspector_assessment_template" "foo" {
-  name       = "bar template"
-  target_arn = "${aws_inspector_assessment_target.foo.arn}"
+```terraform
+resource "aws_inspector_assessment_template" "example" {
+  name       = "example"
+  target_arn = aws_inspector_assessment_target.example.arn
   duration   = 3600
 
   rules_package_arns = [
@@ -35,9 +35,19 @@ The following arguments are supported:
 * `target_arn` - (Required) The assessment target ARN to attach the template to.
 * `duration` - (Required) The duration of the inspector run.
 * `rules_package_arns` - (Required) The rules to be used during the run.
+* `tags` - (Optional) Key-value map of tags for the Inspector assessment template. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The template assessment ARN.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+
+## Import
+
+`aws_inspector_assessment_template` can be imported by using the template assessment ARN, e.g.,
+
+```
+$ terraform import aws_inspector_assessment_template.example arn:aws:inspector:us-west-2:123456789012:target/0-9IaAzhGR/template/0-WEcjR8CH
+```
