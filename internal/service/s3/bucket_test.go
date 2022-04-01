@@ -1,15 +1,18 @@
 package s3_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -2101,6 +2104,62 @@ func TestAccS3Bucket_Security_disableDefaultEncryptionWhenDefaultEncryptionIsEna
 	})
 }
 
+func TestAccS3Bucket_Security_policy(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	partition := acctest.Partition()
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withPolicy(bucketName, partition),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					testAccCheckBucketPolicy(resourceName, testAccBucketPolicy(bucketName, partition)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"acl",
+					"force_destroy",
+					"grant",
+					// NOTE: Prior to Terraform AWS Provider 3.0, this attribute did not import correctly either.
+					//       The Read function does not require GetBucketPolicy, if the argument is not configured.
+					//       Rather than introduce that breaking change as well with 3.0, instead we leave the
+					//       current Read behavior and note this will be deprecated in a later 3.x release along
+					//       with other inline policy attributes across the provider.
+					"policy",
+				},
+			},
+			{
+				// As Policy is a Computed field, removing it from terraform will not
+				// trigger an update to remove it from the S3 bucket.
+				Config: testAccBucketConfig_Basic(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					testAccCheckBucketPolicy(resourceName, testAccBucketPolicy(bucketName, partition)),
+				),
+			},
+			{
+				// As Policy is a Computed field, setting it to the empty String will not
+				// trigger an update to remove it from the S3 bucket.
+				Config: testAccBucketConfig_withEmptyPolicy(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					testAccCheckBucketPolicy(resourceName, testAccBucketPolicy(bucketName, partition)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccS3Bucket_Web_simple(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	region := acctest.Region()
@@ -2719,6 +2778,53 @@ func testAccCheckS3BucketDomainName(resourceName string, attributeName string, b
 	}
 }
 
+func testAccCheckBucketPolicy(n string, policy string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs := s.RootModule().Resources[n]
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+
+		out, err := conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
+			Bucket: aws.String(rs.Primary.ID),
+		})
+
+		if policy == "" {
+			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoSuchBucketPolicy" {
+				// expected
+				return nil
+			}
+			if err == nil {
+				return fmt.Errorf("Expected no policy, got: %#v", *out.Policy)
+			} else {
+				return fmt.Errorf("GetBucketPolicy error: %v, expected %s", err, policy)
+			}
+		}
+		if err != nil {
+			return fmt.Errorf("GetBucketPolicy error: %v, expected %s", err, policy)
+		}
+
+		if v := out.Policy; v == nil {
+			if policy != "" {
+				return fmt.Errorf("bad policy, found nil, expected: %s", policy)
+			}
+		} else {
+			expected := make(map[string]interface{})
+			if err := json.Unmarshal([]byte(policy), &expected); err != nil {
+				return err
+			}
+			actual := make(map[string]interface{})
+			if err := json.Unmarshal([]byte(*v), &actual); err != nil {
+				return err
+			}
+
+			if !reflect.DeepEqual(expected, actual) {
+				return fmt.Errorf("bad policy, expected: %#v, got %#v", expected, actual)
+			}
+		}
+
+		return nil
+	}
+}
+
 func testAccBucketRegionalDomainName(bucket, region string) string {
 	regionalEndpoint, err := tfs3.BucketRegionalDomainName(bucket, region)
 	if err != nil {
@@ -2762,6 +2868,23 @@ func testAccCheckBucketCheckTags(n string, expectedTags map[string]string) resou
 
 		return nil
 	}
+}
+
+func testAccBucketPolicy(bucketName, partition string) string {
+	return fmt.Sprintf(`{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "s3:GetObject",
+      "Resource": "arn:%[1]s:s3:::%[2]s/*"
+    }
+  ]
+}`, partition, bucketName)
 }
 
 func testAccBucketConfig_Basic(bucketName string) string {
@@ -3108,6 +3231,26 @@ resource "aws_s3_bucket" "test" {
   }
 }
 `, bucketName)
+}
+
+func testAccBucketConfig_withEmptyPolicy(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  acl    = "private"
+  policy = ""
+}
+`, bucketName)
+}
+
+func testAccBucketConfig_withPolicy(bucketName, partition string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  acl    = "private"
+  policy = %[2]s
+}
+`, bucketName, strconv.Quote(testAccBucketPolicy(bucketName, partition)))
 }
 
 func testAccBucketConfig_ReplicationBase(bucketName string) string {
