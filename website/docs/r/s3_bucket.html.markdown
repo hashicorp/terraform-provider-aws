@@ -36,6 +36,10 @@ Configuring with both will cause inconsistencies and may overwrite configuration
 or with the deprecated parameter `logging` in the resource `aws_s3_bucket`.
 Configuring with both will cause inconsistencies and may overwrite configuration.
 
+~> **NOTE on S3 Bucket Policy Configuration:** S3 Bucket Policy can be configured in either the standalone resource [`aws_s3_bucket_policy`](s3_bucket_policy.html)
+or with the deprecated parameter `policy` in the resource `aws_s3_bucket`.
+Configuring with both will cause inconsistencies and may overwrite configuration.
+
 ~> **NOTE on S3 Bucket Replication Configuration:** S3 Bucket Replication can be configured in either the standalone resource [`aws_s3_bucket_replicaton_configuration`](s3_bucket_replication_configuration.html)
 or with the deprecated parameter `replication_configuration` in the resource `aws_s3_bucket`.
 Configuring with both will cause inconsistencies and may overwrite configuration.
@@ -438,6 +442,9 @@ The following arguments are supported:
   Use the resource [`aws_s3_bucket_logging`](s3_bucket_logging.html.markdown) instead.
 * `object_lock_enabled` - (Optional, Default:`false`, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled.
 * `object_lock_configuration` - (Optional) A configuration of [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html). See [Object Lock Configuration](#object-lock-configuration) below.
+* `policy` - (Optional, **Deprecated**) A valid [bucket policy](https://docs.aws.amazon.com/AmazonS3/latest/dev/example-bucket-policies.html) JSON document. Note that if the policy document is not specific enough (but still valid), Terraform may view the policy as constantly changing in a `terraform plan`. In this case, please make sure you use the verbose/specific version of the policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
+  Terraform will only perform drift detection if a configuration value is provided.
+  Use the resource [`aws_s3_bucket_policy`](s3_bucket_policy.html) instead.
 * `replication_configuration` - (Optional, **Deprecated**) A configuration of [replication configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html). See [Replication Configuration](#replication-configuration) below for details. Terraform will only perform drift detection if a configuration value is provided.
   Use the resource [`aws_s3_bucket_replication_configuration`](s3_bucket_replication_configuration.html) instead.
 * `server_side_encryption_configuration` - (Optional, **Deprecated**) A configuration of [server-side encryption configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html). See [Server Side Encryption Configuration](#server-side-encryption-configuration) below for details.
@@ -668,7 +675,6 @@ In addition to all arguments above, the following attributes are exported:
             * `mode` - The default Object Lock retention mode applied to new objects placed in this bucket.
             * `days` - The number of days specified for the default retention period.
             * `years` - The number of years specified for the default retention period.
-* `policy` - The [bucket policy](https://docs.aws.amazon.com/AmazonS3/latest/dev/example-bucket-policies.html) JSON document.
 * `region` - The AWS region this bucket resides in.
 * `request_payer` - Either `BucketOwner` or `Requester` that pays for the download and request fees.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
