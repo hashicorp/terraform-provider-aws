@@ -13,7 +13,6 @@ import (
 )
 
 func TestAccAWSIoTProvisioningTemplate_basic(t *testing.T) {
-	resourceName := "aws_iot_provisioning_template.fleet"
 	rName := acctest.RandomWithPrefix("Fleet-")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -24,27 +23,21 @@ func TestAccAWSIoTProvisioningTemplate_basic(t *testing.T) {
 			{
 				Config: testAccAWSIoTProvisioningTemplateConfigInitialState(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "default_version_id", "1"),
-					resource.TestCheckResourceAttr(resourceName, "description", "My provisioning template"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "provisioning_role_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "template_arn"),
-					resource.TestCheckResourceAttr(resourceName, "template_name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "template_body"),
+					resource.TestCheckResourceAttr("aws_iot_provisioning_template.fleet", "default_version_id", "1"),
+					resource.TestCheckResourceAttr("aws_iot_provisioning_template.fleet", "description", "My provisioning template"),
+					resource.TestCheckResourceAttr("aws_iot_provisioning_template.fleet", "enabled", "false"),
+					resource.TestCheckResourceAttrSet("aws_iot_provisioning_template.fleet", "provisioning_role_arn"),
+					resource.TestCheckResourceAttrSet("aws_iot_provisioning_template.fleet", "template_arn"),
+					resource.TestCheckResourceAttr("aws_iot_provisioning_template.fleet", "template_name", rName),
+					resource.TestCheckResourceAttrSet("aws_iot_provisioning_template.fleet", "template_body"),
 					testAccAWSIoTProvisioningTemplateCheckVersionExists(rName, 1),
 				),
 			},
 			{
-				Config:            testAccAWSIoTProvisioningTemplateConfigInitialState(rName),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccAWSIoTProvisioningTemplateConfigTemplateBodyUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "default_version_id", "2"),
-					resource.TestCheckResourceAttrSet(resourceName, "template_body"),
+					resource.TestCheckResourceAttr("aws_iot_provisioning_template.fleet", "default_version_id", "2"),
+					resource.TestCheckResourceAttrSet("aws_iot_provisioning_template.fleet", "template_body"),
 					testAccAWSIoTProvisioningTemplateCheckVersionExists(rName, 2),
 				),
 			},

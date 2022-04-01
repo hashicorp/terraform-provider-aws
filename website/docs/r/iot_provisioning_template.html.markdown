@@ -75,11 +75,3 @@ In addition to all arguments above, the following attributes are exported:
 
 * `default_version_id` - The default version of the fleet provisioning template.
 * `template_arn` - The ARN that identifies the provisioning template.
-
-## Import
-
-IoT fleet provisioning templates can be imported using the `template_name`, e.g.
-
-```
-$ terraform import aws_iot_provisioning_template.fleet FleetProvisioningTemplate
-```
