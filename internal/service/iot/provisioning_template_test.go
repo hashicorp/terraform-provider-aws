@@ -20,7 +20,7 @@ func TestAccIoTProvisioningTemplate_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_provisioning_template.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    acctest.Providers,
@@ -54,7 +54,7 @@ func TestAccIoTProvisioningTemplate_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_provisioning_template.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    acctest.Providers,
@@ -76,7 +76,7 @@ func TestAccIoTProvisioningTemplate_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_provisioning_template.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    acctest.Providers,
@@ -113,6 +113,55 @@ func TestAccIoTProvisioningTemplate_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 					testAccCheckProvisioningTemplateNumVersions(rName, 1),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIoTProvisioningTemplate_update(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iot_provisioning_template.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckProvisioningTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProvisioningTemplateConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProvisioningTemplateExists(resourceName),
+					testAccCheckProvisioningTemplateNumVersions(rName, 1),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "pre_provisioning_hook.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "provisioning_role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "template_body"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProvisioningTemplateUpdatedConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProvisioningTemplateExists(resourceName),
+					testAccCheckProvisioningTemplateNumVersions(rName, 2),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "description", "For testing"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "pre_provisioning_hook.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "provisioning_role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "template_body"),
 				),
 			},
 		},
@@ -336,4 +385,38 @@ resource "aws_iot_provisioning_template" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccProvisioningTemplateUpdatedConfig(rName string) string {
+	return acctest.ConfigCompose(testAccProvisioningTemplateBaseConfig(rName), fmt.Sprintf(`
+resource "aws_iot_provisioning_template" "test" {
+  name                  = %[1]q
+  provisioning_role_arn = aws_iam_role.test.arn
+  description           = "For testing"
+  enabled               = true
+
+  template_body = jsonencode({
+    Parameters = {
+      SerialNumber = { Type = "String" }
+    }
+
+    Resources = {
+      certificate = {
+        Properties = {
+          CertificateId = { Ref = "AWS::IoT::Certificate::Id" }
+          Status        = "Inactive"
+        }
+        Type = "AWS::IoT::Certificate"
+      }
+
+      policy = {
+        Properties = {
+          PolicyName = aws_iot_policy.test.name
+        }
+        Type = "AWS::IoT::Policy"
+      }
+    }
+  })
+}
+`, rName))
 }
