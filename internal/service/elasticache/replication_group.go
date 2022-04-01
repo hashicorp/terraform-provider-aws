@@ -678,6 +678,21 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("arn", rgp.ARN)
 	d.Set("data_tiering_enabled", aws.StringValue(rgp.DataTiering) == elasticache.DataTieringStatusEnabled)
 
+	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(rgp.LogDeliveryConfigurations))
+	d.Set("snapshot_window", rgp.SnapshotWindow)
+	d.Set("snapshot_retention_limit", rgp.SnapshotRetentionLimit)
+
+	if rgp.ConfigurationEndpoint != nil {
+		d.Set("port", rgp.ConfigurationEndpoint.Port)
+		d.Set("configuration_endpoint_address", rgp.ConfigurationEndpoint.Address)
+	} else {
+		d.Set("port", rgp.NodeGroups[0].PrimaryEndpoint.Port)
+		d.Set("primary_endpoint_address", rgp.NodeGroups[0].PrimaryEndpoint.Address)
+		d.Set("reader_endpoint_address", rgp.NodeGroups[0].ReaderEndpoint.Address)
+	}
+
+	d.Set("user_group_ids", rgp.UserGroupIds)
+
 	// Tags cannot be read when the replication group is not Available
 	_, err = WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
@@ -708,11 +723,8 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	if rgp.NodeGroups != nil {
-		if len(rgp.NodeGroups[0].NodeGroupMembers) == 0 {
-			return nil
-		}
-
+	// This section reads settings that require checking the underlying cache clusters
+	if rgp.NodeGroups != nil && len(rgp.NodeGroups[0].NodeGroupMembers) != 0 {
 		cacheCluster := rgp.NodeGroups[0].NodeGroupMembers[0]
 
 		res, err := conn.DescribeCacheClusters(&elasticache.DescribeCacheClustersInput{
@@ -733,21 +745,6 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 			return err
 		}
 		d.Set("auto_minor_version_upgrade", strconv.FormatBool(aws.BoolValue(c.AutoMinorVersionUpgrade)))
-
-		d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(rgp.LogDeliveryConfigurations))
-		d.Set("snapshot_window", rgp.SnapshotWindow)
-		d.Set("snapshot_retention_limit", rgp.SnapshotRetentionLimit)
-
-		if rgp.ConfigurationEndpoint != nil {
-			d.Set("port", rgp.ConfigurationEndpoint.Port)
-			d.Set("configuration_endpoint_address", rgp.ConfigurationEndpoint.Address)
-		} else {
-			d.Set("port", rgp.NodeGroups[0].PrimaryEndpoint.Port)
-			d.Set("primary_endpoint_address", rgp.NodeGroups[0].PrimaryEndpoint.Address)
-			d.Set("reader_endpoint_address", rgp.NodeGroups[0].ReaderEndpoint.Address)
-		}
-
-		d.Set("user_group_ids", rgp.UserGroupIds)
 
 		d.Set("at_rest_encryption_enabled", c.AtRestEncryptionEnabled)
 		d.Set("transit_encryption_enabled", c.TransitEncryptionEnabled)
