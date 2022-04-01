@@ -1352,6 +1352,153 @@ func TestAccS3Bucket_Security_logging(t *testing.T) {
 	})
 }
 
+func TestAccS3Bucket_Web_simple(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	region := acctest.Region()
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withWebsite(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "website.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "website.0.index_document", "index.html"),
+					testAccCheckS3BucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl", "grant"},
+			},
+			{
+				Config: testAccBucketConfig_withWebsiteAndError(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "website.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "website.0.index_document", "index.html"),
+					resource.TestCheckResourceAttr(resourceName, "website.0.error_document", "error.html"),
+					testAccCheckS3BucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
+				),
+			},
+			{
+				// As Website is a Computed field, removing them from terraform will not
+				// trigger an update to remove them from the S3 bucket.
+				Config: testAccBucketConfig_Basic(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "website.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "website.0.index_document", "index.html"),
+					resource.TestCheckResourceAttr(resourceName, "website.0.error_document", "error.html"),
+					testAccCheckS3BucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Web_redirect(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	region := acctest.Region()
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withWebsiteAndRedirect(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "website.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "website.0.redirect_all_requests_to", "hashicorp.com?my=query"),
+					testAccCheckS3BucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl", "grant"},
+			},
+			{
+				Config: testAccBucketConfig_withWebsiteAndHTTPSRedirect(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "website.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "website.0.redirect_all_requests_to", "https://hashicorp.com?my=query"),
+					testAccCheckS3BucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
+				),
+			},
+			{
+				// As Website is a Computed field, removing them from terraform will not
+				// trigger an update to remove them from the S3 bucket.
+				Config: testAccBucketConfig_Basic(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "website.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "website.0.redirect_all_requests_to", "https://hashicorp.com?my=query"),
+					testAccCheckS3BucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Web_routingRules(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	region := acctest.Region()
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withWebsiteAndRoutingRules(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "website.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "website.0.error_document", "error.html"),
+					resource.TestCheckResourceAttr(resourceName, "website.0.index_document", "index.html"),
+					resource.TestCheckResourceAttrSet(resourceName, "website.0.routing_rules"),
+					testAccCheckS3BucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl", "grant"},
+			},
+			{
+				// As Website is a Computed field, removing them from terraform will not
+				// trigger an update to remove them from the S3 bucket.
+				Config: testAccBucketConfig_Basic(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "website.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "website.0.error_document", "error.html"),
+					resource.TestCheckResourceAttr(resourceName, "website.0.index_document", "index.html"),
+					resource.TestCheckResourceAttrSet(resourceName, "website.0.routing_rules"),
+					testAccCheckS3BucketWebsiteEndpoint(resourceName, "website_endpoint", bucketName, region),
+				),
+			},
+		},
+	})
+}
+
 func TestBucketName(t *testing.T) {
 	validDnsNames := []string{
 		"foobar",
@@ -1831,6 +1978,15 @@ func testAccBucketRegionalDomainName(bucket, region string) string {
 	return regionalEndpoint
 }
 
+func testAccCheckS3BucketWebsiteEndpoint(resourceName string, attributeName string, bucketName string, region string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		website := tfs3.WebsiteEndpoint(acctest.Provider.Meta().(*conns.AWSClient), bucketName, region)
+		expectedValue := website.Endpoint
+
+		return resource.TestCheckResourceAttr(resourceName, attributeName, expectedValue)(s)
+	}
+}
+
 func testAccCheckBucketUpdateTags(n string, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
@@ -2179,6 +2335,87 @@ resource "aws_s3_bucket" "test" {
   }
 }
 `, bucketName, mfaDelete)
+}
+
+func testAccBucketConfig_withWebsite(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  acl    = "public-read"
+
+  website {
+    index_document = "index.html"
+  }
+}
+`, bucketName)
+}
+
+func testAccBucketConfig_withWebsiteAndError(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  acl    = "public-read"
+
+  website {
+    index_document = "index.html"
+    error_document = "error.html"
+  }
+}
+`, bucketName)
+}
+
+func testAccBucketConfig_withWebsiteAndRedirect(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  acl    = "public-read"
+
+  website {
+    redirect_all_requests_to = "hashicorp.com?my=query"
+  }
+}
+`, bucketName)
+}
+
+func testAccBucketConfig_withWebsiteAndHTTPSRedirect(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  acl    = "public-read"
+
+  website {
+    redirect_all_requests_to = "https://hashicorp.com?my=query"
+  }
+}
+`, bucketName)
+}
+
+func testAccBucketConfig_withWebsiteAndRoutingRules(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  acl    = "public-read"
+
+  website {
+    index_document = "index.html"
+    error_document = "error.html"
+
+    routing_rules = <<EOF
+[
+  {
+    "Condition": {
+      "KeyPrefixEquals": "docs/"
+    },
+    "Redirect": {
+      "ReplaceKeyPrefixWith": "documents/"
+    }
+  }
+]
+EOF
+
+  }
+}
+`, bucketName)
 }
 
 func testAccBucketConfig_withNoTags(bucketName string) string {
