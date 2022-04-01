@@ -36,6 +36,10 @@ Configuring with both will cause inconsistencies and may overwrite configuration
 or with the deprecated parameter `logging` in the resource `aws_s3_bucket`.
 Configuring with both will cause inconsistencies and may overwrite configuration.
 
+~> **NOTE on S3 Bucket Replication Configuration:** S3 Bucket Replication can be configured in either the standalone resource [`aws_s3_bucket_replicaton_configuration`](s3_bucket_replication_configuration.html)
+or with the deprecated parameter `replication_configuration` in the resource `aws_s3_bucket`.
+Configuring with both will cause inconsistencies and may overwrite configuration.
+
 ~> **NOTE on S3 Bucket Server Side Encryption Configuration:** S3 Bucket Server Side Encryption can be configured in either the standalone resource [`aws_s3_bucket_server_side_encryption_configuration`](s3_bucket_server_side_encryption_configuration.html)
 or with the deprecated parameter `server_side_encryption_configuration` in the resource `aws_s3_bucket`.
 Configuring with both will cause inconsistencies and may overwrite configuration.
@@ -240,8 +244,131 @@ To **enable** Object Lock on an **existing** bucket, please contact AWS Support 
 
 ### Using replication configuration
 
-The `replication_configuration` argument is read-only as of version 4.0 of the Terraform AWS Provider.
-See the [`aws_s3_bucket_replication_configuration` resource](s3_bucket_replication_configuration.html.markdown) for configuration details.
+-> **NOTE:** The parameter `replication_configuration` is deprecated.
+Use the resource [`aws_s3_bucket_replication_configuration`](s3_bucket_replication_configuration.html) instead.
+
+```terraform
+provider "aws" {
+  region = "eu-west-1"
+}
+
+provider "aws" {
+  alias  = "central"
+  region = "eu-central-1"
+}
+
+resource "aws_iam_role" "replication" {
+  name = "tf-iam-role-replication-12345"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "s3.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_policy" "replication" {
+  name = "tf-iam-role-policy-replication-12345"
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "s3:GetReplicationConfiguration",
+        "s3:ListBucket"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "${aws_s3_bucket.source.arn}"
+      ]
+    },
+    {
+      "Action": [
+        "s3:GetObjectVersionForReplication",
+        "s3:GetObjectVersionAcl",
+         "s3:GetObjectVersionTagging"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "${aws_s3_bucket.source.arn}/*"
+      ]
+    },
+    {
+      "Action": [
+        "s3:ReplicateObject",
+        "s3:ReplicateDelete",
+        "s3:ReplicateTags"
+      ],
+      "Effect": "Allow",
+      "Resource": "${aws_s3_bucket.destination.arn}/*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "replication" {
+  role       = aws_iam_role.replication.name
+  policy_arn = aws_iam_policy.replication.arn
+}
+
+resource "aws_s3_bucket" "destination" {
+  bucket = "tf-test-bucket-destination-12345"
+
+  versioning {
+    enabled = true
+  }
+}
+
+resource "aws_s3_bucket" "source" {
+  provider = aws.central
+  bucket   = "tf-test-bucket-source-12345"
+  acl      = "private"
+
+  versioning {
+    enabled = true
+  }
+
+  replication_configuration {
+    role = aws_iam_role.replication.arn
+
+    rules {
+      id     = "foobar"
+      status = "Enabled"
+
+      filter {
+        tags = {}
+      }
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "STANDARD"
+
+        replication_time {
+          status  = "Enabled"
+          minutes = 15
+        }
+
+        metrics {
+          status  = "Enabled"
+          minutes = 15
+        }
+      }
+    }
+  }
+}
+```
 
 ### Enable Default Server Side Encryption
 
@@ -311,6 +438,8 @@ The following arguments are supported:
   Use the resource [`aws_s3_bucket_logging`](s3_bucket_logging.html.markdown) instead.
 * `object_lock_enabled` - (Optional, Default:`false`, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled.
 * `object_lock_configuration` - (Optional) A configuration of [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html). See [Object Lock Configuration](#object-lock-configuration) below.
+* `replication_configuration` - (Optional, **Deprecated**) A configuration of [replication configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html). See [Replication Configuration](#replication-configuration) below for details. Terraform will only perform drift detection if a configuration value is provided.
+  Use the resource [`aws_s3_bucket_replication_configuration`](s3_bucket_replication_configuration.html) instead.
 * `server_side_encryption_configuration` - (Optional, **Deprecated**) A configuration of [server-side encryption configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html). See [Server Side Encryption Configuration](#server-side-encryption-configuration) below for details.
   Terraform will only perform drift detection if a configuration value is provided.
   Use the resource [`aws_s3_bucket_server_side_encryption_configuration`](s3_bucket_server_side_encryption_configuration.html) instead.
@@ -409,6 +538,82 @@ The `object_lock_configuration` configuration block supports the following argum
 
 * `object_lock_enabled` - (Optional, **Deprecated**) Indicates whether this bucket has an Object Lock configuration enabled. Valid value is `Enabled`. Use the top-level argument `object_lock_enabled` instead.
 
+### Replication Configuration
+
+~> **NOTE:** Currently, changes to the `replication_configuration` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage replication configuration changes to an S3 bucket, use the `aws_s3_bucket_replication_configuration` resource instead. If you use `replication_configuration` on an `aws_s3_bucket`, Terraform will assume management over the full replication configuration for the S3 bucket, treating additional replication configuration rules as drift. For this reason, `replication_configuration` cannot be mixed with the external `aws_s3_bucket_replication_configuration` resource for a given S3 bucket.
+
+The `replication_configuration` configuration block supports the following arguments:
+
+* `role` - (Required) The ARN of the IAM role for Amazon S3 to assume when replicating the objects.
+* `rules` - (Required) Specifies the rules managing the replication ([documented below](#rules)).
+
+#### Rules
+
+The `rules` configuration block supports the following arguments:
+
+~> **NOTE:** Amazon S3's latest version of the replication configuration is V2, which includes the `filter` attribute for replication rules.
+With the `filter` attribute, you can specify object filters based on the object key prefix, tags, or both to scope the objects that the rule applies to.
+Replication configuration V1 supports filtering based on only the `prefix` attribute. For backwards compatibility, Amazon S3 continues to support the V1 configuration.
+
+* `delete_marker_replication_status` - (Optional) Whether delete markers are replicated. The only valid value is `Enabled`. To disable, omit this argument. This argument is only valid with V2 replication configurations (i.e., when `filter` is used).
+* `destination` - (Required) Specifies the destination for the rule ([documented below](#destination)).
+* `filter` - (Optional, Conflicts with `prefix`) Filter that identifies subset of objects to which the replication rule applies ([documented below](#filter)).
+* `id` - (Optional) Unique identifier for the rule. Must be less than or equal to 255 characters in length.
+* `prefix` - (Optional, Conflicts with `filter`) Object keyname prefix identifying one or more objects to which the rule applies. Must be less than or equal to 1024 characters in length.
+* `priority` - (Optional) The priority associated with the rule. Priority should only be set if `filter` is configured. If not provided, defaults to `0`. Priority must be unique between multiple rules.
+* `source_selection_criteria` - (Optional) Specifies special object selection criteria ([documented below](#source-selection-criteria)).
+* `status` - (Required) The status of the rule. Either `Enabled` or `Disabled`. The rule is ignored if status is not Enabled.
+
+#### Filter
+
+The `filter` configuration block supports the following arguments:
+
+* `prefix` - (Optional) Object keyname prefix that identifies subset of objects to which the rule applies. Must be less than or equal to 1024 characters in length.
+* `tags` - (Optional)  A map of tags that identifies subset of objects to which the rule applies.
+  The rule applies only to objects having all the tags in its tagset.
+
+#### Destination
+
+~> **NOTE:** Replication to multiple destination buckets requires that `priority` is specified in the `rules` object. If the corresponding rule requires no filter, an empty configuration block `filter {}` must be specified.
+
+The `destination` configuration block supports the following arguments:
+
+* `bucket` - (Required) The ARN of the S3 bucket where you want Amazon S3 to store replicas of the object identified by the rule.
+* `storage_class` - (Optional) The [storage class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Destination.html#AmazonS3-Type-Destination-StorageClass) used to store the object. By default, Amazon S3 uses the storage class of the source object to create the object replica.
+* `replica_kms_key_id` - (Optional) Destination KMS encryption key ARN for SSE-KMS replication. Must be used in conjunction with
+  `sse_kms_encrypted_objects` source selection criteria.
+* `access_control_translation` - (Optional) Specifies the overrides to use for object owners on replication. Must be used in conjunction with `account_id` owner override configuration.
+* `account_id` - (Optional) The Account ID to use for overriding the object owner on replication. Must be used in conjunction with `access_control_translation` override configuration.
+* `replication_time` - (Optional) Enables S3 Replication Time Control (S3 RTC) ([documented below](#replication-time)).
+* `metrics` - (Optional) Enables replication metrics (required for S3 RTC) ([documented below](#metrics)).
+
+#### Replication Time
+
+The `replication_time` configuration block supports the following arguments:
+
+* `status` - (Optional) The status of RTC. Either `Enabled` or `Disabled`.
+* `minutes` - (Optional) Threshold within which objects are to be replicated. The only valid value is `15`.
+
+#### Metrics
+
+The `metrics` configuration block supports the following arguments:
+
+* `status` - (Optional) The status of replication metrics. Either `Enabled` or `Disabled`.
+* `minutes` - (Optional) Threshold within which objects are to be replicated. The only valid value is `15`.
+
+#### Source Selection Criteria
+
+The `source_selection_criteria` configuration block supports the following argument:
+
+* `sse_kms_encrypted_objects` - (Optional) Match SSE-KMS encrypted objects ([documented below](#sse-kms-encrypted-objects)). If specified, `replica_kms_key_id`
+  in `destination` must be specified as well.
+
+#### SSE KMS Encrypted Objects
+
+The `sse_kms_encrypted_objects` configuration block supports the following argument:
+
+* `enabled` - (Required) Boolean which indicates if this criteria is enabled.
+
 ### Server Side Encryption Configuration
 
 ~> **NOTE:** Currently, changes to the `server_side_encryption_configuration` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes in encryption of an S3 bucket, use the `aws_s3_bucket_server_side_encryption_configuration` resource instead. If you use `server_side_encryption_configuration` on an `aws_s3_bucket`, Terraform will assume management over the encryption configuration for the S3 bucket, treating additional encryption changes as drift. For this reason, `server_side_encryption_configuration` cannot be mixed with the external `aws_s3_bucket_server_side_encryption_configuration` resource for a given S3 bucket.
@@ -465,33 +670,6 @@ In addition to all arguments above, the following attributes are exported:
             * `years` - The number of years specified for the default retention period.
 * `policy` - The [bucket policy](https://docs.aws.amazon.com/AmazonS3/latest/dev/example-bucket-policies.html) JSON document.
 * `region` - The AWS region this bucket resides in.
-* `replication_configuration` - The [replication configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html).
-    * `role` - The ARN of the IAM role for Amazon S3 assumed when replicating the objects.
-    * `rules` - The rules managing the replication.
-        * `delete_marker_replication_status` - Whether delete markers are replicated.
-        * `destination` - The destination for the rule.
-            * `access_control_translation` - The overrides to use for object owners on replication.
-                * `owner` - The override value for the owner on replicated objects.
-            * `account_id` - The Account ID to use for overriding the object owner on replication.
-            * `bucket` - The ARN of the S3 bucket where Amazon S3 stores replicas of the object identified by the rule.
-            * `metrics` - Replication metrics.
-                * `status` - The status of replication metrics.
-                * `minutes` - Threshold within which objects are replicated.
-            * `storage_class` - The [storage class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Destination.html#AmazonS3-Type-Destination-StorageClass) used to store the object.
-            * `replica_kms_key_id` - Destination KMS encryption key ARN for SSE-KMS replication.
-            * `replication_time` - S3 Replication Time Control (S3 RTC).
-                * `status` - The status of RTC.
-                * `minutes` - Threshold within which objects are to be replicated.
-        * `filter` - Filter that identifies subset of objects to which the replication rule applies.
-            * `prefix` - Object keyname prefix that identifies subset of objects to which the rule applies.
-            * `tags` - Map of tags that identifies subset of objects to which the rule applies.
-        * `id` - Unique identifier for the rule.
-        * `prefix` - Object keyname prefix identifying one or more objects to which the rule applies
-        * `priority` - The priority associated with the rule.
-        * `source_selection_criteria` - The special object selection criteria.
-            * `sse_kms_encrypted_objects` - Matched SSE-KMS encrypted objects.
-                * `enabled` - Whether this criteria is enabled.
-        * `status` - The status of the rule.
 * `request_payer` - Either `BucketOwner` or `Requester` that pays for the download and request fees.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `website_endpoint` - The website endpoint, if the bucket is configured with a website. If not, this will be an empty string.
