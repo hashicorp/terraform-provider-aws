@@ -3217,7 +3217,6 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_description = "test description"
   node_type                     = "cache.t3.small"
 
-//   apply_immediately          = true
   auto_minor_version_upgrade = %[2]t
 }
 `, rName, enable)
