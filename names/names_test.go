@@ -314,7 +314,7 @@ func TestFullHumanFriendly(t *testing.T) {
 		{
 			TestName: DRS,
 			Input:    DRS,
-			Expected: "AWS Elastic Disaster Recovery",
+			Expected: "AWS Elastic Disaster Recovery (DRS)",
 			Error:    false,
 		},
 		{
