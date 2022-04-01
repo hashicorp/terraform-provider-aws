@@ -51,6 +51,7 @@ func ResourceIndexingConfiguration() *schema.Resource {
 						"managed_field": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
@@ -107,6 +108,7 @@ func ResourceIndexingConfiguration() *schema.Resource {
 						"managed_field": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
