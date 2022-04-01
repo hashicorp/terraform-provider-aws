@@ -12,10 +12,10 @@ Retrieve information about a Storage Gateway local disk. The disk identifier is 
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_storagegateway_local_disk" "test" {
-  disk_path   = "${aws_volume_attachment.test.device_name}"
-  gateway_arn = "${aws_storagegateway_gateway.test.arn}"
+  disk_path   = aws_volume_attachment.test.device_name
+  gateway_arn = aws_storagegateway_gateway.test.arn
 }
 ```
 
@@ -29,5 +29,5 @@ data "aws_storagegateway_local_disk" "test" {
 
 In addition to all arguments above, the following attributes are exported:
 
-* `disk_id` - The disk identifier. e.g. `pci-0000:03:00.0-scsi-0:0:0:0`
-* `id` - The disk identifier. e.g. `pci-0000:03:00.0-scsi-0:0:0:0`
+* `disk_id` - The disk identifierE.g., `pci-0000:03:00.0-scsi-0:0:0:0`
+* `id` - The disk identifierE.g., `pci-0000:03:00.0-scsi-0:0:0:0`

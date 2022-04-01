@@ -18,20 +18,20 @@ with it, etc.
 
 ## Example Usage
 
-```hcl
+```terraform
 variable "lb_arn" {
-  type    = "string"
+  type    = string
   default = ""
 }
 
 variable "lb_name" {
-  type    = "string"
+  type    = string
   default = ""
 }
 
 data "aws_lb" "test" {
-  arn  = "${var.lb_arn}"
-  name = "${var.lb_name}"
+  arn  = var.lb_arn
+  name = var.lb_name
 }
 ```
 
@@ -41,8 +41,9 @@ The following arguments are supported:
 
 * `arn` - (Optional) The full ARN of the load balancer.
 * `name` - (Optional) The unique name of the load balancer.
+* `tags` - (Optional) A mapping of tags, each pair of which must exactly match a pair on the desired load balancer.
 
-~> **NOTE**: When both `arn` and `name` are specified, `arn` takes precedence.
+~> **NOTE**: When both `arn` and `name` are specified, `arn` takes precedence. `tags` has lowest precedence.
 
 ## Attributes Reference
 

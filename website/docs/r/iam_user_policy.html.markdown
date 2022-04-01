@@ -12,25 +12,25 @@ Provides an IAM policy attached to a user.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_user_policy" "lb_ro" {
   name = "test"
-  user = "${aws_iam_user.lb.name}"
+  user = aws_iam_user.lb.name
 
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "ec2:Describe*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "ec2:Describe*",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+    ]
+  })
 }
 
 resource "aws_iam_user" "lb" {
@@ -39,7 +39,7 @@ resource "aws_iam_user" "lb" {
 }
 
 resource "aws_iam_access_key" "lb" {
-  user = "${aws_iam_user.lb.name}"
+  user = aws_iam_user.lb.name
 }
 ```
 
@@ -54,12 +54,14 @@ The following arguments are supported:
 
 ## Attributes Reference
 
+In addition to all arguments above, the following attributes are exported:
+
 * `id` - The user policy ID, in the form of `user_name:user_policy_name`.
 * `name` - The name of the policy (always set).
 
 ## Import
 
-IAM User Policies can be imported using the `user_name:user_policy_name`, e.g.
+IAM User Policies can be imported using the `user_name:user_policy_name`, e.g.,
 
 ```
 $ terraform import aws_iam_user_policy.mypolicy user_of_mypolicy_name:mypolicy_name

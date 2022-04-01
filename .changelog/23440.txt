@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_iot_topic_rule: Add `cloudwatch_logs` and `error_action.cloudwatch_logs` arguments
+```

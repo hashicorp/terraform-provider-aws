@@ -12,22 +12,22 @@ description: |-
 
 The following shows outputing all network ACL ids in a vpc.
 
-```hcl
+```terraform
 data "aws_network_acls" "example" {
-  vpc_id = "${var.vpc_id}"
+  vpc_id = var.vpc_id
 }
 
 output "example" {
-  value = "${data.aws_network_acls.example.ids}"
+  value = data.aws_network_acls.example.ids
 }
 ```
 
 The following example retrieves a list of all network ACL ids in a VPC with a custom
 tag of `Tier` set to a value of "Private".
 
-```hcl
+```terraform
 data "aws_network_acls" "example" {
-  vpc_id = "${var.vpc_id}"
+  vpc_id = var.vpc_id
 
   tags = {
     Tier = "Private"
@@ -38,13 +38,13 @@ data "aws_network_acls" "example" {
 The following example retrieves a network ACL id in a VPC which associated
 with specific subnet.
 
-```hcl
+```terraform
 data "aws_network_acls" "example" {
-  vpc_id = "${var.vpc_id}"
+  vpc_id = var.vpc_id
 
   filter {
     name   = "association.subnet-id"
-    values = ["${aws_subnet.test.id}"]
+    values = [aws_subnet.test.id]
   }
 }
 ```
@@ -53,7 +53,7 @@ data "aws_network_acls" "example" {
 
 * `vpc_id` - (Optional) The VPC ID that you want to filter from.
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) A map of tags, each pair of which must exactly match
   a pair on the desired network ACLs.
 
 * `filter` - (Optional) Custom filter block as described below.
@@ -69,4 +69,5 @@ which take the following arguments:
 
 ## Attributes Reference
 
-* `ids` - A list of all the network ACL ids found. This data source will fail if none are found.
+* `id` - AWS Region.
+* `ids` - A list of all the network ACL ids found.

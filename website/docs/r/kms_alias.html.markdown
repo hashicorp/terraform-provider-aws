@@ -14,12 +14,12 @@ the [account limits](http://docs.aws.amazon.com/kms/latest/developerguide/limits
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_kms_key" "a" {}
 
 resource "aws_kms_alias" "a" {
   name          = "alias/my-key-alias"
-  target_key_id = "${aws_kms_key.a.key_id}"
+  target_key_id = aws_kms_key.a.key_id
 }
 ```
 
@@ -35,14 +35,14 @@ The name must start with the word "alias" followed by a forward slash (alias/). 
 
 ## Attributes Reference
 
-In addition to the arguments, the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the key alias.
 * `target_key_arn` - The Amazon Resource Name (ARN) of the target key identifier.
 
 ## Import
 
-KMS aliases can be imported using the `name`, e.g.
+KMS aliases can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_kms_alias.a alias/my-key-alias
