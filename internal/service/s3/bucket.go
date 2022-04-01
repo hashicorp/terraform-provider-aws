@@ -399,9 +399,11 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"request_payer": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "Use the aws_s3_bucket_request_payment_configuration resource instead",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Deprecated:   "Use the aws_s3_bucket_request_payment_configuration resource instead",
+				ValidateFunc: validation.StringInSlice(s3.Payer_Values(), false),
 			},
 
 			"replication_configuration": {
@@ -847,6 +849,12 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("acceleration_status") {
 		if err := resourceBucketInternalAccelerationUpdate(conn, d); err != nil {
 			return fmt.Errorf("error updating S3 Bucket (%s) Acceleration Status: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("request_payer") {
+		if err := resourceBucketInternalRequestPayerUpdate(conn, d); err != nil {
+			return fmt.Errorf("error updating S3 Bucket (%s) Request Payer: %w", d.Id(), err)
 		}
 	}
 
@@ -1974,6 +1982,23 @@ func resourceBucketInternalReplicationConfigurationUpdate(conn *s3.S3, d *schema
 	if tfresource.TimedOut(err) {
 		_, err = conn.PutBucketReplication(input)
 	}
+
+	return err
+}
+
+func resourceBucketInternalRequestPayerUpdate(conn *s3.S3, d *schema.ResourceData) error {
+	payer := d.Get("request_payer").(string)
+
+	input := &s3.PutBucketRequestPaymentInput{
+		Bucket: aws.String(d.Id()),
+		RequestPaymentConfiguration: &s3.RequestPaymentConfiguration{
+			Payer: aws.String(payer),
+		},
+	}
+
+	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		return conn.PutBucketRequestPayment(input)
+	})
 
 	return err
 }
