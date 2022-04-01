@@ -47,8 +47,6 @@ type WorkingDir struct {
 	// reattachInfo stores the gRPC socket info required for Terraform's
 	// plugin reattach functionality
 	reattachInfo tfexec.ReattachInfo
-
-	env map[string]string
 }
 
 // Close deletes the directories and files created to represent the receiving
@@ -56,19 +54,6 @@ type WorkingDir struct {
 // is invalid and may no longer be used.
 func (wd *WorkingDir) Close() error {
 	return os.RemoveAll(wd.baseDir)
-}
-
-// Setenv sets an environment variable on the WorkingDir.
-func (wd *WorkingDir) Setenv(envVar, val string) {
-	if wd.env == nil {
-		wd.env = map[string]string{}
-	}
-	wd.env[envVar] = val
-}
-
-// Unsetenv removes an environment variable from the WorkingDir.
-func (wd *WorkingDir) Unsetenv(envVar string) {
-	delete(wd.env, envVar)
 }
 
 func (wd *WorkingDir) SetReattachInfo(ctx context.Context, reattachInfo tfexec.ReattachInfo) {

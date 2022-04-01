@@ -119,8 +119,17 @@ func (h *Helper) NewWorkingDir(ctx context.Context) (*WorkingDir, error) {
 	}
 
 	tf, err := tfexec.NewTerraform(dir, h.terraformExec)
+
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to create terraform-exec instance: %w", err)
+	}
+
+	err = tf.SetEnv(map[string]string{
+		EnvCheckpointDisable: "1",
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("unable to set terraform-exec environment variables: %w", err)
 	}
 
 	return &WorkingDir{
