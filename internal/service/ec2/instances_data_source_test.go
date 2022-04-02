@@ -67,6 +67,26 @@ func TestAccEC2InstancesDataSource_instanceStateNames(t *testing.T) {
 	})
 }
 
+func TestAccEC2InstancesDataSource_empty(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  acctest.Providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstancesDataSourceConfig_empty(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "private_ips.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "public_ips.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccInstancesDataSourceConfig_ids(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
@@ -78,7 +98,7 @@ resource "aws_instance" "test" {
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
@@ -129,7 +149,7 @@ resource "aws_instance" "test" {
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
@@ -142,4 +162,14 @@ data "aws_instances" "test" {
   depends_on           = [aws_instance.test]
 }
 `, rName))
+}
+
+func testAccInstancesDataSourceConfig_empty(rName string) string {
+	return fmt.Sprintf(`
+data "aws_instances" "test" {
+  instance_tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
 }

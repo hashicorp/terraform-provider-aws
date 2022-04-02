@@ -70,14 +70,14 @@ backend and the Cognito service to communicate about the developer provider.
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - An identity pool ID in the format REGION:GUID.
+* `id` - An identity pool ID, e.g. `us-west-2_abc123`.
 * `arn` - The ARN of the identity pool.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-Cognito Identity Pool can be imported using the name, e.g.,
+Cognito Identity Pool can be imported using its ID, e.g.,
 
 ```
-$ terraform import aws_cognito_identity_pool.mypool <identity-pool-id>
+$ terraform import aws_cognito_identity_pool.mypool us-west-2_abc123
 ```

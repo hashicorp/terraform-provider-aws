@@ -3,12 +3,12 @@ package schema
 import (
 	"bytes"
 	"fmt"
-	"github.com/google/go-cmp/cmp"
 	"reflect"
 	"sort"
 	"strconv"
 	"sync"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/helper/hashcode"
 )
 
@@ -238,6 +238,6 @@ func (s *Set) listCode() []string {
 	for k := range s.m {
 		keys = append(keys, k)
 	}
-	sort.Sort(sort.StringSlice(keys))
+	sort.Strings(keys)
 	return keys
 }

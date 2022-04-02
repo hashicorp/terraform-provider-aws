@@ -4,20 +4,17 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceVPNConnectionRoute() *schema.Resource {
 	return &schema.Resource{
-		// You can't update a route. You can just delete one and make
-		// a new one.
 		Create: resourceVPNConnectionRouteCreate,
 		Read:   resourceVPNConnectionRouteRead,
 		Delete: resourceVPNConnectionRouteDelete,
@@ -28,7 +25,6 @@ func ResourceVPNConnectionRoute() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-
 			"vpn_connection_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -42,37 +38,24 @@ func resourceVPNConnectionRouteCreate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	cidrBlock := d.Get("destination_cidr_block").(string)
-	vpnConnectionId := d.Get("vpn_connection_id").(string)
-	createOpts := &ec2.CreateVpnConnectionRouteInput{
+	vpnConnectionID := d.Get("vpn_connection_id").(string)
+	id := VPNConnectionRouteCreateResourceID(cidrBlock, vpnConnectionID)
+	input := &ec2.CreateVpnConnectionRouteInput{
 		DestinationCidrBlock: aws.String(cidrBlock),
-		VpnConnectionId:      aws.String(vpnConnectionId),
+		VpnConnectionId:      aws.String(vpnConnectionID),
 	}
 
-	// Create the route.
-	log.Printf("[DEBUG] Creating VPN connection route")
-	_, err := conn.CreateVpnConnectionRoute(createOpts)
+	log.Printf("[DEBUG] Creating EC2 VPN Connection Route: %s", input)
+	_, err := conn.CreateVpnConnectionRoute(input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating VPN connection route: %s", err)
+		return fmt.Errorf("error creating EC2 VPN Connection Route (%s): %w", id, err)
 	}
 
-	// Store the ID by the only two data we have available to us.
-	d.SetId(fmt.Sprintf("%s:%s", *createOpts.DestinationCidrBlock, *createOpts.VpnConnectionId))
+	d.SetId(id)
 
-	stateConf := resource.StateChangeConf{
-		Pending: []string{"pending"},
-		Target:  []string{"available"},
-		Timeout: 15 * time.Second,
-		Refresh: func() (interface{}, string, error) {
-			route, err := findConnectionRoute(conn, cidrBlock, vpnConnectionId)
-			if err != nil {
-				return 42, "", err
-			}
-			return route, *route.State, nil
-		},
-	}
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return err
+	if _, err := WaitVPNConnectionRouteCreated(conn, vpnConnectionID, cidrBlock); err != nil {
+		return fmt.Errorf("error waiting for EC2 VPN Connection Route (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceVPNConnectionRouteRead(d, meta)
@@ -81,16 +64,26 @@ func resourceVPNConnectionRouteCreate(d *schema.ResourceData, meta interface{}) 
 func resourceVPNConnectionRouteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	cidrBlock, vpnConnectionId := VPNConnectionRouteParseID(d.Id())
+	cidrBlock, vpnConnectionID, err := VPNConnectionRouteParseResourceID(d.Id())
 
-	route, err := findConnectionRoute(conn, cidrBlock, vpnConnectionId)
 	if err != nil {
 		return err
 	}
-	if route == nil {
-		// Something other than terraform eliminated the route.
+
+	_, err = FindVPNConnectionRouteByVPNConnectionIDAndCIDR(conn, vpnConnectionID, cidrBlock)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 VPN Connection Route (%s) not found, removing from state", d.Id())
 		d.SetId("")
+		return nil
 	}
+
+	if err != nil {
+		return fmt.Errorf("error reading EC2 VPN Connection Route (%s): %w", d.Id(), err)
+	}
+
+	d.Set("destination_cidr_block", cidrBlock)
+	d.Set("vpn_connection_id", vpnConnectionID)
 
 	return nil
 }
@@ -98,72 +91,48 @@ func resourceVPNConnectionRouteRead(d *schema.ResourceData, meta interface{}) er
 func resourceVPNConnectionRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	cidrBlock := d.Get("destination_cidr_block").(string)
-	vpnConnectionId := d.Get("vpn_connection_id").(string)
-	_, err := conn.DeleteVpnConnectionRoute(&ec2.DeleteVpnConnectionRouteInput{
-		DestinationCidrBlock: aws.String(cidrBlock),
-		VpnConnectionId:      aws.String(vpnConnectionId),
-	})
+	cidrBlock, vpnConnectionID, err := VPNConnectionRouteParseResourceID(d.Id())
+
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidVpnConnectionID.NotFound" {
-			return nil
-		}
-		log.Printf("[ERROR] Error deleting VPN connection route: %s", err)
 		return err
 	}
 
-	stateConf := resource.StateChangeConf{
-		Pending: []string{"pending", "available", "deleting"},
-		Target:  []string{"deleted"},
-		Timeout: 15 * time.Second,
-		Refresh: func() (interface{}, string, error) {
-			route, err := findConnectionRoute(conn, cidrBlock, vpnConnectionId)
-			if err != nil {
-				return 42, "", err
-			}
-			if route == nil {
-				return 42, "deleted", nil
-			}
-			return route, *route.State, nil
-		},
-	}
-	_, err = stateConf.WaitForState()
-	return err
-}
-
-func findConnectionRoute(conn *ec2.EC2, cidrBlock, vpnConnectionId string) (*ec2.VpnStaticRoute, error) {
-	resp, err := conn.DescribeVpnConnections(&ec2.DescribeVpnConnectionsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("route.destination-cidr-block"),
-				Values: []*string{aws.String(cidrBlock)},
-			},
-			{
-				Name:   aws.String("vpn-connection-id"),
-				Values: []*string{aws.String(vpnConnectionId)},
-			},
-		},
+	log.Printf("[INFO] Deleting EC2 VPN Connection Route: %s", d.Id())
+	_, err = conn.DeleteVpnConnectionRoute(&ec2.DeleteVpnConnectionRouteInput{
+		DestinationCidrBlock: aws.String(cidrBlock),
+		VpnConnectionId:      aws.String(vpnConnectionID),
 	})
-	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidVpnConnectionID.NotFound" {
-			return nil, nil
-		}
-		return nil, err
-	}
-	if resp == nil || len(resp.VpnConnections) == 0 {
-		return nil, nil
-	}
-	vpnConnection := resp.VpnConnections[0]
 
-	for _, r := range vpnConnection.Routes {
-		if aws.StringValue(r.DestinationCidrBlock) == cidrBlock && aws.StringValue(r.State) != "deleted" {
-			return r, nil
-		}
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpnConnectionIDNotFound) {
+		return nil
 	}
-	return nil, nil
+
+	if err != nil {
+		return fmt.Errorf("error deleting EC2 VPN Connection Route (%s): %w", d.Id(), err)
+	}
+
+	if _, err := WaitVPNConnectionRouteDeleted(conn, vpnConnectionID, cidrBlock); err != nil {
+		return fmt.Errorf("error waiting for EC2 VPN Connection Route (%s) delete: %w", d.Id(), err)
+	}
+
+	return nil
 }
 
-func VPNConnectionRouteParseID(id string) (string, string) {
-	parts := strings.SplitN(id, ":", 2)
-	return parts[0], parts[1]
+const vpnConnectionRouteResourceIDSeparator = ":"
+
+func VPNConnectionRouteCreateResourceID(cidrBlock, vpcConnectionID string) string {
+	parts := []string{cidrBlock, vpcConnectionID}
+	id := strings.Join(parts, vpnConnectionRouteResourceIDSeparator)
+
+	return id
+}
+
+func VPNConnectionRouteParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, vpnConnectionRouteResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected DestinationCIDRBlock%[2]sVPNConnectionID", id, vpnConnectionRouteResourceIDSeparator)
 }

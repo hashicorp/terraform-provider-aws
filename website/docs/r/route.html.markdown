@@ -61,7 +61,7 @@ One of the following target arguments must be supplied:
 * `carrier_gateway_id` - (Optional) Identifier of a carrier gateway. This attribute can only be used when the VPC contains a subnet which is associated with a Wavelength Zone.
 * `egress_only_gateway_id` - (Optional) Identifier of a VPC Egress Only Internet Gateway.
 * `gateway_id` - (Optional) Identifier of a VPC internet gateway or a virtual private gateway.
-* `instance_id` - (Optional) Identifier of an EC2 instance.
+* `instance_id` - (Optional, **Deprecated** use `network_interface_id` instead) Identifier of an EC2 instance.
 * `nat_gateway_id` - (Optional) Identifier of a VPC NAT gateway.
 * `local_gateway_id` - (Optional) Identifier of a Outpost local gateway.
 * `network_interface_id` - (Optional) Identifier of an EC2 network interface.
@@ -86,7 +86,7 @@ In addition to all arguments above, the following attributes are exported:
 
 `aws_route` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
-- `create` - (Default `2 minutes`) Used for route creation
+- `create` - (Default `5 minutes`) Used for route creation
 - `update` - (Default `2 minutes`) Used for route creation
 - `delete` - (Default `5 minutes`) Used for route deletion
 

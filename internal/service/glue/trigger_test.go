@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -43,6 +43,7 @@ func TestAccGlueTrigger_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "ON_DEMAND"),
 					resource.TestCheckResourceAttr(resourceName, "workflow_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.#", "0"),
 				),
 			},
 			{
@@ -262,6 +263,35 @@ func TestAccGlueTrigger_schedule(t *testing.T) {
 	})
 }
 
+func TestAccGlueTrigger_startOnCreate(t *testing.T) {
+	var trigger glue.Trigger
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_trigger.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTriggerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTriggerConfig_ScheduleStart(rName, "cron(1 2 * * ? *)"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTriggerExists(resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(1 2 * * ? *)"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"start_on_creation"},
+			},
+		},
+	})
+}
+
 func TestAccGlueTrigger_tags(t *testing.T) {
 	var trigger1, trigger2, trigger3 glue.Trigger
 
@@ -467,6 +497,48 @@ func TestAccGlueTrigger_onDemandDisable(t *testing.T) {
 	})
 }
 
+func TestAccGlueTrigger_eventBatchingCondition(t *testing.T) {
+	var trigger glue.Trigger
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_trigger.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTriggerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTriggerConfigEvent(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTriggerExists(resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.0.batch_size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.0.batch_window", "900"),
+					resource.TestCheckResourceAttr(resourceName, "type", "EVENT"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"enabled", "start_on_creation"},
+			},
+			{
+				Config: testAccTriggerConfigEventUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTriggerExists(resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.0.batch_size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.0.batch_window", "50"),
+					resource.TestCheckResourceAttr(resourceName, "type", "EVENT"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccGlueTrigger_disappears(t *testing.T) {
 	var trigger glue.Trigger
 
@@ -533,7 +605,7 @@ func testAccCheckTriggerDestroy(s *terraform.State) error {
 		output, err := tfglue.FindTriggerByName(conn, rs.Primary.ID)
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				return nil
 			}
 
@@ -683,6 +755,21 @@ resource "aws_glue_trigger" "test" {
 `, rName, schedule))
 }
 
+func testAccTriggerConfig_ScheduleStart(rName, schedule string) string {
+	return acctest.ConfigCompose(testAccJobConfig_Required(rName), fmt.Sprintf(`
+resource "aws_glue_trigger" "test" {
+  name              = %[1]q
+  schedule          = %[2]q
+  type              = "SCHEDULED"
+  start_on_creation = true
+
+  actions {
+    job_name = aws_glue_job.test.name
+  }
+}
+`, rName, schedule))
+}
+
 func testAccTriggerTags1Config(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccJobConfig_Required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
@@ -780,6 +867,53 @@ resource "aws_glue_trigger" "test" {
   actions {
     job_name               = aws_glue_job.test.name
     security_configuration = aws_glue_security_configuration.test.name
+  }
+}
+`, rName))
+}
+
+func testAccTriggerConfigEvent(rName string) string {
+	return acctest.ConfigCompose(testAccJobConfig_Required(rName), fmt.Sprintf(`
+resource "aws_glue_workflow" test {
+  name = %[1]q
+}
+
+resource "aws_glue_trigger" "test" {
+  name              = %[1]q
+  type              = "EVENT"
+  workflow_name     = aws_glue_workflow.test.name
+  start_on_creation = false
+
+  actions {
+    job_name = aws_glue_job.test.name
+  }
+
+  event_batching_condition {
+    batch_size = 1
+  }
+}
+`, rName))
+}
+
+func testAccTriggerConfigEventUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccJobConfig_Required(rName), fmt.Sprintf(`
+resource "aws_glue_workflow" test {
+  name = %[1]q
+}
+
+resource "aws_glue_trigger" "test" {
+  name              = %[1]q
+  type              = "EVENT"
+  workflow_name     = aws_glue_workflow.test.name
+  start_on_creation = false
+
+  actions {
+    job_name = aws_glue_job.test.name
+  }
+
+  event_batching_condition {
+    batch_size   = 1
+    batch_window = 50
   }
 }
 `, rName))

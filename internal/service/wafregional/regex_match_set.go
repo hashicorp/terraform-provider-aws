@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
@@ -143,13 +143,13 @@ func resourceRegexMatchSetDelete(d *schema.ResourceData, meta interface{}) error
 	region := meta.(*conns.AWSClient).Region
 
 	err := DeleteRegexMatchSetResource(conn, region, "global", d.Id(), getRegexMatchTuplesFromResourceData(d))
+
 	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
-		log.Printf("[WARN] WAF Regional Regex Match Set (%s) not found, removing from state", d.Id())
-		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting WAF Regional Regex Match Set (%s): %w", d.Id(), err)
 	}
 
 	return nil

@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -45,6 +45,7 @@ func TestAccEC2AMI_basic(t *testing.T) {
 						"iops":                  "0",
 						"throughput":            "0",
 						"volume_size":           "8",
+						"outpost_arn":           "",
 						"volume_type":           "standard",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.snapshot_id", snapshotResourceName, "id"),
@@ -363,6 +364,66 @@ func TestAccEC2AMI_tags(t *testing.T) {
 	})
 }
 
+func TestAccEC2AMI_outpost(t *testing.T) {
+	var ami ec2.Image
+	resourceName := "aws_ami.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckAmiDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAmiConfigOutpost(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAmiExists(resourceName, &ami),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.outpost_arn", " data.aws_outposts_outpost.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"manage_ebs_snapshots",
+				},
+			},
+		},
+	})
+}
+
+func TestAccEC2AMI_boot(t *testing.T) {
+	var ami ec2.Image
+	resourceName := "aws_ami.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckAmiDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAmiConfigBoot(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAmiExists(resourceName, &ami),
+					resource.TestCheckResourceAttr(resourceName, "boot_mode", "uefi"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"manage_ebs_snapshots",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckAmiDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
@@ -416,7 +477,7 @@ func testAccCheckAmiExists(n string, ami *ec2.Image) resource.TestCheckFunc {
 			resp, err = conn.DescribeImages(opts)
 			if err != nil {
 				// This can be just eventual consistency
-				if tfawserr.ErrMessageContains(err, "InvalidAMIID.NotFound", "") {
+				if tfawserr.ErrCodeEquals(err, "InvalidAMIID.NotFound") {
 					return resource.RetryableError(err)
 				}
 
@@ -596,4 +657,48 @@ resource "aws_ami" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccAmiConfigOutpost(rName string) string {
+	return acctest.ConfigCompose(
+		testAccAmiConfigBase(rName),
+		fmt.Sprintf(`
+data "aws_outposts_outposts" "test" {}
+
+data "aws_outposts_outpost" "test" {
+  id = tolist(data.aws_outposts_outposts.test.ids)[0]
+}
+
+resource "aws_ami" "test" {
+  ena_support         = true
+  name                = %[1]q
+  root_device_name    = "/dev/sda1"
+  virtualization_type = "hvm"
+
+  ebs_block_device {
+    device_name = "/dev/sda1"
+    snapshot_id = aws_ebs_snapshot.test.id
+    outpost_arn = data.aws_outposts_outpost.test.arn
+  }
+}
+`, rName))
+}
+
+func testAccAmiConfigBoot(rName string) string {
+	return acctest.ConfigCompose(
+		testAccAmiConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_ami" "test" {
+  ena_support         = true
+  name                = %[1]q
+  root_device_name    = "/dev/sda1"
+  virtualization_type = "hvm"
+  boot_mode           = "uefi"
+
+  ebs_block_device {
+    device_name = "/dev/sda1"
+    snapshot_id = aws_ebs_snapshot.test.id
+  }
+}
+`, rName))
 }

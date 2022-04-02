@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -222,7 +222,10 @@ func TestAccSSMParameter_overwrite(t *testing.T) {
 		CheckDestroy: testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterBasicConfig(name, "String", "test2"),
+				Config: testAccParameterBasicOverwriteConfig(name, "String", "test2"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
 			},
 			{
 				ResourceName:            resourceName,
@@ -236,7 +239,33 @@ func TestAccSSMParameter_overwrite(t *testing.T) {
 					testAccCheckParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "value", "test3"),
 					resource.TestCheckResourceAttr(resourceName, "type", "String"),
+					resource.TestCheckResourceAttr(resourceName, "version", "2"),
 				),
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12213
+func TestAccSSMParameter_overwriteCascade(t *testing.T) {
+	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckParameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterCascadeOverwriteConfig(name, "test1"),
+			},
+			{
+				Config: testAccParameterCascadeOverwriteConfig(name, "test2"),
+			},
+			{
+				Config:             testAccParameterCascadeOverwriteConfig(name, "test2"),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
 			},
 		},
 	})
@@ -818,6 +847,24 @@ resource "aws_ssm_parameter" "test" {
   }
 }
 `, rName, overwrite, tagKey1, tagValue1)
+}
+
+func testAccParameterCascadeOverwriteConfig(rName, value string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "test_upstream" {
+  name      = "test_parameter_upstream-%[1]s"
+  type      = "String"
+  value     = "%[2]s"
+  overwrite = true
+}
+
+resource "aws_ssm_parameter" "test_downstream" {
+  name      = "test_parameter_downstream-%[1]s"
+  type      = "String"
+  value     = aws_ssm_parameter.test_upstream.version
+  overwrite = true
+}
+`, rName, value)
 }
 
 func testAccParameterSecureConfig(rName string, value string) string {

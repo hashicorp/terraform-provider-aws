@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -161,7 +161,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 
 	globalCluster, err := FindGlobalClusterById(ctx, conn, d.Id())
 
-	if tfawserr.ErrMessageContains(err, docdb.ErrCodeGlobalClusterNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeGlobalClusterNotFoundFault) {
 		log.Printf("[WARN] DocDB Global Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -218,7 +218,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	_, err := conn.ModifyGlobalClusterWithContext(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, docdb.ErrCodeGlobalClusterNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeGlobalClusterNotFoundFault) {
 		return nil
 	}
 
@@ -290,7 +290,7 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 		_, err = conn.DeleteGlobalClusterWithContext(ctx, input)
 	}
 
-	if tfawserr.ErrMessageContains(err, docdb.ErrCodeGlobalClusterNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeGlobalClusterNotFoundFault) {
 		return nil
 	}
 
@@ -328,7 +328,7 @@ func statusGlobalClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, glob
 	return func() (interface{}, string, error) {
 		globalCluster, err := FindGlobalClusterById(ctx, conn, globalClusterID)
 
-		if tfawserr.ErrMessageContains(err, docdb.ErrCodeGlobalClusterNotFoundFault, "") || globalCluster == nil {
+		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeGlobalClusterNotFoundFault) || globalCluster == nil {
 			return nil, GlobalClusterStatusDeleted, nil
 		}
 

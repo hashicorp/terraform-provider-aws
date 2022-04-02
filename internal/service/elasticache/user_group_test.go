@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -161,9 +161,9 @@ func testAccCheckUserGroupDestroyWithProvider(s *terraform.State, provider *sche
 			continue
 		}
 
-		_, err := tfelasticache.FindElastiCacheUserGroupByID(conn, rs.Primary.ID)
+		_, err := tfelasticache.FindUserGroupByID(conn, rs.Primary.ID)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, elasticache.ErrCodeUserGroupNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserGroupNotFoundFault) {
 				return nil
 			}
 		}
@@ -191,7 +191,7 @@ func testAccCheckUserGroupExistsWithProvider(n string, v *elasticache.UserGroup,
 
 		provider := providerF()
 		conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn
-		resp, err := tfelasticache.FindElastiCacheUserGroupByID(conn, rs.Primary.ID)
+		resp, err := tfelasticache.FindUserGroupByID(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("ElastiCache User Group (%s) not found: %w", rs.Primary.ID, err)
 		}

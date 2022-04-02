@@ -26,6 +26,16 @@ resource "aws_imagebuilder_image_recipe" "example" {
 
   component {
     component_arn = aws_imagebuilder_component.example.arn
+
+    parameter {
+      name  = "Parameter1"
+      value = "Value1"
+    }
+
+    parameter {
+      name  = "Parameter2"
+      value = "Value2"
+    }
   }
 
   name         = "example"
@@ -45,9 +55,11 @@ The following arguments are required:
 
 The following attributes are optional:
 
-* `block_device_mapping` - (Optional) Configuration block(s) with block device mappings for the the image recipe. Detailed below.
+* `block_device_mapping` - (Optional) Configuration block(s) with block device mappings for the image recipe. Detailed below.
 * `description` - (Optional) Description of the image recipe.
+* `systems_manager_agent` - (Optional) Configuration block for the Systems Manager Agent installed by default by Image Builder. Detailed below.
 * `tags` - (Optional) Key-value map of resource tags for the image recipe. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `user_data_base64` (Optional) Base64 encoded user data. Use this to provide commands or a command script to run when you launch your build instance.
 * `working_directory` - (Optional) The working directory to be used during build and test workflows.
 
 ### block_device_mapping
@@ -73,9 +85,23 @@ The following arguments are optional:
 
 ### component
 
-The following arguments are required:
+The `component` block supports the following arguments:
 
 * `component_arn` - (Required) Amazon Resource Name (ARN) of the Image Builder Component to associate.
+* `parameter` - (Optional) Configuration block(s) for parameters to configure the component. Detailed below.
+
+### parameter
+
+The following arguments are required:
+
+* `name` - (Required) The name of the component parameter.
+* `value` - (Required) The value for the named component parameter.
+
+### systems_manager_agent
+
+The following arguments are required:
+
+* `uninstall_after_build` - (Required) Whether to remove the Systems Manager Agent after the image has been built. Defaults to `false`.
 
 ## Attributes Reference
 

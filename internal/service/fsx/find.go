@@ -3,7 +3,7 @@ package fsx
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -93,6 +93,45 @@ func FindFileSystemByID(conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
 	return filesystems[0], nil
 }
 
+func FindDataRepositoryAssociationByID(conn *fsx.FSx, id string) (*fsx.DataRepositoryAssociation, error) {
+	input := &fsx.DescribeDataRepositoryAssociationsInput{
+		AssociationIds: []*string{aws.String(id)},
+	}
+
+	var associations []*fsx.DataRepositoryAssociation
+
+	err := conn.DescribeDataRepositoryAssociationsPages(input, func(page *fsx.DescribeDataRepositoryAssociationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		associations = append(associations, page.Associations...)
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeDataRepositoryAssociationNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(associations) == 0 || associations[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(associations); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return associations[0], nil
+}
+
 func FindStorageVirtualMachineByID(conn *fsx.FSx, id string) (*fsx.StorageVirtualMachine, error) {
 	input := &fsx.DescribeStorageVirtualMachinesInput{
 		StorageVirtualMachineIds: []*string{aws.String(id)},
@@ -169,4 +208,29 @@ func FindVolumeByID(conn *fsx.FSx, id string) (*fsx.Volume, error) {
 	}
 
 	return volumes[0], nil
+}
+
+func FindSnapshotByID(conn *fsx.FSx, id string) (*fsx.Snapshot, error) {
+	input := &fsx.DescribeSnapshotsInput{
+		SnapshotIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeSnapshots(input)
+
+	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeVolumeNotFound) || tfawserr.ErrCodeEquals(err, fsx.ErrCodeSnapshotNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Snapshots) == 0 || output.Snapshots[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Snapshots[0], nil
 }

@@ -201,6 +201,7 @@ The following arguments are supported in the `kubernetes_network_config` configu
     * Doesn't overlap with any CIDR block assigned to the VPC that you selected for VPC.
 
     * Between /24 and /12.
+* `ip_family` - (Optional) The IP family used to assign Kubernetes pod and service addresses. Valid values are `ipv4` (default) and `ipv6`. You can only specify an IP family when you create a cluster, changing this value will force a new cluster to be created.
 
 ## Attributes Reference
 

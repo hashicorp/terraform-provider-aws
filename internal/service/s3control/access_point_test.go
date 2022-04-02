@@ -549,6 +549,8 @@ resource "aws_s3_access_point" "test" {
     ignore_public_acls      = true
     restrict_public_buckets = false
   }
+
+  policy = "{}"
 }
 `, rName)
 }

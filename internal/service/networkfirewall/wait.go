@@ -13,6 +13,8 @@ const (
 	firewallTimeout = 20 * time.Minute
 	// Maximum amount of time to wait for a Firewall Policy to be deleted
 	firewallPolicyTimeout = 10 * time.Minute
+	// Maximum amount of time to wait for a Resource Policy to be deleted
+	resourcePolicyDeleteTimeout = 2 * time.Minute
 	// Maximum amount of time to wait for a Rule Group to be deleted
 	ruleGroupDeleteTimeout = 10 * time.Minute
 )

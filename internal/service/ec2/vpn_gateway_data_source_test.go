@@ -12,7 +12,7 @@ import (
 )
 
 func TestAccEC2VPNGatewayDataSource_unattached(t *testing.T) {
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceNameById := "data.aws_vpn_gateway.test_by_id"
 	dataSourceNameByTags := "data.aws_vpn_gateway.test_by_tags"
 	dataSourceNameByAsn := "data.aws_vpn_gateway.test_by_amazon_side_asn"
@@ -24,7 +24,7 @@ func TestAccEC2VPNGatewayDataSource_unattached(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPNGatewayUnattachedDataSourceConfig(rInt),
+				Config: testAccVPNGatewayUnattachedDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceNameById, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceNameById, "arn", resourceName, "arn"),
@@ -41,7 +41,7 @@ func TestAccEC2VPNGatewayDataSource_unattached(t *testing.T) {
 }
 
 func TestAccEC2VPNGatewayDataSource_attached(t *testing.T) {
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpn_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -50,7 +50,7 @@ func TestAccEC2VPNGatewayDataSource_attached(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPNGatewayAttachedDataSourceConfig(rInt),
+				Config: testAccVPNGatewayAttachedDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", "aws_vpn_gateway.test", "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "attached_vpc_id", "aws_vpc.test", "id"),
@@ -61,13 +61,13 @@ func TestAccEC2VPNGatewayDataSource_attached(t *testing.T) {
 	})
 }
 
-func testAccVPNGatewayUnattachedDataSourceConfig(rInt int) string {
+func testAccVPNGatewayUnattachedDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
-    Name = "terraform-testacc-vpn-gateway-data-source-unattached-%d"
-    ABC  = "testacc-%d"
-    XYZ  = "testacc-%d"
+    Name = %[1]q
+    ABC  = "abc"
+    XYZ  = "xyz"
   }
 
   amazon_side_asn = 4294967293
@@ -85,22 +85,22 @@ data "aws_vpn_gateway" "test_by_amazon_side_asn" {
   amazon_side_asn = aws_vpn_gateway.test.amazon_side_asn
   state           = "available"
 }
-`, rInt, rInt+1, rInt-1)
+`, rName)
 }
 
-func testAccVPNGatewayAttachedDataSourceConfig(rInt int) string {
+func testAccVPNGatewayAttachedDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-vpn-gateway-data-source-attached-%d"
+    Name = %[1]q
   }
 }
 
 resource "aws_vpn_gateway" "test" {
   tags = {
-    Name = "terraform-testacc-vpn-gateway-data-source-attached-%d"
+    Name = %[1]q
   }
 }
 
@@ -112,5 +112,5 @@ resource "aws_vpn_gateway_attachment" "test" {
 data "aws_vpn_gateway" "test" {
   attached_vpc_id = aws_vpn_gateway_attachment.test.vpc_id
 }
-`, rInt, rInt)
+`, rName)
 }

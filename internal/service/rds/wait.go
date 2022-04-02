@@ -1,6 +1,7 @@
 package rds
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -8,8 +9,6 @@ import (
 )
 
 const (
-	rdsClusterInitiateUpgradeTimeout = 5 * time.Minute
-
 	dbClusterRoleAssociationCreatedTimeout = 5 * time.Minute
 	dbClusterRoleAssociationDeletedTimeout = 5 * time.Minute
 )
@@ -54,12 +53,13 @@ func waitEventSubscriptionDeleted(conn *rds.RDS, id string, timeout time.Duratio
 
 func waitEventSubscriptionUpdated(conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{EventSubscriptionStatusModifying},
-		Target:     []string{EventSubscriptionStatusActive},
-		Refresh:    statusEventSubscription(conn, id),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
+		Pending:                   []string{EventSubscriptionStatusModifying},
+		Target:                    []string{EventSubscriptionStatusActive},
+		Refresh:                   statusEventSubscription(conn, id),
+		Timeout:                   timeout,
+		MinTimeout:                10 * time.Second,
+		Delay:                     30 * time.Second,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -154,17 +154,19 @@ func waitDBInstanceDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rd
 			InstanceStatusCreating,
 			InstanceStatusDeleting,
 			InstanceStatusIncompatibleParameters,
+			InstanceStatusIncompatibleRestore,
 			InstanceStatusModifying,
 			InstanceStatusStarting,
 			InstanceStatusStopping,
 			InstanceStatusStorageFull,
 			InstanceStatusStorageOptimization,
 		},
-		Target:     []string{},
-		Refresh:    statusDBInstance(conn, id),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
+		Target:                    []string{},
+		Refresh:                   statusDBInstance(conn, id),
+		Timeout:                   timeout,
+		MinTimeout:                10 * time.Second,
+		Delay:                     30 * time.Second,
+		ContinuousTargetOccurence: 3,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -188,6 +190,42 @@ func waitDBClusterInstanceDeleted(conn *rds.RDS, id string, timeout time.Duratio
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*rds.DBInstance); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDBInstanceAutomatedBackupCreated(conn *rds.RDS, arn string, timeout time.Duration) (*rds.DBInstanceAutomatedBackup, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{InstanceAutomatedBackupStatusPending},
+		Target:  []string{InstanceAutomatedBackupStatusReplicating},
+		Refresh: statusDBInstanceAutomatedBackup(conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*rds.DBInstanceAutomatedBackup); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// waitDBInstanceAutomatedBackupDeleted waits for a specified automated backup to be deleted from a database instance.
+// The connection must be valid for the database instance's Region.
+func waitDBInstanceAutomatedBackupDeleted(conn *rds.RDS, dbInstanceID, dbInstanceAutomatedBackupsARN string, timeout time.Duration) (*rds.DBInstance, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{strconv.FormatBool(true)},
+		Target:  []string{strconv.FormatBool(false)},
+		Refresh: statusDBInstanceHasAutomatedBackup(conn, dbInstanceID, dbInstanceAutomatedBackupsARN),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

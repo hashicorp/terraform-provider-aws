@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -156,7 +156,7 @@ func resourceIntegrationResponseDelete(d *schema.ResourceData, meta interface{})
 		IntegrationId:         aws.String(d.Get("integration_id").(string)),
 		IntegrationResponseId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {

@@ -3,12 +3,12 @@ subcategory: "CloudFront"
 layout: "aws"
 page_title: "AWS: aws_cloudfront_cache_policy"
 description: |-
-  Provides a cache policy for a CloudFront ditribution. When it’s attached to a cache behavior, 
-  the cache policy determines the the values that CloudFront includes in the cache key. These 
-  values can include HTTP headers, cookies, and URL query strings. CloudFront uses the cache 
-  key to find an object in its cache that it can return to the viewer. It also determines the 
-  default, minimum, and maximum time to live (TTL) values that you want objects to stay in the 
-  CloudFront cache. 
+  Provides a cache policy for a CloudFront ditribution. When it’s attached to a cache behavior,
+  the cache policy determines the the values that CloudFront includes in the cache key. These
+  values can include HTTP headers, cookies, and URL query strings. CloudFront uses the cache
+  key to find an object in its cache that it can return to the viewer. It also determines the
+  default, minimum, and maximum time to live (TTL) values that you want objects to stay in the
+  CloudFront cache.
 ---
 
 # Resource: aws_cloudfront_cache_policy
@@ -62,7 +62,7 @@ The following arguments are supported:
 
 * `cookies_config` - (Required) Object that determines whether any cookies in viewer requests (and if so, which cookies) are included in the cache key and automatically included in requests that CloudFront sends to the origin. See [Cookies Config](#cookies-config) for more information.
 * `headers_config` - (Required) Object that determines whether any HTTP headers (and if so, which headers) are included in the cache key and automatically included in requests that CloudFront sends to the origin. See [Headers Config](#headers-config) for more information.
-* `query_strings_config` - (Required) Object that determines whether any URL query strings in viewer requests (and if so, which query strings) are included in the cache key and automatically included in requests that CloudFront sends to the origin. See [Query Strings Config](#query-strings-config) for more information.
+* `query_strings_config` - (Required) Object that determines whether any URL query strings in viewer requests (and if so, which query strings) are included in the cache key and automatically included in requests that CloudFront sends to the origin. See [Query String Config](#query-string-config) for more information.
 * `enable_accept_encoding_brotli` - (Optional) A flag that can affect whether the Accept-Encoding HTTP header is included in the cache key and included in requests that CloudFront sends to the origin.
 * `enable_accept_encoding_gzip` - (Optional) A flag that can affect whether the Accept-Encoding HTTP header is included in the cache key and included in requests that CloudFront sends to the origin.
 

@@ -60,34 +60,33 @@ resource "aws_route53_record" "example" {
 
 The following arguments are supported:
 
-* `domain_name` - (Required) The domain name. Must be between 1 and 512 characters in length.
-* `domain_name_configuration` - (Required) The domain name configuration.
-* `mutual_tls_authentication` - (Optional) The mutual TLS authentication configuration for the domain name.
-* `tags` - (Optional) A map of tags to assign to the domain name. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `domain_name` - (Required) Domain name. Must be between 1 and 512 characters in length.
+* `domain_name_configuration` - (Required) Domain name configuration. See below.
+* `mutual_tls_authentication` - (Optional) Mutual TLS authentication configuration for the domain name.
+* `tags` - (Optional) Map of tags to assign to the domain name. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-The `domain_name_configuration` object supports the following:
+### `domain_name_configuration`
 
-* `certificate_arn` - (Required) The ARN of an AWS-managed certificate that will be used by the endpoint for the domain name. AWS Certificate Manager is the only supported source.
-Use the [`aws_acm_certificate`](/docs/providers/aws/r/acm_certificate.html) resource to configure an ACM certificate.
-* `endpoint_type` - (Required) The endpoint type. Valid values: `REGIONAL`.
-* `security_policy` - (Required) The Transport Layer Security (TLS) version of the [security policy](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-custom-domain-tls-version.html) for the domain name. Valid values: `TLS_1_2`.
-* `hosted_zone_id` - (Computed) The Amazon Route 53 Hosted Zone ID of the endpoint.
-* `target_domain_name` - (Computed) The target domain name.
+* `certificate_arn` - (Required) ARN of an AWS-managed certificate that will be used by the endpoint for the domain name. AWS Certificate Manager is the only supported source. Use the [`aws_acm_certificate`](/docs/providers/aws/r/acm_certificate.html) resource to configure an ACM certificate.
+* `endpoint_type` - (Required) Endpoint type. Valid values: `REGIONAL`.
+* `hosted_zone_id` - (Computed) Amazon Route 53 Hosted Zone ID of the endpoint.
+* `ownership_verification_certificate_arn` - (Optional) ARN of the AWS-issued certificate used to validate custom domain ownership (when `certificate_arn` is issued via an ACM Private CA or `mutual_tls_authentication` is configured with an ACM-imported certificate.)
+* `security_policy` - (Required) Transport Layer Security (TLS) version of the [security policy](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-custom-domain-tls-version.html) for the domain name. Valid values: `TLS_1_2`.
+* `target_domain_name` - (Computed) Target domain name.
 
-The `mutual_tls_authentication` object supports the following:
+### `mutual_tls_authentication`
 
-* `truststore_uri` - (Required) An Amazon S3 URL that specifies the truststore for mutual TLS authentication, for example, `s3://bucket-name/key-name`.
-The truststore can contain certificates from public or private certificate authorities. To update the truststore, upload a new version to S3, and then update your custom domain name to use the new version.
-* `truststore_version` - (Optional) The version of the S3 object that contains the truststore. To specify a version, you must have versioning enabled for the S3 bucket.
+* `truststore_uri` - (Required) Amazon S3 URL that specifies the truststore for mutual TLS authentication, for example, `s3://bucket-name/key-name`. The truststore can contain certificates from public or private certificate authorities. To update the truststore, upload a new version to S3, and then update your custom domain name to use the new version.
+* `truststore_version` - (Optional) Version of the S3 object that contains the truststore. To specify a version, you must have versioning enabled for the S3 bucket.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The domain name identifier.
-* `api_mapping_selection_expression` - The [API mapping selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-mapping-selection-expressions) for the domain name.
-* `arn` - The ARN of the domain name.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `api_mapping_selection_expression` - [API mapping selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-mapping-selection-expressions) for the domain name.
+* `arn` - ARN of the domain name.
+* `id` - Domain name identifier.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 

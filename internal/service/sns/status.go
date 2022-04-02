@@ -1,22 +1,23 @@
 package sns
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusSubscriptionPendingConfirmation(conn *sns.SNS, id string) resource.StateRefreshFunc {
+func statusSubscriptionPendingConfirmation(conn *sns.SNS, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSubscriptionByARN(conn, id)
+		output, err := FindSubscriptionAttributesByARN(conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
 		if err != nil {
 			return nil, "", err
 		}
 
-		if output == nil {
-			return nil, "", nil
-		}
-
-		return output, aws.StringValue(output.Attributes["PendingConfirmation"]), nil
+		return output, output[SubscriptionAttributeNamePendingConfirmation], nil
 	}
 }

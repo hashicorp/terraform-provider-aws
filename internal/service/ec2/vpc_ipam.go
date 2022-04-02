@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -59,6 +59,10 @@ func ResourceVPCIpam() *schema.Resource {
 			"scope_count": {
 				Type:     schema.TypeInt,
 				Computed: true,
+			},
+			"cascade": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -154,42 +158,48 @@ func resourceVPCIpamUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
+
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+			return fmt.Errorf("error updating IPAM (%s) tags: %w", d.Id(), err)
 		}
 	}
-	input := &ec2.ModifyIpamInput{
-		IpamId: aws.String(d.Id()),
-	}
 
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
-	}
-
-	if d.HasChange("operating_regions") {
-		o, n := d.GetChange("operating_regions")
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &ec2.ModifyIpamInput{
+			IpamId: aws.String(d.Id()),
 		}
 
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-		operatingRegionUpdateAdd := expandIpamOperatingRegionsUpdateAddRegions(ns.Difference(os).List())
-		operatingRegionUpdateRemove := expandIpamOperatingRegionsUpdateDeleteRegions(os.Difference(ns).List())
-
-		if len(operatingRegionUpdateAdd) != 0 {
-			input.AddOperatingRegions = operatingRegionUpdateAdd
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
 		}
 
-		if len(operatingRegionUpdateRemove) != 0 {
-			input.RemoveOperatingRegions = operatingRegionUpdateRemove
+		if d.HasChange("operating_regions") {
+			o, n := d.GetChange("operating_regions")
+			if o == nil {
+				o = new(schema.Set)
+			}
+			if n == nil {
+				n = new(schema.Set)
+			}
+
+			os := o.(*schema.Set)
+			ns := n.(*schema.Set)
+			operatingRegionUpdateAdd := expandIpamOperatingRegionsUpdateAddRegions(ns.Difference(os).List())
+			operatingRegionUpdateRemove := expandIpamOperatingRegionsUpdateDeleteRegions(os.Difference(ns).List())
+
+			if len(operatingRegionUpdateAdd) != 0 {
+				input.AddOperatingRegions = operatingRegionUpdateAdd
+			}
+
+			if len(operatingRegionUpdateRemove) != 0 {
+				input.RemoveOperatingRegions = operatingRegionUpdateRemove
+			}
 		}
+
 		_, err := conn.ModifyIpam(input)
+
 		if err != nil {
-			return fmt.Errorf("Error modifying operating regions to ipam: %w", err)
+			return fmt.Errorf("error modifying IPAM (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -203,7 +213,11 @@ func resourceVPCIpamDelete(d *schema.ResourceData, meta interface{}) error {
 		IpamId: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting IPAM: %s", input)
+	if v, ok := d.GetOk("cascade"); ok {
+		input.Cascade = aws.Bool(v.(bool))
+	}
+
+	log.Printf("[DEBUG] Deleting IPAM: %s", d.Id())
 	_, err := conn.DeleteIpam(input)
 	if err != nil {
 		return fmt.Errorf("error deleting IPAM: (%s): %w", d.Id(), err)
@@ -257,7 +271,7 @@ func WaitIpamAvailable(conn *ec2.EC2, ipamId string, timeout time.Duration) (*ec
 
 func WaiterIpamDeleted(conn *ec2.EC2, ipamId string, timeout time.Duration) (*ec2.Ipam, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.IpamStateCreateComplete, ec2.IpamStateModifyComplete},
+		Pending: []string{ec2.IpamStateCreateComplete, ec2.IpamStateModifyComplete, ec2.IpamStateDeleteInProgress},
 		Target:  []string{InvalidIpamIdNotFound},
 		Refresh: statusIpamStatus(conn, ipamId),
 		Timeout: timeout,

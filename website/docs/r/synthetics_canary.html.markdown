@@ -65,7 +65,7 @@ The following arguments are optional:
 
 ### schedule
 
-* `expression` - (Required) Rate expression that defines how often the canary is to run. The syntax is rate(number unit). unit can be minute, minutes, or hour.
+* `expression` - (Required) Rate expression or cron expression that defines how often the canary is to run. For rate expression, the syntax is `rate(number unit)`. _unit_ can be `minute`, `minutes`, or `hour`. For cron expression, the syntax is `cron(expression)`. For more information about the syntax for cron expressions, see [Scheduling canary runs using cron](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries_cron.html).
 * `duration_in_seconds` - (Optional) Duration in seconds, for the canary to continue making regular runs according to the schedule in the Expression value.
 
 ### run_config
@@ -73,6 +73,7 @@ The following arguments are optional:
 * `timeout_in_seconds` - (Optional) Number of seconds the canary is allowed to run before it must stop. If you omit this field, the frequency of the canary is used, up to a maximum of 840 (14 minutes).
 * `memory_in_mb` - (Optional) Maximum amount of memory available to the canary while it is running, in MB. The value you specify must be a multiple of 64.
 * `active_tracing` - (Optional) Whether this canary is to use active AWS X-Ray tracing when it runs. You can enable active tracing only for canaries that use version syn-nodejs-2.0 or later for their canary runtime.
+* `environment_variables` - (Optional) Map of environment variables that are accessible from the canary during execution. Please see [AWS Docs](https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-runtime) for variables reserved for Lambda.
 
 ### vpc_config
 

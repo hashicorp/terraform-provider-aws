@@ -6,11 +6,10 @@ package gamelift
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -30,12 +29,22 @@ func init() {
 		F:    sweepBuilds,
 	})
 
+	resource.AddTestSweepers("aws_gamelift_script", &resource.Sweeper{
+		Name: "aws_gamelift_script",
+		F:    sweepScripts,
+	})
+
 	resource.AddTestSweepers("aws_gamelift_fleet", &resource.Sweeper{
 		Name: "aws_gamelift_fleet",
 		Dependencies: []string{
 			"aws_gamelift_build",
 		},
 		F: sweepFleets,
+	})
+
+	resource.AddTestSweepers("aws_gamelift_game_server_group", &resource.Sweeper{
+		Name: "aws_gamelift_game_server_group",
+		F:    sweepGameServerGroups,
 	})
 
 	resource.AddTestSweepers("aws_gamelift_game_session_queue", &resource.Sweeper{
@@ -119,56 +128,149 @@ func sweepBuilds(region string) error {
 	return nil
 }
 
-func sweepFleets(region string) error {
+func sweepScripts(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).GameLiftConn
 
-	return listFleets(conn, nil, region, func(fleetIds []*string) error {
-		if len(fleetIds) == 0 {
-			log.Print("[DEBUG] No Gamelift Fleets to sweep")
+	resp, err := conn.ListScripts(&gamelift.ListScriptsInput{})
+	if err != nil {
+		if sweep.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Gamelife Script sweep for %s: %s", region, err)
 			return nil
 		}
+		return fmt.Errorf("Error listing Gamelift Scripts: %s", err)
+	}
 
-		out, err := conn.DescribeFleetAttributes(&gamelift.DescribeFleetAttributesInput{
-			FleetIds: fleetIds,
+	if len(resp.Scripts) == 0 {
+		log.Print("[DEBUG] No Gamelift Scripts to sweep")
+		return nil
+	}
+
+	log.Printf("[INFO] Found %d Gamelift Scripts", len(resp.Scripts))
+
+	for _, build := range resp.Scripts {
+		log.Printf("[INFO] Deleting Gamelift Script %q", *build.ScriptId)
+		_, err := conn.DeleteScript(&gamelift.DeleteScriptInput{
+			ScriptId: build.ScriptId,
 		})
 		if err != nil {
-			return fmt.Errorf("Error describing Gamelift Fleet attributes: %s", err)
+			return fmt.Errorf("Error deleting Gamelift Script (%s): %s",
+				*build.ScriptId, err)
 		}
+	}
 
-		log.Printf("[INFO] Found %d Gamelift Fleets", len(out.FleetAttributes))
+	return nil
+}
 
-		for _, attr := range out.FleetAttributes {
-			log.Printf("[INFO] Deleting Gamelift Fleet %q", *attr.FleetId)
-			err := resource.Retry(60*time.Minute, func() *resource.RetryError {
-				_, err := conn.DeleteFleet(&gamelift.DeleteFleetInput{
-					FleetId: attr.FleetId,
-				})
-				if err != nil {
-					msg := fmt.Sprintf("Cannot delete fleet %s that is in status of ", *attr.FleetId)
-					if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, msg) {
-						return resource.RetryableError(err)
-					}
-					return resource.NonRetryableError(err)
-				}
-				return nil
-			})
+func sweepFleets(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).GameLiftConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+
+	input := &gamelift.ListFleetsInput{}
+
+	for {
+		output, err := conn.ListFleets(input)
+
+		for _, fleet := range output.FleetIds {
+			r := ResourceFleet()
+			d := r.Data(nil)
+
+			id := aws.StringValue(fleet)
+			d.SetId(id)
+
 			if err != nil {
-				return fmt.Errorf("Error deleting Gamelift Fleet (%s): %s",
-					*attr.FleetId, err)
+				err := fmt.Errorf("error reading GameLift Fleet (%s): %w", id, err)
+				log.Printf("[ERROR] %s", err)
+				errs = multierror.Append(errs, err)
+				continue
 			}
 
-			err = WaitForFleetToBeDeleted(conn, *attr.FleetId, FleetDeletedDefaultTimeout)
-			if err != nil {
-				return fmt.Errorf("Error waiting for Gamelift Fleet (%s) to be deleted: %s",
-					*attr.FleetId, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing GameLift Fleet for %s: %w", region, err))
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping GameLift Fleet for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping GameLift Fleet sweep for %s: %s", region, errs)
 		return nil
-	})
+	}
+
+	return errs.ErrorOrNil()
+}
+
+func sweepGameServerGroups(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).GameLiftConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+
+	input := &gamelift.ListGameServerGroupsInput{}
+
+	for {
+		output, err := conn.ListGameServerGroups(input)
+
+		for _, gameServerGroup := range output.GameServerGroups {
+			r := ResourceGameServerGroup()
+			d := r.Data(nil)
+
+			id := aws.StringValue(gameServerGroup.GameServerGroupName)
+			d.SetId(id)
+
+			if err != nil {
+				err := fmt.Errorf("error reading GameLift Game Server Group (%s): %w", id, err)
+				log.Printf("[ERROR] %s", err)
+				errs = multierror.Append(errs, err)
+				continue
+			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing GameLift Game Server Group for %s: %w", region, err))
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping GameLift Game Server Group for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping GameLift Game Server Group sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func sweepGameSessionQueue(region string) error {
@@ -222,28 +324,6 @@ func listAliases(input *gamelift.ListAliasesInput, conn *gamelift.GameLift, f fu
 
 	if resp.NextToken != nil {
 		return listAliases(input, conn, f)
-	}
-	return nil
-}
-
-func listFleets(conn *gamelift.GameLift, nextToken *string, region string, f func([]*string) error) error {
-	resp, err := conn.ListFleets(&gamelift.ListFleetsInput{
-		NextToken: nextToken,
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Gamelift Fleet sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error listing Gamelift Fleets: %s", err)
-	}
-
-	err = f(resp.FleetIds)
-	if err != nil {
-		return err
-	}
-	if nextToken != nil {
-		return listFleets(conn, nextToken, region, f)
 	}
 	return nil
 }

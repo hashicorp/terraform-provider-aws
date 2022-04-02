@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -56,6 +56,9 @@ func init() {
 	resource.AddTestSweepers("aws_db_instance", &resource.Sweeper{
 		Name: "aws_db_instance",
 		F:    sweepInstances,
+		Dependencies: []string{
+			"aws_opsworks_rds_db_instance",
+		},
 	})
 
 	resource.AddTestSweepers("aws_db_option_group", &resource.Sweeper{
@@ -182,7 +185,7 @@ func sweepClusterSnapshots(region string) error {
 			_, err := conn.DeleteDBClusterSnapshot(&rds.DeleteDBClusterSnapshotInput{
 				DBClusterSnapshotIdentifier: aws.String(id),
 			})
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
 				continue
 			}
 			if err != nil {
@@ -343,7 +346,7 @@ func sweepGlobalClusters(region string) error {
 				continue
 			}
 
-			if err := WaitForGlobalClusterDeletion(conn, id); err != nil {
+			if err := WaitForGlobalClusterDeletion(conn, id, 30*time.Minute); err != nil {
 				log.Printf("[ERROR] Failure while waiting for RDS Global Cluster (%s) to be deleted: %s", id, err)
 			}
 		}
@@ -424,7 +427,7 @@ func sweepOptionGroups(region string) error {
 		ret := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.DeleteOptionGroup(deleteOpts)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidOptionGroupStateFault, "") {
+				if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidOptionGroupStateFault) {
 					log.Printf("[DEBUG] AWS believes the RDS Option Group is still in use, retrying")
 					return resource.RetryableError(err)
 				}
@@ -565,7 +568,7 @@ func sweepSnapshots(region string) error {
 			log.Printf("[INFO] Deleting RDS DB Snapshot: %s", id)
 			_, err := conn.DeleteDBSnapshot(input)
 
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
 				continue
 			}
 

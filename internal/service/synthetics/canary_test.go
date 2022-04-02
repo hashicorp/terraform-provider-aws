@@ -389,7 +389,54 @@ func TestAccSyntheticsCanary_runTracing(t *testing.T) {
 	})
 }
 
+func TestAccSyntheticsCanary_runEnvironmentVariables(t *testing.T) {
+	var conf synthetics.Canary
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	resourceName := "aws_synthetics_canary.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, synthetics.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckCanaryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCanaryRunEnvVariables1Config(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCanaryExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.test1", "result1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "run_config.0.environment_variables"},
+			},
+			{
+				Config: testAccCanaryRunEnvVariables2Config(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCanaryExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.test1", "result1"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.test2", "result2"),
+				),
+			},
+			{
+				Config: testAccCanaryBasicConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCanaryExists(resourceName, &conf),
+					resource.TestCheckNoResourceAttr(resourceName, "run_config.0.environment_variables"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSyntheticsCanary_vpc(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf synthetics.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
@@ -634,15 +681,22 @@ func testAccCanaryBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = true
-
-  versioning {
-    enabled = true
-  }
 
   tags = {
     Name = %[1]q
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
@@ -752,6 +806,8 @@ resource "aws_synthetics_canary" "test" {
   run_config {
     timeout_in_seconds = 60
   }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 `, rName))
 }
@@ -774,6 +830,8 @@ resource "aws_synthetics_canary" "test" {
     timeout_in_seconds = 120
     memory_in_mb       = 960
   }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 `, rName))
 }
@@ -796,13 +854,69 @@ resource "aws_synthetics_canary" "test" {
     active_tracing     = %[2]t
     timeout_in_seconds = 60
   }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 `, rName, tracing))
+}
+
+func testAccCanaryRunEnvVariables1Config(rName string) string {
+	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
+resource "aws_synthetics_canary" "test" {
+  name                 = %[1]q
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  execution_role_arn   = aws_iam_role.test.arn
+  handler              = "exports.handler"
+  zip_file             = "test-fixtures/lambdatest.zip"
+  runtime_version      = "syn-nodejs-puppeteer-3.2"
+
+  schedule {
+    expression = "rate(0 minute)"
+  }
+
+  run_config {
+    environment_variables = {
+      test1 = "result1"
+    }
+  }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
+}
+`, rName))
+}
+
+func testAccCanaryRunEnvVariables2Config(rName string) string {
+	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
+resource "aws_synthetics_canary" "test" {
+  name                 = %[1]q
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  execution_role_arn   = aws_iam_role.test.arn
+  handler              = "exports.handler"
+  zip_file             = "test-fixtures/lambdatest.zip"
+  runtime_version      = "syn-nodejs-puppeteer-3.2"
+
+  schedule {
+    expression = "rate(0 minute)"
+  }
+
+  run_config {
+    environment_variables = {
+      test1 = "result1"
+      test2 = "result2"
+    }
+  }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
+}
+`, rName))
 }
 
 func testAccCanaryBasicConfig(rName string) string {
 	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.test, aws_iam_role.test, aws_iam_role_policy.test]
+
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
@@ -836,6 +950,8 @@ resource "aws_synthetics_canary" "test" {
   schedule {
     expression = "rate(0 minute)"
   }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 `, rName))
 }
@@ -865,6 +981,8 @@ resource "aws_synthetics_canary" "test" {
   schedule {
     expression = "rate(0 minute)"
   }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 `, rName))
 }
@@ -882,6 +1000,8 @@ resource "aws_synthetics_canary" "test" {
   schedule {
     expression = "rate(0 minute)"
   }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 `, rName, version))
 }
@@ -899,6 +1019,8 @@ resource "aws_synthetics_canary" "test" {
   schedule {
     expression = "rate(0 minute)"
   }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 `, rName))
 }
@@ -917,6 +1039,8 @@ resource "aws_synthetics_canary" "test" {
   schedule {
     expression = "rate(0 minute)"
   }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 `, rName, state))
 }
@@ -935,6 +1059,8 @@ resource "aws_synthetics_canary" "test" {
   schedule {
     expression = "rate(0 minute)"
   }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 `, rName, state))
 }
@@ -946,17 +1072,22 @@ resource "aws_synthetics_canary" "test" {
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
-  s3_bucket            = aws_s3_bucket_object.test.bucket
-  s3_key               = aws_s3_bucket_object.test.key
-  s3_version           = aws_s3_bucket_object.test.version_id
+  s3_bucket            = aws_s3_object.test.bucket
+  s3_key               = aws_s3_object.test.key
+  s3_version           = aws_s3_object.test.version_id
   runtime_version      = "syn-nodejs-puppeteer-3.2"
 
   schedule {
     expression = "rate(0 minute)"
   }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.test]
+
   bucket = aws_s3_bucket.test.bucket
   key    = %[1]q
   source = "test-fixtures/lambdatest.zip"
@@ -1139,6 +1270,8 @@ resource "aws_synthetics_canary" "test" {
     %[2]q = %[3]q
     %[4]q = %[5]q
   }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

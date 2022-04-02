@@ -117,6 +117,38 @@ func TestAccBackupSelection_withTags(t *testing.T) {
 	})
 }
 
+func TestAccBackupSelection_conditionsWithTags(t *testing.T) {
+	var selection1 backup.GetBackupSelectionOutput
+	resourceName := "aws_backup_selection.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSelectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupSelectionConfigWithConditionsTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSelectionExists(resourceName, &selection1),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.string_equals.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.string_like.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.string_not_equals.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.string_not_like.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccSelectionImportStateIDFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccBackupSelection_withResources(t *testing.T) {
 	var selection1 backup.GetBackupSelectionOutput
 	resourceName := "aws_backup_selection.test"
@@ -133,6 +165,34 @@ func TestAccBackupSelection_withResources(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(resourceName, &selection1),
 					resource.TestCheckResourceAttr(resourceName, "resources.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccSelectionImportStateIDFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccBackupSelection_withNotResources(t *testing.T) {
+	var selection1 backup.GetBackupSelectionOutput
+	resourceName := "aws_backup_selection.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSelectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupSelectionConfigWithNotResources(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSelectionExists(resourceName, &selection1),
+					resource.TestCheckResourceAttr(resourceName, "not_resources.#", "1"),
 				),
 			},
 			{
@@ -256,14 +316,11 @@ func testAccSelectionImportStateIDFunc(resourceName string) resource.ImportState
 
 func testAccBackupSelectionConfigBase(rName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {
-}
+data "aws_caller_identity" "current" {}
 
-data "aws_partition" "current" {
-}
+data "aws_partition" "current" {}
 
-data "aws_region" "current" {
-}
+data "aws_region" "current" {}
 
 resource "aws_backup_vault" "test" {
   name = %[1]q
@@ -298,7 +355,7 @@ resource "aws_backup_selection" "test" {
   }
 
   resources = [
-    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/"
+    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*"
   ]
 }
 `, rName))
@@ -327,7 +384,53 @@ resource "aws_backup_selection" "test" {
   }
 
   resources = [
-    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/"
+    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*"
+  ]
+}
+`, rName))
+}
+
+func testAccBackupSelectionConfigWithConditionsTags(rName string) string {
+	return acctest.ConfigCompose(
+		testAccBackupSelectionConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_backup_selection" "test" {
+  plan_id = aws_backup_plan.test.id
+
+  name = %[1]q
+
+  iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
+
+  condition {
+    string_equals {
+      key   = "aws:ResourceTag/Component"
+      value = "rds"
+    }
+    string_equals {
+      key   = "aws:ResourceTag/Team"
+      value = "dev"
+    }
+    string_like {
+      key   = "aws:ResourceTag/Application"
+      value = "app*"
+    }
+    string_not_equals {
+      key   = "aws:ResourceTag/Backup"
+      value = "false"
+    }
+    string_not_equals {
+      key   = "aws:ResourceTag/Team"
+      value = "infra"
+    }
+    string_not_like {
+      key   = "aws:ResourceTag/Environment"
+      value = "test*"
+    }
+  }
+
+  resources = [
+    "arn:${data.aws_partition.current.partition}:rds:*:*:cluster:*",
+    "arn:${data.aws_partition.current.partition}:rds:*:*:db:*"
   ]
 }
 `, rName))
@@ -374,6 +477,28 @@ resource "aws_backup_selection" "test" {
 `, rName))
 }
 
+func testAccBackupSelectionConfigWithNotResources(rName string) string {
+	return acctest.ConfigCompose(
+		testAccBackupSelectionConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_backup_selection" "test" {
+  plan_id = aws_backup_plan.test.id
+
+  name         = %[1]q
+  iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
+
+  selection_tag {
+    type  = "STRINGEQUALS"
+    key   = "foo"
+    value = "bar"
+  }
+
+  not_resources = ["arn:${data.aws_partition.current.partition}:fsx:*"]
+  resources     = ["*"]
+}
+`, rName))
+}
+
 func testAccBackupSelectionConfigUpdateTag(rName string) string {
 	return acctest.ConfigCompose(
 		testAccBackupSelectionConfigBase(rName),
@@ -391,7 +516,7 @@ resource "aws_backup_selection" "test" {
   }
 
   resources = [
-    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/"
+    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*"
   ]
 }
 `, rName))

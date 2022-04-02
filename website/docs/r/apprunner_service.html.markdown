@@ -40,6 +40,13 @@ resource "aws_apprunner_service" "example" {
     }
   }
 
+  network_configuration {
+    egress_configuration {
+      egress_type       = "VPC"
+      vpc_connector_arn = aws_apprunner_vpc_connector.connector.arn
+    }
+  }
+
   tags = {
     Name = "example-apprunner-service"
   }
@@ -82,6 +89,7 @@ The following arguments are optional:
 * `health_check_configuration` - (Forces new resource) Settings of the health check that AWS App Runner performs to monitor the health of your service. See [Health Check Configuration](#health-check-configuration) below for more details.
 * `instance_configuration` - The runtime configuration of instances (scaling units) of the App Runner service. See [Instance Configuration](#instance-configuration) below for more details.
 * `tags` - Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `network_configuration` - Configuration settings related to network traffic of the web application that the App Runner service runs.
 
 ### Encryption Configuration
 
@@ -125,6 +133,14 @@ The `authentication_configuration` block supports the following arguments:
 
 * `access_role_arn` - (Optional) ARN of the IAM role that grants the App Runner service access to a source repository. Required for ECR image repositories (but not for ECR Public)
 * `connection_arn` - (Optional) ARN of the App Runner connection that enables the App Runner service to connect to a source repository. Required for GitHub code repositories.
+
+### Network Configuration
+
+The `network_configuration` block supports the following arguments:
+
+* `egress_configuration` - (Optional) Network configuration settings for outbound message traffic.
+* `egress_type` - (Optional) The type of egress configuration.Set to DEFAULT for access to resources hosted on public networks.Set to VPC to associate your service to a custom VPC specified by VpcConnectorArn.
+* `vpc_connector_arn` - The Amazon Resource Name (ARN) of the App Runner VPC connector that you want to associate with your App Runner service. Only valid when EgressType = VPC.
 
 ### Code Repository
 

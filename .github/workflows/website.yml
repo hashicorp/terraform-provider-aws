@@ -20,8 +20,10 @@ on:
 jobs:
   markdown-link-check:
     runs-on: ubuntu-latest
+    env:
+      UV_THREADPOOL_SIZE: 128
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: gaurav-nelson/github-action-markdown-link-check@v1
         name: markdown-link-check website/docs/**/*.markdown
         with:
@@ -30,6 +32,8 @@ jobs:
           config-file: ".markdownlinkcheck.json"
           folder-path: "website/docs"
           file-extension: ".markdown"
+          base-branch: "main"
+          check-modified-files-only: "yes"
       - uses: gaurav-nelson/github-action-markdown-link-check@v1
         name: markdown-link-check website/docs/**/*.md
         with:
@@ -38,10 +42,12 @@ jobs:
           config-file: ".markdownlinkcheck.json"
           folder-path: "website/docs"
           file-extension: ".md"
+          base-branch: "main"
+          check-modified-files-only: "yes"
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: avto-dev/markdown-lint@v1
         with:
           config: ".markdownlint.yml"
@@ -49,13 +55,13 @@ jobs:
   misspell:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       # See also: https://github.com/actions/setup-go/pull/62
       - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ env.GO_VERSION }}
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -66,13 +72,13 @@ jobs:
   terrafmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       # See also: https://github.com/actions/setup-go/pull/62
       - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ env.GO_VERSION }}
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -83,13 +89,13 @@ jobs:
   validate-terraform:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       # See also: https://github.com/actions/setup-go/pull/62
       - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ env.GO_VERSION }}
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -99,7 +105,7 @@ jobs:
 
       - run: cd tools && go install github.com/terraform-linters/tflint
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         name: Cache plugin dir
         with:
           path: ~/.tflint.d/plugins
@@ -128,6 +134,14 @@ jobs:
               "--disable-rule=aws_lb_target_group_invalid_protocol"
               "--disable-rule=aws_transfer_ssh_key_invalid_body"
               "--disable-rule=aws_worklink_website_certificate_authority_association_invalid_certificate"
+              "--disable-rule=aws_iot_certificate_invalid_csr"
+              "--disable-rule=aws_networkfirewall_rule_group_invalid_rules"
+              "--disable-rule=aws_appsync_function_invalid_request_mapping_template"
+              "--disable-rule=aws_appsync_function_invalid_response_mapping_template"
+              "--disable-rule=aws_appsync_resolver_invalid_request_template"
+              "--disable-rule=aws_appsync_resolver_invalid_response_template"
+              "--disable-rule=aws_servicecatalog_portfolio_share_invalid_type"
+              "--disable-rule=aws_s3_object_copy_invalid_source"              
           )
           while read -r filename; do
             rules=("${shared_rules[@]}")
@@ -152,7 +166,7 @@ jobs:
                 "--enable-rule=terraform_deprecated_index"
                 )
             fi
-            
+
             # We need to capture the output and error code here. We don't want to exit on the first error
             set +e
             ./scripts/validate-terraform-file.sh "$filename" "${rules[@]}"

@@ -318,7 +318,7 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_certificateAuthorityARNs(t *tes
 				Config: testAccClusterConfigRootCA(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckACMPCACertificateAuthorityExists(acmCAResourceName, &ca),
-					acctest.CheckACMPCACertificateAuthorityActivateCA(&ca),
+					acctest.CheckACMPCACertificateAuthorityActivateRootCA(&ca),
 				),
 			},
 			{
@@ -1401,9 +1401,13 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_s3_bucket" "bucket" {
-  acl           = "private"
   bucket        = %[1]q
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
 }
 
 resource "aws_iam_role" "firehose_role" {

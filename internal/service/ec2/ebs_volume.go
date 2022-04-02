@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -267,7 +267,7 @@ func resourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
 
 	response, err := conn.DescribeVolumes(request)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidVolume.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidVolume.NotFound") {
 			d.SetId("")
 			return nil
 		}
@@ -324,11 +324,11 @@ func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteVolume(input)
 
-		if tfawserr.ErrMessageContains(err, "InvalidVolume.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidVolume.NotFound") {
 			return nil
 		}
 
-		if tfawserr.ErrMessageContains(err, "VolumeInUse", "") {
+		if tfawserr.ErrCodeEquals(err, "VolumeInUse") {
 			return resource.RetryableError(fmt.Errorf("EBS VolumeInUse - trying again while it detaches"))
 		}
 
@@ -379,7 +379,7 @@ func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 		output, err = conn.DescribeVolumes(describeInput)
 	}
 
-	if tfawserr.ErrMessageContains(err, "InvalidVolume.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidVolume.NotFound") {
 		return nil
 	}
 

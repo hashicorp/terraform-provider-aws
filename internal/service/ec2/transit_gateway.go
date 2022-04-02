@@ -4,17 +4,19 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -28,6 +30,12 @@ func ResourceTransitGateway() *schema.Resource {
 		Delete: resourceTransitGatewayDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -58,44 +66,39 @@ func ResourceTransitGateway() *schema.Resource {
 				Computed: true,
 			},
 			"auto_accept_shared_attachments": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ec2.AutoAcceptSharedAttachmentsValueDisable,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.AutoAcceptSharedAttachmentsValueDisable,
-					ec2.AutoAcceptSharedAttachmentsValueEnable,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.AutoAcceptSharedAttachmentsValueDisable,
+				ValidateFunc: validation.StringInSlice(ec2.AutoAcceptSharedAttachmentsValue_Values(), false),
 			},
 			"default_route_table_association": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ec2.DefaultRouteTableAssociationValueEnable,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.DefaultRouteTableAssociationValueDisable,
-					ec2.DefaultRouteTableAssociationValueEnable,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.DefaultRouteTableAssociationValueEnable,
+				ValidateFunc: validation.StringInSlice(ec2.DefaultRouteTableAssociationValue_Values(), false),
 			},
 			"default_route_table_propagation": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ec2.DefaultRouteTablePropagationValueEnable,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.DefaultRouteTablePropagationValueDisable,
-					ec2.DefaultRouteTablePropagationValueEnable,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.DefaultRouteTablePropagationValueEnable,
+				ValidateFunc: validation.StringInSlice(ec2.DefaultRouteTablePropagationValue_Values(), false),
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"dns_support": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ec2.DnsSupportValueEnable,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.DnsSupportValueDisable,
-					ec2.DnsSupportValueEnable,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.DnsSupportValueEnable,
+				ValidateFunc: validation.StringInSlice(ec2.DnsSupportValue_Values(), false),
+			},
+			"multicast_support": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      ec2.MulticastSupportValueDisable,
+				ValidateFunc: validation.StringInSlice(ec2.MulticastSupportValue_Values(), false),
 			},
 			"owner_id": {
 				Type:     schema.TypeString,
@@ -107,14 +110,26 @@ func ResourceTransitGateway() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-			"vpn_ecmp_support": {
-				Type:     schema.TypeString,
+			"transit_gateway_cidr_blocks": {
+				Type:     schema.TypeSet,
 				Optional: true,
-				Default:  ec2.VpnEcmpSupportValueEnable,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.VpnEcmpSupportValueDisable,
-					ec2.VpnEcmpSupportValueEnable,
-				}, false),
+				MaxItems: 2,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: verify.IsIPv4CIDRBlockOrIPv6CIDRBlock(
+						validation.All(
+							validation.IsCIDRNetwork(16, 24),
+							validation.StringDoesNotMatch(regexp.MustCompile(`^169\.254\.`), "must not be from range 169.254.0.0/16"),
+						),
+						validation.IsCIDRNetwork(40, 64),
+					),
+				},
+			},
+			"vpn_ecmp_support": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.VpnEcmpSupportValueEnable,
+				ValidateFunc: validation.StringInSlice(ec2.VpnEcmpSupportValue_Values(), false),
 			},
 		},
 	}
@@ -131,6 +146,7 @@ func resourceTransitGatewayCreate(d *schema.ResourceData, meta interface{}) erro
 			DefaultRouteTableAssociation: aws.String(d.Get("default_route_table_association").(string)),
 			DefaultRouteTablePropagation: aws.String(d.Get("default_route_table_propagation").(string)),
 			DnsSupport:                   aws.String(d.Get("dns_support").(string)),
+			MulticastSupport:             aws.String(d.Get("multicast_support").(string)),
 			VpnEcmpSupport:               aws.String(d.Get("vpn_ecmp_support").(string)),
 		},
 		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGateway),
@@ -144,16 +160,21 @@ func resourceTransitGatewayCreate(d *schema.ResourceData, meta interface{}) erro
 		input.Description = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("transit_gateway_cidr_blocks"); ok && v.(*schema.Set).Len() > 0 {
+		input.Options.TransitGatewayCidrBlocks = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway: %s", input)
 	output, err := conn.CreateTransitGateway(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Transit Gateway: %s", err)
+		return fmt.Errorf("error creating EC2 Transit Gateway: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.TransitGateway.TransitGatewayId))
 
-	if err := waitForTransitGatewayCreation(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for EC2 Transit Gateway (%s) availability: %s", d.Id(), err)
+	if _, err := WaitTransitGatewayCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for EC2 Transit Gateway (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceTransitGatewayRead(d, meta)
@@ -164,32 +185,16 @@ func resourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) error 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	transitGateway, err := DescribeTransitGateway(conn, d.Id())
+	transitGateway, err := FindTransitGatewayByID(conn, d.Id())
 
-	if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayID.NotFound", "") {
-		log.Printf("[WARN] EC2 Transit Gateway (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Transit Gateway Connect %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway: %s", err)
-	}
-
-	if transitGateway == nil {
-		log.Printf("[WARN] EC2 Transit Gateway (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if aws.StringValue(transitGateway.State) == ec2.TransitGatewayStateDeleting || aws.StringValue(transitGateway.State) == ec2.TransitGatewayStateDeleted {
-		log.Printf("[WARN] EC2 Transit Gateway (%s) in deleted state (%s), removing from state", d.Id(), aws.StringValue(transitGateway.State))
-		d.SetId("")
-		return nil
-	}
-
-	if transitGateway.Options == nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway (%s): missing options", d.Id())
+		return fmt.Errorf("error reading EC2 Transit Gateway Connect (%s): %w", d.Id(), err)
 	}
 
 	d.Set("amazon_side_asn", transitGateway.Options.AmazonSideAsn)
@@ -200,8 +205,11 @@ func resourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("default_route_table_propagation", transitGateway.Options.DefaultRouteTablePropagation)
 	d.Set("description", transitGateway.Description)
 	d.Set("dns_support", transitGateway.Options.DnsSupport)
+	d.Set("multicast_support", transitGateway.Options.MulticastSupport)
 	d.Set("owner_id", transitGateway.OwnerId)
 	d.Set("propagation_default_route_table_id", transitGateway.Options.PropagationDefaultRouteTableId)
+	d.Set("transit_gateway_cidr_blocks", aws.StringValueSlice(transitGateway.Options.TransitGatewayCidrBlocks))
+	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
 
 	tags := KeyValueTags(transitGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -214,53 +222,61 @@ func resourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
-
 	return nil
 }
 
 func resourceTransitGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	modifyTransitGatewayInput := &ec2.ModifyTransitGatewayInput{}
-	transitGatewayModified := false
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &ec2.ModifyTransitGatewayInput{
+			Options:          &ec2.ModifyTransitGatewayOptions{},
+			TransitGatewayId: aws.String(d.Id()),
+		}
 
-	if d.HasChange("description") {
-		transitGatewayModified = true
-		modifyTransitGatewayInput.Description = aws.String(d.Get("description").(string))
-	}
+		if d.HasChange("auto_accept_shared_attachments") {
+			input.Options.AutoAcceptSharedAttachments = aws.String(d.Get("auto_accept_shared_attachments").(string))
+		}
 
-	options := &ec2.ModifyTransitGatewayOptions{}
+		if d.HasChange("default_route_table_association") {
+			input.Options.DefaultRouteTableAssociation = aws.String(d.Get("default_route_table_association").(string))
+		}
 
-	if d.HasChange("auto_accept_shared_attachments") {
-		transitGatewayModified = true
-		options.AutoAcceptSharedAttachments = aws.String(d.Get("auto_accept_shared_attachments").(string))
-	}
+		if d.HasChange("default_route_table_propagation") {
+			input.Options.DefaultRouteTablePropagation = aws.String(d.Get("default_route_table_propagation").(string))
+		}
 
-	if d.HasChange("default_route_table_association") {
-		transitGatewayModified = true
-		options.DefaultRouteTableAssociation = aws.String(d.Get("default_route_table_association").(string))
-	}
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
+		}
 
-	if d.HasChange("default_route_table_propagation") {
-		transitGatewayModified = true
-		options.DefaultRouteTablePropagation = aws.String(d.Get("default_route_table_propagation").(string))
-	}
+		if d.HasChange("dns_support") {
+			input.Options.DnsSupport = aws.String(d.Get("dns_support").(string))
+		}
 
-	if d.HasChange("dns_support") {
-		transitGatewayModified = true
-		options.DnsSupport = aws.String(d.Get("dns_support").(string))
-	}
+		if d.HasChange("transit_gateway_cidr_blocks") {
+			oRaw, nRaw := d.GetChange("transit_gateway_cidr_blocks")
+			o, n := oRaw.(*schema.Set), nRaw.(*schema.Set)
 
-	if d.HasChange("vpn_ecmp_support") {
-		transitGatewayModified = true
-		options.VpnEcmpSupport = aws.String(d.Get("vpn_ecmp_support").(string))
-	}
-	if transitGatewayModified {
-		modifyTransitGatewayInput.TransitGatewayId = aws.String(d.Id())
-		modifyTransitGatewayInput.Options = options
-		if _, err := conn.ModifyTransitGateway(modifyTransitGatewayInput); err != nil {
-			return fmt.Errorf("error updating EC2 Transit Gateway (%s) options: %s", d.Id(), err)
+			if add := n.Difference(o); add.Len() > 0 {
+				input.Options.AddTransitGatewayCidrBlocks = flex.ExpandStringSet(add)
+			}
+
+			if del := o.Difference(n); del.Len() > 0 {
+				input.Options.RemoveTransitGatewayCidrBlocks = flex.ExpandStringSet(del)
+			}
+		}
+
+		if d.HasChange("vpn_ecmp_support") {
+			input.Options.VpnEcmpSupport = aws.String(d.Get("vpn_ecmp_support").(string))
+		}
+
+		if _, err := conn.ModifyTransitGateway(input); err != nil {
+			return fmt.Errorf("error updating EC2 Transit Gateway (%s): %w", d.Id(), err)
+		}
+
+		if _, err := WaitTransitGatewayUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for EC2 Transit Gateway (%s) update: %w", d.Id(), err)
 		}
 	}
 
@@ -268,7 +284,7 @@ func resourceTransitGatewayUpdate(d *schema.ResourceData, meta interface{}) erro
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Transit Gateway (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating EC2 Transit Gateway (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -278,63 +294,26 @@ func resourceTransitGatewayUpdate(d *schema.ResourceData, meta interface{}) erro
 func resourceTransitGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	input := &ec2.DeleteTransitGatewayInput{
-		TransitGatewayId: aws.String(d.Id()),
-	}
+	log.Printf("[DEBUG] Deleting EC2 Transit Gateway: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(TransitGatewayIncorrectStateTimeout, func() (interface{}, error) {
+		return conn.DeleteTransitGateway(&ec2.DeleteTransitGatewayInput{
+			TransitGatewayId: aws.String(d.Id()),
+		})
+	}, ErrCodeIncorrectState)
 
-	log.Printf("[DEBUG] Deleting EC2 Transit Gateway (%s): %s", d.Id(), input)
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteTransitGateway(input)
-
-		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Transit Gateway Attachments") {
-			return resource.RetryableError(err)
-		}
-
-		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted DirectConnect Gateway Attachments") {
-			return resource.RetryableError(err)
-		}
-
-		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted VPN Attachments") {
-			return resource.RetryableError(err)
-		}
-
-		if tfawserr.ErrMessageContains(err, "IncorrectState", "has non-deleted Transit Gateway Cross Region Peering Attachments") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteTransitGateway(input)
-	}
-
-	if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidTransitGatewayIDNotFound) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Transit Gateway: %s", err)
+		return fmt.Errorf("error deleting EC2 Transit Gateway (%s): %w", d.Id(), err)
 	}
 
-	if err := WaitForTransitGatewayDeletion(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for EC2 Transit Gateway (%s) deletion: %s", d.Id(), err)
+	if _, err := WaitTransitGatewayDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for EC2 Transit Gateway (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
-}
-func DecodeTransitGatewayRouteID(id string) (string, string, error) {
-	parts := strings.Split(id, "_")
-
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected tgw-rtb-ID_DESTINATION", id)
-	}
-
-	return parts[0], parts[1], nil
 }
 
 func DecodeTransitGatewayRouteTableAssociationID(id string) (string, string, error) {
@@ -574,11 +553,48 @@ func DescribeTransitGatewayVPCAttachment(conn *ec2.EC2, transitGatewayAttachment
 	return nil, nil
 }
 
+func DescribeTransitGatewayAttachment(conn *ec2.EC2, transitGatewayAttachmentID string) (*ec2.TransitGatewayAttachment, error) {
+	input := &ec2.DescribeTransitGatewayAttachmentsInput{
+		TransitGatewayAttachmentIds: []*string{aws.String(transitGatewayAttachmentID)},
+	}
+
+	log.Printf("[DEBUG] Reading EC2 Transit Gateway Attachment (%s): %s", transitGatewayAttachmentID, input)
+	for {
+		output, err := conn.DescribeTransitGatewayAttachments(input)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if output == nil || len(output.TransitGatewayAttachments) == 0 {
+			return nil, nil
+		}
+
+		for _, transitGatewayAttachment := range output.TransitGatewayAttachments {
+			if transitGatewayAttachment == nil {
+				continue
+			}
+
+			if aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId) == transitGatewayAttachmentID {
+				return transitGatewayAttachment, nil
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil, nil
+}
+
 func transitGatewayPeeringAttachmentRefreshFunc(conn *ec2.EC2, transitGatewayAttachmentID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		transitGatewayPeeringAttachment, err := DescribeTransitGatewayPeeringAttachment(conn, transitGatewayAttachmentID)
 
-		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
 			return nil, ec2.TransitGatewayAttachmentStateDeleted, nil
 		}
 
@@ -598,31 +614,11 @@ func transitGatewayPeeringAttachmentRefreshFunc(conn *ec2.EC2, transitGatewayAtt
 	}
 }
 
-func transitGatewayRefreshFunc(conn *ec2.EC2, transitGatewayID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		transitGateway, err := DescribeTransitGateway(conn, transitGatewayID)
-
-		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayID.NotFound", "") {
-			return nil, ec2.TransitGatewayStateDeleted, nil
-		}
-
-		if err != nil {
-			return nil, "", fmt.Errorf("error reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
-		}
-
-		if transitGateway == nil {
-			return nil, ec2.TransitGatewayStateDeleted, nil
-		}
-
-		return transitGateway, aws.StringValue(transitGateway.State), nil
-	}
-}
-
 func transitGatewayRouteTableAssociationRefreshFunc(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		transitGatewayAssociation, err := DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidRouteTableID.NotFound") {
 			return nil, ec2.TransitGatewayRouteTableStateDeleted, nil
 		}
 
@@ -658,6 +654,11 @@ func transitGatewayRouteTableAssociationUpdate(conn *ec2.EC2, transitGatewayRout
 			return fmt.Errorf("error waiting for EC2 Transit Gateway Route Table (%s) association (%s): %s", transitGatewayRouteTableID, transitGatewayAttachmentID, err)
 		}
 	} else if !associate && transitGatewayAssociation != nil {
+		// deassociation must be done only on already associated state
+		if err := waitForTransitGatewayRouteTableAssociationCreation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+			return fmt.Errorf("error waiting for EC2 Transit Gateway Route Table (%s) association before deletion (%s): %s", transitGatewayRouteTableID, transitGatewayAttachmentID, err)
+		}
+
 		input := &ec2.DisassociateTransitGatewayRouteTableInput{
 			TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),
 			TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
@@ -708,7 +709,7 @@ func transitGatewayRouteTableRefreshFunc(conn *ec2.EC2, transitGatewayRouteTable
 	return func() (interface{}, string, error) {
 		transitGatewayRouteTable, err := DescribeTransitGatewayRouteTable(conn, transitGatewayRouteTableID)
 
-		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidRouteTableID.NotFound") {
 			return nil, ec2.TransitGatewayRouteTableStateDeleted, nil
 		}
 
@@ -724,11 +725,11 @@ func transitGatewayRouteTableRefreshFunc(conn *ec2.EC2, transitGatewayRouteTable
 	}
 }
 
-func transitGatewayVPCAttachmentRefreshFunc(conn *ec2.EC2, transitGatewayAttachmentID string) resource.StateRefreshFunc {
+func transitGatewayAttachmentRefreshFunc(conn *ec2.EC2, transitGatewayAttachmentID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		transitGatewayVpcAttachment, err := DescribeTransitGatewayVPCAttachment(conn, transitGatewayAttachmentID)
+		transitGatewayAttachment, err := DescribeTransitGatewayAttachment(conn, transitGatewayAttachmentID)
 
-		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
 			return nil, ec2.TransitGatewayAttachmentStateDeleted, nil
 		}
 
@@ -736,48 +737,12 @@ func transitGatewayVPCAttachmentRefreshFunc(conn *ec2.EC2, transitGatewayAttachm
 			return nil, "", fmt.Errorf("error reading EC2 Transit Gateway VPC Attachment (%s): %s", transitGatewayAttachmentID, err)
 		}
 
-		if transitGatewayVpcAttachment == nil {
+		if transitGatewayAttachment == nil {
 			return nil, ec2.TransitGatewayAttachmentStateDeleted, nil
 		}
 
-		return transitGatewayVpcAttachment, aws.StringValue(transitGatewayVpcAttachment.State), nil
+		return transitGatewayAttachment, aws.StringValue(transitGatewayAttachment.State), nil
 	}
-}
-
-func waitForTransitGatewayCreation(conn *ec2.EC2, transitGatewayID string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.TransitGatewayStatePending},
-		Target:  []string{ec2.TransitGatewayStateAvailable},
-		Refresh: transitGatewayRefreshFunc(conn, transitGatewayID),
-		Timeout: 10 * time.Minute,
-	}
-
-	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway (%s) availability", transitGatewayID)
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func WaitForTransitGatewayDeletion(conn *ec2.EC2, transitGatewayID string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			ec2.TransitGatewayStateAvailable,
-			ec2.TransitGatewayStateDeleting,
-		},
-		Target:         []string{ec2.TransitGatewayStateDeleted},
-		Refresh:        transitGatewayRefreshFunc(conn, transitGatewayID),
-		Timeout:        10 * time.Minute,
-		NotFoundChecks: 1,
-	}
-
-	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway (%s) deletion", transitGatewayID)
-	_, err := stateConf.WaitForState()
-
-	if tfresource.NotFound(err) {
-		return nil
-	}
-
-	return err
 }
 
 func waitForTransitGatewayPeeringAttachmentAcceptance(conn *ec2.EC2, transitGatewayAttachmentID string) error {
@@ -920,7 +885,7 @@ func waitForTransitGatewayVPCAttachmentAcceptance(conn *ec2.EC2, transitGatewayA
 			ec2.TransitGatewayAttachmentStatePendingAcceptance,
 		},
 		Target:  []string{ec2.TransitGatewayAttachmentStateAvailable},
-		Refresh: transitGatewayVPCAttachmentRefreshFunc(conn, transitGatewayAttachmentID),
+		Refresh: transitGatewayAttachmentRefreshFunc(conn, transitGatewayAttachmentID),
 		Timeout: 10 * time.Minute,
 	}
 
@@ -930,36 +895,36 @@ func waitForTransitGatewayVPCAttachmentAcceptance(conn *ec2.EC2, transitGatewayA
 	return err
 }
 
-func waitForTransitGatewayVPCAttachmentCreation(conn *ec2.EC2, transitGatewayAttachmentID string) error {
+func waitForTransitGatewayAttachmentCreation(conn *ec2.EC2, transitGatewayAttachmentID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.TransitGatewayAttachmentStatePending},
 		Target: []string{
 			ec2.TransitGatewayAttachmentStatePendingAcceptance,
 			ec2.TransitGatewayAttachmentStateAvailable,
 		},
-		Refresh: transitGatewayVPCAttachmentRefreshFunc(conn, transitGatewayAttachmentID),
+		Refresh: transitGatewayAttachmentRefreshFunc(conn, transitGatewayAttachmentID),
 		Timeout: 10 * time.Minute,
 	}
 
-	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway VPC Attachment (%s) availability", transitGatewayAttachmentID)
+	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway Attachment (%s) availability", transitGatewayAttachmentID)
 	_, err := stateConf.WaitForState()
 
 	return err
 }
 
-func WaitForTransitGatewayVPCAttachmentDeletion(conn *ec2.EC2, transitGatewayAttachmentID string) error {
+func WaitForTransitGatewayAttachmentDeletion(conn *ec2.EC2, transitGatewayAttachmentID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			ec2.TransitGatewayAttachmentStateAvailable,
 			ec2.TransitGatewayAttachmentStateDeleting,
 		},
 		Target:         []string{ec2.TransitGatewayAttachmentStateDeleted},
-		Refresh:        transitGatewayVPCAttachmentRefreshFunc(conn, transitGatewayAttachmentID),
+		Refresh:        transitGatewayAttachmentRefreshFunc(conn, transitGatewayAttachmentID),
 		Timeout:        10 * time.Minute,
 		NotFoundChecks: 1,
 	}
 
-	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway VPC Attachment (%s) deletion", transitGatewayAttachmentID)
+	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway Attachment (%s) deletion", transitGatewayAttachmentID)
 	_, err := stateConf.WaitForState()
 
 	if tfresource.NotFound(err) {
@@ -969,15 +934,15 @@ func WaitForTransitGatewayVPCAttachmentDeletion(conn *ec2.EC2, transitGatewayAtt
 	return err
 }
 
-func waitForTransitGatewayVPCAttachmentUpdate(conn *ec2.EC2, transitGatewayAttachmentID string) error {
+func waitForTransitGatewayAttachmentUpdate(conn *ec2.EC2, transitGatewayAttachmentID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.TransitGatewayAttachmentStateModifying},
 		Target:  []string{ec2.TransitGatewayAttachmentStateAvailable},
-		Refresh: transitGatewayVPCAttachmentRefreshFunc(conn, transitGatewayAttachmentID),
+		Refresh: transitGatewayAttachmentRefreshFunc(conn, transitGatewayAttachmentID),
 		Timeout: 10 * time.Minute,
 	}
 
-	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway VPC Attachment (%s) availability", transitGatewayAttachmentID)
+	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway Attachment (%s) availability", transitGatewayAttachmentID)
 	_, err := stateConf.WaitForState()
 
 	return err

@@ -2,6 +2,7 @@ package elbv2
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -9,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceTargetGroup() *schema.Resource {
@@ -265,6 +267,11 @@ func dataSourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	tags, err := ListTags(conn, d.Id())
+
+	if verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] Unable to list tags for ELBv2 Target Group %s: %s", d.Id(), err)
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for LB Target Group (%s): %w", d.Id(), err)

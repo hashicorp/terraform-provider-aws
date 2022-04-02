@@ -11,7 +11,7 @@ ifneq ($(origin PKG), undefined)
 endif
 
 ifneq ($(origin TESTS), undefined)
-	TESTARGS = -run='$(TESTS)'
+	RUNARGS = -run='$(TESTS)'
 endif
 
 default: build
@@ -42,7 +42,7 @@ testacc: fmtcheck
 		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/running-and-writing-acceptance-tests.md"; \
 		exit 1; \
 	fi
-	TF_ACC=1 go test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
+	TF_ACC=1 go test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
@@ -74,7 +74,7 @@ docs-lint:
 		echo "Unexpected misspelling found in docs files."; \
 		echo "To automatically fix the misspelling, run 'make docs-lint-fix' and commit the changes."; \
 		exit 1)
-	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli docs/ || (echo; \
+	@docker run --rm -v $(PWD):/markdown 06kellyjac/markdownlint-cli docs/ || (echo; \
 		echo "Unexpected issues found in docs Markdown files."; \
 		echo "To apply any automatic fixes, run 'make docs-lint-fix' and commit the changes."; \
 		exit 1)
@@ -82,7 +82,7 @@ docs-lint:
 docs-lint-fix:
 	@echo "==> Applying automatic docs linter fixes..."
 	@misspell -w -source=text docs/
-	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix docs/
+	@docker run --rm -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix docs/
 
 docscheck:
 	@tfproviderdocs check \
@@ -155,7 +155,7 @@ website-lint:
 		echo "Unexpected mispelling found in website files."; \
 		echo "To automatically fix the misspelling, run 'make website-lint-fix' and commit the changes."; \
 		exit 1)
-	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli website/docs/ || (echo; \
+	@docker run --rm -v $(PWD):/markdown 06kellyjac/markdownlint-cli website/docs/ || (echo; \
 		echo "Unexpected issues found in website Markdown files."; \
 		echo "To apply any automatic fixes, run 'make website-lint-fix' and commit the changes."; \
 		exit 1)
@@ -168,7 +168,7 @@ website-lint:
 website-lint-fix:
 	@echo "==> Applying automatic website linter fixes..."
 	@misspell -w -source=text website/
-	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix website/docs/
+	@docker run --rm -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix website/docs/
 	@terrafmt fmt ./website --pattern '*.markdown'
 
 semgrep:

@@ -57,7 +57,7 @@ The source configuration block supports the following arguments:
 The configuration block supports the following arguments:
 
 * `bucket` - (Required) Name of the S3 bucket.
-* `key` - (Required) Key name of the bucket object that contains your unsigned code.
+* `key` - (Required) Key name of the object that contains your unsigned code.
 * `version` - (Required) Version of your source image in your version enabled S3 bucket.
 
 ### Destination

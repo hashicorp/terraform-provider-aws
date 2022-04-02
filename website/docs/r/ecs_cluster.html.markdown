@@ -10,6 +10,8 @@ description: |-
 
 Provides an ECS cluster.
 
+~> **NOTE on Clusters and Cluster Capacity Providers:** Terraform provides both a standalone [`aws_ecs_cluster_capacity_providers`](/docs/providers/aws/r/ecs_cluster_capacity_providers.html) resource, as well as allowing the capacity providers and default strategies to be managed in-line by the `aws_ecs_cluster` resource. You cannot use a Cluster with in-line capacity providers in conjunction with the Capacity Providers resource, nor use more than one Capacity Providers resource with a single Cluster, as doing so will cause a conflict and will lead to mutual overwrites.
+
 ## Example Usage
 
 ```terraform
@@ -23,7 +25,7 @@ resource "aws_ecs_cluster" "foo" {
 }
 ```
 
-## Example W/Log Configuration
+### Example with Log Configuration
 
 ```terraform
 resource "aws_kms_key" "example" {
@@ -52,13 +54,41 @@ resource "aws_ecs_cluster" "test" {
 }
 ```
 
+### Example with Capacity Providers
+
+```terraform
+resource "aws_ecs_cluster" "example" {
+  name = "example"
+}
+
+resource "aws_ecs_cluster_capacity_providers" "example" {
+  cluster_name = aws_ecs_cluster.example.name
+
+  capacity_providers = [aws_ecs_capacity_provider.example.name]
+
+  default_capacity_provider_strategy {
+    base              = 1
+    weight            = 100
+    capacity_provider = aws_ecs_capacity_provider.example.name
+  }
+}
+
+resource "aws_ecs_capacity_provider" "example" {
+  name = "example"
+
+  auto_scaling_group_provider {
+    auto_scaling_group_arn = aws_autoscaling_group.example.arn
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
-* `capacity_providers` - (Optional) List of short names of one or more capacity providers to associate with the cluster. Valid values also include `FARGATE` and `FARGATE_SPOT`.
+* `capacity_providers` - (Optional, **Deprecated** use the `aws_ecs_cluster_capacity_providers` resource instead) List of short names of one or more capacity providers to associate with the cluster. Valid values also include `FARGATE` and `FARGATE_SPOT`.
 * `configuration` - (Optional) The execute command configuration for the cluster. Detailed below.
-* `default_capacity_provider_strategy` - (Optional) Configuration block for capacity provider strategy to use by default for the cluster. Can be one or more. Detailed below.
+* `default_capacity_provider_strategy` - (Optional, **Deprecated** use the `aws_ecs_cluster_capacity_providers` resource instead) Configuration block for capacity provider strategy to use by default for the cluster. Can be one or more. Detailed below.
 * `name` - (Required) Name of the cluster (up to 255 letters, numbers, hyphens, and underscores)
 * `setting` - (Optional) Configuration block(s) with cluster settings. For example, this can be used to enable CloudWatch Container Insights for a cluster. Detailed below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

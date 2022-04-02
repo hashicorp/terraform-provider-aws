@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -109,7 +109,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		DomainOwner: aws.String(domainOwner),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] CodeArtifact Domain %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -175,7 +175,7 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = conn.DeleteDomain(input)
 
-	if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 

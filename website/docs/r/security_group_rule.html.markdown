@@ -62,7 +62,31 @@ resource "aws_vpc_endpoint" "my_endpoint" {
 }
 ```
 
-You can also find a specific Prefix List using the `aws_prefix_list` data source.
+You can also find a specific Prefix List using the [`aws_prefix_list`](/docs/providers/aws/d/prefix_list.html)
+or [`ec2_managed_prefix_list`](/docs/providers/aws/d/ec2_managed_prefix_list.html) data sources:
+
+```terraform
+data "aws_region" "current" {}
+
+data "aws_prefix_list" "s3" {
+  name = "com.amazonaws.${data.aws_region.current.name}.s3"
+}
+
+resource "aws_security_group_rule" "s3_gateway_egress" {
+  # S3 Gateway interfaces are implemented at the routing level which means we
+  # can avoid the metered billing of a VPC endpoint interface by allowing
+  # outbound traffic to the public IP ranges, which will be routed through
+  # the Gateway interface:
+  # https://docs.aws.amazon.com/AmazonS3/latest/userguide/privatelink-interface-endpoints.html
+  description       = "S3 Gateway Egress"
+  type              = "egress"
+  security_group_id = "sg-123456"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  prefix_list_ids   = [data.aws_prefix_list.s3.id]
+}
+```
 
 ## Argument Reference
 

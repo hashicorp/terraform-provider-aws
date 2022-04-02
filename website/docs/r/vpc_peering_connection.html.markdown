@@ -108,7 +108,7 @@ The following arguments are supported:
    Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `peer_vpc_id` - (Required) The ID of the VPC with which you are creating the VPC Peering Connection.
 * `vpc_id` - (Required) The ID of the requester VPC.
-* `auto_accept` - (Optional) Accept the peering (both VPCs need to be in the same AWS account).
+* `auto_accept` - (Optional) Accept the peering (both VPCs need to be in the same AWS account and region).
 * `peer_region` - (Optional) The region of the accepter VPC of the VPC Peering Connection. `auto_accept` must be `false`,
 and use the `aws_vpc_peering_connection_accepter` to manage the accepter side.
 * `accepter` (Optional) - An optional configuration block that allows for [VPC Peering Connection](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options to be set for the VPC that accepts
@@ -150,7 +150,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Notes
 
-If both VPCs are not in the same AWS account do not enable the `auto_accept` attribute.
+If both VPCs are not in the same AWS account and region do not enable the `auto_accept` attribute.
 The accepter can manage its side of the connection using the `aws_vpc_peering_connection_accepter` resource
 or accept the connection manually using the AWS Management Console, AWS CLI, through SDKs, etc.
 

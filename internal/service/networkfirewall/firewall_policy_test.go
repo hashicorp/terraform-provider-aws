@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -177,6 +177,32 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupReference(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupReferenceManaged(t *testing.T) {
+	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckFirewallPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallPolicy_statefulRuleGroupReferenceManaged(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallPolicyExists(resourceName, &firewallPolicy),
 				),
 			},
 			{
@@ -993,6 +1019,28 @@ resource "aws_networkfirewall_firewall_policy" "test" {
     stateless_default_actions          = ["aws:pass"]
     stateful_rule_group_reference {
       resource_arn = aws_networkfirewall_rule_group.test[0].arn
+    }
+  }
+}
+`, rName))
+}
+
+func testAccFirewallPolicy_statefulRuleGroupReferenceManaged(rName string) string {
+	return acctest.ConfigCompose(
+		testAccFirewallPolicyStatefulRuleGroupDependencies(rName, 1),
+		fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %[1]q
+
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:pass"]
+    stateful_rule_group_reference {
+      resource_arn = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.name}:aws-managed:stateful-rulegroup/MalwareDomainsActionOrder"
     }
   }
 }

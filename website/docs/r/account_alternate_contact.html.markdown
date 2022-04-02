@@ -39,10 +39,25 @@ The following arguments are supported:
 
 No additional attributes are exported.
 
+## Timeouts
+
+`aws_account_alternate_contact` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `5 minutes`)
+- `update` - (Default `5 minutes`)
+- `delete` - (Default `5 minutes`)
+
 ## Import
 
-The current Alternate Contact can be imported using the `alternate_contact_type`, e.g.,
+The Alternate Contact for the current account can be imported using the `alternate_contact_type`, e.g.,
 
 ```
 $ terraform import aws_account_alternate_contact.operations OPERATIONS
+```
+
+If you provide an account ID, the Alternate Contact can be imported using the `account_id` and `alternate_contact_type` separated by a forward slash (`/`) e.g.,
+
+```
+$ terraform import aws_account_alternate_contact.operations 1234567890/OPERATIONS
 ```

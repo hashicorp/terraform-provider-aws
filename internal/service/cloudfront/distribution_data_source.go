@@ -20,6 +20,11 @@ func DataSourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"aliases": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -89,6 +94,9 @@ func dataSourceDistributionRead(d *schema.ResourceData, meta interface{}) error 
 		}
 		if distributionConfig := distribution.DistributionConfig; distributionConfig != nil {
 			d.Set("enabled", distributionConfig.Enabled)
+			if aliases := distributionConfig.Aliases; aliases != nil {
+				d.Set("aliases", aliases.Items)
+			}
 		}
 	}
 	tags, err := ListTags(conn, d.Get("arn").(string))

@@ -54,5 +54,5 @@ In addition to all arguments above, the following attributes are exported:
 API Gateway VPC Link can be imported using the `id`, e.g.,
 
 ```
-$ terraform import aws_api_gateway_vpc_link.example <vpc_link_id>
+$ terraform import aws_api_gateway_vpc_link.example 12345abcde
 ```

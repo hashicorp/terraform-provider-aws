@@ -58,7 +58,7 @@ func TestAccElasticsearchDomainPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "elasticsearch_version", "2.3"),
 					func(s *terraform.State) error {
 						awsClient := acctest.Provider.Meta().(*conns.AWSClient)
-						expectedArn, err := buildESDomainArn(name, awsClient.Partition, awsClient.AccountID, awsClient.Region)
+						expectedArn, err := buildDomainARN(name, awsClient.Partition, awsClient.AccountID, awsClient.Region)
 						if err != nil {
 							return err
 						}
@@ -72,7 +72,7 @@ func TestAccElasticsearchDomainPolicy_basic(t *testing.T) {
 	})
 }
 
-func buildESDomainArn(name, partition, accId, region string) (string, error) {
+func buildDomainARN(name, partition, accId, region string) (string, error) {
 	if partition == "" {
 		return "", fmt.Errorf("Unable to construct ES Domain ARN because of missing AWS partition")
 	}

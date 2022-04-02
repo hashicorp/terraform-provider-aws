@@ -42,7 +42,7 @@ resource "aws_imagebuilder_component" "example" {
 resource "aws_imagebuilder_component" "example" {
   name     = "example"
   platform = "Linux"
-  uri      = "s3://${aws_s3_bucket_object.example.bucket}/${aws_s3_bucket_object.example.key}"
+  uri      = "s3://${aws_s3_object.example.bucket}/${aws_s3_object.example.key}"
   version  = "1.0.0"
 }
 ```

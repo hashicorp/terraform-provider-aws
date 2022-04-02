@@ -58,6 +58,13 @@ In addition to all arguments above, the following attributes are exported:
 * `origin` - Indicates how the Client VPN route was added. Will be `add-route` for routes created by this resource.
 * `type` - The type of the route.
 
+## Timeouts
+
+`aws_ec2_client_vpn_route` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `1 minute`) Used for route creation
+- `delete` - (Default `1 minute`) Used for route deletion
+
 ## Import
 
 AWS Client VPN routes can be imported using the endpoint ID, target subnet ID, and destination CIDR block. All values are separated by a `,`.

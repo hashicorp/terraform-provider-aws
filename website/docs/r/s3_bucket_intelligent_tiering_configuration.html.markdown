@@ -34,7 +34,7 @@ resource "aws_s3_bucket" "example" {
 }
 ```
 
-### Add intelligent tiering configuration with S3 bucket object filter
+### Add intelligent tiering configuration with S3 object filter
 
 ```terraform
 resource "aws_s3_bucket_intelligent_tiering_configuration" "example-filtered" {
@@ -80,7 +80,7 @@ The `filter` configuration supports the following:
 
 The `tiering` configuration supports the following:
 
-* `access_tier` - (Required) S3 Intelligent-Tiering access tier. Valid values: `ARCHIVE_CONFIGURATION`, `DEEP_ARCHIVE_CONFIGURATION`.
+* `access_tier` - (Required) S3 Intelligent-Tiering access tier. Valid values: `ARCHIVE_ACCESS`, `DEEP_ARCHIVE_ACCESS`.
 * `days` - (Required) The number of consecutive days of no access after which an object will be eligible to be transitioned to the corresponding tier.
 
 ## Attributes Reference

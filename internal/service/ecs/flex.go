@@ -3,7 +3,48 @@ package ecs
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+func expandCapacityProviderStrategy(cps *schema.Set) []*ecs.CapacityProviderStrategyItem {
+	list := cps.List()
+	results := make([]*ecs.CapacityProviderStrategyItem, 0)
+	for _, raw := range list {
+		cp := raw.(map[string]interface{})
+		ps := &ecs.CapacityProviderStrategyItem{}
+		if val, ok := cp["base"]; ok {
+			ps.Base = aws.Int64(int64(val.(int)))
+		}
+		if val, ok := cp["weight"]; ok {
+			ps.Weight = aws.Int64(int64(val.(int)))
+		}
+		if val, ok := cp["capacity_provider"]; ok {
+			ps.CapacityProvider = aws.String(val.(string))
+		}
+
+		results = append(results, ps)
+	}
+	return results
+}
+
+func flattenCapacityProviderStrategy(cps []*ecs.CapacityProviderStrategyItem) []map[string]interface{} {
+	if cps == nil {
+		return nil
+	}
+	results := make([]map[string]interface{}, 0)
+	for _, cp := range cps {
+		s := make(map[string]interface{})
+		s["capacity_provider"] = aws.StringValue(cp.CapacityProvider)
+		if cp.Weight != nil {
+			s["weight"] = aws.Int64Value(cp.Weight)
+		}
+		if cp.Base != nil {
+			s["base"] = aws.Int64Value(cp.Base)
+		}
+		results = append(results, s)
+	}
+	return results
+}
 
 // Takes the result of flatmap. Expand for an array of load balancers and
 // returns ecs.LoadBalancer compatible objects
@@ -34,7 +75,7 @@ func expandLoadBalancers(configured []interface{}) []*ecs.LoadBalancer {
 }
 
 // Flattens an array of ECS LoadBalancers into a []map[string]interface{}
-func flattenECSLoadBalancers(list []*ecs.LoadBalancer) []map[string]interface{} {
+func flattenLoadBalancers(list []*ecs.LoadBalancer) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, loadBalancer := range list {
 		l := map[string]interface{}{

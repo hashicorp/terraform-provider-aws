@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -133,7 +133,6 @@ func TestAccGameLiftAlias_fleetRouting(t *testing.T) {
 	aliasName := fmt.Sprintf("tf_acc_alias_%s", rString)
 	description := fmt.Sprintf("tf test description %s", rString)
 	fleetName := fmt.Sprintf("tf_acc_fleet_%s", rString)
-	buildName := fmt.Sprintf("tf_acc_build_%s", rString)
 
 	region := acctest.Region()
 	g, err := testAccSampleGame(region)
@@ -167,7 +166,7 @@ func TestAccGameLiftAlias_fleetRouting(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAliasAllFieldsConfig(aliasName, description,
-					fleetName, launchPath, params, buildName, bucketName, key, roleArn),
+					fleetName, launchPath, params, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "gamelift", regexp.MustCompile(`alias/alias-.+`)),
@@ -277,7 +276,7 @@ func testAccCheckAliasDestroy(s *terraform.State) error {
 			return fmt.Errorf("Gamelift Alias still exists")
 		}
 
-		if tfawserr.ErrMessageContains(err, gamelift.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
 			return nil
 		}
 
@@ -339,7 +338,7 @@ resource "aws_gamelift_alias" "test" {
 }
 
 func testAccAliasAllFieldsConfig(aliasName, description,
-	fleetName, launchPath, params, buildName, bucketName, key, roleArn string) string {
+	fleetName, launchPath, params, bucketName, key, roleArn string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_alias" "test" {
   name        = "%s"
@@ -352,5 +351,5 @@ resource "aws_gamelift_alias" "test" {
 }
 %s
 `, aliasName, description,
-		testAccFleetBasicConfig(fleetName, launchPath, params, buildName, bucketName, key, roleArn))
+		testAccFleetBasicConfig(fleetName, launchPath, params, bucketName, key, roleArn))
 }

@@ -37,3 +37,4 @@ In addition to all arguments above, the following attributes are exported:
 * `number_of_broker_nodes` - Number of broker nodes in the cluster.
 * `tags` - Map of key-value pairs assigned to the cluster.
 * `zookeeper_connect_string` - A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster. The returned values are sorted alphbetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.
+* `zookeeper_connect_string_tls` - A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster via TLS. The returned values are sorted alphabetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.

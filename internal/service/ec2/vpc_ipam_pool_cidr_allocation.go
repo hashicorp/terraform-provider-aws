@@ -7,19 +7,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceVPCIpamPoolCidrAllocation() *schema.Resource {
 	return &schema.Resource{
-		Create: ResourceVPCIpamPoolCidrAllocationCreate,
-		Read:   ResourceVPCIpamPoolCidrAllocationRead,
-		Delete: ResourceVPCIpamPoolCidrAllocationDelete,
+		Create: resourceVPCIpamPoolCidrAllocationCreate,
+		Read:   resourceVPCIpamPoolCidrAllocationRead,
+		Delete: resourceVPCIpamPoolCidrAllocationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -32,13 +33,26 @@ func ResourceVPCIpamPoolCidrAllocation() *schema.Resource {
 				ConflictsWith: []string{"netmask_length"},
 				ValidateFunc: validation.Any(
 					verify.ValidIPv4CIDRNetworkAddress,
-					validation.IsCIDRNetwork(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
+					validation.IsCIDRNetwork(0, 32),
 				),
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+			},
+			"disallowed_cidrs": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.Any(
+						verify.ValidIPv4CIDRNetworkAddress,
+						// Follow the numbers used for netmask_length
+						validation.IsCIDRNetwork(0, 32),
+					),
+				},
 			},
 			"ipam_pool_allocation_id": {
 				Type:     schema.TypeString,
@@ -53,7 +67,7 @@ func ResourceVPCIpamPoolCidrAllocation() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.IntBetween(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
+				ValidateFunc:  validation.IntBetween(0, 32),
 				ConflictsWith: []string{"cidr"},
 			},
 			"resource_id": {
@@ -76,7 +90,7 @@ const (
 	IpamPoolAllocationNotFound = "InvalidIpamPoolCidrAllocationId.NotFound"
 )
 
-func ResourceVPCIpamPoolCidrAllocationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCIpamPoolCidrAllocationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	pool_id := d.Get("ipam_pool_id").(string)
 
@@ -87,6 +101,10 @@ func ResourceVPCIpamPoolCidrAllocationCreate(d *schema.ResourceData, meta interf
 
 	if v, ok := d.GetOk("cidr"); ok {
 		input.Cidr = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("disallowed_cidrs"); ok && v.(*schema.Set).Len() > 0 {
+		input.DisallowedCidrs = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v := d.Get("netmask_length"); v != 0 {
@@ -104,10 +122,10 @@ func ResourceVPCIpamPoolCidrAllocationCreate(d *schema.ResourceData, meta interf
 	}
 	d.SetId(encodeIpamPoolCidrAllocationID(aws.StringValue(output.IpamPoolAllocation.IpamPoolAllocationId), pool_id))
 
-	return ResourceVPCIpamPoolCidrAllocationRead(d, meta)
+	return resourceVPCIpamPoolCidrAllocationRead(d, meta)
 }
 
-func ResourceVPCIpamPoolCidrAllocationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCIpamPoolCidrAllocationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	cidr_allocation, pool_id, err := FindIpamPoolCidrAllocation(conn, d.Id())
@@ -140,7 +158,7 @@ func ResourceVPCIpamPoolCidrAllocationRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func ResourceVPCIpamPoolCidrAllocationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCIpamPoolCidrAllocationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.ReleaseIpamPoolAllocationInput{

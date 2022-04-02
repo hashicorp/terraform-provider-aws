@@ -8,11 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEC2CapacityReservation_basic(t *testing.T) {
@@ -55,273 +57,6 @@ func TestAccEC2CapacityReservation_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2CapacityReservation_ebsOptimized(t *testing.T) {
-	var cr ec2.CapacityReservation
-	resourceName := "aws_ec2_capacity_reservation.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEc2CapacityReservationConfig_ebsOptimized(true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "true"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccEC2CapacityReservation_endDate(t *testing.T) {
-	var cr ec2.CapacityReservation
-	endDate1 := time.Now().UTC().Add(1 * time.Hour).Format(time.RFC3339)
-	endDate2 := time.Now().UTC().Add(2 * time.Hour).Format(time.RFC3339)
-	resourceName := "aws_ec2_capacity_reservation.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEc2CapacityReservationConfig_endDate(endDate1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "end_date", endDate1),
-					resource.TestCheckResourceAttr(resourceName, "end_date_type", "limited"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccEc2CapacityReservationConfig_endDate(endDate2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "end_date", endDate2),
-					resource.TestCheckResourceAttr(resourceName, "end_date_type", "limited"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccEC2CapacityReservation_endDateType(t *testing.T) {
-	var cr ec2.CapacityReservation
-	endDate := time.Now().UTC().Add(12 * time.Hour).Format(time.RFC3339)
-	resourceName := "aws_ec2_capacity_reservation.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEc2CapacityReservationConfig_endDateType("unlimited"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "end_date_type", "unlimited"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccEc2CapacityReservationConfig_endDate(endDate),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "end_date", endDate),
-					resource.TestCheckResourceAttr(resourceName, "end_date_type", "limited"),
-				),
-			},
-			{
-				Config: testAccEc2CapacityReservationConfig_endDateType("unlimited"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "end_date_type", "unlimited"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccEC2CapacityReservation_ephemeralStorage(t *testing.T) {
-	var cr ec2.CapacityReservation
-	resourceName := "aws_ec2_capacity_reservation.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEc2CapacityReservationConfig_ephemeralStorage(true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage", "true"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccEC2CapacityReservation_instanceCount(t *testing.T) {
-	var cr ec2.CapacityReservation
-	resourceName := "aws_ec2_capacity_reservation.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEc2CapacityReservationConfig_instanceCount(1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "instance_count", "1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccEc2CapacityReservationConfig_instanceCount(2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "instance_count", "2"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccEC2CapacityReservation_instanceMatchCriteria(t *testing.T) {
-	var cr ec2.CapacityReservation
-	resourceName := "aws_ec2_capacity_reservation.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEc2CapacityReservationConfig_instanceMatchCriteria("targeted"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "instance_match_criteria", "targeted"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccEC2CapacityReservation_instanceType(t *testing.T) {
-	var cr ec2.CapacityReservation
-	resourceName := "aws_ec2_capacity_reservation.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEc2CapacityReservationConfig_instanceType("t2.micro"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccEc2CapacityReservationConfig_instanceType("t2.small"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.small"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccEC2CapacityReservation_tags(t *testing.T) {
-	var cr ec2.CapacityReservation
-	resourceName := "aws_ec2_capacity_reservation.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEc2CapacityReservationConfig_tags_single("key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccEc2CapacityReservationConfig_tags_multiple("key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccEc2CapacityReservationConfig_tags_single("key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccEC2CapacityReservation_disappears(t *testing.T) {
 	var cr ec2.CapacityReservation
 	resourceName := "aws_ec2_capacity_reservation.test"
@@ -344,9 +79,237 @@ func TestAccEC2CapacityReservation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2CapacityReservation_tenancy(t *testing.T) {
-	// Error creating EC2 Capacity Reservation: Unsupported: The requested configuration is currently not supported. Please check the documentation for supported configurations.
-	acctest.Skip(t, "EC2 Capacity Reservations do not currently support dedicated tenancy.")
+func TestAccEC2CapacityReservation_ebsOptimized(t *testing.T) {
+	var cr ec2.CapacityReservation
+	resourceName := "aws_ec2_capacity_reservation.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2CapacityReservationConfig_ebsOptimized(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2CapacityReservation_endDate(t *testing.T) {
+	var cr ec2.CapacityReservation
+	endDate1 := time.Now().UTC().Add(1 * time.Hour).Format(time.RFC3339)
+	endDate2 := time.Now().UTC().Add(2 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_ec2_capacity_reservation.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2CapacityReservationConfig_endDate(rName, endDate1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					resource.TestCheckResourceAttr(resourceName, "end_date", endDate1),
+					resource.TestCheckResourceAttr(resourceName, "end_date_type", "limited"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEc2CapacityReservationConfig_endDate(rName, endDate2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					resource.TestCheckResourceAttr(resourceName, "end_date", endDate2),
+					resource.TestCheckResourceAttr(resourceName, "end_date_type", "limited"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2CapacityReservation_endDateType(t *testing.T) {
+	var cr ec2.CapacityReservation
+	endDate := time.Now().UTC().Add(12 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_ec2_capacity_reservation.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2CapacityReservationConfig_endDateType(rName, "unlimited"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					resource.TestCheckResourceAttr(resourceName, "end_date_type", "unlimited"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEc2CapacityReservationConfig_endDate(rName, endDate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					resource.TestCheckResourceAttr(resourceName, "end_date", endDate),
+					resource.TestCheckResourceAttr(resourceName, "end_date_type", "limited"),
+				),
+			},
+			{
+				Config: testAccEc2CapacityReservationConfig_endDateType(rName, "unlimited"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					resource.TestCheckResourceAttr(resourceName, "end_date_type", "unlimited"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2CapacityReservation_ephemeralStorage(t *testing.T) {
+	var cr ec2.CapacityReservation
+	resourceName := "aws_ec2_capacity_reservation.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2CapacityReservationConfig_ephemeralStorage(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2CapacityReservation_instanceCount(t *testing.T) {
+	var cr ec2.CapacityReservation
+	resourceName := "aws_ec2_capacity_reservation.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2CapacityReservationConfig_instanceCount(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					resource.TestCheckResourceAttr(resourceName, "instance_count", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEc2CapacityReservationConfig_instanceCount(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					resource.TestCheckResourceAttr(resourceName, "instance_count", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2CapacityReservation_instanceMatchCriteria(t *testing.T) {
+	var cr ec2.CapacityReservation
+	resourceName := "aws_ec2_capacity_reservation.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2CapacityReservationConfig_instanceMatchCriteria(rName, "targeted"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					resource.TestCheckResourceAttr(resourceName, "instance_match_criteria", "targeted"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2CapacityReservation_instanceType(t *testing.T) {
+	var cr ec2.CapacityReservation
+	resourceName := "aws_ec2_capacity_reservation.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2CapacityReservationConfig_instanceType(rName, "t2.micro"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEc2CapacityReservationConfig_instanceType(rName, "t2.small"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.small"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2CapacityReservation_tags(t *testing.T) {
 	var cr ec2.CapacityReservation
 	resourceName := "aws_ec2_capacity_reservation.test"
 
@@ -357,7 +320,54 @@ func TestAccEC2CapacityReservation_tenancy(t *testing.T) {
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2CapacityReservationConfig_tenancy("dedicated"),
+				Config: testAccEc2CapacityReservationConfigTags1("key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEc2CapacityReservationConfigTags2("key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccEc2CapacityReservationConfigTags1("key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2CapacityReservation_tenancy(t *testing.T) {
+	// Error creating EC2 Capacity Reservation: Unsupported: The requested configuration is currently not supported. Please check the documentation for supported configurations.
+	acctest.Skip(t, "EC2 Capacity Reservations do not currently support dedicated tenancy.")
+	var cr ec2.CapacityReservation
+	resourceName := "aws_ec2_capacity_reservation.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2CapacityReservationConfig_tenancy(rName, "dedicated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "dedicated"),
@@ -372,37 +382,27 @@ func TestAccEC2CapacityReservation_tenancy(t *testing.T) {
 	})
 }
 
-func testAccCheckEc2CapacityReservationExists(resourceName string, cr *ec2.CapacityReservation) resource.TestCheckFunc {
+func testAccCheckEc2CapacityReservationExists(n string, v *ec2.CapacityReservation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No EC2 Capacity Reservation ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		resp, err := conn.DescribeCapacityReservations(&ec2.DescribeCapacityReservationsInput{
-			CapacityReservationIds: []*string{aws.String(rs.Primary.ID)},
-		})
+
+		output, err := tfec2.FindCapacityReservationByID(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("Error retrieving EC2 Capacity Reservations: %s", err)
+			return err
 		}
 
-		if len(resp.CapacityReservations) == 0 {
-			return fmt.Errorf("EC2 Capacity Reservation (%s) not found", rs.Primary.ID)
-		}
+		*v = *output
 
-		reservation := resp.CapacityReservations[0]
-
-		if aws.StringValue(reservation.State) != ec2.CapacityReservationStateActive && aws.StringValue(reservation.State) != ec2.CapacityReservationStatePending {
-			return fmt.Errorf("EC2 Capacity Reservation (%s) found in unexpected state: %s", rs.Primary.ID, aws.StringValue(reservation.State))
-		}
-
-		*cr = *reservation
 		return nil
 	}
 }
@@ -415,19 +415,17 @@ func testAccCheckEc2CapacityReservationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to find the resource
-		resp, err := conn.DescribeCapacityReservations(&ec2.DescribeCapacityReservationsInput{
-			CapacityReservationIds: []*string{aws.String(rs.Primary.ID)},
-		})
-		if err == nil {
-			for _, r := range resp.CapacityReservations {
-				if aws.StringValue(r.State) != ec2.CapacityReservationStateCancelled && aws.StringValue(r.State) != ec2.CapacityReservationStateExpired {
-					return fmt.Errorf("Found uncancelled EC2 Capacity Reservation: %s", r)
-				}
-			}
+		_, err := tfec2.FindCapacityReservationByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		return err
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("EC2 Capacity Reservation %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -452,181 +450,128 @@ func testAccPreCheckCapacityReservation(t *testing.T) {
 	}
 }
 
-const testAccEc2CapacityReservationConfig = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccEc2CapacityReservationConfig = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   instance_count    = 1
   instance_platform = "Linux/UNIX"
   instance_type     = "t2.micro"
 }
-`
+`)
 
-func testAccEc2CapacityReservationConfig_ebsOptimized(ebsOptimized bool) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccEc2CapacityReservationConfig_ebsOptimized(rName string, ebsOptimized bool) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
-  ebs_optimized     = %t
+  ebs_optimized     = %[2]t
   instance_count    = 1
   instance_platform = "Linux/UNIX"
   instance_type     = "m4.large"
-}
-`, ebsOptimized)
-}
 
-func testAccEc2CapacityReservationConfig_endDate(endDate string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
+  tags = {
+    Name = %[1]q
   }
 }
+`, rName, ebsOptimized))
+}
 
+func testAccEc2CapacityReservationConfig_endDate(rName, endDate string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
-  end_date          = %q
+  end_date          = %[2]q
   end_date_type     = "limited"
   instance_count    = 1
   instance_platform = "Linux/UNIX"
   instance_type     = "t2.micro"
-}
-`, endDate)
-}
 
-func testAccEc2CapacityReservationConfig_endDateType(endDateType string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
+  tags = {
+    Name = %[1]q
   }
 }
+`, rName, endDate))
+}
 
+func testAccEc2CapacityReservationConfig_endDateType(rName, endDateType string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
-  end_date_type     = %q
+  end_date_type     = %[2]q
   instance_count    = 1
   instance_platform = "Linux/UNIX"
   instance_type     = "t2.micro"
-}
-`, endDateType)
-}
 
-func testAccEc2CapacityReservationConfig_ephemeralStorage(ephemeralStorage bool) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
+  tags = {
+    Name = %[1]q
   }
 }
+`, rName, endDateType))
+}
 
+func testAccEc2CapacityReservationConfig_ephemeralStorage(rName string, ephemeralStorage bool) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
-  ephemeral_storage = %t
+  ephemeral_storage = %[2]t
   instance_count    = 1
   instance_platform = "Linux/UNIX"
   instance_type     = "m3.medium"
-}
-`, ephemeralStorage)
-}
 
-func testAccEc2CapacityReservationConfig_instanceCount(instanceCount int) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
+  tags = {
+    Name = %[1]q
   }
 }
+`, rName, ephemeralStorage))
+}
 
+func testAccEc2CapacityReservationConfig_instanceCount(rName string, instanceCount int) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
-  instance_count    = %d
+  instance_count    = %[2]d
   instance_platform = "Linux/UNIX"
   instance_type     = "t2.micro"
-}
-`, instanceCount)
-}
 
-func testAccEc2CapacityReservationConfig_instanceMatchCriteria(instanceMatchCriteria string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
+  tags = {
+    Name = %[1]q
   }
 }
+`, rName, instanceCount))
+}
 
+func testAccEc2CapacityReservationConfig_instanceMatchCriteria(rName, instanceMatchCriteria string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone       = data.aws_availability_zones.available.names[0]
   instance_count          = 1
   instance_platform       = "Linux/UNIX"
-  instance_match_criteria = %q
+  instance_match_criteria = %[2]q
   instance_type           = "t2.micro"
-}
-`, instanceMatchCriteria)
-}
 
-func testAccEc2CapacityReservationConfig_instanceType(instanceType string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
+  tags = {
+    Name = %[1]q
   }
 }
+`, rName, instanceMatchCriteria))
+}
 
+func testAccEc2CapacityReservationConfig_instanceType(rName, instanceType string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   instance_count    = 1
   instance_platform = "Linux/UNIX"
-  instance_type     = %q
-}
-`, instanceType)
-}
+  instance_type     = %[2]q
 
-func testAccEc2CapacityReservationConfig_tags_single(tag1Key, tag1Value string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
+  tags = {
+    Name = %[1]q
   }
 }
+`, rName, instanceType))
+}
 
+func testAccEc2CapacityReservationConfigTags1(tag1Key, tag1Value string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   instance_count    = 1
@@ -634,23 +579,14 @@ resource "aws_ec2_capacity_reservation" "test" {
   instance_type     = "t2.micro"
 
   tags = {
-    %q = %q
+    %[1]q = %[2]q
   }
 }
-`, tag1Key, tag1Value)
+`, tag1Key, tag1Value))
 }
 
-func testAccEc2CapacityReservationConfig_tags_multiple(tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccEc2CapacityReservationConfigTags2(tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   instance_count    = 1
@@ -658,30 +594,25 @@ resource "aws_ec2_capacity_reservation" "test" {
   instance_type     = "t2.micro"
 
   tags = {
-    %q = %q
-    %q = %q
+    %[1]q = %[2]q
+    %[3]q = %[4]q
   }
 }
-`, tag1Key, tag1Value, tag2Key, tag2Value)
+`, tag1Key, tag1Value, tag2Key, tag2Value))
 }
 
-func testAccEc2CapacityReservationConfig_tenancy(tenancy string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccEc2CapacityReservationConfig_tenancy(rName, tenancy string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   instance_count    = 1
   instance_platform = "Linux/UNIX"
   instance_type     = "t2.micro"
-  tenancy           = %q
+  tenancy           = %[2]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, tenancy)
+`, rName, tenancy))
 }

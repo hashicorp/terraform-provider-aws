@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_datapipeline_pipeline
 
-Provides a Data Pipeline resource.
+Provides a DataPipeline Pipeline resource.
 
 ## Example Usage
 

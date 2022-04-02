@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_ecs_service: `enable_ecs_managed_tags`, `load_balancer`, `propagate_tags` and `service_registries` can now be updated in-place
+```

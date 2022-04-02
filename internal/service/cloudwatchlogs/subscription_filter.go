@@ -8,14 +8,15 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceSubscriptionFilter() *schema.Resource {
@@ -30,19 +31,22 @@ func ResourceSubscriptionFilter() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 512),
 			},
 			"destination_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"filter_pattern": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: false,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     false,
+				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 			"log_group_name": {
 				Type:     schema.TypeString,
@@ -50,14 +54,16 @@ func ResourceSubscriptionFilter() *schema.Resource {
 				ForceNew: true,
 			},
 			"role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"distribution": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  cloudwatchlogs.DistributionByLogStream,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      cloudwatchlogs.DistributionByLogStream,
+				ValidateFunc: validation.StringInSlice(cloudwatchlogs.Distribution_Values(), false),
 			},
 		},
 	}
@@ -131,16 +137,11 @@ func resourceSubscriptionFilterUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func getSubscriptionFilterInput(d *schema.ResourceData) cloudwatchlogs.PutSubscriptionFilterInput {
-	name := d.Get("name").(string)
-	destination_arn := d.Get("destination_arn").(string)
-	filter_pattern := d.Get("filter_pattern").(string)
-	log_group_name := d.Get("log_group_name").(string)
-
 	params := cloudwatchlogs.PutSubscriptionFilterInput{
-		FilterName:     aws.String(name),
-		DestinationArn: aws.String(destination_arn),
-		FilterPattern:  aws.String(filter_pattern),
-		LogGroupName:   aws.String(log_group_name),
+		FilterName:     aws.String(d.Get("name").(string)),
+		DestinationArn: aws.String(d.Get("destination_arn").(string)),
+		FilterPattern:  aws.String(d.Get("filter_pattern").(string)),
+		LogGroupName:   aws.String(d.Get("log_group_name").(string)),
 	}
 
 	if _, ok := d.GetOk("role_arn"); ok {
@@ -160,35 +161,24 @@ func resourceSubscriptionFilterRead(d *schema.ResourceData, meta interface{}) er
 	log_group_name := d.Get("log_group_name").(string)
 	name := d.Get("name").(string) // "name" is a required field in the schema
 
-	req := &cloudwatchlogs.DescribeSubscriptionFiltersInput{
-		LogGroupName:     aws.String(log_group_name),
-		FilterNamePrefix: aws.String(name),
+	subscriptionFilter, err := FindSubscriptionFilter(conn, log_group_name, name)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Cloudwatch Logs Subscription Filter (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	resp, err := conn.DescribeSubscriptionFilters(req)
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
-			log.Printf("[WARN] SubscriptionFilters (%q) Not Found", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error reading SubscriptionFilters for log group %s with name prefix %s: %#v", log_group_name, d.Get("name").(string), err)
+		return fmt.Errorf("error reading Cloudwatch Logs Subscription Filter (%s): %w", d.Id(), err)
 	}
 
-	for _, subscriptionFilter := range resp.SubscriptionFilters {
-		if aws.StringValue(subscriptionFilter.LogGroupName) == log_group_name {
-			d.SetId(cloudwatchLogsSubscriptionFilterId(log_group_name))
-			d.Set("destination_arn", subscriptionFilter.DestinationArn)
-			d.Set("distribution", subscriptionFilter.Distribution)
-			d.Set("filter_pattern", subscriptionFilter.FilterPattern)
-			d.Set("log_group_name", subscriptionFilter.LogGroupName)
-			d.Set("role_arn", subscriptionFilter.RoleArn)
-			return nil // OK, matching subscription filter found
-		}
-	}
+	d.Set("destination_arn", subscriptionFilter.DestinationArn)
+	d.Set("distribution", subscriptionFilter.Distribution)
+	d.Set("filter_pattern", subscriptionFilter.FilterPattern)
+	d.Set("log_group_name", subscriptionFilter.LogGroupName)
+	d.Set("role_arn", subscriptionFilter.RoleArn)
 
-	log.Printf("[DEBUG] Subscription Filter%q Not Found", name)
-	d.SetId("")
 	return nil
 }
 
@@ -207,8 +197,7 @@ func resourceSubscriptionFilterDelete(d *schema.ResourceData, meta interface{}) 
 		if tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeResourceNotFoundException, "The specified log group does not exist") {
 			return nil
 		}
-		return fmt.Errorf(
-			"Error deleting Subscription Filter from log group: %s with name filter name %s: %+v", log_group_name, name, err)
+		return fmt.Errorf("error deleting Subscription Filter from log group: %s with name filter name %s: %w", log_group_name, name, err)
 	}
 
 	return nil

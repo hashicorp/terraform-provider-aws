@@ -7,15 +7,18 @@ on:
       - 'release/**'
   pull_request_target:
 
+env:
+  IN_MAINTAINER_LIST: ${{ contains(secrets.MAINTAINER_LIST, github.actor) }}
+
 jobs:
   changes:
-    if: github.event_name == 'pull_request_target' && !contains(fromJSON('["anGie44", "bflad", "breathingdust", "dependabot[bot]", "DrFaust92", "ewbankkit", "gdavison", "justinretzolk", "maryelizbeth", "YakDriver", "zhelding"]'), github.actor)
     name: Filter Changes
     runs-on: ubuntu-latest
     outputs:
       changed: ${{ steps.filter.outputs.changed }}
     steps:
       - uses: dorny/paths-filter@v2
+        if: github.event_name == 'pull_request_target' && env.IN_MAINTAINER_LIST == 'false'
         id: filter
         with:
           filters: |
@@ -31,7 +34,7 @@ jobs:
     steps:
       - name: Find Existing PR Comment
         id: prc
-        uses: peter-evans/find-comment@v1
+        uses: peter-evans/find-comment@v2
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: "github-actions[bot]"
@@ -39,7 +42,7 @@ jobs:
       - run: echo ${{ steps.prc.outputs.comment-id }}
       - name: PR Comment
         if: ${{ steps.prc.outputs.comment-id == '' }}
-        uses: peter-evans/create-or-update-comment@v1
+        uses: peter-evans/create-or-update-comment@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -60,7 +63,7 @@ jobs:
     name: go mod
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       # See also: https://github.com/actions/setup-go/pull/62
       - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
       - uses: actions/setup-go@v2

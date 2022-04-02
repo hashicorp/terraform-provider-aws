@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -35,6 +35,10 @@ func ResourceFleet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"context": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"excess_capacity_termination_policy": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -340,24 +344,28 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 		OnDemandOptions:                  expandEc2OnDemandOptionsRequest(d.Get("on_demand_options").([]interface{})),
 		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),
 		SpotOptions:                      expandEc2SpotOptionsRequest(d.Get("spot_options").([]interface{})),
+		TagSpecifications:                ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeFleet),
 		TargetCapacitySpecification:      expandEc2TargetCapacitySpecificationRequest(d.Get("target_capacity_specification").([]interface{})),
 		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
-		TagSpecifications:                ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeFleet),
 		Type:                             aws.String(d.Get("type").(string)),
 	}
 
 	if d.Get("type").(string) != ec2.FleetTypeMaintain {
 		if input.SpotOptions.MaintenanceStrategies != nil {
 			log.Printf("[WARN] EC2 Fleet (%s) has an invalid configuration and can not be created. Capacity Rebalance maintenance strategies can only be specified for fleets of type maintain.", input)
-			d.SetId("")
 			return nil
 		}
 	}
 
+	if v, ok := d.GetOk("context"); ok {
+		input.Context = aws.String(v.(string))
+	}
+
 	log.Printf("[DEBUG] Creating EC2 Fleet: %s", input)
 	output, err := conn.CreateFleet(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Fleet: %s", err)
+		return fmt.Errorf("error creating EC2 Fleet: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.FleetId))
@@ -402,7 +410,7 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading EC2 Fleet (%s): %s", d.Id(), input)
 	output, err := conn.DescribeFleets(input)
 
-	if tfawserr.ErrMessageContains(err, "InvalidFleetId.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidFleetId.NotFound") {
 		log.Printf("[WARN] EC2 Fleet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -452,6 +460,7 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	d.Set("context", fleet.Context)
 	d.Set("excess_capacity_termination_policy", fleet.ExcessCapacityTerminationPolicy)
 
 	if err := d.Set("launch_template_config", flattenEc2FleetLaunchTemplateConfigs(fleet.LaunchTemplateConfigs)); err != nil {
@@ -493,6 +502,7 @@ func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.ModifyFleetInput{
+		Context:                         aws.String(d.Get("context").(string)),
 		ExcessCapacityTerminationPolicy: aws.String(d.Get("excess_capacity_termination_policy").(string)),
 		LaunchTemplateConfigs:           expandEc2FleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]interface{})),
 		FleetId:                         aws.String(d.Id()),
@@ -545,7 +555,7 @@ func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deleting EC2 Fleet (%s): %s", d.Id(), input)
 	_, err := conn.DeleteFleets(input)
 
-	if tfawserr.ErrMessageContains(err, "InvalidFleetId.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidFleetId.NotFound") {
 		return nil
 	}
 
@@ -590,7 +600,7 @@ func ec2FleetRefreshFunc(conn *ec2.EC2, fleetID string) resource.StateRefreshFun
 		log.Printf("[DEBUG] Reading EC2 Fleet (%s): %s", fleetID, input)
 		output, err := conn.DescribeFleets(input)
 
-		if tfawserr.ErrMessageContains(err, "InvalidFleetId.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidFleetId.NotFound") {
 			return nil, ec2.FleetStateCodeDeleted, nil
 		}
 

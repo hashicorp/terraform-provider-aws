@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -65,7 +65,7 @@ func resourceVPCEndpointServiceAllowedPrincipalRead(d *schema.ResourceData, meta
 
 	principals, err := findResourceVpcEndpointServiceAllowedPrincipals(conn, svcId)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidVpcEndpointServiceId.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidVpcEndpointServiceId.NotFound") {
 			log.Printf("[WARN]VPC Endpoint Service (%s) not found, removing VPC Endpoint Service allowed principal (%s) from state", svcId, d.Id())
 			d.SetId("")
 			return nil
@@ -101,7 +101,7 @@ func resourceVPCEndpointServiceAllowedPrincipalDelete(d *schema.ResourceData, me
 		RemoveAllowedPrincipals: aws.StringSlice([]string{arn}),
 	})
 	if err != nil {
-		if !tfawserr.ErrMessageContains(err, "InvalidVpcEndpointServiceId.NotFound", "") {
+		if !tfawserr.ErrCodeEquals(err, "InvalidVpcEndpointServiceId.NotFound") {
 			return fmt.Errorf("Error deleting VPC Endpoint Service allowed principal: %s", err.Error())
 		}
 	}

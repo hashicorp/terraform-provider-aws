@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -206,24 +206,18 @@ func ResourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	d.Set("arn", pool.IpamPoolArn)
-
-	scopeId := strings.Split(*pool.IpamScopeArn, "/")[1]
-
 	d.Set("address_family", pool.AddressFamily)
-
-	if pool.PubliclyAdvertisable != nil {
-		d.Set("publicly_advertisable", pool.PubliclyAdvertisable)
-	}
-
 	d.Set("allocation_resource_tags", KeyValueTags(ec2TagsFromIpamAllocationTags(pool.AllocationResourceTags)).Map())
+	d.Set("arn", pool.IpamPoolArn)
 	d.Set("auto_import", pool.AutoImport)
+	d.Set("aws_service", pool.AwsService)
 	d.Set("description", pool.Description)
-	d.Set("ipam_scope_id", scopeId)
+	scopeID := strings.Split(aws.StringValue(pool.IpamScopeArn), "/")[1]
+	d.Set("ipam_scope_id", scopeID)
 	d.Set("ipam_scope_type", pool.IpamScopeType)
 	d.Set("locale", pool.Locale)
 	d.Set("pool_depth", pool.PoolDepth)
-	d.Set("aws_service", pool.AwsService)
+	d.Set("publicly_advertisable", pool.PubliclyAdvertisable)
 	d.Set("source_ipam_pool_id", pool.SourceIpamPoolId)
 	d.Set("state", pool.State)
 
@@ -306,12 +300,11 @@ func ResourceVPCIpamPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 func ResourceVPCIpamPoolDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	input := &ec2.DeleteIpamPoolInput{
+	log.Printf("[DEBUG] Deleting IPAM Pool: %s", d.Id())
+	_, err := conn.DeleteIpamPool(&ec2.DeleteIpamPoolInput{
 		IpamPoolId: aws.String(d.Id()),
-	}
+	})
 
-	log.Printf("[DEBUG] Deleting IPAM Pool: %s", input)
-	_, err := conn.DeleteIpamPool(input)
 	if err != nil {
 		return fmt.Errorf("error deleting IPAM Pool: (%s): %w", d.Id(), err)
 	}

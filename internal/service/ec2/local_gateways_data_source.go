@@ -14,16 +14,13 @@ func DataSourceLocalGateways() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceLocalGatewaysRead,
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
-
-			"tags": tftags.TagsSchemaComputed(),
-
+			"filter": DataSourceFiltersSchema(),
 			"ids": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -31,59 +28,34 @@ func DataSourceLocalGateways() *schema.Resource {
 func dataSourceLocalGatewaysRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	req := &ec2.DescribeLocalGatewaysInput{}
+	input := &ec2.DescribeLocalGatewaysInput{}
 
-	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		req.Filters = append(req.Filters, BuildTagFilterList(
-			Tags(tftags.New(tags.(map[string]interface{}))),
-		)...)
+	input.Filters = append(input.Filters, BuildTagFilterList(
+		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+	)...)
+
+	input.Filters = append(input.Filters, BuildFiltersDataSource(
+		d.Get("filter").(*schema.Set),
+	)...)
+
+	if len(input.Filters) == 0 {
+		input.Filters = nil
 	}
 
-	if filters, filtersOk := d.GetOk("filter"); filtersOk {
-		req.Filters = append(req.Filters, BuildCustomFilterList(
-			filters.(*schema.Set),
-		)...)
-	}
-	if len(req.Filters) == 0 {
-		// Don't send an empty filters list; the EC2 API won't accept it.
-		req.Filters = nil
-	}
-
-	var localGateways []*ec2.LocalGateway
-
-	err := conn.DescribeLocalGatewaysPages(req, func(page *ec2.DescribeLocalGatewaysOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		localGateways = append(localGateways, page.LocalGateways...)
-
-		return !lastPage
-	})
+	output, err := FindLocalGateways(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error describing EC2 Local Gateways: %w", err)
+		return fmt.Errorf("error reading EC2 Local Gateways: %w", err)
 	}
 
-	if len(localGateways) == 0 {
-		return fmt.Errorf("no matching EC2 Local Gateways found")
-	}
+	var gatewayIDs []string
 
-	var ids []string
-
-	for _, localGateway := range localGateways {
-		if localGateway == nil {
-			continue
-		}
-
-		ids = append(ids, aws.StringValue(localGateway.LocalGatewayId))
+	for _, v := range output {
+		gatewayIDs = append(gatewayIDs, aws.StringValue(v.LocalGatewayId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-
-	if err := d.Set("ids", ids); err != nil {
-		return fmt.Errorf("error setting ids: %w", err)
-	}
+	d.Set("ids", gatewayIDs)
 
 	return nil
 }

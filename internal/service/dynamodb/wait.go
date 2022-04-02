@@ -11,7 +11,7 @@ import (
 const (
 	kinesisStreamingDestinationActiveTimeout   = 5 * time.Minute
 	kinesisStreamingDestinationDisabledTimeout = 5 * time.Minute
-	createTableTimeout                         = 20 * time.Minute
+	createTableTimeout                         = 30 * time.Minute
 	updateTableTimeoutTotal                    = 60 * time.Minute
 	replicaUpdateTimeout                       = 30 * time.Minute
 	updateTableTimeout                         = 20 * time.Minute

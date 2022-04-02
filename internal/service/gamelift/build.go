@@ -3,15 +3,15 @@ package gamelift
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -23,8 +23,15 @@ func ResourceBuild() *schema.Resource {
 		Read:   resourceBuildRead,
 		Update: resourceBuildUpdate,
 		Delete: resourceBuildDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -53,6 +60,11 @@ func ResourceBuild() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
+						"object_version": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -67,12 +79,7 @@ func ResourceBuild() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tags": tftags.TagsSchema(),
-
+			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
@@ -85,23 +92,25 @@ func resourceBuildCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	sl := expandGameliftStorageLocation(d.Get("storage_location").([]interface{}))
 	input := gamelift.CreateBuildInput{
 		Name:            aws.String(d.Get("name").(string)),
 		OperatingSystem: aws.String(d.Get("operating_system").(string)),
-		StorageLocation: sl,
+		StorageLocation: expandGameliftStorageLocation(d.Get("storage_location").([]interface{})),
 		Tags:            Tags(tags.IgnoreAWS()),
 	}
+
 	if v, ok := d.GetOk("version"); ok {
 		input.Version = aws.String(v.(string))
 	}
+
 	log.Printf("[INFO] Creating Gamelift Build: %s", input)
 	var out *gamelift.CreateBuildOutput
-	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		out, err = conn.CreateBuild(&input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, "Provided build is not accessible.") {
+			if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, "Provided build is not accessible.") ||
+				tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, "GameLift cannot assume the role") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -112,29 +121,13 @@ func resourceBuildCreate(d *schema.ResourceData, meta interface{}) error {
 		out, err = conn.CreateBuild(&input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating Gamelift build client: %s", err)
+		return fmt.Errorf("Error creating Gamelift build client: %w", err)
 	}
 
 	d.SetId(aws.StringValue(out.Build.BuildId))
 
-	stateConf := resource.StateChangeConf{
-		Pending: []string{gamelift.BuildStatusInitialized},
-		Target:  []string{gamelift.BuildStatusReady},
-		Timeout: 1 * time.Minute,
-		Refresh: func() (interface{}, string, error) {
-			out, err := conn.DescribeBuild(&gamelift.DescribeBuildInput{
-				BuildId: aws.String(d.Id()),
-			})
-			if err != nil {
-				return 42, "", err
-			}
-
-			return out, *out.Build.Status, nil
-		},
-	}
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return err
+	if _, err := waitBuildReady(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for GameLift Build (%s) to ready: %w", d.Id(), err)
 	}
 
 	return resourceBuildRead(d, meta)
@@ -146,29 +139,27 @@ func resourceBuildRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Reading Gamelift Build: %s", d.Id())
-	out, err := conn.DescribeBuild(&gamelift.DescribeBuildInput{
-		BuildId: aws.String(d.Id()),
-	})
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, gamelift.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] Gamelift Build (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+	build, err := FindBuildByID(conn, d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] GameLift Build (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
-	b := out.Build
 
-	d.Set("name", b.Name)
-	d.Set("operating_system", b.OperatingSystem)
-	d.Set("version", b.Version)
+	if err != nil {
+		return fmt.Errorf("error reading GameLift Build (%s): %w", d.Id(), err)
+	}
 
-	arn := aws.StringValue(b.BuildArn)
+	d.Set("name", build.Name)
+	d.Set("operating_system", build.OperatingSystem)
+	d.Set("version", build.Version)
+
+	arn := aws.StringValue(build.BuildArn)
 	d.Set("arn", arn)
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Game Lift Build (%s): %s", arn, err)
+		return fmt.Errorf("error listing tags for Game Lift Build (%s): %w", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -188,26 +179,28 @@ func resourceBuildRead(d *schema.ResourceData, meta interface{}) error {
 func resourceBuildUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GameLiftConn
 
-	log.Printf("[INFO] Updating Gamelift Build: %s", d.Id())
-	input := gamelift.UpdateBuildInput{
-		BuildId: aws.String(d.Id()),
-		Name:    aws.String(d.Get("name").(string)),
-	}
-	if v, ok := d.GetOk("version"); ok {
-		input.Version = aws.String(v.(string))
+	if d.HasChangesExcept("tags", "tags_all") {
+		log.Printf("[INFO] Updating Gamelift Build: %s", d.Id())
+		input := gamelift.UpdateBuildInput{
+			BuildId: aws.String(d.Id()),
+			Name:    aws.String(d.Get("name").(string)),
+		}
+		if v, ok := d.GetOk("version"); ok {
+			input.Version = aws.String(v.(string))
+		}
+
+		_, err := conn.UpdateBuild(&input)
+		if err != nil {
+			return fmt.Errorf("Error updating Gamelift build client: %w", err)
+		}
 	}
 
-	_, err := conn.UpdateBuild(&input)
-	if err != nil {
-		return err
-	}
-
-	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
+		arn := d.Get("arn").(string)
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Game Lift Build (%s) tags: %s", arn, err)
+			return fmt.Errorf("error updating Game Lift Build (%s) tags: %w", arn, err)
 		}
 	}
 
@@ -226,9 +219,16 @@ func resourceBuildDelete(d *schema.ResourceData, meta interface{}) error {
 
 func expandGameliftStorageLocation(cfg []interface{}) *gamelift.S3Location {
 	loc := cfg[0].(map[string]interface{})
-	return &gamelift.S3Location{
+
+	location := &gamelift.S3Location{
 		Bucket:  aws.String(loc["bucket"].(string)),
 		Key:     aws.String(loc["key"].(string)),
 		RoleArn: aws.String(loc["role_arn"].(string)),
 	}
+
+	if v, ok := loc["object_version"].(string); ok && v != "" {
+		location.ObjectVersion = aws.String(v)
+	}
+
+	return location
 }

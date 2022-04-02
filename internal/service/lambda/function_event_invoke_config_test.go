@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -16,6 +16,10 @@ import (
 )
 
 func TestAccLambdaFunctionEventInvokeConfig_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_function_event_invoke_config.test"
@@ -24,7 +28,7 @@ func TestAccLambdaFunctionEventInvokeConfig_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
+		CheckDestroy: testAccCheckFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeFunctionNameConfig(rName),
@@ -56,7 +60,7 @@ func TestAccLambdaFunctionEventInvokeConfig_Disappears_lambdaFunction(t *testing
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
+		CheckDestroy: testAccCheckFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeFunctionNameConfig(rName),
@@ -79,7 +83,7 @@ func TestAccLambdaFunctionEventInvokeConfig_Disappears_lambdaFunctionEventInvoke
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
+		CheckDestroy: testAccCheckFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeFunctionNameConfig(rName),
@@ -94,6 +98,10 @@ func TestAccLambdaFunctionEventInvokeConfig_Disappears_lambdaFunctionEventInvoke
 }
 
 func TestAccLambdaFunctionEventInvokeConfig_DestinationOnFailure_destination(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 	sqsQueueResourceName := "aws_sqs_queue.test"
@@ -103,7 +111,7 @@ func TestAccLambdaFunctionEventInvokeConfig_DestinationOnFailure_destination(t *
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
+		CheckDestroy: testAccCheckFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeDestinationOnFailureDestinationSQSQueueConfig(rName),
@@ -133,6 +141,10 @@ func TestAccLambdaFunctionEventInvokeConfig_DestinationOnFailure_destination(t *
 }
 
 func TestAccLambdaFunctionEventInvokeConfig_DestinationOnSuccess_destination(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 	sqsQueueResourceName := "aws_sqs_queue.test"
@@ -142,7 +154,7 @@ func TestAccLambdaFunctionEventInvokeConfig_DestinationOnSuccess_destination(t *
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
+		CheckDestroy: testAccCheckFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeDestinationOnSuccessDestinationSQSQueueConfig(rName),
@@ -172,6 +184,10 @@ func TestAccLambdaFunctionEventInvokeConfig_DestinationOnSuccess_destination(t *
 }
 
 func TestAccLambdaFunctionEventInvokeConfig_Destination_remove(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 	sqsQueueResourceName := "aws_sqs_queue.test"
@@ -180,7 +196,7 @@ func TestAccLambdaFunctionEventInvokeConfig_Destination_remove(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
+		CheckDestroy: testAccCheckFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeDestinationOnFailureDestinationSQSQueueConfig(rName),
@@ -208,6 +224,10 @@ func TestAccLambdaFunctionEventInvokeConfig_Destination_remove(t *testing.T) {
 }
 
 func TestAccLambdaFunctionEventInvokeConfig_Destination_swap(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 	sqsQueueResourceName := "aws_sqs_queue.test"
@@ -216,7 +236,7 @@ func TestAccLambdaFunctionEventInvokeConfig_Destination_swap(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
+		CheckDestroy: testAccCheckFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeDestinationOnFailureDestinationSQSQueueConfig(rName),
@@ -246,6 +266,10 @@ func TestAccLambdaFunctionEventInvokeConfig_Destination_swap(t *testing.T) {
 }
 
 func TestAccLambdaFunctionEventInvokeConfig_FunctionName_arn(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_function_event_invoke_config.test"
@@ -254,7 +278,7 @@ func TestAccLambdaFunctionEventInvokeConfig_FunctionName_arn(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
+		CheckDestroy: testAccCheckFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeFunctionNameARNConfig(rName),
@@ -274,6 +298,10 @@ func TestAccLambdaFunctionEventInvokeConfig_FunctionName_arn(t *testing.T) {
 }
 
 func TestAccLambdaFunctionEventInvokeConfig_QualifierFunctionName_arn(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_function_event_invoke_config.test"
@@ -282,7 +310,7 @@ func TestAccLambdaFunctionEventInvokeConfig_QualifierFunctionName_arn(t *testing
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
+		CheckDestroy: testAccCheckFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeQualifierFunctionNameARNConfig(rName),
@@ -302,6 +330,10 @@ func TestAccLambdaFunctionEventInvokeConfig_QualifierFunctionName_arn(t *testing
 }
 
 func TestAccLambdaFunctionEventInvokeConfig_maximumEventAgeInSeconds(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
@@ -309,7 +341,7 @@ func TestAccLambdaFunctionEventInvokeConfig_maximumEventAgeInSeconds(t *testing.
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
+		CheckDestroy: testAccCheckFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeMaximumEventAgeInSecondsConfig(rName, 100),
@@ -335,6 +367,10 @@ func TestAccLambdaFunctionEventInvokeConfig_maximumEventAgeInSeconds(t *testing.
 }
 
 func TestAccLambdaFunctionEventInvokeConfig_maximumRetryAttempts(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function_event_invoke_config.test"
 
@@ -342,7 +378,7 @@ func TestAccLambdaFunctionEventInvokeConfig_maximumRetryAttempts(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
+		CheckDestroy: testAccCheckFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeMaximumRetryAttemptsConfig(rName, 0),
@@ -383,7 +419,7 @@ func TestAccLambdaFunctionEventInvokeConfig_Qualifier_aliasName(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
+		CheckDestroy: testAccCheckFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeQualifierAliasNameConfig(rName),
@@ -410,7 +446,7 @@ func TestAccLambdaFunctionEventInvokeConfig_Qualifier_functionVersion(t *testing
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
+		CheckDestroy: testAccCheckFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeQualifierFunctionVersionConfig(rName),
@@ -437,7 +473,7 @@ func TestAccLambdaFunctionEventInvokeConfig_Qualifier_latest(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
+		CheckDestroy: testAccCheckFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionEventInvokeQualifierLatestConfig(rName),
@@ -455,7 +491,7 @@ func TestAccLambdaFunctionEventInvokeConfig_Qualifier_latest(t *testing.T) {
 	})
 }
 
-func testAccCheckLambdaFunctionEventInvokeConfigDestroy(s *terraform.State) error {
+func testAccCheckFunctionEventInvokeConfigDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -479,7 +515,7 @@ func testAccCheckLambdaFunctionEventInvokeConfigDestroy(s *terraform.State) erro
 
 		output, err := conn.GetFunctionEventInvokeConfig(input)
 
-		if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 			continue
 		}
 

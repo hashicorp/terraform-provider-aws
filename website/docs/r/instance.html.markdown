@@ -132,8 +132,9 @@ The following arguments are supported:
 * `subnet_id` - (Optional) VPC Subnet ID to launch in.
 * `tags` - (Optional) A map of tags to assign to the resource. Note that these tags apply to the instance and not block storage devices. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tenancy` - (Optional) Tenancy of the instance (if the instance is running in a VPC). An instance with a tenancy of dedicated runs on single-tenant hardware. The host tenancy is not supported for the import-instance command.
-* `user_data` - (Optional) User data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see `user_data_base64` instead.
-* `user_data_base64` - (Optional) Can be used instead of `user_data` to pass base64-encoded binary data directly. Use this instead of `user_data` whenever the value is not a valid UTF-8 string. For example, gzip-encoded user data must be base64-encoded and passed via this argument to avoid corruption.
+* `user_data` - (Optional) User data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see `user_data_base64` instead. Updates to this field will trigger a stop/start of the EC2 instance by default. If the `user_data_replace_on_change` is set then updates to this field will trigger a destroy and recreate.
+* `user_data_base64` - (Optional) Can be used instead of `user_data` to pass base64-encoded binary data directly. Use this instead of `user_data` whenever the value is not a valid UTF-8 string. For example, gzip-encoded user data must be base64-encoded and passed via this argument to avoid corruption. Updates to this field will trigger a stop/start of the EC2 instance by default. If the `user_data_replace_on_change` is set then updates to this field will trigger a destroy and recreate.
+* `user_data_replace_on_change` - (Optional) When used in combination with `user_data` or `user_data_base64` will trigger a destroy and recreate when set to `true`. Defaults to `false` if not set.
 * `volume_tags` - (Optional) A map of tags to assign, at instance-creation time, to root and EBS volumes.
 
 ~> **NOTE:** Do not use `volume_tags` if you plan to manage block device tags outside the `aws_instance` configuration, such as using `tags` in an [`aws_ebs_volume`](/docs/providers/aws/r/ebs_volume.html) resource attached via [`aws_volume_attachment`](/docs/providers/aws/r/volume_attachment.html). Doing so will result in resource cycling and inconsistent behavior.
@@ -192,7 +193,7 @@ The `root_block_device` block supports the following:
 * `volume_size` - (Optional) Size of the volume in gibibytes (GiB).
 * `volume_type` - (Optional) Type of volume. Valid values include `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1`, or `st1`. Defaults to `gp2`.
 
-Modifying any of the `root_block_device` settings other than `volume_size` or `tags` requires resource replacement.
+Modifying the `encrypted` or `kms_key_id` settings of the `root_block_device` requires resource replacement.
 
 Each `ebs_block_device` block supports the following:
 
@@ -238,6 +239,7 @@ The `metadata_options` block supports the following:
 * `http_endpoint` - (Optional) Whether the metadata service is available. Valid values include `enabled` or `disabled`. Defaults to `enabled`.
 * `http_put_response_hop_limit` - (Optional) Desired HTTP PUT response hop limit for instance metadata requests. The larger the number, the further instance metadata requests can travel. Valid values are integer from `1` to `64`. Defaults to `1`.
 * `http_tokens` - (Optional) Whether or not the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2 (IMDSv2)_. Valid values include `optional` or `required`. Defaults to `optional`.
+* `instance_metadata_tags` - (optional) Enables or disables access to instance tags from the instance metadata service. Valid values include `enabled` or `disabled`. Defaults to `disabled`.
 
 For more information, see the documentation on the [Instance Metadata Service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html).
 

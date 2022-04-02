@@ -12,15 +12,53 @@ Provides an AppConfig Hosted Configuration Version resource.
 
 ## Example Usage
 
+### Freeform
+
 ```terraform
 resource "aws_appconfig_hosted_configuration_version" "example" {
   application_id           = aws_appconfig_application.example.id
   configuration_profile_id = aws_appconfig_configuration_profile.example.configuration_profile_id
-  description              = "Example Hosted Configuration Version"
+  description              = "Example Freeform Hosted Configuration Version"
   content_type             = "application/json"
 
   content = jsonencode({
-    foo = "bar"
+    foo            = "bar",
+    fruit          = ["apple", "pear", "orange"],
+    isThingEnabled = true
+  })
+}
+```
+
+### Feature Flags
+
+```terraform
+resource "aws_appconfig_hosted_configuration_version" "example" {
+  application_id           = aws_appconfig_application.example.id
+  configuration_profile_id = aws_appconfig_configuration_profile.example.configuration_profile_id
+  description              = "Example Freeform Hosted Configuration Version"
+  content_type             = "application/json"
+
+  content = jsonencode({
+    flags : {
+      foo : {
+        name : "foo",
+        _deprecation : {
+          "status" : "planned"
+        }
+      }
+      bar : {
+        name : "bar",
+      }
+    }
+    values : {
+      foo : {
+        enabled : "true",
+      }
+      bar : {
+        enabled : "true",
+      }
+    }
+    version : "1"
   })
 }
 ```

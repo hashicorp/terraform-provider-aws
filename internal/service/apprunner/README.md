@@ -1,9 +1,10 @@
 # Terraform AWS Provider AppRunner Package
-<!-- markdownlint-disable MD026 -->
+
 This area is primarily for AWS provider contributors and maintainers. For information on _using_ Terraform and the AWS provider, see the links below.
 
 
 ## Handy Links
+
 * [Find out about contributing](../../../docs/contributing) to the AWS provider!
 * AWS Provider Docs: [Home](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 * AWS Provider Docs: [One of the AppRunner resources](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apprunner_auto_scaling_configuration_version)

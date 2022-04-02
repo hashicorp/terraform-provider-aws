@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -23,9 +23,9 @@ import (
 )
 
 const (
-	rdsClusterScalingConfiguration_DefaultMinCapacity = 1
-	rdsClusterScalingConfiguration_DefaultMaxCapacity = 16
-	rdsClusterTimeoutDelete                           = 2 * time.Minute
+	clusterScalingConfiguration_DefaultMinCapacity = 1
+	clusterScalingConfiguration_DefaultMaxCapacity = 16
+	clusterTimeoutDelete                           = 2 * time.Minute
 )
 
 func ResourceCluster() *schema.Resource {
@@ -157,6 +157,11 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 			},
 
+			"db_cluster_instance_class": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			"engine": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -205,12 +210,12 @@ func ResourceCluster() *schema.Resource {
 						"max_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  rdsClusterScalingConfiguration_DefaultMaxCapacity,
+							Default:  clusterScalingConfiguration_DefaultMaxCapacity,
 						},
 						"min_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  rdsClusterScalingConfiguration_DefaultMinCapacity,
+							Default:  clusterScalingConfiguration_DefaultMinCapacity,
 						},
 						"seconds_until_auto_pause": {
 							Type:         schema.TypeInt,
@@ -229,6 +234,23 @@ func ResourceCluster() *schema.Resource {
 						},
 					},
 				},
+			},
+
+			"allocated_storage": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+
+			"storage_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+
+			"iops": {
+				Type:     schema.TypeInt,
+				Optional: true,
 			},
 
 			"storage_encrypted": {
@@ -870,6 +892,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			createOpts.DBClusterParameterGroupName = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("db_cluster_instance_class"); ok {
+			createOpts.DBClusterInstanceClass = aws.String(attr.(string))
+		}
+
 		if attr, ok := d.GetOk("engine_version"); ok {
 			createOpts.EngineVersion = aws.String(attr.(string))
 		}
@@ -922,6 +948,18 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			createOpts.ReplicationSourceIdentifier = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOkExists("allocated_storage"); ok {
+			createOpts.AllocatedStorage = aws.Int64(int64(attr.(int)))
+		}
+
+		if attr, ok := d.GetOkExists("storage_type"); ok {
+			createOpts.StorageType = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOkExists("iops"); ok {
+			createOpts.Iops = aws.Int64(int64(attr.(int)))
+		}
+
 		if attr, ok := d.GetOkExists("storage_encrypted"); ok {
 			createOpts.StorageEncrypted = aws.Bool(attr.(bool))
 		}
@@ -953,8 +991,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] RDS Cluster ID: %s", d.Id())
 
-	log.Println(
-		"[INFO] Waiting for RDS Cluster to be available")
+	log.Println("[INFO] Waiting for RDS Cluster to be available")
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceClusterCreatePendingStates,
@@ -990,7 +1027,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[INFO] Waiting for RDS Cluster (%s) to be available", d.Id())
-		err = waitForRDSClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+		err = waitForClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 		if err != nil {
 			return fmt.Errorf("error waiting for RDS Cluster (%s) to be available: %s", d.Id(), err)
 		}
@@ -1011,7 +1048,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Describing RDS Cluster: %s", input)
 	resp, err := conn.DescribeDBClusters(input)
 
-	if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
 		log.Printf("[WARN] RDS Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -1076,12 +1113,13 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("endpoint", dbc.Endpoint)
+	d.Set("db_cluster_instance_class", dbc.DBClusterInstanceClass)
 	d.Set("engine_mode", dbc.EngineMode)
 	d.Set("engine", dbc.Engine)
 	d.Set("hosted_zone_id", dbc.HostedZoneId)
 	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
 
-	rdsClusterSetResourceDataEngineVersionFromCluster(d, dbc)
+	clusterSetResourceDataEngineVersionFromCluster(d, dbc)
 
 	var roles []string
 	for _, r := range dbc.AssociatedRoles {
@@ -1103,7 +1141,11 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting scaling_configuration: %s", err)
 	}
 
+	d.Set("allocated_storage", dbc.AllocatedStorage)
+	d.Set("storage_type", dbc.StorageType)
+	d.Set("iops", dbc.Iops)
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
+
 	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
 
 	var vpcg []string
@@ -1182,6 +1224,11 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		requestUpdate = true
 	}
 
+	if d.HasChange("db_cluster_instance_class") {
+		req.EngineVersion = aws.String(d.Get("db_cluster_instance_class").(string))
+		requestUpdate = true
+	}
+
 	if d.HasChange("engine_version") {
 		req.EngineVersion = aws.String(d.Get("engine_version").(string))
 		requestUpdate = true
@@ -1198,6 +1245,21 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("port") {
 		req.Port = aws.Int64(int64(d.Get("port").(int)))
+		requestUpdate = true
+	}
+
+	if d.HasChange("storage_type") {
+		req.StorageType = aws.String(d.Get("storage_type").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("allocated_storage") {
+		req.AllocatedStorage = aws.Int64(int64(d.Get("allocated_storage").(int)))
+		requestUpdate = true
+	}
+
+	if d.HasChange("iops") {
+		req.Iops = aws.Int64(int64(d.Get("iops").(int)))
 		requestUpdate = true
 	}
 
@@ -1273,7 +1335,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 					return resource.NonRetryableError(err)
 				}
 
-				if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "") {
+				if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidDBClusterStateFault) {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -1288,7 +1350,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[INFO] Waiting for RDS Cluster (%s) to be available", d.Id())
-		err = waitForRDSClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		err = waitForClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for RDS Cluster (%s) to be available: %s", d.Id(), err)
 		}
@@ -1397,7 +1459,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] RDS Cluster delete options: %s", deleteOpts)
 
-	err := resource.Retry(rdsClusterTimeoutDelete, func() *resource.RetryError {
+	err := resource.Retry(clusterTimeoutDelete, func() *resource.RetryError {
 		_, err := conn.DeleteDBCluster(&deleteOpts)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
@@ -1406,7 +1468,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "cluster is a part of a global cluster") {
 				return resource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -1435,7 +1497,7 @@ func resourceClusterStateRefreshFunc(conn *rds.RDS, dbClusterIdentifier string) 
 			DBClusterIdentifier: aws.String(dbClusterIdentifier),
 		})
 
-		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
 			return 42, "destroyed", nil
 		}
 
@@ -1506,7 +1568,7 @@ var resourceClusterUpdatePendingStates = []string{
 	"upgrading",
 }
 
-func waitForRDSClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) error {
+func waitForClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceClusterUpdatePendingStates,
 		Target:     []string{"available"},
@@ -1515,6 +1577,7 @@ func waitForRDSClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) er
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
+
 	_, err := stateConf.WaitForState()
 	return err
 }
@@ -1534,15 +1597,8 @@ func WaitForClusterDeletion(conn *rds.RDS, id string, timeout time.Duration) err
 	return err
 }
 
-func rdsClusterSetResourceDataEngineVersionFromCluster(d *schema.ResourceData, c *rds.DBCluster) {
+func clusterSetResourceDataEngineVersionFromCluster(d *schema.ResourceData, c *rds.DBCluster) {
 	oldVersion := d.Get("engine_version").(string)
 	newVersion := aws.StringValue(c.EngineVersion)
 	compareActualEngineVersion(d, oldVersion, newVersion)
-}
-
-func compareActualEngineVersion(d *schema.ResourceData, oldVersion string, newVersion string) {
-	if oldVersion != newVersion && string(append([]byte(oldVersion), []byte(".")...)) != string([]byte(newVersion)[0:len(oldVersion)+1]) {
-		d.Set("engine_version", newVersion)
-	}
-	d.Set("engine_version_actual", newVersion)
 }

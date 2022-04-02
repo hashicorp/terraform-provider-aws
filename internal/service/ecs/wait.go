@@ -1,6 +1,7 @@
 package ecs
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -21,6 +22,7 @@ const (
 	clusterAvailableTimeout = 10 * time.Minute
 	clusterDeleteTimeout    = 10 * time.Minute
 	clusterAvailableDelay   = 10 * time.Second
+	clusterReadTimeout      = 2 * time.Second
 
 	taskSetCreateTimeout = 10 * time.Minute
 	taskSetDeleteTimeout = 10 * time.Minute
@@ -122,16 +124,16 @@ func waitServiceDescribeReady(conn *ecs.ECS, id, cluster string) (*ecs.DescribeS
 	return nil, err
 }
 
-func waitClusterAvailable(conn *ecs.ECS, arn string) (*ecs.Cluster, error) { //nolint:unparam
+func waitClusterAvailable(ctx context.Context, conn *ecs.ECS, arn string) (*ecs.Cluster, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PROVISIONING"},
 		Target:  []string{"ACTIVE"},
-		Refresh: statusCluster(conn, arn),
+		Refresh: statusCluster(ctx, conn, arn),
 		Timeout: clusterAvailableTimeout,
 		Delay:   clusterAvailableDelay,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*ecs.Cluster); ok {
 		return v, err
@@ -144,7 +146,7 @@ func waitClusterDeleted(conn *ecs.ECS, arn string) (*ecs.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"ACTIVE", "DEPROVISIONING"},
 		Target:  []string{"INACTIVE"},
-		Refresh: statusCluster(conn, arn),
+		Refresh: statusCluster(context.Background(), conn, arn),
 		Timeout: clusterDeleteTimeout,
 	}
 

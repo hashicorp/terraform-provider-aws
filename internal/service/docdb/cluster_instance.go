@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -495,7 +495,7 @@ func resourceInstanceRetrieve(id string, conn *docdb.DocDB) (*docdb.DBInstance, 
 
 	resp, err := conn.DescribeDBInstances(&opts)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBInstanceNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBInstanceNotFoundFault) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("Error retrieving DB Instances: %s", err)

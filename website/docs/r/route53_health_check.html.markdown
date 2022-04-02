@@ -91,7 +91,7 @@ The following arguments are supported:
 * `ip_address` - (Optional) The IP address of the endpoint to be checked.
 * `port` - (Optional) The port of the endpoint to be checked.
 * `type` - (Required) The protocol to use when performing health checks. Valid values are `HTTP`, `HTTPS`, `HTTP_STR_MATCH`, `HTTPS_STR_MATCH`, `TCP`, `CALCULATED`, `CLOUDWATCH_METRIC` and `RECOVERY_CONTROL`.
-* `failure_threshold` - (Required) The number of consecutive health checks that an endpoint must pass or fail.
+* `failure_threshold` - (Optional) The number of consecutive health checks that an endpoint must pass or fail.
 * `request_interval` - (Required) The number of seconds between the time that Amazon Route 53 gets a response from your endpoint and the time that it sends the next health-check request.
 * `resource_path` - (Optional) The path that you want Amazon Route 53 to request when performing health checks.
 * `search_string` - (Optional) String searched in the first 5120 bytes of the response body for check to be considered healthy. Only valid with `HTTP_STR_MATCH` and `HTTPS_STR_MATCH`.

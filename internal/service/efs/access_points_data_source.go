@@ -16,7 +16,7 @@ func DataSourceAccessPoints() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"arns": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -26,7 +26,7 @@ func DataSourceAccessPoints() *schema.Resource {
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			"ids": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -37,47 +37,51 @@ func DataSourceAccessPoints() *schema.Resource {
 func dataSourceAccessPointsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
-	fileSystemId := d.Get("file_system_id").(string)
+	fileSystemID := d.Get("file_system_id").(string)
 	input := &efs.DescribeAccessPointsInput{
-		FileSystemId: aws.String(fileSystemId),
+		FileSystemId: aws.String(fileSystemID),
 	}
 
-	var accessPoints []*efs.AccessPointDescription
+	output, err := findAccessPointDescriptions(conn, input)
+
+	if err != nil {
+		return fmt.Errorf("error reading EFS Access Points: %w", err)
+	}
+
+	var accessPointIDs, arns []string
+
+	for _, v := range output {
+		accessPointIDs = append(accessPointIDs, aws.StringValue(v.AccessPointId))
+		arns = append(arns, aws.StringValue(v.AccessPointArn))
+	}
+
+	d.SetId(fileSystemID)
+	d.Set("arns", arns)
+	d.Set("ids", accessPointIDs)
+
+	return nil
+}
+
+func findAccessPointDescriptions(conn *efs.EFS, input *efs.DescribeAccessPointsInput) ([]*efs.AccessPointDescription, error) {
+	var output []*efs.AccessPointDescription
 
 	err := conn.DescribeAccessPointsPages(input, func(page *efs.DescribeAccessPointsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		accessPoints = append(accessPoints, page.AccessPoints...)
+		for _, v := range page.AccessPoints {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
 
 		return !lastPage
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading EFS Access Points for File System (%s): %w", fileSystemId, err)
+		return nil, err
 	}
 
-	if len(accessPoints) == 0 {
-		return fmt.Errorf("no matching EFS Access Points for File System (%s) found", fileSystemId)
-	}
-
-	d.SetId(fileSystemId)
-
-	var arns, ids []string
-
-	for _, accessPoint := range accessPoints {
-		arns = append(arns, aws.StringValue(accessPoint.AccessPointArn))
-		ids = append(ids, aws.StringValue(accessPoint.AccessPointId))
-	}
-
-	if err := d.Set("arns", arns); err != nil {
-		return fmt.Errorf("error setting arns: %w", err)
-	}
-
-	if err := d.Set("ids", ids); err != nil {
-		return fmt.Errorf("error setting ids: %w", err)
-	}
-
-	return nil
+	return output, nil
 }

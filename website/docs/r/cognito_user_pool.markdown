@@ -76,7 +76,7 @@ The following arguments are optional:
 * `email_configuration` - (Optional) Configuration block for configuring email. [Detailed below](#email_configuration).
 * `email_verification_message` - (Optional) String representing the email verification message. Conflicts with `verification_message_template` configuration block `email_message` argument.
 * `email_verification_subject` - (Optional) String representing the email verification subject. Conflicts with `verification_message_template` configuration block `email_subject` argument.
-* `lambda_config` - (Optional) Configuration block for the AWS Lambda triggers associated with the user pool. [Detailed below](#lambda_configuration).
+* `lambda_config` - (Optional) Configuration block for the AWS Lambda triggers associated with the user pool. [Detailed below](#lambda_config).
 * `mfa_configuration` - (Optional) Multi-Factor Authentication (MFA) configuration for the User Pool. Defaults of `OFF`. Valid values are `OFF` (MFA Tokens are not required), `ON` (MFA is required for all users to sign in; requires at least one of `sms_configuration` or `software_token_mfa_configuration` to be configured), or `OPTIONAL` (MFA Will be required only for individual users who have MFA Enabled; requires at least one of `sms_configuration` or `software_token_mfa_configuration` to be configured).
 * `password_policy` - (Optional) Configuration blocked for information about the user pool password policy. [Detailed below](#password_policy).
 * `schema` - (Optional) Configuration block for the schema attributes of a user pool. [Detailed below](#schema). Schema attributes from the [standard attribute set](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes) only need to be specified if they are different from the default configuration. Attributes can be added, but not modified or removed. Maximum of 50 attributes.
@@ -247,5 +247,5 @@ In addition to all arguments above, the following attributes are exported:
 Cognito User Pools can be imported using the `id`, e.g.,
 
 ```
-$ terraform import aws_cognito_user_pool.pool <id>
+$ terraform import aws_cognito_user_pool.pool us-west-2_abc123
 ```

@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -972,7 +972,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	cluster, err := waitClusterCreated(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EMR Cluster (%s) to be created: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for EMR Cluster (%s) to create: %w", d.Id(), err)
 	}
 
 	// For multiple master nodes, EMR automatically enables
@@ -1377,88 +1377,25 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
 
-	req := &emr.TerminateJobFlowsInput{
+	log.Printf("[DEBUG] Deleting EMR Cluster: (%s)", d.Id())
+	_, err := conn.TerminateJobFlows(&emr.TerminateJobFlowsInput{
 		JobFlowIds: []*string{
 			aws.String(d.Id()),
 		},
-	}
-
-	_, err := conn.TerminateJobFlows(req)
-	if err != nil {
-		log.Printf("[ERROR], %s", err)
-		return err
-	}
-
-	input := &emr.ListInstancesInput{
-		ClusterId: aws.String(d.Id()),
-	}
-	var resp *emr.ListInstancesOutput
-	var count int
-	err = resource.Retry(20*time.Minute, func() *resource.RetryError {
-		var err error
-		resp, err = conn.ListInstances(input)
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		count = CountRemainingInstances(resp, d.Id())
-		if count != 0 {
-			return resource.RetryableError(fmt.Errorf("EMR Cluster (%s) has (%d) Instances remaining", d.Id(), count))
-		}
-		return nil
 	})
 
-	if tfresource.TimedOut(err) {
-		resp, err = conn.ListInstances(input)
-
-		if err == nil {
-			count = CountRemainingInstances(resp, d.Id())
-		}
+	if err != nil {
+		return fmt.Errorf("error terminating EMR Cluster (%s): %w", d.Id(), err)
 	}
 
-	if count != 0 {
-		return fmt.Errorf("EMR Cluster (%s) has (%d) Instances remaining", d.Id(), count)
-	}
+	log.Println("[INFO] Waiting for EMR Cluster to be terminated")
+	_, err = waitClusterDeleted(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EMR Cluster (%s) Instances to drain: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for EMR Cluster (%s) to delete: %w", d.Id(), err)
 	}
 
 	return nil
-}
-
-func CountRemainingInstances(resp *emr.ListInstancesOutput, emrClusterId string) int {
-	if resp == nil {
-		log.Printf("[ERROR] response is nil")
-		return 0
-	}
-
-	instanceCount := len(resp.Instances)
-
-	if instanceCount == 0 {
-		log.Printf("[DEBUG] No instances found for EMR Cluster (%s)", emrClusterId)
-		return 0
-	}
-
-	// Collect instance status states, wait for all instances to be terminated
-	// before moving on
-	var terminated []string
-	for j, i := range resp.Instances {
-		instanceId := aws.StringValue(i.Ec2InstanceId)
-		if i.Status != nil {
-			if aws.StringValue(i.Status.State) == emr.InstanceStateTerminated {
-				terminated = append(terminated, instanceId)
-			}
-		} else {
-			log.Printf("[DEBUG] Cluster instance (%d : %s) has no status", j, instanceId)
-		}
-	}
-	if len(terminated) == instanceCount {
-		log.Printf("[DEBUG] All (%d) EMR Cluster (%s) Instances terminated", instanceCount, emrClusterId)
-		return 0
-	}
-	return len(resp.Instances)
 }
 
 func expandApplications(apps []interface{}) []*emr.Application {

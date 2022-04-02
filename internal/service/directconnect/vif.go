@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -33,7 +33,17 @@ func dxVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 			Mtu:                aws.Int64(int64(d.Get("mtu").(int))),
 			VirtualInterfaceId: aws.String(d.Id()),
 		}
-
+		log.Printf("[DEBUG] Modifying Direct Connect virtual interface attributes: %s", req)
+		_, err := conn.UpdateVirtualInterfaceAttributes(req)
+		if err != nil {
+			return fmt.Errorf("error modifying Direct Connect virtual interface (%s) attributes: %s", d.Id(), err)
+		}
+	}
+	if d.HasChange("sitelink_enabled") {
+		req := &directconnect.UpdateVirtualInterfaceAttributesInput{
+			EnableSiteLink:     aws.Bool(d.Get("sitelink_enabled").(bool)),
+			VirtualInterfaceId: aws.String(d.Id()),
+		}
 		log.Printf("[DEBUG] Modifying Direct Connect virtual interface attributes: %s", req)
 		_, err := conn.UpdateVirtualInterfaceAttributes(req)
 		if err != nil {

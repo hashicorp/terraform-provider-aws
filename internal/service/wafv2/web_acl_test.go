@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -526,6 +526,95 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_basic(t *testing.T) {
 						"statement.0.managed_rule_group_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.#": "2",
 						"statement.0.managed_rule_group_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.0": "US",
 						"statement.0.managed_rule_group_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.1": "NL",
+					}),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_ManagedRuleGroupStatementWithVersionVersion_10(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                      "rule-1",
+						"action.#":                  "0",
+						"override_action.#":         "1",
+						"override_action.0.count.#": "0",
+						"override_action.0.none.#":  "1",
+						"statement.#":               "1",
+						"statement.0.managed_rule_group_statement.#":                        "1",
+						"statement.0.managed_rule_group_statement.0.name":                   "AWSManagedRulesCommonRuleSet",
+						"statement.0.managed_rule_group_statement.0.vendor_name":            "AWS",
+						"statement.0.managed_rule_group_statement.0.version":                "Version_1.0",
+						"statement.0.managed_rule_group_statement.0.excluded_rule.#":        "0",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#": "0",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACL_ManagedRuleGroup_specifyVersion(t *testing.T) {
+	var v wafv2.WebACL
+	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckWebACLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_ManagedRuleGroupStatementWithVersionVersion_10(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                      "rule-1",
+						"action.#":                  "0",
+						"override_action.#":         "1",
+						"override_action.0.count.#": "0",
+						"override_action.0.none.#":  "1",
+						"statement.#":               "1",
+						"statement.0.managed_rule_group_statement.#":                        "1",
+						"statement.0.managed_rule_group_statement.0.name":                   "AWSManagedRulesCommonRuleSet",
+						"statement.0.managed_rule_group_statement.0.vendor_name":            "AWS",
+						"statement.0.managed_rule_group_statement.0.version":                "Version_1.0",
+						"statement.0.managed_rule_group_statement.0.excluded_rule.#":        "0",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#": "0",
+					}),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_ManagedRuleGroupStatement(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                      "rule-1",
+						"action.#":                  "0",
+						"override_action.#":         "1",
+						"override_action.0.count.#": "0",
+						"override_action.0.none.#":  "1",
+						"statement.#":               "1",
+						"statement.0.managed_rule_group_statement.#":                        "1",
+						"statement.0.managed_rule_group_statement.0.name":                   "AWSManagedRulesCommonRuleSet",
+						"statement.0.managed_rule_group_statement.0.vendor_name":            "AWS",
+						"statement.0.managed_rule_group_statement.0.excluded_rule.#":        "0",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#": "0",
 					}),
 				),
 			},
@@ -1542,7 +1631,7 @@ func testAccCheckWebACLDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the WebACL is already destroyed
-		if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
 			return nil
 		}
 
@@ -2351,6 +2440,54 @@ resource "aws_wafv2_web_acl" "test" {
             country_codes = ["US", "NL"]
           }
         }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name)
+}
+
+func testAccWebACLConfig_ManagedRuleGroupStatementWithVersionVersion_10(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesCommonRuleSet"
+        vendor_name = "AWS"
+        version     = "Version_1.0"
       }
     }
 

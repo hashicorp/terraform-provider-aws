@@ -53,9 +53,9 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the VPC endpoint service.
-* `availability_zones` - The Availability Zones in which the service is available.
+* `availability_zones` - A set of Availability Zones in which the service is available.
 * `arn` - The Amazon Resource Name (ARN) of the VPC endpoint service.
-* `base_endpoint_dns_names` - The DNS names for the service.
+* `base_endpoint_dns_names` - A set of DNS names for the service.
 * `manages_vpc_endpoints` - Whether or not the service manages its VPC endpoints - `true` or `false`.
 * `service_name` - The service name.
 * `service_type` - The service type, `Gateway` or `Interface`.

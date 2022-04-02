@@ -37,6 +37,10 @@ The following arguments are supported:
 
 * `volume_id` - (Required) The Volume ID of which to make a snapshot.
 * `description` - (Optional) A description of what the snapshot is.
+* `outpost_arn` - (Optional) The Amazon Resource Name (ARN) of the Outpost on which to create a local snapshot.
+* `storage_tier` - (Optional) The name of the storage tier. Valid values are `archive` and `standard`. Default value is `standard`.
+* `permanent_restore` - (Optional) Indicates whether to permanently restore an archived snapshot.
+* `temporary_restore_days` - (Optional) Specifies the number of days for which to temporarily restore an archived snapshot. Required for temporary restores only. The snapshot will be automatically re-archived after this period.
 * `tags` - (Optional) A map of tags to assign to the snapshot. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Timeouts
@@ -59,7 +63,6 @@ In addition to all arguments above, the following attributes are exported:
 * `volume_size` - The size of the drive in GiBs.
 * `kms_key_id` - The ARN for the KMS encryption key.
 * `data_encryption_key_id` - The data encryption key identifier for the snapshot.
-* `tags` - A map of tags for the snapshot.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import

@@ -62,6 +62,8 @@ In addition to all arguments above, the following attributes are exported:
 * `kms_key_id` - The ARN for the KMS encryption key.
 * `data_encryption_key_id` - The data encryption key identifier for the snapshot.
 * `state` - The snapshot state.
+* `storage_tier` - The storage tier in which the snapshot is stored.
+* `outpost_arn` - The ARN of the Outpost on which the snapshot is stored.
 * `tags` - A map of tags for the resource.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-snapshots.html

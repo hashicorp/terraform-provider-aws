@@ -1,5 +1,5 @@
-//go:build ignore
-// +build ignore
+//go:build generate
+// +build generate
 
 package main
 
@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	filename = "list_pages_gen.go"
+	defaultFilename = "list_pages_gen.go"
 )
 
 var (
@@ -31,7 +31,7 @@ var (
 
 func usage() {
 	fmt.Fprintf(os.Stderr, "Usage:\n")
-	fmt.Fprintf(os.Stderr, "\tmain.go [flags]\n\n")
+	fmt.Fprintf(os.Stderr, "\tmain.go [flags] [<generated-lister-file>]\n\n")
 	fmt.Fprintf(os.Stderr, "Flags:\n")
 	flag.PrintDefaults()
 }
@@ -48,6 +48,11 @@ func main() {
 	log.SetFlags(0)
 	flag.Usage = usage
 	flag.Parse()
+
+	filename := defaultFilename
+	if args := flag.Args(); len(args) > 0 {
+		filename = args[0]
+	}
 
 	wd, err := os.Getwd()
 
@@ -543,6 +548,7 @@ func init() {
 	awsServiceNames["networkfirewall"] = "NetworkFirewall"
 	awsServiceNames["networkmanager"] = "NetworkManager"
 	awsServiceNames["nimblestudio"] = "NimbleStudio"
+	awsServiceNames["opensearchservice"] = "OpenSearchService"
 	awsServiceNames["opsworks"] = "OpsWorks"
 	awsServiceNames["opsworkscm"] = "OpsWorksCM"
 	awsServiceNames["organizations"] = "Organizations"

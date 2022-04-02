@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -71,41 +72,68 @@ func dataSourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	name := d.Get("name").(string)
 
-	output, err := FindStreamByName(conn, name)
+	stream, err := FindStreamByName(conn, name)
 
 	if err != nil {
 		return fmt.Errorf("error reading Kinesis Stream (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.StreamARN))
-	d.Set("arn", output.StreamARN)
+	input := &kinesis.ListShardsInput{
+		StreamName: aws.String(name),
+	}
+	var shards []*kinesis.Shard
+
+	for {
+		output, err := conn.ListShards(input)
+
+		if err != nil {
+			return fmt.Errorf("error listing Kinesis Stream (%s) shards: %w", name, err)
+		}
+
+		if output == nil {
+			break
+		}
+
+		shards = append(shards, output.Shards...)
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input = &kinesis.ListShardsInput{
+			NextToken: output.NextToken,
+		}
+	}
+
+	d.SetId(aws.StringValue(stream.StreamARN))
+	d.Set("arn", stream.StreamARN)
 
 	var closedShards []*string
-	for _, v := range filterShards(output.Shards, false) {
+	for _, v := range filterShards(shards, false) {
 		closedShards = append(closedShards, v.ShardId)
 	}
 
 	d.Set("closed_shards", aws.StringValueSlice(closedShards))
-	d.Set("creation_timestamp", aws.TimeValue(output.StreamCreationTimestamp).Unix())
-	d.Set("name", output.StreamName)
+	d.Set("creation_timestamp", aws.TimeValue(stream.StreamCreationTimestamp).Unix())
+	d.Set("name", stream.StreamName)
 
 	var openShards []*string
-	for _, v := range filterShards(output.Shards, true) {
+	for _, v := range filterShards(shards, true) {
 		openShards = append(openShards, v.ShardId)
 	}
 	d.Set("open_shards", aws.StringValueSlice(openShards))
 
-	d.Set("retention_period", output.RetentionPeriodHours)
+	d.Set("retention_period", stream.RetentionPeriodHours)
 
 	var shardLevelMetrics []*string
-	for _, v := range output.EnhancedMonitoring {
+	for _, v := range stream.EnhancedMonitoring {
 		shardLevelMetrics = append(shardLevelMetrics, v.ShardLevelMetrics...)
 	}
 	d.Set("shard_level_metrics", aws.StringValueSlice(shardLevelMetrics))
 
-	d.Set("status", output.StreamStatus)
+	d.Set("status", stream.StreamStatus)
 
-	if details := output.StreamModeDetails; details != nil {
+	if details := stream.StreamModeDetails; details != nil {
 		if err := d.Set("stream_mode_details", []interface{}{flattenStreamModeDetails(details)}); err != nil {
 			return fmt.Errorf("error setting stream_mode_details: %w", err)
 		}
@@ -124,4 +152,19 @@ func dataSourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+// See http://docs.aws.amazon.com/kinesis/latest/dev/kinesis-using-sdk-java-resharding-merge.html
+func filterShards(shards []*kinesis.Shard, open bool) []*kinesis.Shard {
+	var output []*kinesis.Shard
+
+	for _, shard := range shards {
+		if open && shard.SequenceNumberRange.EndingSequenceNumber == nil {
+			output = append(output, shard)
+		} else if !open && shard.SequenceNumberRange.EndingSequenceNumber != nil {
+			output = append(output, shard)
+		}
+	}
+
+	return output
 }

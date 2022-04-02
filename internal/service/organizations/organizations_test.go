@@ -50,6 +50,9 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"basic":      testAccDelegatedAdministrator_basic,
 			"disappears": testAccDelegatedAdministrator_disappears,
 		},
+		"ResourceTags": {
+			"basic": testAccResourceTagsDataSource_basic,
+		},
 	}
 
 	for group, m := range testCases {

@@ -89,12 +89,25 @@ The following arguments are supported:
 * `parameter_overrides` - (Optional) Key-value map of input parameters to override from the StackSet for this Instance.
 * `region` - (Optional) Target AWS Region to create a Stack based on the StackSet. Defaults to current region.
 * `retain_stack` - (Optional) During Terraform resource destroy, remove Instance from StackSet while keeping the Stack and its associated resources. Must be enabled in Terraform state _before_ destroy operation to take effect. You cannot reassociate a retained Stack or add an existing, saved Stack to a new StackSet. Defaults to `false`.
+* `call_as` - (Optional) Specifies whether you are acting as an account administrator in the organization's management account or as a delegated administrator in a member account. Valid values: `SELF` (default), `DELEGATED_ADMIN`.
+* `operation_preferences` - (Optional) Preferences for how AWS CloudFormation performs a stack set operation.
 
 ### `deployment_targets` Argument Reference
 
 The `deployment_targets` configuration block supports the following arguments:
 
 *`organizational_unit_ids` - (Optional) The organization root ID or organizational unit (OU) IDs to which StackSets deploys.
+
+### `operation_preferences` Argument Reference
+
+The `operation_preferences` configuration block supports the following arguments:
+
+*`failure_tolerance_count` - (Optional) The number of accounts, per Region, for which this operation can fail before AWS CloudFormation stops the operation in that Region.
+*`failure_tolerance_percentage` - (Optional) The percentage of accounts, per Region, for which this stack operation can fail before AWS CloudFormation stops the operation in that Region.
+*`max_concurrent_count` - (Optional) The maximum number of accounts in which to perform this operation at one time.
+*`max_concurrent_percentage` - (Optional) The maximum percentage of accounts in which to perform this operation at one time.
+*`region_concurrency_type` - (Optional) The concurrency type of deploying StackSets operations in Regions, could be in parallel or one Region at a time.
+*`region_order` - (Optional) The order of the Regions in where you want to perform the stack operation.
 
 ## Attributes Reference
 

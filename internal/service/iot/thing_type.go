@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -141,7 +141,7 @@ func resourceThingTypeRead(d *schema.ResourceData, meta interface{}) error {
 	out, err := conn.DescribeThingType(params)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] IoT Thing Type %q not found, removing from state", d.Id())
 			d.SetId("")
 		}
@@ -235,7 +235,7 @@ func resourceThingTypeDelete(d *schema.ResourceData, meta interface{}) error {
 
 			// As the delay post-deprecation is about 5 minutes, it may have been
 			// deleted in between, thus getting a Not Found Exception.
-			if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 
@@ -246,7 +246,7 @@ func resourceThingTypeDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteThingType(deleteParams)
-		if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 	}

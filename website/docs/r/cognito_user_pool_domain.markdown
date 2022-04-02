@@ -29,7 +29,7 @@ resource "aws_cognito_user_pool" "example" {
 
 ```terraform
 resource "aws_cognito_user_pool_domain" "main" {
-  domain          = "example-domain.example.com"
+  domain          = "example-domain"
   certificate_arn = aws_acm_certificate.cert.arn
   user_pool_id    = aws_cognito_user_pool.example.id
 }
@@ -59,7 +59,7 @@ resource "aws_route53_record" "auth-cognito-A" {
 
 The following arguments are supported:
 
-* `domain` - (Required) The domain string.
+* `domain` - (Required) For custom domains, this is the fully-qualified domain name, such as auth.example.com. For Amazon Cognito prefix domains, this is the prefix alone, such as auth.
 * `user_pool_id` - (Required) The user pool ID.
 * `certificate_arn` - (Optional) The ARN of an ISSUED ACM certificate in us-east-1 for a custom domain.
 
@@ -77,5 +77,5 @@ In addition to all arguments above, the following attributes are exported:
 Cognito User Pool Domains can be imported using the `domain`, e.g.,
 
 ```
-$ terraform import aws_cognito_user_pool_domain.main <domain>
+$ terraform import aws_cognito_user_pool_domain.main auth.example.org
 ```

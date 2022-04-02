@@ -147,7 +147,7 @@ The following arguments are supported:
 
 #### `action` / `override_action` Configuration Block
 
-* `type` - (Required) Specifies how you want AWS WAF Regional to respond to requests that match the settings in a ruleE.g., `ALLOW`, `BLOCK` or `COUNT`
+* `type` - (Required) Specifies how you want AWS WAF Regional to respond to requests that match the settings in a rule. Valid values for `action` are `ALLOW`, `BLOCK` or `COUNT`. Valid values for `override_action` are `COUNT` and `NONE`.
 
 ## Attributes Reference
 

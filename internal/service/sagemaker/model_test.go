@@ -514,7 +514,7 @@ resource "aws_sagemaker_model" "test" {
 
   primary_container {
     image          = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
-    model_data_url = "https://s3.amazonaws.com/${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
+    model_data_url = "https://s3.amazonaws.com/${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
   }
 }
 
@@ -565,11 +565,15 @@ resource "aws_iam_role_policy_attachment" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_object" "test" {
   bucket  = aws_s3_bucket.test.bucket
   key     = "model.tar.gz"
   content = "some-data"

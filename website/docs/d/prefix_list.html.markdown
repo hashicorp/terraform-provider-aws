@@ -8,13 +8,15 @@ description: |-
 
 # Data Source: aws_prefix_list
 
-`aws_prefix_list` provides details about a specific prefix list (PL)
+`aws_prefix_list` provides details about a specific AWS prefix list (PL)
 in the current region.
 
 This can be used both to validate a prefix list given in a variable
 and to obtain the CIDR blocks (IP address ranges) for the associated
 AWS service. The latter may be useful e.g., for adding network ACL
 rules.
+
+The [aws_ec2_managed_prefix_list](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ec2_managed_prefix_list) datasource is normally more appropriate to use given it can return customer-managed prefix list info, as well as additional attributes.
 
 ## Example Usage
 

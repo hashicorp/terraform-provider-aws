@@ -34,6 +34,7 @@ func TestAccAPIGatewayAuthorizer_basic(t *testing.T) {
 				Config: testAccAuthorizerConfig_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(resourceName, &conf),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/.+/authorizers/.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "identity_source", "method.request.header.Authorization"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),

@@ -19,11 +19,9 @@ resource "aws_gamelift_build" "test" {
 
   storage_location {
     bucket   = aws_s3_bucket.test.bucket
-    key      = aws_s3_bucket_object.test.key
+    key      = aws_s3_object.test.key
     role_arn = aws_iam_role.test.arn
   }
-
-  depends_on = [aws_iam_role_policy.test]
 }
 ```
 
@@ -44,6 +42,7 @@ The following arguments are supported:
 * `bucket` - (Required) Name of your S3 bucket.
 * `key` - (Required) Name of the zip file containing your build files.
 * `role_arn` - (Required) ARN of the access role that allows Amazon GameLift to access your S3 bucket.
+* `object_version` - (Optional) A specific version of the file. If not set, the latest version of the file is retrieved.
 
 ## Attributes Reference
 
@@ -55,4 +54,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Gamelift Builds cannot be imported at this time.
+Gamelift Builds can be imported using the ID, e.g.,
+
+```
+$ terraform import aws_gamelift_build.example <build-id>
+```

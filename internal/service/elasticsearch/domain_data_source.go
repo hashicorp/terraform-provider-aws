@@ -42,6 +42,10 @@ func DataSourceDomain() *schema.Resource {
 					},
 				},
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"auto_tune_options": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -56,7 +60,7 @@ func DataSourceDomain() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"start_at": {
+									"cron_expression_for_recurrence": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -65,18 +69,18 @@ func DataSourceDomain() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"value": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
 												"unit": {
 													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"value": {
+													Type:     schema.TypeInt,
 													Computed: true,
 												},
 											},
 										},
 									},
-									"cron_expression_for_recurrence": {
+									"start_at": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -90,25 +94,113 @@ func DataSourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"domain_name": {
-				Type:     schema.TypeString,
-				Required: true,
+			"cluster_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cold_storage_options": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enabled": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"dedicated_master_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"dedicated_master_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"dedicated_master_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"instance_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"instance_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"warm_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"warm_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"warm_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"zone_awareness_config": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"availability_zone_count": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"zone_awareness_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
 			},
-			"arn": {
-				Type:     schema.TypeString,
+			"cognito_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"identity_pool_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"role_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"user_pool_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"created": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"deleted": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"domain_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint": {
+			"domain_name": {
 				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"kibana_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
 			},
 			"ebs_options": {
 				Type:     schema.TypeList,
@@ -134,6 +226,10 @@ func DataSourceDomain() *schema.Resource {
 					},
 				},
 			},
+			"elasticsearch_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"encryption_at_rest": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -144,6 +240,34 @@ func DataSourceDomain() *schema.Resource {
 							Computed: true,
 						},
 						"kms_key_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"kibana_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"log_publishing_options": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cloudwatch_log_group_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"log_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -162,61 +286,9 @@ func DataSourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"cluster_config": {
-				Type:     schema.TypeList,
+			"processing": {
+				Type:     schema.TypeBool,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"dedicated_master_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"dedicated_master_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"dedicated_master_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"instance_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"instance_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"zone_awareness_config": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"availability_zone_count": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"zone_awareness_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"warm_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"warm_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"warm_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
 			},
 			"snapshot_options": {
 				Type:     schema.TypeList,
@@ -230,6 +302,7 @@ func DataSourceDomain() *schema.Resource {
 					},
 				},
 			},
+			"tags": tftags.TagsSchemaComputed(),
 			"vpc_options": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -239,7 +312,6 @@ func DataSourceDomain() *schema.Resource {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							//Set:      schema.HashString,
 						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
@@ -258,69 +330,6 @@ func DataSourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"log_publishing_options": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"log_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"cloudwatch_log_group_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"elasticsearch_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cognito_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"user_pool_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"identity_pool_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"role_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-
-			"created": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"deleted": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"processing": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-
-			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -329,20 +338,10 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticsearchConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	reqDescribeDomain := &elasticsearchservice.DescribeElasticsearchDomainInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
-	}
-
-	respDescribeDomain, err := conn.DescribeElasticsearchDomain(reqDescribeDomain)
+	ds, err := FindDomainByName(conn, d.Get("domain_name").(string))
 	if err != nil {
-		return fmt.Errorf("error querying elasticsearch_domain: %w", err)
-	}
-
-	if respDescribeDomain.DomainStatus == nil {
 		return fmt.Errorf("your query returned no results")
 	}
-
-	ds := respDescribeDomain.DomainStatus
 
 	reqDescribeDomainConfig := &elasticsearchservice.DescribeElasticsearchDomainConfigInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
@@ -431,18 +430,8 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if ds.LogPublishingOptions != nil {
-		m := make([]map[string]interface{}, 0)
-		for k, val := range ds.LogPublishingOptions {
-			mm := map[string]interface{}{}
-			mm["log_type"] = k
-			if val.CloudWatchLogsLogGroupArn != nil {
-				mm["cloudwatch_log_group_arn"] = aws.StringValue(val.CloudWatchLogsLogGroupArn)
-			}
-			mm["enabled"] = aws.BoolValue(val.Enabled)
-			m = append(m, mm)
-		}
-		d.Set("log_publishing_options", m)
+	if err := d.Set("log_publishing_options", flattenLogPublishingOptions(ds.LogPublishingOptions)); err != nil {
+		return fmt.Errorf("error setting log_publishing_options: %w", err)
 	}
 
 	d.Set("elasticsearch_version", ds.ElasticsearchVersion)

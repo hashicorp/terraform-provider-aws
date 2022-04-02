@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -8,7 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -85,7 +87,19 @@ func ResourceNetworkInterface() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"ipv6_addresses"},
+				ConflictsWith: []string{"ipv6_addresses", "ipv6_address_list"},
+			},
+			"ipv6_address_list": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				Computed:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"ipv6_addresses", "ipv6_address_count"},
+			},
+			"ipv6_address_list_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"ipv6_addresses": {
 				Type:     schema.TypeSet,
@@ -95,7 +109,7 @@ func ResourceNetworkInterface() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validation.IsIPv6Address,
 				},
-				ConflictsWith: []string{"ipv6_address_count"},
+				ConflictsWith: []string{"ipv6_address_count", "ipv6_address_list"},
 			},
 			"ipv6_prefixes": {
 				Type:     schema.TypeSet,
@@ -135,15 +149,29 @@ func ResourceNetworkInterface() *schema.Resource {
 				Computed: true,
 			},
 			"private_ips": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Computed:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"private_ip_list"},
 			},
 			"private_ips_count": {
-				Type:     schema.TypeInt,
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"private_ip_list"},
+			},
+			"private_ip_list": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				Computed:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"private_ips", "private_ips_count"},
+			},
+			"private_ip_list_enabled": {
+				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 			},
 			"security_groups": {
 				Type:     schema.TypeSet,
@@ -165,7 +193,129 @@ func ResourceNetworkInterface() *schema.Resource {
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			verify.SetTagsDiff,
+			customdiff.ForceNewIf("private_ips", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				privateIPListEnabled := d.Get("private_ip_list_enabled").(bool)
+				if privateIPListEnabled {
+					return false
+				}
+				_, new := d.GetChange("private_ips")
+				if new != nil {
+					oldPrimaryIP := ""
+					if v, ok := d.GetOk("private_ip_list"); ok {
+						for _, ip := range v.([]interface{}) {
+							oldPrimaryIP = ip.(string)
+							break
+						}
+					}
+					for _, ip := range new.(*schema.Set).List() {
+						// no need for new resource if we still have the primary ip
+						if oldPrimaryIP == ip.(string) {
+							return false
+						}
+					}
+					// new primary ip requires a new resource
+					return true
+				} else {
+					return false
+				}
+			}),
+			customdiff.ForceNewIf("private_ip_list", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				privateIPListEnabled := d.Get("private_ip_list_enabled").(bool)
+				if !privateIPListEnabled {
+					return false
+				}
+				old, new := d.GetChange("private_ip_list")
+				if old != nil && new != nil {
+					oldPrimaryIP := ""
+					newPrimaryIP := ""
+					for _, ip := range old.([]interface{}) {
+						oldPrimaryIP = ip.(string)
+						break
+					}
+					for _, ip := range new.([]interface{}) {
+						newPrimaryIP = ip.(string)
+						break
+					}
+
+					// change in primary private ip requires a new resource
+					return oldPrimaryIP != newPrimaryIP
+				} else {
+					return false
+				}
+			}),
+			customdiff.ComputedIf("private_ips", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				if !diff.Get("private_ip_list_enabled").(bool) {
+					// it is not computed if we are actively updating it
+					if diff.HasChange("private_ips") {
+						return false
+					} else {
+						return diff.HasChange("private_ips_count")
+					}
+				} else {
+					return diff.HasChange("private_ip_list")
+				}
+			}),
+			customdiff.ComputedIf("private_ips_count", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				if !diff.Get("private_ip_list_enabled").(bool) {
+					// it is not computed if we are actively updating it
+					if diff.HasChange("private_ips_count") {
+						return false
+					} else {
+						// compute the new count if private_ips change
+						return diff.HasChange("private_ips")
+					}
+				} else {
+					// compute the new count if private_ip_list changes
+					return diff.HasChange("private_ip_list")
+				}
+			}),
+			customdiff.ComputedIf("private_ip_list", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				if diff.Get("private_ip_list_enabled").(bool) {
+					// if the list is controlling it does not need to be computed
+					return false
+				} else {
+					// list is not controlling so compute new list if private_ips or private_ips_count changes
+					return diff.HasChange("private_ips") || diff.HasChange("private_ips_count") || diff.HasChange("private_ip_list")
+				}
+			}),
+			customdiff.ComputedIf("ipv6_addresses", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				if !diff.Get("ipv6_address_list_enabled").(bool) {
+					// it is not computed if we are actively updating it
+					if diff.HasChange("private_ips") {
+						return false
+					} else {
+						return diff.HasChange("ipv6_address_count")
+					}
+				} else {
+					return diff.HasChange("ipv6_address_list")
+				}
+			}),
+			customdiff.ComputedIf("ipv6_address_count", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				if !diff.Get("ipv6_address_list_enabled").(bool) {
+					// it is not computed if we are actively updating it
+					if diff.HasChange("ipv6_address_count") {
+						return false
+					} else {
+						// compute the new count if ipv6_addresses change
+						return diff.HasChange("ipv6_addresses")
+					}
+				} else {
+					// compute the new count if ipv6_address_list changes
+					return diff.HasChange("ipv6_address_list")
+				}
+			}),
+			customdiff.ComputedIf("ipv6_address_list", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				if diff.Get("ipv6_address_list_enabled").(bool) {
+					// if the list is controlling it does not need to be computed
+					return false
+				} else {
+					// list is not controlling so compute new list if anything changes
+					return diff.HasChange("ipv6_addresses") || diff.HasChange("ipv6_address_count") || diff.HasChange("ipv6_address_list")
+				}
+			}),
+		),
 	}
 }
 
@@ -191,7 +341,7 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 
 	if v, ok := d.GetOk("ipv4_prefixes"); ok && v.(*schema.Set).Len() > 0 {
 		ipv4PrefixesSpecified = true
-		input.Ipv4Prefixes = expandIpv4PrefixSpecificationRequests(v.(*schema.Set).List())
+		input.Ipv4Prefixes = expandIPv4PrefixSpecificationRequests(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("ipv4_prefix_count"); ok {
@@ -203,24 +353,48 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("ipv6_addresses"); ok && v.(*schema.Set).Len() > 0 {
-		input.Ipv6Addresses = expandInstanceIpv6Addresses(v.(*schema.Set).List())
+		input.Ipv6Addresses = expandInstanceIPv6Addresses(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("ipv6_prefixes"); ok && v.(*schema.Set).Len() > 0 {
 		ipv6PrefixesSpecified = true
-		input.Ipv6Prefixes = expandIpv6PrefixSpecificationRequests(v.(*schema.Set).List())
+		input.Ipv6Prefixes = expandIPv6PrefixSpecificationRequests(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("ipv6_prefix_count"); ok {
 		input.Ipv6PrefixCount = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("private_ips"); ok && v.(*schema.Set).Len() > 0 {
-		input.PrivateIpAddresses = expandPrivateIpAddressSpecifications(v.(*schema.Set).List())
-	}
-
-	if v, ok := d.GetOk("private_ips_count"); ok {
-		input.SecondaryPrivateIpAddressCount = aws.Int64(int64(v.(int)))
+	if d.Get("private_ip_list_enabled").(bool) {
+		if v, ok := d.GetOk("private_ip_list"); ok && len(v.([]interface{})) > 0 {
+			input.PrivateIpAddresses = expandPrivateIPAddressSpecifications(v.([]interface{}))
+		}
+	} else {
+		if v, ok := d.GetOk("private_ips"); ok && v.(*schema.Set).Len() > 0 {
+			privateIPs := v.(*schema.Set).List()
+			// total includes the primary
+			totalPrivateIPs := len(privateIPs)
+			// private_ips_count is for secondaries
+			if v, ok := d.GetOk("private_ips_count"); ok {
+				// reduce total count if necessary
+				if v.(int)+1 < totalPrivateIPs {
+					totalPrivateIPs = v.(int) + 1
+				}
+			}
+			// truncate the list
+			countLimitedIPs := make([]interface{}, totalPrivateIPs)
+			for i, ip := range privateIPs {
+				countLimitedIPs[i] = ip.(string)
+				if i == totalPrivateIPs-1 {
+					break
+				}
+			}
+			input.PrivateIpAddresses = expandPrivateIPAddressSpecifications(countLimitedIPs)
+		} else {
+			if v, ok := d.GetOk("private_ips_count"); ok {
+				input.SecondaryPrivateIpAddressCount = aws.Int64(int64(v.(int)))
+			}
+		}
 	}
 
 	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
@@ -244,6 +418,25 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 
 	if _, err := WaitNetworkInterfaceCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for EC2 Network Interface (%s) create: %w", d.Id(), err)
+	}
+
+	if !d.Get("private_ip_list_enabled").(bool) {
+		// add more ips to match the count
+		if v, ok := d.GetOk("private_ips"); ok && v.(*schema.Set).Len() > 0 {
+			totalPrivateIPs := v.(*schema.Set).Len()
+			if privateIPsCount, ok := d.GetOk("private_ips_count"); ok {
+				if privateIPsCount.(int)+1 > totalPrivateIPs {
+					input := &ec2.AssignPrivateIpAddressesInput{
+						NetworkInterfaceId:             aws.String(d.Id()),
+						SecondaryPrivateIpAddressCount: aws.Int64(int64(privateIPsCount.(int) + 1 - totalPrivateIPs)),
+					}
+					_, err := conn.AssignPrivateIpAddresses(input)
+					if err != nil {
+						return fmt.Errorf("Failure to assign Private IPs: %s", err)
+					}
+				}
+			}
+		}
 	}
 
 	if len(tags) > 0 && (ipv4PrefixesSpecified || ipv6PrefixesSpecified) {
@@ -322,7 +515,7 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("description", eni.Description)
 	d.Set("interface_type", eni.InterfaceType)
 
-	if err := d.Set("ipv4_prefixes", flattenIpv4PrefixSpecifications(eni.Ipv4Prefixes)); err != nil {
+	if err := d.Set("ipv4_prefixes", flattenIPv4PrefixSpecifications(eni.Ipv4Prefixes)); err != nil {
 		return fmt.Errorf("error setting ipv4_prefixes: %w", err)
 	}
 
@@ -330,11 +523,15 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("ipv6_address_count", len(eni.Ipv6Addresses))
 
+	if err := d.Set("ipv6_address_list", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses)); err != nil {
+		return fmt.Errorf("error setting ipv6 address list: %s", err)
+	}
+
 	if err := d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses)); err != nil {
 		return fmt.Errorf("error setting ipv6_addresses: %w", err)
 	}
 
-	if err := d.Set("ipv6_prefixes", flattenIpv6PrefixSpecifications(eni.Ipv6Prefixes)); err != nil {
+	if err := d.Set("ipv6_prefixes", flattenIPv6PrefixSpecifications(eni.Ipv6Prefixes)); err != nil {
 		return fmt.Errorf("error setting ipv6_prefixes: %w", err)
 	}
 
@@ -346,11 +543,15 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("private_dns_name", eni.PrivateDnsName)
 	d.Set("private_ip", eni.PrivateIpAddress)
 
-	if err := d.Set("private_ips", flattenNetworkInterfacePrivateIpAddresses(eni.PrivateIpAddresses)); err != nil {
+	if err := d.Set("private_ips", FlattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
 		return fmt.Errorf("error setting private_ips: %w", err)
 	}
 
 	d.Set("private_ips_count", len(eni.PrivateIpAddresses)-1)
+
+	if err := d.Set("private_ip_list", FlattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
+		return fmt.Errorf("error setting private_ip_list: %s", err)
+	}
 
 	if err := d.Set("security_groups", FlattenGroupIdentifiers(eni.Groups)); err != nil {
 		return fmt.Errorf("error setting security_groups: %w", err)
@@ -375,6 +576,7 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 
 func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
+	privateIPsNetChange := 0
 
 	if d.HasChange("attachment") {
 		oa, na := d.GetChange("attachment")
@@ -400,7 +602,7 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if d.HasChange("private_ips") {
+	if d.HasChange("private_ips") && !d.Get("private_ip_list_enabled").(bool) {
 		o, n := d.GetChange("private_ips")
 		if o == nil {
 			o = new(schema.Set)
@@ -426,6 +628,8 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 			if err != nil {
 				return fmt.Errorf("error unassigning EC2 Network Interface (%s) private IPv4 addresses: %w", d.Id(), err)
 			}
+
+			privateIPsNetChange -= unassignIPs.Len()
 		}
 
 		// Assign new IP addresses.
@@ -442,10 +646,63 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 			if err != nil {
 				return fmt.Errorf("error assigning EC2 Network Interface (%s) private IPv4 addresses: %w", d.Id(), err)
 			}
+			privateIPsNetChange += assignIPs.Len()
 		}
 	}
 
-	if d.HasChange("private_ips_count") {
+	if d.HasChange("private_ip_list") && d.Get("private_ip_list_enabled").(bool) {
+		o, n := d.GetChange("private_ip_list")
+		if o == nil {
+			o = make([]string, 0)
+		}
+		if n == nil {
+			n = make([]string, 0)
+		}
+		if len(o.([]interface{}))-1 > 0 {
+			privateIPsToUnassign := make([]interface{}, len(o.([]interface{}))-1)
+			idx := 0
+			for i, ip := range o.([]interface{}) {
+				// skip primary private ip address
+				if i == 0 {
+					continue
+				}
+				privateIPsToUnassign[idx] = ip
+				log.Printf("[INFO] Unassigning private ip %s", ip)
+				idx += 1
+			}
+
+			// Unassign the secondary IP addresses
+			input := &ec2.UnassignPrivateIpAddressesInput{
+				NetworkInterfaceId: aws.String(d.Id()),
+				PrivateIpAddresses: flex.ExpandStringList(privateIPsToUnassign),
+			}
+			_, err := conn.UnassignPrivateIpAddresses(input)
+			if err != nil {
+				return fmt.Errorf("Failure to unassign Private IPs: %s", err)
+			}
+		}
+
+		// Assign each ip one-by-one in order to retain order
+		for i, ip := range n.([]interface{}) {
+			// skip primary private ip address
+			if i == 0 {
+				continue
+			}
+			privateIPToAssign := []interface{}{ip}
+			log.Printf("[INFO] Assigning private ip %s", ip)
+
+			input := &ec2.AssignPrivateIpAddressesInput{
+				NetworkInterfaceId: aws.String(d.Id()),
+				PrivateIpAddresses: flex.ExpandStringList(privateIPToAssign),
+			}
+			_, err := conn.AssignPrivateIpAddresses(input)
+			if err != nil {
+				return fmt.Errorf("Failure to assign Private IPs: %s", err)
+			}
+		}
+	}
+
+	if d.HasChange("private_ips_count") && !d.Get("private_ip_list_enabled").(bool) {
 		o, n := d.GetChange("private_ips_count")
 		privateIPs := d.Get("private_ips").(*schema.Set).List()
 		privateIPsFiltered := privateIPs[:0]
@@ -458,7 +715,7 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		if o != nil && n != nil && n != len(privateIPsFiltered) {
-			if diff := n.(int) - o.(int); diff > 0 {
+			if diff := n.(int) - o.(int) - privateIPsNetChange; diff > 0 {
 				input := &ec2.AssignPrivateIpAddressesInput{
 					NetworkInterfaceId:             aws.String(d.Id()),
 					SecondaryPrivateIpAddressCount: aws.Int64(int64(diff)),
@@ -564,7 +821,7 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if d.HasChange("ipv6_addresses") {
+	if d.HasChange("ipv6_addresses") && !d.Get("ipv6_address_list_enabled").(bool) {
 		o, n := d.GetChange("ipv6_addresses")
 		if o == nil {
 			o = new(schema.Set)
@@ -609,7 +866,7 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if d.HasChange("ipv6_address_count") {
+	if d.HasChange("ipv6_address_count") && !d.Get("ipv6_address_list_enabled").(bool) {
 		o, n := d.GetChange("ipv6_address_count")
 		ipv6Addresses := d.Get("ipv6_addresses").(*schema.Set).List()
 
@@ -638,6 +895,50 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 				if err != nil {
 					return fmt.Errorf("error unassigning EC2 Network Interface (%s) IPv6 addresses: %w", d.Id(), err)
 				}
+			}
+		}
+	}
+
+	if d.HasChange("ipv6_address_list") && d.Get("ipv6_address_list_enabled").(bool) {
+		o, n := d.GetChange("ipv6_address_list")
+		if o == nil {
+			o = make([]string, 0)
+		}
+		if n == nil {
+			n = make([]string, 0)
+		}
+
+		// Unassign old IPV6 addresses
+		if len(o.([]interface{})) > 0 {
+			unassignIPs := make([]interface{}, len(o.([]interface{})))
+			for i, ip := range o.([]interface{}) {
+				unassignIPs[i] = ip
+				log.Printf("[INFO] Unassigning ipv6 address %s", ip)
+			}
+
+			log.Printf("[INFO] Unassigning ipv6 addresses")
+			input := &ec2.UnassignIpv6AddressesInput{
+				NetworkInterfaceId: aws.String(d.Id()),
+				Ipv6Addresses:      flex.ExpandStringList(unassignIPs),
+			}
+			_, err := conn.UnassignIpv6Addresses(input)
+			if err != nil {
+				return fmt.Errorf("failure to unassign IPV6 Addresses: %s", err)
+			}
+		}
+
+		// Assign each ip one-by-one in order to retain order
+		for _, ip := range n.([]interface{}) {
+			privateIPToAssign := []interface{}{ip}
+			log.Printf("[INFO] Assigning ipv6 address %s", ip)
+
+			input := &ec2.AssignIpv6AddressesInput{
+				NetworkInterfaceId: aws.String(d.Id()),
+				Ipv6Addresses:      flex.ExpandStringList(privateIPToAssign),
+			}
+			_, err := conn.AssignIpv6Addresses(input)
+			if err != nil {
+				return fmt.Errorf("Failure to assign IPV6 Addresses: %s", err)
 			}
 		}
 	}
@@ -921,7 +1222,7 @@ func flattenNetworkInterfaceAttachment(apiObject *ec2.NetworkInterfaceAttachment
 	return tfMap
 }
 
-func expandPrivateIpAddressSpecification(tfString string) *ec2.PrivateIpAddressSpecification {
+func expandPrivateIPAddressSpecification(tfString string) *ec2.PrivateIpAddressSpecification {
 	if tfString == "" {
 		return nil
 	}
@@ -933,7 +1234,7 @@ func expandPrivateIpAddressSpecification(tfString string) *ec2.PrivateIpAddressS
 	return apiObject
 }
 
-func expandPrivateIpAddressSpecifications(tfList []interface{}) []*ec2.PrivateIpAddressSpecification {
+func expandPrivateIPAddressSpecifications(tfList []interface{}) []*ec2.PrivateIpAddressSpecification {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -947,7 +1248,7 @@ func expandPrivateIpAddressSpecifications(tfList []interface{}) []*ec2.PrivateIp
 			continue
 		}
 
-		apiObject := expandPrivateIpAddressSpecification(tfString)
+		apiObject := expandPrivateIPAddressSpecification(tfString)
 
 		if apiObject == nil {
 			continue
@@ -963,7 +1264,7 @@ func expandPrivateIpAddressSpecifications(tfList []interface{}) []*ec2.PrivateIp
 	return apiObjects
 }
 
-func expandInstanceIpv6Address(tfString string) *ec2.InstanceIpv6Address {
+func expandInstanceIPv6Address(tfString string) *ec2.InstanceIpv6Address {
 	if tfString == "" {
 		return nil
 	}
@@ -975,7 +1276,7 @@ func expandInstanceIpv6Address(tfString string) *ec2.InstanceIpv6Address {
 	return apiObject
 }
 
-func expandInstanceIpv6Addresses(tfList []interface{}) []*ec2.InstanceIpv6Address {
+func expandInstanceIPv6Addresses(tfList []interface{}) []*ec2.InstanceIpv6Address {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -989,7 +1290,7 @@ func expandInstanceIpv6Addresses(tfList []interface{}) []*ec2.InstanceIpv6Addres
 			continue
 		}
 
-		apiObject := expandInstanceIpv6Address(tfString)
+		apiObject := expandInstanceIPv6Address(tfString)
 
 		if apiObject == nil {
 			continue
@@ -1001,7 +1302,7 @@ func expandInstanceIpv6Addresses(tfList []interface{}) []*ec2.InstanceIpv6Addres
 	return apiObjects
 }
 
-func flattenNetworkInterfacePrivateIpAddress(apiObject *ec2.NetworkInterfacePrivateIpAddress) string {
+func flattenNetworkInterfacePrivateIPAddress(apiObject *ec2.NetworkInterfacePrivateIpAddress) string {
 	if apiObject == nil {
 		return ""
 	}
@@ -1015,7 +1316,7 @@ func flattenNetworkInterfacePrivateIpAddress(apiObject *ec2.NetworkInterfacePriv
 	return tfString
 }
 
-func flattenNetworkInterfacePrivateIpAddresses(apiObjects []*ec2.NetworkInterfacePrivateIpAddress) []string {
+func FlattenNetworkInterfacePrivateIPAddresses(apiObjects []*ec2.NetworkInterfacePrivateIpAddress) []string {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -1027,7 +1328,7 @@ func flattenNetworkInterfacePrivateIpAddresses(apiObjects []*ec2.NetworkInterfac
 			continue
 		}
 
-		tfList = append(tfList, flattenNetworkInterfacePrivateIpAddress(apiObject))
+		tfList = append(tfList, flattenNetworkInterfacePrivateIPAddress(apiObject))
 	}
 
 	return tfList
@@ -1065,7 +1366,7 @@ func flattenNetworkInterfaceIPv6Addresses(apiObjects []*ec2.NetworkInterfaceIpv6
 	return tfList
 }
 
-func expandIpv4PrefixSpecificationRequest(tfString string) *ec2.Ipv4PrefixSpecificationRequest {
+func expandIPv4PrefixSpecificationRequest(tfString string) *ec2.Ipv4PrefixSpecificationRequest {
 	if tfString == "" {
 		return nil
 	}
@@ -1077,7 +1378,7 @@ func expandIpv4PrefixSpecificationRequest(tfString string) *ec2.Ipv4PrefixSpecif
 	return apiObject
 }
 
-func expandIpv4PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv4PrefixSpecificationRequest {
+func expandIPv4PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv4PrefixSpecificationRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1091,7 +1392,7 @@ func expandIpv4PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv4Pref
 			continue
 		}
 
-		apiObject := expandIpv4PrefixSpecificationRequest(tfString)
+		apiObject := expandIPv4PrefixSpecificationRequest(tfString)
 
 		if apiObject == nil {
 			continue
@@ -1103,7 +1404,7 @@ func expandIpv4PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv4Pref
 	return apiObjects
 }
 
-func expandIpv6PrefixSpecificationRequest(tfString string) *ec2.Ipv6PrefixSpecificationRequest {
+func expandIPv6PrefixSpecificationRequest(tfString string) *ec2.Ipv6PrefixSpecificationRequest {
 	if tfString == "" {
 		return nil
 	}
@@ -1115,7 +1416,7 @@ func expandIpv6PrefixSpecificationRequest(tfString string) *ec2.Ipv6PrefixSpecif
 	return apiObject
 }
 
-func expandIpv6PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv6PrefixSpecificationRequest {
+func expandIPv6PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv6PrefixSpecificationRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1129,7 +1430,7 @@ func expandIpv6PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv6Pref
 			continue
 		}
 
-		apiObject := expandIpv6PrefixSpecificationRequest(tfString)
+		apiObject := expandIPv6PrefixSpecificationRequest(tfString)
 
 		if apiObject == nil {
 			continue
@@ -1141,7 +1442,7 @@ func expandIpv6PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv6Pref
 	return apiObjects
 }
 
-func flattenIpv4PrefixSpecification(apiObject *ec2.Ipv4PrefixSpecification) string {
+func flattenIPv4PrefixSpecification(apiObject *ec2.Ipv4PrefixSpecification) string {
 	if apiObject == nil {
 		return ""
 	}
@@ -1155,7 +1456,7 @@ func flattenIpv4PrefixSpecification(apiObject *ec2.Ipv4PrefixSpecification) stri
 	return tfString
 }
 
-func flattenIpv4PrefixSpecifications(apiObjects []*ec2.Ipv4PrefixSpecification) []string {
+func flattenIPv4PrefixSpecifications(apiObjects []*ec2.Ipv4PrefixSpecification) []string {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -1167,13 +1468,13 @@ func flattenIpv4PrefixSpecifications(apiObjects []*ec2.Ipv4PrefixSpecification) 
 			continue
 		}
 
-		tfList = append(tfList, flattenIpv4PrefixSpecification(apiObject))
+		tfList = append(tfList, flattenIPv4PrefixSpecification(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenIpv6PrefixSpecification(apiObject *ec2.Ipv6PrefixSpecification) string {
+func flattenIPv6PrefixSpecification(apiObject *ec2.Ipv6PrefixSpecification) string {
 	if apiObject == nil {
 		return ""
 	}
@@ -1187,7 +1488,7 @@ func flattenIpv6PrefixSpecification(apiObject *ec2.Ipv6PrefixSpecification) stri
 	return tfString
 }
 
-func flattenIpv6PrefixSpecifications(apiObjects []*ec2.Ipv6PrefixSpecification) []string {
+func flattenIPv6PrefixSpecifications(apiObjects []*ec2.Ipv6PrefixSpecification) []string {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -1199,7 +1500,7 @@ func flattenIpv6PrefixSpecifications(apiObjects []*ec2.Ipv6PrefixSpecification) 
 			continue
 		}
 
-		tfList = append(tfList, flattenIpv6PrefixSpecification(apiObject))
+		tfList = append(tfList, flattenIPv6PrefixSpecification(apiObject))
 	}
 
 	return tfList

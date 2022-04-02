@@ -309,17 +309,17 @@ func dataSourcemqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("engine_type", output.EngineType)
 	d.Set("engine_version", output.EngineVersion)
 	d.Set("host_instance_type", output.HostInstanceType)
-	d.Set("instances", flattenMqBrokerInstances(output.BrokerInstances))
+	d.Set("instances", flattenBrokerInstances(output.BrokerInstances))
 	d.Set("publicly_accessible", output.PubliclyAccessible)
 	d.Set("security_groups", aws.StringValueSlice(output.SecurityGroups))
 	d.Set("storage_type", output.StorageType)
 	d.Set("subnet_ids", aws.StringValueSlice(output.SubnetIds))
 
-	if err := d.Set("configuration", flattenMqConfiguration(output.Configurations)); err != nil {
+	if err := d.Set("configuration", flattenConfiguration(output.Configurations)); err != nil {
 		return fmt.Errorf("error setting configuration: %w", err)
 	}
 
-	if err := d.Set("encryption_options", flattenMqEncryptionOptions(output.EncryptionOptions)); err != nil {
+	if err := d.Set("encryption_options", flattenEncryptionOptions(output.EncryptionOptions)); err != nil {
 		return fmt.Errorf("error setting encryption_options: %w", err)
 	}
 
@@ -328,25 +328,25 @@ func dataSourcemqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 		password = v.(string)
 	}
 
-	if err := d.Set("ldap_server_metadata", flattenMQLDAPServerMetadata(output.LdapServerMetadata, password)); err != nil {
+	if err := d.Set("ldap_server_metadata", flattenLDAPServerMetadata(output.LdapServerMetadata, password)); err != nil {
 		return fmt.Errorf("error setting ldap_server_metadata: %w", err)
 	}
 
-	if err := d.Set("logs", flattenMqLogs(output.Logs)); err != nil {
+	if err := d.Set("logs", flattenLogs(output.Logs)); err != nil {
 		return fmt.Errorf("error setting logs: %w", err)
 	}
 
-	if err := d.Set("maintenance_window_start_time", flattenMqWeeklyStartTime(output.MaintenanceWindowStartTime)); err != nil {
+	if err := d.Set("maintenance_window_start_time", flattenWeeklyStartTime(output.MaintenanceWindowStartTime)); err != nil {
 		return fmt.Errorf("error setting maintenance_window_start_time: %w", err)
 	}
 
-	rawUsers, err := expandMqUsersForBroker(conn, brokerId, output.Users)
+	rawUsers, err := expandUsersForBroker(conn, brokerId, output.Users)
 
 	if err != nil {
 		return fmt.Errorf("error retrieving user info for MQ broker (%s): %w", brokerId, err)
 	}
 
-	if err := d.Set("user", flattenMqUsers(rawUsers, d.Get("user").(*schema.Set).List())); err != nil {
+	if err := d.Set("user", flattenUsers(rawUsers, d.Get("user").(*schema.Set).List())); err != nil {
 		return fmt.Errorf("error setting user: %w", err)
 	}
 

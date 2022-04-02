@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -132,7 +132,7 @@ func resourceRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	resp, err := conn.GetRateBasedRule(params)
-	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 		log.Printf("[WARN] WAF Regional Rate Based Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -195,7 +195,7 @@ func resourceRateBasedRuleUpdate(d *schema.ResourceData, meta interface{}) error
 		rateLimit := d.Get("rate_limit")
 
 		err := updateWafRateBasedRuleResourceWR(d.Id(), oldP, newP, rateLimit, conn, region)
-		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			log.Printf("[WARN] WAF Regional Rate Based Rule (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -226,7 +226,7 @@ func resourceRateBasedRuleDelete(d *schema.ResourceData, meta interface{}) error
 		rateLimit := d.Get("rate_limit")
 
 		err := updateWafRateBasedRuleResourceWR(d.Id(), oldPredicates, noPredicates, rateLimit, conn, region)
-		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			return nil
 		}
 		if err != nil {
@@ -243,7 +243,7 @@ func resourceRateBasedRuleDelete(d *schema.ResourceData, meta interface{}) error
 		log.Printf("[INFO] Deleting WAF Regional Rate Based Rule")
 		return conn.DeleteRateBasedRule(req)
 	})
-	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 		return nil
 	}
 	if err != nil {

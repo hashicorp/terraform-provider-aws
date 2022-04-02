@@ -76,6 +76,35 @@ func TestAccFSxBackup_ontapBasic(t *testing.T) {
 	})
 }
 
+func TestAccFSxBackup_openzfsBasic(t *testing.T) {
+	var backup fsx.Backup
+	resourceName := "aws_fsx_backup.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckFsxBackupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupOpenzfsBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxBackupExists(resourceName, &backup),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`backup/.+`)),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccFSxBackup_windowsBasic(t *testing.T) {
 	var backup fsx.Backup
 	resourceName := "aws_fsx_backup.test"
@@ -333,6 +362,22 @@ resource "aws_fsx_ontap_volume" "test" {
 `, rName, vName))
 }
 
+func testAccBackupOpenzfsBaseConfig(rName string) string {
+	return acctest.ConfigCompose(testAccBackupBaseConfig(), fmt.Sprintf(`
+resource "aws_fsx_openzfs_file_system" "test" {
+  storage_capacity    = 64
+  subnet_ids          = [aws_subnet.test1.id]
+  deployment_type     = "SINGLE_AZ_1"
+  throughput_capacity = 64
+
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
 func testAccBackupWindowsBaseConfig(rName string) string {
 	return acctest.ConfigCompose(testAccBackupBaseConfig(), fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
@@ -378,6 +423,18 @@ func testAccBackupONTAPBasicConfig(rName string, vName string) string {
 	return acctest.ConfigCompose(testAccBackupONTAPBaseConfig(rName, vName), fmt.Sprintf(`
 resource "aws_fsx_backup" "test" {
   volume_id = aws_fsx_ontap_volume.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccBackupOpenzfsBasicConfig(rName string) string {
+	return acctest.ConfigCompose(testAccBackupOpenzfsBaseConfig(rName), fmt.Sprintf(`
+resource "aws_fsx_backup" "test" {
+  file_system_id = aws_fsx_openzfs_file_system.test.id
 
   tags = {
     Name = %[1]q

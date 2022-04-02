@@ -26,6 +26,7 @@ data "aws_imagebuilder_image_pipeline" "example" {
 
 In addition to all arguments above, the following attributes are exported:
 
+* `container_recipe_arn` - Amazon Resource Name (ARN) of the container recipe.
 * `date_created` - Date the image pipeline was created.
 * `date_last_run` - Date the image pipeline was last run.
 * `date_next_run` - Date the image pipeline will run next.
@@ -33,7 +34,7 @@ In addition to all arguments above, the following attributes are exported:
 * `description` - Description of the image pipeline.
 * `distribution_configuration_arn` - Amazon Resource Name (ARN) of the Image Builder Distribution Configuration.
 * `enhanced_image_metadata_enabled` - Whether additional information about the image being created is collected.
-* `image_recipe_arn` - Amazon Resource Name (ARN) of the Image Builder Infrastructure Recipe.
+* `image_recipe_arn` - Amazon Resource Name (ARN) of the image recipe.
 * `image_tests_configuration` - List of an object with image tests configuration.
     * `image_tests_enabled` - Whether image tests are enabled.
     * `timeout_minutes` - Number of minutes before image tests time out.

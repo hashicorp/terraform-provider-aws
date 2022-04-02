@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -487,6 +487,10 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateCrossZone(t *testing.T) 
 	lbName := fmt.Sprintf("testAccAWSlb-nlbcz-%s", sdkacctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
 
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
@@ -528,6 +532,10 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateHTTP2(t *testing.T) 
 	lbName := fmt.Sprintf("testAccAWSalb-http2-%s", sdkacctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
 
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
@@ -567,6 +575,10 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateHTTP2(t *testing.T) 
 func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDropInvalidHeaderFields(t *testing.T) {
 	var pre, mid, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSalb-headers-%s", sdkacctest.RandString(10))
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -609,6 +621,10 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDeletionProtection(t
 	lbName := fmt.Sprintf("testAccAWSalb-basic-%s", sdkacctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
 
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
@@ -649,6 +665,10 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateWafFailOpen(t *testi
 	var pre, mid, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSalb-basic-%s", sdkacctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -698,6 +718,10 @@ func TestAccELBV2LoadBalancer_updatedSecurityGroups(t *testing.T) {
 	lbName := fmt.Sprintf("testAccAWSlb-basic-%s", sdkacctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
 
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
@@ -727,6 +751,10 @@ func TestAccELBV2LoadBalancer_updatedSubnets(t *testing.T) {
 	var pre, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-basic-%s", sdkacctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -823,6 +851,10 @@ func TestAccELBV2LoadBalancer_ALB_accessLogs(t *testing.T) {
 	lbName := fmt.Sprintf("testAccAWSlbaccesslog-%s", sdkacctest.RandString(4))
 	resourceName := "aws_lb.test"
 
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
@@ -911,6 +943,10 @@ func TestAccELBV2LoadBalancer_ALBAccessLogs_prefix(t *testing.T) {
 	lbName := fmt.Sprintf("testAccAWSlbaccesslog-%s", sdkacctest.RandString(4))
 	resourceName := "aws_lb.test"
 
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elbv2.EndpointsID),
@@ -980,6 +1016,10 @@ func TestAccELBV2LoadBalancer_NLB_accessLogs(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-test-access-logs-%s", sdkacctest.RandString(6))
 	lbName := fmt.Sprintf("testAccAWSlbaccesslog-%s", sdkacctest.RandString(4))
 	resourceName := "aws_lb.test"
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1068,6 +1108,10 @@ func TestAccELBV2LoadBalancer_NLBAccessLogs_prefix(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-test-access-logs-%s", sdkacctest.RandString(6))
 	lbName := fmt.Sprintf("testAccAWSlbaccesslog-%s", sdkacctest.RandString(4))
 	resourceName := "aws_lb.test"
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1163,6 +1207,10 @@ func TestAccELBV2LoadBalancer_updateDesyncMitigationMode(t *testing.T) {
 	var pre, mid, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testaccawsalb-desync-%s", sdkacctest.RandString(4))
 	resourceName := "aws_lb.lb_test"
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },

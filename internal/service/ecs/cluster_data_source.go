@@ -1,6 +1,7 @@
 package ecs
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -67,21 +68,12 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 
 	clusterName := d.Get("cluster_name").(string)
-	desc, err := FindClusterByNameOrARN(conn, d.Get("cluster_name").(string))
+	cluster, err := FindClusterByNameOrARN(context.Background(), conn, d.Get("cluster_name").(string))
 
 	if err != nil {
 		return fmt.Errorf("error reading ECS Cluster (%s): %w", clusterName, err)
 	}
 
-	if len(desc.Clusters) == 0 {
-		return fmt.Errorf("no matches found for name: %s", clusterName)
-	}
-
-	if len(desc.Clusters) > 1 {
-		return fmt.Errorf("multiple matches found for name: %s", clusterName)
-	}
-
-	cluster := desc.Clusters[0]
 	d.SetId(aws.StringValue(cluster.ClusterArn))
 	d.Set("arn", cluster.ClusterArn)
 	d.Set("status", cluster.Status)
@@ -89,7 +81,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("running_tasks_count", cluster.RunningTasksCount)
 	d.Set("registered_container_instances_count", cluster.RegisteredContainerInstancesCount)
 
-	if err := d.Set("setting", flattenEcsSettings(cluster.Settings)); err != nil {
+	if err := d.Set("setting", flattenClusterSettings(cluster.Settings)); err != nil {
 		return fmt.Errorf("error setting setting: %w", err)
 	}
 
