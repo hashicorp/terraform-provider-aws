@@ -2,187 +2,156 @@ package s3
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-)
-
-const (
-	deleteBatchSize = 500
+	multierror "github.com/hashicorp/go-multierror"
 )
 
 // emptyBucket empties the specified S3 bucket by deleting all object versions and delete markers.
 // If `force` is `true` then S3 Object Lock governance mode restrictions are bypassed and
 // an attempt is made to remove any S3 Object Lock legal holds.
 func emptyBucket(ctx context.Context, conn *s3.S3, bucket string, force bool) error {
-	deleter := s3manager.NewBatchDeleteWithClient(conn, func(o *s3manager.BatchDelete) { o.BatchSize = deleteBatchSize })
-
-	// First attempt to delete all object versions.
-	objectVersionIterator := NewDeleteObjectVersionListIterator(conn, bucket, "", force)
-	err := deleter.Delete(ctx, objectVersionIterator)
+	err := forEachObjectVersionsPage(ctx, conn, bucket, func(ctx context.Context, conn *s3.S3, bucket string, page *s3.ListObjectVersionsOutput) error {
+		return deletePageOfObjectVersions(ctx, conn, bucket, force, page)
+	})
 
 	if err != nil {
-		if !force {
-			return err
-		}
+		return err
+	}
 
-		var batchErr *s3manager.BatchError
+	err = forEachObjectVersionsPage(ctx, conn, bucket, deletePageOfDeleteMarkers)
 
-		if errors.As(err, &batchErr) {
-			for _, v := range batchErr.Errors {
-				if tfawserr.ErrCodeEquals(v.OrigErr, "AccessDenied") {
-
-				}
-			}
-		}
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
-// listIterator is intended to be embedded inside iterators.
-type listIterator struct {
-	bucket                    string
-	bypassGovernanceRetention bool
-	key                       string
-	paginator                 request.Pagination
+// forEachObjectVersionsPage calls the specified function for each page returned from the S3 ListObjectVersionsPages API.
+func forEachObjectVersionsPage(ctx context.Context, conn *s3.S3, bucket string, fn func(ctx context.Context, conn *s3.S3, bucket string, page *s3.ListObjectVersionsOutput) error) error {
+	input := &s3.ListObjectVersionsInput{
+		Bucket: aws.String(bucket),
+	}
+	var lastErr error
+
+	err := conn.ListObjectVersionsPagesWithContext(ctx, input, func(page *s3.ListObjectVersionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		if err := fn(ctx, conn, bucket, page); err != nil {
+			lastErr = err
+
+			return false
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return fmt.Errorf("error listing S3 Bucket (%s) bject versions: %w", bucket, err)
+	}
+
+	if lastErr != nil {
+		return lastErr
+	}
+
+	return nil
 }
 
-// deleteVersionListIterator implements s3manager.BatchDeleteIterator.
-// It iterates through a list of S3 Object versions and delete them.
-// It is inspired by s3manager.DeleteListIterator.
-type deleteObjectVersionListIterator struct {
-	listIterator
-	objects []*s3.ObjectVersion
-}
+func deletePageOfObjectVersions(ctx context.Context, conn *s3.S3, bucket string, force bool, page *s3.ListObjectVersionsOutput) error {
+	toDelete := make([]*s3.ObjectIdentifier, 0, len(page.Versions))
+	for _, v := range page.Versions {
+		toDelete = append(toDelete, &s3.ObjectIdentifier{
+			Key:       v.Key,
+			VersionId: v.VersionId,
+		})
+	}
 
-func NewDeleteObjectVersionListIterator(conn *s3.S3, bucket, key string, bypassGovernanceRetention bool) s3manager.BatchDeleteIterator {
-	return &deleteObjectVersionListIterator{
-		listIterator: listIterator{
-			bucket:                    bucket,
-			bypassGovernanceRetention: bypassGovernanceRetention,
-			key:                       key,
-			paginator:                 listObjectVersionsPaginator(conn, bucket, key),
+	input := &s3.DeleteObjectsInput{
+		Bucket:                    aws.String(bucket),
+		BypassGovernanceRetention: aws.Bool(force),
+		Delete: &s3.Delete{
+			Objects: toDelete,
+			Quiet:   aws.Bool(true), // Only report errors.
 		},
 	}
-}
 
-func (iter *deleteObjectVersionListIterator) Next() bool {
-	if len(iter.objects) > 0 {
-		iter.objects = iter.objects[1:]
+	output, err := conn.DeleteObjectsWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+		return nil
 	}
 
-	if len(iter.objects) == 0 && iter.listIterator.paginator.Next() {
-		if iter.key == "" {
-			iter.objects = iter.listIterator.paginator.Page().(*s3.ListObjectVersionsOutput).Versions
-		} else {
-			// ListObjectVersions uses Prefix as an argument but we use Key.
-			// Ignore any object versions that do not have the required Key.
-			for _, v := range iter.listIterator.paginator.Page().(*s3.ListObjectVersionsOutput).Versions {
-				if iter.key != aws.StringValue(v.Key) {
-					continue
-				}
+	if err != nil {
+		return fmt.Errorf("error deleting S3 Bucket (%s) objects: %w", bucket, err)
+	}
 
-				iter.objects = append(iter.objects, v)
-			}
+	var deleteErrs *multierror.Error
+
+	for _, v := range output.Errors {
+		// Attempt to remove any legal hold on the object.
+		if force && aws.StringValue(v.Code) == ErrCodeAccessDenied {
+		} else {
+			deleteErrs = multierror.Append(deleteErrs, newDeleteError(v))
 		}
 	}
 
-	return len(iter.objects) > 0
+	return deleteErrs.ErrorOrNil()
 }
 
-func (iter *deleteObjectVersionListIterator) Err() error {
-	return iter.listIterator.paginator.Err()
-}
+func deletePageOfDeleteMarkers(ctx context.Context, conn *s3.S3, bucket string, page *s3.ListObjectVersionsOutput) error {
+	toDelete := make([]*s3.ObjectIdentifier, 0, len(page.Versions))
+	for _, v := range page.DeleteMarkers {
+		toDelete = append(toDelete, &s3.ObjectIdentifier{
+			Key:       v.Key,
+			VersionId: v.VersionId,
+		})
+	}
 
-func (iter *deleteObjectVersionListIterator) DeleteObject() s3manager.BatchDeleteObject {
-	return s3manager.BatchDeleteObject{
-		Object: &s3.DeleteObjectInput{
-			Bucket:                    aws.String(iter.listIterator.bucket),
-			BypassGovernanceRetention: aws.Bool(iter.listIterator.bypassGovernanceRetention),
-			Key:                       iter.objects[0].Key,
-			VersionId:                 iter.objects[0].VersionId,
+	input := &s3.DeleteObjectsInput{
+		Bucket: aws.String(bucket),
+		Delete: &s3.Delete{
+			Objects: toDelete,
+			Quiet:   aws.Bool(true), // Only report errors.
 		},
 	}
-}
 
-// deleteDeleteMarkerListIterator implements s3manager.BatchDeleteIterator.
-// It iterates through a list of S3 Object delete markers and delete them.
-// It is inspired by s3manager.DeleteListIterator.
-type deleteDeleteMarkerListIterator struct {
-	listIterator
-	deleteMarkers []*s3.DeleteMarkerEntry
-}
+	output, err := conn.DeleteObjectsWithContext(ctx, input)
 
-func NewDeleteDeleteMarkerListIterator(conn *s3.S3, bucket, key string, bypassGovernanceRetention bool) s3manager.BatchDeleteIterator {
-	return &deleteDeleteMarkerListIterator{
-		listIterator: listIterator{
-			bucket:                    bucket,
-			bypassGovernanceRetention: bypassGovernanceRetention,
-			key:                       key,
-			paginator:                 listObjectVersionsPaginator(conn, bucket, key),
-		},
-	}
-}
-
-func (iter *deleteDeleteMarkerListIterator) Next() bool {
-	if len(iter.deleteMarkers) > 0 {
-		iter.deleteMarkers = iter.deleteMarkers[1:]
+	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+		return nil
 	}
 
-	if len(iter.deleteMarkers) == 0 && iter.listIterator.paginator.Next() {
-		if iter.key == "" {
-			iter.deleteMarkers = iter.listIterator.paginator.Page().(*s3.ListObjectVersionsOutput).DeleteMarkers
-		} else {
-			// ListObjectVersions uses Prefix as an argument but we use Key.
-			// Ignore any delete markers that do not have the required Key.
-			for _, v := range iter.listIterator.paginator.Page().(*s3.ListObjectVersionsOutput).DeleteMarkers {
-				if iter.key != aws.StringValue(v.Key) {
-					continue
-				}
-
-				iter.deleteMarkers = append(iter.deleteMarkers, v)
-			}
-		}
+	if err != nil {
+		return fmt.Errorf("error deleting S3 Bucket (%s) delete markers: %w", bucket, err)
 	}
 
-	return len(iter.deleteMarkers) > 0
-}
+	var deleteErrs *multierror.Error
 
-func (iter *deleteDeleteMarkerListIterator) Err() error {
-	return iter.listIterator.paginator.Err()
-}
-
-func (iter *deleteDeleteMarkerListIterator) DeleteObject() s3manager.BatchDeleteObject {
-	return s3manager.BatchDeleteObject{
-		Object: &s3.DeleteObjectInput{
-			Bucket:                    aws.String(iter.listIterator.bucket),
-			BypassGovernanceRetention: aws.Bool(iter.listIterator.bypassGovernanceRetention),
-			Key:                       iter.deleteMarkers[0].Key,
-			VersionId:                 iter.deleteMarkers[0].VersionId,
-		},
+	for _, v := range output.Errors {
+		deleteErrs = multierror.Append(deleteErrs, newDeleteError(v))
 	}
+
+	return deleteErrs.ErrorOrNil()
 }
 
-// listObjectVersionsPaginator returns a paginator that lists S3 object versions for the specified bucket and optional key.
-func listObjectVersionsPaginator(conn *s3.S3, bucket, key string) request.Pagination {
-	return request.Pagination{
-		NewRequest: func() (*request.Request, error) {
-			input := &s3.ListObjectVersionsInput{
-				Bucket: aws.String(bucket),
-			}
-
-			if key != "" {
-				input.Prefix = aws.String(key)
-			}
-
-			request, _ := conn.ListObjectVersionsRequest(input)
-
-			return request, nil
-		},
+func newDeleteError(v *s3.Error) error {
+	if v == nil {
+		return nil
 	}
+
+	key := aws.StringValue(v.Key)
+	awsErr := awserr.New(aws.StringValue(v.Code), aws.StringValue(v.Message), nil)
+
+	if v.VersionId == nil {
+		return fmt.Errorf("deleting S3 object (%s): %w", key, awsErr)
+	}
+
+	return fmt.Errorf("deleting S3 object (%s) version (%s): %w", key, aws.StringValue(v.VersionId), awsErr)
 }
