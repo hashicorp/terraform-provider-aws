@@ -1025,9 +1025,9 @@ var testLambdaOrgPolicy = []byte(`{
 	  {
 		"Condition": {
 		  "StringEquals": {
-			"aws:PrincipalOrgID": "o-1234567890",
-		  },
-		},
+			"aws:PrincipalOrgID": "o-1234567890"
+		  }
+		},	
 		"Action": "lambda:InvokeFunction",
 		"Resource": "arn:aws:lambda:eu-west-1:319201112229:function:myCustomFunction",
 		"Effect": "Allow",
