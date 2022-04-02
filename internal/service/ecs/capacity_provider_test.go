@@ -304,19 +304,19 @@ resource "aws_autoscaling_group" "test" {
 }
 
 func testAccCapacityProviderConfig(rName string) string {
-	return testAccCapacityProviderBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCapacityProviderBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
-  name = %q
+  name = %[1]q
 
   auto_scaling_group_provider {
     auto_scaling_group_arn = aws_autoscaling_group.test.arn
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccCapacityProviderManagedScalingConfig(rName, status string, warmup, max, min, cap int) string {
-	return testAccCapacityProviderBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCapacityProviderBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 
@@ -332,11 +332,11 @@ resource "aws_ecs_capacity_provider" "test" {
     }
   }
 }
-`, rName, warmup, max, min, status, cap)
+`, rName, warmup, max, min, status, cap))
 }
 
 func testAccCapacityProviderManagedScalingPartialConfig(rName string) string {
-	return testAccCapacityProviderBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCapacityProviderBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 
@@ -349,11 +349,11 @@ resource "aws_ecs_capacity_provider" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccCapacityProviderTags1Config(rName, tag1Key, tag1Value string) string {
-	return testAccCapacityProviderBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCapacityProviderBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 
@@ -365,11 +365,11 @@ resource "aws_ecs_capacity_provider" "test" {
     auto_scaling_group_arn = aws_autoscaling_group.test.arn
   }
 }
-`, rName, tag1Key, tag1Value)
+`, rName, tag1Key, tag1Value))
 }
 
 func testAccCapacityProviderTags2Config(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return testAccCapacityProviderBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCapacityProviderBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 
@@ -382,5 +382,5 @@ resource "aws_ecs_capacity_provider" "test" {
     auto_scaling_group_arn = aws_autoscaling_group.test.arn
   }
 }
-`, rName, tag1Key, tag1Value, tag2Key, tag2Value)
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value))
 }

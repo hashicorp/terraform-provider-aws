@@ -345,7 +345,7 @@ func expandManagedScaling(configured interface{}) *ecs.ManagedScaling {
 
 	managedScaling := ecs.ManagedScaling{}
 
-	if val, ok := p["instance_warmup_period"].(int); ok && val != 0 {
+	if val, ok := p["instance_warmup_period"].(int); ok {
 		managedScaling.InstanceWarmupPeriod = aws.Int64(int64(val))
 	}
 	if val, ok := p["maximum_scaling_step_size"].(int); ok && val != 0 {
