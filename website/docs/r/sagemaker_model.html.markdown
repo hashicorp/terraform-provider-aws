@@ -59,9 +59,10 @@ The following arguments are supported:
 
 The `primary_container` and `container` block both support:
 
-* `image` - (Required) The registry path where the inference code image is stored in Amazon ECR.
+* `image` - (Optional) The registry path where the inference code image is stored in Amazon ECR.
 * `mode` - (Optional) The container hosts value `SingleModel/MultiModel`. The default value is `SingleModel`.
 * `model_data_url` - (Optional) The URL for the S3 location where model artifacts are stored.
+* `model_package_name` - (Optional) The name or Amazon Resource Name (ARN) of the model package to use to create the model.
 * `container_hostname` - (Optional) The DNS host name for the container.
 * `environment` - (Optional) Environment variables for the Docker container.
    A list of key value pairs.

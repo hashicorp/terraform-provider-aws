@@ -85,6 +85,12 @@ func ResourceModel() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validModelDataURL,
 						},
+						"model_package_name": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 					},
 				},
 			},
@@ -143,7 +149,7 @@ func ResourceModel() *schema.Resource {
 						},
 						"image": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validImage,
 						},
@@ -174,6 +180,12 @@ func ResourceModel() *schema.Resource {
 							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validModelDataURL,
+						},
+						"model_package_name": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -408,6 +420,10 @@ func expandContainer(m map[string]interface{}) *sagemaker.ContainerDefinition {
 	if v, ok := m["model_data_url"]; ok && v.(string) != "" {
 		container.ModelDataUrl = aws.String(v.(string))
 	}
+	if v, ok := m["model_package_name"]; ok && v.(string) != "" {
+		container.ModelPackageName = aws.String(v.(string))
+	}
+
 	if v, ok := m["environment"]; ok {
 		container.Environment = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
@@ -461,6 +477,9 @@ func flattenContainer(container *sagemaker.ContainerDefinition) []interface{} {
 	}
 	if container.ModelDataUrl != nil {
 		cfg["model_data_url"] = aws.StringValue(container.ModelDataUrl)
+	}
+	if container.ModelDataUrl != nil {
+		cfg["model_package_name"] = aws.StringValue(container.ModelPackageName)
 	}
 	if container.Environment != nil {
 		cfg["environment"] = aws.StringValueMap(container.Environment)
