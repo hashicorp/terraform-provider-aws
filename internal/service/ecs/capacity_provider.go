@@ -58,7 +58,7 @@ func ResourceCapacityProvider() *schema.Resource {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Computed:     true,
-										ValidateFunc: validation.IntBetween(1, 10000),
+										ValidateFunc: validation.IntBetween(0, 10000),
 									},
 									"maximum_scaling_step_size": {
 										Type:         schema.TypeInt,
