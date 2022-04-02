@@ -414,6 +414,10 @@ func resourceOntapFileSystemUpdate(d *schema.ResourceData, meta interface{}) err
 			input.OntapConfiguration.ThroughputCapacity = aws.Int64(int64(d.Get("throughput_capacity").(int)))
 		}
 
+		if d.HasChange("disk_iops_configuration") {
+			input.OntapConfiguration.DiskIopsConfiguration = expandFsxOntapFileDiskIopsConfiguration(d.Get("disk_iops_configuration").([]interface{}))
+		}
+
 		_, err := conn.UpdateFileSystem(input)
 
 		if err != nil {

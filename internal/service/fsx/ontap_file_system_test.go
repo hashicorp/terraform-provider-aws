@@ -148,7 +148,7 @@ func TestAccFSxOntapFileSystem_diskIops(t *testing.T) {
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOntapFileSystemDiskIopsConfigurationConfig(rName),
+				Config: testAccOntapFileSystemDiskIopsConfigurationConfig(rName, 3072),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
@@ -161,6 +161,15 @@ func TestAccFSxOntapFileSystem_diskIops(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config: testAccOntapFileSystemDiskIopsConfigurationConfig(rName, 4000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "USER_PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "4000"),
+				),
 			},
 		},
 	})
@@ -661,7 +670,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 `, rName))
 }
 
-func testAccOntapFileSystemDiskIopsConfigurationConfig(rName string) string {
+func testAccOntapFileSystemDiskIopsConfigurationConfig(rName string, iops int) string {
 	return acctest.ConfigCompose(testAccOntapFileSystemBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 1024
@@ -672,14 +681,14 @@ resource "aws_fsx_ontap_file_system" "test" {
 
   disk_iops_configuration {
     mode = "USER_PROVISIONED"
-    iops = 3072
+    iops = %[2]d
   }
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName))
+`, rName, iops))
 }
 
 func testAccOntapFileSystemRouteTableConfig(rName string) string {
