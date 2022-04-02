@@ -93,7 +93,7 @@ func TestLambdaPermissionOrgUnmarshalling(t *testing.T) {
 	expectedOrgId := "o-1234567890"
 	strEquals := stmt.Condition["StringEquals"]
 	if strEquals["aws:PrincipalOrgID"] != expectedOrgId {
-		t.Fatalf("Expected Source Account to match (%q != %q)", strEquals["aws:PrincipalOrgID"], expectedOrgId)
+		t.Fatalf("Expected Principal Org ID to match (%q != %q)", strEquals["aws:PrincipalOrgID"], expectedOrgId)
 	}
 }
 
