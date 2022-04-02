@@ -427,6 +427,10 @@ func resourceOntapFileSystemUpdate(d *schema.ResourceData, meta interface{}) err
 		if _, err := waitFileSystemUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for FSx ONTAP File System (%s) update: %w", d.Id(), err)
 		}
+
+		if _, err := waitAdministrativeActionCompleted(conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for FSx ONTAP File System (%s) update: %w", d.Id(), err)
+		}
 	}
 
 	return resourceOntapFileSystemRead(d, meta)
