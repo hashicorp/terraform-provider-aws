@@ -470,10 +470,45 @@ func TestAccFSxOntapFileSystem_throughputCapacity(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"security_group_ids"},
 			},
 			{
-				Config: testAccOntapFileSystemBasicConfig(rName),
+				Config: testAccOntapFileSystemThroughputCapacityConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "256"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFSxOntapFileSystem_storageCapacity(t *testing.T) {
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_ontap_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOntapFileSystemBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1024"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config: testAccOntapFileSystemStorageCapacityConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "2048"),
 				),
 			},
 		},
@@ -900,6 +935,18 @@ resource "aws_fsx_ontap_file_system" "test" {
   subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
   deployment_type     = "MULTI_AZ_1"
   throughput_capacity = 256
+  preferred_subnet_id = aws_subnet.test1.id
+}
+`)
+}
+
+func testAccOntapFileSystemStorageCapacityConfig(rName string) string {
+	return acctest.ConfigCompose(testAccOntapFileSystemBaseConfig(rName), `
+resource "aws_fsx_ontap_file_system" "test" {
+  storage_capacity    = 2048
+  subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
+  deployment_type     = "MULTI_AZ_1"
+  throughput_capacity = 128
   preferred_subnet_id = aws_subnet.test1.id
 }
 `)
