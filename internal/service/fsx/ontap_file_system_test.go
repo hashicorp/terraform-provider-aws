@@ -446,7 +446,7 @@ func TestAccFSxOntapFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 }
 
 func TestAccFSxOntapFileSystem_throughputCapacity(t *testing.T) {
-	var filesystem fsx.FileSystem
+	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -459,7 +459,7 @@ func TestAccFSxOntapFileSystem_throughputCapacity(t *testing.T) {
 			{
 				Config: testAccOntapFileSystemBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
+					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "128"),
 				),
 			},
@@ -472,7 +472,8 @@ func TestAccFSxOntapFileSystem_throughputCapacity(t *testing.T) {
 			{
 				Config: testAccOntapFileSystemThroughputCapacityConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
+					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem2),
+					testAccCheckFsxOntapFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "256"),
 				),
 			},
@@ -481,7 +482,7 @@ func TestAccFSxOntapFileSystem_throughputCapacity(t *testing.T) {
 }
 
 func TestAccFSxOntapFileSystem_storageCapacity(t *testing.T) {
-	var filesystem fsx.FileSystem
+	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -494,7 +495,7 @@ func TestAccFSxOntapFileSystem_storageCapacity(t *testing.T) {
 			{
 				Config: testAccOntapFileSystemBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
+					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1024"),
 				),
 			},
@@ -507,7 +508,8 @@ func TestAccFSxOntapFileSystem_storageCapacity(t *testing.T) {
 			{
 				Config: testAccOntapFileSystemStorageCapacityConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
+					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem2),
+					testAccCheckFsxOntapFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "2048"),
 				),
 			},
