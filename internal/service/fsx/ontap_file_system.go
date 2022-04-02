@@ -183,7 +183,6 @@ func ResourceOntapFileSystem() *schema.Resource {
 			"storage_capacity": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(1024, 192*1024),
 			},
 			"storage_type": {
@@ -206,8 +205,7 @@ func ResourceOntapFileSystem() *schema.Resource {
 			"throughput_capacity": {
 				Type:         schema.TypeInt,
 				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntInSlice([]int{128, 512, 1024, 2048}),
+				ValidateFunc: validation.IntInSlice([]int{128, 256, 512, 1024, 2048}),
 			},
 			"vpc_id": {
 				Type:     schema.TypeString,
@@ -392,6 +390,10 @@ func resourceOntapFileSystemUpdate(d *schema.ResourceData, meta interface{}) err
 			OntapConfiguration: &fsx.UpdateFileSystemOntapConfiguration{},
 		}
 
+		if d.HasChange("storage_capacity") {
+			input.StorageCapacity = aws.Int64(int64(d.Get("storage_capacity").(int)))
+		}
+
 		if d.HasChange("automatic_backup_retention_days") {
 			input.OntapConfiguration.AutomaticBackupRetentionDays = aws.Int64(int64(d.Get("automatic_backup_retention_days").(int)))
 		}
@@ -406,6 +408,10 @@ func resourceOntapFileSystemUpdate(d *schema.ResourceData, meta interface{}) err
 
 		if d.HasChange("weekly_maintenance_start_time") {
 			input.OntapConfiguration.WeeklyMaintenanceStartTime = aws.String(d.Get("weekly_maintenance_start_time").(string))
+		}
+
+		if d.HasChange("throughput_capacity") {
+			input.OntapConfiguration.ThroughputCapacity = aws.Int64(int64(d.Get("throughput_capacity").(int)))
 		}
 
 		_, err := conn.UpdateFileSystem(input)
