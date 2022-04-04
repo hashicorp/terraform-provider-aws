@@ -239,13 +239,13 @@ func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
+	d.SetId(RouteCreateID(routeTableID, destination))
+
 	_, err = WaitRouteReady(conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to become available: %w", routeTableID, destination, err)
 	}
-
-	d.SetId(RouteCreateID(routeTableID, destination))
 
 	return resourceRouteRead(d, meta)
 }
