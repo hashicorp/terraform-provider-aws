@@ -1202,6 +1202,7 @@ func Provider() *schema.Provider {
 			"aws_directory_service_directory":             ds.ResourceDirectory(),
 			"aws_directory_service_log_subscription":      ds.ResourceLogSubscription(),
 
+			"aws_dynamodb_contributor_insights":          dynamodb.ResourceContributorInsights(),
 			"aws_dynamodb_global_table":                  dynamodb.ResourceGlobalTable(),
 			"aws_dynamodb_kinesis_streaming_destination": dynamodb.ResourceKinesisStreamingDestination(),
 			"aws_dynamodb_table":                         dynamodb.ResourceTable(),
