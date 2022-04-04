@@ -11,10 +11,10 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 )
 
-// emptyBucket empties the specified S3 bucket by deleting all object versions and delete markers.
+// EmptyBucket empties the specified S3 bucket by deleting all object versions and delete markers.
 // If `force` is `true` then S3 Object Lock governance mode restrictions are bypassed and
 // an attempt is made to remove any S3 Object Lock legal holds.
-func emptyBucket(ctx context.Context, conn *s3.S3, bucket string, force bool) error {
+func EmptyBucket(ctx context.Context, conn *s3.S3, bucket string, force bool) error {
 	err := forEachObjectVersionsPage(ctx, conn, bucket, func(ctx context.Context, conn *s3.S3, bucket string, page *s3.ListObjectVersionsOutput) error {
 		return deletePageOfObjectVersions(ctx, conn, bucket, force, page)
 	})
@@ -74,12 +74,15 @@ func deletePageOfObjectVersions(ctx context.Context, conn *s3.S3, bucket string,
 	}
 
 	input := &s3.DeleteObjectsInput{
-		Bucket:                    aws.String(bucket),
-		BypassGovernanceRetention: aws.Bool(force),
+		Bucket: aws.String(bucket),
 		Delete: &s3.Delete{
 			Objects: toDelete,
 			Quiet:   aws.Bool(true), // Only report errors.
 		},
+	}
+
+	if force {
+		input.BypassGovernanceRetention = aws.Bool(true)
 	}
 
 	output, err := conn.DeleteObjectsWithContext(ctx, input)
