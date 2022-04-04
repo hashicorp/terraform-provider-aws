@@ -34,4 +34,4 @@ The following arguments are supported by the `filter` configuration block:
 
 ## Attributes Reference
 
-* `ids` - Set of window IDs of the matched SSM maintenance windows.
+* `ids` - List of window IDs of the matched SSM maintenance windows.

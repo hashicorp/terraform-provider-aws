@@ -33,7 +33,7 @@ func DataSourceMaintenanceWindows() *schema.Resource {
 				},
 			},
 			"ids": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -69,7 +69,7 @@ func dataMaintenanceWindowsRead(d *schema.ResourceData, meta interface{}) error 
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading SSM maintenance windows: %w", err)
+		return fmt.Errorf("error reading SSM Maintenance Windows: %w", err)
 	}
 
 	var windowIDs []string
