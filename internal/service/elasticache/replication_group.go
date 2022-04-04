@@ -192,7 +192,7 @@ func ResourceReplicationGroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				StateFunc: func(val interface{}) string {
-					// Elasticache always changes the maintenance to lowercase
+					// ElastiCache always changes the maintenance to lowercase
 					return strings.ToLower(val.(string))
 				},
 				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
@@ -684,7 +684,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 
 	// tags not supported in all partitions
 	if err != nil {
-		log.Printf("[WARN] failed listing tags for Elasticache Replication Group (%s): %s", aws.StringValue(rgp.ARN), err)
+		log.Printf("[WARN] failed listing tags for ElastiCache Replication Group (%s): %s", aws.StringValue(rgp.ARN), err)
 	}
 
 	if tags != nil {
@@ -913,6 +913,11 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		if err != nil {
 			return fmt.Errorf("error updating ElastiCache Replication Group (%s): %w", d.Id(), err)
 		}
+
+		_, err = WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) to update: %w", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("auth_token") {
@@ -925,7 +930,12 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 
 		_, err := conn.ModifyReplicationGroup(params)
 		if err != nil {
-			return fmt.Errorf("error changing auth_token for Elasticache Replication Group (%s): %w", d.Id(), err)
+			return fmt.Errorf("error changing auth_token for ElastiCache Replication Group (%s): %w", d.Id(), err)
+		}
+
+		_, err = WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) auth_token change: %w", d.Id(), err)
 		}
 	}
 
@@ -942,11 +952,6 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 
 			log.Printf("[WARN] failed updating tags for ElastiCache Replication Group (%s): %s", d.Id(), err)
 		}
-	}
-
-	_, err := WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
-	if err != nil {
-		return fmt.Errorf("error waiting for modification: %w", err)
 	}
 
 	return resourceReplicationGroupRead(d, meta)
