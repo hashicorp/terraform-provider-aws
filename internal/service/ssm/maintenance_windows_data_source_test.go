@@ -63,7 +63,7 @@ resource "aws_ssm_maintenance_window" "test3" {
   cutoff   = 0
   schedule = "cron(0 16 ? * THU *)"
 
-  enabled  = false
+  enabled = false
 }
 `, rName1, rName2, rName3)
 }
