@@ -14,26 +14,30 @@ import (
 // EmptyBucket empties the specified S3 bucket by deleting all object versions and delete markers.
 // If `force` is `true` then S3 Object Lock governance mode restrictions are bypassed and
 // an attempt is made to remove any S3 Object Lock legal holds.
-func EmptyBucket(ctx context.Context, conn *s3.S3, bucket string, force bool) error {
-	err := forEachObjectVersionsPage(ctx, conn, bucket, func(ctx context.Context, conn *s3.S3, bucket string, page *s3.ListObjectVersionsOutput) error {
+// Returns the number of object deleted.
+func EmptyBucket(ctx context.Context, conn *s3.S3, bucket string, force bool) (int64, error) {
+	nObjects, err := forEachObjectVersionsPage(ctx, conn, bucket, func(ctx context.Context, conn *s3.S3, bucket string, page *s3.ListObjectVersionsOutput) (int64, error) {
 		return deletePageOfObjectVersions(ctx, conn, bucket, force, page)
 	})
 
 	if err != nil {
-		return err
+		return nObjects, err
 	}
 
-	err = forEachObjectVersionsPage(ctx, conn, bucket, deletePageOfDeleteMarkers)
+	n, err := forEachObjectVersionsPage(ctx, conn, bucket, deletePageOfDeleteMarkers)
+	nObjects += n
 
 	if err != nil {
-		return err
+		return nObjects, err
 	}
 
-	return nil
+	return nObjects, nil
 }
 
 // forEachObjectVersionsPage calls the specified function for each page returned from the S3 ListObjectVersionsPages API.
-func forEachObjectVersionsPage(ctx context.Context, conn *s3.S3, bucket string, fn func(ctx context.Context, conn *s3.S3, bucket string, page *s3.ListObjectVersionsOutput) error) error {
+func forEachObjectVersionsPage(ctx context.Context, conn *s3.S3, bucket string, fn func(ctx context.Context, conn *s3.S3, bucket string, page *s3.ListObjectVersionsOutput) (int64, error)) (int64, error) {
+	var nObjects int64
+
 	input := &s3.ListObjectVersionsInput{
 		Bucket: aws.String(bucket),
 	}
@@ -44,7 +48,10 @@ func forEachObjectVersionsPage(ctx context.Context, conn *s3.S3, bucket string, 
 			return !lastPage
 		}
 
-		if err := fn(ctx, conn, bucket, page); err != nil {
+		n, err := fn(ctx, conn, bucket, page)
+		nObjects += n
+
+		if err != nil {
 			lastErr = err
 
 			return false
@@ -54,17 +61,19 @@ func forEachObjectVersionsPage(ctx context.Context, conn *s3.S3, bucket string, 
 	})
 
 	if err != nil {
-		return fmt.Errorf("listing S3 Bucket (%s) object versions: %w", bucket, err)
+		return nObjects, fmt.Errorf("listing S3 Bucket (%s) object versions: %w", bucket, err)
 	}
 
 	if lastErr != nil {
-		return lastErr
+		return nObjects, lastErr
 	}
 
-	return nil
+	return nObjects, nil
 }
 
-func deletePageOfObjectVersions(ctx context.Context, conn *s3.S3, bucket string, force bool, page *s3.ListObjectVersionsOutput) error {
+func deletePageOfObjectVersions(ctx context.Context, conn *s3.S3, bucket string, force bool, page *s3.ListObjectVersionsOutput) (int64, error) {
+	var nObjects int64
+
 	toDelete := make([]*s3.ObjectIdentifier, 0, len(page.Versions))
 	for _, v := range page.Versions {
 		toDelete = append(toDelete, &s3.ObjectIdentifier{
@@ -73,8 +82,8 @@ func deletePageOfObjectVersions(ctx context.Context, conn *s3.S3, bucket string,
 		})
 	}
 
-	if len(toDelete) == 0 {
-		return nil
+	if nObjects = int64(len(toDelete)); nObjects == 0 {
+		return nObjects, nil
 	}
 
 	input := &s3.DeleteObjectsInput{
@@ -92,12 +101,14 @@ func deletePageOfObjectVersions(ctx context.Context, conn *s3.S3, bucket string,
 	output, err := conn.DeleteObjectsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-		return nil
+		return nObjects, nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting S3 Bucket (%s) objects: %w", bucket, err)
+		return nObjects, fmt.Errorf("deleting S3 Bucket (%s) objects: %w", bucket, err)
 	}
+
+	nObjects -= int64(len(output.Errors))
 
 	var deleteErrs *multierror.Error
 
@@ -130,6 +141,8 @@ func deletePageOfObjectVersions(ctx context.Context, conn *s3.S3, bucket string,
 
 				if err != nil {
 					deleteErrs = multierror.Append(deleteErrs, fmt.Errorf("deleting: %w", newS3ObjectVersionError(key, versionID, err)))
+				} else {
+					nObjects++
 				}
 			}
 		} else {
@@ -138,13 +151,15 @@ func deletePageOfObjectVersions(ctx context.Context, conn *s3.S3, bucket string,
 	}
 
 	if err := deleteErrs.ErrorOrNil(); err != nil {
-		return fmt.Errorf("deleting S3 Bucket (%s) objects: %w", bucket, err)
+		return nObjects, fmt.Errorf("deleting S3 Bucket (%s) objects: %w", bucket, err)
 	}
 
-	return nil
+	return nObjects, nil
 }
 
-func deletePageOfDeleteMarkers(ctx context.Context, conn *s3.S3, bucket string, page *s3.ListObjectVersionsOutput) error {
+func deletePageOfDeleteMarkers(ctx context.Context, conn *s3.S3, bucket string, page *s3.ListObjectVersionsOutput) (int64, error) {
+	var nObjects int64
+
 	toDelete := make([]*s3.ObjectIdentifier, 0, len(page.Versions))
 	for _, v := range page.DeleteMarkers {
 		toDelete = append(toDelete, &s3.ObjectIdentifier{
@@ -153,8 +168,8 @@ func deletePageOfDeleteMarkers(ctx context.Context, conn *s3.S3, bucket string, 
 		})
 	}
 
-	if len(toDelete) == 0 {
-		return nil
+	if nObjects = int64(len(toDelete)); nObjects == 0 {
+		return nObjects, nil
 	}
 
 	input := &s3.DeleteObjectsInput{
@@ -168,12 +183,14 @@ func deletePageOfDeleteMarkers(ctx context.Context, conn *s3.S3, bucket string, 
 	output, err := conn.DeleteObjectsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-		return nil
+		return nObjects, nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting S3 Bucket (%s) delete markers: %w", bucket, err)
+		return nObjects, fmt.Errorf("deleting S3 Bucket (%s) delete markers: %w", bucket, err)
 	}
+
+	nObjects -= int64(len(output.Errors))
 
 	var deleteErrs *multierror.Error
 
@@ -182,10 +199,10 @@ func deletePageOfDeleteMarkers(ctx context.Context, conn *s3.S3, bucket string, 
 	}
 
 	if err := deleteErrs.ErrorOrNil(); err != nil {
-		return fmt.Errorf("deleting S3 Bucket (%s) delete markers: %w", bucket, err)
+		return nObjects, fmt.Errorf("deleting S3 Bucket (%s) delete markers: %w", bucket, err)
 	}
 
-	return nil
+	return nObjects, nil
 }
 
 func newS3ObjectVersionError(key, versionID string, err error) error {

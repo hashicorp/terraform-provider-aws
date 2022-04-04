@@ -1436,8 +1436,10 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 				objectLockEnabled = aws.StringValue(objectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled
 			}
 
-			if err := EmptyBucket(ctx, conn, d.Id(), objectLockEnabled); err != nil {
+			if n, err := EmptyBucket(ctx, conn, d.Id(), objectLockEnabled); err != nil {
 				return diag.Errorf("emptying S3 Bucket (%s): %s", d.Id(), err)
+			} else {
+				log.Printf("[DEBUG] Deleted %d S3 objects", n)
 			}
 
 			// this line recurses until all objects are deleted or an error is returned
