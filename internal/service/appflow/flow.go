@@ -2,6 +2,7 @@ package appflow
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"regexp"
 	"time"
@@ -12,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -701,284 +701,284 @@ func ResourceFlow() *schema.Resource {
 								},
 							},
 						},
-					},
-				},
-				"source_connector_properties": {
-					Type:     schema.TypeList,
-					Required: true,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"amplitude": {
-								Type:     schema.TypeList,
-								Optional: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"object": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+						"source_connector_properties": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"amplitude": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"object": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
+											},
 										},
 									},
-								},
-							},
-							"custom_connector": {
-								Type:     schema.TypeList,
-								Optional: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"custom_properties": {
-											Type:             schema.TypeMap,
-											Optional:         true,
-											MaxItems:         50,
-											ValidateDiagFunc: validation.All(validation.MapKeyLenBetween(1, 128), validation.MapKeyMatch(regexp.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"), validation.MapValueLenBetween(0, 2048), validation.MapValueMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters")),
-										},
-										"entity_name": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 1024)),
-										},
-									},
-								},
-							},
-							"datadog": {
-								Type:     schema.TypeList,
-								Optional: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"object": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+									"custom_connector": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"custom_properties": {
+													Type:             schema.TypeMap,
+													Optional:         true,
+													MaxItems:         50,
+													ValidateDiagFunc: validation.All(validation.MapKeyLenBetween(1, 128), validation.MapKeyMatch(regexp.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"), validation.MapValueLenBetween(0, 2048), validation.MapValueMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters")),
+												},
+												"entity_name": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 1024)),
+												},
+											},
 										},
 									},
-								},
-							},
-							"dynatrace": {
-								Type:     schema.TypeList,
-								Optional: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"object": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+									"datadog": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"object": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
+											},
 										},
 									},
-								},
-							},
-							"google_analytics": {
-								Type:     schema.TypeList,
-								Optional: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"object": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+									"dynatrace": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"object": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
+											},
 										},
 									},
-								},
-							},
-							"infor_nexus": {
-								Type:     schema.TypeList,
-								Optional: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"object": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+									"google_analytics": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"object": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
+											},
 										},
 									},
-								},
-							},
-							"marketo": {
-								Type:     schema.TypeList,
-								Optional: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"object": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+									"infor_nexus": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"object": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
+											},
 										},
 									},
-								},
-							},
-							"s3": {
-								Type:     schema.TypeList,
-								Optional: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"bucket_name": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+									"marketo": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"object": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
+											},
 										},
-										"bucket_prefix": {
-											Type:         schema.TypeString,
-											Optional:     true,
-											ValidateFunc: validation.StringLenBetween(0, 512),
-										},
-										"s3_input_format_config": {
-											Type:     schema.TypeList,
-											Optional: true,
-											MaxItems: 1,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													"s3_input_file_type": {
-														Type:         schema.TypeString,
-														Optional:     true,
-														ValidateFunc: validation.StringInSlice(appflow.S3InputFileType_Values(), false),
+									},
+									"s3": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"bucket_name": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+												},
+												"bucket_prefix": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringLenBetween(0, 512),
+												},
+												"s3_input_format_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"s3_input_file_type": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringInSlice(appflow.S3InputFileType_Values(), false),
+															},
+														},
 													},
 												},
 											},
 										},
 									},
-								},
-							},
-							"salesforce": {
-								Type:     schema.TypeList,
-								Optional: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"enable_dynamic_field_update": {
-											Type:     schema.TypeBool,
-											Optional: true,
-										},
-										"include_deleted_records": {
-											Type:     schema.TypeBool,
-											Optional: true,
-										},
-										"object": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
-										},
-									},
-								},
-							},
-							"sapo_data": {
-								Type:     schema.TypeList,
-								Optional: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"object": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+									"salesforce": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enable_dynamic_field_update": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"include_deleted_records": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"object": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
+											},
 										},
 									},
-								},
-							},
-							"service_now": {
-								Type:     schema.TypeList,
-								Optional: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"object": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+									"sapo_data": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"object": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
+											},
 										},
 									},
-								},
-							},
-							"singular": {
-								Type:     schema.TypeList,
-								Optional: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"object": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+									"service_now": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"object": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
+											},
 										},
 									},
-								},
-							},
-							"slack": {
-								Type:     schema.TypeList,
-								Optional: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"object": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+									"singular": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"object": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
+											},
 										},
 									},
-								},
-							},
-							"trendmicro": {
-								Type:     schema.TypeList,
-								Optional: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"object": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+									"slack": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"object": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
+											},
 										},
 									},
-								},
-							},
-							"veeva": {
-								Type:     schema.TypeList,
-								Optional: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"document_type": {
-											Type:         schema.TypeString,
-											Optional:     true,
-											ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`[\s\w_-]+`), "must contain only alphanumeric, underscore (_), and hyphen (-) characters"), validation.StringLenBetween(1, 512)),
-										},
-										"include_all_versions": {
-											Type:     schema.TypeBool,
-											Optional: true,
-										},
-										"include_renditions": {
-											Type:     schema.TypeBool,
-											Optional: true,
-										},
-										"include_source_files": {
-											Type:     schema.TypeBool,
-											Optional: true,
-										},
-										"object": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+									"trendmicro": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"object": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
+											},
 										},
 									},
-								},
-							},
-							"zendesk": {
-								Type:     schema.TypeList,
-								Optional: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"object": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+									"veeva": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"document_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`[\s\w_-]+`), "must contain only alphanumeric, underscore (_), and hyphen (-) characters"), validation.StringLenBetween(1, 512)),
+												},
+												"include_all_versions": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"include_renditions": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"include_source_files": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"object": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
+											},
+										},
+									},
+									"zendesk": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"object": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
+											},
 										},
 									},
 								},
@@ -1213,14 +1213,8 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("creating Appflow Flow (%s): empty output", d.Get("name").(string))
 	}
 
-	d.SetId(aws.ToString(out.Flow.FlowArn))
+	d.SetId(aws.ToString(out.Flow.FlowName))
 
-	// TIP: 5. Use a waiter to wait for create to complete
-	if _, err := waitFlowCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Appflow Flow (%s) create: %s", d.Id(), err)
-	}
-
-	// TIP: 6. Call the Read function in the Create return
 	return resourceFlowRead(ctx, d, meta)
 }
 
@@ -1235,14 +1229,10 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	// 5. Set the tags
 	// 6. Return nil
 
-	// TIP: 1. Get a client connection to the relevant service
 	conn := meta.(*conns.AWSClient).AppFlowConn
 
-	// TIP: 2. Get the resource from AWS using an API Get, List, or Describe-
-	// type function, or, better yet, using a finder.
-	out, err := findFlowByID(ctx, conn, d.Id())
+	out, err := conn.DescribeFlowWithContext(ctx, conn, d.Id())
 
-	// TIP: 3. Set ID to empty where resource is not new and not found
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppFlow Flow (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -1253,45 +1243,34 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.Errorf("reading AppFlow Flow (%s): %s", d.Id(), err)
 	}
 
-	// TIP: 4. Set the arguments and attributes
-	//
-	// For simple data types (i.e., schema.TypeString, schema.TypeBool,
-	// schema.TypeInt, and schema.TypeFloat), a simple Set call (e.g.,
-	// d.Set("arn", out.Arn) is sufficient. No error or nil checking is
-	// necessary.
-	//
-	// However, there are some situations where more handling is needed.
-	// a. Complex data types (e.g., schema.TypeList, schema.TypeSet)
-	// b. Where errorneous diffs occur. For example, a schema.TypeString may be
-	//    a JSON. AWS may return the JSON in a slightly different order but it
-	//    is equivalent to what is already set. In that case, you may check if
-	//    it is equivalent before setting the different JSON.
-	d.Set("arn", out.Arn)
-	d.Set("name", out.Name)
+	d.Set("arn", out.FlowArn)
+	d.Set("description", out.Description)
 
-	// TIP: Setting a complex type.
-	// For more information, see:
-	// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md
-	// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md#flatten-functions-for-blocks
-	// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md#root-typeset-of-resource-and-aws-list-of-structure
-	if err := d.Set("complex_argument", flattenComplexArguments(out.ComplexArguments)); err != nil {
-		return diag.Errorf("setting complex argument: %s", err)
+	if err := d.Set("destination_flow_config", flattenDestinationFlowConfigs(out.DestinationFlowConfigList)); err != nil {
+		return fmt.Errorf("error setting destination_flow_config: %w", err)
 	}
 
-	// TIP: Setting a JSON string to avoid errorneous diffs.
-	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
+	d.Set("kms_arn", out.KmsArn)
 
-	if err != nil {
-		return diag.Errorf("while setting policy (%s), encountered: %s", p, err)
+	if out.SourceFlowConfig != nil {
+		if err := d.Set("source_flow_config", []interface{}{flattenSourceFlowConfig(out.SourceFlowConfig)}); err != nil {
+			return fmt.Errorf("error setting source_flow_config: %w", err)
+		}
+	} else {
+		d.Set("source_flow_config", nil)
 	}
 
-	p, err = structure.NormalizeJsonString(p)
-
-	if err != nil {
-		return diag.Errorf("policy (%s) is invalid JSON: %s", p, err)
+	if err := d.Set("task", flattenTasks(out.Tasks)); err != nil {
+		return fmt.Errorf("error setting task: %w", err)
 	}
 
-	d.Set("policy", p)
+	if out.TriggerConfig != nil {
+		if err := d.Set("trigger_config", []interface{}{flattenTriggerConfig(out.TriggerConfig)}); err != nil {
+			return fmt.Errorf("error setting trigger_config: %w", err)
+		}
+	} else {
+		d.Set("trigger_config", nil)
+	}
 
 	// TIP: 5. Set the tags
 	//
@@ -1572,45 +1551,11 @@ func findFlowByID(ctx context.Context, conn *appflow.AppFlow, id string) (*appfl
 //
 // See more:
 // https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md
-func flattenComplexArgument(apiObject *appflow.ComplexArgument) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	m := map[string]interface{}{}
-
-	if v := apiObject.SubFieldOne; v != nil {
-		m["sub_field_one"] = aws.ToString(v)
-	}
-
-	if v := apiObject.SubFieldTwo; v != nil {
-		m["sub_field_two"] = aws.ToString(v)
-	}
-
-	return m
-}
 
 // TIP: Often the AWS API will return a slice of structures in response to a
 // request for information. Sometimes you will have set criteria (e.g., the ID)
 // that means you'll get back a one-length slice. This plural function works
 // brilliantly for that situation too.
-func flattenComplexArguments(apiObjects []*appflow.ComplexArgument) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var l []interface{}
-
-	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		l = append(l, flattenComplexArgument(apiObject))
-	}
-
-	return l
-}
 
 // TIP: Remember, as mentioned above, expanders take a Terraform data structure
 // and return something that you can send to the AWS API. In other words,
@@ -2665,7 +2610,7 @@ func expandTriggerConfig(tfMap map[string]interface{}) *appflow.TriggerConfig {
 
 	a := &appflow.TriggerConfig{}
 
-	if v, ok := tfMap["trigger_propeties"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["trigger_properties"].([]interface{}); ok && len(v) > 0 {
 		a.TriggerProperties = expandTriggerProperties(v[0].(map[string]interface{}))
 	}
 
@@ -2732,4 +2677,1090 @@ func expandScheduledTriggerProperties(tfMap map[string]interface{}) *appflow.Sch
 	}
 
 	return a
+}
+
+func flattenErrorHandlingConfig(errorHandlingConfig *appflow.ErrorHandlingConfig) map[string]interface{} {
+	if errorHandlingConfig == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := errorHandlingConfig.BucketName; v != nil {
+		m["bucket_name"] = aws.ToString(v)
+	}
+
+	if v := errorHandlingConfig.BucketPrefix; v != nil {
+		m["bucket_prefix"] = aws.ToString(v)
+	}
+
+	if v := errorHandlingConfig.FailOnFirstDestinationError; v != nil {
+		m["fail_on_first_destination_error"] = aws.BoolValue(v)
+	}
+
+	return m
+}
+
+func flattenPrefixConfig(prefixConfig *appflow.PrefixConfig) map[string]interface{} {
+	if prefixConfig == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := prefixConfig.PrefixFormat; v != nil {
+		m["prefix_format"] = aws.ToString(v)
+	}
+
+	if v := prefixConfig.PrefixType; v != nil {
+		m["prefix_type"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenAggregationConfig(aggregationConfig *appflow.AggregationConfig) map[string]interface{} {
+	if aggregationConfig == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := aggregationConfig.AggregationType; v != nil {
+		m["aggregation_type"] = []interface{}{flattenAggregationConfig(v)}
+	}
+
+	return m
+}
+
+func flattenDestinationFlowConfigs(destinationFlowConfigs []*appflow.DestinationFlowConfig) []interface{} {
+	if len(destinationFlowConfigs) == 0 {
+		return nil
+	}
+
+	var l []interface{}
+
+	for _, destinationFlowConfig := range destinationFlowConfigs {
+		if destinationFlowConfig == nil {
+			continue
+		}
+
+		l = append(l, flattenDestinationFlowConfig(DestinationFlowConfig))
+	}
+
+	return l
+}
+
+func flattenDestinationFlowConfig(destinationFlowConfig *appflow.DestinationFlowConfig) map[string]interface{} {
+	if destinationFlowConfig == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := destinationFlowConfig.ApiVersion; v != nil {
+		m["api_version"] = aws.ToString(v)
+	}
+
+	if v := destinationFlowConfig.ConnectorProfileName; v != nil {
+		m["connector_profile_name"] = aws.ToString(v)
+	}
+
+	if v := destinationFlowConfig.ConnectorType; v != nil {
+		m["connector_type"] = aws.ToString(v)
+	}
+
+	if v := destinationFlowConfig.DestinationConnectorProperties; v != nil {
+		m["destination_connector_properties"] = []interface{}{flattenDestinationConnectorProperties(v)}
+	}
+
+	return m
+}
+
+func flattenDestinationConnectorProperties(destinationConnectorProperties *appflow.DestinationConnectorProperties) map[string]interface{} {
+	if destinationConnectorProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := destinationConnectorProperties.CustomConnector; v != nil {
+		m["custom_connector"] = []interface{}{flattenCustomConnectorDestinationProperties(v)}
+	}
+
+	if v := destinationConnectorProperties.CustomerProfiles; v != nil {
+		m["customer_profiles"] = []interface{}{flattenCustomerProfilesDestinationProperties(v)}
+	}
+
+	if v := destinationConnectorProperties.EventBridge; v != nil {
+		m["event_bridge"] = []interface{}{flattenEventBridgeDestinationProperties(v)}
+	}
+
+	if v := destinationConnectorProperties.Honeycode; v != nil {
+		m["honeycode"] = []interface{}{flattenHoneycodeDestinationProperties(v)}
+	}
+
+	if v := destinationConnectorProperties.LookoutMetrics; v != nil {
+		m["lookout_metrics"] = v[0].(appflow.LookoutMetricsDestinationProperties)
+	}
+
+	if v := destinationConnectorProperties.Marketo; v != nil {
+		m["marketo"] = []interface{}{flattenMarketoDestinationProperties(v)}
+	}
+
+	if v := destinationConnectorProperties.Redshift; v != nil {
+		m["redshift"] = []interface{}{flattenRedshiftDestinationProperties(v)}
+	}
+
+	if v := destinationConnectorProperties.S3; v != nil {
+		m["s3"] = []interface{}{flattenS3DestinationProperties(v)}
+	}
+
+	if v := destinationConnectorProperties.Salesforce; v != nil {
+		m["salesforce"] = []interface{}{flattenSalesforceDestinationProperties(v)}
+	}
+
+	if v := destinationConnectorProperties.SAPOData; v != nil {
+		m["sapo_data"] = []interface{}{flattenSAPODataDestinationProperties(v)}
+	}
+
+	if v := destinationConnectorProperties.Snowflake; v != nil {
+		m["snowflake"] = []interface{}{flattenSnowflakeDestinationProperties(v)}
+	}
+
+	if v := destinationConnectorProperties.Upsolver; v != nil {
+		m["upsolver"] = []interface{}{flattenUpsolverDestinationProperties(v)}
+	}
+
+	if v := destinationConnectorProperties.Zendesk; v != nil {
+		m["custom_connector"] = []interface{}{flattenCustomConnectorDestinationProperties(v)}
+	}
+
+	return m
+}
+
+func flattenCustomConnectorDestinationProperties(customConnectorDestinationProperties *appflow.CustomConnectorDestinationProperties) map[string]interface{} {
+	if customConnectorDestinationProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := customConnectorDestinationProperties.CustomProperties; v != nil {
+		m["custom_properties"] = aws.StringValueMap(v)
+	}
+
+	if v := customConnectorDestinationProperties.EntityName; v != nil {
+		m["entity_name"] = aws.ToString(v)
+	}
+
+	if v := customConnectorDestinationProperties.ErrorHandlingConfig; v != nil {
+		m["error_handling_config"] = []interface{}{flattenErrorHandlingConfig(v)}
+	}
+
+	if v := customConnectorDestinationProperties.IdFieldNames; v != nil {
+		m["id_field_names"] = aws.StringValueSlice(v)
+	}
+
+	if v := customConnectorDestinationProperties.WriteOperationType; v != nil {
+		m["write_operation_type"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenCustomerProfilesDestinationProperties(customerProfilesDestinationProperties *appflow.CustomerProfilesDestinationProperties) map[string]interface{} {
+	if customerProfilesDestinationProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := customerProfilesDestinationProperties.DomainName; v != nil {
+		m["domain_name"] = aws.ToString(v)
+	}
+
+	if v := customerProfilesDestinationProperties.ObjectTypeName; v != nil {
+		m["object_type_name"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenEventBridgeDestinationProperties(eventBridgeDestinationProperties *appflow.EventBridgeDestinationProperties) map[string]interface{} {
+	if eventBridgeDestinationProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := eventBridgeDestinationProperties.ErrorHandlingConfig; v != nil {
+		m["error_handling_config"] = []interface{}{flattenErrorHandlingConfig(v)}
+	}
+
+	if v := eventBridgeDestinationProperties.Object; v != nil {
+		m["object"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenHoneycodeDestinationProperties(honeycodeDestinationProperties *appflow.HoneycodeDestinationProperties) map[string]interface{} {
+	if honeycodeDestinationProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := honeycodeDestinationProperties.ErrorHandlingConfig; v != nil {
+		m["error_handling_config"] = []interface{}{flattenErrorHandlingConfig(v)}
+	}
+
+	if v := honeycodeDestinationProperties.Object; v != nil {
+		m["object"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenMarketoDestinationProperties(marketoDestinationProperties *appflow.MarketoDestinationProperties) map[string]interface{} {
+	if marketoDestinationProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := marketoDestinationProperties.ErrorHandlingConfig; v != nil {
+		m["error_handling_config"] = []interface{}{flattenErrorHandlingConfig(v)}
+	}
+
+	if v := marketoDestinationProperties.Object; v != nil {
+		m["object"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenRedshiftDestinationProperties(redshiftDestinationProperties *appflow.RedshiftDestinationProperties) map[string]interface{} {
+	if redshiftDestinationProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := redshiftDestinationProperties.BucketPrefix; v != nil {
+		m["bucket_prefix"] = aws.ToString(v)
+	}
+
+	if v := redshiftDestinationProperties.ErrorHandlingConfig; v != nil {
+		m["error_handling_config"] = []interface{}{flattenErrorHandlingConfig(v)}
+	}
+
+	if v := redshiftDestinationProperties.IntermediateBucketName; v != nil {
+		m["intermediate_bucket_name"] = aws.ToString(v)
+	}
+
+	if v := redshiftDestinationProperties.Object; v != nil {
+		m["object"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenS3DestinationProperties(s3DestinationProperties *appflow.S3DestinationProperties) map[string]interface{} {
+	if s3DestinationProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := s3DestinationProperties.BucketName; v != nil {
+		m["bucket_name"] = aws.ToString(v)
+	}
+
+	if v := s3DestinationProperties.BucketPrefix; v != nil {
+		m["bucket_prefix"] = aws.ToString(v)
+	}
+
+	if v := s3DestinationProperties.S3OutputFormatConfig; v != nil {
+		m["s3_output_format_config"] = []interface{}{flattenS3OutputFormatConfig(v)}
+	}
+
+	return m
+}
+
+func flattenS3OutputFormatConfig(s3OutputFormatConfig *appflow.S3OutputFormatConfig) map[string]interface{} {
+	if s3OutputFormatConfig == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := s3OutputFormatConfig.AggregationConfig; v != nil {
+		m["aggregation_config"] = []interface{}{flattenAggregationConfig(v)}
+	}
+
+	if v := s3OutputFormatConfig.FileType; v != nil {
+		m["file_type"] = aws.ToString(v)
+	}
+
+	if v := s3OutputFormatConfig.PrefixConfig; v != nil {
+		m["prefix_config"] = []interface{}{flattenPrefixConfig(v)}
+	}
+
+	return m
+}
+
+func flattenSalesforceDestinationProperties(salesforceDestinationProperties *appflow.SalesforceDestinationProperties) map[string]interface{} {
+	if salesforceDestinationProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := salesforceDestinationProperties.ErrorHandlingConfig; v != nil {
+		m["error_handling_config"] = []interface{}{flattenErrorHandlingConfig(v)}
+	}
+
+	if v := salesforceDestinationProperties.IdFieldNames; v != nil {
+		m["id_field_names"] = aws.StringValueSlice(v)
+	}
+
+	if v := salesforceDestinationProperties.Object; v != nil {
+		m["object"] = aws.ToString(v)
+	}
+
+	if v := salesforceDestinationProperties.WriteOperationType; v != nil {
+		m["write_operation_type"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenSAPODataDestinationProperties(SAPODataDestinationProperties *appflow.SAPODataDestinationProperties) map[string]interface{} {
+	if SAPODataDestinationProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := SAPODataDestinationProperties.ErrorHandlingConfig; v != nil {
+		m["error_handling_config"] = []interface{}{flattenErrorHandlingConfig(v)}
+	}
+
+	if v := SAPODataDestinationProperties.IdFieldNames; v != nil {
+		m["id_field_names"] = aws.StringValueSlice(v)
+	}
+
+	if v := SAPODataDestinationProperties.ObjectPath; v != nil {
+		m["object_path"] = aws.ToString(v)
+	}
+
+	if v := SAPODataDestinationProperties.SuccessResponseHandlingConfig; v != nil {
+		m["success_response_handling_config"] = []interface{}{flattenSuccessResponseHandlingConfig(v)}
+	}
+
+	if v := SAPODataDestinationProperties.WriteOperationType; v != nil {
+		m["write_operation_type"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenSuccessResponseHandlingConfig(successResponseHandlingConfig *appflow.SuccessResponseHandlingConfig) map[string]interface{} {
+	if successResponseHandlingConfig == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := successResponseHandlingConfig.BucketName; v != nil {
+		m["bucket_name"] = aws.StringValueSlice(v)
+	}
+
+	if v := successResponseHandlingConfig.BucketPrefix; v != nil {
+		m["bucket_prefix"] = aws.StringValueSlice(v)
+	}
+
+	return m
+}
+
+func flattenSnowflakeDestinationProperties(snowflakeDestinationProperties *appflow.SnowflakeDestinationProperties) map[string]interface{} {
+	if snowflakeDestinationProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := snowflakeDestinationProperties.BucketPrefix; v != nil {
+		m["bucket_prefix"] = aws.ToString(v)
+	}
+
+	if v := snowflakeDestinationProperties.ErrorHandlingConfig; v != nil {
+		m["error_handling_config"] = []interface{}{flattenErrorHandlingConfig(v)}
+	}
+
+	if v := snowflakeDestinationProperties.IntermediateBucketName; v != nil {
+		m["intermediate_bucket_name"] = aws.ToString(v)
+	}
+
+	if v := snowflakeDestinationProperties.Object; v != nil {
+		m["object"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenUpsolverDestinationProperties(upsolverDestinationProperties *appflow.UpsolverDestinationProperties) map[string]interface{} {
+	if upsolverDestinationProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := upsolverDestinationProperties.BucketName; v != nil {
+		m["bucket_name"] = aws.ToString(v)
+	}
+
+	if v := upsolverDestinationProperties.BucketPrefix; v != nil {
+		m["bucket_prefix"] = aws.ToString(v)
+	}
+
+	if v := upsolverDestinationProperties.S3OutputFormatConfig; v != nil {
+		m["s3_output_format_config"] = []interface{}{flattenUpsolverS3OutputFormatConfig(v)}
+	}
+
+	return m
+}
+
+func flattenUpsolverS3OutputFormatConfig(upsolverS3OutputFormatConfig *appflow.UpsolverS3OutputFormatConfig) map[string]interface{} {
+	if upsolverS3OutputFormatConfig == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := upsolverS3OutputFormatConfig.AggregationConfig; v != nil {
+		m["aggregation_config"] = []interface{}{flattenAggregationConfig(v)}
+	}
+
+	if v := upsolverS3OutputFormatConfig.FileType; v != nil {
+		m["file_type"] = aws.ToString(v)
+	}
+
+	if v := upsolverS3OutputFormatConfig.PrefixConfig; v != nil {
+		m["prefix_config"] = []interface{}{flattenPrefixConfig(v)}
+	}
+
+	return m
+}
+
+func flattenZendeskDestinationProperties(zendeskDestinationProperties *appflow.ZendeskDestinationProperties) map[string]interface{} {
+	if zendeskDestinationProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := zendeskDestinationProperties.ErrorHandlingConfig; v != nil {
+		m["error_handling_config"] = []interface{}{flattenErrorHandlingConfig(v)}
+	}
+
+	if v := zendeskDestinationProperties.IdFieldNames; v != nil {
+		m["id_field_names"] = aws.StringValueSlice(v)
+	}
+
+	if v := zendeskDestinationProperties.Object; v != nil {
+		m["object"] = aws.ToString(v)
+	}
+
+	if v := zendeskDestinationProperties.WriteOperationType; v != nil {
+		m["write_operation_type"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenSourceFlowConfig(sourceFlowConfig *appflow.SourceFlowConfig) map[string]interface{} {
+	if sourceFlowConfig == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := sourceFlowConfig.ApiVersion; v != nil {
+		m["api_version"] = aws.ToString(v)
+	}
+
+	if v := sourceFlowConfig.ConnectorProfileName; v != nil {
+		m["connector_profile_name"] = aws.ToString(v)
+	}
+
+	if v := sourceFlowConfig.ConnectorType; v != nil {
+		m["connector_type"] = aws.ToString(v)
+	}
+
+	if v := sourceFlowConfig.IncrementalPullConfig; v != nil {
+		m["incremental_pull_config"] = []interface{}{flattenIncrementalPullConfig(v)}
+	}
+
+	if v := sourceFlowConfig.SourceConnectorProperties; v != nil {
+		m["source_connector_properties"] = []interface{}{flattenSourceConnectorProperties(v)}
+	}
+
+	return m
+}
+
+func flattenIncrementalPullConfig(incrementalPullConfig *appflow.IncrementalPullConfig) map[string]interface{} {
+	if incrementalPullConfig == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := incrementalPullConfig.DatetimeTypeFieldName; v != nil {
+		m["datetime_type_field_name"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenSourceConnectorProperties(sourceConnectorProperties *appflow.SourceConnectorProperties) map[string]interface{} {
+	if sourceConnectorProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := sourceConnectorProperties.Amplitude; v != nil {
+		m["amplitude"] = []interface{}{flattenAmplitudeSourceProperties(v)}
+	}
+
+	if v := sourceConnectorProperties.CustomConnector; v != nil {
+		m["custom_connector"] = []interface{}{flattenCustomConnectorSourceProperties(v)}
+	}
+
+	if v := sourceConnectorProperties.Datadog; v != nil {
+		m["datadog"] = []interface{}{flattenDatadogSourceProperties(v)}
+	}
+
+	if v := sourceConnectorProperties.Dynatrace; v != nil {
+		m["dynatrace"] = []interface{}{flattenEventBridgeSourceProperties(v)}
+	}
+
+	if v := sourceConnectorProperties.GoogleAnalytics; v != nil {
+		m["google_analytics"] = []interface{}{flattenGoogleAnalyticsSourceProperties(v)}
+	}
+
+	if v := sourceConnectorProperties.InforNexus; v != nil {
+		m["infor_nexus"] = []interface{}{flattenInforNexusSourceProperties(v)}
+	}
+
+	if v := sourceConnectorProperties.Marketo; v != nil {
+		m["marketo"] = []interface{}{flattenMarketoSourceProperties(v)}
+	}
+
+	if v := sourceConnectorProperties.S3; v != nil {
+		m["s3"] = []interface{}{flattenS3SourceProperties(v)}
+	}
+
+	if v := sourceConnectorProperties.Salesforce; v != nil {
+		m["salesforce"] = []interface{}{flattenSalesforceSourceProperties(v)}
+	}
+
+	if v := sourceConnectorProperties.SAPOData; v != nil {
+		m["sapo_data"] = []interface{}{flattenSAPODataSourceProperties(v)}
+	}
+
+	if v := sourceConnectorProperties.ServiceNow; v != nil {
+		m["service_now"] = []interface{}{flattenServiceNowProperties(v)}
+	}
+
+	if v := sourceConnectorProperties.Singular; v != nil {
+		m["singular"] = []interface{}{flattenUpsolverSourceProperties(v)}
+	}
+
+	if v := sourceConnectorProperties.Slack; v != nil {
+		m["slack"] = []interface{}{flattenSlackSourceProperties(v)}
+	}
+
+	if v := sourceConnectorProperties.Trendmicro; v != nil {
+		m["trendmicro"] = []interface{}{flattenTrendmicoSourceProperties(v)}
+	}
+
+	if v := sourceConnectorProperties.Veeva; v != nil {
+		m["veeva"] = []interface{}{flattenVeevaSourceProperties(v)}
+	}
+
+	if v := sourceConnectorProperties.Zendesk; v != nil {
+		m["zendesk"] = []interface{}{flattenZendeskSourceProperties(v)}
+	}
+
+	return m
+}
+
+func flattenAmplitudeSourceProperties(amplitudeSourceProperties *appflow.AmplitudeSourceProperties) map[string]interface{} {
+	if amplitudeSourceProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := amplitudeSourceProperties.Object; v != nil {
+		m["object"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenCustomConnectorSourceProperties(customConnectorSourceProperties *appflow.CustomConnectorSourceProperties) map[string]interface{} {
+	if customConnectorSourceProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := customConnectorSourceProperties.CustomProperties; v != nil {
+		m["custom_properties"] = aws.StringValueMap(v)
+	}
+
+	if v := customConnectorSourceProperties.EntityName; v != nil {
+		m["entity_name"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenDatadogSourceProperties(datadogSourceProperties *appflow.DatadogSourceProperties) map[string]interface{} {
+	if datadogSourceProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := datadogSourceProperties.Object; v != nil {
+		m["object"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenDynatraceSourceProperties(dynatraceSourceProperties *appflow.DynatraceSourceProperties) map[string]interface{} {
+	if dynatraceSourceProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := dynatraceSourceProperties.Object; v != nil {
+		m["object"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenGoogleAnalyticsSourceProperties(googleAnalyticsSourceProperties *appflow.GoogleAnalyticsSourceProperties) map[string]interface{} {
+	if googleAnalyticsSourceProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := googleAnalyticsSourceProperties.Object; v != nil {
+		m["object"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenInforNexusSourceProperties(inforNexusSourceProperties *appflow.InforNexusSourceProperties) map[string]interface{} {
+	if inforNexusSourceProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := inforNexusSourceProperties.Object; v != nil {
+		m["object"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenMarketoSourceProperties(marketoSourceProperties *appflow.MarketoSourceProperties) map[string]interface{} {
+	if marketoSourceProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := marketoSourceProperties.Object; v != nil {
+		m["object"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenS3SourceProperties(s3SourceProperties *appflow.S3SourceProperties) map[string]interface{} {
+	if s3SourceProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := s3SourceProperties.BucketName; v != nil {
+		m["bucket_name"] = aws.ToString(v)
+	}
+
+	if v := s3SourceProperties.BucketPrefix; v != nil {
+		m["bucket_prefix"] = aws.ToString(v)
+	}
+
+	if v := s3SourceProperties.S3InputFormatConfig; v != nil {
+		m["s3_input_format_config"] = []interface{}{flattenS3InputFormatConfig(v)}
+	}
+
+	return m
+}
+
+func flattenS3InputFormatConfig(s3InputFormatConfig *appflow.S3InputFormatConfig) map[string]interface{} {
+	if s3InputFormatConfig == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := s3InputFormatConfig.S3InputFileType; v != nil {
+		m["s3_input_file_type"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenSalesforceSourceProperties(salesforceSourceProperties *appflow.SalesforceSourceProperties) map[string]interface{} {
+	if salesforceSourceProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := salesforceSourceProperties.EnableDynamicFieldUpdate; v != nil {
+		m["enable_dynamic_field_update"] = aws.BoolValue(v)
+	}
+
+	if v := salesforceSourceProperties.IncludeDeletedRecords; v != nil {
+		m["include_deleted_records"] = aws.BoolValue(v)
+	}
+
+	if v := salesforceSourceProperties.Object; v != nil {
+		m["object"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenSAPODataSourceProperties(sapoDataSourceProperties *appflow.SAPODataSourceProperties) map[string]interface{} {
+	if sapoSourceProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := sapoSourceProperties.Object; v != nil {
+		m["object"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenServiceNowSourceProperties(serviceNowDataSourceProperties *appflow.ServiceNowSourceProperties) map[string]interface{} {
+	if serviceNowSourceProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := serviceNowSourceProperties.Object; v != nil {
+		m["object"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenSingularSourceProperties(singularDataSourceProperties *appflow.SingularSourceProperties) map[string]interface{} {
+	if singularSourceProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := singularSourceProperties.Object; v != nil {
+		m["object"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenSlackSourceProperties(slackDataSourceProperties *appflow.SlackSourceProperties) map[string]interface{} {
+	if slackSourceProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := slackSourceProperties.Object; v != nil {
+		m["object"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenTrendmicroSourceProperties(trendmicroDataSourceProperties *appflow.TrendmicroSourceProperties) map[string]interface{} {
+	if trendmicroSourceProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := trendmicroSourceProperties.Object; v != nil {
+		m["object"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenVeevaSourceProperties(veevaSourceProperties *appflow.VeevaSourceProperties) map[string]interface{} {
+	if veevaSourceProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := veevaSourceProperties.DocumentType; v != nil {
+		m["document_type"] = aws.ToString(v)
+	}
+
+	if v := veevaSourceProperties.IncludeAllVersions; v != nil {
+		m["include_all_versions"] = aws.BoolValue(v)
+	}
+
+	if v := veevaSourceProperties.IncludeRenditions; v != nil {
+		m["include_renditions"] = aws.BoolValue(v)
+	}
+
+	if v := veevaSourceProperties.IncludeSourceFiles; v != nil {
+		m["include_source_files"] = aws.BoolValue(v)
+	}
+
+	if v := veevaSourceProperties.Object; v != nil {
+		m["object"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenZendeskSourceProperties(zendeskDataSourceProperties *appflow.ZendeskSourceProperties) map[string]interface{} {
+	if zendeskSourceProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := zendeskSourceProperties.Object; v != nil {
+		m["object"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenTasks(tasks []*appflow.Task) []interface{} {
+	if len(tasks) == 0 {
+		return nil
+	}
+
+	var l []interface{}
+
+	for _, task := range destinationFlowConfigs {
+		if task == nil {
+			continue
+		}
+
+		l = append(l, flattenTask(task))
+	}
+
+	return l
+}
+
+func flattenTask(task *appflow.Task) map[string]interface{} {
+	if task == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := task.ConnectorOperator; v != nil {
+		m["connector_operator"] = []interface{}{flattenConnectorOperator(v)}
+	}
+
+	if v := task.DestinationField; v != nil {
+		m["destination_field"] = aws.ToString(v)
+	}
+
+	if v := task.SourceFields; v != nil {
+		m["source_fields"] = aws.ToString(v)
+	}
+
+	if v := task.TaskProperties; v != nil {
+		m["task_properties"] = aws.StringValueMap(v)
+	}
+
+	if v := task.TaskType; v != nil {
+		m["task_type"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenConnectorOperator(connectorOperator *appflow.ConnectorOperator) map[string]interface{} {
+	if connectorOperator == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := connectorOperator.Amplitude; v != nil {
+		m["amplitude"] = aws.ToString(v)
+	}
+
+	if v := connectorOperator.CustomConnector; v != nil {
+		m["custom_connector"] = aws.ToString(v)
+	}
+
+	if v := connectorOperator.Datadog; v != nil {
+		m["datadog"] = aws.ToString(v)
+	}
+
+	if v := connectorOperator.Dynatrace; v != nil {
+		m["dynatrace"] = aws.ToString(v)
+	}
+
+	if v := connectorOperator.GoogleAnalytics; v != nil {
+		m["google_analytics"] = aws.ToString(v)
+	}
+
+	if v := connectorOperator.InforNexus; v != nil {
+		m["infor_nexus"] = aws.ToString(v)
+	}
+
+	if v := connectorOperator.Marketo; v != nil {
+		m["marketo"] = aws.ToString(v)
+	}
+
+	if v := connectorOperator.S3; v != nil {
+		m["s3"] = aws.ToString(v)
+	}
+
+	if v := connectorOperator.Salesforce; v != nil {
+		m["salesforce"] = aws.ToString(v)
+	}
+
+	if v := connectorOperator.SAPOData; v != nil {
+		m["sapo_data"] = aws.ToString(v)
+	}
+
+	if v := connectorOperator.ServiceNow; v != nil {
+		m["service_now"] = aws.ToString(v)
+	}
+
+	if v := connectorOperator.Singular; v != nil {
+		m["singular"] = aws.ToString(v)
+	}
+
+	if v := connectorOperator.Slack; v != nil {
+		m["slack"] = aws.ToString(v)
+	}
+
+	if v := connectorOperator.Trendmicro; v != nil {
+		m["trendmicro"] = aws.ToString(v)
+	}
+
+	if v := connectorOperator.Veeva; v != nil {
+		m["veeva"] = aws.ToString(v)
+	}
+
+	if v := connectorOperator.Zendesk; v != nil {
+		m["zendesk"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenTriggerConfig(triggerConfig *appflow.TriggerConfig) map[string]interface{} {
+	if triggerConfig == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := triggerConfig.TriggerProperties; v != nil {
+		m["trigger_properties"] = []interface{}{flattenTriggerProperties(v)}
+	}
+
+	if v := triggerConfig.TriggerType; v != nil {
+		m["trigger_type"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenTriggerProperties(triggerProperties *appflow.TriggerProperties) map[string]interface{} {
+	if triggerProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := triggerProperties.Scheduled; v != nil {
+		m["trigger_properties"] = []interface{}{flattenScheduled(v)}
+	}
+
+	return m
+}
+
+func flattenScheduled(scheduledTriggerProperties *appflow.ScheduledTriggerProperties) map[string]interface{} {
+	if scheduledTriggerProperties == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := scheduledTriggerProperties.DataPullMode; v != nil {
+		m["data_pull_mode"] = aws.ToString(v)
+	}
+
+	if v := scheduledTriggerProperties.FirstExecutionFrom; v != nil {
+		m["first_execution_from"] = aws.TimeValue(v).Format(time.RFC3339)
+	}
+
+	if v := scheduledTriggerProperties.ScheduleEndTime; v != nil {
+		m["schedule_end_time"] = aws.TimeValue(v).Format(time.RFC3339)
+	}
+
+	if v := scheduledTriggerProperties.ScheduleExpression; v != nil {
+		m["schedule_expression"] = aws.ToString(v)
+	}
+
+	if v := scheduledTriggerProperties.ScheduleOffset; v != nil {
+		m["schedule_offset"] = aws.ToString(v)
+	}
+
+	if v := scheduledTriggerProperties.ScheduleStartTime; v != nil {
+		m["schedule_start_time"] = aws.TimeValue(v).Format(time.RFC3339)
+	}
+
+	if v := scheduledTriggerProperties.Timezone; v != nil {
+		m["timezone"] = aws.ToString(v)
+	}
+
+	return m
 }
