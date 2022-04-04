@@ -827,11 +827,12 @@ func Provider() *schema.Provider {
 
 			"aws_sqs_queue": sqs.DataSourceQueue(),
 
-			"aws_ssm_document":           ssm.DataSourceDocument(),
-			"aws_ssm_instances":          ssm.DataSourceInstances(),
-			"aws_ssm_parameter":          ssm.DataSourceParameter(),
-			"aws_ssm_parameters_by_path": ssm.DataSourceParametersByPath(),
-			"aws_ssm_patch_baseline":     ssm.DataSourcePatchBaseline(),
+			"aws_ssm_document":            ssm.DataSourceDocument(),
+			"aws_ssm_instances":           ssm.DataSourceInstances(),
+			"aws_ssm_maintenance_windows": ssm.DataSourceMaintenanceWindows(),
+			"aws_ssm_parameter":           ssm.DataSourceParameter(),
+			"aws_ssm_parameters_by_path":  ssm.DataSourceParametersByPath(),
+			"aws_ssm_patch_baseline":      ssm.DataSourcePatchBaseline(),
 
 			"aws_ssoadmin_instances":      ssoadmin.DataSourceInstances(),
 			"aws_ssoadmin_permission_set": ssoadmin.DataSourcePermissionSet(),
