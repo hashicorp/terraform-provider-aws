@@ -54,7 +54,7 @@ func forEachObjectVersionsPage(ctx context.Context, conn *s3.S3, bucket string, 
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing S3 Bucket (%s) bject versions: %w", bucket, err)
+		return fmt.Errorf("listing S3 Bucket (%s) object versions: %w", bucket, err)
 	}
 
 	if lastErr != nil {
@@ -89,7 +89,7 @@ func deletePageOfObjectVersions(ctx context.Context, conn *s3.S3, bucket string,
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Bucket (%s) objects: %w", bucket, err)
+		return fmt.Errorf("deleting S3 Bucket (%s) objects: %w", bucket, err)
 	}
 
 	var deleteErrs *multierror.Error
@@ -129,7 +129,7 @@ func deletePageOfDeleteMarkers(ctx context.Context, conn *s3.S3, bucket string, 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Bucket (%s) delete markers: %w", bucket, err)
+		return fmt.Errorf("deleting S3 Bucket (%s) delete markers: %w", bucket, err)
 	}
 
 	var deleteErrs *multierror.Error
