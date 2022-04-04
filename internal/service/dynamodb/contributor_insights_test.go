@@ -3,7 +3,6 @@ package dynamodb_test
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"log"
 	"testing"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccContributorInsights_basic(t *testing.T) {
