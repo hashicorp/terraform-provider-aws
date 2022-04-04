@@ -32,7 +32,7 @@ func TestAccSSMMaintenanceWindowsDataSource_filter(t *testing.T) {
 			{
 				Config: testAccCheckMaintenanceWindowsDataSourceConfig_filter_enabled(rName1, rName2, rName3),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "2"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "1"),
 				),
 			},
 		},
