@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -1178,49 +1179,30 @@ func ResourceFlow() *schema.Resource {
 }
 
 func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// TIP: Generally, the Create function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 2. Populate a create input structure
-	// 3. Call the AWS create/put function
-	// 4. Using the output from the create function, set the minimum arguments
-	//    and attributes for the Read function to work. At a minimum, set the
-	//    resource ID. E.g., d.SetId(<Identifier, such as AWS ID or ARN>)
-	// 5. Use a waiter to wait for create to complete
-	// 6. Call the Read function in the Create return
-
 	conn := meta.(*conns.AWSClient).AppFlowConn
 
-	// TIP: 2. Populate a create input structure
 	in := &appflow.CreateFlowInput{
-		// TIP: Mandatory or fields that will always be present can be set when
-		// you create the Input structure. (Replace these with real fields.)
-		FlowName: aws.String(d.Get("name").(string)),
-		FlowType: aws.String(d.Get("type").(string)),
+		FlowName:                  aws.String(d.Get("name").(string)),
+		DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config")),
+		SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config")),
+		Tasks:                     expandTasks(d.Get("task")),
+		TriggerConfig:             expandTriggerConfig(d.Get("trigger_config")),
 	}
 
-	if v, ok := d.GetOk("max_size"); ok {
-		// TIP: Optional fields should be set based on whether or not they are
-		// used.
-		in.MaxSize = aws.Int64(int64(v.(int)))
+	if v, ok := d.GetOk("description"); ok {
+		in.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("complex_argument"); ok && len(v.([]interface{})) > 0 {
-		// TIP: Use an expander to assign a complex argument.
-		in.ComplexArguments = expandComplexArguments(v.([]interface{}))
+	if v, ok := d.GetOk("kms_arn"); ok {
+		in.KmsArn = aws.String(v.(string))
 	}
 
-	// TIP: Not all resources support tags and tags don't always make sense. If
-	// your resource doesn't need tags, you can remove the tags lines here and
-	// below. Many resources do include tags so this a reminder to include them
-	// where possible.
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	// TIP: 3. Call the AWS create function
 	out, err := conn.CreateFlowWithContext(ctx, in)
 
 	if err != nil {
@@ -1231,9 +1213,7 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("creating Appflow Flow (%s): empty output", d.Get("name").(string))
 	}
 
-	// TIP: 4. Set the minimum arguments and/or attributes for the Read function to
-	// work.
-	d.SetId(aws.ToString(out.Flow.FlowID))
+	d.SetId(aws.ToString(out.Flow.FlowArn))
 
 	// TIP: 5. Use a waiter to wait for create to complete
 	if _, err := waitFlowCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -1638,48 +1618,70 @@ func flattenComplexArguments(apiObjects []*appflow.ComplexArgument) []interface{
 //
 // See more:
 // https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md
-func expandComplexArgument(tfMap map[string]interface{}) *appflow.ComplexArgument {
+
+// TIP: Even when you have a list with max length of 1, this plural function
+// works brilliantly. However, if the AWS API takes a structure rather than a
+// slice of structures, you will not need it.
+func expandErrorHandlingConfig(tfMap map[string]interface{}) *appflow.ErrorHandlingConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &appflow.ComplexArgument{}
+	a := &appflow.ErrorHandlingConfig{}
 
-	if v, ok := tfMap["sub_field_one"].(string); ok && v != "" {
-		a.SubFieldOne = aws.String(v)
+	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+		a.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["sub_field_two"].(string); ok && v != "" {
-		a.SubFieldTwo = aws.String(v)
+	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+		a.BucketPrefix = aws.String(v)
+	}
+
+	if v, ok := tfMap["fail_on_first_destination_error"].(bool); ok {
+		a.FailOnFirstDestinationError = aws.Bool(v)
 	}
 
 	return a
 }
 
-// TIP: Even when you have a list with max length of 1, this plural function
-// works brilliantly. However, if the AWS API takes a structure rather than a
-// slice of structures, you will not need it.
-func expandComplexArguments(tfList []interface{}) []*appflow.ComplexArgument {
-	// TIP: The AWS API can be picky about whether you send a nil or zero-
-	// length for an argument that should be cleared. For example, in some
-	// cases, if you send a nil value, the AWS API interprets that as "make no
-	// changes" when what you want to say is "remove everything." Sometimes
-	// using a zero-length list will cause an error.
-	//
-	// As a result, here are two options. Usually, option 1, nil, will work as
-	// expected, clearing the field. But, test going from something to nothing
-	// to make sure it works. If not, try the second option.
-	// Option 1: Returning nil for zero-length list
+func expandAggregationConfig(tfMap map[string]interface{}) *appflow.AggregationConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.AggregationConfig{}
+
+	if v, ok := tfMap["aggregation_type"].(string); ok && v != "" {
+		a.AggregationType = aws.String(v)
+	}
+
+	return a
+}
+
+func expandPrefixConfig(tfMap map[string]interface{}) *appflow.PrefixConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.PrefixConfig{}
+
+	if v, ok := tfMap["prefix_format"].(string); ok && v != "" {
+		a.PrefixFormat = aws.String(v)
+	}
+
+	if v, ok := tfMap["prefix_type"].(string); ok && v != "" {
+		a.PrefixType = aws.String(v)
+	}
+
+	return a
+}
+
+func expandDestinationFlowConfigs(tfList []interface{}) []*appflow.DestinationFlowConfig {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var s []*appflow.ComplexArgument
-
-	// Option 2: Return zero-length list for zero-length list. If option 1 does
-	// not work, after testing going from something to nothing (if that is
-	// possible), uncomment out the next line and remove option 1.
-	// s := make([]*appflow.ComplexArgument, 0)
+	var s []*appflow.DestinationFlowConfig
 
 	for _, r := range tfList {
 		m, ok := r.(map[string]interface{})
@@ -1688,7 +1690,7 @@ func expandComplexArguments(tfList []interface{}) []*appflow.ComplexArgument {
 			continue
 		}
 
-		a := expandComplexArgument(m)
+		a := expandDestinationFlowConfig(m)
 
 		if a == nil {
 			continue
@@ -1698,4 +1700,1036 @@ func expandComplexArguments(tfList []interface{}) []*appflow.ComplexArgument {
 	}
 
 	return s
+}
+
+func expandDestinationFlowConfig(tfMap map[string]interface{}) *appflow.DestinationFlowConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.DestinationFlowConfig{}
+
+	if v, ok := tfMap["api_version"].(string); ok && v != "" {
+		a.ApiVersion = aws.String(v)
+	}
+
+	if v, ok := tfMap["connector_profile_name"].(string); ok && v != "" {
+		a.ConnectorProfileName = aws.String(v)
+	}
+
+	if v, ok := tfMap["connector_type"].(string); ok && v != "" {
+		a.ConnectorProfileName = aws.String(v)
+	}
+
+	if v, ok := tfMap["destination_connector_properties"].([]interface{}); ok && len(v) > 0 {
+		a.DestinationConnectorProperties = expandDestinationConnectorProperties(v[0].(map[string]interface{}))
+	}
+
+	return a
+}
+
+func expandDestinationConnectorProperties(tfMap map[string]interface{}) *appflow.DestinationConnectorProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.DestinationConnectorProperties{}
+
+	if v, ok := tfMap["custom_connector"].([]interface{}); ok && len(v) > 0 {
+		a.CustomConnector = expandCustomConnectorDestinationProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["customer_profiles"].([]interface{}); ok && len(v) > 0 {
+		a.CustomerProfiles = expandCustomerProfilesDestinationProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["event_bridge"].([]interface{}); ok && len(v) > 0 {
+		a.EventBridge = expandEventBridgeDestinationProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["honeycode"].([]interface{}); ok && len(v) > 0 {
+		a.Honeycode = expandHoneycodeDestinationProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["lookout_metrics"].(map[string]interface{}); ok && len(v) > 0 {
+		a.LookoutMetrics = v[0].(appflow.LookoutMetricsDestinationProperties)
+	}
+
+	if v, ok := tfMap["marketo"].([]interface{}); ok && len(v) > 0 {
+		a.Marketo = expandMarketoDestinationProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["redshift"].([]interface{}); ok && len(v) > 0 {
+		a.Redshift = expandRedshiftDestinationProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
+		a.S3 = expandS3DestinationProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["salesforce"].([]interface{}); ok && len(v) > 0 {
+		a.Salesforce = expandSalesforceDestinationProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["sapo_data"].([]interface{}); ok && len(v) > 0 {
+		a.SAPOData = expandSAPODataDestinationProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["snowflake"].([]interface{}); ok && len(v) > 0 {
+		a.Snowflake = expandSnowflakeDestinationProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["upsolver"].([]interface{}); ok && len(v) > 0 {
+		a.Upsolver = expandUpsolverDestinationProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["zendesk"].([]interface{}); ok && len(v) > 0 {
+		a.Zendesk = expandZendeskDestinationProperties(v[0].(map[string]interface{}))
+	}
+
+	return a
+}
+
+func expandCustomConnectorDestinationProperties(tfMap map[string]interface{}) *appflow.CustomConnectorDestinationProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.CustomConnectorDestinationProperties{}
+
+	if v, ok := tfMap["custom_properties"].(map[string]interface{}); ok && len(v) > 0 {
+		a.CustomProperties = flex.ExpandStringMap(v)
+	}
+
+	if v, ok := tfMap["entity_name"].(string); ok && v != "" {
+		a.EntityName = aws.String(v)
+	}
+
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["id_field_names"].([]interface{}); ok && len(v) > 0 {
+		a.IdFieldNames = flex.ExpandStringList(v)
+	}
+
+	if v, ok := tfMap["write_operation_type"].(string); ok && v != "" {
+		a.WriteOperationType = aws.String(v)
+	}
+
+	return a
+}
+
+func expandCustomerProfilesDestinationProperties(tfMap map[string]interface{}) *appflow.CustomerProfilesDestinationProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.CustomerProfilesDestinationProperties{}
+
+	if v, ok := tfMap["domain_name"].(string); ok && v != "" {
+		a.DomainName = aws.String(v)
+	}
+
+	if v, ok := tfMap["object_type_name"].(string); ok && v != "" {
+		a.ObjectTypeName = aws.String(v)
+	}
+
+	return a
+}
+
+func expandEventBridgeDestinationProperties(tfMap map[string]interface{}) *appflow.EventBridgeDestinationProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.EventBridgeDestinationProperties{}
+
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["object"].(string); ok && v != "" {
+		a.Object = aws.String(v)
+	}
+
+	return a
+}
+
+func expandHoneycodeDestinationProperties(tfMap map[string]interface{}) *appflow.HoneycodeDestinationProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.HoneycodeDestinationProperties{}
+
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["object"].(string); ok && v != "" {
+		a.Object = aws.String(v)
+	}
+
+	return a
+}
+
+func expandMarketoDestinationProperties(tfMap map[string]interface{}) *appflow.MarketoDestinationProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.MarketoDestinationProperties{}
+
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["object"].(string); ok && v != "" {
+		a.Object = aws.String(v)
+	}
+
+	return a
+}
+
+func expandRedshiftDestinationProperties(tfMap map[string]interface{}) *appflow.RedshiftDestinationProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.RedshiftDestinationProperties{}
+
+	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+		a.BucketPrefix = aws.String(v)
+	}
+
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["intermediate_bucket_name"].(string); ok && v != "" {
+		a.IntermediateBucketName = aws.String(v)
+	}
+
+	if v, ok := tfMap["object"].(string); ok && v != "" {
+		a.Object = aws.String(v)
+	}
+
+	return a
+}
+
+func expandS3DestinationProperties(tfMap map[string]interface{}) *appflow.S3DestinationProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.S3DestinationProperties{}
+
+	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+		a.BucketName = aws.String(v)
+	}
+
+	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+		a.BucketPrefix = aws.String(v)
+	}
+
+	if v, ok := tfMap["s3_output_format_config"].([]interface{}); ok && len(v) > 0 {
+		a.S3OutputFormatConfig = expandS3OutputFormatConfig(v[0].(map[string]interface{}))
+	}
+
+	return a
+}
+
+func expandS3OutputFormatConfig(tfMap map[string]interface{}) *appflow.S3OutputFormatConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.S3OutputFormatConfig{}
+
+	if v, ok := tfMap["aggregation_config"].([]interface{}); ok && len(v) > 0 {
+		a.S3OutputFormatConfig = expandAggregationConfig(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["file_type"].(string); ok && v != "" {
+		a.FileType = aws.String(v)
+	}
+
+	if v, ok := tfMap["prefix_config"].([]interface{}); ok && len(v) > 0 {
+		a.PrefixConfig = expandPrefixConfig(v[0].(map[string]interface{}))
+	}
+
+	return a
+}
+
+func expandSalesforceDestinationProperties(tfMap map[string]interface{}) *appflow.SalesforceDestinationProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.SalesforceDestinationProperties{}
+
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["id_field_names"].([]interface{}); ok && len(v) > 0 {
+		a.IdFieldNames = flex.ExpandStringList(v)
+	}
+
+	if v, ok := tfMap["object"].(string); ok && v != "" {
+		a.Object = aws.String(v)
+	}
+
+	if v, ok := tfMap["write_operation_type"].(string); ok && v != "" {
+		a.WriteOperationType = aws.String(v)
+	}
+
+	return a
+}
+
+func expandSAPODataDestinationProperties(tfMap map[string]interface{}) *appflow.SAPODataDestinationProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.SAPODataDestinationProperties{}
+
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["id_field_names"].([]interface{}); ok && len(v) > 0 {
+		a.IdFieldNames = flex.ExpandStringList(v)
+	}
+
+	if v, ok := tfMap["object_path"].(string); ok && v != "" {
+		a.ObjectPath = aws.String(v)
+	}
+
+	if v, ok := tfMap["success_response_handling_config"].([]interface{}); ok && len(v) > 0 {
+		a.SuccessResponseHandlingConfig = expandSuccessResponseHandlingConfig(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["write_operation_type"].(string); ok && v != "" {
+		a.WriteOperationType = aws.String(v)
+	}
+
+	return a
+}
+
+func expandSuccessResponseHandlingConfig(tfMap map[string]interface{}) *appflow.SuccessResponseHandlingConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.SuccessResponseHandlingConfig{}
+
+	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+		a.BucketName = aws.String(v)
+	}
+
+	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+		a.BucketPrefix = aws.String(v)
+	}
+
+	return a
+}
+
+func expandSnowflakeDestinationProperties(tfMap map[string]interface{}) *appflow.SnowflakeDestinationProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.SnowflakeDestinationProperties{}
+
+	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+		a.BucketPrefix = aws.String(v)
+	}
+
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["intermediate_bucket_name"].(string); ok && v != "" {
+		a.IntermediateBucketName = aws.String(v)
+	}
+
+	if v, ok := tfMap["object"].(string); ok && v != "" {
+		a.Object = aws.String(v)
+	}
+
+	return a
+}
+
+func expandUpsolverDestinationProperties(tfMap map[string]interface{}) *appflow.UpsolverDestinationProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.UpsolverDestinationProperties{}
+
+	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+		a.BucketName = aws.String(v)
+	}
+
+	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+		a.BucketPrefix = aws.String(v)
+	}
+
+	if v, ok := tfMap["s3_output_format_config"].([]interface{}); ok && len(v) > 0 {
+		a.S3OutputFormatConfig = expandUpsolverS3OutputFormatConfig(v[0].(map[string]interface{}))
+	}
+
+	return a
+}
+
+func expandUpsolverS3OutputFormatConfig(tfMap map[string]interface{}) *appflow.UpsolverS3OutputFormatConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	if v, ok := tfMap["aggregation_config"].([]interface{}); ok && len(v) > 0 {
+		a.S3OutputFormatConfig = expandAggregationConfig(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["file_type"].(string); ok && v != "" {
+		a.FileType = aws.String(v)
+	}
+
+	if v, ok := tfMap["prefix_config"].([]interface{}); ok && len(v) > 0 {
+		a.PrefixConfig = expandPrefixConfig(v[0].(map[string]interface{}))
+	}
+
+	a := &appflow.UpsolverS3OutputFormatConfig{}
+
+	return a
+}
+
+func expandZendeskDestinationProperties(tfMap map[string]interface{}) *appflow.ZendeskDestinationProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.ZendeskDestinationProperties{}
+
+	if v, ok := tfMap["error_handling_config"].([]interface{}); ok && len(v) > 0 {
+		a.ErrorHandlingConfig = expandErrorHandlingConfig(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["id_field_names"].([]interface{}); ok && len(v) > 0 {
+		a.IdFieldNames = flex.ExpandStringList(v)
+	}
+
+	if v, ok := tfMap["object"].(string); ok && v != "" {
+		a.Object = aws.String(v)
+	}
+
+	if v, ok := tfMap["write_operation_type"].(string); ok && v != "" {
+		a.WriteOperationType = aws.String(v)
+	}
+
+	return a
+}
+
+func expandSourceFlowConfig(tfMap map[string]interface{}) *appflow.SourceFlowConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.SourceFlowConfig{}
+
+	if v, ok := tfMap["api_version"].(string); ok && v != "" {
+		a.ApiVersion = aws.String(v)
+	}
+
+	if v, ok := tfMap["connector_profile_name"].(string); ok && v != "" {
+		a.ConnectorProfileName = aws.String(v)
+	}
+
+	if v, ok := tfMap["connector_type"].(string); ok && v != "" {
+		a.ConnectorProfileName = aws.String(v)
+	}
+
+	if v, ok := tfMap["incremental_pull_config"].([]interface{}); ok && len(v) > 0 {
+		a.IncrementalPullConfig = expandIncrementalPullConfig(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["source_connector_properties"].([]interface{}); ok && len(v) > 0 {
+		a.SourceConnectorProperties = expandSourceConnectorProperties(v[0].(map[string]interface{}))
+	}
+
+	return a
+}
+
+func expandIncrementalPullConfig(tfMap map[string]interface{}) *appflow.IncrementalPullConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.IncrementalPullConfig{}
+
+	if v, ok := tfMap["datetime_type_field_name"].(string); ok && v != "" {
+		a.DatetimeTypeFieldName = aws.String(v)
+	}
+
+	return a
+}
+
+func expandSourceConnectorProperties(tfMap map[string]interface{}) *appflow.SourceConnectorProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.SourceConnectorProperties{}
+
+	if v, ok := tfMap["amplitude"].([]interface{}); ok && len(v) > 0 {
+		a.Amplitude = expandAmplitudeSourceProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["custom_connector"].([]interface{}); ok && len(v) > 0 {
+		a.CustomConnector = expandCustomConnectorSourceProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["datadog"].([]interface{}); ok && len(v) > 0 {
+		a.Datadog = expandDatadogSourceProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["dynatrace"].([]interface{}); ok && len(v) > 0 {
+		a.Dynatrace = expandDynatraceSourceProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["google_analytics"].([]interface{}); ok && len(v) > 0 {
+		a.GoogleAnalytics = expandGoogleAnalyticsSourceProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["infor_nexus"].([]interface{}); ok && len(v) > 0 {
+		a.InforNexus = expandInforNexusSourceProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["marketo"].([]interface{}); ok && len(v) > 0 {
+		a.Marketo = expandMarketoSourceProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
+		a.S3 = expandS3SourceProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["sapo_data"].([]interface{}); ok && len(v) > 0 {
+		a.SAPOData = expandSAPODataSourceProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["salesforce"].([]interface{}); ok && len(v) > 0 {
+		a.Salesforce = expandSalesforceSourceProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["service_now"].([]interface{}); ok && len(v) > 0 {
+		a.ServiceNow = expandServiceNowSourceProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["singular"].([]interface{}); ok && len(v) > 0 {
+		a.Singular = expandSingularSourceProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["slack"].([]interface{}); ok && len(v) > 0 {
+		a.Slack = expandSlackSourceProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["trendmicro"].([]interface{}); ok && len(v) > 0 {
+		a.Trendmicro = expandTrendmicroSourceProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["veeva"].([]interface{}); ok && len(v) > 0 {
+		a.Veeva = expandVeevaSourceProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["zendesk"].([]interface{}); ok && len(v) > 0 {
+		a.Zendesk = expandZendeskSourceProperties(v[0].(map[string]interface{}))
+	}
+
+	return a
+}
+
+func expandAmplitudeSourceProperties(tfMap map[string]interface{}) *appflow.AmplitudeSourceProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.AmplitudeSourceProperties{}
+
+	if v, ok := tfMap["object"].(string); ok && v != "" {
+		a.Object = aws.String(v)
+	}
+
+	return a
+}
+
+func expandCustomConnectorSourceProperties(tfMap map[string]interface{}) *appflow.CustomConnectorSourceProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.CustomConnectorSourceProperties{}
+
+	if v, ok := tfMap["object"].(string); ok && v != "" {
+		a.Object = aws.String(v)
+	}
+
+	if v, ok := tfMap["custom_properties"].(map[string]interface{}); ok && len(v) > 0 {
+		a.CustomProperties = flex.ExpandStringMap(v)
+	}
+
+	if v, ok := tfMap["entity_name"].(string); ok && v != "" {
+		a.EntityName = aws.String(v)
+	}
+
+	return a
+}
+
+func expandDatadogSourceProperties(tfMap map[string]interface{}) *appflow.DatadogSourceProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.DatadogSourceProperties{}
+
+	if v, ok := tfMap["object"].(string); ok && v != "" {
+		a.Object = aws.String(v)
+	}
+
+	return a
+}
+
+func expandDynatraceSourceProperties(tfMap map[string]interface{}) *appflow.DynatraceSourceProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.DynatraceSourceProperties{}
+
+	if v, ok := tfMap["object"].(string); ok && v != "" {
+		a.Object = aws.String(v)
+	}
+
+	return a
+}
+
+func expandGoogleAnalyticsSourceProperties(tfMap map[string]interface{}) *appflow.GoogleAnalyticsSourceProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.GoogleAnalyticsSourceProperties{}
+
+	if v, ok := tfMap["object"].(string); ok && v != "" {
+		a.Object = aws.String(v)
+	}
+
+	return a
+}
+
+func expandInforNexusSourceProperties(tfMap map[string]interface{}) *appflow.InforNexusSourceProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.InforNexusSourceProperties{}
+
+	if v, ok := tfMap["object"].(string); ok && v != "" {
+		a.Object = aws.String(v)
+	}
+
+	return a
+}
+
+func expandMarketoSourceProperties(tfMap map[string]interface{}) *appflow.MarketoSourceProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.MarketoSourceProperties{}
+
+	if v, ok := tfMap["object"].(string); ok && v != "" {
+		a.Object = aws.String(v)
+	}
+
+	return a
+}
+
+func expandS3SourceProperties(tfMap map[string]interface{}) *appflow.S3SourceProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.S3SourceProperties{}
+
+	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+		a.BucketName = aws.String(v)
+	}
+
+	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+		a.BucketPrefix = aws.String(v)
+	}
+
+	if v, ok := tfMap["s3_input_format_config"].([]interface{}); ok && len(v) > 0 {
+		a.S3InputFormatConfig = expandS3InputFormatConfig(v[0].(map[string]interface{}))
+	}
+
+	return a
+}
+
+func expandS3InputFormatConfig(tfMap map[string]interface{}) *appflow.S3InputFormatConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.S3InputFileType{}
+
+	if v, ok := tfMap["s3_input_file_type"].(string); ok && v != "" {
+		a.FileType = aws.String(v)
+	}
+
+	return a
+}
+
+func expandSalesforceSourceProperties(tfMap map[string]interface{}) *appflow.SalesforceSourceProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.SalesforceSourceProperties{}
+
+	if v, ok := tfMap["enable_dynamic_field_update"].(bool); ok {
+		apiObject.EnableDynamicFieldUpdate = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["include_deleted_records"].(bool); ok {
+		apiObject.IncludeDeletedRecords = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["object"].(string); ok && v != "" {
+		a.Object = aws.String(v)
+	}
+
+	return a
+}
+
+func expandSAPODataSourceProperties(tfMap map[string]interface{}) *appflow.SAPODataSourceProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.SAPODataSourceProperties{}
+
+	if v, ok := tfMap["object"].(string); ok && v != "" {
+		a.Object = aws.String(v)
+	}
+
+	return a
+}
+
+func expandServiceNowSourceProperties(tfMap map[string]interface{}) *appflow.ServiceNowSourceProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.ServiceNowSourceProperties{}
+
+	if v, ok := tfMap["object"].(string); ok && v != "" {
+		a.Object = aws.String(v)
+	}
+
+	return a
+}
+
+func expandSingularSourceProperties(tfMap map[string]interface{}) *appflow.SingularSourceProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.SingularSourceProperties{}
+
+	if v, ok := tfMap["object"].(string); ok && v != "" {
+		a.Object = aws.String(v)
+	}
+
+	return a
+}
+
+func expandSlackSourceProperties(tfMap map[string]interface{}) *appflow.SlackSourceProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.SlackSourceProperties{}
+
+	if v, ok := tfMap["object"].(string); ok && v != "" {
+		a.Object = aws.String(v)
+	}
+
+	return a
+}
+
+func expandTrendmicroSourceProperties(tfMap map[string]interface{}) *appflow.TrendmicroSourceProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.TrendmicroSourceProperties{}
+
+	if v, ok := tfMap["object"].(string); ok && v != "" {
+		a.Object = aws.String(v)
+	}
+
+	return a
+}
+
+func expandVeevaSourceProperties(tfMap map[string]interface{}) *appflow.VeevaSourceProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.VeevaSourceProperties{}
+
+	if v, ok := tfMap["document_type"].(string); ok && v != "" {
+		a.DocumentType = aws.String(v)
+	}
+
+	if v, ok := tfMap["include_all_versions"].(bool); ok {
+		a.IncludeAllVersions = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["include_renditions"].(bool); ok {
+		a.IncludeRenditions = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["include_source_files"].(bool); ok {
+		a.IncludeSourceFiles = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["object"].(string); ok && v != "" {
+		a.Object = aws.String(v)
+	}
+
+	return a
+}
+
+func expandZendeskSourceProperties(tfMap map[string]interface{}) *appflow.ZendeskSourceProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.ZendeskSourceProperties{}
+
+	if v, ok := tfMap["object"].(string); ok && v != "" {
+		a.Object = aws.String(v)
+	}
+
+	return a
+}
+
+func expandTasks(tfList []interface{}) []*appflow.Task {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var s []*appflow.Task
+
+	for _, r := range tfList {
+		m, ok := r.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		a := expandTask(m)
+
+		if a == nil {
+			continue
+		}
+
+		s = append(s, a)
+	}
+
+	return s
+}
+
+func expandTask(tfMap map[string]interface{}) *appflow.Task {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.Task{}
+
+	if v, ok := tfMap["connector_operator"].([]interface{}); ok && len(v) > 0 {
+		a.ConnectorOperator = expandConnectorOperator(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["destination_field"].(string); ok && v != "" {
+		a.DestinationField = aws.String(v)
+	}
+
+	if v, ok := tfMap["source_fields"].([]interface{}); ok && len(v) > 0 {
+		a.SourceFields = flex.ExpandStringList(v)
+	}
+
+	if v, ok := tfMap["task_properties"].(map[string]interface{}); ok && len(v) > 0 {
+		a.TaskProperties = flex.ExpandStringMap(v)
+	}
+
+	if v, ok := tfMap["task_type"].(string); ok && v != "" {
+		a.TaskType = aws.String(v)
+	}
+
+	return a
+}
+
+func expandConnectorOperator(tfMap map[string]interface{}) *appflow.ConnectorOperator {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.ConnectorOperator{}
+
+	if v, ok := tfMap["amplitude"].(string); ok && v != "" {
+		a.Amplitude = aws.String(v)
+	}
+
+	if v, ok := tfMap["custom_connector"].(string); ok && v != "" {
+		a.CustomConnector = aws.String(v)
+	}
+
+	if v, ok := tfMap["datadog"].(string); ok && v != "" {
+		a.DataDog = aws.String(v)
+	}
+
+	if v, ok := tfMap["dynatrace"].(string); ok && v != "" {
+		a.Dynatrace = aws.String(v)
+	}
+
+	if v, ok := tfMap["google_analytics"].(string); ok && v != "" {
+		a.GoogleAnalytics = aws.String(v)
+	}
+
+	if v, ok := tfMap["infor_nexus"].(string); ok && v != "" {
+		a.InforNexus = aws.String(v)
+	}
+
+	if v, ok := tfMap["marketo"].(string); ok && v != "" {
+		a.Marketo = aws.String(v)
+	}
+
+	if v, ok := tfMap["s3"].(string); ok && v != "" {
+		a.S3 = aws.String(v)
+	}
+
+	if v, ok := tfMap["sapo_data"].(string); ok && v != "" {
+		a.SAPOData = aws.String(v)
+	}
+
+	if v, ok := tfMap["salesforce"].(string); ok && v != "" {
+		a.Salesforce = aws.String(v)
+	}
+
+	if v, ok := tfMap["service_now"].(string); ok && v != "" {
+		a.ServiceNow = aws.String(v)
+	}
+
+	if v, ok := tfMap["singular"].(string); ok && v != "" {
+		a.Singular = aws.String(v)
+	}
+
+	if v, ok := tfMap["slack"].(string); ok && v != "" {
+		a.Slack = aws.String(v)
+	}
+
+	if v, ok := tfMap["trendmicro"].(string); ok && v != "" {
+		a.Trendmicro = aws.String(v)
+	}
+
+	if v, ok := tfMap["veeva"].(string); ok && v != "" {
+		a.Veeva = aws.String(v)
+	}
+
+	if v, ok := tfMap["zendesk"].(string); ok && v != "" {
+		a.Zendesk = aws.String(v)
+	}
+
+	return a
+}
+
+func expandTriggerConfig(tfMap map[string]interface{}) *appflow.TriggerConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.TriggerConfig{}
+
+	if v, ok := tfMap["trigger_propeties"].([]interface{}); ok && len(v) > 0 {
+		a.TriggerProperties = expandTriggerProperties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["trigger_type"].(string); ok && v != "" {
+		a.TriggerType = aws.String(v)
+	}
+
+	return a
+}
+
+func expandTriggerProperties(tfMap map[string]interface{}) *appflow.TriggerProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.TriggerProperties{}
+
+	if v, ok := tfMap["scheduled"].([]interface{}); ok && len(v) > 0 {
+		a.Scheduled = expandScheduledTriggerProperties(v[0].(map[string]interface{}))
+	}
+
+	return a
+}
+
+func expandScheduledTriggerProperties(tfMap map[string]interface{}) *appflow.ScheduledTriggerProperties {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &appflow.ScheduledTriggerProperties{}
+
+	if v, ok := tfMap["data_pull_mode"].(string); ok && v != "" {
+		a.DataPullMode = aws.String(v)
+	}
+
+	if v, ok := tfMap["first_execution_from"].(string); ok && v != "" {
+		v, _ := time.Parse(time.RFC3339, v)
+
+		a.FirstExecutionFrom = aws.Time(v)
+	}
+
+	if v, ok := tfMap["schedule_end_time"].(string); ok && v != "" {
+		v, _ := time.Parse(time.RFC3339, v)
+
+		a.ScheduleEndTime = aws.Time(v)
+	}
+
+	if v, ok := tfMap["schedule_expression"].(string); ok && v != "" {
+		a.ScheduleExpression = aws.String(v)
+	}
+
+	if v, ok := tfMap["schedule_offset"].(string); ok && v != "" {
+		a.ScheduleOffset = aws.String(v)
+	}
+
+	if v, ok := tfMap["schedule_start_time"].(string); ok && v != "" {
+		v, _ := time.Parse(time.RFC3339, v)
+
+		a.ScheduleEndTime = aws.Time(v)
+	}
+
+	if v, ok := tfMap["timezone"].(string); ok && v != "" {
+		a.Timezone = aws.String(v)
+	}
+
+	return a
 }
