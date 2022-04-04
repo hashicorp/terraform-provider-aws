@@ -73,6 +73,10 @@ func deletePageOfObjectVersions(ctx context.Context, conn *s3.S3, bucket string,
 		})
 	}
 
+	if len(toDelete) == 0 {
+		return nil
+	}
+
 	input := &s3.DeleteObjectsInput{
 		Bucket: aws.String(bucket),
 		Delete: &s3.Delete{
@@ -100,8 +104,22 @@ func deletePageOfObjectVersions(ctx context.Context, conn *s3.S3, bucket string,
 	for _, v := range output.Errors {
 		// Attempt to remove any legal hold on the object.
 		if force && aws.StringValue(v.Code) == ErrCodeAccessDenied {
+			_, err := conn.PutObjectLegalHold(&s3.PutObjectLegalHoldInput{
+				Bucket:    aws.String(bucket),
+				Key:       v.Key,
+				VersionId: v.VersionId,
+				LegalHold: &s3.ObjectLockLegalHold{
+					Status: aws.String(s3.ObjectLockLegalHoldStatusOff),
+				},
+			})
+
+			if err != nil {
+				// Add the original error and the new error.
+				deleteErrs = multierror.Append(deleteErrs, newObjectOpError(v, "deleting"))
+				deleteErrs = multierror.Append(deleteErrs, newObjectOpError(v, "removing legal hold"))
+			}
 		} else {
-			deleteErrs = multierror.Append(deleteErrs, newDeleteError(v))
+			deleteErrs = multierror.Append(deleteErrs, newObjectOpError(v, "deleting"))
 		}
 	}
 
@@ -115,6 +133,10 @@ func deletePageOfDeleteMarkers(ctx context.Context, conn *s3.S3, bucket string, 
 			Key:       v.Key,
 			VersionId: v.VersionId,
 		})
+	}
+
+	if len(toDelete) == 0 {
+		return nil
 	}
 
 	input := &s3.DeleteObjectsInput{
@@ -138,13 +160,13 @@ func deletePageOfDeleteMarkers(ctx context.Context, conn *s3.S3, bucket string, 
 	var deleteErrs *multierror.Error
 
 	for _, v := range output.Errors {
-		deleteErrs = multierror.Append(deleteErrs, newDeleteError(v))
+		deleteErrs = multierror.Append(deleteErrs, newObjectOpError(v, "deleting"))
 	}
 
 	return deleteErrs.ErrorOrNil()
 }
 
-func newDeleteError(v *s3.Error) error {
+func newObjectOpError(v *s3.Error, op string) error {
 	if v == nil {
 		return nil
 	}
@@ -153,8 +175,8 @@ func newDeleteError(v *s3.Error) error {
 	awsErr := awserr.New(aws.StringValue(v.Code), aws.StringValue(v.Message), nil)
 
 	if v.VersionId == nil {
-		return fmt.Errorf("deleting S3 object (%s): %w", key, awsErr)
+		return fmt.Errorf("%s S3 object (%s): %w", op, key, awsErr)
 	}
 
-	return fmt.Errorf("deleting S3 object (%s) version (%s): %w", key, aws.StringValue(v.VersionId), awsErr)
+	return fmt.Errorf("%s S3 object (%s) version (%s): %w", op, key, aws.StringValue(v.VersionId), awsErr)
 }
