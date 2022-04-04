@@ -87,7 +87,7 @@ func FindAddonVersionByAddonNameAndKubernetesVersion(ctx context.Context, conn *
 					return !lastPage
 				}
 				for _, versionCompatibility := range addonVersion.Compatibilities {
-					if *versionCompatibility.DefaultVersion {
+					if aws.BoolValue(versionCompatibility.DefaultVersion) {
 						version = addonVersion
 						return !lastPage
 					}

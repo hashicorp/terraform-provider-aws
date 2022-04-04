@@ -13,6 +13,7 @@ import (
 func DataSourceAddonVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAddonVersionRead,
+
 		Schema: map[string]*schema.Schema{
 			"addon_name": {
 				Type:         schema.TypeString,
@@ -50,6 +51,7 @@ func dataSourceAddonVersionRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.SetId(id)
+
 	d.Set("addon_name", addonName)
 	d.Set("kubernetes_version", kubernetesVersion)
 	d.Set("most_recent", mostRecent)
