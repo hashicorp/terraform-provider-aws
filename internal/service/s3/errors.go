@@ -5,6 +5,7 @@ package s3
 
 const (
 	ErrCodeAccessDenied                              = "AccessDenied"
+	ErrCodeBucketNotEmpty                            = "BucketNotEmpty"
 	ErrCodeInvalidBucketState                        = "InvalidBucketState"
 	ErrCodeInvalidRequest                            = "InvalidRequest"
 	ErrCodeMalformedPolicy                           = "MalformedPolicy"

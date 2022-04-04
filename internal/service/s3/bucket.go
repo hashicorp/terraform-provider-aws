@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -32,10 +33,11 @@ import (
 
 func ResourceBucket() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceBucketCreate,
-		Read:   resourceBucketRead,
-		Update: resourceBucketUpdate,
-		Delete: resourceBucketDelete,
+		Create:               resourceBucketCreate,
+		Read:                 resourceBucketRead,
+		Update:               resourceBucketUpdate,
+		DeleteWithoutTimeout: resourceBucketDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -1404,11 +1406,11 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceBucketDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	log.Printf("[DEBUG] S3 Delete Bucket: %s", d.Id())
-	_, err := conn.DeleteBucket(&s3.DeleteBucketInput{
+	log.Printf("[DEBUG] Deleting S3 Bucket: %s", d.Id())
+	_, err := conn.DeleteBucketWithContext(ctx, &s3.DeleteBucketInput{
 		Bucket: aws.String(d.Id()),
 	})
 
@@ -1416,7 +1418,7 @@ func resourceBucketDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	if tfawserr.ErrCodeEquals(err, "BucketNotEmpty") {
+	if tfawserr.ErrCodeEquals(err, ErrCodeBucketNotEmpty) {
 		if d.Get("force_destroy").(bool) {
 			// Use a S3 service client that can handle multiple slashes in URIs.
 			// While aws_s3_object resources cannot create these object
@@ -1424,7 +1426,7 @@ func resourceBucketDelete(d *schema.ResourceData, meta interface{}) error {
 			conn = meta.(*conns.AWSClient).S3ConnURICleaningDisabled
 
 			// bucket may have things delete them
-			log.Printf("[DEBUG] S3 Bucket attempting to forceDestroy %+v", err)
+			log.Printf("[DEBUG] S3 Bucket attempting to forceDestroy %s", err)
 
 			// Delete everything including locked objects.
 			// Don't ignore any object errors or we could recurse infinitely.
@@ -1433,19 +1435,18 @@ func resourceBucketDelete(d *schema.ResourceData, meta interface{}) error {
 			if objectLockConfiguration != nil {
 				objectLockEnabled = aws.StringValue(objectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled
 			}
-			err = DeleteAllObjectVersions(conn, d.Id(), "", objectLockEnabled, false)
 
-			if err != nil {
-				return fmt.Errorf("error S3 Bucket force_destroy: %s", err)
+			if err := EmptyBucket(ctx, conn, d.Id(), objectLockEnabled); err != nil {
+				return diag.Errorf("emptying S3 Bucket (%s): %s", d.Id(), err)
 			}
 
 			// this line recurses until all objects are deleted or an error is returned
-			return resourceBucketDelete(d, meta)
+			return resourceBucketDelete(ctx, d, meta)
 		}
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Bucket (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting S3 Bucket (%s): %s", d.Id(), err)
 	}
 
 	return nil
