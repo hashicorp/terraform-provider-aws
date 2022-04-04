@@ -52,6 +52,28 @@ func TestAccContributorInsights_basic(t *testing.T) {
 	})
 }
 
+func TestAccContributorInsights_disappears(t *testing.T) {
+	var conf dynamodb.DescribeContributorInsightsOutput
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	resourceName := "aws_dynamodb_contributor_insights.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckContributorInsightsDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContributorInsightsBasicConfig(rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckContributorInsightsExists(resourceName, &conf),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceContributorInsights(), resourceName),
+				),
+			},
+		},
+	})
+}
+
 func testAccContributorInsightsBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {

@@ -25,12 +25,6 @@ The following arguments are supported:
 * `table_name` - (Required) The name of the table to enable contributor insights
 * `index_name` - (Optional) The global secondary index name
 
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
-
-* `status` - The contributor insights status
-
 ## Import
 
 `aws_dynamodb_contributor_insights` can be imported using the format `name:table_name/index:index_name`, followed by the account number, e.g.,

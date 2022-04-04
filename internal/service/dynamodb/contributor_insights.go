@@ -41,10 +41,6 @@ func ResourceContributorInsights() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -52,30 +48,30 @@ func ResourceContributorInsights() *schema.Resource {
 func resourceContributorInsightsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
-	in := &dynamodb.UpdateContributorInsightsInput{
+	input := &dynamodb.UpdateContributorInsightsInput{
 		ContributorInsightsAction: aws.String(dynamodb.ContributorInsightsActionEnable),
 	}
 
 	if v, ok := d.GetOk("table_name"); ok {
-		in.TableName = aws.String(v.(string))
+		input.TableName = aws.String(v.(string))
 	}
 
 	var indexName string
 	if v, ok := d.GetOk("index_name"); ok {
-		in.IndexName = aws.String(v.(string))
+		input.IndexName = aws.String(v.(string))
 		indexName = v.(string)
 	}
 
-	out, err := conn.UpdateContributorInsightsWithContext(ctx, in)
+	output, err := conn.UpdateContributorInsightsWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("creating dynamodb ContributorInsights for table (%s): %s", d.Get("table_name").(string), err)
+		return diag.Errorf("creating DynamoDB ContributorInsights for table (%s): %s", d.Get("table_name").(string), err)
 	}
 
-	id := EncodeContributorInsightsID(aws.StringValue(out.TableName), indexName, meta.(*conns.AWSClient).AccountID)
+	id := EncodeContributorInsightsID(aws.StringValue(output.TableName), indexName, meta.(*conns.AWSClient).AccountID)
 	d.SetId(id)
 
-	if err := waitContributorInsightsCreated(ctx, conn, aws.StringValue(out.TableName), indexName, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for dynamodb ContributorInsights (%s) create: %s", d.Id(), err)
+	if err := waitContributorInsightsCreated(ctx, conn, aws.StringValue(output.TableName), indexName, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return diag.Errorf("waiting for DynamoDB ContributorInsights (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceContributorInsightsRead(ctx, d, meta)
@@ -86,7 +82,7 @@ func resourceContributorInsightsRead(ctx context.Context, d *schema.ResourceData
 
 	tableName, indexName, err := DecodeContributorInsightsID(d.Id())
 	if err != nil {
-		return diag.Errorf("unable to decode ContributorInsights ID (%s): %s", d.Id(), err)
+		return diag.Errorf("unable to decode DynamoDB ContributorInsights ID (%s): %s", d.Id(), err)
 	}
 
 	out, err := FindContributorInsights(ctx, conn, tableName, indexName)
@@ -103,7 +99,6 @@ func resourceContributorInsightsRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set("index_name", out.IndexName)
 	d.Set("table_name", out.TableName)
-	d.Set("status", out.ContributorInsightsStatus)
 
 	return nil
 }
@@ -118,16 +113,16 @@ func resourceContributorInsightsDelete(ctx context.Context, d *schema.ResourceDa
 		return diag.Errorf("unable to decode DynamoDB ContributorInsights ID (%s): %s", d.Id(), err)
 	}
 
-	in := &dynamodb.UpdateContributorInsightsInput{
+	input := &dynamodb.UpdateContributorInsightsInput{
 		ContributorInsightsAction: aws.String(dynamodb.ContributorInsightsActionDisable),
 		TableName:                 aws.String(tableName),
 	}
 
 	if indexName != "" {
-		in.IndexName = aws.String(indexName)
+		input.IndexName = aws.String(indexName)
 	}
 
-	_, err = conn.UpdateContributorInsightsWithContext(ctx, in)
+	_, err = conn.UpdateContributorInsightsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 		return nil
