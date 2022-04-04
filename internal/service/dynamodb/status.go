@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func statusDynamoDBKinesisStreamingDestination(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) resource.StateRefreshFunc {
@@ -189,7 +190,7 @@ func statusContributorInsights(ctx context.Context, conn *dynamodb.DynamoDB, tab
 	return func() (interface{}, string, error) {
 		insight, err := FindContributorInsights(ctx, conn, tableName, indexName)
 
-		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 

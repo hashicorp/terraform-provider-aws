@@ -275,7 +275,7 @@ func waitContributorInsightsCreated(ctx context.Context, conn *dynamodb.DynamoDB
 func waitContributorInsightsDeleted(ctx context.Context, conn *dynamodb.DynamoDB, tableName, indexName string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{dynamodb.ContributorInsightsStatusDisabling},
-		Target:  []string{dynamodb.ContributorInsightsStatusDisabled},
+		Target:  []string{},
 		Timeout: timeout,
 		Refresh: statusContributorInsights(ctx, conn, tableName, indexName),
 	}
