@@ -219,13 +219,8 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 								"create-route",
 							}, false),
 						},
-						/* 2 types of segment actions
-						action = share: mode = "attachment-route", share-with (list), segment (source of what is sharing) 1 to many segment to many segments
 
-						action = create-route: destination_cidr_blocks, destination (array), segment (no mode, )
-
-						*/
-						"destination": setOfString,
+						"destinations": setOfString,
 						// can be either a list of attachments or ["blackhole"]
 
 						"destination_cidr_blocks": setOfString,
@@ -245,21 +240,15 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 							//"^[a-zA-Z][A-Za-z0-9]{0,63}$"
 						},
 						/*
-							can be array or string or object
+							share_with can be array or string or object
 							share_with = ["segment-ids", "..."] # subset of all segments
 							share_with = "*"                    # all segments
 							share_with = {                      # setsubtraction of all segments
 								except = ["segment-ids", "..."]
 							}
 						*/
-						"share_with": {
-							Type:     schema.TypeList,
-							Required: true,
-							//"^[a-zA-Z][A-Za-z0-9]{0,63}$"
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{},
-							},
-						},
+						// "share_with":        setOfString,
+						// "share_with_except": setOfString,
 					},
 				},
 			},
@@ -296,6 +285,13 @@ func dataSourceCoreNetworkPolicyDocumentRead(d *schema.ResourceData, meta interf
 	}
 	mergedDoc.AttachmentPolicies = attachmentPolicies
 
+	// SegmentActions
+	segment_actions, err := expandDataCoreNetworkPolicySegmentActions(d)
+	if err != nil {
+		return err
+	}
+	mergedDoc.SegmentActions = segment_actions
+
 	// Segments
 	segments, err := expandDataCoreNetworkPolicySegments(d)
 	if err != nil {
@@ -317,21 +313,77 @@ func dataSourceCoreNetworkPolicyDocumentRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
+func expandDataCoreNetworkPolicySegmentActions(d *schema.ResourceData) ([]*CoreNetworkPolicySegmentAction, error) {
+	var cfgSegmentActionsIntf = d.Get("segment_actions").([]interface{})
+	sgmtActions := make([]*CoreNetworkPolicySegmentAction, len(cfgSegmentActionsIntf))
+	for i, sgmtActionI := range cfgSegmentActionsIntf {
+		cfgSA := sgmtActionI.(map[string]interface{})
+		sgmtAction := &CoreNetworkPolicySegmentAction{}
+		/* 2 types of segment actions
+		share: mode = "attachment-route", share-with (list), segment (source of what is sharing) 1 to many segment to many segments
+
+		create-route: destination_cidr_blocks, destination (array), segment (no mode, )
+		*/
+		action := cfgSA["action"].(string)
+		sgmtAction.Action = action
+
+		if action == "share" {
+			if dest := cfgSA["destinations"].(*schema.Set).List(); len(dest) > 0 {
+				return nil, fmt.Errorf("Cannot specify \"destinations\" if action = \"share\".")
+			}
+			if destCidrB := cfgSA["destination_cidr_blocks"].(*schema.Set).List(); len(destCidrB) > 0 {
+				return nil, fmt.Errorf("Cannot specify \"destination_cidr_blocks\" if action = \"share\".")
+			}
+
+			if mode, ok := cfgSA["mode"]; ok {
+				sgmtAction.Mode = mode.(string)
+			}
+
+			if sgmt, ok := cfgSA["segment"]; ok {
+				sgmtAction.Segment = sgmt.(string)
+			}
+
+		}
+
+		if action == "create-route" {
+			if mode, _ := cfgSA["mode"]; mode != "" {
+				return nil, fmt.Errorf("Cannot specify \"mode\" if action = \"create-route\".")
+			}
+
+			if dest, ok := cfgSA["dest"]; ok {
+				sgmtAction.Destinations = dest.(string)
+			}
+
+			if destCidrB, ok := cfgSA["destination_cidr_blocks"]; ok {
+				sgmtAction.DestinationCidrBlocks = destCidrB.(string)
+			}
+		}
+
+		if sgmt, ok := cfgSA["segment"]; ok {
+			sgmtAction.Segment = sgmt.(string)
+		}
+		sgmtActions[i] = sgmtAction
+		// TODO: share_with
+
+	}
+	return sgmtActions, nil
+}
+
 func expandDataCoreNetworkPolicyAttachmentPolicies(d *schema.ResourceData) ([]*CoreNetworkAttachmentPolicy, error) {
-	var cfgAttachmentPolicyInterface = d.Get("attachment_policies").([]interface{})
-	aPolicies := make([]*CoreNetworkAttachmentPolicy, len(cfgAttachmentPolicyInterface))
+	var cfgAttachmentPolicyIntf = d.Get("attachment_policies").([]interface{})
+	aPolicies := make([]*CoreNetworkAttachmentPolicy, len(cfgAttachmentPolicyIntf))
 	ruleMap := make(map[string]struct{})
 
-	for i, polI := range cfgAttachmentPolicyInterface {
+	for i, polI := range cfgAttachmentPolicyIntf {
 		cfgPol := polI.(map[string]interface{})
 		policy := &CoreNetworkAttachmentPolicy{}
 
-		rule := cfgPol["rule_number"]
-		ruleStr := strconv.Itoa(rule.(int))
+		rule := cfgPol["rule_number"].(int)
+		ruleStr := strconv.Itoa(rule)
 		if _, ok := ruleMap[ruleStr]; ok {
 			return nil, fmt.Errorf("duplicate Rule Number (%s). Remove the Rule Number or ensure the Rule Number is unique.", ruleStr)
 		}
-		policy.RuleNumber = rule.(int)
+		policy.RuleNumber = rule
 		ruleMap[ruleStr] = struct{}{}
 
 		if desc, ok := cfgPol["description"]; ok {

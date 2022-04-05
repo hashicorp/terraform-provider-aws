@@ -9,12 +9,23 @@ const (
 )
 
 type CoreNetworkPolicyDoc struct {
-	Version            string                         `json:",omitempty"`
-	Id                 string                         `json:",omitempty"`
-	AttachmentPolicies []*CoreNetworkAttachmentPolicy `json:"AttachmentPolicies"`
-	Segments           []*CoreNetworkPolicySegment    `json:"Segments"`
-	// SegmentActions           []*CoreNetworkPolicySegment                `json:"Segments"`
-	CoreNetworkConfiguration *CoreNetworkPolicyCoreNetworkConfiguration `json:"CoreNetworkConfiguration"`
+	Version                  string `json:",omitempty"`
+	Id                       string `json:",omitempty"`
+	CoreNetworkConfiguration *CoreNetworkPolicyCoreNetworkConfiguration
+	Segments                 []*CoreNetworkPolicySegment
+	AttachmentPolicies       []*CoreNetworkAttachmentPolicy    `json:"AttachmentPolicies,omitempty"`
+	SegmentActions           []*CoreNetworkPolicySegmentAction `json:"SegmentActions,omitempty"`
+}
+
+type CoreNetworkPolicySegmentAction struct {
+	Action                string
+	Destinations          interface{} `json:",omitempty"`
+	DestinationCidrBlocks interface{} `json:",omitempty"`
+	Mode                  string      `json:",omitempty"`
+	Segment               string      `json:",omitempty"`
+
+	// ShareWith       []string{} `json:"ShareWith,omitempty"`
+	// ShareWithExcept []string{} `json:"ShareWith,omitempty"`
 }
 
 type CoreNetworkAttachmentPolicy struct {

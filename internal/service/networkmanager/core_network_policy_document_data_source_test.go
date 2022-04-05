@@ -54,6 +54,13 @@ data "aws_networkmanager_core_network_policy_document" test {
     require_attachment_acceptance = true
   }
 
+  segment_actions {
+    action = "share"
+    mode =  "attachment-route"
+    segment = "shared"
+    # share-with = "*"
+  }
+
   attachment_policies {
     rule_number = 100
     condition_logic = "or"
