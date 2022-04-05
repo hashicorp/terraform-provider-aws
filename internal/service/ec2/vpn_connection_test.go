@@ -163,6 +163,8 @@ func TestAccEC2VPNConnection_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(resourceName, &vpn),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpn-connection/vpn-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "core_network_attachment_arn", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "customer_gateway_configuration"),
 					resource.TestCheckResourceAttr(resourceName, "enable_acceleration", "false"),
 					resource.TestCheckResourceAttr(resourceName, "local_ipv4_network_cidr", "0.0.0.0/0"),
