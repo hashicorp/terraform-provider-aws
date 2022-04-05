@@ -89,8 +89,8 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 			"global_replication_group_description": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				DiffSuppressFunc: elasticacheDescriptionDiffSuppress,
-				StateFunc:        elasticacheDescriptionStateFunc,
+				DiffSuppressFunc: descriptionDiffSuppress,
+				StateFunc:        descriptionStateFunc,
 			},
 			// global_replication_group_members cannot be correctly implemented because any secondary
 			// replication groups will be added after this resource completes.
@@ -128,14 +128,14 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 	}
 }
 
-func elasticacheDescriptionDiffSuppress(_, old, new string, d *schema.ResourceData) bool {
+func descriptionDiffSuppress(_, old, new string, d *schema.ResourceData) bool {
 	if (old == EmptyDescription && new == "") || (old == "" && new == EmptyDescription) {
 		return true
 	}
 	return false
 }
 
-func elasticacheDescriptionStateFunc(v interface{}) string {
+func descriptionStateFunc(v interface{}) string {
 	s := v.(string)
 	if s == "" {
 		return EmptyDescription
@@ -199,7 +199,7 @@ func resourceGlobalReplicationGroupRead(d *schema.ResourceData, meta interface{}
 	d.Set("global_replication_group_id", globalReplicationGroup.GlobalReplicationGroupId)
 	d.Set("transit_encryption_enabled", globalReplicationGroup.TransitEncryptionEnabled)
 
-	d.Set("primary_replication_group_id", flattenElasticacheGlobalReplicationGroupPrimaryGroupID(globalReplicationGroup.Members))
+	d.Set("primary_replication_group_id", flattenGlobalReplicationGroupPrimaryGroupID(globalReplicationGroup.Members))
 
 	return nil
 }
@@ -208,7 +208,7 @@ func resourceGlobalReplicationGroupUpdate(d *schema.ResourceData, meta interface
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	// Only one field can be changed per request
-	updaters := map[string]elasticacheGlobalReplicationGroupUpdater{}
+	updaters := map[string]globalReplicationGroupUpdater{}
 	if !d.IsNewResource() {
 		updaters["global_replication_group_description"] = func(input *elasticache.ModifyGlobalReplicationGroupInput) {
 			input.GlobalReplicationGroupDescription = aws.String(d.Get("global_replication_group_description").(string))
@@ -217,7 +217,7 @@ func resourceGlobalReplicationGroupUpdate(d *schema.ResourceData, meta interface
 
 	for k, f := range updaters {
 		if d.HasChange(k) {
-			if err := updateElasticacheGlobalReplicationGroup(conn, d.Id(), f); err != nil {
+			if err := updateGlobalReplicationGroup(conn, d.Id(), f); err != nil {
 				return fmt.Errorf("error updating ElastiCache Global Replication Group (%s): %w", d.Id(), err)
 			}
 		}
@@ -226,9 +226,9 @@ func resourceGlobalReplicationGroupUpdate(d *schema.ResourceData, meta interface
 	return resourceGlobalReplicationGroupRead(d, meta)
 }
 
-type elasticacheGlobalReplicationGroupUpdater func(input *elasticache.ModifyGlobalReplicationGroupInput)
+type globalReplicationGroupUpdater func(input *elasticache.ModifyGlobalReplicationGroupInput)
 
-func updateElasticacheGlobalReplicationGroup(conn *elasticache.ElastiCache, id string, f elasticacheGlobalReplicationGroupUpdater) error {
+func updateGlobalReplicationGroup(conn *elasticache.ElastiCache, id string, f globalReplicationGroupUpdater) error {
 	input := &elasticache.ModifyGlobalReplicationGroupInput{
 		ApplyImmediately:         aws.Bool(true),
 		GlobalReplicationGroupId: aws.String(id),
@@ -298,7 +298,7 @@ func DeleteGlobalReplicationGroup(conn *elasticache.ElastiCache, id string, read
 	return nil
 }
 
-func flattenElasticacheGlobalReplicationGroupPrimaryGroupID(members []*elasticache.GlobalReplicationGroupMember) string {
+func flattenGlobalReplicationGroupPrimaryGroupID(members []*elasticache.GlobalReplicationGroupMember) string {
 	for _, member := range members {
 		if aws.StringValue(member.Role) == GlobalReplicationGroupMemberRolePrimary {
 			return aws.StringValue(member.ReplicationGroupId)

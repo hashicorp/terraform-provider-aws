@@ -22,10 +22,10 @@ jobs:
       matrix:
         terraform_version: ["0.12.31", "1.0.6"]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
@@ -53,7 +53,7 @@ jobs:
     - name: install tflint
       run: cd tools && go install github.com/terraform-linters/tflint
 
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       name: Cache plugin dir
       with:
         path: ~/.tflint.d/plugins

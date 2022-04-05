@@ -106,7 +106,7 @@ func resourceRegexMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetRegexMatchSet(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, waf.ErrCodeNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
 			log.Printf("[WARN] WAF Regex Match Set (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

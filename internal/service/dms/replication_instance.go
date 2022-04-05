@@ -217,7 +217,7 @@ func resourceReplicationInstanceRead(d *schema.ResourceData, meta interface{}) e
 		},
 	})
 
-	if tfawserr.ErrMessageContains(err, dms.ErrCodeResourceNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 		log.Printf("[WARN] DMS Replication Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -389,7 +389,7 @@ func resourceReplicationInstanceDelete(d *schema.ResourceData, meta interface{})
 
 	_, err := conn.DeleteReplicationInstance(request)
 
-	if tfawserr.ErrMessageContains(err, dms.ErrCodeResourceNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 		return nil
 	}
 
@@ -426,7 +426,7 @@ func resourceReplicationInstanceStateRefreshFunc(conn *dms.DatabaseMigrationServ
 			},
 		})
 
-		if tfawserr.ErrMessageContains(err, dms.ErrCodeResourceNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 			return nil, "", nil
 		}
 

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestProvider(t *testing.T) {
@@ -174,7 +175,7 @@ func TestAccProvider_endpoints(t *testing.T) {
 	var endpoints strings.Builder
 
 	// Initialize each endpoint configuration with matching name and value
-	for _, serviceKey := range conns.ServiceKeys() {
+	for _, serviceKey := range names.ServiceKeys() {
 		endpoints.WriteString(fmt.Sprintf("%s = \"http://%s\"\n", serviceKey, serviceKey))
 	}
 
@@ -829,7 +830,7 @@ func testAccCheckEndpoints(providers *[]*schema.Provider) resource.TestCheckFunc
 			return func(name string) bool {
 				serviceUpper := ""
 				var err error
-				if serviceUpper, err = conns.ServiceProviderNameUpper(key); err != nil {
+				if serviceUpper, err = names.ServiceProviderNameUpper(key); err != nil {
 					return false
 				}
 
@@ -844,7 +845,7 @@ func testAccCheckEndpoints(providers *[]*schema.Provider) resource.TestCheckFunc
 
 			providerClient := provo.Meta().(*conns.AWSClient)
 
-			for _, serviceKey := range conns.ServiceKeys() {
+			for _, serviceKey := range names.ServiceKeys() {
 				providerClientField := reflect.Indirect(reflect.ValueOf(providerClient)).FieldByNameFunc(endpointFieldNameF(serviceKey))
 
 				if !providerClientField.IsValid() {
@@ -875,7 +876,7 @@ func testAccCheckUnusualEndpoints(providers *[]*schema.Provider, unusual1, unusu
 			return func(name string) bool {
 				serviceUpper := ""
 				var err error
-				if serviceUpper, err = conns.ServiceProviderNameUpper(key); err != nil {
+				if serviceUpper, err = names.ServiceProviderNameUpper(key); err != nil {
 					return false
 				}
 

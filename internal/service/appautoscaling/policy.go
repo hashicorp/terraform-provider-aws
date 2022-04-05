@@ -226,7 +226,7 @@ func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "token included in the request is invalid") {
 				return resource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeObjectNotFoundException) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(fmt.Errorf("Error putting scaling policy: %s", err))
@@ -254,7 +254,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		p, err = getPolicy(d, meta)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
+			if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeFailedResourceAccessException) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -308,10 +308,10 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutScalingPolicy(&params)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
+			if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeFailedResourceAccessException) {
 				return resource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeObjectNotFoundException) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -348,11 +348,11 @@ func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		_, err = conn.DeleteScalingPolicy(&params)
 
-		if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
+		if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeFailedResourceAccessException) {
 			return resource.RetryableError(err)
 		}
 
-		if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeObjectNotFoundException) {
 			return nil
 		}
 

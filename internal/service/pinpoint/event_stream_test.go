@@ -178,7 +178,7 @@ func testAccCheckEventStreamDestroy(s *terraform.State) error {
 		}
 		_, err := conn.GetEventStream(params)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
 				continue
 			}
 			return err

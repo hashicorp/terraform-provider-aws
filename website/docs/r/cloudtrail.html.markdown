@@ -334,7 +334,7 @@ This configuration block supports the following attributes:
 
 This configuration block supports the following attributes:
 
-* `insight_type` - (Optional) Type of insights to log on a trail. The valid value is `ApiCallRateInsight`.
+* `insight_type` - (Optional) Type of insights to log on a trail. Valid values are: `ApiCallRateInsight` and `ApiErrorRateInsight`.
 
 ### Advanced Event Selector Arguments
 For **advanced_event_selector** the following attributes are supported.

@@ -168,5 +168,5 @@ In addition to all arguments above, the following attributes are exported:
 Cognito User Pool Clients can be imported using the `id` of the Cognito User Pool, and the `id` of the Cognito User Pool Client, e.g.,
 
 ```
-$ terraform import aws_cognito_user_pool_client.client <user_pool_id>/<user_pool_client_id>
+$ terraform import aws_cognito_user_pool_client.client us-west-2_abc123/3ho4ek12345678909nh3fmhpko
 ```

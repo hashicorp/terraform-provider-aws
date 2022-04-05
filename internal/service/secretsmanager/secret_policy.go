@@ -187,7 +187,7 @@ func resourceSecretPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[DEBUG] Removing Secrets Manager Secret policy: %#v", input)
 	_, err := conn.DeleteResourcePolicy(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error removing Secrets Manager Secret %q policy: %w", d.Id(), err)

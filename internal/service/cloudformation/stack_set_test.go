@@ -40,6 +40,7 @@ func TestAccCloudFormationStackSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "execution_role_name", "AWSCloudFormationStackSetExecutionRole"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "permission_model", "SELF_MANAGED"),
 					resource.TestMatchResourceAttr(resourceName, "stack_set_id", regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
@@ -254,6 +255,43 @@ func TestAccCloudFormationStackSet_name(t *testing.T) {
 					testAccCheckCloudFormationStackSetRecreated(&stackSet1, &stackSet2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFormationStackSet_operationPreferences(t *testing.T) {
+	var stackSet cloudformation.StackSet
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckStackSet(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckStackSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetOperationPreferencesConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackSetExists(resourceName, &stackSet),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "10"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"call_as",
+					"template_url",
+					"operation_preferences",
+				},
 			},
 		},
 	})
@@ -600,9 +638,11 @@ func testAccCheckCloudFormationStackSetExists(resourceName string, v *cloudforma
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
+		callAs := rs.Primary.Attributes["call_as"]
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 
-		output, err := tfcloudformation.FindStackSetByName(conn, rs.Primary.ID)
+		output, err := tfcloudformation.FindStackSetByName(conn, rs.Primary.ID, callAs)
 
 		if err != nil {
 			return err
@@ -622,7 +662,9 @@ func testAccCheckStackSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfcloudformation.FindStackSetByName(conn, rs.Primary.ID)
+		callAs := rs.Primary.Attributes["call_as"]
+
+		_, err := tfcloudformation.FindStackSetByName(conn, rs.Primary.ID, callAs)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -1446,6 +1488,47 @@ resource "aws_cloudformation_stack_set" "test" {
   auto_deployment {
     enabled                          = true
     retain_stacks_on_account_removal = false
+  }
+
+  template_body = <<TEMPLATE
+%[2]s
+TEMPLATE
+}
+`, rName, testAccStackSetTemplateBodyVPC(rName))
+}
+
+func testAccStackSetOperationPreferencesConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
+}
+
+resource "aws_cloudformation_stack_set" "test" {
+  administration_role_arn = aws_iam_role.test.arn
+  name                    = %[1]q
+
+  operation_preferences {
+    failure_tolerance_count = 1
+    max_concurrent_count    = 10
   }
 
   template_body = <<TEMPLATE

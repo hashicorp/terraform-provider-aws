@@ -173,7 +173,7 @@ func testAccCheckCloudFrontKeyGroupDestroy(s *terraform.State) error {
 		}
 
 		_, err := conn.GetKeyGroup(input)
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchResource, "") {
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchResource) {
 			continue
 		}
 		if err != nil {

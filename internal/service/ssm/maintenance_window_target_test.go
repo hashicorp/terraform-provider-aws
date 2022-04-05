@@ -301,7 +301,7 @@ func testAccCheckMaintenanceWindowTargetDestroy(s *terraform.State) error {
 
 		if err != nil {
 			// Verify the error is what we want
-			if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
+			if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 				continue
 			}
 			return err

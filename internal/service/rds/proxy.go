@@ -181,7 +181,7 @@ func resourceProxyRefreshFunc(conn *rds.RDS, proxyName string) resource.StateRef
 		})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBProxyNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 				return 42, "", nil
 			}
 			return 42, "", err
@@ -260,7 +260,7 @@ func resourceProxyRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.DescribeDBProxies(&params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBProxyNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 			log.Printf("[WARN] DB Proxy (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

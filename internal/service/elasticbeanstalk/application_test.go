@@ -177,7 +177,7 @@ func testAccCheckBeanstalkAppDestroy(s *terraform.State) error {
 			return nil
 		}
 
-		if !tfawserr.ErrMessageContains(err, "InvalidBeanstalkAppID.NotFound", "") {
+		if !tfawserr.ErrCodeEquals(err, "InvalidBeanstalkAppID.NotFound") {
 			return err
 		}
 	}

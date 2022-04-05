@@ -65,7 +65,7 @@ func resourceBucketPolicyPut(d *schema.ResourceData, meta interface{}) error {
 
 	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.PutBucketPolicy(params)
-		if tfawserr.ErrMessageContains(err, "MalformedPolicy", "") {
+		if tfawserr.ErrCodeEquals(err, "MalformedPolicy") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {

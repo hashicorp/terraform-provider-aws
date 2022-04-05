@@ -174,7 +174,7 @@ func resourceVolumeAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 
 	vols, err := conn.DescribeVolumes(request)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidVolume.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidVolume.NotFound") {
 			d.SetId("")
 			return nil
 		}

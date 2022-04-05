@@ -7,6 +7,7 @@ Access Analyzer
 Account
 Amplify Console
 AppConfig
+AppIntegrations
 AppMesh
 App Runner
 AppSync
@@ -29,6 +30,7 @@ CloudHSM v2
 CloudSearch
 CloudTrail
 CloudWatch
+CloudWatch RUM
 CodeArtifact
 CodeBuild
 CodeCommit
@@ -81,12 +83,13 @@ Identity Store
 Image Builder
 Inspector
 IoT
-KMS
+Keyspaces
 Kinesis
 Kinesis Data Analytics (SQL Applications)
 Kinesis Data Analytics v2 (SQL and Flink Applications)
 Kinesis Firehose
 Kinesis Video
+KMS
 Lake Formation
 Lambda
 Lex
@@ -105,6 +108,8 @@ MemoryDB
 Managed Workflows for Apache Airflow (MWAA)
 Neptune
 Network Firewall
+Network Manager
+OpenSearch
 OpsWorks
 Organizations
 Outposts
@@ -146,7 +151,6 @@ Storage Gateway
 Synthetics
 Timestream Write
 Transfer
-Transit Gateway Network Manager
 VPC
 WAF Regional
 WAF

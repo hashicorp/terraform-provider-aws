@@ -206,7 +206,7 @@ func resourceInstanceProfileDelete(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[DEBUG] Deleting DeviceFarm Instance Profile: %s", d.Id())
 	_, err := conn.DeleteInstanceProfile(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, devicefarm.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting DeviceFarm Instance Profile: %w", err)

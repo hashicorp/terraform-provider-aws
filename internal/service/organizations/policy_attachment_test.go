@@ -145,11 +145,11 @@ func testAccCheckPolicyAttachmentDestroy(s *terraform.State) error {
 			return !lastPage
 		})
 
-		if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
 			continue
 		}
 
-		if tfawserr.ErrMessageContains(err, organizations.ErrCodeTargetNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeTargetNotFoundException) {
 			continue
 		}
 

@@ -73,6 +73,22 @@ func ResourceDistributionConfiguration() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"organization_arns": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
+												"organizational_unit_arns": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
 												"user_groups": {
 													Type:     schema.TypeSet,
 													Optional: true,
@@ -158,6 +174,11 @@ func ResourceDistributionConfiguration() *schema.Resource {
 							MaxItems: 100,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"account_id": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidAccountID,
+									},
 									"default": {
 										Type:     schema.TypeBool,
 										Optional: true,
@@ -495,6 +516,14 @@ func expandLaunchPermissionConfiguration(tfMap map[string]interface{}) *imagebui
 
 	apiObject := &imagebuilder.LaunchPermissionConfiguration{}
 
+	if v, ok := tfMap["organization_arns"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.OrganizationArns = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["organizational_unit_arns"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.OrganizationalUnitArns = flex.ExpandStringSet(v)
+	}
+
 	if v, ok := tfMap["user_ids"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.UserIds = flex.ExpandStringSet(v)
 	}
@@ -537,6 +566,10 @@ func expandLaunchTemplateConfiguration(tfMap map[string]interface{}) *imagebuild
 
 	if v, ok := tfMap["default"].(bool); ok {
 		apiObject.SetDefaultVersion = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["account_id"].(string); ok && v != "" {
+		apiObject.AccountId = aws.String(v)
 	}
 
 	return apiObject
@@ -671,6 +704,14 @@ func flattenLaunchPermissionConfiguration(apiObject *imagebuilder.LaunchPermissi
 
 	tfMap := map[string]interface{}{}
 
+	if v := apiObject.OrganizationArns; v != nil {
+		tfMap["organization_arns"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.OrganizationalUnitArns; v != nil {
+		tfMap["organizational_unit_arns"] = aws.StringValueSlice(v)
+	}
+
 	if v := apiObject.UserGroups; v != nil {
 		tfMap["user_groups"] = aws.StringValueSlice(v)
 	}
@@ -713,6 +754,10 @@ func flattenLaunchTemplateConfiguration(apiObject *imagebuilder.LaunchTemplateCo
 
 	if v := apiObject.SetDefaultVersion; v != nil {
 		tfMap["default"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.AccountId; v != nil {
+		tfMap["account_id"] = aws.StringValue(v)
 	}
 
 	return tfMap

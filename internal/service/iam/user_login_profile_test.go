@@ -280,7 +280,7 @@ func testAccCheckUserLoginProfileDestroy(s *terraform.State) error {
 			UserName: aws.String(rs.Primary.ID),
 		})
 
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
 		}
 
@@ -339,10 +339,10 @@ func testDecryptPasswordAndTest(nProfile, nAccessKey, key string) resource.TestC
 			})
 			if err != nil {
 				// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
-				if tfawserr.ErrMessageContains(err, iam.ErrCodeEntityTemporarilyUnmodifiableException, "") {
+				if tfawserr.ErrCodeEquals(err, iam.ErrCodeEntityTemporarilyUnmodifiableException) {
 					return resource.RetryableError(err)
 				}
-				if tfawserr.ErrMessageContains(err, "InvalidClientTokenId", "") {
+				if tfawserr.ErrCodeEquals(err, "InvalidClientTokenId") {
 					return resource.RetryableError(err)
 				}
 

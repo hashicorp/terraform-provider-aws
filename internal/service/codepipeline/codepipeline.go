@@ -538,7 +538,7 @@ func resourceCodePipelineRead(d *schema.ResourceData, meta interface{}) error {
 		Name: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, codepipeline.ErrCodePipelineNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, codepipeline.ErrCodePipelineNotFoundException) {
 		log.Printf("[WARN] CodePipeline (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -627,7 +627,7 @@ func resourceCodePipelineDelete(d *schema.ResourceData, meta interface{}) error 
 		Name: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, codepipeline.ErrCodePipelineNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, codepipeline.ErrCodePipelineNotFoundException) {
 		return nil
 	}
 

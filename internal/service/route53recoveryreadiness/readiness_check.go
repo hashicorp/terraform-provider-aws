@@ -156,7 +156,7 @@ func resourceReadinessCheckDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 	_, err := conn.DeleteReadinessCheck(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, route53recoveryreadiness.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, route53recoveryreadiness.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error deleting Route53 Recovery Readiness ReadinessCheck: %s", err)
@@ -168,7 +168,7 @@ func resourceReadinessCheckDelete(d *schema.ResourceData, meta interface{}) erro
 	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.GetReadinessCheck(gcinput)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, route53recoveryreadiness.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, route53recoveryreadiness.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 			return resource.NonRetryableError(err)

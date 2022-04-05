@@ -62,7 +62,7 @@ func testAccCheckSubnetGroupDestroy(s *terraform.State) error {
 			SubnetGroupNames: []*string{aws.String(rs.Primary.ID)},
 		})
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, dax.ErrCodeSubnetGroupNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, dax.ErrCodeSubnetGroupNotFoundFault) {
 				return nil
 			}
 			return err

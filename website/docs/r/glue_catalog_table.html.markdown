@@ -104,6 +104,10 @@ The follow arguments are optional:
 
 ### partition_index
 
+~> **NOTE:** A `partition_index` cannot be added to an existing `glue_catalog_table`.
+This will destroy and recreate the table, possibly resulting in data loss.
+To add an index to an existing table, see the [`glue_partition_index` resource](/docs/providers/aws/r/glue_partition_index.html) for configuration details.
+
 * `index_name` - (Required) Name of the partition index.
 * `keys` - (Required) Keys for the partition index.
 

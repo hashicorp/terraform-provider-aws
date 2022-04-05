@@ -569,6 +569,33 @@ func TestAccImageBuilderImageRecipe_pipelineUpdateDependency(t *testing.T) {
 	})
 }
 
+func TestAccImageBuilderImageRecipe_systemsManagerAgent(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image_recipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckImageRecipeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageRecipeSystemsManagerAgentConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageRecipeExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "systems_manager_agent.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "systems_manager_agent.0.uninstall_after_build", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccImageBuilderImageRecipe_userDataBase64(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image_recipe.test"
@@ -584,6 +611,31 @@ func TestAccImageBuilderImageRecipe_userDataBase64(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "user_data_base64", verify.Base64Encode([]byte("hello world"))),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderImageRecipe_WindowsBaseImage(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image_recipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckImageRecipeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageRecipeWindowsConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageRecipeExists(resourceName),
 				),
 			},
 			{
@@ -1195,6 +1247,26 @@ resource "aws_imagebuilder_image_recipe" "test" {
 `, rName))
 }
 
+func testAccImageRecipeSystemsManagerAgentConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccImageRecipeBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_image_recipe" "test" {
+  component {
+    component_arn = aws_imagebuilder_component.test.arn
+  }
+
+  name         = %[1]q
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  version      = "1.0.0"
+
+  systems_manager_agent {
+    uninstall_after_build = true
+  }
+}
+`, rName))
+}
+
 func testAccImageRecipeUserDataBase64Config(rName string) string {
 	return acctest.ConfigCompose(
 		testAccImageRecipeBaseConfig(rName),
@@ -1208,6 +1280,50 @@ resource "aws_imagebuilder_image_recipe" "test" {
   parent_image     = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
   version          = "1.0.0"
   user_data_base64 = base64encode("hello world")
+}
+`, rName))
+}
+
+func testAccImageRecipeBaseConfigWindows(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_imagebuilder_component" "test" {
+  data = yamlencode({
+    phases = [{
+      name = "build"
+      steps = [{
+        action = "ExecutePowerShell"
+        inputs = {
+          commands = ["Write-Host 'hello world'"]
+        }
+        name      = "example"
+        onFailure = "Continue"
+      }]
+    }]
+    schemaVersion = 1.0
+  })
+  name     = %[1]q
+  platform = "Windows"
+  version  = "1.0.0"
+}
+`, rName)
+}
+
+func testAccImageRecipeWindowsConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccImageRecipeBaseConfigWindows(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_image_recipe" "test" {
+  component {
+    component_arn = aws_imagebuilder_component.test.arn
+  }
+
+  name         = %[1]q
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/windows-server-2022-english-full-base-x86/x.x.x"
+  version      = "1.0.0"
 }
 `, rName))
 }

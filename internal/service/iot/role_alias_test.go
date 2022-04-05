@@ -88,7 +88,7 @@ func testAccCheckRoleAliasDestroy(s *terraform.State) error {
 
 		_, err := tfiot.GetRoleAliasDescription(conn, rs.Primary.ID)
 
-		if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 			continue
 		}
 

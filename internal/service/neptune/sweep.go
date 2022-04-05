@@ -43,7 +43,7 @@ func sweepEventSubscriptions(region string) error {
 			_, err = conn.DeleteEventSubscription(&neptune.DeleteEventSubscriptionInput{
 				SubscriptionName: aws.String(name),
 			})
-			if tfawserr.ErrMessageContains(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeSubscriptionNotFoundFault) {
 				continue
 			}
 			if err != nil {
@@ -54,7 +54,7 @@ func sweepEventSubscriptions(region string) error {
 			}
 
 			_, err = WaitEventSubscriptionDeleted(conn, name)
-			if tfawserr.ErrMessageContains(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeSubscriptionNotFoundFault) {
 				continue
 			}
 			if err != nil {

@@ -58,35 +58,35 @@ resource "aws_vpc" "example" {
 }
 ```
 
-## Authentication
+## Authentication and Configuration
 
-The AWS provider offers a flexible means of providing credentials for
-authentication. The following methods are supported, in this order, and
-explained below:
+Configuration for the AWS Provider can be derived from several sources,
+which are applied in the following order:
 
-- Static credentials
-- Profiles with shared credentials and configuration files
-- Environment variables
-- CodeBuild, ECS, and EKS Roles
-- EC2 Instance Metadata Service (IMDS and IMDSv2)
+1. Parameters in the provider configuration
+1. Environment variables
+1. Shared credentials files
+1. Shared configuration files
+1. Container credentials
+1. Instance profile credentials and region
 
-If a setting is specified more than once, the precedence is:
+This order matches the precedence used by the
+[AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-precedence)
+and the [AWS SDKs](https://aws.amazon.com/tools/).
 
-- The provider configuration
-- Environment variables
-- Settings for the profile from the shared credentials and configuration files
+The AWS Provider supports assuming an IAM role, either in
+the provider configuration block parameter `assume_role`
+or in [a named profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html).
 
-For instance, if the region is set in the shared configuration file and in the provider configuration,
-the setting from the provider configuration will be used.
+When using a named profile, the AWS Provider also supports [sourcing credentials from an external process](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sourcing-external.html).
 
-### Static Credentials
+### Provider Configuration
 
 !> **Warning:** Hard-coded credentials are not recommended in any Terraform
 configuration and risks secret leakage should this file ever be committed to a
 public version control system.
 
-Static credentials can be provided by adding an `access_key` and `secret_key`
-in-line in the AWS provider block:
+Credentials can be provided by adding an `access_key`, `secret_key`, and optionally `token`, to the `aws` provider block.
 
 Usage:
 
@@ -98,75 +98,77 @@ provider "aws" {
 }
 ```
 
-### Profiles With Shared Credentials and Configuration Files
+Other settings related to authorization can be configured, such as:
 
-You can use [AWS credentials and configuration files](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html) to specify your credentials and configuration.
-The default locations are `$HOME/.aws/credentials` and `$HOME/.aws/config` on Linux and macOS,
-or `"%USERPROFILE%\.aws\credentials"` and `"%USERPROFILE%\.aws\config"`on Windows.
-You can optionally specify a different location in the Terraform configuration by providing the `shared_credentials_files` and `shared_config_files` arguments or
-using the `AWS_SHARED_CREDENTIALS_FILE` and `AWS_CONFIG_FILE` environment variables.
-This method also supports the `profile` configuration or corresponding `AWS_PROFILE` environment variable:
+* `profile`
+* `shared_config_files`
+* `shared_credentials_files`
 
-Usage:
+### Environment Variables
+
+Credentials can be provided by using the `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and optionally `AWS_SESSION_TOKEN` environment variables.
+The region can be set using the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables.
+
+For example:
+
+```terraform
+provider "aws" {}
+```
+
+```sh
+$ export AWS_ACCESS_KEY_ID="anaccesskey"
+$ export AWS_SECRET_ACCESS_KEY="asecretkey"
+$ export AWS_REGION="us-west-2"
+$ terraform plan
+```
+
+Other environment variables related to authorization are:
+
+* `AWS_PROFILE`
+* `AWS_CONFIG_FILE`
+* `AWS_SHARED_CREDENTIALS_FILE`
+
+
+### Shared Configuration and Credentials Files
+
+The AWS Provider can source credentials and other settings from the [shared configuration and credentials files](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html).
+By default, these files are located at `$HOME/.aws/config` and `$HOME/.aws/credentials` on Linux and macOS,
+and `"%USERPROFILE%\.aws\config"` and `"%USERPROFILE%\.aws\credentials"` on Windows.
+
+If no named profile is specified, the `default` profile is used.
+Use the `profile` parameter or `AWS_PROFILE` environment variable to specify a named profile.
+
+The locations of the shared configuration and credentials files can be configured using either
+the parameters `shared_config_files` and `shared_credentials_files`
+or the environment variables `AWS_CONFIG_FILE` and `AWS_SHARED_CREDENTIALS_FILE`.
+
+For example:
 
 ```terraform
 provider "aws" {
-  region                   = "us-west-2"
   shared_config_files      = ["/Users/tf_user/.aws/conf"]
   shared_credentials_files = ["/Users/tf_user/.aws/creds"]
   profile                  = "customprofile"
 }
 ```
 
-Please note that the [AWS SDK for Go v2](https://aws.amazon.com/sdk-for-go-v2/), the underlying authentication handler used by the Terraform AWS Provider, does not support all AWS CLI features.
+### Container Credentials
 
-### Environment Variables
+If you're running Terraform on CodeBuild or ECS and have configured an [IAM Task Role](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html), Terraform can use the container's Task Role. This support is based on the underlying `AWS_CONTAINER_CREDENTIALS_RELATIVE_URI` and `AWS_CONTAINER_CREDENTIALS_FULL_URI` environment variables being automatically set by those services or manually for advanced usage.
 
-You can provide your credentials via the `AWS_ACCESS_KEY_ID` and
-`AWS_SECRET_ACCESS_KEY`, environment variables, representing your AWS
-Access Key and AWS Secret Key, respectively.  Note that setting your
-AWS credentials using either these (or legacy) environment variables
-will override the use of `AWS_SHARED_CREDENTIALS_FILE` and `AWS_PROFILE`.
-The `AWS_REGION` or `AWS_DEFAULT_REGION` and `AWS_SESSION_TOKEN` environment variables
-are also used, if applicable:
+If you're running Terraform on EKS and have configured [IAM Roles for Service Accounts (IRSA)](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html), Terraform can use the pod's role. This support is based on the underlying `AWS_ROLE_ARN` and `AWS_WEB_IDENTITY_TOKEN_FILE` environment variables being automatically set by Kubernetes or manually for advanced usage.
 
-```terraform
-provider "aws" {}
-```
+### Instance profile credentials and region
 
-Usage:
+When the AWS Provider is running on an EC2 instance with an IAM Instance Profile set,
+the provider can source credentials from the [EC2 Instance Metadata Service](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#instance-metadata-security-credentials).
+Both IMDS v1 and IMDS v2 are supported.
 
-```sh
-$ export AWS_ACCESS_KEY_ID="anaccesskey"
-$ export AWS_SECRET_ACCESS_KEY="asecretkey"
-$ export AWS_DEFAULT_REGION="us-west-2"
-$ terraform plan
-```
+A custom endpoint for the metadata service can be provided using the `ec2_metadata_service_endpoint` parameter or the `AWS_EC2_METADATA_SERVICE_ENDPOINT` environment variable.
 
-### CodeBuild, ECS, and EKS Roles
+### Assuming an IAM Role
 
-If you're running Terraform on CodeBuild or ECS and have configured an [IAM Task Role](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html), Terraform will use the container's Task Role. This support is based on the underlying `AWS_CONTAINER_CREDENTIALS_RELATIVE_URI` and `AWS_CONTAINER_CREDENTIALS_FULL_URI` environment variables being automatically set by those services or manually for advanced usage.
-
-If you're running Terraform on EKS and have configured [IAM Roles for Service Accounts (IRSA)](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html), Terraform will use the pod's role. This support is based on the underlying `AWS_ROLE_ARN` and `AWS_WEB_IDENTITY_TOKEN_FILE` environment variables being automatically set by Kubernetes or manually for advanced usage.
-
-### EC2 Instance Metadata Service
-
-If you're running Terraform from an EC2 instance with IAM Instance Profile
-using IAM Role, Terraform will just ask
-[the metadata API](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#instance-metadata-security-credentials)
-endpoint for credentials.
-
-This is a preferred approach over any other when running in EC2 as you can avoid
-hard coding credentials. Instead these are leased on-the-fly by Terraform
-which reduces the chance of leakage.
-
-You can provide a custom metadata API endpoint via `ec2_metadata_service_endpoint` or the `AWS_EC2_METADATA_SERVICE_ENDPOINT` environment variable. Include the endpoint URL and version. The default is `http://169.254.169.254:80/latest`.
-
-~> **NOTE:** Using the `AWS_METADATA_URL` environment variable has been deprecated in Terraform AWS Provider v4.0.0 and support will be removed in a future version. Change any scripts or environments using `AWS_METADATA_URL` to instead use `AWS_EC2_METADATA_SERVICE_ENDPOINT`.
-
-### Assume Role
-
-If provided with a role ARN, Terraform will attempt to assume this role
+If provided with a role ARN, the AWS Provider will attempt to assume this role
 using the supplied credentials.
 
 Usage:
@@ -174,7 +176,7 @@ Usage:
 ```terraform
 provider "aws" {
   assume_role {
-    role_arn     = "arn:aws:iam::ACCOUNT_ID:role/ROLE_NAME"
+    role_arn     = "arn:aws:iam::123456789012:role/ROLE_NAME"
     session_name = "SESSION_NAME"
     external_id  = "EXTERNAL_ID"
   }
@@ -183,6 +185,66 @@ provider "aws" {
 
 > **Hands-on:** Try the [Use AssumeRole to Provision AWS Resources Across Accounts](https://learn.hashicorp.com/tutorials/terraform/aws-assumerole) tutorial on HashiCorp Learn.
 
+### Using an External Credentials Process
+
+To use an [external process to source credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sourcing-external.html),
+the process must be configured in a named profile, including the `default` profile.
+The profile is configured in a shared configuration file.
+
+For example:
+
+```terraform
+provider "aws" {
+  profile = "customprofile"
+}
+```
+
+```ini
+[profile customprofile]
+credential_process = custom-process --username jdoe
+```
+
+## AWS Configuration Reference
+
+|Setting|Provider|[Environment Variable][envvars]|[Shared Config][config]|
+|-------|--------|-------------------------------|-----------------------|
+|Access Key ID|`access_key`|`AWS_ACCESS_KEY_ID`|`aws_access_key_id`|
+|Secret Access Key|`secret_key`|`AWS_SECRET_ACCESS_KEY`|`aws_secret_access_key`|
+|Session Token|`token`|`AWS_SESSION_TOKEN`|`aws_session_token`|
+|Region|`region`|`AWS_REGION` or `AWS_DEFAULT_REGION`|`region`|
+|Custom CA Bundle |`custom_ca_bundle`|`AWS_CA_BUNDLE`|Not supported|
+|EC2 IMDS Endpoint |`ec2_metadata_service_endpoint`|`AWS_EC2_METADATA_SERVICE_ENDPOINT`|N/A|
+|EC2 IMDS Endpoint Mode|`ec2_metadata_service_endpoint_mode`|`AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE`|N/A|
+|Disable EC2 IMDS|`skip_metadata_api_check`|`AWS_EC2_METADATA_DISABLED`|N/A|
+|HTTP Proxy|`http_proxy`|`HTTP_PROXY` or `HTTPS_PROXY`|N/A|
+|Max Retries|`max_retries`|`AWS_MAX_ATTEMPTS`|`max_attempts`|
+|Profile|`profile`|`AWS_PROFILE` or `AWS_DEFAULT_PROFILE`|N/A|
+|Shared Config Files|`shared_config_files`|`AWS_CONFIG_FILE`|N/A|
+|Shared Credentials Files|`shared_credentials_files` or `shared_credentials_file`|`AWS_SHARED_CREDENTIALS_FILE`|N/A|
+|Use DualStack Endpoints|`use_dualstack_endpoint`|`AWS_USE_DUALSTACK_ENDPOINT`|`use_dualstack_endpoint`|
+|Use FIPS Endpoints|`use_fips_endpoint`|`AWS_USE_FIPS_ENDPOINT`|`use_fips_endpoint`|
+
+### Assume Role Configuration Reference
+
+In the provider, all parameters for assuming an IAM role are set in the `assume_role` block.
+
+Environment variables are not supported for assuming IAM roles.
+
+See the [assume role documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html) for more information.
+
+|Setting|Provider|[Shared Config][config]|
+|-------|--------|-----------------------|
+|Role ARN|`role_arn`|`role_arn`|
+|Duration|`duration` or `duration_seconds`|`duration_seconds`|
+|External ID|`external_id`|`external_id`|
+|Policy|`policy`|N/A|
+|Policy ARNs|`policy_arns`|N/A|
+|Session Name|`session_name`|`role_session_name`|
+|Tags|`tags`|N/A|
+|Transitive Tag Keys|`transitive_tag_keys`|N/A|
+
+[envvars]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
+[config]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-settings
 
 ## Custom User-Agent Information
 
@@ -201,7 +263,9 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `access_key` - (Optional) AWS access key. Can also be set with the `AWS_ACCESS_KEY_ID` environment variable, or via a shared credentials file if `profile` is specified. See also `secret_key`.
 * `allowed_account_ids` - (Optional) List of allowed AWS account IDs to prevent you from mistakenly using an incorrect one (and potentially end up destroying a live environment). Conflicts with `forbidden_account_ids`.
 * `assume_role` - (Optional) Configuration block for an assumed role. See below. Only one `assume_role` block may be in the configuration.
-* `custom_ca_bundle` - (Optional) File containing custom root and intermediate certificates. Can also be set using the `AWS_CA_BUNDLE` environment variable. (Setting `ca_bundle` in the shared config file is not supported.)
+* `custom_ca_bundle` - (Optional) File containing custom root and intermediate certificates.
+  Can also be set using the `AWS_CA_BUNDLE` environment variable.
+  Setting `ca_bundle` in the shared config file is not supported.
 * `default_tags` - (Optional) Configuration block with resource tag settings to apply across all resources handled by this provider (see the [Terraform multiple provider instances documentation](/docs/configuration/providers.html#alias-multiple-provider-instances) for more information about additional provider configurations). This is designed to replace redundant per-resource `tags` configurations. Provider tags can be overridden with new values, but not excluded from specific resources. To override provider tag values, use the `tags` argument within a resource to configure new tag values for matching keys. See the [`default_tags`](#default_tags-configuration-block) Configuration Block section below for example usage and available arguments. This functionality is supported in all resources that implement `tags`, with the exception of the `aws_autoscaling_group` resource.
 * `ec2_metadata_service_endpoint` - (Optional) Address of the EC2 metadata service (IMDS) endpoint to use. Can also be set with the `AWS_EC2_METADATA_SERVICE_ENDPOINT` environment variable.
 * `ec2_metadata_service_endpoint_mode` - (Optional) Mode to use in communicating with the metadata service. Valid values are `IPv4` and `IPv6`. Can also be set with the `AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE` environment variable.
@@ -213,15 +277,20 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `max_retries` - (Optional) Maximum number of times an API call is retried when AWS throttles requests or you experience transient failures.
   The delay between the subsequent API calls increases exponentially.
   If omitted, the default value is `25`.
-  Can also be set using the environment variable `AWS_MAX_ATTEMPTS`.
-* `profile` - (Optional) AWS profile name as set in the shared credentials file.
-* `region` - (Optional) AWS region. Can also be set with either the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables, or via a shared config file if `profile` is used.
+  Can also be set using the environment variable `AWS_MAX_ATTEMPTS`
+  and the shared configuration parameter `max_attempts`.
+* `profile` - (Optional) AWS profile name as set in the shared configuration and credentials files.
+  Can also be set using either the environment variables `AWS_PROFILE` or `AWS_DEFAULT_PROFILE`.
+* `region` - (Optional) The AWS region where the provider will operate. The region must be set.
+  Can also be set with either the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables,
+  or via a shared config file parameter `region` if `profile` is used.
+  If credentials are retrieved from the EC2 Instance Metadata Service, the region can also be retrieved from the metadata.
 * `s3_force_path_style` - (Optional, **Deprecated**) Whether to enable the request to use path-style addressing, i.e., `https://s3.amazonaws.com/BUCKET/KEY`. By default, the S3 client will use virtual hosted bucket addressing, `https://BUCKET.s3.amazonaws.com/KEY`, when possible. Specific to the Amazon S3 service.
 * `s3_use_path_style` - (Optional) Whether to enable the request to use path-style addressing, i.e., `https://s3.amazonaws.com/BUCKET/KEY`. By default, the S3 client will use virtual hosted bucket addressing, `https://BUCKET.s3.amazonaws.com/KEY`, when possible. Specific to the Amazon S3 service.
-* `secret_key` - (Optional) AWS secret key. Can also be set with the `AWS_SECRET_ACCESS_KEY` environment variable, or via a shared credentials file if `profile` is used. See also `access_key`.
-* `shared_config_files` = (Optional) List of paths to AWS shared config files. If not set, the default is `[~/.aws/config]`. A single value can also be set with the `AWS_CONFIG_FILE` environment variable.
-* `shared_credentials_file` = (Optional, **Deprecated**) Path to the shared credentials file. If not set and a profile is used, the default value is `~/.aws/credentials`. Can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
-* `shared_credentials_files` = (Optional) List of paths to the shared credentials file. If not set and a profile is used, the default value is `[~/.aws/credentials]`. A single value can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
+* `secret_key` - (Optional) AWS secret key. Can also be set with the `AWS_SECRET_ACCESS_KEY` environment variable, or via a shared configuration and credentials files if `profile` is used. See also `access_key`.
+* `shared_config_files` - (Optional) List of paths to AWS shared config files. If not set, the default is `[~/.aws/config]`. A single value can also be set with the `AWS_CONFIG_FILE` environment variable.
+* `shared_credentials_file` - (Optional, **Deprecated**) Path to the shared credentials file. If not set and a profile is used, the default value is `~/.aws/credentials`. Can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
+* `shared_credentials_files` - (Optional) List of paths to the shared credentials file. If not set and a profile is used, the default value is `[~/.aws/credentials]`. A single value can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
 * `skip_credentials_validation` - (Optional) Whether to skip credentials validation via the STS API. This can be useful for testing and for AWS API implementations that do not have STS available.
 * `skip_get_ec2_platforms` - (Optional) Whether to skip getting the supported EC2 platforms. Can be used when you do not have `ec2:DescribeAccountAttributes` permissions.
 * `skip_metadata_api_check` - (Optional) Whether to skip the AWS Metadata API check.  Useful for AWS API implementations that do not have a metadata API endpoint.  Setting to `true` prevents Terraform from authenticating via the Metadata API. You may need to use other authentication methods like static credentials, configuration variables, or environment variables.
@@ -356,7 +425,7 @@ The `assume_role` configuration block supports the following optional arguments:
 * `external_id` - (Optional) External identifier to use when assuming the role.
 * `policy` - (Optional) IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.
 * `policy_arns` - (Optional) Set of Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.
-* `role_arn` - (Optional) Amazon Resource Name (ARN) of the IAM Role to assume.
+* `role_arn` - (Required) Amazon Resource Name (ARN) of the IAM Role to assume.
 * `session_name` - (Optional) Session name to use when assuming the role.
 * `tags` - (Optional) Map of assume role session tags.
 * `transitive_tag_keys` - (Optional) Set of assume role session tag keys to pass to any subsequent sessions.

@@ -23,7 +23,7 @@ func TestAccEC2EIPsDataSource_vpcDomain(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue("data.aws_eips.all", "allocation_ids.#", "1"),
 					resource.TestCheckResourceAttr("data.aws_eips.by_tags", "allocation_ids.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_eips.by_tags", "public_ips.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_eips.by_tags", "public_ips.#", "1"),
 					resource.TestCheckResourceAttr("data.aws_eips.none", "allocation_ids.#", "0"),
 					resource.TestCheckResourceAttr("data.aws_eips.none", "public_ips.#", "0"),
 				),

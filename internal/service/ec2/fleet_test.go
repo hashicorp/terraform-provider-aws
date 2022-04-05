@@ -33,6 +33,7 @@ func TestAccEC2Fleet_basic(t *testing.T) {
 				Config: testAccFleetConfig_TargetCapacitySpecification_DefaultTargetCapacityType(rName, "spot"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
+					resource.TestCheckResourceAttr(resourceName, "context", ""),
 					resource.TestCheckResourceAttr(resourceName, "excess_capacity_termination_policy", "termination"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", "1"),
@@ -1178,7 +1179,7 @@ func testAccCheckFleetDestroy(s *terraform.State) error {
 
 		output, err := conn.DescribeFleets(input)
 
-		if tfawserr.ErrMessageContains(err, "InvalidFleetId.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidFleetId.NotFound") {
 			continue
 		}
 

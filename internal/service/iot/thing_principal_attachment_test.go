@@ -143,7 +143,7 @@ func testAccCheckThingPrincipalAttachmentStatus(thingName string, exists bool, p
 			ThingName: aws.String(thingName),
 		})
 
-		if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 			if exists {
 				return fmt.Errorf("Error: Thing (%s) exists, but expected to be removed", thingName)
 			} else {

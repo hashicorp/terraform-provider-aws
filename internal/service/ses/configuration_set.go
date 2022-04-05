@@ -138,7 +138,7 @@ func resourceConfigurationSetRead(d *schema.ResourceData, meta interface{}) erro
 	response, err := conn.DescribeConfigurationSet(configSetInput)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
+		if tfawserr.ErrCodeEquals(err, ses.ErrCodeConfigurationSetDoesNotExistException) {
 			log.Printf("[WARN] SES Configuration Set (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -222,7 +222,7 @@ func resourceConfigurationSetDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if _, err := conn.DeleteConfigurationSet(input); err != nil {
-		if !tfawserr.ErrMessageContains(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
+		if !tfawserr.ErrCodeEquals(err, ses.ErrCodeConfigurationSetDoesNotExistException) {
 			return fmt.Errorf("error deleting SES Configuration Set (%s): %w", d.Id(), err)
 		}
 	}

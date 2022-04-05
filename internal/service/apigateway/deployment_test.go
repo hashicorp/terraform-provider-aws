@@ -297,7 +297,7 @@ func testAccCheckDeploymentDestroy(s *terraform.State) error {
 		}
 		describe, err := conn.GetDeployments(req)
 
-		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 			continue
 		}
 

@@ -307,7 +307,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	res, err := conn.DescribeClusters(req)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, dax.ErrCodeClusterNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, dax.ErrCodeClusterNotFoundFault) {
 			log.Printf("[WARN] DAX cluster (%s) not found", d.Id())
 			d.SetId("")
 			return nil
@@ -527,7 +527,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteCluster(req)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, dax.ErrCodeInvalidClusterStateFault, "") {
+			if tfawserr.ErrCodeEquals(err, dax.ErrCodeInvalidClusterStateFault) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -565,7 +565,7 @@ func daxClusterStateRefreshFunc(conn *dax.DAX, clusterID, givenState string, pen
 			ClusterNames: []*string{aws.String(clusterID)},
 		})
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, dax.ErrCodeClusterNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, dax.ErrCodeClusterNotFoundFault) {
 				log.Printf("[DEBUG] Detect deletion")
 				return nil, "", nil
 			}

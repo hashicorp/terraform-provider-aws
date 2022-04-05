@@ -388,7 +388,7 @@ func testAccCheckPlatformApplicationDestroy(s *terraform.State) error {
 		log.Printf("[DEBUG] Reading SNS Platform Application attributes: %s", input)
 		_, err := conn.GetPlatformApplicationAttributes(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
 				return nil
 			}
 			return err

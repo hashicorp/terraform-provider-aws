@@ -600,6 +600,11 @@ func ResourceInstance() *schema.Resource {
 					return
 				},
 			},
+			"user_data_replace_on_change": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"volume_tags": tftags.TagsSchema(),
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
@@ -694,6 +699,14 @@ func ResourceInstance() *schema.Resource {
 			}),
 			customdiff.ComputedIf("launch_template.0.name", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("launch_template.0.id")
+			}),
+			customdiff.ForceNewIf("user_data", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				replace := diff.Get("user_data_replace_on_change")
+				return replace.(bool)
+			}),
+			customdiff.ForceNewIf("user_data_base64", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				replace := diff.Get("user_data_replace_on_change")
+				return replace.(bool)
 			}),
 		),
 	}
@@ -895,7 +908,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		// If the instance was not found, return nil so that we can show
 		// that the instance is gone.
-		if tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
 			log.Printf("[WARN] EC2 Instance (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -1168,7 +1181,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US)
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362
-		if err != nil && !tfawserr.ErrMessageContains(err, "UnsupportedOperation", "") {
+		if err != nil && !tfawserr.ErrCodeEquals(err, "UnsupportedOperation") {
 			return fmt.Errorf("error getting EC2 Instance (%s) Credit Specifications: %s", d.Id(), err)
 		}
 
@@ -1326,7 +1339,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				// Tolerate InvalidParameterCombination error in Classic, otherwise
 				// return the error
-				if !tfawserr.ErrMessageContains(err, "InvalidParameterCombination", "") {
+				if !tfawserr.ErrCodeEquals(err, "InvalidParameterCombination") {
 					return err
 				}
 				log.Printf("[WARN] Attempted to modify SourceDestCheck on non VPC instance: %s", err)
@@ -1441,12 +1454,25 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
+		// From the API reference:
+		// "If you are using an AWS SDK or command line tool,
+		// base64-encoding is performed for you, and you can load the text from a file.
+		// Otherwise, you must provide base64-encoded text".
+
 		if d.HasChange("user_data") {
 			log.Printf("[INFO] Modifying user data %s", d.Id())
+
+			// Decode so the AWS SDK doesn't double encode
+			userData, err := base64.StdEncoding.DecodeString(d.Get("user_data").(string))
+			if err != nil {
+				log.Printf("[DEBUG] Instance (%s) user_data not base64 decoded", d.Id())
+				userData = []byte(d.Get("user_data").(string))
+			}
+
 			input := &ec2.ModifyInstanceAttributeInput{
 				InstanceId: aws.String(d.Id()),
 				UserData: &ec2.BlobAttributeValue{
-					Value: []byte(d.Get("user_data").(string)),
+					Value: userData,
 				},
 			}
 
@@ -1457,9 +1483,13 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChange("user_data_base64") {
 			log.Printf("[INFO] Modifying user data base64 %s", d.Id())
-			userData, err := base64.URLEncoding.DecodeString(d.Get("user_data_base64").(string))
+
+			// Schema validation technically ensures the data is Base64 encoded.
+			// Decode so the AWS SDK doesn't double encode
+			userData, err := base64.StdEncoding.DecodeString(d.Get("user_data_base64").(string))
 			if err != nil {
-				return fmt.Errorf("error updating instance (%s) user data base64: %w", d.Id(), err)
+				log.Printf("[DEBUG] Instance (%s) user_data_base64 not base64 decoded", d.Id())
+				userData = []byte(d.Get("user_data_base64").(string))
 			}
 
 			input := &ec2.ModifyInstanceAttributeInput{
@@ -1810,7 +1840,7 @@ func InstanceStateRefreshFunc(conn *ec2.EC2, instanceID string, failStates []str
 	return func() (interface{}, string, error) {
 		instance, err := InstanceFindByID(conn, instanceID)
 		if err != nil {
-			if !tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
+			if !tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
 				log.Printf("Error on InstanceStateRefresh: %s", err)
 				return nil, "", err
 			}
@@ -1841,7 +1871,7 @@ func MetadataOptionsRefreshFunc(conn *ec2.EC2, instanceID string) resource.State
 	return func() (interface{}, string, error) {
 		instance, err := InstanceFindByID(conn, instanceID)
 		if err != nil {
-			if !tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
+			if !tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
 				log.Printf("Error on InstanceStateRefresh: %s", err)
 				return nil, "", err
 			}
@@ -1865,7 +1895,7 @@ func RootBlockDeviceDeleteOnTerminationRefreshFunc(conn *ec2.EC2, instanceID str
 	return func() (interface{}, string, error) {
 		instance, err := InstanceFindByID(conn, instanceID)
 		if err != nil {
-			if !tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
+			if !tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
 				log.Printf("Error on InstanceStateRefresh: %s", err)
 				return nil, "", err
 			}
@@ -2810,7 +2840,7 @@ func terminateInstance(conn *ec2.EC2, id string, timeout time.Duration) error {
 		InstanceIds: []*string{aws.String(id)},
 	}
 	if _, err := conn.TerminateInstances(req); err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
 			return nil
 		}
 		return err
@@ -3056,27 +3086,11 @@ func expandCapacityReservationSpecification(crs []interface{}) *ec2.CapacityRese
 		capacityReservationSpecification.CapacityReservationPreference = aws.String(v.(string))
 	}
 
-	if v, ok := m["capacity_reservation_target"]; ok && v != "" && (len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil) {
-		capacityReservationSpecification.CapacityReservationTarget = expandCapacityReservationTarget(v.([]interface{}))
+	if v, ok := m["capacity_reservation_target"].([]interface{}); ok && len(v) > 0 {
+		capacityReservationSpecification.CapacityReservationTarget = expandCapacityReservationTarget(v[0].(map[string]interface{}))
 	}
 
 	return capacityReservationSpecification
-}
-
-func expandCapacityReservationTarget(crt []interface{}) *ec2.CapacityReservationTarget {
-	if len(crt) < 1 || crt[0] == nil {
-		return nil
-	}
-
-	m := crt[0].(map[string]interface{})
-
-	capacityReservationTarget := &ec2.CapacityReservationTarget{}
-
-	if v, ok := m["capacity_reservation_id"]; ok && v != "" {
-		capacityReservationTarget.CapacityReservationId = aws.String(v.(string))
-	}
-
-	return capacityReservationTarget
 }
 
 func flattenEc2InstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse) []interface{} {
@@ -3182,7 +3196,7 @@ func getInstanceLaunchTemplate(conn *ec2.EC2, d *schema.ResourceData) ([]map[str
 	name, defaultVersion, latestVersion, err := getLaunchTemplateSpecification(conn, id)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.Malformed", "") || tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateId.Malformed") || tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateId.NotFound") {
 			// Instance is tagged with non existent template just set it to nil
 			log.Printf("[WARN] Launch template %s not found, removing from state", id)
 			return nil, nil
@@ -3204,7 +3218,7 @@ func getInstanceLaunchTemplate(conn *ec2.EC2, d *schema.ResourceData) ([]map[str
 	}
 
 	if _, err := conn.DescribeLaunchTemplateVersions(dltvi); err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.VersionNotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateId.VersionNotFound") {
 			// Instance is tagged with non existent template version, just don't set it
 			log.Printf("[WARN] Launch template %s version %s not found, removing from state", id, liveVersion)
 			result = append(result, attrs)

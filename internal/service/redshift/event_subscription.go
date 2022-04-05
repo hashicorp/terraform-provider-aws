@@ -189,7 +189,7 @@ func resourceEventSubscriptionRetrieve(name string, conn *redshift.Redshift) (*r
 
 	describeResp, err := conn.DescribeEventSubscriptions(request)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSubscriptionNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSubscriptionNotFoundFault) {
 			log.Printf("[WARN] No Redshift Event Subscription by name (%s) found", name)
 			return nil, nil
 		}
@@ -240,7 +240,7 @@ func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if _, err := conn.DeleteEventSubscription(&deleteOpts); err != nil {
-		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSubscriptionNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSubscriptionNotFoundFault) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting Redshift Event Subscription %s: %s", d.Id(), err)

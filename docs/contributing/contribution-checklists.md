@@ -304,7 +304,7 @@ More details about this code generation, including fixes for potential error mes
   func ResourceCluster() *schema.Resource {
     return &schema.Resource{
       /* ... other configuration ... */
-      CustomizeDiff: SetTagsDiff,
+      CustomizeDiff: verify.SetTagsDiff,
     }
   }
   ```
@@ -332,7 +332,7 @@ More details about this code generation, including fixes for potential error mes
   
   input := &eks.CreateClusterInput{
     /* ... other configuration ... */
-    Tags: Tags(tags.IgnoreAws()),
+    Tags: Tags(tags.IgnoreAWS()),
   }
   ```
 
@@ -348,7 +348,7 @@ More details about this code generation, including fixes for potential error mes
   }
 
   if len(tags) > 0 {
-    input.Tags = Tags(tags.IgnoreAws())
+    input.Tags = Tags(tags.IgnoreAWS())
   }
   ```
 
@@ -361,7 +361,7 @@ More details about this code generation, including fixes for potential error mes
   
   if len(tags) > 0 {
     if err := UpdateTags(conn, d.Id(), nil, tags); err != nil {
-      return fmt.Errorf("error adding Elasticsearch Cluster (%s) tags: %s", d.Id(), err)
+      return fmt.Errorf("error adding Elasticsearch Cluster (%s) tags: %w", d.Id(), err)
     }
   }
   ```
@@ -388,7 +388,7 @@ More details about this code generation, including fixes for potential error mes
   
   /* ... other d.Set(...) logic ... */
 
-  tags := keyvaluetags.EksKeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+  tags := keyvaluetags.EksKeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
   
   if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
     return fmt.Errorf("error setting tags: %w", err)
@@ -411,10 +411,10 @@ More details about this code generation, including fixes for potential error mes
   tags, err := keyvaluetags.AthenaListTags(conn, arn.String())
 
   if err != nil {
-    return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+    return fmt.Errorf("error listing tags for resource (%s): %w", arn, err)
   }
 
-  tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+  tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
   
   if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
     return fmt.Errorf("error setting tags: %w", err)
@@ -431,7 +431,7 @@ More details about this code generation, including fixes for potential error mes
   if d.HasChange("tags_all") {
     o, n := d.GetChange("tags_all")
     if err := keyvaluetags.EksUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-      return fmt.Errorf("error updating tags: %s", err)
+      return fmt.Errorf("error updating tags: %w", err)
     }
   }
   ```
@@ -448,7 +448,7 @@ More details about this code generation, including fixes for potential error mes
     }
 
     if _, err := conn.CreatePolicyVersion(request); err != nil {
-        return fmt.Errorf("error updating IAM policy %s: %w", d.Id(), err)
+        return fmt.Errorf("error updating IAM policy (%s): %w", d.Id(), err)
     }
   }
   ```
@@ -595,7 +595,7 @@ filters := namevaluesfilters.New(map[string]string{
 	"internet-gateway-id": d.Get("internet_gateway_id").(string),
 })
 // Add filters based on keyvalue tags (N.B. Not applicable to all AWS services that support filtering)
-filters.Add(namevaluesfilters.Ec2Tags(keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()))
+filters.Add(namevaluesfilters.Ec2Tags(keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()))
 // Add filters based on the custom filtering "filter" attribute.
 filters.Add(d.Get("filter").(*schema.Set))
 
@@ -908,7 +908,7 @@ into Terraform.
     - Run the following then submit the pull request:
 
   ```sh
-  go test ./aws
+  make test
   go mod tidy
   ```
 

@@ -59,7 +59,6 @@ func ResourceSpotFleetRequest() *schema.Resource {
 			"wait_for_fulfillment": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: false,
 				Default:  false,
 			},
 			// http://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-SpotFleetLaunchSpecification
@@ -407,7 +406,6 @@ func ResourceSpotFleetRequest() *schema.Resource {
 			"target_capacity": {
 				Type:     schema.TypeInt,
 				Required: true,
-				ForceNew: false,
 			},
 			"allocation_strategy": {
 				Type:         schema.TypeString,
@@ -427,7 +425,6 @@ func ResourceSpotFleetRequest() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Default",
-				ForceNew: false,
 				ValidateFunc: validation.StringInSlice([]string{
 					"Default",
 					"NoTermination",
@@ -1225,7 +1222,7 @@ func resourceSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		// If the spot request was not found, return nil so that we can show
 		// that it is gone.
-		if tfawserr.ErrMessageContains(err, "InvalidSpotFleetRequestId.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidSpotFleetRequestId.NotFound") {
 			d.SetId("")
 			return nil
 		}

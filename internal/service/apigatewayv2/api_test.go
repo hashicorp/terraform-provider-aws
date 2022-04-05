@@ -766,7 +766,7 @@ func testAccCheckAPIDestroy(s *terraform.State) error {
 		_, err := conn.GetApi(&apigatewayv2.GetApiInput{
 			ApiId: aws.String(rs.Primary.ID),
 		})
-		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 			continue
 		}
 		if err != nil {

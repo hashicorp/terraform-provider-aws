@@ -174,7 +174,7 @@ func testAccCheckVoiceConnectorTerminationDestroy(s *terraform.State) error {
 		}
 		resp, err := conn.GetVoiceConnectorTermination(input)
 
-		if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 			continue
 		}
 

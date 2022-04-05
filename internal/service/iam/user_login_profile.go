@@ -233,12 +233,12 @@ func resourceUserLoginProfileDelete(d *schema.ResourceData, meta interface{}) er
 	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteLoginProfile(input)
 
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return nil
 		}
 
 		// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeEntityTemporarilyUnmodifiableException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeEntityTemporarilyUnmodifiableException) {
 			return resource.RetryableError(err)
 		}
 
@@ -254,7 +254,7 @@ func resourceUserLoginProfileDelete(d *schema.ResourceData, meta interface{}) er
 		_, err = conn.DeleteLoginProfile(input)
 	}
 
-	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		return nil
 	}
 

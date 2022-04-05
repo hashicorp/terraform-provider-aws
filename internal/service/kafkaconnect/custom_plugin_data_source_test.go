@@ -36,10 +36,10 @@ func TestAccKafkaConnectCustomPluginDataSource_basic(t *testing.T) {
 }
 
 func testAccCustomPluginDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(testAccCustomPluginConfigBasicS3ObjectJar(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCustomPluginBaseConfig(rName, false), fmt.Sprintf(`
 resource "aws_mskconnect_custom_plugin" "test" {
   name         = %[1]q
-  content_type = "JAR"
+  content_type = "ZIP"
 
   location {
     s3 {

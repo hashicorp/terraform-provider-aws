@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -58,9 +59,10 @@ func ResourceBroker() *schema.Resource {
 				Default:  false,
 			},
 			"broker_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: ValidateBrokerName,
 			},
 			"configuration": {
 				Type:     schema.TypeList,
@@ -264,6 +266,7 @@ func ResourceBroker() *schema.Resource {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
+				MaxItems: 5,
 			},
 			"storage_type": {
 				Type:         schema.TypeString,
@@ -1093,3 +1096,8 @@ func expandMQLDAPServerMetadata(tfList []interface{}) *mq.LdapServerMetadataInpu
 
 	return apiObject
 }
+
+var ValidateBrokerName = validation.All(
+	validation.StringLenBetween(1, 50),
+	validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z_-]+$`), ""),
+)

@@ -252,7 +252,7 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 			_, err := conn.RotateSecret(input)
 			if err != nil {
 				// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-				if tfawserr.ErrMessageContains(err, "AccessDeniedException", "") {
+				if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -449,7 +449,7 @@ func resourceSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 				_, err := conn.RotateSecret(input)
 				if err != nil {
 					// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-					if tfawserr.ErrMessageContains(err, "AccessDeniedException", "") {
+					if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
 						return resource.RetryableError(err)
 					}
 					return resource.NonRetryableError(err)
@@ -510,7 +510,7 @@ func resourceSecretDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deleting Secrets Manager Secret: %s", input)
 	_, err := conn.DeleteSecret(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error deleting Secrets Manager Secret: %w", err)
@@ -547,7 +547,7 @@ func removeSecretsManagerSecretReplicas(conn *secretsmanager.SecretsManager, id 
 	_, err := conn.RemoveRegionsFromReplication(input)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 

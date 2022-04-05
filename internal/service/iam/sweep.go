@@ -108,6 +108,7 @@ func init() {
 			"aws_iam_service_specific_credential",
 			"aws_iam_virtual_mfa_device",
 			"aws_iam_signing_certificate",
+			"aws_opsworks_user_profile",
 		},
 	})
 

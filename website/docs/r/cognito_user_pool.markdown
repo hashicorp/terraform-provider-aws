@@ -247,5 +247,5 @@ In addition to all arguments above, the following attributes are exported:
 Cognito User Pools can be imported using the `id`, e.g.,
 
 ```
-$ terraform import aws_cognito_user_pool.pool <id>
+$ terraform import aws_cognito_user_pool.pool us-west-2_abc123
 ```

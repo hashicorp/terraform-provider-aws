@@ -276,7 +276,7 @@ func testAccCheckAliasDestroy(s *terraform.State) error {
 			return fmt.Errorf("Gamelift Alias still exists")
 		}
 
-		if tfawserr.ErrMessageContains(err, gamelift.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
 			return nil
 		}
 

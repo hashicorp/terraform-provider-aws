@@ -109,7 +109,7 @@ func sweepBudgets(region string) error {
 				AccountId:  aws.String(accountID),
 				BudgetName: aws.String(name),
 			})
-			if tfawserr.ErrMessageContains(err, budgets.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
 				continue
 			}
 			if err != nil {

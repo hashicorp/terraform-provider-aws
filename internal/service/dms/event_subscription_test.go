@@ -210,7 +210,7 @@ func testAccCheckDmsEventSubscriptionDestroy(s *terraform.State) error {
 			SubscriptionName: aws.String(rs.Primary.ID),
 		})
 
-		if tfawserr.ErrMessageContains(err, dms.ErrCodeResourceNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 			continue
 		}
 

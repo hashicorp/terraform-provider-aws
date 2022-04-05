@@ -210,7 +210,7 @@ func testAccCheckNotificationRuleDestroy(s *terraform.State) error {
 				Arn: aws.String(rs.Primary.ID),
 			})
 
-			if err != nil && !tfawserr.ErrMessageContains(err, codestarnotifications.ErrCodeResourceNotFoundException, "") {
+			if err != nil && !tfawserr.ErrCodeEquals(err, codestarnotifications.ErrCodeResourceNotFoundException) {
 				return err
 			}
 		case "aws_sns_topic":

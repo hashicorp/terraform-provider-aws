@@ -1,6 +1,8 @@
 package rds
 
 import (
+	"strconv"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -93,5 +95,45 @@ func statusDBClusterActivityStream(conn *rds.RDS, dbClusterArn string) resource.
 		}
 
 		return output, aws.StringValue(output.ActivityStreamStatus), nil
+	}
+}
+
+func statusDBInstanceAutomatedBackup(conn *rds.RDS, arn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDBInstanceAutomatedBackupByARN(conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+// statusDBInstanceHasAutomatedBackup returns whether or not a database instance has a specified automated backup.
+// The connection must be valid for the database instance's Region.
+func statusDBInstanceHasAutomatedBackup(conn *rds.RDS, dbInstanceID, dbInstanceAutomatedBackupsARN string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDBInstanceByID(conn, dbInstanceID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		for _, v := range output.DBInstanceAutomatedBackupsReplications {
+			if aws.StringValue(v.DBInstanceAutomatedBackupsArn) == dbInstanceAutomatedBackupsARN {
+				return output, strconv.FormatBool(true), nil
+			}
+		}
+
+		return output, strconv.FormatBool(false), nil
 	}
 }

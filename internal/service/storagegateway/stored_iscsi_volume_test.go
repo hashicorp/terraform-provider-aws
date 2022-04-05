@@ -241,7 +241,7 @@ func testAccCheckStorediSCSIVolumeDestroy(s *terraform.State) error {
 			if tfstoragegateway.IsErrGatewayNotFound(err) {
 				return nil
 			}
-			if tfawserr.ErrMessageContains(err, storagegateway.ErrorCodeVolumeNotFound, "") {
+			if tfawserr.ErrCodeEquals(err, storagegateway.ErrorCodeVolumeNotFound) {
 				return nil
 			}
 			if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {

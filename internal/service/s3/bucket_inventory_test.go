@@ -179,7 +179,7 @@ func testAccCheckBucketInventoryDestroy(s *terraform.State) error {
 			log.Printf("[DEBUG] Reading S3 bucket inventory configuration: %s", input)
 			output, err := conn.GetBucketInventoryConfiguration(input)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") || tfawserr.ErrMessageContains(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
+				if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
 					return nil
 				}
 				return resource.NonRetryableError(err)

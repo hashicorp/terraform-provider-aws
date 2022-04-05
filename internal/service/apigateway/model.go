@@ -179,7 +179,7 @@ func resourceModelDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] schema is %#v", d)
 	_, err := conn.DeleteModel(input)
 
-	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		return nil
 	}
 

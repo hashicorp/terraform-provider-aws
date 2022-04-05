@@ -15,6 +15,10 @@ import (
 )
 
 func TestAccRDSProxyTarget_instance(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxyTarget rds.DBProxyTarget
 	resourceName := "aws_db_proxy_target.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -47,6 +51,10 @@ func TestAccRDSProxyTarget_instance(t *testing.T) {
 }
 
 func TestAccRDSProxyTarget_cluster(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxyTarget rds.DBProxyTarget
 	resourceName := "aws_db_proxy_target.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -79,6 +87,10 @@ func TestAccRDSProxyTarget_cluster(t *testing.T) {
 }
 
 func TestAccRDSProxyTarget_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxyTarget rds.DBProxyTarget
 	resourceName := "aws_db_proxy_target.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

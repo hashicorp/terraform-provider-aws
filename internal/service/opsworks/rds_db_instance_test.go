@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -15,8 +15,14 @@ import (
 )
 
 func TestAccOpsWorksRDSDBInstance_basic(t *testing.T) {
-	sName := fmt.Sprintf("test-db-instance-%d", sdkacctest.RandInt())
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resourceName := "aws_opsworks_rds_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var opsdb opsworks.RdsDbInstance
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
@@ -24,47 +30,35 @@ func TestAccOpsWorksRDSDBInstance_basic(t *testing.T) {
 		CheckDestroy: testAccCheckRDSDBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRDSDBInstance(sName, "foo", "barbarbarbar"),
+				Config: testAccRDSDBInstance(rName, "foo", "barbarbarbar"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRDSDBExists(
-						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", &opsdb),
+					testAccCheckRDSDBExists(resourceName, &opsdb),
 					testAccCheckCreateRDSDBAttributes(&opsdb, "foo"),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", "db_user", "foo",
-					),
+					resource.TestCheckResourceAttr(resourceName, "db_user", "foo"),
 				),
 			},
 			{
-				Config: testAccRDSDBInstance(sName, "bar", "barbarbarbar"),
+				Config: testAccRDSDBInstance(rName, "bar", "barbarbarbar"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRDSDBExists(
-						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", &opsdb),
+					testAccCheckRDSDBExists(resourceName, &opsdb),
 					testAccCheckCreateRDSDBAttributes(&opsdb, "bar"),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", "db_user", "bar",
-					),
+					resource.TestCheckResourceAttr(resourceName, "db_user", "bar"),
 				),
 			},
 			{
-				Config: testAccRDSDBInstance(sName, "bar", "foofoofoofoofoo"),
+				Config: testAccRDSDBInstance(rName, "bar", "foofoofoofoofoo"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRDSDBExists(
-						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", &opsdb),
+					testAccCheckRDSDBExists(resourceName, &opsdb),
 					testAccCheckCreateRDSDBAttributes(&opsdb, "bar"),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", "db_user", "bar",
-					),
+					resource.TestCheckResourceAttr(resourceName, "db_user", "bar"),
 				),
 			},
 			{
-				Config: testAccRDSDBInstanceForceNew(sName),
+				Config: testAccRDSDBInstanceForceNew(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRDSDBExists(
-						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", &opsdb),
+					testAccCheckRDSDBExists(resourceName, &opsdb),
 					testAccCheckCreateRDSDBAttributes(&opsdb, "foo"),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", "db_user", "foo",
-					),
+					resource.TestCheckResourceAttr(resourceName, "db_user", "foo"),
 				),
 			},
 		},
@@ -111,10 +105,10 @@ func testAccCheckRDSDBExists(
 func testAccCheckCreateRDSDBAttributes(
 	opsdb *opsworks.RdsDbInstance, user string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if *opsdb.DbUser != user {
+		if aws.StringValue(opsdb.DbUser) != user {
 			return fmt.Errorf("Unnexpected user: %s", *opsdb.DbUser)
 		}
-		if *opsdb.Engine != "mysql" {
+		if aws.StringValue(opsdb.Engine) != "mysql" {
 			return fmt.Errorf("Unnexpected engine: %s", *opsdb.Engine)
 		}
 		return nil
@@ -140,73 +134,73 @@ func testAccCheckRDSDBDestroy(s *terraform.State) error {
 			}
 		}
 
-		if awserr, ok := err.(awserr.Error); ok {
-			if awserr.Code() != "ResourceNotFoundException" {
-				return err
-			}
+		if !tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+			return err
 		}
 	}
 	return nil
 }
 
-func testAccRDSDBInstance(name, userName, password string) string {
-	return fmt.Sprintf(`
-resource "aws_opsworks_rds_db_instance" "tf-acc-opsworks-db" {
-  stack_id = aws_opsworks_stack.tf-acc.id
+func testAccRDSDBInstance(rName, userName, password string) string {
+	return acctest.ConfigCompose(
+		testAccStackVPCCreateConfig(rName),
+		testAccDBInstanceBasicConfig(),
+		fmt.Sprintf(`
+resource "aws_opsworks_rds_db_instance" "test" {
+  stack_id = aws_opsworks_stack.test.id
 
-  rds_db_instance_arn = aws_db_instance.bar.arn
-  db_user             = "%s"
-  db_password         = "%s"
+  rds_db_instance_arn = aws_db_instance.test.arn
+  db_user             = %[1]q
+  db_password         = %[2]q
 }
-%s
-%s
-`, userName, password, testAccStackVPCCreateConfig(name), testAccDBInstanceBasicConfig())
+`, userName, password))
 }
 
-func testAccRDSDBInstanceForceNew(name string) string {
-	return fmt.Sprintf(`
-resource "aws_opsworks_rds_db_instance" "tf-acc-opsworks-db" {
-  stack_id = aws_opsworks_stack.tf-acc.id
+func testAccRDSDBInstanceForceNew(rName string) string {
+	return acctest.ConfigCompose(
+		testAccStackVPCCreateConfig(rName),
+		testAccDBInstanceConfig_orderableClassMySQL(),
+		`
+resource "aws_opsworks_rds_db_instance" "test" {
+  stack_id = aws_opsworks_stack.test.id
 
-  rds_db_instance_arn = aws_db_instance.foo.arn
+  rds_db_instance_arn = aws_db_instance.test2.arn
   db_user             = "foo"
   db_password         = "foofoofoofoo"
 }
-%s
 
-resource "aws_db_instance" "foo" {
-  allocated_storage    = 10
-  engine               = "mysql"
-  engine_version       = "5.6.35"
-  instance_class       = "db.t2.micro"
-  name                 = "baz"
-  password             = "foofoofoofoo"
-  username             = "foo"
-  parameter_group_name = "default.mysql5.6"
-
-  skip_final_snapshot = true
-}
-`, testAccStackVPCCreateConfig(name))
-}
-
-func testAccDBInstanceBasicConfig() string {
-	return acctest.ConfigCompose(testAccDBInstanceConfig_orderableClassMySQL(), `
-resource "aws_db_instance" "bar" {
+resource "aws_db_instance" "test2" {
   allocated_storage       = 10
   backup_retention_period = 0
+  db_name                 = "baz"
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  name                    = "baz"
-  parameter_group_name    = "default.mysql5.6"
+  maintenance_window      = "Fri:09:00-Fri:09:30"
+  parameter_group_name    = "default.mysql8.0"
+  password                = "foofoofoofoo"
+  skip_final_snapshot     = true
+  username                = "foo"
+}
+`)
+}
+
+func testAccDBInstanceBasicConfig() string {
+	return acctest.ConfigCompose(
+		testAccDBInstanceConfig_orderableClassMySQL(),
+		`
+resource "aws_db_instance" "test" {
+  allocated_storage       = 10
+  backup_retention_period = 0
+  db_name                 = "baz"
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  maintenance_window      = "Fri:09:00-Fri:09:30"
+  parameter_group_name    = "default.mysql8.0"
   password                = "barbarbarbar"
   skip_final_snapshot     = true
   username                = "foo"
-
-  # Maintenance Window is stored in lower case in the API, though not strictly
-  # documented. Terraform will downcase this to match (as opposed to throw a
-  # validation error).
-  maintenance_window = "Fri:09:00-Fri:09:30"
 }
 `)
 }
@@ -214,9 +208,9 @@ resource "aws_db_instance" "bar" {
 func testAccDBInstanceConfig_orderableClass(engine, version, license string) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
-  engine         = %q
-  engine_version = %q
-  license_model  = %q
+  engine         = %[1]q
+  engine_version = %[2]q
+  license_model  = %[3]q
   storage_type   = "standard"
 
   preferred_instance_classes = ["db.t3.micro", "db.t2.micro", "db.t2.medium"]
@@ -225,5 +219,5 @@ data "aws_rds_orderable_db_instance" "test" {
 }
 
 func testAccDBInstanceConfig_orderableClassMySQL() string {
-	return testAccDBInstanceConfig_orderableClass("mysql", "5.6.35", "general-public-license")
+	return testAccDBInstanceConfig_orderableClass("mysql", "8.0.25", "general-public-license")
 }

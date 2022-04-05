@@ -50,6 +50,8 @@ service/apigatewayv2:
   - '((\*|-) ?`?|(data|resource) "?)aws_apigatewayv2_'
 service/appconfig:
   - '((\*|-) ?`?|(data|resource) "?)aws_appconfig_'
+service/appintegrations:
+  - '((\*|-) ?`?|(data|resource) "?)aws_appintegrations_'
 service/applicationautoscaling:
   - '((\*|-) ?`?|(data|resource) "?)aws_appautoscaling_'
 service/applicationdiscoveryservice:
@@ -100,6 +102,8 @@ service/cloudwatch:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_(?!(event_|log_|query_))'
 service/cloudwatchlogs:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_(log_|query_)'
+service/cloudwatchrum:
+  - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatchrum_'
 service/codeartifact:
   - '((\*|-) ?`?|(data|resource) "?)aws_codeartifact_'
 service/codebuild:
@@ -216,6 +220,8 @@ service/kafka:
   - '((\*|-) ?`?|(data|resource) "?)aws_msk_'
 service/kafkaconnect:
   - '((\*|-) ?`?|(data|resource) "?)aws_mskconnect_'
+service/keyspaces:
+  - '((\*|-) ?`?|(data|resource) "?)aws_keyspaces_'
 service/kinesis:
   - '((\*|-) ?`?|(data|resource) "?)aws_kinesis_stream'
 service/kinesisanalytics:
@@ -270,6 +276,8 @@ service/networkfirewall:
   - '((\*|-) ?`?|(data|resource) "?)aws_networkfirewall_'
 service/networkmanager:
   - '((\*|-) ?`?|(data|resource) "?)aws_networkmanager_'
+service/opensearch:
+  - '((\*|-) ?`?|(data|resource) "?)aws_opensearch_'
 service/opsworks:
   - '((\*|-) ?`?|(data|resource) "?)aws_opsworks_'
 service/organizations:

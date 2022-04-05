@@ -225,7 +225,7 @@ func resourceEIPAssociationDelete(d *schema.ResourceData, meta interface{}) erro
 
 	_, err := conn.DisassociateAddress(opts)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidAssociationID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidAssociationID.NotFound") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting Elastic IP association: %s", err)

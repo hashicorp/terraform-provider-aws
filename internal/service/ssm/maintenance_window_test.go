@@ -560,7 +560,7 @@ func testAccCheckMaintenanceWindowDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the SSM Maintenance Window is already destroyed
-		if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
+		if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 			continue
 		}
 

@@ -605,7 +605,7 @@ func testAccCheckTriggerDestroy(s *terraform.State) error {
 		output, err := tfglue.FindTriggerByName(conn, rs.Primary.ID)
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				return nil
 			}
 

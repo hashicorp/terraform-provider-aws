@@ -237,7 +237,7 @@ func testAccCheckQueueDestroy(s *terraform.State) error {
 			Name: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, mediaconvert.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, mediaconvert.ErrCodeNotFoundException) {
 				continue
 			}
 			return err

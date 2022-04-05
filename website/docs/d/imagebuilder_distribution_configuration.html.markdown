@@ -35,6 +35,8 @@ In addition to all arguments above, the following attributes are exported:
         * `description` - Description to apply to distributed AMI.
         * `kms_key_id` - Amazon Resource Name (ARN) of Key Management Service (KMS) Key to encrypt AMI.
         * `launch_permission` - Nested list of EC2 launch permissions.
+            * `organization_arns` - Set of AWS Organization ARNs.
+            * `organizational_unit_arns` - Set of AWS Organizational Unit ARNs.
             * `user_groups` - Set of EC2 launch permission user groups.
             * `user_ids` - Set of AWS Account identifiers.
         * `target_account_ids` - Set of target AWS Account identifiers.
@@ -47,6 +49,7 @@ In addition to all arguments above, the following attributes are exported:
     * `launch_template_configuration` - Nested list of launch template configurations.
         * `default` - Indicates whether the specified Amazon EC2 launch template is set as the default launch template.
         * `launch_template_id` - ID of the Amazon EC2 launch template.
+        * `account_id` - The account ID that this configuration applies to.
     * `license_configuration_arns` - Set of Amazon Resource Names (ARNs) of License Manager License Configurations.
     * `region` - AWS Region of distribution.
 * `name` - Name of the distribution configuration.

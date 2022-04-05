@@ -285,7 +285,7 @@ func testAccCheckSQLInjectionMatchSetDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the SqlInjectionMatchSet is already destroyed
-		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			return nil
 		}
 

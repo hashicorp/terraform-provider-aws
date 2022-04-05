@@ -70,9 +70,7 @@ func valueFromSet(typ Type, in interface{}) (Value, error) {
 	case []Value:
 		var elType Type
 		for _, v := range value {
-			if v.Type().Is(DynamicPseudoType) && v.IsKnown() {
-				return Value{}, NewAttributePath().WithElementKeyValue(v).NewErrorf("invalid value %s for %s", v, v.Type())
-			} else if !v.Type().Is(DynamicPseudoType) && !v.Type().UsableAs(typ) {
+			if !v.Type().UsableAs(typ) {
 				return Value{}, NewAttributePath().WithElementKeyValue(v).NewErrorf("can't use %s as %s", v.Type(), typ)
 			}
 			if elType == nil {

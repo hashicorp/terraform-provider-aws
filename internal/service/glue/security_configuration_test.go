@@ -224,7 +224,7 @@ func testAccCheckSecurityConfigurationDestroy(s *terraform.State) error {
 			Name: aws.String(rs.Primary.ID),
 		})
 
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			continue
 		}
 

@@ -400,6 +400,11 @@ func ResourceInstance() *schema.Resource {
 							Optional: true,
 						},
 
+						"source_db_instance_automated_backups_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
 						"source_dbi_resource_id": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -1357,7 +1362,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			createdDBInstanceOutput, err = conn.CreateDBInstance(&opts)
 		}
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "") {
+			if tfawserr.ErrCodeEquals(err, "InvalidParameterValue") {
 				opts.MasterUserPassword = aws.String("********")
 				return fmt.Errorf("Error creating DB Instance: %w, %+v", err, opts)
 			}
@@ -1808,11 +1813,16 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	if requestUpdate {
 		log.Printf("[DEBUG] DB Instance Modification request: %s", req)
 
-		err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 			_, err := conn.ModifyDBInstance(req)
 
 			// Retry for IAM eventual consistency
 			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+				return resource.RetryableError(err)
+			}
+
+			// InvalidDBInstanceState: RDS is configuring Enhanced Monitoring or Performance Insights for this DB instance. Try your request later.
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "your request later") {
 				return resource.RetryableError(err)
 			}
 
@@ -1828,7 +1838,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("Error modifying DB Instance %s: %w", d.Id(), err)
+			return fmt.Errorf("modifying DB Instance %s: %w", d.Id(), err)
 		}
 
 		log.Printf("[DEBUG] Waiting for DB Instance (%s) to be available", d.Id())
@@ -1885,7 +1895,7 @@ func resourceInstanceRetrieve(id string, conn *rds.RDS) (*rds.DBInstance, error)
 
 	resp, err := conn.DescribeDBInstances(&opts)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("Error retrieving DB Instances: %w", err)
@@ -1985,6 +1995,10 @@ func expandRestoreToPointInTime(l []interface{}) *rds.RestoreDBInstanceToPointIn
 
 	if v, ok := tfMap["source_db_instance_identifier"].(string); ok && v != "" {
 		input.SourceDBInstanceIdentifier = aws.String(v)
+	}
+
+	if v, ok := tfMap["source_db_instance_automated_backups_arn"].(string); ok && v != "" {
+		input.SourceDBInstanceAutomatedBackupsArn = aws.String(v)
 	}
 
 	if v, ok := tfMap["source_dbi_resource_id"].(string); ok && v != "" {

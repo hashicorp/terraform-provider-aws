@@ -39,6 +39,7 @@ func ResourceInternetGateway() *schema.Resource {
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 		},
 

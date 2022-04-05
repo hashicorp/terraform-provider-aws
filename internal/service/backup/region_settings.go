@@ -52,7 +52,7 @@ func resourceRegionSettingsUpdate(d *schema.ResourceData, meta interface{}) erro
 	_, err := conn.UpdateRegionSettings(input)
 
 	if err != nil {
-		return fmt.Errorf("error setting Backup Region Settings (%s): %w", d.Id(), err)
+		return fmt.Errorf("error updating Backup Region Settings (%s): %w", d.Id(), err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
@@ -63,14 +63,14 @@ func resourceRegionSettingsUpdate(d *schema.ResourceData, meta interface{}) erro
 func resourceRegionSettingsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
-	resp, err := conn.DescribeRegionSettings(&backup.DescribeRegionSettingsInput{})
+	output, err := conn.DescribeRegionSettings(&backup.DescribeRegionSettingsInput{})
 
 	if err != nil {
 		return fmt.Errorf("error reading Backup Region Settings (%s): %w", d.Id(), err)
 	}
 
-	d.Set("resource_type_opt_in_preference", aws.BoolValueMap(resp.ResourceTypeOptInPreference))
-	d.Set("resource_type_management_preference", aws.BoolValueMap(resp.ResourceTypeManagementPreference))
+	d.Set("resource_type_opt_in_preference", aws.BoolValueMap(output.ResourceTypeOptInPreference))
+	d.Set("resource_type_management_preference", aws.BoolValueMap(output.ResourceTypeManagementPreference))
 
 	return nil
 }

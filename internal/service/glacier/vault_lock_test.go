@@ -153,7 +153,7 @@ func testAccCheckVaultLockDestroy(s *terraform.State) error {
 		}
 		output, err := conn.GetVaultLock(input)
 
-		if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
 			continue
 		}
 

@@ -29,10 +29,11 @@ data "aws_imagebuilder_image" "example" {
 In addition to all arguments above, the following attributes are exported:
 
 * `build_version_arn` - Build version Amazon Resource Name (ARN) of the image. This will always have the `#.#.#/#` suffix.
+* `container_recipe_arn` - Amazon Resource Name (ARN) of the container recipe.
 * `date_created` - Date the image was created.
 * `distribution_configuration_arn` - Amazon Resource Name (ARN) of the Image Builder Distribution Configuration.
 * `enhanced_image_metadata_enabled` - Whether additional information about the image being created is collected.
-* `image_recipe_arn` - Amazon Resource Name (ARN) of the Image Builder Infrastructure Recipe.
+* `image_recipe_arn` - Amazon Resource Name (ARN) of the image recipe.
 * `image_tests_configuration` - List of an object with image tests configuration.
     * `image_tests_enabled` - Whether image tests are enabled.
     * `timeout_minutes` - Number of minutes before image tests time out.

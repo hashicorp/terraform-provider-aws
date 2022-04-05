@@ -112,7 +112,7 @@ func testAccCheckBaiduChannelDestroy(s *terraform.State) error {
 		}
 		_, err := conn.GetBaiduChannel(params)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
 				continue
 			}
 			return err

@@ -814,7 +814,7 @@ func resourceUserPoolRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.DescribeUserPool(params)
 
-	if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Cognito User Pool (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -924,7 +924,7 @@ func resourceUserPoolRead(d *schema.ResourceData, meta interface{}) error {
 
 	output, err := conn.GetUserPoolMfaConfig(input)
 
-	if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Cognito User Pool (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

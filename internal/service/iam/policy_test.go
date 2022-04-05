@@ -277,7 +277,7 @@ func testAccCheckPolicyDestroy(s *terraform.State) error {
 			PolicyArn: aws.String(rs.Primary.ID),
 		})
 
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
 		}
 

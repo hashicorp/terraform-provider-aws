@@ -142,7 +142,7 @@ func testAccCheckIAMOpenIDConnectProviderDestroy(s *terraform.State) error {
 		}
 		out, err := conn.GetOpenIDConnectProvider(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 				// none found, that's good
 				return nil
 			}

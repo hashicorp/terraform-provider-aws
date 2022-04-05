@@ -215,7 +215,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Println("[DEBUG] Update IAM User request:", request)
 		_, err := conn.UpdateUser(request)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 				log.Printf("[WARN] No IAM user by name (%s) found", d.Id())
 				d.SetId("")
 				return nil
@@ -313,7 +313,7 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Println("[DEBUG] Delete IAM User request:", deleteUserInput)
 	_, err := conn.DeleteUser(deleteUserInput)
 
-	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		return nil
 	}
 
@@ -457,11 +457,11 @@ func DeleteUserLoginProfile(svc *iam.IAM, username string) error {
 	err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		_, err = svc.DeleteLoginProfile(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 				return nil
 			}
 			// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
-			if tfawserr.ErrMessageContains(err, iam.ErrCodeEntityTemporarilyUnmodifiableException, "") {
+			if tfawserr.ErrCodeEquals(err, iam.ErrCodeEntityTemporarilyUnmodifiableException) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)

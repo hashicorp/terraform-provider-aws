@@ -95,6 +95,33 @@ resource "aws_elasticache_replication_group" "baz" {
 }
 ```
 
+### Redis Log Delivery configuration
+
+```terraform
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = "myreplicaciongroup"
+  replication_group_description = "test description"
+  node_type                     = "cache.t3.small"
+  port                          = 6379
+  apply_immediately             = true
+  auto_minor_version_upgrade    = false
+  maintenance_window            = "tue:06:30-tue:07:30"
+  snapshot_window               = "01:00-02:00"
+  log_delivery_configuration {
+    destination      = aws_cloudwatch_log_group.example.name
+    destination_type = "cloudwatch-logs"
+    log_format       = "text"
+    log_type         = "slow-log"
+  }
+  log_delivery_configuration {
+    destination      = aws_kinesis_firehose_delivery_stream.example.name
+    destination_type = "kinesis-firehose"
+    log_format       = "json"
+    log_type         = "engine-log"
+  }
+}
+```
+
 ~> **Note:** We currently do not support passing a `primary_cluster_id` in order to create the Replication Group.
 
 ~> **Note:** Automatic Failover is unavailable for Redis versions earlier than 2.8.6,
@@ -158,6 +185,7 @@ The following arguments are optional:
 * `final_snapshot_identifier` - (Optional) The name of your final node group (shard) snapshot. ElastiCache creates the snapshot from the primary node in the cluster. If omitted, no final snapshot will be made.
 * `global_replication_group_id` - (Optional) The ID of the global replication group to which this replication group should belong. If this parameter is specified, the replication group is added to the specified global replication group as a secondary replication group; otherwise, the replication group is not part of any global replication group. If `global_replication_group_id` is set, the `num_node_groups` parameter (or the `num_node_groups` parameter of the deprecated `cluster_mode` block) cannot be set.
 * `kms_key_id` - (Optional) The ARN of the key that you wish to use if encrypting at rest. If not supplied, uses service managed encryption. Can be specified only if `at_rest_encryption_enabled = true`.
+* `log_delivery_configuration` - (Optional, Redis only) Specifies the destination and format of Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log). See the documentation on [Amazon ElastiCache](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log). See [Log Delivery Configuration](#log-delivery-configuration) below for more details.
 * `maintenance_window` – (Optional) Specifies the weekly time range for when maintenance on the cache cluster is performed. The format is `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC). The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09:00`
 * `multi_az_enabled` - (Optional) Specifies whether to enable Multi-AZ Support for the replication group. If `true`, `automatic_failover_enabled` must also be enabled. Defaults to `false`.
 * `node_type` - (Optional) Instance class to be used. See AWS documentation for information on [supported node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html). Required unless `global_replication_group_id` is set. Cannot be set if `global_replication_group_id` is set.
@@ -182,6 +210,15 @@ The following arguments are optional:
 
 * `num_node_groups` - (Optional, **Deprecated** use root-level `num_node_groups` instead) Number of node groups (shards) for this Redis replication group. Changing this number will trigger an online resizing operation before other settings modifications. Required unless `global_replication_group_id` is set.
 * `replicas_per_node_group` - (Optional, Required with `cluster_mode` `num_node_groups`, **Deprecated** use root-level `replicas_per_node_group` instead) Number of replica nodes in each node group. Valid values are 0 to 5. Changing this number will trigger an online resizing operation before other settings modifications.
+
+### Log Delivery Configuration
+
+The `log_delivery_configuration` block allows the streaming of Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log) to CloudWatch Logs or Kinesis Data Firehose. Max of 2 blocks.
+
+* `destination` - Name of either the CloudWatch Logs LogGroup or Kinesis Data Firehose resource.
+* `destination_type` - For CloudWatch Logs use `cloudwatch-logs` or for Kinesis Data Firehose use `kinesis-firehose`.
+* `log_format` - Valid values are `json` or `text`
+* `log_type` - Valid values are  `slow-log` or `engine-log`. Max 1 of each.
 
 ## Attributes Reference
 

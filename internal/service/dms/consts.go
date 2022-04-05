@@ -2,6 +2,16 @@ package dms
 
 const (
 	endpointStatusDeleting = "deleting"
+
+	replicationTaskStatusCreating  = "creating"
+	replicationTaskStatusDeleting  = "deleting"
+	replicationTaskStatusFailed    = "failed"
+	replicationTaskStatusModifying = "modifying"
+	replicationTaskStatusReady     = "ready"
+	replicationTaskStatusStopped   = "stopped"
+	replicationTaskStatusStopping  = "stopping"
+	replicationTaskStatusRunning   = "running"
+	replicationTaskStatusStarting  = "starting"
 )
 
 const (

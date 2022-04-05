@@ -118,7 +118,7 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 
 		resp, err = conn.CreateAccount(createOpts)
 
-		if tfawserr.ErrMessageContains(err, organizations.ErrCodeFinalizingOrganizationException, "") {
+		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeFinalizingOrganizationException) {
 			return resource.RetryableError(err)
 		}
 
@@ -195,7 +195,7 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	resp, err := conn.DescribeAccount(describeOpts)
 
-	if tfawserr.ErrMessageContains(err, organizations.ErrCodeAccountNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAccountNotFoundException) {
 		log.Printf("[WARN] Account does not exist, removing from state: %s", d.Id())
 		d.SetId("")
 		return nil
@@ -282,7 +282,7 @@ func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Removing AWS account from organization: %s", input)
 	_, err := conn.RemoveAccountFromOrganization(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, organizations.ErrCodeAccountNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAccountNotFoundException) {
 			return nil
 		}
 		return err
@@ -299,7 +299,7 @@ func resourceAccountStateRefreshFunc(conn *organizations.Organizations, id strin
 		}
 		resp, err := conn.DescribeCreateAccountStatus(opts)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, organizations.ErrCodeCreateAccountStatusNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, organizations.ErrCodeCreateAccountStatusNotFoundException) {
 				resp = nil
 			} else {
 				log.Printf("Error on OrganizationAccountStateRefresh: %s", err)

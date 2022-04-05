@@ -226,3 +226,81 @@ func FindEventSubscriptionByID(conn *rds.RDS, id string) (*rds.EventSubscription
 
 	return output.EventSubscriptionsList[0], nil
 }
+
+func FindDBInstanceAutomatedBackupByARN(conn *rds.RDS, arn string) (*rds.DBInstanceAutomatedBackup, error) {
+	input := &rds.DescribeDBInstanceAutomatedBackupsInput{
+		DBInstanceAutomatedBackupsArn: aws.String(arn),
+	}
+
+	output, err := findDBInstanceAutomatedBackup(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := aws.StringValue(output.Status); status == InstanceAutomatedBackupStatusRetained {
+		// If the automated backup is retained, the replication is stopped.
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.DBInstanceAutomatedBackupsArn) != arn {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findDBInstanceAutomatedBackup(conn *rds.RDS, input *rds.DescribeDBInstanceAutomatedBackupsInput) (*rds.DBInstanceAutomatedBackup, error) {
+	output, err := findDBInstanceAutomatedBackups(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func findDBInstanceAutomatedBackups(conn *rds.RDS, input *rds.DescribeDBInstanceAutomatedBackupsInput) ([]*rds.DBInstanceAutomatedBackup, error) {
+	var output []*rds.DBInstanceAutomatedBackup
+
+	err := conn.DescribeDBInstanceAutomatedBackupsPages(input, func(page *rds.DescribeDBInstanceAutomatedBackupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBInstanceAutomatedBackups {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceAutomatedBackupNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}

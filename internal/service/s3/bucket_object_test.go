@@ -1912,9 +1912,7 @@ func testAccBucketObjectConfig_noObjectLockLegalHold(rName string, content strin
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 }
 
 resource "aws_s3_bucket_versioning" "test" {
@@ -1941,9 +1939,7 @@ func testAccBucketObjectConfig_withObjectLockLegalHold(rName string, content, le
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 }
 
 resource "aws_s3_bucket_versioning" "test" {
@@ -1971,9 +1967,7 @@ func testAccBucketObjectConfig_noObjectLockRetention(rName string, content strin
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 }
 
 resource "aws_s3_bucket_versioning" "test" {
@@ -2000,9 +1994,7 @@ func testAccBucketObjectConfig_withObjectLockRetention(rName string, content, re
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 }
 
 resource "aws_s3_bucket_versioning" "test" {

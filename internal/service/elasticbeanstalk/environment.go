@@ -768,7 +768,7 @@ func DeleteEnvironment(conn *elasticbeanstalk.ElasticBeanstalk, id string, timeo
 
 	_, err := conn.TerminateEnvironment(&opts)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidConfiguration.NotFound", "") || tfawserr.ErrMessageContains(err, "ValidationError", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidConfiguration.NotFound") || tfawserr.ErrCodeEquals(err, "ValidationError") {
 			log.Printf("[DEBUG] Elastic Beanstalk Environment %q not found", id)
 			return nil
 		}

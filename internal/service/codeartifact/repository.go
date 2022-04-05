@@ -237,7 +237,7 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 		DomainOwner: aws.String(owner),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] CodeArtifact Repository %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -301,7 +301,7 @@ func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = conn.DeleteRepository(input)
 
-	if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 

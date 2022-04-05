@@ -271,7 +271,7 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 	_, err := conn.DeleteDBSecurityGroup(&opts)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidDBSecurityGroup.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidDBSecurityGroup.NotFound") {
 			return nil
 		}
 		return err

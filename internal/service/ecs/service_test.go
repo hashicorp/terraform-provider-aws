@@ -557,7 +557,7 @@ func TestAccECSService_deploymentCircuitBreaker(t *testing.T) {
 
 // Regression for https://github.com/hashicorp/terraform/issues/3444
 func TestAccECSService_loadBalancerChanges(t *testing.T) {
-	var service ecs.Service
+	var s1, s2 ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -570,13 +570,14 @@ func TestAccECSService_loadBalancerChanges(t *testing.T) {
 			{
 				Config: testAccServiceLBChangesConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &s1),
 				),
 			},
 			{
 				Config: testAccServiceLBChangesModifiedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(resourceName, &service),
+					testAccCheckServiceExists(resourceName, &s2),
+					testAccCheckServiceNotRecreated(&s2, &s1),
 				),
 			},
 		},
@@ -1233,10 +1234,10 @@ func TestAccECSService_Tags_propagate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceManagedTagsConfig(rName),
+				Config: testAccServicePropagateTagsConfig(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &third),
-					resource.TestCheckResourceAttr(resourceName, "propagate_tags", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags", ecs.PropagateTagsNone),
 				),
 			},
 		},
@@ -1327,10 +1328,10 @@ func testAccCheckServiceExists(name string, service *ecs.Service) resource.TestC
 			output, err = conn.DescribeServices(input)
 
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, ecs.ErrCodeClusterNotFoundException, "") {
+				if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
 					return resource.RetryableError(err)
 				}
-				if tfawserr.ErrMessageContains(err, ecs.ErrCodeServiceNotFoundException, "") {
+				if tfawserr.ErrCodeEquals(err, ecs.ErrCodeServiceNotFoundException) {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -2789,15 +2790,27 @@ resource "aws_iam_role_policy" "ecs_service" {
 EOF
 }
 
-resource "aws_elb" "test" {
+resource "aws_lb_target_group" "test" {
+  name     = aws_lb.test.name
+  port     = %[5]d
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+}
+
+resource "aws_lb" "test" {
+  name     = %[1]q
   internal = true
   subnets  = aws_subnet.test[*].id
+}
 
-  listener {
-    instance_port     = %[5]d
-    instance_protocol = "http"
-    lb_port           = 80
-    lb_protocol       = "http"
+resource "aws_lb_listener" "front_end" {
+  load_balancer_arn = aws_lb.test.id
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.id
+    type             = "forward"
   }
 }
 
@@ -2809,9 +2822,9 @@ resource "aws_ecs_service" "test" {
   iam_role        = aws_iam_role.ecs_service.name
 
   load_balancer {
-    elb_name       = aws_elb.test.id
-    container_name = %[3]q
-    container_port = %[4]d
+    target_group_arn = aws_lb_target_group.test.id
+    container_name   = %[3]q
+    container_port   = %[4]d
   }
 
   depends_on = [aws_iam_role_policy.ecs_service]

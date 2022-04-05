@@ -188,7 +188,7 @@ func testAccCheckPrivateDNSNamespaceDestroy(s *terraform.State) error {
 
 		_, err := conn.GetNamespace(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, servicediscovery.ErrCodeNamespaceNotFound, "") {
+			if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeNamespaceNotFound) {
 				return nil
 			}
 			return err

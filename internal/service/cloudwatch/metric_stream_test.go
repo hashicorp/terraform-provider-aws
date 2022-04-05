@@ -310,7 +310,7 @@ func testAccCheckMetricStreamDestroy(s *terraform.State) error {
 		if err == nil {
 			return fmt.Errorf("MetricStream still exists: %s", rs.Primary.ID)
 		}
-		if !tfawserr.ErrMessageContains(err, cloudwatch.ErrCodeResourceNotFoundException, "") {
+		if !tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFoundException) {
 			return err
 		}
 	}
@@ -332,7 +332,7 @@ func testAccCheckMetricStreamDestroyPrevious(name string) resource.TestCheckFunc
 			return fmt.Errorf("MetricStream still exists: %s", name)
 		}
 
-		if !tfawserr.ErrMessageContains(err, cloudwatch.ErrCodeResourceNotFoundException, "") {
+		if !tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFoundException) {
 			return err
 		}
 

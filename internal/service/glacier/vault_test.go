@@ -288,7 +288,7 @@ func testAccCheckVaultNotificationsMissing(name string) resource.TestCheckFunc {
 			VaultName: aws.String(rs.Primary.ID),
 		})
 
-		if !tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
+		if !tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
 			return fmt.Errorf("Expected ResourceNotFoundException for Vault %s Notification Block but got %s", rs.Primary.ID, err)
 		}
 
@@ -314,7 +314,7 @@ func testAccCheckVaultDestroy(s *terraform.State) error {
 		}
 		if _, err := conn.DescribeVault(input); err != nil {
 			// Verify the error is what we want
-			if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
 				continue
 			}
 

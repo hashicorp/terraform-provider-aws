@@ -621,9 +621,7 @@ func testAccObjectDataSourceConfig_objectLockLegalHoldOff(randInt int) string {
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%[1]d"
 
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 }
 
 resource "aws_s3_bucket_versioning" "object_bucket" {
@@ -653,9 +651,7 @@ func testAccObjectDataSourceConfig_objectLockLegalHoldOn(randInt int, retainUnti
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%[1]d"
 
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 }
 
 resource "aws_s3_bucket_versioning" "object_bucket" {

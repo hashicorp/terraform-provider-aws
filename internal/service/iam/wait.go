@@ -78,7 +78,7 @@ func waitDeleteServiceLinkedRole(conn *iam.IAM, deletionTaskID string) error {
 
 	_, err := stateConf.WaitForState()
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return nil
 		}
 		return err

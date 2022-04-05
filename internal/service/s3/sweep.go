@@ -179,11 +179,11 @@ func sweepBuckets(region string) error {
 		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.DeleteBucket(input)
 
-			if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
+			if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 				return nil
 			}
 
-			if tfawserr.ErrMessageContains(err, "BucketNotEmpty", "") {
+			if tfawserr.ErrCodeEquals(err, "BucketNotEmpty") {
 				return resource.RetryableError(err)
 			}
 
@@ -224,7 +224,7 @@ func objectLockEnabled(conn *s3.S3, bucket string) (bool, error) {
 
 	output, err := conn.GetObjectLockConfiguration(input)
 
-	if tfawserr.ErrMessageContains(err, "ObjectLockConfigurationNotFoundError", "") {
+	if tfawserr.ErrCodeEquals(err, "ObjectLockConfigurationNotFoundError") {
 		return false, nil
 	}
 

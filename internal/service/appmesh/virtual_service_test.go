@@ -183,7 +183,7 @@ func testAccCheckAppmeshVirtualServiceDestroy(s *terraform.State) error {
 			MeshName:           aws.String(rs.Primary.Attributes["mesh_name"]),
 			VirtualServiceName: aws.String(rs.Primary.Attributes["name"]),
 		})
-		if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 			continue
 		}
 		if err != nil {

@@ -592,6 +592,14 @@ func ResourceBucket() *schema.Resource {
 				},
 			},
 
+			"object_lock_enabled": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Computed:      true, // Can be removed when object_lock_configuration.0.object_lock_enabled is removed
+				ForceNew:      true,
+				ConflictsWith: []string{"object_lock_configuration.0.object_lock_enabled"},
+			},
+
 			"object_lock_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -601,9 +609,10 @@ func ResourceBucket() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"object_lock_enabled": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(s3.ObjectLockEnabled_Values(), false),
+							Deprecated:   "Use the top-level parameter object_lock_enabled instead",
 						},
 
 						"rule": {
@@ -670,7 +679,8 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] S3 bucket create: %s", bucket)
 
 	req := &s3.CreateBucketInput{
-		Bucket: aws.String(bucket),
+		Bucket:                     aws.String(bucket),
+		ObjectLockEnabledForBucket: aws.Bool(d.Get("object_lock_enabled").(bool)),
 	}
 
 	awsRegion := meta.(*conns.AWSClient).Region
@@ -697,9 +707,8 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.CreateBucket(req)
 		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "OperationAborted" {
-				return resource.RetryableError(
-					fmt.Errorf("Error creating S3 bucket %s, retrying: %s", bucket, err))
+			if awsErr.Code() == ErrCodeOperationAborted {
+				return resource.RetryableError(fmt.Errorf("Error creating S3 bucket %s, retrying: %w", bucket, err))
 			}
 		}
 		if err != nil {
@@ -1024,7 +1033,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	if err != nil {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNotImplemented) {
 		return fmt.Errorf("error getting S3 Bucket logging: %s", err)
 	}
 
@@ -1141,7 +1150,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Object lock not supported in all partitions (extra guard, also guards in read func)
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeMethodNotAllowed, ErrCodeObjectLockConfigurationNotFound) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeMethodNotAllowed, ErrCodeNotImplemented, ErrCodeObjectLockConfigurationNotFound) {
 		if meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID || meta.(*conns.AWSClient).Partition == endpoints.AwsUsGovPartitionID {
 			return fmt.Errorf("error getting S3 Bucket (%s) Object Lock configuration: %w", d.Id(), err)
 		}
@@ -1151,11 +1160,13 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[WARN] Unable to read S3 bucket (%s) Object Lock Configuration: %s", d.Id(), err)
 	}
 
-	if output, ok := resp.(*s3.GetObjectLockConfigurationOutput); ok {
+	if output, ok := resp.(*s3.GetObjectLockConfigurationOutput); ok && output.ObjectLockConfiguration != nil {
+		d.Set("object_lock_enabled", aws.StringValue(output.ObjectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled)
 		if err := d.Set("object_lock_configuration", flattenS3ObjectLockConfiguration(output.ObjectLockConfiguration)); err != nil {
 			return fmt.Errorf("error setting object_lock_configuration: %w", err)
 		}
 	} else {
+		d.Set("object_lock_enabled", false)
 		d.Set("object_lock_configuration", nil)
 	}
 
@@ -1286,11 +1297,11 @@ func resourceBucketDelete(d *schema.ResourceData, meta interface{}) error {
 		Bucket: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
+	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 		return nil
 	}
 
-	if tfawserr.ErrMessageContains(err, "BucketNotEmpty", "") {
+	if tfawserr.ErrCodeEquals(err, "BucketNotEmpty") {
 		if d.Get("force_destroy").(bool) {
 			// Use a S3 service client that can handle multiple slashes in URIs.
 			// While aws_s3_object resources cannot create these object
@@ -2014,167 +2025,6 @@ func grantHash(v interface{}) int {
 	}
 	if p, ok := m["permissions"]; ok {
 		buf.WriteString(fmt.Sprintf("%v-", p.(*schema.Set).List()))
-	}
-	return create.StringHashcode(buf.String())
-}
-
-func rulesHash(v interface{}) int {
-	var buf bytes.Buffer
-	m, ok := v.(map[string]interface{})
-
-	if !ok {
-		return 0
-	}
-
-	if v, ok := m["id"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["prefix"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["status"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		buf.WriteString(fmt.Sprintf("%d-", destinationHash(v[0])))
-	}
-	if v, ok := m["source_selection_criteria"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		buf.WriteString(fmt.Sprintf("%d-", sourceSelectionCriteriaHash(v[0])))
-	}
-	if v, ok := m["priority"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
-	}
-	if v, ok := m["filter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		buf.WriteString(fmt.Sprintf("%d-", replicationRuleFilterHash(v[0])))
-
-		if v, ok := m["delete_marker_replication_status"]; ok && v.(string) == s3.DeleteMarkerReplicationStatusEnabled {
-			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-		}
-	}
-	return create.StringHashcode(buf.String())
-}
-
-func replicationRuleFilterHash(v interface{}) int {
-	var buf bytes.Buffer
-	m, ok := v.(map[string]interface{})
-
-	if !ok {
-		return 0
-	}
-
-	if v, ok := m["prefix"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["tags"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", tftags.New(v).Hash()))
-	}
-	return create.StringHashcode(buf.String())
-}
-
-func destinationHash(v interface{}) int {
-	var buf bytes.Buffer
-	m, ok := v.(map[string]interface{})
-
-	if !ok {
-		return 0
-	}
-
-	if v, ok := m["bucket"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["storage_class"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["replica_kms_key_id"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["account"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["access_control_translation"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		buf.WriteString(fmt.Sprintf("%d-", accessControlTranslationHash(v[0])))
-	}
-	if v, ok := m["replication_time"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		buf.WriteString(fmt.Sprintf("%d-", replicationTimeHash(v[0])))
-	}
-	if v, ok := m["metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		buf.WriteString(fmt.Sprintf("%d-", metricsHash(v[0])))
-	}
-	return create.StringHashcode(buf.String())
-}
-
-func accessControlTranslationHash(v interface{}) int {
-	var buf bytes.Buffer
-	m, ok := v.(map[string]interface{})
-
-	if !ok {
-		return 0
-	}
-
-	if v, ok := m["owner"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	return create.StringHashcode(buf.String())
-}
-
-func metricsHash(v interface{}) int {
-	var buf bytes.Buffer
-	m, ok := v.(map[string]interface{})
-
-	if !ok {
-		return 0
-	}
-
-	if v, ok := m["minutes"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
-	}
-	if v, ok := m["status"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	return create.StringHashcode(buf.String())
-}
-
-func replicationTimeHash(v interface{}) int {
-	var buf bytes.Buffer
-	m, ok := v.(map[string]interface{})
-
-	if !ok {
-		return 0
-	}
-
-	if v, ok := m["minutes"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
-	}
-	if v, ok := m["status"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	return create.StringHashcode(buf.String())
-}
-
-func sourceSelectionCriteriaHash(v interface{}) int {
-	var buf bytes.Buffer
-	m, ok := v.(map[string]interface{})
-
-	if !ok {
-		return 0
-	}
-
-	if v, ok := m["sse_kms_encrypted_objects"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		buf.WriteString(fmt.Sprintf("%d-", sourceSseKmsObjectsHash(v[0])))
-	}
-	return create.StringHashcode(buf.String())
-}
-
-func sourceSseKmsObjectsHash(v interface{}) int {
-	var buf bytes.Buffer
-	m, ok := v.(map[string]interface{})
-
-	if !ok {
-		return 0
-	}
-
-	if v, ok := m["enabled"]; ok {
-		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
 	}
 	return create.StringHashcode(buf.String())
 }

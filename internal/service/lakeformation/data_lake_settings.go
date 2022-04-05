@@ -143,7 +143,7 @@ func resourceDataLakeSettingsCreate(d *schema.ResourceData, meta interface{}) er
 			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "Invalid principal") {
 				return resource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeConcurrentModificationException, "") {
+			if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeConcurrentModificationException) {
 				return resource.RetryableError(err)
 			}
 

@@ -95,7 +95,7 @@ func testAccCheckTransitGatewayRouteTableAssociationDestroy(s *terraform.State) 
 
 		association, err := tfec2.DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidRouteTableID.NotFound") {
 			continue
 		}
 

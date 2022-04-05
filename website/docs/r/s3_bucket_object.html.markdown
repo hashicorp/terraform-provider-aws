@@ -100,9 +100,7 @@ resource "aws_s3_bucket_object" "example" {
 resource "aws_s3_bucket" "examplebucket" {
   bucket = "examplebuckettftest"
 
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 }
 
 resource "aws_s3_bucket_acl" "example" {

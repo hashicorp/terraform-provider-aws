@@ -200,7 +200,7 @@ func resourceMethodResponseDelete(d *schema.ResourceData, meta interface{}) erro
 		StatusCode: aws.String(d.Get("status_code").(string)),
 	})
 
-	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		return nil
 	}
 

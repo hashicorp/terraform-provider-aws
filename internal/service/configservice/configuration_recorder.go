@@ -100,7 +100,7 @@ func resourceConfigurationRecorderRead(d *schema.ResourceData, meta interface{})
 	}
 	out, err := conn.DescribeConfigurationRecorders(&input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchConfigurationRecorderException, "") {
+		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationRecorderException) {
 			log.Printf("[WARN] Configuration Recorder %q is gone (NoSuchConfigurationRecorderException)", d.Id())
 			d.SetId("")
 			return nil
@@ -143,7 +143,7 @@ func resourceConfigurationRecorderDelete(d *schema.ResourceData, meta interface{
 	}
 	_, err := conn.DeleteConfigurationRecorder(&input)
 	if err != nil {
-		if !tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchConfigurationRecorderException, "") {
+		if !tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationRecorderException) {
 			return fmt.Errorf("Deleting Configuration Recorder failed: %s", err)
 		}
 	}

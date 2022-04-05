@@ -111,7 +111,11 @@ func ResourceMetricAlarm() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.Any(
 											validation.StringInSlice(cloudwatch.Statistic_Values(), false),
-											validation.StringMatch(regexp.MustCompile(`p(\d{1,2}(\.\d{0,2})?|100)`), "must specify a value between p0.0 and p100"),
+											validation.StringMatch(
+												// doesn't catch: PR with %-values provided, TM/WM/PR/TC/TS with no values provided
+												regexp.MustCompile(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`),
+												"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
+											),
 										),
 									},
 									"unit": {
@@ -235,7 +239,11 @@ func ResourceMetricAlarm() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"statistic", "metric_query"},
-				ValidateFunc:  validation.StringMatch(regexp.MustCompile(`p(\d{1,2}(\.\d{0,2})?|100)`), "must specify a value between p0.0 and p100"),
+				ValidateFunc: validation.StringMatch(
+					// doesn't catch: PR with %-values provided, TM/WM/PR/TC/TS with no values provided
+					regexp.MustCompile(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`),
+					"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
+				),
 			},
 			"treat_missing_data": {
 				Type:         schema.TypeString,
@@ -464,7 +472,7 @@ func resourceMetricAlarmDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Deleting CloudWatch Metric Alarm: %s", d.Id())
 
 	if _, err := conn.DeleteAlarms(&params); err != nil {
-		if tfawserr.ErrMessageContains(err, cloudwatch.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting CloudWatch Metric Alarm: %w", err)

@@ -141,7 +141,7 @@ func resourceMaintenanceWindowTargetRead(d *schema.ResourceData, meta interface{
 	}
 
 	resp, err := conn.DescribeMaintenanceWindowTargets(params)
-	if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
+	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 		log.Printf("[WARN] Maintenance Window (%s) Target (%s) not found, removing from state", windowID, d.Id())
 		d.SetId("")
 		return nil
@@ -218,7 +218,7 @@ func resourceMaintenanceWindowTargetDelete(d *schema.ResourceData, meta interfac
 	}
 
 	_, err := conn.DeregisterTargetFromMaintenanceWindow(params)
-	if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
+	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 		return nil
 	}
 

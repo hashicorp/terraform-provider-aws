@@ -138,7 +138,7 @@ func testAccCheckGlueUDFDestroy(s *terraform.State) error {
 		}
 		if _, err := conn.GetUserDefinedFunction(input); err != nil {
 			//Verify the error is what we want
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				continue
 			}
 

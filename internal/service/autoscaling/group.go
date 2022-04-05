@@ -392,6 +392,7 @@ func ResourceGroup() *schema.Resource {
 			"initial_lifecycle_hook": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -590,6 +591,20 @@ func ResourceGroup() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  -1,
+						},
+						"instance_reuse_policy": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"reuse_on_scale_in": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -1413,7 +1428,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteAutoScalingGroup(&deleteopts)
-		if tfawserr.ErrMessageContains(err, "InvalidGroup.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidGroup.NotFound") {
 			return nil
 		}
 	}
@@ -2099,6 +2114,22 @@ func FlattenWarmPoolConfiguration(warmPoolConfiguration *autoscaling.WarmPoolCon
 		"max_group_prepared_capacity": maxGroupPreparedCapacity,
 	}
 
+	if warmPoolConfiguration.InstanceReusePolicy != nil {
+		m["instance_reuse_policy"] = flattenWarmPoolInstanceReusePolicy(warmPoolConfiguration.InstanceReusePolicy)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWarmPoolInstanceReusePolicy(instanceReusePolicy *autoscaling.InstanceReusePolicy) []interface{} {
+	if instanceReusePolicy == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"reuse_on_scale_in": aws.BoolValue(instanceReusePolicy.ReuseOnScaleIn),
+	}
+
 	return []interface{}{m}
 }
 
@@ -2197,6 +2228,10 @@ func CreatePutWarmPoolInput(asgName string, l []interface{}) *autoscaling.PutWar
 		input.MaxGroupPreparedCapacity = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := m["instance_reuse_policy"]; ok && len(v.([]interface{})) > 0 {
+		input.InstanceReusePolicy = expandWarmPoolInstanceReusePolicy(v.([]interface{}))
+	}
+
 	return &input
 }
 
@@ -2248,6 +2283,22 @@ func expandAutoScalingGroupInstanceRefreshPreferences(l []interface{}) *autoscal
 	}
 
 	return refreshPreferences
+}
+
+func expandWarmPoolInstanceReusePolicy(l []interface{}) *autoscaling.InstanceReusePolicy {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	instanceReusePolicy := &autoscaling.InstanceReusePolicy{}
+
+	if v, ok := m["reuse_on_scale_in"]; ok {
+		instanceReusePolicy.ReuseOnScaleIn = aws.Bool(v.(bool))
+	}
+
+	return instanceReusePolicy
 }
 
 func autoScalingGroupRefreshInstances(conn *autoscaling.AutoScaling, asgName string, refreshConfig []interface{}) error {

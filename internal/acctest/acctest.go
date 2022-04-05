@@ -59,7 +59,7 @@ const (
 
 const RFC3339RegexPattern = `^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?([Zz]|([+-]([01][0-9]|2[0-3]):[0-5][0-9]))$`
 const awsRegionRegexp = `[a-z]{2}(-[a-z]+)+-\d`
-const awsAccountIDRegexp = `(aws|\d{12})`
+const awsAccountIDRegexp = `(aws|aws-managed|\d{12})`
 
 // Skip implements a wrapper for (*testing.T).Skip() to prevent unused linting reports
 //
@@ -232,6 +232,11 @@ func providerAccountID(provo *schema.Provider) string {
 		return ""
 	}
 	return client.AccountID
+}
+
+// CheckDestroyNoop is a TestCheckFunc to be used as a TestCase's CheckDestroy when no such check can be made.
+func CheckDestroyNoop(_ *terraform.State) error {
+	return nil
 }
 
 // CheckResourceAttrAccountID ensures the Terraform state exactly matches the account ID
@@ -673,7 +678,7 @@ func PreCheckOrganizationsAccount(t *testing.T) {
 	conn := Provider.Meta().(*conns.AWSClient).OrganizationsConn
 	input := &organizations.DescribeOrganizationInput{}
 	_, err := conn.DescribeOrganization(input)
-	if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
 		return
 	}
 	if err != nil {
@@ -686,7 +691,7 @@ func PreCheckOrganizationsEnabled(t *testing.T) {
 	conn := Provider.Meta().(*conns.AWSClient).OrganizationsConn
 	input := &organizations.DescribeOrganizationInput{}
 	_, err := conn.DescribeOrganization(input)
-	if tfawserr.ErrMessageContains(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
 		t.Skip("this AWS account must be an existing member of an AWS Organization")
 	}
 	if err != nil {
@@ -748,7 +753,7 @@ func PreCheckHasIAMRole(t *testing.T, roleName string) {
 	}
 	_, err := conn.GetRole(input)
 
-	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		t.Skipf("skipping acceptance test: required IAM role \"%s\" is not present", roleName)
 	}
 	if PreCheckSkipError(err) {
@@ -1087,7 +1092,7 @@ func PreCheckSkipError(err error) bool {
 	// GovCloud has endpoints that respond with (no message provided after the error code):
 	// AccessDeniedException:
 	// Ignore these API endpoints that exist but are not officially enabled
-	if tfawserr.ErrMessageContains(err, "AccessDeniedException", "") {
+	if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
 		return true
 	}
 	// Ignore missing API endpoints
@@ -1095,10 +1100,10 @@ func PreCheckSkipError(err error) bool {
 		return true
 	}
 	// Ignore unsupported API calls
-	if tfawserr.ErrMessageContains(err, "UnknownOperationException", "") {
+	if tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
 		return true
 	}
-	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "") {
+	if tfawserr.ErrCodeEquals(err, "UnsupportedOperation") {
 		return true
 	}
 	if tfawserr.ErrMessageContains(err, "InvalidInputException", "Unknown operation") {

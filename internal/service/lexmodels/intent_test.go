@@ -578,7 +578,7 @@ func TestAccLexModelsIntent_updateWithExternalChange(t *testing.T) {
 			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 				_, err := conn.PutIntent(input)
 
-				if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
+				if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
 					return resource.RetryableError(fmt.Errorf("%q: intent still updating", resourceName))
 				}
 				if err != nil {

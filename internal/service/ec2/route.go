@@ -115,10 +115,9 @@ func ResourceRoute() *schema.Resource {
 				ExactlyOneOf: routeValidTargets,
 			},
 			"nat_gateway_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ExactlyOneOf:  routeValidTargets,
-				ConflictsWith: []string{"destination_ipv6_cidr_block"}, // IPv4 destinations only.
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: routeValidTargets,
 			},
 			"network_interface_id": {
 				Type:         schema.TypeString,

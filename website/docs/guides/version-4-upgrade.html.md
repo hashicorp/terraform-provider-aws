@@ -14,6 +14,10 @@ We previously marked most of the changes we outline in this guide as deprecated 
 
 ~> **NOTE:** Version 4.0.0 of the AWS Provider introduces significant changes to the `aws_s3_bucket` resource. See [S3 Bucket Refactor](#s3-bucket-refactor) for more details.
 
+~> **NOTE:** Version 4.0.0 of the AWS Provider introduces changes to the precedence of some authentication and configuration parameters.
+These changes bring the provider in line with the AWS CLI and SDKs.
+See [Changes to Authentication](#changes-to-authentication) for more details.
+
 ~> **NOTE:** Version 4.0.0 of the AWS Provider will be the last major version to support [EC2-Classic resources](#ec2-classic-resource-and-data-source-support) as AWS plans to fully retire EC2-Classic Networking. See the [AWS News Blog](https://aws.amazon.com/blogs/aws/ec2-classic-is-retiring-heres-how-to-prepare/) for additional details.
 
 ~> **NOTE:** Version 4.0.0 and 4.x.x versions of the AWS Provider will be the last versions compatible with Terraform 0.12-0.15.
@@ -126,7 +130,7 @@ provider "aws" {
 
 ## Changes to Authentication
 
-The authentication configuration for the AWS Provider has changed in this version to match the behavior of other AWS products, including the AWS SDK and AWS CLI. _This will break AWS provider configurations where you set a non-empty `profile` in the `provider` configuration but the profile does not correspond to an AWS profile with valid credentials._
+The authentication configuration for the AWS Provider has changed in this version to match the behavior of other AWS products, including the AWS SDK and AWS CLI. _This will cause authentication failures in AWS provider configurations where you set a non-empty `profile` in the `provider` configuration but the profile does not correspond to an AWS profile with valid credentials._
 
 Precedence for authentication settings is as follows:
 
@@ -193,9 +197,13 @@ Note that the provider can only resolve FIPS endpoints where AWS provides FIPS s
 
 ## S3 Bucket Refactor
 
-To help distribute the management of S3 bucket settings via independent resources, various arguments and attributes in the `aws_s3_bucket` resource
-have become **read-only**. Configurations dependent on these arguments should be updated to use the corresponding `aws_s3_bucket_*` resource.
-Once updated, new `aws_s3_bucket_*` resources should be imported into Terraform state.
+To help distribute the management of S3 bucket settings via independent resources, various arguments and attributes in the `aws_s3_bucket` resource have become **read-only**.
+
+Configurations dependent on these arguments should be updated to use the corresponding `aws_s3_bucket_*` resource in order to prevent Terraform from reporting “unconfigurable attribute” errors for read-only arguments. Once updated, it is recommended to import new `aws_s3_bucket_*` resources into Terraform state.
+
+In the event practitioners do not anticipate future modifications to the S3 bucket settings associated with these read-only arguments or drift detection is not needed, these read-only arguments should be removed from `aws_s3_bucket` resource configurations in order to prevent Terraform from reporting “unconfigurable attribute” errors; the states of these arguments will be preserved but are subject to change with modifications made outside Terraform.
+
+~> **NOTE:** Each of the new `aws_s3_bucket_*` resources relies on S3 API calls that utilize a `PUT` action in order to modify the target S3 bucket. These calls follow standard HTTP methods for REST APIs, and therefore **should** handle situations where the target configuration already exists. While it is not strictly necessary to import new `aws_s3_bucket_*` resources where the updated configuration matches the configuration used in previous versions of the AWS provider, skipping this step will lead to a diff in the first plan after a configuration change indicating that any new `aws_s3_bucket_*` resources will be created, making it more difficult to determine whether the appropriate actions will be taken.
 
 ### `acceleration_status` Argument
 
@@ -532,7 +540,7 @@ resource and remove `lifecycle_rule` and its nested arguments in the `aws_s3_buc
 
 ~> **Note:** When configuring the `rule.filter` configuration block in the new `aws_s3_bucket_lifecycle_configuration` resource, use the AWS CLI s3api [get-bucket-lifecycle-configuration](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/s3api/get-bucket-lifecycle-configuration.html)
 to get the source bucket's lifecycle configuration and determine if the `Filter` is configured as `"Filter" : {}` or `"Filter" : { "Prefix": "" }`.
-If AWS returns the former, configure `rule.filter` as `filter {}`. Otherwise, configure `rule.filter` as `filter { prefix = "" }` as shown here:
+If AWS returns the former, configure `rule.filter` as `filter {}`. Otherwise, neither a `rule.filter` nor `rule.prefix` parameter should be configured as shown here:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
@@ -548,10 +556,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "example" {
     id     = "Keep previous version 30 days, then in Glacier another 60"
     status = "Enabled"
 
-    filter {
-      prefix = ""
-    }
-
     noncurrent_version_transition {
       noncurrent_days = 30
       storage_class   = "GLACIER"
@@ -565,10 +569,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "example" {
   rule {
     id     = "Delete old incomplete multi-part uploads"
     status = "Enabled"
-
-    filter {
-      prefix = ""
-    }
 
     abort_incomplete_multipart_upload {
       days_after_initiation = 7
@@ -647,8 +647,91 @@ resource "aws_s3_bucket_lifecycle_configuration" "example" {
     id     = "log-expiration"
     status = "Enabled"
 
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    transition {
+      days          = 180
+      storage_class = "GLACIER"
+    }
+  }
+}
+```
+
+Run `terraform import` on each new resource, _e.g._,
+
+```shell
+$ terraform import aws_s3_bucket_lifecycle_configuration.example yournamehere
+aws_s3_bucket_lifecycle_configuration.example: Importing from ID "yournamehere"...
+aws_s3_bucket_lifecycle_configuration.example: Import prepared!
+  Prepared aws_s3_bucket_lifecycle_configuration for import
+aws_s3_bucket_lifecycle_configuration.example: Refreshing state... [id=yournamehere]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
+#### For Lifecycle Rules with `prefix`
+
+For example, given this configuration:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  lifecycle_rule {
+    id      = "log-expiration"
+    enabled = true
+    prefix  = "foobar"
+
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    transition {
+      days          = 180
+      storage_class = "GLACIER"
+    }
+  }
+}
+```
+
+You will receive the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
+│
+│ Can't configure a value for "lifecycle_rule": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since the `lifecycle_rule` argument changed to read-only, update the configuration to use the `aws_s3_bucket_lifecycle_configuration`
+resource and remove `lifecycle_rule` and its nested arguments in the `aws_s3_bucket` resource:
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "example" {
+  bucket = aws_s3_bucket.example.id
+
+  rule {
+    id     = "log-expiration"
+    status = "Enabled"
+
     filter {
-      prefix = ""
+      prefix = "foobar"
     }
 
     transition {
@@ -679,8 +762,7 @@ The resources that were imported are shown above. These resources are now in
 your Terraform state and will henceforth be managed by Terraform.
 ```
 
-#### For Lifecycle Rules with a `prefix`
-
+#### For Lifecycle Rules with `prefix` and `tags`
 
 For example, given this previous configuration:
 
@@ -929,9 +1011,7 @@ resource "aws_s3_bucket" "example" {
   bucket = "yournamehere"
 
   # ... other configuration ...
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-  }
+  object_lock_enabled = true
 }
 
 resource "aws_s3_bucket_object_lock_configuration" "example" {
@@ -1298,7 +1378,9 @@ Switch your Terraform configuration to the [`aws_s3_bucket_versioning` resource]
 
 ~> **NOTE:** As `aws_s3_bucket_versioning` is a separate resource, any S3 objects for which versioning is important (_e.g._, a truststore for mutual TLS authentication) must implicitly or explicitly depend on the `aws_s3_bucket_versioning` resource. Otherwise, the S3 objects may be created before versioning has been set. [See below](#ensure-objects-depend-on-versioning) for an example. Also note that AWS recommends waiting 15 minutes after enabling versioning on a bucket before putting or deleting objects in/from the bucket.
 
-For example, given this previous configuration:
+#### Buckets With Versioning Enabled
+
+Given this previous configuration:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
@@ -1340,6 +1422,114 @@ resource "aws_s3_bucket_versioning" "example" {
   }
 }
 ```
+
+Run `terraform import` on each new resource, _e.g._,
+
+```shell
+$ terraform import aws_s3_bucket_versioning.example yournamehere
+aws_s3_bucket_versioning.example: Importing from ID "yournamehere"...
+aws_s3_bucket_versioning.example: Import prepared!
+  Prepared aws_s3_bucket_versioning for import
+aws_s3_bucket_versioning.example: Refreshing state... [id=yournamehere]
+
+Import successful!
+
+The resources that were imported are shown above. These resources are now in
+your Terraform state and will henceforth be managed by Terraform.
+```
+
+#### Buckets With Versioning Disabled or Suspended
+
+Depending on the version of the Terraform AWS Provider you are migrating from, the interpretation of `versioning.enabled = false`
+in your `aws_s3_bucket` resource will differ and thus the migration to the `aws_s3_bucket_versioning` resource will also differ as follows.
+
+If you are migrating from the Terraform AWS Provider `v3.70.0` or later:
+
+* For new S3 buckets, `enabled = false` is synonymous to `Disabled`.
+* For existing S3 buckets, `enabled = false` is synonymous to `Suspended`.
+
+If you are migrating from an earlier version of the Terraform AWS Provider:
+
+* For both new and existing S3 buckets, `enabled = false` is synonymous to `Suspended`.
+
+Given this previous configuration :
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "yournamehere"
+
+  # ... other configuration ...
+  versioning {
+    enabled = false
+  }
+}
+```
+
+You will get the following error after upgrading:
+
+```
+│ Error: Value for unconfigurable attribute
+│
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
+│
+│ Can't configure a value for "versioning": its value will be decided automatically based on the result of applying this configuration.
+```
+
+Since `versioning` is now read only, update your configuration to use the `aws_s3_bucket_versioning`
+resource and remove `versioning` and its nested arguments in the `aws_s3_bucket` resource.
+
+* If migrating from Terraform AWS Provider `v3.70.0` or later and bucket versioning was never enabled:
+
+  ```terraform
+  resource "aws_s3_bucket" "example" {
+    bucket = "yournamehere"
+  
+    # ... other configuration ...
+  }
+  
+  resource "aws_s3_bucket_versioning" "example" {
+    bucket = aws_s3_bucket.example.id
+    versioning_configuration {
+      status = "Disabled"
+    }
+  }
+  ```
+
+* If migrating from Terraform AWS Provider `v3.70.0` or later and bucket versioning was enabled at one point:
+
+  ```terraform
+  resource "aws_s3_bucket" "example" {
+    bucket = "yournamehere"
+  
+    # ... other configuration ...
+  }
+  
+  resource "aws_s3_bucket_versioning" "example" {
+    bucket = aws_s3_bucket.example.id
+    versioning_configuration {
+      status = "Suspended"
+    }
+  }
+  ```
+  
+* If migrating from an earlier version of Terraform AWS Provider:
+
+  ```terraform
+  resource "aws_s3_bucket" "example" {
+    bucket = "yournamehere"
+  
+    # ... other configuration ...
+  }
+  
+  resource "aws_s3_bucket_versioning" "example" {
+    bucket = aws_s3_bucket.example.id
+    versioning_configuration {
+      status = "Suspended"
+    }
+  }
+  ```
 
 Run `terraform import` on each new resource, _e.g._,
 

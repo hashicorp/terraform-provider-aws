@@ -474,7 +474,7 @@ func testAccCheckOrganizationCustomRuleDestroy(s *terraform.State) error {
 
 		rule, err := tfconfig.DescribeOrganizationConfigRule(conn, rs.Primary.ID)
 
-		if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException, "") {
+		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException) {
 			continue
 		}
 

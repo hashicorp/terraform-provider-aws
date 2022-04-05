@@ -216,7 +216,7 @@ func resourceCatalogDatabaseRead(d *schema.ResourceData, meta interface{}) error
 	out, err := conn.GetDatabase(input)
 	if err != nil {
 
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue Catalog Database (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

@@ -261,7 +261,7 @@ func DeleteConnection(conn *glue.Glue, catalogID, connectionName string) error {
 
 	_, err := conn.DeleteConnection(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 		return err

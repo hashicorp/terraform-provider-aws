@@ -104,7 +104,7 @@ resource "aws_cloudwatch_log_stream" "example" {
 
 resource "aws_kinesisanalyticsv2_application" "example" {
   name                   = "example-sql-application"
-  runtime_environment    = "SQL-1.0"
+  runtime_environment    = "SQL-1_0"
   service_execution_role = aws_iam_role.example.arn
 
   application_configuration {

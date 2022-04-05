@@ -121,7 +121,7 @@ func resourceRuleAssociationDelete(d *schema.ResourceData, meta interface{}) err
 		ResolverRuleId: aws.String(d.Get("resolver_rule_id").(string)),
 		VPCId:          aws.String(d.Get("vpc_id").(string)),
 	})
-	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 	if err != nil {
@@ -143,7 +143,7 @@ func route53ResolverRuleAssociationRefresh(conn *route53resolver.Route53Resolver
 		resp, err := conn.GetResolverRuleAssociation(&route53resolver.GetResolverRuleAssociationInput{
 			ResolverRuleAssociationId: aws.String(assocId),
 		})
-		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 			return "", RuleAssociationStatusDeleted, nil
 		}
 		if err != nil {

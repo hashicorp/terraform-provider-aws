@@ -320,7 +320,7 @@ func testAccCheckPermissionDestroy(s *terraform.State) error {
 		}
 		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 			debo, err := conn.DescribeEventBus(input)
-			if tfawserr.ErrMessageContains(err, eventbridge.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 			if err != nil {

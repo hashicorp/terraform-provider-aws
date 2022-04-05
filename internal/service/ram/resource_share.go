@@ -97,7 +97,7 @@ func resourceResourceShareRead(d *schema.ResourceData, meta interface{}) error {
 
 	output, err := conn.GetResourceShares(request)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ram.ErrCodeUnknownResourceException, "") {
+		if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
 			log.Printf("[WARN] No RAM resource share by ARN (%s) found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -150,7 +150,7 @@ func resourceResourceShareUpdate(d *schema.ResourceData, meta interface{}) error
 		log.Println("[DEBUG] Update RAM resource share request:", request)
 		_, err := conn.UpdateResourceShare(request)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, ram.ErrCodeUnknownResourceException, "") {
+			if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
 				log.Printf("[WARN] No RAM resource share by ARN (%s) found", d.Id())
 				d.SetId("")
 				return nil
@@ -180,7 +180,7 @@ func resourceResourceShareDelete(d *schema.ResourceData, meta interface{}) error
 	log.Println("[DEBUG] Delete RAM resource share request:", deleteResourceShareInput)
 	_, err := conn.DeleteResourceShare(deleteResourceShareInput)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ram.ErrCodeUnknownResourceException, "") {
+		if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting RAM resource share %s: %s", d.Id(), err)

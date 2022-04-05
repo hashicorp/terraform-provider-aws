@@ -148,7 +148,7 @@ func testAccCheckVPCLinkDestroy(s *terraform.State) error {
 
 		_, err := conn.GetVpcLink(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 				return nil
 			}
 			return err

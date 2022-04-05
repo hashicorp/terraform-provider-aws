@@ -350,7 +350,7 @@ func resourcePatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetPatchBaseline(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
+		if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 			log.Printf("[WARN] Patch Baseline %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

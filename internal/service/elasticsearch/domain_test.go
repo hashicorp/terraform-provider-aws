@@ -262,6 +262,43 @@ func TestAccElasticsearchDomain_warm(t *testing.T) {
 	})
 }
 
+func TestAccElasticsearchDomain_withColdStorageOptions(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticsearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_WithColdStorageOptions(rName, false, false, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
+						"enabled": "false",
+					})),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName[:28],
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_WithColdStorageOptions(rName, true, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
+						"enabled": "true",
+					})),
+			},
+		},
+	})
+}
+
 func TestAccElasticsearchDomain_withDedicatedMaster(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -337,7 +374,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 						t.Fatal(err)
 					}
 
-					err = tfelasticsearch.WaitForDomainCreation(conn, rName[:28])
+					err = tfelasticsearch.WaitForDomainCreation(conn, rName[:28], 60*time.Minute)
 					if err != nil {
 						t.Fatal(err)
 					}
@@ -348,7 +385,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "elasticsearch_version", "1.5"),
 				),
-				ExpectError: regexp.MustCompile(`domain .+ already exists`),
+				ExpectError: regexp.MustCompile(`Elasticsearch Domain .+ already exists`),
 			},
 		},
 	})
@@ -1764,6 +1801,51 @@ resource "aws_elasticsearch_domain" "test" {
   }
 }
 `, rName, enabled)
+}
+
+func testAccDomainConfig_WithColdStorageOptions(rName string, dMasterEnabled bool, warmEnabled bool, csEnabled bool) string {
+	warmConfig := ""
+	if warmEnabled {
+		warmConfig = `
+	warm_count = "2"
+	warm_type = "ultrawarm1.medium.elasticsearch"
+`
+	}
+
+	coldConfig := ""
+	if csEnabled {
+		coldConfig = `
+	cold_storage_options {
+	  enabled = true
+	}
+`
+	}
+
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "test" {
+  domain_name = substr(%[1]q, 0, 28)
+
+  elasticsearch_version = "7.9"
+
+  cluster_config {
+    instance_type            = "m3.medium.elasticsearch"
+    instance_count           = "1"
+    dedicated_master_enabled = %t
+    dedicated_master_count   = "3"
+    dedicated_master_type    = "m3.medium.elasticsearch"
+    warm_enabled             = %[3]t
+    %[4]s
+    %[5]s
+  }
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+  timeouts {
+    update = "180m"
+  }
+}
+`, rName, dMasterEnabled, warmEnabled, warmConfig, coldConfig)
 }
 
 func testAccDomainConfig_ClusterUpdate(rName string, instanceInt, snapshotInt int) string {

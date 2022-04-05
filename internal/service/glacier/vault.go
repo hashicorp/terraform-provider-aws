@@ -170,7 +170,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	out, err := conn.DescribeVault(input)
-	if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Glaier Vault (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -211,7 +211,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 		VaultName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
 		d.Set("access_policy", "")
 	} else if err != nil {
 		return fmt.Errorf("error getting access policy for Glacier Vault (%s): %w", d.Id(), err)
@@ -226,7 +226,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	notifications, err := getGlacierVaultNotification(conn, d.Id())
-	if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
 		d.Set("notification", []map[string]interface{}{})
 	} else if pol != nil {
 		d.Set("notification", notifications)

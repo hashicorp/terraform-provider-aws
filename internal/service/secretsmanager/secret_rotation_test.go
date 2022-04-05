@@ -75,7 +75,7 @@ func testAccCheckSecretRotationDestroy(s *terraform.State) error {
 		output, err := conn.DescribeSecret(input)
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 				continue
 			}
 			return err

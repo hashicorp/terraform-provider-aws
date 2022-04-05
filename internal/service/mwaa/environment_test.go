@@ -60,6 +60,7 @@ func TestAccMWAAEnvironment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "schedulers", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_role_arn"),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "source_bucket_arn", "s3", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
@@ -287,6 +288,7 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "plugins_s3_path", "plugins.zip"),
 					resource.TestCheckResourceAttr(resourceName, "requirements_s3_path", "requirements.txt"),
+					resource.TestCheckResourceAttr(resourceName, "schedulers", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_role_arn"),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "source_bucket_arn", "s3", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
@@ -386,7 +388,7 @@ func testAccCheckEnvironmentDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, mwaa.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, mwaa.ErrCodeResourceNotFoundException) {
 				continue
 			}
 			return err
@@ -729,6 +731,7 @@ resource "aws_mwaa_environment" "test" {
 
   plugins_s3_path                 = aws_s3_object.plugins.key
   requirements_s3_path            = aws_s3_object.requirements.key
+  schedulers                      = 1
   source_bucket_arn               = aws_s3_bucket.test.arn
   webserver_access_mode           = "PUBLIC_ONLY"
   weekly_maintenance_window_start = "SAT:03:00"

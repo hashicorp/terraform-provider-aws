@@ -102,6 +102,53 @@ func ResourceStackSet() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]+$`), "must contain only alphanumeric and hyphen characters"),
 				),
 			},
+			"operation_preferences": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"failure_tolerance_count": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							ValidateFunc:  validation.IntAtLeast(0),
+							ConflictsWith: []string{"operation_preferences.0.failure_tolerance_percentage"},
+						},
+						"failure_tolerance_percentage": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							ValidateFunc:  validation.IntBetween(0, 100),
+							ConflictsWith: []string{"operation_preferences.0.failure_tolerance_count"},
+						},
+						"max_concurrent_count": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							ValidateFunc:  validation.IntAtLeast(1),
+							ConflictsWith: []string{"operation_preferences.0.max_concurrent_percentage"},
+						},
+						"max_concurrent_percentage": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							ValidateFunc:  validation.IntBetween(1, 100),
+							ConflictsWith: []string{"operation_preferences.0.max_concurrent_count"},
+						},
+						"region_concurrency_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(cloudformation.RegionConcurrencyType_Values(), false),
+						},
+						"region_order": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]{1,128}$`), ""),
+							},
+						},
+					},
+				},
+			},
 			"parameters": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -209,8 +256,9 @@ func resourceStackSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	callAs := d.Get("call_as").(string)
 
-	stackSet, err := FindStackSetByName(conn, d.Id())
+	stackSet, err := FindStackSetByName(conn, d.Id(), callAs)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFormation StackSet (%s) not found, removing from state", d.Id())
@@ -288,6 +336,10 @@ func resourceStackSetUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.ExecutionRoleName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.OperationPreferences = expandCloudFormationOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("parameters"); ok {
 		input.Parameters = expandParameters(v.(map[string]interface{}))
 	}
@@ -296,6 +348,7 @@ func resourceStackSetUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.PermissionModel = aws.String(v.(string))
 	}
 
+	callAs := d.Get("call_as").(string)
 	if v, ok := d.GetOk("call_as"); ok {
 		input.CallAs = aws.String(v.(string))
 	}
@@ -327,7 +380,7 @@ func resourceStackSetUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating CloudFormation StackSet (%s): %w", d.Id(), err)
 	}
 
-	if _, err := WaitStackSetOperationSucceeded(conn, d.Id(), aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := WaitStackSetOperationSucceeded(conn, d.Id(), aws.StringValue(output.OperationId), callAs, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return fmt.Errorf("error waiting for CloudFormation StackSet (%s) update: %w", d.Id(), err)
 	}
 
@@ -339,6 +392,10 @@ func resourceStackSetDelete(d *schema.ResourceData, meta interface{}) error {
 
 	input := &cloudformation.DeleteStackSetInput{
 		StackSetName: aws.String(d.Id()),
+	}
+
+	if v, ok := d.GetOk("call_as"); ok {
+		input.CallAs = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Deleting CloudFormation StackSet: %s", d.Id())

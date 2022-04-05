@@ -80,7 +80,7 @@ func testAccCheckPrincipalPortfolioAssociationDestroy(s *terraform.State) error 
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		err = tfservicecatalog.WaitPrincipalPortfolioAssociationDeleted(conn, acceptLanguage, principalARN, portfolioID)
+		err = tfservicecatalog.WaitPrincipalPortfolioAssociationDeleted(conn, acceptLanguage, principalARN, portfolioID, tfservicecatalog.PrincipalPortfolioAssociationDeleteTimeout)
 
 		if tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 			continue
@@ -110,7 +110,7 @@ func testAccCheckPrincipalPortfolioAssociationExists(resourceName string) resour
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
-		_, err = tfservicecatalog.WaitPrincipalPortfolioAssociationReady(conn, acceptLanguage, principalARN, portfolioID)
+		_, err = tfservicecatalog.WaitPrincipalPortfolioAssociationReady(conn, acceptLanguage, principalARN, portfolioID, tfservicecatalog.PrincipalPortfolioAssociationReadyTimeout)
 
 		if err != nil {
 			return fmt.Errorf("waiting for Service Catalog Principal Portfolio Association existence (%s): %w", rs.Primary.ID, err)

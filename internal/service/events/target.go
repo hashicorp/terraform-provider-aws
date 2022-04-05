@@ -844,8 +844,8 @@ func expandTargetHTTPParameters(tfMap map[string]interface{}) *eventbridge.HttpP
 		apiObject.HeaderParameters = flex.ExpandStringMap(v)
 	}
 
-	if v, ok := tfMap["path_parameter_values"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.PathParameterValues = flex.ExpandStringSet(v)
+	if v, ok := tfMap["path_parameter_values"].([]interface{}); ok && len(v) > 0 {
+		apiObject.PathParameterValues = flex.ExpandStringList(v)
 	}
 
 	if v, ok := tfMap["query_string_parameters"].(map[string]interface{}); ok && len(v) > 0 {

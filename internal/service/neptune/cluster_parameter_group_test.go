@@ -300,7 +300,7 @@ func testAccCheckClusterParameterGroupDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
 				return nil
 			}
 			return err

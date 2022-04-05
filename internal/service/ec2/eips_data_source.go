@@ -61,10 +61,10 @@ func dataSourceEIPsRead(d *schema.ResourceData, meta interface{}) error {
 	var publicIPs []string
 
 	for _, v := range output {
+		publicIPs = append(publicIPs, aws.StringValue(v.PublicIp))
+
 		if aws.StringValue(v.Domain) == ec2.DomainTypeVpc {
 			allocationIDs = append(allocationIDs, aws.StringValue(v.AllocationId))
-		} else {
-			publicIPs = append(publicIPs, aws.StringValue(v.PublicIp))
 		}
 	}
 

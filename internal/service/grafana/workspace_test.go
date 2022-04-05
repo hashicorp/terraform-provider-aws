@@ -29,6 +29,22 @@ func TestAccGrafana_serial(t *testing.T) {
 		"DataSource": {
 			"basic": testAccGrafanaWorkspaceDataSource_basic,
 		},
+		"LicenseAssociation": {
+			"enterpriseFreeTrial": testAccGrafanaLicenseAssociation_freeTrial,
+		},
+		"SamlConfiguration": {
+			"basic":         testAccGrafanaWorkspaceSamlConfiguration_basic,
+			"loginValidity": testAccGrafanaWorkspaceSamlConfiguration_loginValidity,
+			"assertions":    testAccGrafanaWorkspaceSamlConfiguration_assertions,
+		},
+		"RoleAssociation": {
+			"usersAdmin":           testAccGrafanaRoleAssociation_usersAdmin,
+			"usersEditor":          testAccGrafanaRoleAssociation_usersEditor,
+			"groupsAdmin":          testAccGrafanaRoleAssociation_groupsAdmin,
+			"groupsEditor":         testAccGrafanaRoleAssociation_groupsEditor,
+			"usersAndGroupsAdmin":  testAccGrafanaRoleAssociation_usersAndGroupsAdmin,
+			"usersAndGroupsEditor": testAccGrafanaRoleAssociation_usersAndGroupsEditor,
+		},
 	}
 
 	for group, m := range testCases {
@@ -423,7 +439,7 @@ func testAccCheckWorkspaceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_managed_grafana" {
+		if rs.Type != "aws_grafana_workspace" {
 			continue
 		}
 

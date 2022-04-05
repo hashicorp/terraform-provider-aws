@@ -33,3 +33,13 @@ jobs:
           message: |
             :warning: The following pull request has been labeled as a regression:
             https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}
+  AddToWorkingBoard:
+    if: ${{ github.event.label.name == 'regression' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add regressions to To Do column
+        uses: alex-page/github-project-automation-plus@v0.8.1
+        with:
+          project: AWS Provider Working Board
+          column: To Do
+          repo-token: ${{ secrets.ORGSCOPED_GITHUB_TOKEN }}

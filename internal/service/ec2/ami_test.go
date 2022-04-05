@@ -477,7 +477,7 @@ func testAccCheckAmiExists(n string, ami *ec2.Image) resource.TestCheckFunc {
 			resp, err = conn.DescribeImages(opts)
 			if err != nil {
 				// This can be just eventual consistency
-				if tfawserr.ErrMessageContains(err, "InvalidAMIID.NotFound", "") {
+				if tfawserr.ErrCodeEquals(err, "InvalidAMIID.NotFound") {
 					return resource.RetryableError(err)
 				}
 

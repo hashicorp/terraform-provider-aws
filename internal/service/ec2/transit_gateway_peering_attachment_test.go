@@ -224,7 +224,7 @@ func testAccCheckTransitGatewayPeeringAttachmentDestroy(s *terraform.State) erro
 
 		peeringAttachment, err := tfec2.DescribeTransitGatewayPeeringAttachment(conn, rs.Primary.ID)
 
-		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
 			continue
 		}
 

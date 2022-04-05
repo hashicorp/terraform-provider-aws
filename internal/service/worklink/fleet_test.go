@@ -318,7 +318,7 @@ func testAccCheckFleetDestroy(s *terraform.State) error {
 
 		if err != nil {
 			// Return nil if the Worklink Fleet is already destroyed
-			if tfawserr.ErrMessageContains(err, worklink.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, worklink.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 

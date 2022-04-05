@@ -16,6 +16,10 @@ import (
 )
 
 func TestAccRDSProxyEndpoint_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBProxyEndpoint
 	resourceName := "aws_db_proxy_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -54,6 +58,10 @@ func TestAccRDSProxyEndpoint_basic(t *testing.T) {
 }
 
 func TestAccRDSProxyEndpoint_targetRole(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBProxyEndpoint
 	resourceName := "aws_db_proxy_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -81,6 +89,10 @@ func TestAccRDSProxyEndpoint_targetRole(t *testing.T) {
 }
 
 func TestAccRDSProxyEndpoint_vpcSecurityGroupIDs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxy rds.DBProxyEndpoint
 	resourceName := "aws_db_proxy_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -118,6 +130,10 @@ func TestAccRDSProxyEndpoint_vpcSecurityGroupIDs(t *testing.T) {
 }
 
 func TestAccRDSProxyEndpoint_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbProxy rds.DBProxyEndpoint
 	resourceName := "aws_db_proxy_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -163,6 +179,10 @@ func TestAccRDSProxyEndpoint_tags(t *testing.T) {
 }
 
 func TestAccRDSProxyEndpoint_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBProxyEndpoint
 	resourceName := "aws_db_proxy_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -185,6 +205,10 @@ func TestAccRDSProxyEndpoint_disappears(t *testing.T) {
 }
 
 func TestAccRDSProxyEndpoint_Disappears_proxy(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v rds.DBProxyEndpoint
 	resourceName := "aws_db_proxy_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -212,7 +236,7 @@ func testAccDBProxyEndpointPreCheck(t *testing.T) {
 
 	_, err := conn.DescribeDBProxyEndpoints(&rds.DescribeDBProxyEndpointsInput{})
 
-	if tfawserr.ErrMessageContains(err, "InvalidAction", "") {
+	if tfawserr.ErrCodeEquals(err, "InvalidAction") {
 		t.Skipf("skipping acceptance test, RDS Proxy not supported: %s", err)
 	}
 

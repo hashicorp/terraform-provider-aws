@@ -75,7 +75,7 @@ func resourceKeyGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	output, err := conn.GetKeyGroup(input)
 	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchResource, "") {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchResource) {
 			log.Printf("[WARN] No key group found: %s, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -124,7 +124,7 @@ func resourceKeyGroupDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.DeleteKeyGroup(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchResource, "") {
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchResource) {
 			return nil
 		}
 		return fmt.Errorf("error deleting CloudFront Key Group (%s): %w", d.Id(), err)

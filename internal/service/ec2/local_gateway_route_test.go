@@ -117,7 +117,7 @@ func testAccCheckLocalGatewayRouteDestroy(s *terraform.State) error {
 
 		route, err := tfec2.GetLocalGatewayRoute(conn, localGatewayRouteTableID, destination)
 
-		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidRouteTableID.NotFound") {
 			continue
 		}
 

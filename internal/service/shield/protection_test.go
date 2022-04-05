@@ -294,7 +294,7 @@ func testAccCheckProtectionDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeProtection(input)
 
-		if tfawserr.ErrMessageContains(err, shield.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, shield.ErrCodeResourceNotFoundException) {
 			continue
 		}
 

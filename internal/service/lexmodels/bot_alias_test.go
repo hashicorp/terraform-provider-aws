@@ -388,7 +388,7 @@ func testAccCheckBotAliasDestroy(botName, botAliasName string) resource.TestChec
 		})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
 				return nil
 			}
 

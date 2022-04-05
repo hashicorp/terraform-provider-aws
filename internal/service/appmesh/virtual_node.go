@@ -1220,7 +1220,7 @@ func resourceVirtualNodeDelete(d *schema.ResourceData, meta interface{}) error {
 		VirtualNodeName: aws.String(d.Get("name").(string)),
 	})
 
-	if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		return nil
 	}
 

@@ -17,6 +17,7 @@ func TestAccTransfer_serial(t *testing.T) {
 			"disappears":                    testAccServer_disappears,
 			"APIGateway":                    testAccServer_apiGateway,
 			"APIGatewayForceDestroy":        testAccServer_apiGateway_forceDestroy,
+			"AuthenticationLoginBanners":    testAccTransferServer_AuthenticationLoginBanners,
 			"DirectoryService":              testAccServer_directoryService,
 			"Domain":                        testAccServer_domain,
 			"ForceDestroy":                  testAccServer_forceDestroy,

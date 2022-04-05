@@ -351,7 +351,7 @@ func resourceUserPoolClientRead(d *schema.ResourceData, meta interface{}) error 
 	resp, err := conn.DescribeUserPoolClient(params)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] Cognito User Pool Client %s is already gone", d.Id())
 			d.SetId("")
 			return nil

@@ -637,7 +637,7 @@ func DeleteAllObjectVersions(conn *s3.S3, bucketName, key string, force, ignoreO
 			}
 
 			err := deleteS3ObjectVersion(conn, bucketName, objectKey, objectVersionID, force)
-			if tfawserr.ErrMessageContains(err, "AccessDenied", "") && force {
+			if tfawserr.ErrCodeEquals(err, "AccessDenied") && force {
 				// Remove any legal hold.
 				resp, err := conn.HeadObject(&s3.HeadObjectInput{
 					Bucket:    aws.String(bucketName),
@@ -690,7 +690,7 @@ func DeleteAllObjectVersions(conn *s3.S3, bucketName, key string, force, ignoreO
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
+	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 		err = nil
 	}
 
@@ -730,7 +730,7 @@ func DeleteAllObjectVersions(conn *s3.S3, bucketName, key string, force, ignoreO
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
+	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 		err = nil
 	}
 
@@ -772,7 +772,7 @@ func deleteS3ObjectVersion(conn *s3.S3, b, k, v string, force bool) error {
 		log.Printf("[WARN] Error deleting S3 Bucket (%s) Object (%s) Version (%s): %s", b, k, v, err)
 	}
 
-	if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") || tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchKey, "") {
+	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchKey) {
 		return nil
 	}
 

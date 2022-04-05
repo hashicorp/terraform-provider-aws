@@ -1381,7 +1381,7 @@ func testAccCheckListenerRuleDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error
-		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeRuleNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeRuleNotFoundException) {
 			return nil
 		} else {
 			return fmt.Errorf("Unexpected error checking LB Listener Rule destroyed: %s", err)

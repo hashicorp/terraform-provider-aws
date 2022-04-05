@@ -215,7 +215,7 @@ func resourcePlatformApplicationRead(d *schema.ResourceData, meta interface{}) e
 
 	output, err := conn.GetPlatformApplicationAttributes(input)
 
-	if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
 		log.Printf("[WARN] SNS Platform Application (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

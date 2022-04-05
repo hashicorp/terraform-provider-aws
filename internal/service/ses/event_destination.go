@@ -199,7 +199,7 @@ func resourceEventDestinationRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	output, err := conn.DescribeConfigurationSet(input)
-	if tfawserr.ErrMessageContains(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
+	if tfawserr.ErrCodeEquals(err, ses.ErrCodeConfigurationSetDoesNotExistException) {
 		log.Printf("[WARN] SES Configuration Set (%s) not found, removing from state", configurationSetName)
 		d.SetId("")
 		return nil
