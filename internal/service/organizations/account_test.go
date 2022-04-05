@@ -49,9 +49,10 @@ func testAccAccount_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"close_on_deletion"},
 			},
 		},
 	})
@@ -91,9 +92,10 @@ func testAccAccount_CloseOnDeletion(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"close_on_deletion"},
 			},
 		},
 	})
@@ -128,9 +130,10 @@ func testAccAccount_ParentID(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"close_on_deletion"},
 			},
 			{
 				Config: testAccAccountParentId2Config(name, email),
@@ -171,9 +174,10 @@ func testAccAccount_Tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"close_on_deletion"},
 			},
 			{
 				Config: testAccAccountTags2Config(name, email, "key1", "value1updated", "key2", "value2"),
