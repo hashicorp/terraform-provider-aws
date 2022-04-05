@@ -242,52 +242,36 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
+	close := d.Get("close_on_deletion").(bool)
 	var err error
-	if d.Get("close_on_deletion").(bool) {
-		input := &organizations.CloseAccountInput{
+
+	if close {
+		log.Printf("[DEBUG] Closing AWS Organizations Account: %s", d.Id())
+		_, err = conn.CloseAccount(&organizations.CloseAccountInput{
 			AccountId: aws.String(d.Id()),
-		}
-		log.Printf("[DEBUG] Deleting AWS account: %s", input)
-		_, err = conn.CloseAccount(input)
+		})
 	} else {
-		input := &organizations.RemoveAccountFromOrganizationInput{
+		log.Printf("[DEBUG] Removing AWS Organizations Account from organization: %s", d.Id())
+		_, err = conn.RemoveAccountFromOrganization(&organizations.RemoveAccountFromOrganizationInput{
 			AccountId: aws.String(d.Id()),
-		}
-		log.Printf("[DEBUG] Removing AWS account from organization: %s", input)
-		_, err = conn.RemoveAccountFromOrganization(input)
+		})
 	}
+
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAccountNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAccountNotFoundException) {
-			return nil
-		}
-		return err
+		return fmt.Errorf("error deleting AWS Organizations Account (%s): %w", d.Id(), err)
 	}
+
+	if close {
+		if _, err := waitAccountDeleted(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for AWS Organizations Account (%s) delete: %w", d.Id(), err)
+		}
+	}
+
 	return nil
-}
-
-func findCreateAccountStatusByID(conn *organizations.Organizations, id string) (*organizations.CreateAccountStatus, error) {
-	input := &organizations.DescribeCreateAccountStatusInput{
-		CreateAccountRequestId: aws.String(id),
-	}
-
-	output, err := conn.DescribeCreateAccountStatus(input)
-
-	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeCreateAccountStatusNotFoundException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.CreateAccountStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.CreateAccountStatus, nil
 }
 
 func findParentAccountID(conn *organizations.Organizations, id string) (string, error) {
@@ -317,6 +301,31 @@ func findParentAccountID(conn *organizations.Organizations, id string) (string, 
 	}
 
 	return aws.StringValue(output[0].Id), nil
+}
+
+func findCreateAccountStatusByID(conn *organizations.Organizations, id string) (*organizations.CreateAccountStatus, error) {
+	input := &organizations.DescribeCreateAccountStatusInput{
+		CreateAccountRequestId: aws.String(id),
+	}
+
+	output, err := conn.DescribeCreateAccountStatus(input)
+
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeCreateAccountStatusNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.CreateAccountStatus == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.CreateAccountStatus, nil
 }
 
 func statusCreateAccountState(conn *organizations.Organizations, id string) resource.StateRefreshFunc {
@@ -351,6 +360,40 @@ func waitAccountCreated(conn *organizations.Organizations, id string) (*organiza
 			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
 		}
 
+		return output, err
+	}
+
+	return nil, err
+}
+
+func statusAccountStatus(conn *organizations.Organizations, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindAccountByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitAccountDeleted(conn *organizations.Organizations, id string) (*organizations.Account, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:      []string{organizations.AccountStatusPendingClosure},
+		Target:       []string{},
+		Refresh:      statusAccountStatus(conn, id),
+		PollInterval: 10 * time.Second,
+		Timeout:      5 * time.Minute,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*organizations.Account); ok {
 		return output, err
 	}
 

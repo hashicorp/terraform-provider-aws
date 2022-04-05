@@ -30,6 +30,13 @@ func FindAccountByID(conn *organizations.Organizations, id string) (*organizatio
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
+	if status := aws.StringValue(output.Account.Status); status == organizations.AccountStatusSuspended {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
 	return output.Account, nil
 }
 
