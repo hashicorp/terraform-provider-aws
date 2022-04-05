@@ -58,8 +58,9 @@ func resourceTransitGatewayRouteCreate(d *schema.ResourceData, meta interface{})
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	destination := d.Get("destination_cidr_block").(string)
+	TransitGatewayAttachmentID := d.Get("transit_gateway_attachment_id").(string)
 	transitGatewayRouteTableID := d.Get("transit_gateway_route_table_id").(string)
-	id := TransitGatewayRouteCreateResourceID(transitGatewayRouteTableID, destination)
+	id := TransitGatewayRouteCreateResourceID(transitGatewayRouteTableID, destination, TransitGatewayAttachmentID)
 	input := &ec2.CreateTransitGatewayRouteInput{
 		Blackhole:                  aws.Bool(d.Get("blackhole").(bool)),
 		DestinationCidrBlock:       aws.String(destination),
@@ -153,8 +154,8 @@ func resourceTransitGatewayRouteDelete(d *schema.ResourceData, meta interface{})
 
 const transitGatewayRouteIDSeparator = "_"
 
-func TransitGatewayRouteCreateResourceID(transitGatewayRouteTableID, destination string) string {
-	parts := []string{transitGatewayRouteTableID, destination}
+func TransitGatewayRouteCreateResourceID(transitGatewayRouteTableID, destination, TransitGatewayAttachmentID string) string {
+	parts := []string{transitGatewayRouteTableID, destination, TransitGatewayAttachmentID}
 	id := strings.Join(parts, transitGatewayRouteIDSeparator)
 
 	return id
