@@ -45,6 +45,12 @@ func ResourceNFSFileShare() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"bucket_region": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				RequiredWith: []string{"vpc_endpoint_dns_name"},
+			},
 			"client_list": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -241,6 +247,10 @@ func resourceNFSFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 	if v, ok := d.GetOk("audit_destination_arn"); ok {
 		input.AuditDestinationARN = aws.String(v.(string))
 	}
+	
+	if v, ok := d.GetOk("bucket_region"); ok {
+		input.BucketRegion = aws.String(v.(string))
+	}
 
 	if v, ok := d.GetOk("kms_key_arn"); ok {
 		input.KMSKey = aws.String(v.(string))
@@ -313,6 +323,7 @@ func resourceNFSFileShareRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("audit_destination_arn", fileshare.AuditDestinationARN)
+	d.Set("bucket_region", fileshare.BucketRegion)
 	d.Set("default_storage_class", fileshare.DefaultStorageClass)
 	d.Set("fileshare_id", fileshare.FileShareId)
 	d.Set("gateway_arn", fileshare.GatewayARN)
