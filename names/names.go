@@ -56,20 +56,37 @@ const (
 	// column indices of CSV
 	//awsCLIV2Command         = 0
 	//awsCLIV2CommandNoDashes = 1
+	//goV1Package             = 2
+	//goV2Package             = 3
 	//providerPackageActual   = 4
 	//providerPackageCorrect  = 5
-	//note                    = 12
-	goV1Package         = 2
-	goV2Package         = 3
-	providerPackageBoth = 6
-	providerNameUpper   = 7
-	aliases             = 8
-	goV1ClientName      = 9
-	humanFriendly       = 10
-	brand               = 11
-	exclude             = 13
-	deprecatedEnvVar    = 14
-	envVar              = 15
+	//aliases                 = 6
+	//providerNameUpper       = 7
+	//goV1ClientName          = 8
+	//skipClientGenerate      = 9
+	//sdkVersion              = 10
+	//resourcePrefixActual    = 11
+	//resourcePrefixCorrect   = 12
+	//substituteDocsPrefixes  = 13
+	//humanFriendly           = 14
+	//brand                   = 15
+	//exclude                 = 16
+	//allowedSubcategory      = 17
+	//deprecatedEnvVar        = 18
+	//envVar                  = 19
+	//note                    = 20
+	goV1Package            = 2
+	goV2Package            = 3
+	providerPackageActual  = 4
+	providerPackageCorrect = 5
+	aliases                = 6
+	providerNameUpper      = 7
+	goV1ClientName         = 8
+	humanFriendly          = 14
+	brand                  = 15
+	exclude                = 16
+	deprecatedEnvVar       = 18
+	envVar                 = 19
 )
 
 //go:embed names_data.csv
@@ -87,19 +104,25 @@ func readCSVIntoServiceData() error {
 	}
 
 	for i, l := range d {
-		if i < 0 { // omit header line
+		if i < 1 { // omit header line
 			continue
 		}
 
-		if len(l) < 16 {
-			return fmt.Errorf("CSV file format, expected 16+ columns, got: %d", len(l))
-		}
-
-		if l[exclude] != "" || l[providerPackageBoth] == "" {
+		if l[exclude] != "" {
 			continue
 		}
 
-		serviceData[l[providerPackageBoth]] = &ServiceDatum{
+		if l[providerPackageActual] == "" && l[providerPackageCorrect] == "" {
+			continue
+		}
+
+		p := l[providerPackageCorrect]
+
+		if l[providerPackageActual] != "" {
+			p = l[providerPackageActual]
+		}
+
+		serviceData[p] = &ServiceDatum{
 			Brand:             l[brand],
 			DeprecatedEnvVar:  l[deprecatedEnvVar],
 			EnvVar:            l[envVar],
@@ -110,13 +133,13 @@ func readCSVIntoServiceData() error {
 			ProviderNameUpper: l[providerNameUpper],
 		}
 
-		a := []string{l[providerPackageBoth]}
+		a := []string{p}
 
 		if l[aliases] != "" {
 			a = append(a, strings.Split(l[aliases], ";")...)
 		}
 
-		serviceData[l[providerPackageBoth]].Aliases = a
+		serviceData[p].Aliases = a
 	}
 
 	return nil
