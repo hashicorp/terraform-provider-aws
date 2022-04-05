@@ -28,6 +28,8 @@ The following arguments are supported:
 * `client_list` - (Required) The list of clients that are allowed to access the file gateway. The list must contain either valid IP addresses or valid CIDR blocks. Set to `["0.0.0.0/0"]` to not limit access. Minimum 1 item. Maximum 100 items.
 * `gateway_arn` - (Required) Amazon Resource Name (ARN) of the file gateway.
 * `location_arn` - (Required) The ARN of the backed storage used for storing file data.
+* `vpc_endpoint_dns_name` - (Optional) The DNS name of the VPC endpoint for S3 private link.
+* `bucket_regio`n - (Optional) The region of the S3 bucket used by the file share. Required when specifying a vpc_endpoint_dns_name.
 * `role_arn` - (Required) The ARN of the AWS Identity and Access Management (IAM) role that a file gateway assumes when it accesses the underlying storage.
 * `audit_destination_arn` - (Optional) The Amazon Resource Name (ARN) of the storage used for audit logs.
 * `default_storage_class` - (Optional) The default [storage class](https://docs.aws.amazon.com/storagegateway/latest/APIReference/API_CreateNFSFileShare.html#StorageGateway-CreateNFSFileShare-request-DefaultStorageClass) for objects put into an Amazon S3 bucket by the file gateway. Defaults to `S3_STANDARD`.
