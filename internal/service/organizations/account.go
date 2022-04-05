@@ -34,29 +34,10 @@ func ResourceAccount() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"joined_method": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"joined_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"parent_id": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[a-z0-9]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_MoveAccount.html#organizations-MoveAccount-request-DestinationParentId"),
-			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				ForceNew:     true,
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 50),
+			"close_on_deletion": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"email": {
 				ForceNew: true,
@@ -73,16 +54,35 @@ func ResourceAccount() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{organizations.IAMUserAccessToBillingAllow, organizations.IAMUserAccessToBillingDeny}, true),
 			},
+			"joined_method": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"joined_timestamp": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				ForceNew:     true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 50),
+			},
+			"parent_id": {
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[a-z0-9]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_MoveAccount.html#organizations-MoveAccount-request-DestinationParentId"),
+			},
 			"role_name": {
 				ForceNew:     true,
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]{1,64}$`), "must consist of uppercase letters, lowercase letters, digits with no spaces, and any of the following characters"),
 			},
-			"close_on_deletion": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
