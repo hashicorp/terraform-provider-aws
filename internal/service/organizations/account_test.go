@@ -16,14 +16,13 @@ import (
 )
 
 func testAccAccount_basic(t *testing.T) {
-	var account organizations.Account
-
-	orgsEmailDomain, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
-
-	if !ok {
-		acctest.Skip(t, "'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
+	key := "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN"
+	orgsEmailDomain := os.Getenv(key)
+	if orgsEmailDomain == "" {
+		t.Skipf("Environment variable %s is not set", key)
 	}
 
+	var account organizations.Account
 	rInt := sdkacctest.RandInt()
 	name := fmt.Sprintf("tf_acctest_%d", rInt)
 	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
@@ -58,14 +57,13 @@ func testAccAccount_basic(t *testing.T) {
 }
 
 func testAccAccount_ParentID(t *testing.T) {
-	var account organizations.Account
-
-	orgsEmailDomain, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
-
-	if !ok {
-		acctest.Skip(t, "'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
+	key := "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN"
+	orgsEmailDomain := os.Getenv(key)
+	if orgsEmailDomain == "" {
+		t.Skipf("Environment variable %s is not set", key)
 	}
 
+	var account organizations.Account
 	rInt := sdkacctest.RandInt()
 	name := fmt.Sprintf("tf_acctest_%d", rInt)
 	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
@@ -103,14 +101,13 @@ func testAccAccount_ParentID(t *testing.T) {
 }
 
 func testAccAccount_Tags(t *testing.T) {
-	var account organizations.Account
-
-	orgsEmailDomain, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
-
-	if !ok {
-		acctest.Skip(t, "'TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN' not set, skipping test.")
+	key := "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN"
+	orgsEmailDomain := os.Getenv(key)
+	if orgsEmailDomain == "" {
+		t.Skipf("Environment variable %s is not set", key)
 	}
 
+	var account organizations.Account
 	rInt := sdkacctest.RandInt()
 	name := fmt.Sprintf("tf_acctest_%d", rInt)
 	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
@@ -208,8 +205,8 @@ func testAccCheckAccountExists(n string, v *organizations.Account) resource.Test
 func testAccAccountConfig(name, email string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_account" "test" {
-  name              = "%s"
-  email             = "%s"
+  name              = %[1]q
+  email             = %[1]q
   close_on_deletion = true
 }
 `, name, email)
