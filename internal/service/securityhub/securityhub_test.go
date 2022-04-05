@@ -7,7 +7,7 @@ import (
 func TestAccSecurityHub_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Account": {
-			"basic": TestAccAccount_basic,
+			"basic": testAccAccount_basic,
 		},
 		"Member": {
 			"basic":  testAccMember_basic,
