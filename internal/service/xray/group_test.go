@@ -54,6 +54,46 @@ func TestAccXRayGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccXRayGroup_insights(t *testing.T) {
+	var Group xray.Group
+	resourceName := "aws_xray_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupBasicInsightsConfig(rName, "responsetime > 5", true, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckXrayGroupExists(resourceName, &Group),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "insights_configuration.*", map[string]string{
+						"insights_enabled":      "true",
+						"notifications_enabled": "true",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGroupBasicInsightsConfig(rName, "responsetime > 10", false, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckXrayGroupExists(resourceName, &Group),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "insights_configuration.*", map[string]string{
+						"insights_enabled":      "false",
+						"notifications_enabled": "false",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccXRayGroup_tags(t *testing.T) {
 	var Group xray.Group
 	resourceName := "aws_xray_group.test"
@@ -213,4 +253,17 @@ resource "aws_xray_group" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccGroupBasicInsightsConfig(rName, expression string, insightsEnabled bool, notificationsEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_xray_group" "test" {
+  group_name             = %[1]q
+  filter_expression      = %[2]q
+  insights_configuration {
+    insights_enabled     = %[3]t	
+    notifications_enabled = %[4]t	
+  }
+}
+`, rName, expression, insightsEnabled, notificationsEnabled)
 }

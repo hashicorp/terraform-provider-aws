@@ -40,6 +40,25 @@ func ResourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"insights_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"insights_enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"notifications_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -51,9 +70,10 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	input := &xray.CreateGroupInput{
-		GroupName:        aws.String(d.Get("group_name").(string)),
-		FilterExpression: aws.String(d.Get("filter_expression").(string)),
-		Tags:             Tags(tags.IgnoreAWS()),
+		GroupName:             aws.String(d.Get("group_name").(string)),
+		FilterExpression:      aws.String(d.Get("filter_expression").(string)),
+		InsightsConfiguration: expandInsightsConfig(d.Get("insights_configuration").([]interface{})),
+		Tags:                  Tags(tags.IgnoreAWS()),
 	}
 
 	out, err := conn.CreateGroup(input)
@@ -91,6 +111,10 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("group_name", group.Group.GroupName)
 	d.Set("filter_expression", group.Group.FilterExpression)
 
+	if config := flattenInsightsConfig(group.Group.InsightsConfiguration); config != nil {
+		d.Set("insights_configuration", config)
+	}
+
 	tags, err := ListTags(conn, arn)
 	if err != nil {
 		return fmt.Errorf("error listing tags for Xray Group (%q): %s", d.Id(), err)
@@ -113,10 +137,14 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).XRayConn
 
-	if d.HasChange("filter_expression") {
-		input := &xray.UpdateGroupInput{
-			GroupARN:         aws.String(d.Id()),
-			FilterExpression: aws.String(d.Get("filter_expression").(string)),
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &xray.UpdateGroupInput{GroupARN: aws.String(d.Id())}
+
+		if v, ok := d.GetOk("filter_expression"); ok {
+			input.FilterExpression = aws.String(v.(string))
+		}
+		if v, ok := d.GetOk("insights_configuration"); ok {
+			input.InsightsConfiguration = expandInsightsConfig(v.([]interface{}))
 		}
 
 		_, err := conn.UpdateGroup(input)
@@ -149,4 +177,39 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func expandInsightsConfig(l []interface{}) *xray.InsightsConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	config := xray.InsightsConfiguration{}
+
+	if v, ok := m["insights_enabled"]; ok {
+		config.InsightsEnabled = aws.Bool(v.(bool))
+	}
+	if v, ok := m["notifications_enabled"]; ok {
+		config.NotificationsEnabled = aws.Bool(v.(bool))
+	}
+
+	return &config
+}
+
+func flattenInsightsConfig(config *xray.InsightsConfiguration) []interface{} {
+	if config == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if config.InsightsEnabled != nil {
+		m["insights_enabled"] = config.InsightsEnabled
+	}
+	if config.NotificationsEnabled != nil {
+		m["notifications_enabled"] = config.NotificationsEnabled
+	}
+
+	return []interface{}{m}
 }
