@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -33,6 +32,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const (
@@ -670,31 +670,26 @@ func PreCheckPartition(partition string, t *testing.T) {
 }
 
 func PreCheckOrganizationsAccount(t *testing.T) {
-	conn := Provider.Meta().(*conns.AWSClient).OrganizationsConn
-	input := &organizations.DescribeOrganizationInput{}
-	_, err := conn.DescribeOrganization(input)
-	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
+	_, err := tforganizations.FindOrganization(Provider.Meta().(*conns.AWSClient).OrganizationsConn)
+
+	if tfresource.NotFound(err) {
 		return
 	}
+
 	if err != nil {
 		t.Fatalf("error describing AWS Organization: %s", err)
 	}
-	_, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_SKIP_PRECHECK")
-	if !ok {
-		t.Skip("skipping tests; this AWS account must not be an existing member of an AWS Organization")
-	}
+
+	t.Skip("skipping tests; this AWS account must not be an existing member of an AWS Organization")
 }
 
 func PreCheckOrganizationsEnabled(t *testing.T) {
-	conn := Provider.Meta().(*conns.AWSClient).OrganizationsConn
-	input := &organizations.DescribeOrganizationInput{}
-	_, err := conn.DescribeOrganization(input)
-	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
-		_, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_SKIP_PRECHECK")
-		if !ok {
-			t.Skip("this AWS account must be an existing member of an AWS Organization")
-		}
+	_, err := tforganizations.FindOrganization(Provider.Meta().(*conns.AWSClient).OrganizationsConn)
+
+	if tfresource.NotFound(err) {
+		t.Skip("this AWS account must be an existing member of an AWS Organization")
 	}
+
 	if err != nil {
 		t.Fatalf("error describing AWS Organization: %s", err)
 	}
