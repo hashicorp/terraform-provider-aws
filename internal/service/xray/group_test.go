@@ -34,6 +34,7 @@ func TestAccXRayGroup_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "xray", regexp.MustCompile(`group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression", "responsetime > 5"),
+					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"), // Computed.
 				),
 			},
 			{
@@ -48,6 +49,7 @@ func TestAccXRayGroup_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "xray", regexp.MustCompile(`group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression", "responsetime > 10"),
+					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"),
 				),
 			},
 		},
@@ -69,6 +71,7 @@ func TestAccXRayGroup_insights(t *testing.T) {
 				Config: testAccGroupBasicInsightsConfig(rName, "responsetime > 5", true, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXrayGroupExists(resourceName, &Group),
+					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "insights_configuration.*", map[string]string{
 						"insights_enabled":      "true",
 						"notifications_enabled": "true",
@@ -84,6 +87,7 @@ func TestAccXRayGroup_insights(t *testing.T) {
 				Config: testAccGroupBasicInsightsConfig(rName, "responsetime > 10", false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXrayGroupExists(resourceName, &Group),
+					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "insights_configuration.*", map[string]string{
 						"insights_enabled":      "false",
 						"notifications_enabled": "false",
