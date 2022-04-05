@@ -12,8 +12,7 @@ Provides a resource to create a member account in the current organization.
 
 ~> **Note:** Account management must be done from the organization's master account.
 
-!> **WARNING:** By default, deleting this Terraform resource will only remove an AWS account from an organization. To close the account you must set the `close_on_deletion` flag to true.
-If only closing, the member account must be prepared to be a standalone account beforehand. See the [AWS Organizations documentation](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html) for more information.
+~> **Note:** By default, deleting this Terraform resource will only remove an AWS account from an organization. You must set the `close_on_deletion` flag to true to close the account. It is worth noting that quotas are enforced when using the `close_on_deletion` argument, which you can produce a [CLOSE_ACCOUNT_QUOTA_EXCEEDED](https://docs.aws.amazon.com/organizations/latest/APIReference/API_CloseAccount.html) error, and require you to close the account manually.
 
 ## Example Usage
 
