@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_route: Fix state leakage in case of wait-for-creation times out
+resource/aws_route: Ensure that resource ID is set in case of wait-for-creation time out
 ```
