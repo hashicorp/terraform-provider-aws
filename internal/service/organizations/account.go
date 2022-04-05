@@ -168,7 +168,7 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("parent_id"); ok {
 		newParentID := v.(string)
 
-		existingParentID, err := resourceAccountGetParentID(conn, d.Id())
+		existingParentID, err := findParentAccountID(conn, d.Id())
 
 		if err != nil {
 			return fmt.Errorf("error getting AWS Organizations Account (%s) parent: %w", d.Id(), err)
@@ -195,31 +195,22 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	describeOpts := &organizations.DescribeAccountInput{
-		AccountId: aws.String(d.Id()),
-	}
-	resp, err := conn.DescribeAccount(describeOpts)
+	account, err := FindAccountByID(conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAccountNotFoundException) {
-		log.Printf("[WARN] Account does not exist, removing from state: %s", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] AWS Organizations Account does not exist, removing from state: %s", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing AWS Organizations Account (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading AWS Organizations Account (%s): %w", d.Id(), err)
 	}
 
-	account := resp.Account
-	if account == nil {
-		log.Printf("[WARN] Account does not exist, removing from state: %s", d.Id())
-		d.SetId("")
-		return nil
-	}
+	parentAccountID, err := findParentAccountID(conn, d.Id())
 
-	parentId, err := resourceAccountGetParentID(conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("error getting AWS Organizations Account (%s) parent: %w", d.Id(), err)
+		return fmt.Errorf("error reading AWS Organizations Account (%s) parent: %w", d.Id(), err)
 	}
 
 	d.Set("arn", account.Arn)
@@ -227,7 +218,7 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("joined_method", account.JoinedMethod)
 	d.Set("joined_timestamp", aws.TimeValue(account.JoinedTimestamp).Format(time.RFC3339))
 	d.Set("name", account.Name)
-	d.Set("parent_id", parentId)
+	d.Set("parent_id", parentAccountID)
 	d.Set("status", account.Status)
 
 	tags, err := ListTags(conn, d.Id())
@@ -335,14 +326,14 @@ func resourceAccountStateRefreshFunc(conn *organizations.Organizations, id strin
 	}
 }
 
-func resourceAccountGetParentID(conn *organizations.Organizations, childId string) (string, error) {
+func findParentAccountID(conn *organizations.Organizations, id string) (string, error) {
 	input := &organizations.ListParentsInput{
-		ChildId: aws.String(childId),
+		ChildId: aws.String(id),
 	}
-	var parents []*organizations.Parent
+	var output []*organizations.Parent
 
 	err := conn.ListParentsPages(input, func(page *organizations.ListParentsOutput, lastPage bool) bool {
-		parents = append(parents, page.Parents...)
+		output = append(output, page.Parents...)
 
 		return !lastPage
 	})
@@ -351,12 +342,15 @@ func resourceAccountGetParentID(conn *organizations.Organizations, childId strin
 		return "", err
 	}
 
-	if len(parents) == 0 {
-		return "", nil
+	if len(output) == 0 || output[0] == nil {
+		return "", tfresource.NewEmptyResultError(input)
 	}
 
 	// assume there is only a single parent
 	// https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListParents.html
-	parent := parents[0]
-	return aws.StringValue(parent.Id), nil
+	if count := len(output); count > 1 {
+		return "", tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return aws.StringValue(output[0].Id), nil
 }

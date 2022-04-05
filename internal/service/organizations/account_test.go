@@ -6,12 +6,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAccount_basic(t *testing.T) {
@@ -164,52 +165,43 @@ func testAccCheckAccountDestroy(s *terraform.State) error {
 			continue
 		}
 
-		params := &organizations.DescribeAccountInput{
-			AccountId: &rs.Primary.ID,
-		}
+		_, err := tforganizations.FindAccountByID(conn, rs.Primary.ID)
 
-		resp, err := conn.DescribeAccount(params)
-
-		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAccountNotFoundException) {
-			return nil
+		if tfresource.NotFound(err) {
+			continue
 		}
 
 		if err != nil {
 			return err
 		}
 
-		if resp != nil && resp.Account != nil {
-			return fmt.Errorf("Bad: Account still exists: %q", rs.Primary.ID)
-		}
+		return fmt.Errorf("AWS Organizations Account %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 
 }
 
-func testAccCheckAccountExists(n string, a *organizations.Account) resource.TestCheckFunc {
+func testAccCheckAccountExists(n string, v *organizations.Account) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
-		params := &organizations.DescribeAccountInput{
-			AccountId: &rs.Primary.ID,
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No AWS Organizations Account ID is set")
 		}
 
-		resp, err := conn.DescribeAccount(params)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
+
+		output, err := tforganizations.FindAccountByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if resp == nil || resp.Account == nil {
-			return fmt.Errorf("Account %q does not exist", rs.Primary.ID)
-		}
-
-		a = resp.Account
+		*v = *output
 
 		return nil
 	}
