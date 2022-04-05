@@ -258,11 +258,12 @@ resource "aws_xray_group" "test" {
 func testAccGroupBasicInsightsConfig(rName, expression string, insightsEnabled bool, notificationsEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_xray_group" "test" {
-  group_name             = %[1]q
-  filter_expression      = %[2]q
+  group_name        = %[1]q
+  filter_expression = %[2]q
+
   insights_configuration {
-    insights_enabled     = %[3]t	
-    notifications_enabled = %[4]t	
+    insights_enabled      = %[3]t
+    notifications_enabled = %[4]t
   }
 }
 `, rName, expression, insightsEnabled, notificationsEnabled)
