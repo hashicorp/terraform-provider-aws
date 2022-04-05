@@ -281,7 +281,6 @@ func ResourceDomain() *schema.Resource {
 			"cognito_options": {
 				Type:             schema.TypeList,
 				Optional:         true,
-				ForceNew:         false,
 				MaxItems:         1,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{

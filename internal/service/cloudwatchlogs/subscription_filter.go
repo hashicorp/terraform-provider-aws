@@ -45,7 +45,6 @@ func ResourceSubscriptionFilter() *schema.Resource {
 			"filter_pattern": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     false,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 			"log_group_name": {
