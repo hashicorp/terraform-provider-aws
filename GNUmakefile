@@ -23,6 +23,10 @@ gen:
 	rm -f internal/service/**/*_gen.go
 	rm -f names/*_gen.go
 	rm -f internal/conns/*_gen.go
+	rm -f website/docs/guides/custom-service-endpoints.html.md
+	rm -f website/allowed-subcategories.txt
+	rm -f .github/labeler-issue-triage.yml
+	rm -f infrastructure/repository/labels-service.tf
 	go generate ./...
 
 sweep:
