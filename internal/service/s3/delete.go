@@ -117,11 +117,17 @@ func deletePageOfObjectVersions(ctx context.Context, conn *s3.S3, bucket string,
 	var deleteErrs *multierror.Error
 
 	for _, v := range output.Errors {
+		code := aws.StringValue(v.Code)
+
+		if code == s3.ErrCodeNoSuchKey {
+			continue
+		}
+
 		key := aws.StringValue(v.Key)
 		versionID := aws.StringValue(v.VersionId)
 
 		// Attempt to remove any legal hold on the object.
-		if force && aws.StringValue(v.Code) == ErrCodeAccessDenied {
+		if force && code == ErrCodeAccessDenied {
 			_, err := conn.PutObjectLegalHoldWithContext(ctx, &s3.PutObjectLegalHoldInput{
 				Bucket:    aws.String(bucket),
 				Key:       aws.String(key),
