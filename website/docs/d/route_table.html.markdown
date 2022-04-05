@@ -74,6 +74,7 @@ For destinations:
 For targets:
 
 * `carrier_gateway_id` - ID of the Carrier Gateway.
+* `core_network_arn` - ARN of the core network.
 * `egress_only_gateway_id` - ID of the Egress Only Internet Gateway.
 * `gateway_id` - Internet Gateway ID.
 * `instance_id` - EC2 instance ID.

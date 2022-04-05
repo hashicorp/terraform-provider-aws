@@ -76,6 +76,7 @@ One of the following destination arguments must be supplied:
 
 One of the following target arguments must be supplied:
 
+* `core_network_arn` - (Optional) The Amazon Resource Name (ARN) of a core network.
 * `egress_only_gateway_id` - (Optional) Identifier of a VPC Egress Only Internet Gateway.
 * `gateway_id` - (Optional) Identifier of a VPC internet gateway or a virtual private gateway.
 * `instance_id` - (Optional) Identifier of an EC2 instance.

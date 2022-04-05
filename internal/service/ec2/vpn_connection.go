@@ -37,6 +37,14 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"core_network_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"core_network_attachment_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"customer_gateway_configuration": {
 				Type:      schema.TypeString,
 				Sensitive: true,
@@ -633,6 +641,8 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 		Resource:  fmt.Sprintf("vpn-connection/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
+	d.Set("core_network_arn", vpnConnection.CoreNetworkArn)
+	d.Set("core_network_attachment_arn", vpnConnection.CoreNetworkAttachmentArn)
 	d.Set("customer_gateway_id", vpnConnection.CustomerGatewayId)
 	d.Set("type", vpnConnection.Type)
 	d.Set("vpn_gateway_id", vpnConnection.VpnGatewayId)
