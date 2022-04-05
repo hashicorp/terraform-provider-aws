@@ -322,29 +322,29 @@ type AWSClient struct {
 	SupportedPlatforms        []string
 	TerraformVersion          string
 
-	AccessAnalyzerConn               *accessanalyzer.AccessAnalyzer
-	AccountConn                      *account.Account
 	ACMConn                          *acm.ACM
 	ACMPCAConn                       *acmpca.ACMPCA
-	AlexaForBusinessConn             *alexaforbusiness.AlexaForBusiness
 	AMPConn                          *prometheusservice.PrometheusService
-	AmplifyConn                      *amplify.Amplify
-	AmplifyBackendConn               *amplifybackend.AmplifyBackend
-	AmplifyUIBuilderConn             *amplifyuibuilder.AmplifyUIBuilder
 	APIGatewayConn                   *apigateway.APIGateway
 	APIGatewayManagementAPIConn      *apigatewaymanagementapi.ApiGatewayManagementApi
 	APIGatewayV2Conn                 *apigatewayv2.ApiGatewayV2
+	AccessAnalyzerConn               *accessanalyzer.AccessAnalyzer
+	AccountConn                      *account.Account
+	AlexaForBusinessConn             *alexaforbusiness.AlexaForBusiness
+	AmplifyConn                      *amplify.Amplify
+	AmplifyBackendConn               *amplifybackend.AmplifyBackend
+	AmplifyUIBuilderConn             *amplifyuibuilder.AmplifyUIBuilder
 	AppAutoScalingConn               *applicationautoscaling.ApplicationAutoScaling
 	AppConfigConn                    *appconfig.AppConfig
 	AppConfigDataConn                *appconfigdata.AppConfigData
 	AppFlowConn                      *appflow.Appflow
 	AppIntegrationsConn              *appintegrationsservice.AppIntegrationsService
-	ApplicationCostProfilerConn      *applicationcostprofiler.ApplicationCostProfiler
-	ApplicationInsightsConn          *applicationinsights.ApplicationInsights
 	AppMeshConn                      *appmesh.AppMesh
 	AppRunnerConn                    *apprunner.AppRunner
 	AppStreamConn                    *appstream.AppStream
 	AppSyncConn                      *appsync.AppSync
+	ApplicationCostProfilerConn      *applicationcostprofiler.ApplicationCostProfiler
+	ApplicationInsightsConn          *applicationinsights.ApplicationInsights
 	AthenaConn                       *athena.Athena
 	AuditManagerConn                 *auditmanager.AuditManager
 	AutoScalingConn                  *autoscaling.AutoScaling
@@ -356,6 +356,7 @@ type AWSClient struct {
 	BraketConn                       *braket.Braket
 	BudgetsConn                      *budgets.Budgets
 	CEConn                           *costexplorer.CostExplorer
+	CURConn                          *costandusagereportservice.CostandUsageReportService
 	ChimeConn                        *chime.Chime
 	ChimeSDKIdentityConn             *chimesdkidentity.ChimeSDKIdentity
 	ChimeSDKMeetingsConn             *chimesdkmeetings.ChimeSDKMeetings
@@ -381,8 +382,8 @@ type AWSClient struct {
 	CodeStarConn                     *codestar.CodeStar
 	CodeStarConnectionsConn          *codestarconnections.CodeStarConnections
 	CodeStarNotificationsConn        *codestarnotifications.CodeStarNotifications
-	CognitoIdentityConn              *cognitoidentity.CognitoIdentity
 	CognitoIDPConn                   *cognitoidentityprovider.CognitoIdentityProvider
+	CognitoIdentityConn              *cognitoidentity.CognitoIdentity
 	CognitoSyncConn                  *cognitosync.CognitoSync
 	ComprehendConn                   *comprehend.Comprehend
 	ComprehendMedicalConn            *comprehendmedical.ComprehendMedical
@@ -391,23 +392,22 @@ type AWSClient struct {
 	ConnectConn                      *connect.Connect
 	ConnectContactLensConn           *connectcontactlens.ConnectContactLens
 	ConnectParticipantConn           *connectparticipant.ConnectParticipant
-	CURConn                          *costandusagereportservice.CostandUsageReportService
 	CustomerProfilesConn             *customerprofiles.CustomerProfiles
+	DAXConn                          *dax.DAX
+	DLMConn                          *dlm.DLM
+	DMSConn                          *databasemigrationservice.DatabaseMigrationService
+	DRSConn                          *drs.Drs
+	DSConn                           *directoryservice.DirectoryService
 	DataBrewConn                     *gluedatabrew.GlueDataBrew
 	DataExchangeConn                 *dataexchange.DataExchange
 	DataPipelineConn                 *datapipeline.DataPipeline
 	DataSyncConn                     *datasync.DataSync
-	DAXConn                          *dax.DAX
 	DetectiveConn                    *detective.Detective
-	DeviceFarmConn                   *devicefarm.DeviceFarm
 	DevOpsGuruConn                   *devopsguru.DevOpsGuru
+	DeviceFarmConn                   *devicefarm.DeviceFarm
 	DirectConnectConn                *directconnect.DirectConnect
 	DiscoveryConn                    *applicationdiscoveryservice.ApplicationDiscoveryService
-	DLMConn                          *dlm.DLM
-	DMSConn                          *databasemigrationservice.DatabaseMigrationService
 	DocDBConn                        *docdb.DocDB
-	DRSConn                          *drs.Drs
-	DSConn                           *directoryservice.DirectoryService
 	DynamoDBConn                     *dynamodb.DynamoDB
 	DynamoDBStreamsConn              *dynamodbstreams.DynamoDBStreams
 	EBSConn                          *ebs.EBS
@@ -418,26 +418,26 @@ type AWSClient struct {
 	ECSConn                          *ecs.ECS
 	EFSConn                          *efs.EFS
 	EKSConn                          *eks.EKS
-	ElastiCacheConn                  *elasticache.ElastiCache
-	ElasticBeanstalkConn             *elasticbeanstalk.ElasticBeanstalk
-	ElasticInferenceConn             *elasticinference.ElasticInference
-	ElasticsearchConn                *elasticsearchservice.ElasticsearchService
-	ElasticTranscoderConn            *elastictranscoder.ElasticTranscoder
 	ELBConn                          *elb.ELB
 	ELBV2Conn                        *elbv2.ELBV2
 	EMRConn                          *emr.EMR
 	EMRContainersConn                *emrcontainers.EMRContainers
+	ElastiCacheConn                  *elasticache.ElastiCache
+	ElasticBeanstalkConn             *elasticbeanstalk.ElasticBeanstalk
+	ElasticInferenceConn             *elasticinference.ElasticInference
+	ElasticTranscoderConn            *elastictranscoder.ElasticTranscoder
+	ElasticsearchConn                *elasticsearchservice.ElasticsearchService
 	EventsConn                       *eventbridge.EventBridge
 	EvidentlyConn                    *cloudwatchevidently.CloudWatchEvidently
+	FISConn                          *fis.FIS
+	FMSConn                          *fms.FMS
+	FSxConn                          *fsx.FSx
 	FinSpaceConn                     *finspace.Finspace
 	FinSpaceDataConn                 *finspacedata.FinSpaceData
 	FirehoseConn                     *firehose.Firehose
-	FISConn                          *fis.FIS
-	FMSConn                          *fms.FMS
 	ForecastConn                     *forecastservice.ForecastService
 	ForecastQueryConn                *forecastqueryservice.ForecastQueryService
 	FraudDetectorConn                *frauddetector.FraudDetector
-	FSxConn                          *fsx.FSx
 	GameLiftConn                     *gamelift.GameLift
 	GlacierConn                      *glacier.Glacier
 	GlobalAcceleratorConn            *globalaccelerator.GlobalAccelerator
@@ -451,6 +451,7 @@ type AWSClient struct {
 	HealthLakeConn                   *healthlake.HealthLake
 	HoneycodeConn                    *honeycode.Honeycode
 	IAMConn                          *iam.IAM
+	IVSConn                          *ivs.IVS
 	IdentityStoreConn                *identitystore.IdentityStore
 	ImageBuilderConn                 *imagebuilder.Imagebuilder
 	InspectorConn                    *inspector.Inspector
@@ -470,7 +471,7 @@ type AWSClient struct {
 	IoTThingsGraphConn               *iotthingsgraph.IoTThingsGraph
 	IoTTwinMakerConn                 *iottwinmaker.IoTTwinMaker
 	IoTWirelessConn                  *iotwireless.IoTWireless
-	IVSConn                          *ivs.IVS
+	KMSConn                          *kms.KMS
 	KafkaConn                        *kafka.Kafka
 	KafkaConnectConn                 *kafkaconnect.KafkaConnect
 	KendraConn                       *kendra.Kendra
@@ -482,7 +483,6 @@ type AWSClient struct {
 	KinesisVideoArchivedMediaConn    *kinesisvideoarchivedmedia.KinesisVideoArchivedMedia
 	KinesisVideoMediaConn            *kinesisvideomedia.KinesisVideoMedia
 	KinesisVideoSignalingConn        *kinesisvideosignalingchannels.KinesisVideoSignalingChannels
-	KMSConn                          *kms.KMS
 	LakeFormationConn                *lakeformation.LakeFormation
 	LambdaConn                       *lambda.Lambda
 	LexModelsConn                    *lexmodelbuildingservice.LexModelBuildingService
@@ -495,6 +495,9 @@ type AWSClient struct {
 	LookoutEquipmentConn             *lookoutequipment.LookoutEquipment
 	LookoutMetricsConn               *lookoutmetrics.LookoutMetrics
 	LookoutVisionConn                *lookoutforvision.LookoutForVision
+	MQConn                           *mq.MQ
+	MTurkConn                        *mturk.MTurk
+	MWAAConn                         *mwaa.MWAA
 	MachineLearningConn              *machinelearning.MachineLearning
 	MacieConn                        *macie.Macie
 	Macie2Conn                       *macie2.Macie2
@@ -519,9 +522,6 @@ type AWSClient struct {
 	MigrationHubStrategyConn         *migrationhubstrategyrecommendations.MigrationHubStrategyRecommendations
 	MobileConn                       *mobile.Mobile
 	MobileAnalyticsConn              *mobileanalytics.MobileAnalytics
-	MQConn                           *mq.MQ
-	MTurkConn                        *mturk.MTurk
-	MWAAConn                         *mwaa.MWAA
 	NeptuneConn                      *neptune.Neptune
 	NetworkFirewallConn              *networkfirewall.NetworkFirewall
 	NetworkManagerConn               *networkmanager.NetworkManager
@@ -531,11 +531,11 @@ type AWSClient struct {
 	OpsWorksCMConn                   *opsworkscm.OpsWorksCM
 	OrganizationsConn                *organizations.Organizations
 	OutpostsConn                     *outposts.Outposts
+	PIConn                           *pi.PI
 	PanoramaConn                     *panorama.Panorama
 	PersonalizeConn                  *personalize.Personalize
 	PersonalizeEventsConn            *personalizeevents.PersonalizeEvents
 	PersonalizeRuntimeConn           *personalizeruntime.PersonalizeRuntime
-	PIConn                           *pi.PI
 	PinpointConn                     *pinpoint.Pinpoint
 	PinpointEmailConn                *pinpointemail.PinpointEmail
 	PinpointSMSVoiceConn             *pinpointsmsvoice.PinpointSMSVoice
@@ -549,6 +549,7 @@ type AWSClient struct {
 	RBinConn                         *recyclebin.RecycleBin
 	RDSConn                          *rds.RDS
 	RDSDataConn                      *rdsdataservice.RDSDataService
+	RUMConn                          *cloudwatchrum.CloudWatchRUM
 	RedshiftConn                     *redshift.Redshift
 	RedshiftDataConn                 *redshiftdataapiservice.RedshiftDataAPIService
 	RekognitionConn                  *rekognition.Rekognition
@@ -562,10 +563,23 @@ type AWSClient struct {
 	Route53RecoveryControlConfigConn *route53recoverycontrolconfig.Route53RecoveryControlConfig
 	Route53RecoveryReadinessConn     *route53recoveryreadiness.Route53RecoveryReadiness
 	Route53ResolverConn              *route53resolver.Route53Resolver
-	RUMConn                          *cloudwatchrum.CloudWatchRUM
 	S3Conn                           *s3.S3
 	S3ControlConn                    *s3control.S3Control
 	S3OutpostsConn                   *s3outposts.S3Outposts
+	SESConn                          *ses.SES
+	SESV2Conn                        *sesv2.SESV2
+	SFNConn                          *sfn.SFN
+	SMSConn                          *sms.SMS
+	SNSConn                          *sns.SNS
+	SQSConn                          *sqs.SQS
+	SSMConn                          *ssm.SSM
+	SSMContactsConn                  *ssmcontacts.SSMContacts
+	SSMIncidentsConn                 *ssmincidents.SSMIncidents
+	SSOConn                          *sso.SSO
+	SSOAdminConn                     *ssoadmin.SSOAdmin
+	SSOOIDCConn                      *ssooidc.SSOOIDC
+	STSConn                          *sts.STS
+	SWFConn                          *swf.SWF
 	SageMakerConn                    *sagemaker.SageMaker
 	SageMakerA2IRuntimeConn          *augmentedairuntime.AugmentedAIRuntime
 	SageMakerEdgeConn                *sagemakeredgemanager.SagemakerEdgeManager
@@ -580,27 +594,13 @@ type AWSClient struct {
 	ServiceCatalogAppRegistryConn    *appregistry.AppRegistry
 	ServiceDiscoveryConn             *servicediscovery.ServiceDiscovery
 	ServiceQuotasConn                *servicequotas.ServiceQuotas
-	SESConn                          *ses.SES
-	SESV2Conn                        *sesv2.SESV2
-	SFNConn                          *sfn.SFN
 	ShieldConn                       *shield.Shield
 	SignerConn                       *signer.Signer
 	SimpleDBConn                     *simpledb.SimpleDB
-	SMSConn                          *sms.SMS
-	SnowballConn                     *snowball.Snowball
 	SnowDeviceManagementConn         *snowdevicemanagement.SnowDeviceManagement
-	SNSConn                          *sns.SNS
-	SQSConn                          *sqs.SQS
-	SSMConn                          *ssm.SSM
-	SSMContactsConn                  *ssmcontacts.SSMContacts
-	SSMIncidentsConn                 *ssmincidents.SSMIncidents
-	SSOConn                          *sso.SSO
-	SSOAdminConn                     *ssoadmin.SSOAdmin
-	SSOOIDCConn                      *ssooidc.SSOOIDC
+	SnowballConn                     *snowball.Snowball
 	StorageGatewayConn               *storagegateway.StorageGateway
-	STSConn                          *sts.STS
 	SupportConn                      *support.Support
-	SWFConn                          *swf.SWF
 	SyntheticsConn                   *synthetics.Synthetics
 	TextractConn                     *textract.Textract
 	TimestreamQueryConn              *timestreamquery.TimestreamQuery
