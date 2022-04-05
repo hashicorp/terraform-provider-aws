@@ -15,8 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAccount_basic(t *testing.T) {
-
+func testAccAccount_basic(t *testing.T) {
 	var account organizations.Account
 
 	orgsEmailDomain, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
@@ -58,8 +57,7 @@ func TestAccAccount_basic(t *testing.T) {
 	})
 }
 
-func TestAccAccount_ParentID(t *testing.T) {
-
+func testAccAccount_ParentID(t *testing.T) {
 	var account organizations.Account
 
 	orgsEmailDomain, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
@@ -104,7 +102,7 @@ func TestAccAccount_ParentID(t *testing.T) {
 	})
 }
 
-func TestAccAccount_Tags(t *testing.T) {
+func testAccAccount_Tags(t *testing.T) {
 	var account organizations.Account
 
 	orgsEmailDomain, ok := os.LookupEnv("TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")

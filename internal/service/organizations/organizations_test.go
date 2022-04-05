@@ -16,9 +16,9 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"DataSource":                 testAccOrganizationDataSource_basic,
 		},
 		"Account": {
-			"basic":    TestAccAccount_basic,
-			"ParentId": TestAccAccount_ParentID,
-			"Tags":     TestAccAccount_Tags,
+			"basic":    testAccAccount_basic,
+			"ParentId": testAccAccount_ParentID,
+			"Tags":     testAccAccount_Tags,
 		},
 		"OrganizationalUnit": {
 			"basic":      testAccOrganizationalUnit_basic,
