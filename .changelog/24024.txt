@@ -9,3 +9,7 @@ resource/aws_route: Add `core_network_arn` argument
 ```release-note:enhancement
 data-source/aws_route: Add `core_network_arn` argument
 ```
+
+```release-note:enhancement
+resource/aws_route_table: Add `core_network_arn` argument to the `route` configuration block
+```
