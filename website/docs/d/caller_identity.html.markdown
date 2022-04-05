@@ -1,5 +1,5 @@
 ---
-subcategory: ""
+subcategory: "STS (Security Token)"
 layout: "aws"
 page_title: "AWS: aws_caller_identity"
 description: |-
@@ -9,8 +9,7 @@ description: |-
 
 # Data Source: aws_caller_identity
 
-Use this data source to get the access to the effective Account ID, User ID, and ARN in
-which Terraform is authorized.
+Use this data source to access the effective Account ID, User ID, and ARN in which Terraform is authorized.
 
 ## Example Usage
 
