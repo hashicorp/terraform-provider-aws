@@ -69,19 +69,25 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).XRayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	name := d.Get("group_name").(string)
 	input := &xray.CreateGroupInput{
-		GroupName:             aws.String(d.Get("group_name").(string)),
-		FilterExpression:      aws.String(d.Get("filter_expression").(string)),
-		InsightsConfiguration: expandInsightsConfig(d.Get("insights_configuration").([]interface{})),
-		Tags:                  Tags(tags.IgnoreAWS()),
+		GroupName:        aws.String(name),
+		FilterExpression: aws.String(d.Get("filter_expression").(string)),
+		Tags:             Tags(tags.IgnoreAWS()),
 	}
 
-	out, err := conn.CreateGroup(input)
+	if v, ok := d.GetOk("insights_configuration"); ok {
+		input.InsightsConfiguration = expandInsightsConfig(v.([]interface{}))
+	}
+
+	output, err := conn.CreateGroup(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating XRay Group: %w", err)
+		return fmt.Errorf("error creating XRay Group (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(out.Group.GroupARN))
+	d.SetId(aws.StringValue(output.Group.GroupARN))
 
 	return resourceGroupRead(d, meta)
 }
@@ -97,12 +103,13 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	group, err := conn.GetGroup(input)
 
+	if tfawserr.ErrMessageContains(err, xray.ErrCodeInvalidRequestException, "Group not found") {
+		log.Printf("[WARN] XRay Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, xray.ErrCodeInvalidRequestException, "Group not found") {
-			log.Printf("[WARN] XRay Group (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
 		return fmt.Errorf("error reading XRay Group (%s): %w", d.Id(), err)
 	}
 
@@ -110,12 +117,12 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	d.Set("group_name", group.Group.GroupName)
 	d.Set("filter_expression", group.Group.FilterExpression)
-
-	if config := flattenInsightsConfig(group.Group.InsightsConfiguration); config != nil {
-		d.Set("insights_configuration", config)
+	if err := d.Set("insights_configuration", flattenInsightsConfig(group.Group.InsightsConfiguration)); err != nil {
+		return fmt.Errorf("error setting insights_configuration: %w", err)
 	}
 
 	tags, err := ListTags(conn, arn)
+
 	if err != nil {
 		return fmt.Errorf("error listing tags for Xray Group (%q): %s", d.Id(), err)
 	}
@@ -143,11 +150,13 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		if v, ok := d.GetOk("filter_expression"); ok {
 			input.FilterExpression = aws.String(v.(string))
 		}
+
 		if v, ok := d.GetOk("insights_configuration"); ok {
 			input.InsightsConfiguration = expandInsightsConfig(v.([]interface{}))
 		}
 
 		_, err := conn.UpdateGroup(input)
+
 		if err != nil {
 			return fmt.Errorf("error updating XRay Group (%s): %w", d.Id(), err)
 		}
@@ -155,6 +164,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
+
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
@@ -167,11 +177,10 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).XRayConn
 
 	log.Printf("[INFO] Deleting XRay Group: %s", d.Id())
-
-	params := &xray.DeleteGroupInput{
+	_, err := conn.DeleteGroup(&xray.DeleteGroupInput{
 		GroupARN: aws.String(d.Id()),
-	}
-	_, err := conn.DeleteGroup(params)
+	})
+
 	if err != nil {
 		return fmt.Errorf("error deleting XRay Group (%s): %w", d.Id(), err)
 	}
