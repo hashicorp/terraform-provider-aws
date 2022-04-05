@@ -857,28 +857,10 @@ into Terraform.
 
   To add the AWS Go SDK service client:
 
-    - Determine the service identifier using the rule described in [the Naming Guide](./naming.md#service-identifier). Examples of service identifiers include `ec2`, `pi`, `rbin`, `rum`, `s3`, and `servicecatalogappregistry`.
-    - In `names/names_data.csv`, add a new line for the service following the guidance in the [`names` README](../../names/README.md).    
-    - In `names/names.go`, add a constant for the service, in alphabetical order. The constant name is the same as the service identifier except it is properly capitalized using Go mixed-case. The constant value is the service identifier. For example, `SavingsPlans = "savingsplans"`, `SageMakerA2IRuntime = "sagemakera2iruntime"`, and `SSMContacts = "ssmcontacts"`.
-    - In `internal/conns/conns.go`: Add a new import for the AWS Go SDK code. _E.g._,
-    `github.com/aws/aws-sdk-go/service/quicksight`
-    - In `internal/conns/conns.go`: Add a new client connection field to the `AWSClient` struct in alphabetical order:
-        1. The field's name is `{ServiceName}Conn`, where `{ServiceName}` is the same as the ProviderPackageBoth column in `names/names_data.csv` and the constant name (see above). _E.g._, if we were adding the RUM service, the constant name is `RUM` and the `ProviderPackageBoth` column is `RUM` so the field name is `RUMConn`.
-        2. The field's type is a pointer to the service's client type in the AWS SDK for Go v1. _E.g._, if we were adding SES, the new field would be this type: `SESConn *ses.SES`.
-    - In `internal/conns/conns.go`: Assign a new instance of the service client to the client connection field in the `client` variable definition. _E.g._, for DynamoDB, the instance assignment line looks like this: `DynamoDBConn: dynamodb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[DynamoDB])})),`.
+    - Determine the service identifier using the rule described in [the Naming Guide](./naming.md#service-identifier).
+    - In `names/names_data.csv`, add a new line for the service following the guidance in the [`names` README](../../names/README.md). **_Be very careful when adding or changing data in `names_data.csv`! The Provider and many generators depend on the file being correct._**
+    - Run `make gen`. This will add the service to various files.
 
-    - In `website/allowed-subcategories.txt`: Add a name acceptable for the documentation navigation.
-    - In `website/docs/guides/custom-service-endpoints.html.md`: Add the service
-    name in the list of customizable endpoints.
-    - In `infrastructure/repository/labels-service.tf`: Add the new service to create a repository label.
-    - In `.github/labeler-issue-triage.yml`: Add the new service to automated issue labeling. E.g., with the `quicksight` service
-
-  ```yaml
-  # ... other services ...
-  service/quicksight:
-    - '((\*|-) ?`?|(data|resource) "?)aws_quicksight_'
-  # ... other services ...
-  ```
 
     - In `.github/labeler-pr-triage.yml`: Add the new service to automated pull request labeling. E.g., with the `quicksight` service
 
