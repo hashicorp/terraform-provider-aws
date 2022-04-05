@@ -98,89 +98,59 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	// Create the account
-	createOpts := &organizations.CreateAccountInput{
-		AccountName: aws.String(d.Get("name").(string)),
+	name := d.Get("name").(string)
+	input := &organizations.CreateAccountInput{
+		AccountName: aws.String(name),
 		Email:       aws.String(d.Get("email").(string)),
 	}
 
-	if role, ok := d.GetOk("role_name"); ok {
-		createOpts.RoleName = aws.String(role.(string))
+	if v, ok := d.GetOk("iam_user_access_to_billing"); ok {
+		input.IamUserAccessToBilling = aws.String(v.(string))
 	}
 
-	if iam_user, ok := d.GetOk("iam_user_access_to_billing"); ok {
-		createOpts.IamUserAccessToBilling = aws.String(iam_user.(string))
+	if v, ok := d.GetOk("role_name"); ok {
+		input.RoleName = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
-		createOpts.Tags = Tags(tags.IgnoreAWS())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating AWS Organizations Account: %s", createOpts)
-
-	var resp *organizations.CreateAccountOutput
-	err := resource.Retry(4*time.Minute, func() *resource.RetryError {
-		var err error
-
-		resp, err = conn.CreateAccount(createOpts)
-
-		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeFinalizingOrganizationException) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateAccount(createOpts)
-	}
+	log.Printf("[DEBUG] Creating AWS Organizations Account: %s", input)
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(4*time.Minute,
+		func() (interface{}, error) {
+			return conn.CreateAccount(input)
+		},
+		organizations.ErrCodeFinalizingOrganizationException,
+	)
 
 	if err != nil {
-		return fmt.Errorf("Error creating account: %w", err)
+		return fmt.Errorf("error creating AWS Organizations Account (%s): %w", name, err)
 	}
 
-	requestId := aws.StringValue(resp.CreateAccountStatus.Id)
+	output, err := waitAccountCreated(conn, aws.StringValue(outputRaw.(*organizations.CreateAccountOutput).CreateAccountStatus.Id))
 
-	// Wait for the account to become available
-	log.Printf("[DEBUG] Waiting for account request (%s) to succeed", requestId)
-
-	stateConf := &resource.StateChangeConf{
-		Pending:      []string{organizations.CreateAccountStateInProgress},
-		Target:       []string{organizations.CreateAccountStateSucceeded},
-		Refresh:      resourceAccountStateRefreshFunc(conn, requestId),
-		PollInterval: 10 * time.Second,
-		Timeout:      5 * time.Minute,
-	}
-	stateResp, stateErr := stateConf.WaitForState()
-	if stateErr != nil {
-		return fmt.Errorf(
-			"Error waiting for account request (%s) to become available: %w",
-			requestId, stateErr)
+	if err != nil {
+		return fmt.Errorf("error waiting for AWS Organizations Account (%s) create: %w", name, err)
 	}
 
-	// Store the ID
-	accountId := stateResp.(*organizations.CreateAccountStatus).AccountId
-	d.SetId(aws.StringValue(accountId))
+	d.SetId(aws.StringValue(output.AccountId))
 
 	if v, ok := d.GetOk("parent_id"); ok {
-		newParentID := v.(string)
-
-		existingParentID, err := findParentAccountID(conn, d.Id())
+		oldParentAccountID, err := findParentAccountID(conn, d.Id())
 
 		if err != nil {
-			return fmt.Errorf("error getting AWS Organizations Account (%s) parent: %w", d.Id(), err)
+			return fmt.Errorf("error reading AWS Organizations Account (%s) parent: %w", d.Id(), err)
 		}
 
-		if newParentID != existingParentID {
+		if newParentAccountID := v.(string); newParentAccountID != oldParentAccountID {
 			input := &organizations.MoveAccountInput{
-				AccountId:           accountId,
-				SourceParentId:      aws.String(existingParentID),
-				DestinationParentId: aws.String(newParentID),
+				AccountId:           aws.String(d.Id()),
+				DestinationParentId: aws.String(newParentAccountID),
+				SourceParentId:      aws.String(oldParentAccountID),
 			}
 
+			log.Printf("[DEBUG] Moving AWS Organizations Account: %s", input)
 			if _, err := conn.MoveAccount(input); err != nil {
 				return fmt.Errorf("error moving AWS Organizations Account (%s): %w", d.Id(), err)
 			}
@@ -295,35 +265,29 @@ func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// resourceAccountStateRefreshFunc returns a resource.StateRefreshFunc
-// that is used to watch a CreateAccount request
-func resourceAccountStateRefreshFunc(conn *organizations.Organizations, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		opts := &organizations.DescribeCreateAccountStatusInput{
-			CreateAccountRequestId: aws.String(id),
-		}
-		resp, err := conn.DescribeCreateAccountStatus(opts)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, organizations.ErrCodeCreateAccountStatusNotFoundException) {
-				resp = nil
-			} else {
-				log.Printf("Error on OrganizationAccountStateRefresh: %s", err)
-				return nil, "", err
-			}
-		}
-
-		if resp == nil {
-			// Sometimes AWS just has consistency issues and doesn't see
-			// our account yet. Return an empty state.
-			return nil, "", nil
-		}
-
-		accountStatus := resp.CreateAccountStatus
-		if aws.StringValue(accountStatus.State) == organizations.CreateAccountStateFailed {
-			return nil, aws.StringValue(accountStatus.State), errors.New(aws.StringValue(accountStatus.FailureReason))
-		}
-		return accountStatus, aws.StringValue(accountStatus.State), nil
+func findCreateAccountStatusByID(conn *organizations.Organizations, id string) (*organizations.CreateAccountStatus, error) {
+	input := &organizations.DescribeCreateAccountStatusInput{
+		CreateAccountRequestId: aws.String(id),
 	}
+
+	output, err := conn.DescribeCreateAccountStatus(input)
+
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeCreateAccountStatusNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.CreateAccountStatus == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.CreateAccountStatus, nil
 }
 
 func findParentAccountID(conn *organizations.Organizations, id string) (string, error) {
@@ -353,4 +317,42 @@ func findParentAccountID(conn *organizations.Organizations, id string) (string, 
 	}
 
 	return aws.StringValue(output[0].Id), nil
+}
+
+func statusCreateAccountState(conn *organizations.Organizations, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findCreateAccountStatusByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func waitAccountCreated(conn *organizations.Organizations, id string) (*organizations.CreateAccountStatus, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:      []string{organizations.CreateAccountStateInProgress},
+		Target:       []string{organizations.CreateAccountStateSucceeded},
+		Refresh:      statusCreateAccountState(conn, id),
+		PollInterval: 10 * time.Second,
+		Timeout:      5 * time.Minute,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*organizations.CreateAccountStatus); ok {
+		if state := aws.StringValue(output.State); state == organizations.CreateAccountStateFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }
