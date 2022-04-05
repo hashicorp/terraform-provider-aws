@@ -9,6 +9,7 @@ import (
 	"go/format"
 	"log"
 	"os"
+	"sort"
 	"text/template"
 )
 
@@ -28,22 +29,32 @@ const (
 	// column indices of CSV
 	//awsCLIV2Command         = 0
 	//awsCLIV2CommandNoDashes = 1
+	//goV1Package             = 2
+	//goV2Package             = 3
 	//providerPackageActual   = 4
 	//providerPackageCorrect  = 5
-	//aliases                 = 8
-	//goV1ClientName          = 9
-	//humanFriendly           = 10
-	//brand                   = 11
-	//note                    = 12
-	//deprecatedEnvVar        = 14
-	//envVar                  = 15
-	goV1Package         = 2
-	goV2Package         = 3
-	providerPackageBoth = 6
-	providerNameUpper   = 7
-	exclude             = 13
-	sdkVersion          = 16
-	skipClientGenerate  = 17
+	//aliases                 = 6
+	//providerNameUpper       = 7
+	//goV1ClientName          = 8
+	//skipClientGenerate      = 9
+	//sdkVersion              = 10
+	//resourcePrefixActual    = 11
+	//resourcePrefixCorrect   = 12
+	//humanFriendly           = 13
+	//brand                   = 14
+	//exclude                 = 15
+	//allowedSubcategory      = 16
+	//deprecatedEnvVar        = 17
+	//envVar                  = 18
+	//note                    = 19
+	goV1Package            = 2
+	goV2Package            = 3
+	providerPackageActual  = 4
+	providerPackageCorrect = 5
+	providerNameUpper      = 7
+	skipClientGenerate     = 9
+	sdkVersion             = 10
+	exclude                = 15
 )
 
 func main() {
@@ -64,25 +75,35 @@ func main() {
 	td := TemplateData{}
 
 	for i, l := range data {
-		if i > 0 { // no header
-			if l[exclude] != "" || l[skipClientGenerate] != "" || l[providerPackageBoth] == "" {
-				continue
-			}
-
-			s := ServiceDatum{
-				ProviderNameUpper: l[providerNameUpper],
-				SDKVersion:        l[sdkVersion],
-			}
-
-			if l[sdkVersion] == "1" {
-				s.GoPackage = l[goV1Package]
-			} else {
-				s.GoPackage = l[goV2Package]
-			}
-
-			td.Services = append(td.Services, s)
+		if i < 1 { // no header
+			continue
 		}
+
+		if l[exclude] != "" || l[skipClientGenerate] != "" {
+			continue
+		}
+
+		if l[providerPackageActual] == "" && l[providerPackageCorrect] == "" {
+			continue
+		}
+
+		s := ServiceDatum{
+			ProviderNameUpper: l[providerNameUpper],
+			SDKVersion:        l[sdkVersion],
+		}
+
+		if l[sdkVersion] == "1" {
+			s.GoPackage = l[goV1Package]
+		} else {
+			s.GoPackage = l[goV2Package]
+		}
+
+		td.Services = append(td.Services, s)
 	}
+
+	sort.SliceStable(td.Services, func(i, j int) bool {
+		return td.Services[i].ProviderNameUpper < td.Services[j].ProviderNameUpper
+	})
 
 	writeTemplate(tmpl, "awsclient", td)
 }
