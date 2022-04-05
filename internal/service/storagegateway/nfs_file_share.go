@@ -200,6 +200,11 @@ func ResourceNFSFileShare() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"vpc_endpoint_dns_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -247,6 +252,10 @@ func resourceNFSFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 
 	if v, ok := d.GetOk("file_share_name"); ok {
 		input.FileShareName = aws.String(v.(string))
+	}
+	
+	if v, ok := d.GetOk("vpc_endpoint_dns_name"); ok {
+		input.VPCEndpointDNSName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("cache_attributes"); ok {
@@ -312,6 +321,7 @@ func resourceNFSFileShareRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("kms_key_arn", fileshare.KMSKey)
 	d.Set("location_arn", fileshare.LocationARN)
 	d.Set("file_share_name", fileshare.FileShareName)
+	d.Set("vpc_endpoint_dns_name", fileshare.VPCEndpointDNSName)
 
 	if err := d.Set("nfs_file_share_defaults", flattenStorageGatewayNfsFileShareDefaults(fileshare.NFSFileShareDefaults)); err != nil {
 		return fmt.Errorf("error setting nfs_file_share_defaults: %w", err)
