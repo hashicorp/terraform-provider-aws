@@ -9,6 +9,7 @@ import (
 	"go/format"
 	"log"
 	"os"
+	"sort"
 	"text/template"
 )
 
@@ -31,16 +32,24 @@ const (
 	//goV2Package             = 3
 	//providerPackageActual   = 4
 	//providerPackageCorrect  = 5
-	//aliases                 = 8
-	//goV1ClientName          = 9
-	//humanFriendly           = 10
-	//brand                   = 11
-	//note                    = 12
-	//deprecatedEnvVar        = 14
-	//envVar                  = 15
-	providerPackageBoth = 6
-	providerNameUpper   = 7
-	exclude             = 13
+	//aliases                 = 6
+	//providerNameUpper       = 7
+	//goV1ClientName          = 8
+	//skipClientGenerate      = 9
+	//sdkVersion              = 10
+	//resourcePrefixActual    = 11
+	//resourcePrefixCorrect   = 12
+	//humanFriendly           = 13
+	//brand                   = 14
+	//exclude                 = 15
+	//allowedSubcategory      = 16
+	//deprecatedEnvVar        = 17
+	//envVar                  = 18
+	//note                    = 19
+	providerPackageActual  = 4
+	providerPackageCorrect = 5
+	providerNameUpper      = 7
+	exclude                = 15
 )
 
 func main() {
@@ -61,17 +70,33 @@ func main() {
 	td := TemplateData{}
 
 	for i, l := range data {
-		if i > 0 { // no header
-			if l[exclude] != "" || l[providerPackageBoth] == "" {
-				continue
-			}
-
-			td.Services = append(td.Services, ServiceDatum{
-				ProviderNameUpper: l[providerNameUpper],
-				ProviderPackage:   l[providerPackageBoth],
-			})
+		if i < 1 { // no header
+			continue
 		}
+
+		if l[exclude] != "" {
+			continue
+		}
+
+		if l[providerPackageActual] == "" && l[providerPackageCorrect] == "" {
+			continue
+		}
+
+		p := l[providerPackageCorrect]
+
+		if l[providerPackageActual] != "" {
+			p = l[providerPackageActual]
+		}
+
+		td.Services = append(td.Services, ServiceDatum{
+			ProviderNameUpper: l[providerNameUpper],
+			ProviderPackage:   p,
+		})
 	}
+
+	sort.SliceStable(td.Services, func(i, j int) bool {
+		return td.Services[i].ProviderNameUpper < td.Services[j].ProviderNameUpper
+	})
 
 	writeTemplate(tmpl, "consts", td)
 }
