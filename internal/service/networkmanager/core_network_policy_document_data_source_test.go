@@ -31,7 +31,21 @@ func TestAccCoreNetworkPolicyDocumentDataSource_basic(t *testing.T) {
 }
 
 var testAccPolicyDocumentConfig = `
-data "aws_networkmanager_core_network_policy_document" "test" {
+data "aws_networkmanager_core_network_policy_document" test {
+
+  core_network_configuration {
+      vpn_ecmp_support = true
+      asn_ranges = ["64512-64555"]
+      edge_locations {
+          location = "us-east-1"
+          asn = 64512
+      }
+      edge_locations {
+          location = "eu-central-1"
+          asn = 64513
+      }
+  }
+
   segments {
     name = "test"
   }
@@ -39,12 +53,61 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     name = "test2"
     require_attachment_acceptance = true
   }
-}
-`
+
+  attachment_policies {
+    rule_number = 100
+    condition_logic = "or"
+
+    conditions {
+      type = "tag-value"
+      operator = "equals"
+      key = "segment"
+      value = "prod"
+    }
+    conditions {
+      type = "any"
+    }
+    conditions {
+      type = "attachment-type"
+      operator = "equals"
+      value = "prod"
+    }
+    action {
+      association_method = "constant"
+      segment = "prod"
+    }
+  }
+}`
 
 func testAccPolicyDocumentExpectedJSON() string {
 	return fmt.Sprint(`{
   "Version": "2021.12",
+  "AttachmentPolicies": [
+    {
+      "RuleNumber": 100,
+      "Action": {
+        "AssociationMethod": "constant",
+        "Segment": "prod"
+      },
+      "Conditions": [
+        {
+          "Type": "tag-value",
+          "Operator": "equals",
+          "Key": "segment",
+          "Value": "prod"
+        },
+        {
+          "Type": "any"
+        },
+        {
+          "Type": "attachment-type",
+          "Operator": "equals",
+          "Value": "prod"
+        }
+      ],
+      "ConditionLogic": "or"
+    }
+  ],
   "Segments": [
     {
       "Name": "test"
@@ -54,6 +117,19 @@ func testAccPolicyDocumentExpectedJSON() string {
       "RequireAttachmentAcceptance": true
     }
   ],
-  "CoreNetworkConfiguration": null
+  "CoreNetworkConfiguration": {
+    "AsnRanges": "64512-64555",
+    "VpnEcmpSupport": true,
+    "EdgeLocations": [
+      {
+        "Location": "us-east-1",
+        "Asn": 64512
+      },
+      {
+        "Location": "eu-central-1",
+        "Asn": 64513
+      }
+    ]
+  }
 }`)
 }
