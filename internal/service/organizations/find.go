@@ -45,6 +45,13 @@ func FindOrganization(conn *organizations.Organizations) (*organizations.Organiz
 
 	output, err := conn.DescribeOrganization(input)
 
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
