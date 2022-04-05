@@ -757,7 +757,7 @@ func expandEc2ReplaceRouteInput(tfMap map[string]interface{}) *ec2.ReplaceRouteI
 	}
 
 	if v, ok := tfMap["core_network_arn"].(string); ok && v != "" {
-		apiObject.CarrierGatewayId = aws.String(v)
+		apiObject.CoreNetworkArn = aws.String(v)
 	}
 
 	if v, ok := tfMap["egress_only_gateway_id"].(string); ok && v != "" {
