@@ -7,7 +7,7 @@ import (
 func TestAccMacie2_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Account": {
-			"basic":                        TestAccAccount_basic,
+			"basic":                        testAccAccount_basic,
 			"finding_publishing_frequency": testAccAccount_FindingPublishingFrequency,
 			"status":                       testAccAccount_WithStatus,
 			"finding_and_status":           testAccAccount_WithFindingAndStatus,
