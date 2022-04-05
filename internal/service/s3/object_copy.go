@@ -462,7 +462,7 @@ func resourceObjectCopyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		err = DeleteAllObjectVersions(conn, bucket, key, d.Get("force_destroy").(bool), false)
+		_, err = DeleteAllObjectVersions(conn, bucket, key, d.Get("force_destroy").(bool), false)
 	} else {
 		err = deleteS3ObjectVersion(conn, bucket, key, "", false)
 	}
