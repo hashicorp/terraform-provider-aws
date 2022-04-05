@@ -1,3 +1,7 @@
 ```release-note:bug
 resource/aws_route: Ensure that resource ID is set in case of wait-for-creation time out
 ```
+
+```release-note:enhancement
+resource/aws_route: Add `core_network_arn` argument
+```

@@ -23,6 +23,7 @@ var routeValidDestinations = []string{
 
 var routeValidTargets = []string{
 	"carrier_gateway_id",
+	"core_network_arn",
 	"egress_only_gateway_id",
 	"gateway_id",
 	"instance_id",
@@ -90,6 +91,11 @@ func ResourceRoute() *schema.Resource {
 				Optional:      true,
 				ExactlyOneOf:  routeValidTargets,
 				ConflictsWith: []string{"destination_ipv6_cidr_block"}, // IPv4 destinations only.
+			},
+			"core_network_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: routeValidTargets,
 			},
 			"egress_only_gateway_id": {
 				Type:          schema.TypeString,
@@ -203,6 +209,8 @@ func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	switch target := aws.String(target); targetAttributeKey {
 	case "carrier_gateway_id":
 		input.CarrierGatewayId = target
+	case "core_network_arn":
+		input.CoreNetworkArn = target
 	case "egress_only_gateway_id":
 		input.EgressOnlyInternetGatewayId = target
 	case "gateway_id":
@@ -287,6 +295,7 @@ func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("carrier_gateway_id", route.CarrierGatewayId)
+	d.Set("nat_gatcore_network_arneway_id", route.CoreNetworkArn)
 	d.Set("destination_cidr_block", route.DestinationCidrBlock)
 	d.Set("destination_ipv6_cidr_block", route.DestinationIpv6CidrBlock)
 	d.Set("destination_prefix_list_id", route.DestinationPrefixListId)
@@ -351,6 +360,8 @@ func resourceRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 	switch target := aws.String(target); targetAttributeKey {
 	case "carrier_gateway_id":
 		input.CarrierGatewayId = target
+	case "core_network_arn":
+		input.CoreNetworkArn = target
 	case "egress_only_gateway_id":
 		input.EgressOnlyInternetGatewayId = target
 	case "gateway_id":
