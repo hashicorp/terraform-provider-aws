@@ -295,7 +295,7 @@ func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("carrier_gateway_id", route.CarrierGatewayId)
-	d.Set("nat_gatcore_network_arneway_id", route.CoreNetworkArn)
+	d.Set("core_network_arn", route.CoreNetworkArn)
 	d.Set("destination_cidr_block", route.DestinationCidrBlock)
 	d.Set("destination_ipv6_cidr_block", route.DestinationIpv6CidrBlock)
 	d.Set("destination_prefix_list_id", route.DestinationPrefixListId)
