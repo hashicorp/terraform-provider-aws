@@ -33,7 +33,6 @@ func DataSourceRoute() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-
 			"destination_prefix_list_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -44,6 +43,11 @@ func DataSourceRoute() *schema.Resource {
 			// Targets.
 			//
 			"carrier_gateway_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"core_network_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -132,6 +136,10 @@ func dataSourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 			continue
 		}
 
+		if v, ok := d.GetOk("core_network_arn"); ok && aws.StringValue(r.CoreNetworkArn) != v.(string) {
+			continue
+		}
+
 		if v, ok := d.GetOk("egress_only_gateway_id"); ok && aws.StringValue(r.EgressOnlyInternetGatewayId) != v.(string) {
 			continue
 		}
@@ -186,6 +194,7 @@ func dataSourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("carrier_gateway_id", route.CarrierGatewayId)
+	d.Set("core_network_arn", route.CoreNetworkArn)
 	d.Set("destination_cidr_block", route.DestinationCidrBlock)
 	d.Set("destination_ipv6_cidr_block", route.DestinationIpv6CidrBlock)
 	d.Set("destination_prefix_list_id", route.DestinationPrefixListId)

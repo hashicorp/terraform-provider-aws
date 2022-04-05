@@ -5,3 +5,7 @@ resource/aws_route: Ensure that resource ID is set in case of wait-for-creation 
 ```release-note:enhancement
 resource/aws_route: Add `core_network_arn` argument
 ```
+
+```release-note:enhancement
+data-source/aws_route: Add `core_network_arn` argument
+```
