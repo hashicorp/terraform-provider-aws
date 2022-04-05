@@ -59,7 +59,6 @@ func ResourceSpotFleetRequest() *schema.Resource {
 			"wait_for_fulfillment": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: false,
 				Default:  false,
 			},
 			// http://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-SpotFleetLaunchSpecification
@@ -407,7 +406,6 @@ func ResourceSpotFleetRequest() *schema.Resource {
 			"target_capacity": {
 				Type:     schema.TypeInt,
 				Required: true,
-				ForceNew: false,
 			},
 			"allocation_strategy": {
 				Type:         schema.TypeString,
@@ -427,7 +425,6 @@ func ResourceSpotFleetRequest() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Default",
-				ForceNew: false,
 				ValidateFunc: validation.StringInSlice([]string{
 					"Default",
 					"NoTermination",
