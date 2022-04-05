@@ -17,3 +17,7 @@ resource/aws_route_table: Add `core_network_arn` argument to the `route` configu
 ```release-note:enhancement
 data-source/aws_route_table: Add 'routes.core_network_arn' attribute'
 ```
+
+```release-note:enhancement
+resource/aws_default_route_table: Add `core_network_arn` argument to the `route` configuration block
+```
