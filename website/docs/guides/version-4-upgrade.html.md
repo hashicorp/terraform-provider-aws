@@ -323,7 +323,7 @@ resource "aws_s3_bucket_cors_configuration" "example" {
 Depending on the tools available to you, the above configuration can either be directly applied with Terraform or the standalone resource
 can be imported into Terraform state. Please refer to each standalone resource's _Import_ documentation for the proper syntax.
 
-Once the standalone resource(s) are managed by Terraform, updates/removal can be performed as needed.
+Once the standalone resources are managed by Terraform, updates and removal can be performed as needed.
 
 The following sections depict standalone resource adoption per individual parameter. Standalone resource adoption is not required to upgrade but is recommended to ensure drift is detected by Terraform.
 The examples below are by no means exhaustive. The aim is to provide important concepts when migrating to a standalone resource whose parameters may not entirely align with the corresponding parameter in the `aws_s3_bucket` resource.
@@ -889,7 +889,7 @@ resource "aws_s3_bucket" "example" {
       "Principal": {
         "AWS": "${data.aws_elb_service_account.current.arn}"
       },
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::example/*",
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::yournamehere/*",
       "Sid": "Stmt1446575236270"
     }
   ],
@@ -920,7 +920,7 @@ resource "aws_s3_bucket_policy" "example" {
       "Principal": {
         "AWS": "${data.aws_elb_service_account.current.arn}"
       },
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::example/*",
+      "Resource": "${aws_s3_bucket.example.arn}/*",
       "Sid": "Stmt1446575236270"
     }
   ],
@@ -2193,7 +2193,7 @@ resource "aws_s3_bucket" "example" {
       "Principal": {
         "AWS": "${data.aws_elb_service_account.current.arn}"
       },
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::example/*",
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::yournamehere/*",
       "Sid": "Stmt1446575236270"
     }
   ],
@@ -2237,7 +2237,7 @@ resource "aws_s3_bucket_policy" "example" {
       "Principal": {
         "AWS": "${data.aws_elb_service_account.current.arn}"
       },
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::example/*",
+      "Resource": "${aws_s3_bucket.example.arn}/*",
       "Sid": "Stmt1446575236270"
     }
   ],
