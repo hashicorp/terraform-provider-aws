@@ -49,22 +49,22 @@ func ResourceFunctionUrl() *schema.Resource {
 							Optional: true,
 						},
 						"allow_headers": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"allow_methods": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"allow_origins": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"expose_headers": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -108,43 +108,45 @@ func ResourceFunctionUrl() *schema.Resource {
 func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
-	params := &lambda.CreateFunctionUrlConfigInput{
-		FunctionName: aws.String(d.Get("function_name").(string)),
+	name := d.Get("function_name").(string)
+	input := &lambda.CreateFunctionUrlConfigInput{
 		AuthType:     aws.String(d.Get("authorization_type").(string)),
-	}
-
-	if v, ok := d.GetOk("qualifier"); ok {
-		params.Qualifier = aws.String(v.(string))
+		FunctionName: aws.String(name),
 	}
 
 	if v, ok := d.GetOk("cors"); ok && len(v.([]interface{})) > 0 {
-		params.Cors = expandFunctionUrlCorsConfigs(v.([]interface{}))
+		input.Cors = expandFunctionUrlCorsConfigs(v.([]interface{}))
 	}
 
-	output, err := conn.CreateFunctionUrlConfig(params)
+	if v, ok := d.GetOk("qualifier"); ok {
+		input.Qualifier = aws.String(v.(string))
+	}
+
+	log.Printf("[DEBUG] Creating Lambda Function URL: %s", input)
+	output, err := conn.CreateFunctionUrlConfigWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("Error creating Lambda function url: %s", err)
-	}
-	log.Printf("[DEBUG] Creating Lambda Function Url Config Output: %s", output)
-
-	if d.Get("authorization_type").(string) == lambda.FunctionUrlAuthTypeNone {
-		permissionParams := &lambda.AddPermissionInput{
-			Action:              aws.String("lambda:InvokeFunctionUrl"),
-			FunctionName:        aws.String(d.Get("function_name").(string)),
-			Principal:           aws.String("*"),
-			FunctionUrlAuthType: aws.String(lambda.FunctionUrlAuthTypeNone),
-			StatementId:         aws.String("FunctionURLAllowPublicAccess"),
-		}
-		permissionOutput, permissionErr := conn.AddPermission(permissionParams)
-
-		if permissionErr != nil {
-			return diag.Errorf("Error adding permission for Lambda function url: %s", permissionErr)
-		}
-		log.Printf("[DEBUG] Add permission for Lambda Function Url Output: %s", permissionOutput)
+		return diag.Errorf("error creating Lambda Function URL (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.FunctionArn))
+
+	if v := d.Get("authorization_type").(string); v == lambda.FunctionUrlAuthTypeNone {
+		input := &lambda.AddPermissionInput{
+			Action:              aws.String("lambda:InvokeFunctionUrl"),
+			FunctionName:        aws.String(d.Get("function_name").(string)),
+			FunctionUrlAuthType: aws.String(v),
+			Principal:           aws.String("*"),
+			StatementId:         aws.String("FunctionURLAllowPublicAccess"),
+		}
+
+		log.Printf("[DEBUG] Adding Lambda Permission: %s", input)
+		_, err := conn.AddPermissionWithContext(ctx, input)
+
+		if err != nil {
+			return diag.Errorf("error adding Lambda Function URL (%s) permission %s", d.Id(), err)
+		}
+	}
 
 	return resourceFunctionURLRead(ctx, d, meta)
 }
