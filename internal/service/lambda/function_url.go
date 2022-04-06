@@ -187,28 +187,27 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta i
 func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
-	log.Printf("[DEBUG] Updating Lambda Function Url: %s", d.Id())
-
-	params := &lambda.UpdateFunctionUrlConfigInput{
+	input := &lambda.UpdateFunctionUrlConfigInput{
 		FunctionName: aws.String(d.Get("function_name").(string)),
 	}
 
-	if v, ok := d.GetOk("qualifier"); ok {
-		params.Qualifier = aws.String(v.(string))
-	}
-
 	if d.HasChange("authorization_type") {
-		params.AuthType = aws.String(d.Get("authorization_type").(string))
+		input.AuthType = aws.String(d.Get("authorization_type").(string))
 	}
 
 	if d.HasChange("cors") {
-		params.Cors = expandFunctionUrlCorsConfigs(d.Get("cors").([]interface{}))
+		input.Cors = expandFunctionUrlCorsConfigs(d.Get("cors").([]interface{}))
 	}
 
-	_, err := conn.UpdateFunctionUrlConfig(params)
+	if v, ok := d.GetOk("qualifier"); ok {
+		input.Qualifier = aws.String(v.(string))
+	}
+
+	log.Printf("[DEBUG] Updating Lambda Function URL: %s", input)
+	_, err := conn.UpdateFunctionUrlConfigWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error updating Lambda Function Url (%s): %s", d.Id(), err)
+		return diag.Errorf("error updating Lambda Function URL (%s): %s", d.Id(), err)
 	}
 
 	return resourceFunctionURLRead(ctx, d, meta)
