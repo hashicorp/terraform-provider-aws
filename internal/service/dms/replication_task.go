@@ -223,6 +223,7 @@ func resourceReplicationTaskRead(d *schema.ResourceData, meta interface{}) error
 
 func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
+	status := d.Get("status").(string)
 
 	if d.HasChangesExcept("tags", "tags_all", "start_replication_task") {
 		input := &dms.ModifyReplicationTaskInput{
@@ -253,7 +254,6 @@ func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) err
 			input.TableMappings = aws.String(d.Get("table_mappings").(string))
 		}
 
-		status := d.Get("status").(string)
 		if status == replicationTaskStatusRunning {
 			log.Println("[DEBUG] stopping DMS replication task:", input)
 			if err := stopReplicationTask(d.Id(), conn); err != nil {
@@ -270,12 +270,30 @@ func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) err
 		if err := waitReplicationTaskModified(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for DMS Replication Task (%s) update: %s", d.Id(), err)
 		}
+
+		if d.Get("start_replication_task").(bool) {
+			err := startReplicationTask(d.Id(), conn)
+			if err != nil {
+				return err
+			} else {
+				status = replicationTaskStatusRunning
+			}
+		}
 	}
 
-	if d.Get("start_replication_task").(bool) {
-		log.Println("[INFO] starting DMS replication task:", d.Id())
-		if err := startReplicationTask(d.Id(), conn); err != nil {
-			return err
+	if d.HasChanges("start_replication_task") {
+		if d.Get("start_replication_task").(bool) {
+			if status != replicationTaskStatusRunning {
+				if err := startReplicationTask(d.Id(), conn); err != nil {
+					return err
+				}
+			}
+		} else {
+			if status == replicationTaskStatusRunning {
+				if err := stopReplicationTask(d.Id(), conn); err != nil {
+					return err
+				}
+			}
 		}
 	}
 

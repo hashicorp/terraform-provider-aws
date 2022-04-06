@@ -2,6 +2,7 @@ package dms_test
 
 import (
 	"fmt"
+	// "strings"
 	"testing"
 
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
@@ -115,6 +116,13 @@ func TestAccDMSReplicationTask_startReplicationTask(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"start_replication_task"},
 			},
+			// {
+			// 	Config: strings.Replace(dmsReplicationTaskConfigStartReplicationTask(rName, true), "%%", "default", 1),
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		testAccCheckReplicationTaskExists(resourceName),
+			// 		resource.TestCheckResourceAttr(resourceName, "status", "running"),
+			// 	),
+			// },
 			{
 				Config: dmsReplicationTaskConfigStartReplicationTask(rName, false),
 				Check: resource.ComposeTestCheckFunc(
@@ -351,16 +359,41 @@ resource "aws_db_subnet_group" "test" {
   }
 }
 
+resource "aws_rds_cluster_parameter_group" "test" {
+  name        = "%[1]s-pg-cluster"
+  family      = "aurora-mysql5.7"
+  description = "DMS cluster parameter group"
+
+  parameter {
+    name  = "binlog_format"
+    value = "ROW"
+		apply_method = "pending-reboot"
+  }
+
+  parameter {
+    name  = "binlog_row_image"
+    value = "Full"
+		apply_method = "pending-reboot"
+  }
+
+  parameter {
+    name  = "binlog_checksum"
+    value = "NONE"
+		apply_method = "pending-reboot"
+  }
+}
+
 resource "aws_rds_cluster" "test1" {
-  cluster_identifier     = "%[1]s-aurora-cluster-source"
-  engine                 = "aurora-mysql"
-  engine_version         = "5.7.mysql_aurora.2.03.2"
-  database_name          = "tftest"
-  master_username        = "tftest"
-  master_password        = "mustbeeightcharaters"
-  skip_final_snapshot    = true
-  vpc_security_group_ids = [aws_default_security_group.test.id]
-  db_subnet_group_name   = aws_db_subnet_group.test.name
+  cluster_identifier              = "%[1]s-aurora-cluster-source"
+  engine                          = "aurora-mysql"
+  engine_version                  = "5.7.mysql_aurora.2.03.2"
+  database_name                   = "tftest"
+  master_username                 = "tftest"
+  master_password                 = "mustbeeightcharaters"
+  skip_final_snapshot             = true
+  vpc_security_group_ids          = [aws_default_security_group.test.id]
+  db_subnet_group_name            = aws_db_subnet_group.test.name
+	db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.test.name
 }
 
 resource "aws_rds_cluster_instance" "test1" {
