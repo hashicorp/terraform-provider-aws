@@ -36,20 +36,34 @@ func ResourceNFSFileShare() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"audit_destination_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"bucket_region": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				RequiredWith: []string{"vpc_endpoint_dns_name"},
+			},
+			"cache_attributes": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cache_stale_timeout_in_seconds": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(300, 2592000),
+						},
+					},
+				},
 			},
 			"client_list": {
 				Type:     schema.TypeSet,
@@ -78,6 +92,12 @@ func ResourceNFSFileShare() *schema.Resource {
 			"fileshare_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"file_share_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			"gateway_arn": {
 				Type:         schema.TypeString,
@@ -139,19 +159,14 @@ func ResourceNFSFileShare() *schema.Resource {
 					},
 				},
 			},
-			"cache_attributes": {
-				Type:     schema.TypeList,
+			"notification_policy": {
+				Type:     schema.TypeString,
 				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cache_stale_timeout_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(300, 2592000),
-						},
-					},
-				},
+				Default:  "{}",
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`^\{[\w\s:\{\}\[\]"]*}$`), ""),
+					validation.StringLenBetween(2, 100),
+				),
 			},
 			"object_acl": {
 				Type:         schema.TypeString,
@@ -188,21 +203,6 @@ func ResourceNFSFileShare() *schema.Resource {
 					"NoSquash",
 					"RootSquash",
 				}, false),
-			},
-			"file_share_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"notification_policy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "{}",
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexp.MustCompile(`^\{[\w\s:\{\}\[\]"]*}$`), ""),
-					validation.StringLenBetween(2, 100),
-				),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
