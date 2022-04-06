@@ -114,17 +114,11 @@ func ResourceGateway() *schema.Resource {
 				),
 			},
 			"gateway_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "STORED",
-				ValidateFunc: validation.StringInSlice([]string{
-					"CACHED",
-					"FILE_FSX_SMB",
-					"FILE_S3",
-					"STORED",
-					"VTL",
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      gatewayTypeStored,
+				ValidateFunc: validation.StringInSlice(gatewayType_Values(), false),
 			},
 			"gateway_vpc_endpoint": {
 				Type:     schema.TypeString,
@@ -136,14 +130,10 @@ func ResourceGateway() *schema.Resource {
 				Computed: true,
 			},
 			"medium_changer_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"AWS-Gateway-VTL",
-					"STK-L700",
-					"IBM-03584L32-0402",
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(mediumChangerType_Values(), false),
 			},
 			"smb_active_directory_settings": {
 				Type:     schema.TypeList,
@@ -227,12 +217,10 @@ func ResourceGateway() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"tape_drive_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"IBM-ULT3580-TD5",
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(tapeDriveType_Values(), false),
 			},
 		},
 

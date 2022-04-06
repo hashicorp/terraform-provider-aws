@@ -31,6 +31,40 @@ func defaultStorageClass_Values() []string {
 }
 
 const (
+	gatewayTypeCached     = "CACHED"
+	gatewayTypeFileFSXSMB = "FILE_FSX_SMB"
+	gatewayTypeFileS3     = "FILE_S3"
+	gatewayTypeStored     = "STORED"
+	gatewayTypeVTL        = "VTL"
+	gatewayTypeVTLSnow    = "VTL_SNOW"
+)
+
+func gatewayType_Values() []string {
+	return []string{
+		gatewayTypeCached,
+		gatewayTypeFileFSXSMB,
+		gatewayTypeFileS3,
+		gatewayTypeStored,
+		gatewayTypeVTL,
+		gatewayTypeVTLSnow,
+	}
+}
+
+const (
+	mediumChangerTypeAWS_Gateway_VTL   = "AWS-Gateway-VTL"
+	mediumChangerTypeIBM_03584L32_0402 = "IBM-03584L32-0402"
+	mediumChangerTypeSTK_L700          = "STK-L700"
+)
+
+func mediumChangerType_Values() []string {
+	return []string{
+		mediumChangerTypeAWS_Gateway_VTL,
+		mediumChangerTypeIBM_03584L32_0402,
+		mediumChangerTypeSTK_L700,
+	}
+}
+
+const (
 	squashAllSquash  = "AllSquash"
 	squashNoSquash   = "NoSquash"
 	squashRootSquash = "RootSquash"
@@ -41,6 +75,16 @@ func squash_Values() []string {
 		squashAllSquash,
 		squashNoSquash,
 		squashRootSquash,
+	}
+}
+
+const (
+	tapeDriveTypeIBM_ULT3580_TD5 = "IBM-ULT3580-TD5"
+)
+
+func tapeDriveType_Values() []string {
+	return []string{
+		tapeDriveTypeIBM_ULT3580_TD5,
 	}
 }
 
