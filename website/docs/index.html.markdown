@@ -317,7 +317,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `skip_region_validation` - (Optional) Whether to skip validating the region. Useful for AWS-like implementations that use their own region names or to bypass the validation for regions that aren't publicly available yet.
 * `skip_requesting_account_id` - (Optional) Whether to skip requesting the account ID.  Useful for AWS API implementations that do not have the IAM, STS API, or metadata API.  When set to `true` and not determined previously, returns an empty account ID when manually constructing ARN attributes with the following:
     - [`aws_api_gateway_deployment` resource](/docs/providers/aws/r/api_gateway_deployment.html)
-    - [`aws_api_gateway_rest_api` resource](/docs/providers/aws/r/api_gateway_rest_api.html)
+    - [`aws_api_gateway_rest_api` resource](/docs/providers/aws/r/apigateway_rest_api.html)
     - [`aws_api_gateway_stage` resource](/docs/providers/aws/r/api_gateway_stage.html)
     - [`aws_apigatewayv2_api` data source](/docs/providers/aws/d/apigatewayv2_api.html)
     - [`aws_apigatewayv2_api` resource](/docs/providers/aws/r/apigatewayv2_api.html)
@@ -369,8 +369,8 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
     - [`aws_efs_mount_target` resource](/docs/providers/aws/r/efs_mount_target.html)
     - [`aws_elasticache_cluster` data source](/docs/providers/aws/d/elasticache_cluster.html)
     - [`aws_elasticache_cluster` resource](/docs/providers/aws/r/elasticache_cluster.html)
-    - [`aws_elb` data source](/docs/providers/aws/d/elb.html)
-    - [`aws_elb` resource](/docs/providers/aws/r/elb.html)
+    - [`aws_elb` data source](/docs/providers/aws/d/elb_elb.html)
+    - [`aws_elb` resource](/docs/providers/aws/r/elb_elb.html)
     - [`aws_flow_log` resource](/docs/providers/aws/r/flow_log.html)
     - [`aws_glue_catalog_database` resource](/docs/providers/aws/r/glue_catalog_database.html)
     - [`aws_glue_catalog_table` resource](/docs/providers/aws/r/glue_catalog_table.html)

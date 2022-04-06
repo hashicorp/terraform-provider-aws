@@ -49,4 +49,4 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-See the [LB Listener Resource](/docs/providers/aws/r/lb_listener.html) for details on the returned attributes - they are identical.
+See the [LB Listener Resource](/docs/providers/aws/r/elbv2_lb_listener.html) for details on the returned attributes - they are identical.

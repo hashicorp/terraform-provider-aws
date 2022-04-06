@@ -3564,7 +3564,7 @@ it is important to keep in the mind the following AWS Provider resources will ev
 be compatible with EC2-Classic as AWS completes their EC2-Classic networking retirement (expected around August 15, 2022).
 
 * Running or stopped [EC2 instances](/docs/providers/aws/r/instance.html)
-* Running or stopped [RDS database instances](/docs/providers/aws/r/db_instance.html)
+* Running or stopped [RDS database instances](/docs/providers/aws/r/rds_db_instance.html)
 * [Elastic IP addresses](/docs/providers/aws/r/eip.html)
 * [Classic Load Balancers](/docs/providers/aws/r/lb.html)
 * [Redshift clusters](/docs/providers/aws/r/redshift_cluster.html)

@@ -31,7 +31,7 @@ resource "aws_default_subnet" "default_az1" {
 
 ## Argument Reference
 
-The arguments of an `aws_default_subnet` differ slightly from those of [`aws_subnet`](subnet.html):
+The arguments of an `aws_default_subnet` differ slightly from those of [`aws_subnet`](vpc_subnet.html):
 
 * `availability_zone` is required
 * The `availability_zone_id`, `cidr_block` and `vpc_id` arguments become computed attributes

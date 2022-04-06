@@ -34,7 +34,7 @@ resource "aws_default_vpc" "default" {
 
 ## Argument Reference
 
-The arguments of an `aws_default_vpc` differ slightly from those of [`aws_vpc`](vpc.html):
+The arguments of an `aws_default_vpc` differ slightly from those of [`aws_vpc`](vpc_vpc.html):
 
 * The `cidr_block` and `instance_tenancy` arguments become computed attributes
 * The default value for `enable_dns_hostnames` is `true`

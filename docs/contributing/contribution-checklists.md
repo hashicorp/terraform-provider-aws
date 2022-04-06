@@ -858,24 +858,12 @@ into Terraform.
   To add the AWS Go SDK service client:
 
     - Determine the service identifier using the rule described in [the Naming Guide](./naming.md#service-identifier).
-    - In `names/names_data.csv`, add a new line for the service following the guidance in the [`names` README](../../names/README.md). **_Be very careful when adding or changing data in `names_data.csv`! The Provider and many generators depend on the file being correct._**
-    - Run `make gen`. This will add the service to various files.
-
-
-    - In `.github/labeler-pr-triage.yml`: Add the new service to automated pull request labeling. E.g., with the `quicksight` service
-
-  ```yaml
-  # ... other services ...
-  service/quicksight:
-    - 'internal/service/quicksight/**/*'
-    - '**/*_quicksight_*'
-    - '**/quicksight_*'
-  # ... other services ...
-  ```
+    - In `names/names_data.csv`, add a new line with all the requested data for the service following the guidance in the [`names` README](../../names/README.md). **_Be very careful when adding or changing data in `names_data.csv`! The Provider and many generators depend on the file being correct._**
 
     - Run the following then submit the pull request:
 
   ```sh
+  make gen
   make test
   go mod tidy
   ```

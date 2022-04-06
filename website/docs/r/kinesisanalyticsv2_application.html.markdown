@@ -11,7 +11,7 @@ description: |-
 Manages a Kinesis Analytics v2 Application.
 This resource can be used to manage both Kinesis Data Analytics for SQL applications and Kinesis Data Analytics for Apache Flink applications.
 
--> **Note:** Kinesis Data Analytics for SQL applications created using this resource cannot currently be viewed in the AWS Console. To manage Kinesis Data Analytics for SQL applications that can also be viewed in the AWS Console, use the [`aws_kinesis_analytics_application`](/docs/providers/aws/r/kinesis_analytics_application.html) resource.
+-> **Note:** Kinesis Data Analytics for SQL applications created using this resource cannot currently be viewed in the AWS Console. To manage Kinesis Data Analytics for SQL applications that can also be viewed in the AWS Console, use the [`aws_kinesis_analytics_application`](/docs/providers/aws/r/kinesisanalytics_application.html) resource.
 
 ## Example Usage
 
@@ -259,7 +259,7 @@ The following arguments are supported:
 * `runtime_environment` - (Required) The runtime environment for the application. Valid values: `SQL-1_0`, `FLINK-1_6`, `FLINK-1_8`, `FLINK-1_11`, `FLINK-1_13`.
 * `service_execution_role` - (Required) The ARN of the [IAM role](/docs/providers/aws/r/iam_role.html) used by the application to access Kinesis data streams, Kinesis Data Firehose delivery streams, Amazon S3 objects, and other external resources.
 * `application_configuration` - (Optional) The application's configuration
-* `cloudwatch_logging_options` - (Optional) A [CloudWatch log stream](/docs/providers/aws/r/cloudwatch_log_stream.html) to monitor application configuration errors.
+* `cloudwatch_logging_options` - (Optional) A [CloudWatch log stream](/docs/providers/aws/r/logs_stream.html) to monitor application configuration errors.
 * `description` - (Optional) A summary description of the application.
 * `force_stop` - (Optional) Whether to force stop an unresponsive Flink-based application.
 * `start_application` - (Optional) Whether to start or stop the application.
@@ -361,7 +361,7 @@ The `input` object supports the following:
 * `input_processing_configuration` - (Optional) The input processing configuration for the input.
 An input processor transforms records as they are received from the stream, before the application's SQL code executes.
 * `input_starting_position_configuration` (Optional) The point at which the application starts processing records from the streaming source.
-* `kinesis_firehose_input` - (Optional) If the streaming source is a [Kinesis Data Firehose delivery stream](/docs/providers/aws/r/kinesis_firehose_delivery_stream.html), identifies the delivery stream's ARN.
+* `kinesis_firehose_input` - (Optional) If the streaming source is a [Kinesis Data Firehose delivery stream](/docs/providers/aws/r/firehose_delivery_stream.html), identifies the delivery stream's ARN.
 * `kinesis_streams_input` - (Optional) If the streaming source is a [Kinesis data stream](/docs/providers/aws/r/kinesis_stream.html), identifies the stream's Amazon Resource Name (ARN).
 
 The `input_parallelism` object supports the following:
@@ -425,7 +425,7 @@ The `output` object supports the following:
 
 * `destination_schema` - (Required) Describes the data format when records are written to the destination.
 * `name` - (Required) The name of the in-application stream.
-* `kinesis_firehose_output` - (Optional) Identifies a [Kinesis Data Firehose delivery stream](/docs/providers/aws/r/kinesis_firehose_delivery_stream.html) as the destination.
+* `kinesis_firehose_output` - (Optional) Identifies a [Kinesis Data Firehose delivery stream](/docs/providers/aws/r/firehose_delivery_stream.html) as the destination.
 * `kinesis_streams_output` - (Optional) Identifies a [Kinesis data stream](/docs/providers/aws/r/kinesis_stream.html) as the destination.
 * `lambda_output` - (Optional) Identifies a [Lambda function](/docs/providers/aws/r/lambda_function.html) as the destination.
 
@@ -464,8 +464,8 @@ The `s3_reference_data_source` object supports the following:
 
 The `vpc_configuration` object supports the following:
 
-* `security_group_ids` - (Required) The [Security Group](/docs/providers/aws/r/security_group.html) IDs used by the VPC configuration.
-* `subnet_ids` - (Required) The [Subnet](/docs/providers/aws/r/subnet.html) IDs used by the VPC configuration.
+* `security_group_ids` - (Required) The [Security Group](/docs/providers/aws/r/vpc_security_group.html) IDs used by the VPC configuration.
+* `subnet_ids` - (Required) The [Subnet](/docs/providers/aws/r/vpc_subnet.html) IDs used by the VPC configuration.
 
 The `cloudwatch_logging_options` object supports the following:
 

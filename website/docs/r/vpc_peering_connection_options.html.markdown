@@ -154,7 +154,7 @@ the peering connection (a maximum of one).
 
 -> **Note:** When enabled, the DNS resolution feature requires that VPCs participating in the peering
 must have support for the DNS hostnames enabled. This can be done using the [`enable_dns_hostnames`]
-(vpc.html#enable_dns_hostnames) attribute in the [`aws_vpc`](vpc.html) resource. See [Using DNS with Your VPC]
+(vpc_vpc.html#enable_dns_hostnames) attribute in the [`aws_vpc`](vpc_vpc.html) resource. See [Using DNS with Your VPC]
 (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-dns.html) user guide for more information.
 
 * `allow_remote_vpc_dns_resolution` - (Optional) Allow a local VPC to resolve public DNS hostnames to

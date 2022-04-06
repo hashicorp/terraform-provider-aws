@@ -29,9 +29,9 @@ The following arguments are supported:
 * `api_id` - (Required) The API identifier.
 * `name` - (Required) The name of the stage. Must be between 1 and 128 characters in length.
 * `access_log_settings` - (Optional) Settings for logging access in this stage.
-Use the [`aws_api_gateway_account`](/docs/providers/aws/r/api_gateway_account.html) resource to configure [permissions for CloudWatch Logging](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html#set-up-access-logging-permissions).
+Use the [`aws_api_gateway_account`](/docs/providers/aws/r/apigateway_account.html) resource to configure [permissions for CloudWatch Logging](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html#set-up-access-logging-permissions).
 * `auto_deploy` - (Optional) Whether updates to an API automatically trigger a new deployment. Defaults to `false`. Applicable for HTTP APIs.
-* `client_certificate_id` - (Optional) The identifier of a client certificate for the stage. Use the [`aws_api_gateway_client_certificate`](/docs/providers/aws/r/api_gateway_client_certificate.html) resource to configure a client certificate.
+* `client_certificate_id` - (Optional) The identifier of a client certificate for the stage. Use the [`aws_api_gateway_client_certificate`](/docs/providers/aws/r/apigateway_client_certificate.html) resource to configure a client certificate.
 Supported only for WebSocket APIs.
 * `default_route_settings` - (Optional) The default route settings for the stage.
 * `deployment_id` - (Optional) The deployment identifier of the stage. Use the [`aws_apigatewayv2_deployment`](/docs/providers/aws/r/apigatewayv2_deployment.html) resource to configure a deployment.

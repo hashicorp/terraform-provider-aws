@@ -37,5 +37,5 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-See the [ELB Resource](/docs/providers/aws/r/elb.html) for details on the
+See the [ELB Resource](/docs/providers/aws/r/elb_elb.html) for details on the
 returned attributes - they are identical.

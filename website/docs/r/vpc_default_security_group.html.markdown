@@ -18,7 +18,7 @@ When Terraform first adopts the default security group, it **immediately removes
 
 This resource treats its inline rules as absolute; only the rules defined inline are created, and any additions/removals external to this resource will result in diff shown. For these reasons, this resource is incompatible with the `aws_security_group_rule` resource.
 
-For more information about default security groups, see the AWS documentation on [Default Security Groups][aws-default-security-groups]. To manage normal security groups, see the [`aws_security_group`](/docs/providers/aws/r/security_group.html) resource.
+For more information about default security groups, see the AWS documentation on [Default Security Groups][aws-default-security-groups]. To manage normal security groups, see the [`aws_security_group`](/docs/providers/aws/r/vpc_security_group.html) resource.
 
 ## Example Usage
 

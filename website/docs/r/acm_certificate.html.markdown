@@ -24,7 +24,7 @@ Domain validation through email is also supported but should be avoided as it re
 of Terraform.
 
 It's recommended to specify `create_before_destroy = true` in a [lifecycle][1] block to replace a certificate
-which is currently in use (eg, by [`aws_lb_listener`](lb_listener.html)).
+which is currently in use (eg, by [`aws_lb_listener`](elbv2_lb_listener.html)).
 
 ## Example Usage
 
