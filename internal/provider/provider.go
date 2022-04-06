@@ -1703,6 +1703,7 @@ func Provider() *schema.Provider {
 			"aws_db_snapshot":                               rds.ResourceSnapshot(),
 			"aws_db_subnet_group":                           rds.ResourceSubnetGroup(),
 			"aws_rds_cluster":                               rds.ResourceCluster(),
+			"aws_rds_cluster_activity_stream":               rds.ResourceClusterActivityStream(),
 			"aws_rds_cluster_endpoint":                      rds.ResourceClusterEndpoint(),
 			"aws_rds_cluster_instance":                      rds.ResourceClusterInstance(),
 			"aws_rds_cluster_parameter_group":               rds.ResourceClusterParameterGroup(),
