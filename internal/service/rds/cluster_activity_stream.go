@@ -21,7 +21,7 @@ func ResourceClusterActivityStream() *schema.Resource {
 		ReadContext:   resourceAwsRDSClusterActivityStreamRead,
 		DeleteContext: resourceAwsRDSClusterActivityStreamDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -92,26 +92,16 @@ func resourceAwsRDSClusterActivityStreamRead(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	log.Printf("[DEBUG] Finding DB Cluster (%s)", d.Id())
-	resp, err := FindDBClusterByClusterArn(conn, d.Id())
+	resp, err := FindDBClusterWithActivityStream(conn, d.Id())
 
-	if err != nil {
-		if tfresource.NotFound(err) {
-			log.Printf("[WARN] RDS Cluster (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-
-		return diag.FromErr(fmt.Errorf("error describing RDS Cluster (%s): %s", d.Id(), err))
-	}
-
-	if resp == nil {
-		return diag.FromErr(fmt.Errorf("error retrieving RDS cluster: empty response for: %s", d.Id()))
-	}
-
-	if aws.StringValue(resp.ActivityStreamStatus) == rds.ActivityStreamStatusStopped {
-		log.Printf("[WARN] RDS Cluster (%s) Activity Stream already stopped, removing from state", d.Id())
+	if tfresource.NotFound(err) {
+		log.Printf("[WARN] RDS Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error describing RDS Cluster (%s): %s", d.Id(), err))
 	}
 
 	d.Set("resource_arn", resp.DBClusterArn)
@@ -134,7 +124,7 @@ func resourceAwsRDSClusterActivityStreamDelete(ctx context.Context, d *schema.Re
 
 	resp, err := conn.StopActivityStream(stopActivityStreamInput)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error stopping RDS Cluster Activity Stream: %s", err))
+		return diag.FromErr(fmt.Errorf("error stopping RDS Cluster Activity Stream: %w", err))
 	}
 
 	log.Printf("[DEBUG] RDS Cluster stop activity stream response: %s", resp)

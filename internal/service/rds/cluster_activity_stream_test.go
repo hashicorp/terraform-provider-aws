@@ -94,12 +94,9 @@ func testAccCheckAWSRDSClusterActivityStreamExistsWithProvider(resourceName stri
 
 		conn := provider.Meta().(*conns.AWSClient).RDSConn
 
-		response, err := tfrds.FindDBClusterByClusterArn(conn, rs.Primary.ID)
+		response, err := tfrds.FindDBClusterWithActivityStream(conn, rs.Primary.ID)
 
 		if err != nil {
-			if tfresource.NotFound(err) {
-				return fmt.Errorf("DBCluster not found")
-			}
 			return err
 		}
 
@@ -149,18 +146,13 @@ func testAccCheckAWSClusterActivityStreamDestroyWithProvider(s *terraform.State,
 
 		var err error
 
-		resp, err := tfrds.FindDBClusterByClusterArn(conn, rs.Primary.ID)
+		_, err = tfrds.FindDBClusterWithActivityStream(conn, rs.Primary.ID)
 		if err != nil {
 			// Return nil if the cluster is already destroyed
 			if tfresource.NotFound(err) {
 				return nil
 			}
 			return err
-		}
-
-		if *resp.ActivityStreamStatus != rds.ActivityStreamStatusStopped {
-			return fmt.Errorf("DB Cluster %s Activity Stream still exists with status %s when status %s is expected",
-				rs.Primary.ID, *resp.ActivityStreamStatus, rds.ActivityStreamStatusStopped)
 		}
 
 		return err

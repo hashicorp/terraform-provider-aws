@@ -233,7 +233,7 @@ func waitActivityStreamStopped(ctx context.Context, conn *rds.RDS, dbClusterArn 
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{rds.ActivityStreamStatusStopping},
-		Target:     []string{rds.ActivityStreamStatusStopped},
+		Target:     []string{},
 		Refresh:    statusDBClusterActivityStream(conn, dbClusterArn),
 		Timeout:    dbClusterActivityStreamStoppedTimeout,
 		MinTimeout: 10 * time.Second,

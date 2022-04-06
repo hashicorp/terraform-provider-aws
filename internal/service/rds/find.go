@@ -120,23 +120,19 @@ func FindDBClusterByID(conn *rds.RDS, id string) (*rds.DBCluster, error) {
 	return dbCluster, nil
 }
 
-func FindDBClusterByClusterArn(conn *rds.RDS, dbClusterArn string) (*rds.DBCluster, error) {
+func FindDBClusterWithActivityStream(conn *rds.RDS, dbClusterArn string) (*rds.DBCluster, error) {
+	log.Printf("[DEBUG] Calling conn.DescribeDBCClusters(input) with DBClusterIdentifier set to %s", dbClusterArn)
 	input := &rds.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(dbClusterArn),
 	}
 
-	log.Printf("[DEBUG] Calling conn.DescribeDBCClusters(input) with DBClusterIdentifier set to %s", dbClusterArn)
 	output, err := conn.DescribeDBClusters(input)
 
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
-			return nil, &resource.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
-		log.Print("[WARN] Error is not nil")
-		return nil, err
 	}
 
 	if output == nil || len(output.DBClusters) == 0 || output.DBClusters[0] == nil {
@@ -149,6 +145,12 @@ func FindDBClusterByClusterArn(conn *rds.RDS, dbClusterArn string) (*rds.DBClust
 	if aws.StringValue(dbCluster.DBClusterArn) != dbClusterArn {
 		return nil, &resource.NotFoundError{
 			LastRequest: input,
+		}
+	}
+
+	if status := aws.StringValue(dbCluster.ActivityStreamStatus); status == rds.ActivityStreamStatusStopped {
+		return nil, &resource.NotFoundError{
+			Message: status,
 		}
 	}
 
