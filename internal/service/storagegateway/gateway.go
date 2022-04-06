@@ -129,6 +129,36 @@ func ResourceGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"maintenance_start_time": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"day_of_week": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 6),
+						},
+						"day_of_month": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(1, 28),
+						},
+						"hour_of_day": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(0, 23),
+						},
+						"minute_of_hour": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 59),
+						},
+					},
+				},
+			},
 			"medium_changer_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -356,6 +386,25 @@ func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if v, ok := d.GetOk("maintenance_start_time"); ok && len(v.([]interface{})) > 0 {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
+
+		input := &storagegateway.UpdateMaintenanceStartTimeInput{
+			DayOfMonth:   aws.Int64(int64(tfMap["day_of_month"].(int))),
+			DayOfWeek:    aws.Int64(int64(tfMap["day_of_week"].(int))),
+			GatewayARN:   aws.String(d.Id()),
+			HourOfDay:    aws.Int64(int64(tfMap["hour_of_day"].(int))),
+			MinuteOfHour: aws.Int64(int64(tfMap["minute_of_hour"].(int))),
+		}
+
+		log.Printf("[DEBUG] Storage Gateway Gateway %q updating maintenance start time", d.Id())
+		_, err := conn.UpdateMaintenanceStartTime(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating maintenance start time: %w", err)
+		}
+	}
+
 	if v, ok := d.GetOk("smb_active_directory_settings"); ok && len(v.([]interface{})) > 0 {
 		input := expandStorageGatewayGatewayDomain(v.([]interface{}), d.Id())
 		log.Printf("[DEBUG] Storage Gateway Gateway %q joining Active Directory domain: %s", d.Id(), aws.StringValue(input.DomainName))
@@ -555,21 +604,44 @@ func resourceGatewayRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting gateway_network_interface: %w", err)
 	}
 
-	bandwidthInput := &storagegateway.DescribeBandwidthRateLimitInput{
+	bandwidthOutput, err := conn.DescribeBandwidthRateLimit(&storagegateway.DescribeBandwidthRateLimitInput{
 		GatewayARN: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Reading Storage Gateway Bandwidth rate limit: %s", bandwidthInput)
-	bandwidthOutput, err := conn.DescribeBandwidthRateLimit(bandwidthInput)
+	})
 	if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified operation is not supported") ||
 		tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "This operation is not valid for the specified gateway") {
-		return nil
+		err = nil
 	}
 	if err != nil {
 		return fmt.Errorf("error reading Storage Gateway Bandwidth rate limit: %w", err)
 	}
-	d.Set("average_download_rate_limit_in_bits_per_sec", bandwidthOutput.AverageDownloadRateLimitInBitsPerSec)
-	d.Set("average_upload_rate_limit_in_bits_per_sec", bandwidthOutput.AverageUploadRateLimitInBitsPerSec)
+	if bandwidthOutput != nil {
+		d.Set("average_download_rate_limit_in_bits_per_sec", bandwidthOutput.AverageDownloadRateLimitInBitsPerSec)
+		d.Set("average_upload_rate_limit_in_bits_per_sec", bandwidthOutput.AverageUploadRateLimitInBitsPerSec)
+	}
+
+	maintenanceStartTimeOutput, err := conn.DescribeMaintenanceStartTime(&storagegateway.DescribeMaintenanceStartTimeInput{
+		GatewayARN: aws.String(d.Id()),
+	})
+	if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified operation is not supported") ||
+		tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "This operation is not valid for the specified gateway") {
+		err = nil
+	}
+	if err != nil {
+		return fmt.Errorf("error reading Storage Gateway maintenance start time: %w", err)
+	}
+	if maintenanceStartTimeOutput != nil {
+		tfMap := map[string]interface{}{
+			"day_of_month":   aws.Int64Value(maintenanceStartTimeOutput.DayOfMonth),
+			"day_of_week":    aws.Int64Value(maintenanceStartTimeOutput.DayOfWeek),
+			"hour_of_day":    aws.Int64Value(maintenanceStartTimeOutput.HourOfDay),
+			"minute_of_hour": aws.Int64Value(maintenanceStartTimeOutput.MinuteOfHour),
+		}
+
+		if err := d.Set("maintenance_start_time", []map[string]interface{}{tfMap}); err != nil {
+			return fmt.Errorf("error setting maintenance_start_time: %w", err)
+		}
+	}
+
 	return nil
 }
 
@@ -589,6 +661,24 @@ func resourceGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if err != nil {
 			return fmt.Errorf("error updating Storage Gateway Gateway (%s): %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("maintenance_start_time") {
+		tfMap := d.Get("maintenance_start_time").([]interface{})[0].(map[string]interface{})
+
+		input := &storagegateway.UpdateMaintenanceStartTimeInput{
+			DayOfMonth:   aws.Int64(int64(tfMap["day_of_month"].(int))),
+			DayOfWeek:    aws.Int64(int64(tfMap["day_of_week"].(int))),
+			GatewayARN:   aws.String(d.Id()),
+			HourOfDay:    aws.Int64(int64(tfMap["hour_of_day"].(int))),
+			MinuteOfHour: aws.Int64(int64(tfMap["minute_of_month"].(int))),
+		}
+
+		_, err := conn.UpdateMaintenanceStartTime(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating Storage Gateway Gateway (%s) maintenance start time: %w", d.Id(), err)
 		}
 	}
 
