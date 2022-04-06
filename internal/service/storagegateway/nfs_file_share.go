@@ -247,7 +247,7 @@ func resourceNFSFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 	if v, ok := d.GetOk("audit_destination_arn"); ok {
 		input.AuditDestinationARN = aws.String(v.(string))
 	}
-	
+
 	if v, ok := d.GetOk("bucket_region"); ok {
 		input.BucketRegion = aws.String(v.(string))
 	}
@@ -263,7 +263,7 @@ func resourceNFSFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 	if v, ok := d.GetOk("file_share_name"); ok {
 		input.FileShareName = aws.String(v.(string))
 	}
-	
+
 	if v, ok := d.GetOk("vpc_endpoint_dns_name"); ok {
 		input.VPCEndpointDNSName = aws.String(v.(string))
 	}
