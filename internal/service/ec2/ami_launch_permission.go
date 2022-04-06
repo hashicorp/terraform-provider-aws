@@ -32,7 +32,7 @@ func ResourceAMILaunchPermission() *schema.Resource {
 					d.Set("arn", arn)
 					d.Set("arn_type", arn_type)
 					d.Set("image_id", imageId)
-					d.SetId(fmt.Sprintf("%s-%s", imageId, arn))
+					d.SetId(fmt.Sprintf("%s,%s,%s", arn, arn_type, imageId))
 				} else {
 					sep := ","
 					if !strings.Contains(d.Id(), sep) {
