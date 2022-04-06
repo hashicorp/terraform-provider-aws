@@ -155,7 +155,7 @@ func resourceReplicationTaskCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if d.Get("start_replication_task").(bool) {
-		if err := startReplicationTask(d.Id(), conn); err != nil {
+		if err := startReplicationTask(d.Id(), conn, replicationTaskStatusReady); err != nil {
 			return err
 		}
 	}
@@ -272,7 +272,7 @@ func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		if d.Get("start_replication_task").(bool) {
-			err := startReplicationTask(d.Id(), conn)
+			err := startReplicationTask(d.Id(), conn, replicationTaskStatusStopped)
 			if err != nil {
 				return err
 			} else {
@@ -284,7 +284,7 @@ func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChanges("start_replication_task") {
 		if d.Get("start_replication_task").(bool) {
 			if status != replicationTaskStatusRunning {
-				if err := startReplicationTask(d.Id(), conn); err != nil {
+				if err := startReplicationTask(d.Id(), conn, status); err != nil {
 					return err
 				}
 			}
@@ -370,7 +370,7 @@ func dmsReplicationTaskRemoveReadOnlySettings(settings string) (*string, error) 
 	return &cleanedSettingsString, nil
 }
 
-func startReplicationTask(id string, conn *dms.DatabaseMigrationService) error {
+func startReplicationTask(id string, conn *dms.DatabaseMigrationService, fromStatus string) error {
 	log.Printf("[DEBUG] Starting DMS Replication Task: (%s)", id)
 
 	task, err := FindReplicationTaskByID(conn, id)
@@ -382,9 +382,14 @@ func startReplicationTask(id string, conn *dms.DatabaseMigrationService) error {
 		return fmt.Errorf("error reading DMS Replication Task (%s): empty output", id)
 	}
 
+	startReplicationTaskType := dms.StartReplicationTaskTypeValueStartReplication
+	if fromStatus != replicationTaskStatusReady {
+		startReplicationTaskType = dms.StartReplicationTaskTypeValueResumeProcessing
+	}
+
 	_, err = conn.StartReplicationTask(&dms.StartReplicationTaskInput{
 		ReplicationTaskArn:       task.ReplicationTaskArn,
-		StartReplicationTaskType: aws.String(dms.StartReplicationTaskTypeValueStartReplication),
+		StartReplicationTaskType: aws.String(startReplicationTaskType),
 	})
 
 	if err != nil {
