@@ -19,10 +19,10 @@ import (
 
 func ResourceFunctionUrl() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceFunctionUrlCreate,
-		ReadWithoutTimeout:   resourceFunctionUrlRead,
-		UpdateWithoutTimeout: resourceFunctionUrlUpdate,
-		DeleteWithoutTimeout: resourceFunctionUrlDelete,
+		CreateWithoutTimeout: resourceFunctionURLCreate,
+		ReadWithoutTimeout:   resourceFunctionURLRead,
+		UpdateWithoutTimeout: resourceFunctionURLUpdate,
+		DeleteWithoutTimeout: resourceFunctionURLDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceFunctionUrlImport,
@@ -105,7 +105,7 @@ func ResourceFunctionUrl() *schema.Resource {
 	}
 }
 
-func resourceFunctionUrlCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	params := &lambda.CreateFunctionUrlConfigInput{
@@ -146,10 +146,10 @@ func resourceFunctionUrlCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.StringValue(output.FunctionArn))
 
-	return resourceFunctionUrlRead(ctx, d, meta)
+	return resourceFunctionURLRead(ctx, d, meta)
 }
 
-func resourceFunctionUrlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	input := &lambda.GetFunctionUrlConfigInput{
@@ -179,7 +179,7 @@ func resourceFunctionUrlRead(ctx context.Context, d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceFunctionUrlUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	log.Printf("[DEBUG] Updating Lambda Function Url: %s", d.Id())
@@ -206,10 +206,10 @@ func resourceFunctionUrlUpdate(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("error updating Lambda Function Url (%s): %s", d.Id(), err)
 	}
 
-	return resourceFunctionUrlRead(ctx, d, meta)
+	return resourceFunctionURLRead(ctx, d, meta)
 }
 
-func resourceFunctionUrlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionURLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	log.Printf("[INFO] Deleting Lambda Function Url: %s", d.Id())
