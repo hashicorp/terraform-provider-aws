@@ -31,12 +31,15 @@ func TestAccStorageGatewayNFSFileShare_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNFSFileShareConfig_Required(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNFSFileShareExists(resourceName, &nfsFileShare),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`share/share-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "bucket_region", ""),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "client_list.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "client_list.*", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "default_storage_class", "S3_STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "file_share_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "fileshare_id", regexp.MustCompile(`^share-`)),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "guess_mime_type_enabled", "true"),
@@ -44,16 +47,15 @@ func TestAccStorageGatewayNFSFileShare_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "location_arn", bucketResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "nfs_file_share_defaults.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "notification_policy", "{}"),
 					resource.TestCheckResourceAttr(resourceName, "object_acl", storagegateway.ObjectACLPrivate),
 					resource.TestMatchResourceAttr(resourceName, "path", regexp.MustCompile(`^/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "read_only", "false"),
 					resource.TestCheckResourceAttr(resourceName, "requester_pays", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "squash", "RootSquash"),
-					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "file_share_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "notification_policy", "{}"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_dns_name", ""),
 				),
 			},
 			{
