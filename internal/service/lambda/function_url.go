@@ -3,7 +3,6 @@ package lambda
 import (
 	"context"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -25,7 +24,11 @@ func ResourceFunctionUrl() *schema.Resource {
 		DeleteWithoutTimeout: resourceFunctionURLDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceFunctionUrlImport,
+			StateContext: func(_ context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("function_name", d.Id())
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -275,17 +278,4 @@ func flattenFunctionUrlCorsConfigs(cors *lambda.Cors) []map[string]interface{} {
 	settings["max_age"] = cors.MaxAge
 
 	return []map[string]interface{}{settings}
-}
-
-func resourceFunctionUrlImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-
-	idSplit := strings.Split(d.Id(), ":")
-
-	functionName := idSplit[len(idSplit)-2]
-	qualifier := idSplit[len(idSplit)-1]
-
-	d.Set("function_name", functionName)
-	d.Set("qualifier", qualifier)
-
-	return []*schema.ResourceData{d}, nil
 }
