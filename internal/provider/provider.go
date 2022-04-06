@@ -701,7 +701,7 @@ func Provider() *schema.Provider {
 
 			"aws_lambda_alias":               lambda.DataSourceAlias(),
 			"aws_lambda_code_signing_config": lambda.DataSourceCodeSigningConfig(),
-			"aws_lambda_function_url":        lambda.DataSourceFunctionUrl(),
+			"aws_lambda_function_url":        lambda.DataSourceFunctionURL(),
 			"aws_lambda_function":            lambda.DataSourceFunction(),
 			"aws_lambda_invocation":          lambda.DataSourceInvocation(),
 			"aws_lambda_layer_version":       lambda.DataSourceLayerVersion(),

@@ -1,28 +1,18 @@
 package lambda
 
 import (
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func DataSourceFunctionUrl() *schema.Resource {
+func DataSourceFunctionURL() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFunctionUrlRead,
+		ReadWithoutTimeout: dataSourceFunctionURLRead,
 
 		Schema: map[string]*schema.Schema{
-			"function_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"qualifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"authorization_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -71,6 +61,10 @@ func DataSourceFunctionUrl() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"function_name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"function_url": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -79,47 +73,39 @@ func DataSourceFunctionUrl() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"qualifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
 
-func dataSourceFunctionUrlRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
-	input := &lambda.GetFunctionUrlConfigInput{
-		FunctionName: aws.String(d.Get("function_name").(string)),
-	}
-
-	if v, ok := d.GetOk("qualifier"); ok {
-		input.Qualifier = aws.String(v.(string))
-	}
-
-	log.Printf("[DEBUG] Getting Lambda Function Url Config: %s", input)
-	output, err := conn.GetFunctionUrlConfig(input)
+	name := d.Get("function_name").(string)
+	qualifier := d.Get("qualifier").(string)
+	id := FunctionURLCreateResourceID(name, qualifier)
+	output, err := FindFunctionURLByNameAndQualifier(ctx, conn, name, qualifier)
 
 	if err != nil {
-		return fmt.Errorf("error getting Lambda Function Url Config: %w", err)
+		return diag.Errorf("error reading Lambda Function URL (%s): %w", id, err)
 	}
 
-	d.SetId(aws.StringValue(output.FunctionArn))
-	if err = d.Set("authorization_type", output.AuthType); err != nil {
-		return err
+	d.SetId(id)
+	d.Set("authorization_type", output.AuthType)
+	if output.Cors != nil {
+		if err := d.Set("cors", []interface{}{flattenCors(output.Cors)}); err != nil {
+			return diag.Errorf("error setting cors: %s", err)
+		}
+	} else {
+		d.Set("cors", nil)
 	}
-	if err = d.Set("cors", flattenFunctionUrlCorsConfigs(output.Cors)); err != nil {
-		return err
-	}
-	if err = d.Set("creation_time", output.CreationTime); err != nil {
-		return err
-	}
-	if err = d.Set("function_arn", output.FunctionArn); err != nil {
-		return err
-	}
-	if err = d.Set("function_url", output.FunctionUrl); err != nil {
-		return err
-	}
-	if err = d.Set("last_modified_time", output.LastModifiedTime); err != nil {
-		return err
-	}
+	d.Set("creation_time", output.CreationTime)
+	d.Set("function_arn", output.FunctionArn)
+	d.Set("function_url", output.FunctionUrl)
+	d.Set("last_modified_time", output.LastModifiedTime)
 
 	return nil
 }

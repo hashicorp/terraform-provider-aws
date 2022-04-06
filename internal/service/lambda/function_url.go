@@ -122,8 +122,8 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Qualifier = aws.String(qualifier)
 	}
 
-	if v, ok := d.GetOk("cors"); ok && len(v.([]interface{})) > 0 {
-		input.Cors = expandFunctionUrlCorsConfigs(v.([]interface{}))
+	if v, ok := d.GetOk("cors"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Cors = expandCors(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating Lambda Function URL: %s", input)
@@ -177,7 +177,13 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("authorization_type", output.AuthType)
-	d.Set("cors", flattenFunctionUrlCorsConfigs(output.Cors))
+	if output.Cors != nil {
+		if err := d.Set("cors", []interface{}{flattenCors(output.Cors)}); err != nil {
+			return diag.Errorf("error setting cors: %s", err)
+		}
+	} else {
+		d.Set("cors", nil)
+	}
 	d.Set("function_arn", output.FunctionArn)
 	d.Set("function_name", name)
 	d.Set("function_url", output.FunctionUrl)
@@ -208,7 +214,9 @@ func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChange("cors") {
-		input.Cors = expandFunctionUrlCorsConfigs(d.Get("cors").([]interface{}))
+		if v, ok := d.GetOk("cors"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.Cors = expandCors(v.([]interface{})[0].(map[string]interface{}))
+		}
 	}
 
 	log.Printf("[DEBUG] Updating Lambda Function URL: %s", input)
@@ -250,47 +258,6 @@ func resourceFunctionURLDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return nil
-}
-
-func expandFunctionUrlCorsConfigs(urlConfigMap []interface{}) *lambda.Cors {
-	cors := &lambda.Cors{}
-	if len(urlConfigMap) == 1 && urlConfigMap[0] != nil {
-		config := urlConfigMap[0].(map[string]interface{})
-		cors.AllowCredentials = aws.Bool(config["allow_credentials"].(bool))
-		if len(config["allow_headers"].([]interface{})) > 0 {
-			cors.AllowHeaders = flex.ExpandStringList(config["allow_headers"].([]interface{}))
-		}
-		if len(config["allow_methods"].([]interface{})) > 0 {
-			cors.AllowMethods = flex.ExpandStringList(config["allow_methods"].([]interface{}))
-		}
-		if len(config["allow_origins"].([]interface{})) > 0 {
-			cors.AllowOrigins = flex.ExpandStringList(config["allow_origins"].([]interface{}))
-		}
-		if len(config["expose_headers"].([]interface{})) > 0 {
-			cors.ExposeHeaders = flex.ExpandStringList(config["expose_headers"].([]interface{}))
-		}
-		if config["max_age"].(int) > 0 {
-			cors.MaxAge = aws.Int64(int64(config["max_age"].(int)))
-		}
-	}
-	return cors
-}
-
-func flattenFunctionUrlCorsConfigs(cors *lambda.Cors) []map[string]interface{} {
-	settings := make(map[string]interface{})
-
-	if cors == nil {
-		return nil
-	}
-
-	settings["allow_credentials"] = cors.AllowCredentials
-	settings["allow_headers"] = cors.AllowHeaders
-	settings["allow_methods"] = cors.AllowMethods
-	settings["allow_origins"] = cors.AllowOrigins
-	settings["expose_headers"] = cors.ExposeHeaders
-	settings["max_age"] = cors.MaxAge
-
-	return []map[string]interface{}{settings}
 }
 
 func FindFunctionURLByNameAndQualifier(ctx context.Context, conn *lambda.Lambda, name, qualifier string) (*lambda.GetFunctionUrlConfigOutput, error) {
@@ -346,4 +313,72 @@ func FunctionURLParseResourceID(id string) (string, string, error) {
 	}
 
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected FUNCTION-NAME%[2]qQUALIFIER or FUNCTION-NAME", id, functionURLResourceIDSeparator)
+}
+
+func expandCors(tfMap map[string]interface{}) *lambda.Cors {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &lambda.Cors{}
+
+	if v, ok := tfMap["allow_credentials"].(bool); ok {
+		apiObject.AllowCredentials = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["allow_headers"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.AllowHeaders = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["allow_methods"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.AllowMethods = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["allow_origins"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.AllowOrigins = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["expose_headers"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.ExposeHeaders = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["max_age"].(int); ok && v != 0 {
+		apiObject.MaxAge = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func flattenCors(apiObject *lambda.Cors) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AllowCredentials; v != nil {
+		tfMap["allow_credentials"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.AllowHeaders; v != nil {
+		tfMap["allow_headers"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.AllowMethods; v != nil {
+		tfMap["allow_methods"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.AllowOrigins; v != nil {
+		tfMap["allow_origins"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.ExposeHeaders; v != nil {
+		tfMap["expose_headers"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.MaxAge; v != nil {
+		tfMap["max_age"] = aws.Int64Value(v)
+	}
+
+	return tfMap
 }
