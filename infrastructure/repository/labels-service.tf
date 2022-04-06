@@ -2,7 +2,6 @@
 
 variable "service_labels" {
   default = [
-    "0",
     "accessanalyzer",
     "account",
     "acm",
