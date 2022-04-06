@@ -3,6 +3,7 @@ package storagegateway_test
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/storagegateway"
@@ -1433,6 +1434,14 @@ resource "aws_storagegateway_gateway" "test" {
 }
 
 func testAccGatewayMaintenanceStartTimeConfig(rName string, hourOfDay, minuteOfHour, dayOfWeek, dayOfMonth int) string {
+	nullOrValue := func(v int) string {
+		if v == 0 {
+			return "null"
+		}
+
+		return strconv.Quote(strconv.Itoa(v))
+	}
+
 	return acctest.ConfigCompose(testAcc_TapeAndVolumeGatewayBase(rName), fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
   gateway_ip_address = aws_instance.test.public_ip
@@ -1443,9 +1452,9 @@ resource "aws_storagegateway_gateway" "test" {
   maintenance_start_time {
     hour_of_day    = %[2]d
     minute_of_hour = %[3]d
-    day_of_week    = %[4]d  
-    day_of_month   = %[5]d  
+    day_of_week    = %[4]s
+    day_of_month   = %[5]s
   }
 }
-`, rName, hourOfDay, minuteOfHour, dayOfWeek, dayOfMonth))
+`, rName, hourOfDay, minuteOfHour, nullOrValue(dayOfWeek), nullOrValue(dayOfMonth)))
 }
