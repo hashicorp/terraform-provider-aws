@@ -2,9 +2,9 @@
 
 Package `names` provides AWS service-name information that is critical to the Terraform AWS Provider working correctly. If you are unsure about a change you are making, please do not hesitate to ask!
 
-**NOTE:** The information in `names_data.csv` affects code working correctly, generators, documentation, website navigation, etc. Please triple-check for correctness before making changes!
+**NOTE:** The information in `names_data.csv` affects the provider, generators, documentation, website navigation, etc. working correctly. _Please do not make any changes until you have fully read the table below._
 
-The core of the `names` package is the `names_data.csv`, which contains raw, comma-separated data about naming in the AWS Provider, AWS Go SDKs v1 and v2, and AWS CLI. The file is dynamically embedded at build time in the AWS Provider. _The information it contains must be correct._ Please double-check any changes.
+The core of the `names` package is `names_data.csv`, which contains raw, comma-separated data about naming in the AWS Provider, AWS Go SDKs v1 and v2, and AWS CLI. The file is dynamically embedded at build time in the AWS Provider and referenced by generators when generating code. _The information it contains must be correct._ Please double-check any changes.
 
 Consumers of `names` include:
 
@@ -12,6 +12,8 @@ Consumers of `names` include:
 * Package `conns` (`internal/conns`)
 * AWS Provider generators
 * `skaff` tool
+
+After any edits to `names_data.csv`, run `make gen`. Doing so regenerates code and performs checks on `names_data.csv`.
 
 The columns of `names_data.csv` are as follows:
 
@@ -33,7 +35,7 @@ The columns of `names_data.csv` are as follows:
 | 13 | **ResourcePrefixCorrect** | Code | Regular expression to match what resource name prefixes _should be_ (_i.e._, `aws_` + **ProviderPackageCorrect** + `_`); used if **ResourcePrefixActual** is blank |
 | 14 | **FilePrefix** | Code | If multiple "services" live in one service, this is the prefix that files must have to be associated with this sub-service (_e.g._, VPC files in the EC2 service are prefixed with `vpc_`); see also **SplitPackageRealPackage** |
 | 15 | **DocPrefix** | Code | Documentation files in `website/docs/r` and `website/docs/d` must have this prefix |
-| 16 | **HumanFriendly** | Code | Human-friendly name of service as used by AWS; documentation `subcategory` must exactly match this value; used in website navigation and error messages |
+| 16 | **HumanFriendly** | Code | [REQUIRED] Human-friendly name of service as used by AWS; documentation `subcategory` must exactly match this value; used in website navigation and error messages |
 | 17 | **Brand** | Code | Either `Amazon`, `AWS`, or blank (rare) as used by AWS; used in error messages |
 | 18 | **Exclude** | Code | Whether or not the service should be included; if included (blank), **ProviderPackageActual** or **ProviderPackageCorrect** must have a value |
 | 19 | **AllowedSubcategory** | Code | If **Exclude** is non-blank, whether to include **HumanFriendly** in `website/allowed-subcategories.txt` anyway. In other words, if non-blank, overrides **Exclude** in some situations. Some excluded pseudo-services (_e.g._, VPC is part of EC2) are still subcategories. Only applies if **Exclude** is non-blank. |
