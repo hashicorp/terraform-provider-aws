@@ -79,15 +79,10 @@ func ResourceNFSFileShare() *schema.Resource {
 				},
 			},
 			"default_storage_class": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "S3_STANDARD",
-				ValidateFunc: validation.StringInSlice([]string{
-					"S3_ONEZONE_IA",
-					"S3_STANDARD_IA",
-					"S3_STANDARD",
-					"S3_INTELLIGENT_TIERING",
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      defaultStorageClassS3Standard,
+				ValidateFunc: validation.StringInSlice(defaultStorageClass_Values(), false),
 			},
 			"fileshare_id": {
 				Type:     schema.TypeString,
@@ -195,14 +190,10 @@ func ResourceNFSFileShare() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"squash": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "RootSquash",
-				ValidateFunc: validation.StringInSlice([]string{
-					"AllSquash",
-					"NoSquash",
-					"RootSquash",
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      squashRootSquash,
+				ValidateFunc: validation.StringInSlice(squash_Values(), false),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -247,7 +238,7 @@ func resourceNFSFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 	if v, ok := d.GetOk("audit_destination_arn"); ok {
 		input.AuditDestinationARN = aws.String(v.(string))
 	}
-	
+
 	if v, ok := d.GetOk("bucket_region"); ok {
 		input.BucketRegion = aws.String(v.(string))
 	}
@@ -263,7 +254,7 @@ func resourceNFSFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 	if v, ok := d.GetOk("file_share_name"); ok {
 		input.FileShareName = aws.String(v.(string))
 	}
-	
+
 	if v, ok := d.GetOk("vpc_endpoint_dns_name"); ok {
 		input.VPCEndpointDNSName = aws.String(v.(string))
 	}

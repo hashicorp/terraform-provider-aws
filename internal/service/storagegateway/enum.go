@@ -31,6 +31,20 @@ func defaultStorageClass_Values() []string {
 }
 
 const (
+	squashAllSquash  = "AllSquash"
+	squashNoSquash   = "NoSquash"
+	squashRootSquash = "RootSquash"
+)
+
+func squash_Values() []string {
+	return []string{
+		squashAllSquash,
+		squashNoSquash,
+		squashRootSquash,
+	}
+}
+
+const (
 	fileShareStatusAvailable     = "AVAILABLE"
 	fileShareStatusCreating      = "CREATING"
 	fileShareStatusDeleting      = "DELETING"
