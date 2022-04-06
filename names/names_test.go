@@ -314,7 +314,7 @@ func TestFullHumanFriendly(t *testing.T) {
 		{
 			TestName: DRS,
 			Input:    DRS,
-			Expected: "AWS Elastic Disaster Recovery (DRS)",
+			Expected: "AWS DRS (Elastic Disaster Recovery)",
 			Error:    false,
 		},
 		{
@@ -328,6 +328,128 @@ func TestFullHumanFriendly(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
 			got, err := FullHumanFriendly(testCase.Input)
+
+			if err != nil && !testCase.Error {
+				t.Errorf("got error (%s), expected no error", err)
+			}
+
+			if err == nil && testCase.Error {
+				t.Errorf("got (%s) and no error, expected error", got)
+			}
+
+			if got != testCase.Expected {
+				t.Errorf("got %s, expected %s", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestAWSGoV1Package(t *testing.T) {
+	testCases := []struct {
+		TestName string
+		Input    string
+		Expected string
+		Error    bool
+	}{
+		{
+			TestName: "empty",
+			Input:    "",
+			Expected: "",
+			Error:    true,
+		},
+		{
+			TestName: "same as AWS",
+			Input:    Translate,
+			Expected: Translate,
+			Error:    false,
+		},
+		{
+			TestName: "different from AWS",
+			Input:    Transcribe,
+			Expected: "transcribeservice",
+			Error:    false,
+		},
+		{
+			TestName: "different from AWS 2",
+			Input:    RBin,
+			Expected: "recyclebin",
+			Error:    false,
+		},
+		{
+			TestName: "doesnotexist",
+			Input:    "doesnotexist",
+			Expected: "",
+			Error:    true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			got, err := AWSGoV1Package(testCase.Input)
+
+			if err != nil && !testCase.Error {
+				t.Errorf("got error (%s), expected no error", err)
+			}
+
+			if err == nil && testCase.Error {
+				t.Errorf("got (%s) and no error, expected error", got)
+			}
+
+			if got != testCase.Expected {
+				t.Errorf("got %s, expected %s", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestAWSGoV1ClientName(t *testing.T) {
+	testCases := []struct {
+		TestName string
+		Input    string
+		Expected string
+		Error    bool
+	}{
+		{
+			TestName: "empty",
+			Input:    "",
+			Expected: "",
+			Error:    true,
+		},
+		{
+			TestName: Elasticsearch,
+			Input:    Elasticsearch,
+			Expected: "ElasticsearchService",
+			Error:    false,
+		},
+		{
+			TestName: CodeDeploy,
+			Input:    CodeDeploy,
+			Expected: "CodeDeploy",
+			Error:    false,
+		},
+		{
+			TestName: RUM,
+			Input:    RUM,
+			Expected: "CloudWatchRUM",
+			Error:    false,
+		},
+		{
+			TestName: CloudControl,
+			Input:    CloudControl,
+			Expected: "CloudControlApi",
+			Error:    false,
+		},
+		{
+			TestName: "doesnotexist",
+			Input:    "doesnotexist",
+			Expected: "",
+			Error:    true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			got, err := AWSGoV1ClientName(testCase.Input)
 
 			if err != nil && !testCase.Error {
 				t.Errorf("got error (%s), expected no error", err)

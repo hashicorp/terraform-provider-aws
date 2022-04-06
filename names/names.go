@@ -60,33 +60,35 @@ const (
 	//goV2Package             = 3
 	//providerPackageActual   = 4
 	//providerPackageCorrect  = 5
-	//aliases                 = 6
-	//providerNameUpper       = 7
-	//goV1ClientName          = 8
-	//skipClientGenerate      = 9
-	//sdkVersion              = 10
-	//resourcePrefixActual    = 11
-	//resourcePrefixCorrect   = 12
-	//substituteDocsPrefixes  = 13
-	//humanFriendly           = 14
-	//brand                   = 15
-	//exclude                 = 16
-	//allowedSubcategory      = 17
-	//deprecatedEnvVar        = 18
-	//envVar                  = 19
-	//note                    = 20
+	//splitPackageRealPackage = 6
+	//aliases                 = 7
+	//providerNameUpper       = 8
+	//goV1ClientName          = 9
+	//skipClientGenerate      = 10
+	//sdkVersion              = 11
+	//resourcePrefixActual    = 12
+	//resourcePrefixCorrect   = 13
+	//filePrefix              = 14
+	//docPrefix               = 15
+	//humanFriendly           = 16
+	//brand                   = 17
+	//exclude                 = 18
+	//allowedSubcategory      = 19
+	//deprecatedEnvVar        = 20
+	//envVar                  = 21
+	//note                    = 22
 	goV1Package            = 2
 	goV2Package            = 3
 	providerPackageActual  = 4
 	providerPackageCorrect = 5
-	aliases                = 6
-	providerNameUpper      = 7
-	goV1ClientName         = 8
-	humanFriendly          = 14
-	brand                  = 15
-	exclude                = 16
-	deprecatedEnvVar       = 18
-	envVar                 = 19
+	aliases                = 7
+	providerNameUpper      = 8
+	goV1ClientName         = 9
+	humanFriendly          = 16
+	brand                  = 17
+	exclude                = 18
+	deprecatedEnvVar       = 20
+	envVar                 = 21
 )
 
 //go:embed names_data.csv
@@ -217,4 +219,20 @@ func FullHumanFriendly(service string) (string, error) {
 	}
 
 	return "", fmt.Errorf("no service data found for %s", service)
+}
+
+func AWSGoV1Package(providerPackage string) (string, error) {
+	if v, ok := serviceData[providerPackage]; ok {
+		return v.GoV1Package, nil
+	}
+
+	return "", fmt.Errorf("getting AWS Go SDK v1 package, %s not found", providerPackage)
+}
+
+func AWSGoV1ClientName(providerPackage string) (string, error) {
+	if v, ok := serviceData[providerPackage]; ok {
+		return v.GoV1ClientName, nil
+	}
+
+	return "", fmt.Errorf("getting AWS Go SDK v1 client name, %s not found", providerPackage)
 }
