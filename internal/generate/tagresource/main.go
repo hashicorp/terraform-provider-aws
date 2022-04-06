@@ -10,8 +10,9 @@ import (
 	"go/format"
 	"log"
 	"os"
-	"strings"
 	"text/template"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 var (
@@ -26,9 +27,9 @@ func usage() {
 }
 
 type TemplateData struct {
-	AWSService      string
-	AWSServiceUpper string
-	ServicePackage  string
+	AWSService        string
+	ProviderNameUpper string
+	ServicePackage    string
 
 	IDAttribName string
 }
@@ -39,23 +40,23 @@ func main() {
 	flag.Parse()
 
 	servicePackage := os.Getenv("GOPACKAGE")
-	awsService, err := awsServiceName(servicePackage)
+	awsService, err := names.AWSGoV1Package(servicePackage)
 
 	if err != nil {
 		log.Fatalf("encountered: %s", err)
 	}
 
-	awsServiceUpper, err := awsServiceNameUpper(servicePackage)
+	u, err := names.ProviderNameUpper(servicePackage)
 
 	if err != nil {
 		log.Fatalf("encountered: %s", err)
 	}
 
 	templateData := TemplateData{
-		AWSService:      awsService,
-		AWSServiceUpper: awsServiceUpper,
-		ServicePackage:  servicePackage,
-		IDAttribName:    *idAttribName,
+		AWSService:        awsService,
+		ProviderNameUpper: u,
+		ServicePackage:    servicePackage,
+		IDAttribName:      *idAttribName,
 	}
 
 	resourceFilename := "tag_gen.go"
@@ -154,7 +155,7 @@ func ResourceTag() *schema.Resource {
 }
 
 func resourceTagCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).{{ .AWSServiceUpper }}Conn
+	conn := meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Conn
 
 	identifier := d.Get("{{ .IDAttribName }}").(string)
 	key := d.Get("key").(string)
@@ -174,7 +175,7 @@ func resourceTagCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTagRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).{{ .AWSServiceUpper }}Conn
+	conn := meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Conn
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
@@ -201,7 +202,7 @@ func resourceTagRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTagUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).{{ .AWSServiceUpper }}Conn
+	conn := meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Conn
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
@@ -216,7 +217,7 @@ func resourceTagUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTagDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).{{ .AWSServiceUpper }}Conn
+	conn := meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Conn
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
@@ -249,7 +250,7 @@ import (
 )
 
 func testAccCheckTagDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .AWSServiceUpper }}Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .ProviderNameUpper }}Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_{{ .ServicePackage }}_tag" {
@@ -295,7 +296,7 @@ func testAccCheckTagExists(resourceName string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .AWSServiceUpper }}Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .ProviderNameUpper }}Conn
 
 		_, err = tf{{ .ServicePackage }}.GetTag(conn, identifier, key)
 
@@ -308,33 +309,3 @@ func testAccCheckTagExists(resourceName string) resource.TestCheckFunc {
 }
 `
 )
-
-var awsServiceNames map[string]string
-
-func init() {
-	awsServiceNames = make(map[string]string)
-
-	awsServiceNames["dynamodb"] = "DynamoDB"
-	awsServiceNames["ec2"] = "EC2"
-	awsServiceNames["ecs"] = "ECS"
-}
-
-func awsServiceName(s string) (string, error) {
-	s = strings.ToLower(s)
-
-	if _, ok := awsServiceNames[s]; ok {
-		return s, nil
-	}
-
-	return "", fmt.Errorf("unable to find AWS service name for %s", s)
-}
-
-func awsServiceNameUpper(s string) (string, error) {
-	s = strings.ToLower(s)
-
-	if v, ok := awsServiceNames[s]; ok {
-		return v, nil
-	}
-
-	return "", fmt.Errorf("unable to find AWS service name for %s", s)
-}
