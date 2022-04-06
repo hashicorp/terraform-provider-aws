@@ -2,7 +2,6 @@ package dms_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
