@@ -134,7 +134,7 @@ func waitSMBFileShareCreated(conn *storagegateway.StorageGateway, arn string, ti
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fileShareStatusCreating},
 		Target:  []string{fileShareStatusAvailable},
-		Refresh: statussmBFileShare(conn, arn),
+		Refresh: statusSMBFileShare(conn, arn),
 		Timeout: timeout,
 		Delay:   smbFileShareAvailableDelay,
 	}
@@ -152,7 +152,7 @@ func waitSMBFileShareDeleted(conn *storagegateway.StorageGateway, arn string, ti
 	stateConf := &resource.StateChangeConf{
 		Pending:        []string{fileShareStatusAvailable, fileShareStatusDeleting, fileShareStatusForceDeleting},
 		Target:         []string{},
-		Refresh:        statussmBFileShare(conn, arn),
+		Refresh:        statusSMBFileShare(conn, arn),
 		Timeout:        timeout,
 		Delay:          smbFileShareDeletedDelay,
 		NotFoundChecks: 1,
@@ -171,7 +171,7 @@ func waitSMBFileShareUpdated(conn *storagegateway.StorageGateway, arn string, ti
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fileShareStatusUpdating},
 		Target:  []string{fileShareStatusAvailable},
-		Refresh: statussmBFileShare(conn, arn),
+		Refresh: statusSMBFileShare(conn, arn),
 		Timeout: timeout,
 		Delay:   smbFileShareAvailableDelay,
 	}

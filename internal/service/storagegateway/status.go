@@ -96,7 +96,7 @@ func statusNFSFileShare(conn *storagegateway.StorageGateway, arn string) resourc
 	}
 }
 
-func statussmBFileShare(conn *storagegateway.StorageGateway, arn string) resource.StateRefreshFunc {
+func statusSMBFileShare(conn *storagegateway.StorageGateway, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSMBFileShareByARN(conn, arn)
 
