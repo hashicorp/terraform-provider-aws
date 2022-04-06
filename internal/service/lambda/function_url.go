@@ -173,7 +173,7 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Lambda Function URL (%s): %w", d.Id(), err)
+		return diag.Errorf("error reading Lambda Function URL (%s): %s", d.Id(), err)
 	}
 
 	d.Set("authorization_type", output.AuthType)

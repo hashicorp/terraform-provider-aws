@@ -90,7 +90,7 @@ func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta
 	output, err := FindFunctionURLByNameAndQualifier(ctx, conn, name, qualifier)
 
 	if err != nil {
-		return diag.Errorf("error reading Lambda Function URL (%s): %w", id, err)
+		return diag.Errorf("error reading Lambda Function URL (%s): %s", id, err)
 	}
 
 	d.SetId(id)
@@ -104,8 +104,10 @@ func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 	d.Set("creation_time", output.CreationTime)
 	d.Set("function_arn", output.FunctionArn)
+	d.Set("function_name", name)
 	d.Set("function_url", output.FunctionUrl)
 	d.Set("last_modified_time", output.LastModifiedTime)
+	d.Set("qualifier", qualifier)
 
 	return nil
 }

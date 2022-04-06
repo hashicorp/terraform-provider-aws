@@ -1,53 +1,56 @@
 package lambda_test
 
 import (
+	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/lambda"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccLambdaFunctionUrl_basic(t *testing.T) {
+func TestAccLambdaFunctionURL_basic(t *testing.T) {
 	var conf lambda.GetFunctionUrlConfigOutput
 	resourceName := "aws_lambda_function_url.test"
-
 	rString := sdkacctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckFunctionURLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionUrlBasicConfig(funcName, policyName, roleName),
+				Config: testAccFunctionURLBasicConfig(funcName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFunctionUrlExists(resourceName, funcName, nil, &conf),
+					testAccCheckFunctionURLExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", lambda.FunctionUrlAuthTypeNone),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "function_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, tflambda.FunctionVersionLatest)),
 					resource.TestCheckResourceAttr(resourceName, "cors.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "function_arn"),
+					resource.TestCheckResourceAttr(resourceName, "function_name", funcName),
+					resource.TestCheckResourceAttrSet(resourceName, "function_url"),
+					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"function_name", "qualifier"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func TestAccLambdaFunctionUrl_Cors(t *testing.T) {
+func TestAccLambdaFunctionURL_Cors(t *testing.T) {
 	var conf lambda.GetFunctionUrlConfigOutput
 	resourceName := "aws_lambda_function_url.test"
 
@@ -57,38 +60,41 @@ func TestAccLambdaFunctionUrl_Cors(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckFunctionURLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionUrlCoresConfig(funcName, policyName, roleName),
+				Config: testAccFunctionURLCorsConfig(funcName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFunctionUrlExists(resourceName, funcName, nil, &conf),
+					testAccCheckFunctionURLExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", lambda.FunctionUrlAuthTypeAwsIam),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "function_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, tflambda.FunctionVersionLatest)),
 					resource.TestCheckResourceAttr(resourceName, "cors.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_credentials", "true"),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_headers.0", "date"),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_headers.1", "keep-alive"),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_methods.0", "*"),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_origins.0", "*"),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.expose_headers.0", "keep-alive"),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.expose_headers.1", "date"),
+					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_headers.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.allow_headers.*", "date"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.allow_headers.*", "keep-alive"),
+					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_methods.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.allow_methods.*", "*"),
+					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_origins.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.allow_origins.*", "*"),
+					resource.TestCheckResourceAttr(resourceName, "cors.0.expose_headers.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.expose_headers.*", "date"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.expose_headers.*", "keep-alive"),
 					resource.TestCheckResourceAttr(resourceName, "cors.0.max_age", "86400"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"function_name", "qualifier"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func TestAccLambdaFunctionUrl_Alias(t *testing.T) {
+func TestAccLambdaFunctionURL_Alias(t *testing.T) {
 	var conf lambda.GetFunctionUrlConfigOutput
 	resourceName := "aws_lambda_function_url.test"
 
@@ -99,70 +105,90 @@ func TestAccLambdaFunctionUrl_Alias(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckFunctionURLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionUrlAliasConfig(funcName, aliasName, policyName, roleName),
+				Config: testAccFunctionURLAliasConfig(funcName, aliasName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFunctionUrlExists(resourceName, funcName, &aliasName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", lambda.FunctionUrlAuthTypeAwsIam),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "function_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, aliasName)),
-					resource.TestCheckResourceAttr(resourceName, "cors.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_credentials", "true"),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_headers.0", "date"),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_headers.1", "keep-alive"),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_methods.0", "*"),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_origins.0", "*"),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.expose_headers.0", "keep-alive"),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.expose_headers.1", "date"),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.max_age", "86400"),
+					testAccCheckFunctionURLExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "function_name", funcName),
+					resource.TestCheckResourceAttr(resourceName, "qualifier", aliasName),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"function_name", "qualifier"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func testAccCheckFunctionUrlExists(res string, funcName string, qualifier *string, function *lambda.GetFunctionUrlConfigOutput) resource.TestCheckFunc {
+func testAccCheckFunctionURLExists(n string, v *lambda.GetFunctionUrlConfigOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[res]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Lambda function url not found: %s", res)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("Lambda function url ID not set")
+			return fmt.Errorf("No Lambda Function URL ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		name, qualifier, err := tflambda.FunctionURLParseResourceID(rs.Primary.ID)
 
-		params := &lambda.GetFunctionUrlConfigInput{
-			FunctionName: aws.String(funcName),
-		}
-
-		if qualifier != nil {
-			params.Qualifier = qualifier
-		}
-
-		output, err := conn.GetFunctionUrlConfig(params)
 		if err != nil {
 			return err
 		}
 
-		*function = *output
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+
+		output, err := tflambda.FindFunctionURLByNameAndQualifier(context.TODO(), conn, name, qualifier)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccFunctionUrlBaseConfig(policyName, roleName string) string {
+func testAccCheckFunctionURLDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_lambda_function_url" {
+			continue
+		}
+
+		name, qualifier, err := tflambda.FunctionURLParseResourceID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		_, err = tflambda.FindFunctionURLByNameAndQualifier(context.TODO(), conn, name, qualifier)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("Lambda Function URL %s still exists", rs.Primary.ID)
+	}
+
+	return nil
+}
+
+func testAccFunctionURLBaseConfig(policyName, roleName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -240,8 +266,8 @@ EOF
 `, policyName, roleName)
 }
 
-func testAccFunctionUrlBasicConfig(funcName, policyName, roleName string) string {
-	return fmt.Sprintf(testAccFunctionUrlBaseConfig(policyName, roleName)+`
+func testAccFunctionURLBasicConfig(funcName, policyName, roleName string) string {
+	return acctest.ConfigCompose(testAccFunctionURLBaseConfig(policyName, roleName), fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
@@ -254,11 +280,11 @@ resource "aws_lambda_function_url" "test" {
   function_name      = aws_lambda_function.test.function_name
   authorization_type = "NONE"
 }
-`, funcName)
+`, funcName))
 }
 
-func testAccFunctionUrlCoresConfig(funcName, policyName, roleName string) string {
-	return fmt.Sprintf(testAccFunctionUrlBaseConfig(policyName, roleName)+`
+func testAccFunctionURLCorsConfig(funcName, policyName, roleName string) string {
+	return acctest.ConfigCompose(testAccFunctionURLBaseConfig(policyName, roleName), fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
@@ -270,6 +296,7 @@ resource "aws_lambda_function" "test" {
 resource "aws_lambda_function_url" "test" {
   function_name      = aws_lambda_function.test.function_name
   authorization_type = "AWS_IAM"
+
   cors {
     allow_credentials = true
     allow_origins     = ["*"]
@@ -279,11 +306,11 @@ resource "aws_lambda_function_url" "test" {
     max_age           = 86400
   }
 }
-`, funcName)
+`, funcName))
 }
 
-func testAccFunctionUrlAliasConfig(funcName, aliasName, policyName, roleName string) string {
-	return fmt.Sprintf(testAccFunctionUrlBaseConfig(policyName, roleName)+`
+func testAccFunctionURLAliasConfig(funcName, aliasName, policyName, roleName string) string {
+	return acctest.ConfigCompose(testAccFunctionURLBaseConfig(policyName, roleName), fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
@@ -304,6 +331,7 @@ resource "aws_lambda_function_url" "test" {
   function_name      = aws_lambda_function.test.function_name
   qualifier          = aws_lambda_alias.live.name
   authorization_type = "AWS_IAM"
+
   cors {
     allow_credentials = true
     allow_origins     = ["*"]
@@ -313,5 +341,5 @@ resource "aws_lambda_function_url" "test" {
     max_age           = 86400
   }
 }
-`, funcName, aliasName)
+`, funcName, aliasName))
 }

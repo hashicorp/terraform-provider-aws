@@ -2,17 +2,16 @@ package lambda_test
 
 import (
 	"fmt"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/lambda"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccLambdaFunctionUrlDataSource_basic(t *testing.T) {
+func TestAccLambdaFunctionURLDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	dataSourceName := "data.aws_lambda_function_url.test"
 	resourceName := "aws_lambda_function_url.test"
 
@@ -22,29 +21,29 @@ func TestAccLambdaFunctionUrlDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionUrlBasicDataSourceConfig(rName),
+				Config: testAccFunctionURLBasicDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "function_name", resourceName, "function_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "qualifier", resourceName, "qualifier"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "authorization_type", resourceName, "authorization_type"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "function_arn", resourceName, "function_arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "function_url", resourceName, "function_url"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "creation_time", resourceName, "creation_time"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "last_modified_time", resourceName, "last_modified_time"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cors.#", resourceName, "cors.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cors.0.allow_credentials", resourceName, "cors.0.allow_credentials"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "cors.0.allow_headers", resourceName, "cors.0.allow_headers"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "cors.0.allow_methods", resourceName, "cors.0.allow_methods"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "cors.0.allow_origins", resourceName, "cors.0.allow_origins"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "cors.0.expose_headers", resourceName, "cors.0.expose_headers"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "cors.0.allow_headers.#", resourceName, "cors.0.allow_headers.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "cors.0.allow_methods.#", resourceName, "cors.0.allow_methods.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "cors.0.allow_origins.#", resourceName, "cors.0.allow_origins.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "cors.0.expose_headers.#", resourceName, "cors.0.expose_headers.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cors.0.max_age", resourceName, "cors.0.max_age"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "creation_time"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "function_arn", resourceName, "function_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "function_name", resourceName, "function_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "function_url", resourceName, "function_url"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "last_modified_time"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "qualifier", resourceName, "qualifier"),
 				),
 			},
 		},
 	})
 }
 
-func testAccFunctionUrlDataSourceBaseConfig(rName string) string {
+func testAccFunctionURLDataSourceBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -112,6 +111,7 @@ resource "aws_lambda_function" "test" {
 resource "aws_lambda_function_url" "test" {
   function_name      = aws_lambda_function.test.arn
   authorization_type = "AWS_IAM"
+
   cors {
     allow_credentials = true
     allow_origins     = ["*"]
@@ -125,10 +125,10 @@ resource "aws_lambda_function_url" "test" {
 `, rName)
 }
 
-func testAccFunctionUrlBasicDataSourceConfig(rName string) string {
-	return testAccFunctionUrlDataSourceBaseConfig(rName) + `
+func testAccFunctionURLBasicDataSourceConfig(rName string) string {
+	return acctest.ConfigCompose(testAccFunctionURLDataSourceBaseConfig(rName), `
 data "aws_lambda_function_url" "test" {
   function_name = aws_lambda_function_url.test.function_name
 }
-`
+`)
 }
