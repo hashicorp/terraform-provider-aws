@@ -214,6 +214,7 @@ func resourceNFSFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	fileShareDefaults, err := expandStorageGatewayNfsFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
+
 	if err != nil {
 		return err
 	}
@@ -243,6 +244,14 @@ func resourceNFSFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 		input.BucketRegion = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("cache_attributes"); ok {
+		input.CacheAttributes = expandStorageGatewayNfsFileShareCacheAttributes(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("file_share_name"); ok {
+		input.FileShareName = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("kms_key_arn"); ok {
 		input.KMSKey = aws.String(v.(string))
 	}
@@ -251,20 +260,13 @@ func resourceNFSFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 		input.NotificationPolicy = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("file_share_name"); ok {
-		input.FileShareName = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("vpc_endpoint_dns_name"); ok {
 		input.VPCEndpointDNSName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("cache_attributes"); ok {
-		input.CacheAttributes = expandStorageGatewayNfsFileShareCacheAttributes(v.([]interface{}))
-	}
-
 	log.Printf("[DEBUG] Creating Storage Gateway NFS File Share: %s", input)
 	output, err := conn.CreateNFSFileShare(input)
+
 	if err != nil {
 		return fmt.Errorf("error creating Storage Gateway NFS File Share: %w", err)
 	}
@@ -272,7 +274,7 @@ func resourceNFSFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 	d.SetId(aws.StringValue(output.FileShareARN))
 
 	if _, err = waitNFSFileShareAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Storage Gateway NFS File Share (%q) to be Available: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for Storage Gateway NFS File Share (%s) to be Available: %w", d.Id(), err)
 	}
 
 	return resourceNFSFileShareRead(d, meta)
@@ -358,15 +360,9 @@ func resourceNFSFileShareRead(d *schema.ResourceData, meta interface{}) error {
 func resourceNFSFileShareUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
-		}
-	}
-
 	if d.HasChangesExcept("tags_all", "tags") {
 		fileShareDefaults, err := expandStorageGatewayNfsFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
+
 		if err != nil {
 			return err
 		}
@@ -388,6 +384,14 @@ func resourceNFSFileShareUpdate(d *schema.ResourceData, meta interface{}) error 
 			input.AuditDestinationARN = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("cache_attributes"); ok {
+			input.CacheAttributes = expandStorageGatewayNfsFileShareCacheAttributes(v.([]interface{}))
+		}
+
+		if v, ok := d.GetOk("file_share_name"); ok {
+			input.FileShareName = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("kms_key_arn"); ok {
 			input.KMSKey = aws.String(v.(string))
 		}
@@ -396,22 +400,23 @@ func resourceNFSFileShareUpdate(d *schema.ResourceData, meta interface{}) error 
 			input.NotificationPolicy = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("file_share_name"); ok {
-			input.FileShareName = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("cache_attributes"); ok {
-			input.CacheAttributes = expandStorageGatewayNfsFileShareCacheAttributes(v.([]interface{}))
-		}
-
 		log.Printf("[DEBUG] Updating Storage Gateway NFS File Share: %s", input)
 		_, err = conn.UpdateNFSFileShare(input)
+
 		if err != nil {
-			return fmt.Errorf("error updating Storage Gateway NFS File Share: %w", err)
+			return fmt.Errorf("error updating Storage Gateway NFS File Share (%s): %w", d.Id(), err)
 		}
 
 		if _, err = waitNFSFileShareAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Storage Gateway NFS File Share (%q) to be Available: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for Storage Gateway NFS File Share (%s) to be Available: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
 
@@ -421,17 +426,17 @@ func resourceNFSFileShareUpdate(d *schema.ResourceData, meta interface{}) error 
 func resourceNFSFileShareDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
-	input := &storagegateway.DeleteFileShareInput{
+	log.Printf("[DEBUG] Deleting Storage Gateway NFS File Share: %s", d.Id())
+	_, err := conn.DeleteFileShare(&storagegateway.DeleteFileShareInput{
 		FileShareARN: aws.String(d.Id()),
+	})
+
+	if operationErrorCode(err) == operationErrCodeFileShareNotFound {
+		return nil
 	}
 
-	log.Printf("[DEBUG] Deleting Storage Gateway NFS File Share: %s", input)
-	_, err := conn.DeleteFileShare(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
-			return nil
-		}
-		return fmt.Errorf("error deleting Storage Gateway NFS File Share: %w", err)
+		return fmt.Errorf("error deleting Storage Gateway NFS File Share (%s): %w", d.Id(), err)
 	}
 
 	if _, err = waitNFSFileShareDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
