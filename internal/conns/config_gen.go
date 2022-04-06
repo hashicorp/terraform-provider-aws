@@ -202,7 +202,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/migrationhubrefactorspaces"
 	"github.com/aws/aws-sdk-go/service/migrationhubstrategyrecommendations"
 	"github.com/aws/aws-sdk-go/service/mobile"
-	"github.com/aws/aws-sdk-go/service/mobileanalytics"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/mturk"
 	"github.com/aws/aws-sdk-go/service/mwaa"
@@ -499,7 +498,6 @@ func (c *Config) generatedClientConns(sess *session.Session) *AWSClient {
 		MigrationHubRefactorSpacesConn:   migrationhubrefactorspaces.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.MigrationHubRefactorSpaces])})),
 		MigrationHubStrategyConn:         migrationhubstrategyrecommendations.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.MigrationHubStrategy])})),
 		MobileConn:                       mobile.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Mobile])})),
-		MobileAnalyticsConn:              mobileanalytics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.MobileAnalytics])})),
 		NeptuneConn:                      neptune.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Neptune])})),
 		NetworkFirewallConn:              networkfirewall.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.NetworkFirewall])})),
 		NetworkManagerConn:               networkmanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.NetworkManager])})),

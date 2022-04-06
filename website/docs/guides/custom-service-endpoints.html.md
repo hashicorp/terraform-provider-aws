@@ -69,7 +69,6 @@ provider "aws" {
 -->
 <div style="column-width: 14em;">
 <ul>
-  <li><code>0</code></li>
   <li><code>accessanalyzer</code></li>
   <li><code>account</code></li>
   <li><code>acm</code></li>
@@ -169,7 +168,7 @@ provider "aws" {
   <li><code>elasticache</code></li>
   <li><code>elasticbeanstalk</code></li>
   <li><code>elasticinference</code></li>
-  <li><code>elasticsearch</code> (or <code>elasticsearch</code> or <code>elasticsearchservice</code>)</li>
+  <li><code>elasticsearch</code> (or <code>es</code> or <code>elasticsearchservice</code>)</li>
   <li><code>elastictranscoder</code></li>
   <li><code>elb</code> (or <code>elasticloadbalancing</code>)</li>
   <li><code>elbv2</code> (or <code>elasticloadbalancingv2</code>)</li>

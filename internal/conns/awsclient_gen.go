@@ -205,7 +205,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/migrationhubrefactorspaces"
 	"github.com/aws/aws-sdk-go/service/migrationhubstrategyrecommendations"
 	"github.com/aws/aws-sdk-go/service/mobile"
-	"github.com/aws/aws-sdk-go/service/mobileanalytics"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/mturk"
 	"github.com/aws/aws-sdk-go/service/mwaa"
@@ -521,7 +520,6 @@ type AWSClient struct {
 	MigrationHubRefactorSpacesConn   *migrationhubrefactorspaces.MigrationHubRefactorSpaces
 	MigrationHubStrategyConn         *migrationhubstrategyrecommendations.MigrationHubStrategyRecommendations
 	MobileConn                       *mobile.Mobile
-	MobileAnalyticsConn              *mobileanalytics.MobileAnalytics
 	NeptuneConn                      *neptune.Neptune
 	NetworkFirewallConn              *networkfirewall.NetworkFirewall
 	NetworkManagerConn               *networkmanager.NetworkManager

@@ -201,7 +201,6 @@ const (
 	MigrationHubRefactorSpaces   = "migrationhubrefactorspaces"
 	MigrationHubStrategy         = "migrationhubstrategy"
 	Mobile                       = "mobile"
-	MobileAnalytics              = "0"
 	Neptune                      = "neptune"
 	NetworkFirewall              = "networkfirewall"
 	NetworkManager               = "networkmanager"
