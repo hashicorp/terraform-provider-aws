@@ -90,6 +90,26 @@ func TestAccLambdaFunctionURL_Cors(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccFunctionURLCorsUpdatedConfig(funcName, policyName, roleName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionURLExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", lambda.FunctionUrlAuthTypeAwsIam),
+					resource.TestCheckResourceAttr(resourceName, "cors.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_credentials", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_headers.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.allow_headers.*", "x-custom-header"),
+					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_methods.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.allow_methods.*", "GET"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.allow_methods.*", "POST"),
+					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_origins.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.allow_origins.*", "https://www.example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.allow_origins.*", "http://localhost:60905"),
+					resource.TestCheckResourceAttr(resourceName, "cors.0.expose_headers.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.expose_headers.*", "date"),
+					resource.TestCheckResourceAttr(resourceName, "cors.0.max_age", "72000"),
+				),
+			},
 		},
 	})
 }
@@ -304,6 +324,32 @@ resource "aws_lambda_function_url" "test" {
     allow_headers     = ["date", "keep-alive"]
     expose_headers    = ["keep-alive", "date"]
     max_age           = 86400
+  }
+}
+`, funcName))
+}
+
+func testAccFunctionURLCorsUpdatedConfig(funcName, policyName, roleName string) string {
+	return acctest.ConfigCompose(testAccFunctionURLBaseConfig(policyName, roleName), fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs14.x"
+}
+
+resource "aws_lambda_function_url" "test" {
+  function_name      = aws_lambda_function.test.function_name
+  authorization_type = "AWS_IAM"
+
+  cors {
+    allow_credentials = false
+    allow_origins     = ["https://www.example.com", "http://localhost:60905"]
+    allow_methods     = ["GET", "POST"]
+    allow_headers     = ["x-custom-header"]
+    expose_headers    = ["date"]
+    max_age           = 72000
   }
 }
 `, funcName))
