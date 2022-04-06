@@ -16,7 +16,7 @@ This resource creates a Beanstalk Application Version that can be deployed to a 
 Environment.
 
 ~> **NOTE on Application Version Resource:**  When using the Application Version resource with multiple
-[Elastic Beanstalk Environments](elastic_beanstalk_environment.html) it is possible that an error may be returned
+[Elastic Beanstalk Environments](elasticbeanstalk_environment.html) it is possible that an error may be returned
 when attempting to delete an Application Version while it is still in use by a different environment.
 To work around this you can either create each environment in a separate AWS account or create your `aws_elastic_beanstalk_application_version` resources with a unique names in your Elastic Beanstalk Application. For example &lt;revision&gt;-&lt;environment&gt;.
 

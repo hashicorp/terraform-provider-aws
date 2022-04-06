@@ -2960,12 +2960,12 @@ such that they no longer return an error if zero results are found.
 * [aws_efs_access_points](/docs/providers/aws/d/efs_access_points.html)
 * [aws_emr_release_labels](/docs/providers/aws/d/emr_release_labels.markdown)
 * [aws_inspector_rules_packages](/docs/providers/aws/d/inspector_rules_packages.html)
-* [aws_ip_ranges](/docs/providers/aws/d/ip_ranges.html)
-* [aws_network_acls](/docs/providers/aws/d/network_acls.html)
-* [aws_route_tables](/docs/providers/aws/d/route_tables.html)
-* [aws_security_groups](/docs/providers/aws/d/security_groups.html)
+* [aws_ip_ranges](/docs/providers/aws/d/ec2_ip_ranges.html)
+* [aws_network_acls](/docs/providers/aws/d/vpc_network_acls.html)
+* [aws_route_tables](/docs/providers/aws/d/vpc_route_tables.html)
+* [aws_security_groups](/docs/providers/aws/d/vpc_security_groups.html)
 * [aws_ssoadmin_instances](/docs/providers/aws/d/ssoadmin_instances.html)
-* [aws_vpcs](/docs/providers/aws/d/vpcs.html)
+* [aws_vpcs](/docs/providers/aws/d/vpc_vpcs.html)
 * [aws_vpc_peering_connections](/docs/providers/aws/d/vpc_peering_connections.html)
 
 ## Empty Strings Not Valid For Certain Resources
@@ -3563,14 +3563,14 @@ While an upgrade to this major version will not directly impact EC2-Classic reso
 it is important to keep in the mind the following AWS Provider resources will eventually no longer
 be compatible with EC2-Classic as AWS completes their EC2-Classic networking retirement (expected around August 15, 2022).
 
-* Running or stopped [EC2 instances](/docs/providers/aws/r/instance.html)
+* Running or stopped [EC2 instances](/docs/providers/aws/r/ec2_instance.html)
 * Running or stopped [RDS database instances](/docs/providers/aws/r/rds_db_instance.html)
-* [Elastic IP addresses](/docs/providers/aws/r/eip.html)
-* [Classic Load Balancers](/docs/providers/aws/r/lb.html)
+* [Elastic IP addresses](/docs/providers/aws/r/ec2_eip.html)
+* [Classic Load Balancers](/docs/providers/aws/r/elbv2_lb.html)
 * [Redshift clusters](/docs/providers/aws/r/redshift_cluster.html)
-* [Elastic Beanstalk environments](/docs/providers/aws/r/elastic_beanstalk_environment.html)
+* [Elastic Beanstalk environments](/docs/providers/aws/r/elasticbeanstalk_environment.html)
 * [EMR clusters](/docs/providers/aws/r/emr_cluster.html)
 * [AWS Data Pipelines pipelines](/docs/providers/aws/r/datapipeline_pipeline.html)
 * [ElastiCache clusters](/docs/providers/aws/r/elasticache_cluster.html)
-* [Spot Requests](/docs/providers/aws/r/spot_instance_request.html)
+* [Spot Requests](/docs/providers/aws/r/ec2_spot_instance_request.html)
 * [Capacity Reservations](/docs/providers/aws/r/ec2_capacity_reservation.html)

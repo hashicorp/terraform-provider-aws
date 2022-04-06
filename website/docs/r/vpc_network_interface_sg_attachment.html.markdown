@@ -19,7 +19,7 @@ conjunction with security groups provided in-line in those resources will cause
 conflicts, and will lead to spurious diffs and undefined behavior - please use
 one or the other.
 
-[1]: /docs/providers/aws/d/instance.html
+[1]: /docs/providers/aws/d/ec2_instance.html
 [2]: /docs/providers/aws/r/network_interface.html
 
 ## Example Usage

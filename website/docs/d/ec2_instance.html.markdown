@@ -97,7 +97,7 @@ interpolation.
 * `secondary_private_ips` - The secondary private IPv4 addresses assigned to the instance's primary network interface (eth0) in a VPC.
 * `public_dns` - The public DNS name assigned to the Instance. For EC2-VPC, this
   is only available if you've enabled DNS hostnames for your VPC.
-* `public_ip` - The public IP address assigned to the Instance, if applicable. **NOTE**: If you are using an [`aws_eip`](/docs/providers/aws/r/eip.html) with your instance, you should refer to the EIP's address directly and not use `public_ip`, as this field will change after the EIP is attached.
+* `public_ip` - The public IP address assigned to the Instance, if applicable. **NOTE**: If you are using an [`aws_eip`](/docs/providers/aws/r/ec2_eip.html) with your instance, you should refer to the EIP's address directly and not use `public_ip`, as this field will change after the EIP is attached.
 * `root_block_device` - The root block device mappings of the Instance
     * `device_name` - The physical name of the device.
     * `delete_on_termination` - If the root block device will be deleted on termination.

@@ -10,7 +10,7 @@ description: |-
 
 Provides an Elastic Load Balancer resource, also known as a "Classic
 Load Balancer" after the release of
-[Application/Network Load Balancers](/docs/providers/aws/r/lb.html).
+[Application/Network Load Balancers](/docs/providers/aws/r/elbv2_lb.html).
 
 ~> **NOTE on ELB Instances and ELB Attachments:** Terraform currently
 provides both a standalone [ELB Attachment resource](elb_attachment.html)
