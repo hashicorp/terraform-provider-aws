@@ -24,8 +24,6 @@ sweeper:
 # Catch the following:
 # 1. List items (* or -) with aws_XXX resource prefix (with or without backticks)
 # 2. "data aws_XXX" or "resource aws_XXX"
-service/0:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_0_'
 service/accessanalyzer:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_accessanalyzer_'
 service/account:

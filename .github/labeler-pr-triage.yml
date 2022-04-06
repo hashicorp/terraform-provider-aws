@@ -66,9 +66,6 @@ tests:
   - 'internal/acctest/**/*'
 verify:
   - 'internal/verify/**/*'
-service/0:
-  - 'internal/service/0/**/*'
-  - 'website/**/0_*'
 service/accessanalyzer:
   - 'internal/service/accessanalyzer/**/*'
   - 'website/**/accessanalyzer_*'
