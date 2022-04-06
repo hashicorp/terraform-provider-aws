@@ -82,6 +82,35 @@ func FindUploadBufferDisk(conn *storagegateway.StorageGateway, gatewayARN string
 	return result, err
 }
 
+func FindNFSFileShareByARN(conn *storagegateway.StorageGateway, arn string) (*storagegateway.NFSFileShareInfo, error) {
+	input := &storagegateway.DescribeNFSFileSharesInput{
+		FileShareARNList: aws.StringSlice([]string{arn}),
+	}
+
+	output, err := conn.DescribeNFSFileShares(input)
+
+	if operationErrorCode(err) == operationErrCodeFileShareNotFound {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.NFSFileShareInfoList) == 0 || output.NFSFileShareInfoList[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.NFSFileShareInfoList); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.NFSFileShareInfoList[0], nil
+}
+
 func FindSMBFileShareByARN(conn *storagegateway.StorageGateway, arn string) (*storagegateway.SMBFileShareInfo, error) {
 	input := &storagegateway.DescribeSMBFileSharesInput{
 		FileShareARNList: aws.StringSlice([]string{arn}),

@@ -5,15 +5,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccStorageGatewayNFSFileShare_basic(t *testing.T) {
@@ -668,22 +667,17 @@ func testAccCheckNFSFileShareDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &storagegateway.DescribeNFSFileSharesInput{
-			FileShareARNList: []*string{aws.String(rs.Primary.ID)},
+		_, err := tfstoragegateway.FindNFSFileShareByARN(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		output, err := conn.DescribeNFSFileShares(input)
-
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
-				continue
-			}
 			return err
 		}
 
-		if output != nil && len(output.NFSFileShareInfoList) > 0 && output.NFSFileShareInfoList[0] != nil {
-			return fmt.Errorf("Storage Gateway NFS File Share %q still exists", rs.Primary.ID)
-		}
+		return fmt.Errorf("Storage Gateway NFS File Share %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -698,21 +692,14 @@ func testAccCheckNFSFileShareExists(resourceName string, nfsFileShare *storagega
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
-		input := &storagegateway.DescribeNFSFileSharesInput{
-			FileShareARNList: []*string{aws.String(rs.Primary.ID)},
-		}
 
-		output, err := conn.DescribeNFSFileShares(input)
+		output, err := tfstoragegateway.FindNFSFileShareByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil || len(output.NFSFileShareInfoList) == 0 || output.NFSFileShareInfoList[0] == nil {
-			return fmt.Errorf("Storage Gateway NFS File Share %q does not exist", rs.Primary.ID)
-		}
-
-		*nfsFileShare = *output.NFSFileShareInfoList[0]
+		*nfsFileShare = *output
 
 		return nil
 	}
