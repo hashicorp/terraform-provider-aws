@@ -123,18 +123,18 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[DEBUG] Creating Lambda Function URL: %s", input)
-	output, err := conn.CreateFunctionUrlConfigWithContext(ctx, input)
+	_, err := conn.CreateFunctionUrlConfigWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("error creating Lambda Function URL (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.FunctionArn))
+	d.SetId(name)
 
 	if v := d.Get("authorization_type").(string); v == lambda.FunctionUrlAuthTypeNone {
 		input := &lambda.AddPermissionInput{
 			Action:              aws.String("lambda:InvokeFunctionUrl"),
-			FunctionName:        aws.String(d.Get("function_name").(string)),
+			FunctionName:        aws.String(d.Id()),
 			FunctionUrlAuthType: aws.String(v),
 			Principal:           aws.String("*"),
 			StatementId:         aws.String("FunctionURLAllowPublicAccess"),
@@ -214,24 +214,23 @@ func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta
 func resourceFunctionURLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
-	log.Printf("[INFO] Deleting Lambda Function Url: %s", d.Id())
-
-	params := &lambda.DeleteFunctionUrlConfigInput{
-		FunctionName: aws.String(d.Get("function_name").(string)),
+	input := &lambda.DeleteFunctionUrlConfigInput{
+		FunctionName: aws.String(d.Id()),
 	}
 
 	if v, ok := d.GetOk("qualifier"); ok {
-		params.Qualifier = aws.String(v.(string))
+		input.Qualifier = aws.String(v.(string))
 	}
 
-	_, err := conn.DeleteFunctionUrlConfig(params)
+	log.Printf("[INFO] Deleting Lambda Function URL: %s", d.Id())
+	_, err := conn.DeleteFunctionUrlConfigWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Lambda Function Url (%s): %s", d.Id(), err)
+		return diag.Errorf("error deleting Lambda Function URL (%s): %s", d.Id(), err)
 	}
 
 	return nil
