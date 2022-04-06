@@ -1,7 +1,7 @@
 package lambda
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strings"
 	"time"
@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,10 +19,10 @@ import (
 
 func ResourceFunctionUrl() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFunctionUrlCreate,
-		Read:   resourceFunctionUrlRead,
-		Update: resourceFunctionUrlUpdate,
-		Delete: resourceFunctionUrlDelete,
+		CreateWithoutTimeout: resourceFunctionUrlCreate,
+		ReadWithoutTimeout:   resourceFunctionUrlRead,
+		UpdateWithoutTimeout: resourceFunctionUrlUpdate,
+		DeleteWithoutTimeout: resourceFunctionUrlDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceFunctionUrlImport,
@@ -104,7 +105,7 @@ func ResourceFunctionUrl() *schema.Resource {
 	}
 }
 
-func resourceFunctionUrlCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionUrlCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	params := &lambda.CreateFunctionUrlConfigInput{
@@ -123,7 +124,7 @@ func resourceFunctionUrlCreate(d *schema.ResourceData, meta interface{}) error {
 	output, err := conn.CreateFunctionUrlConfig(params)
 
 	if err != nil {
-		return fmt.Errorf("Error creating Lambda function url: %s", err)
+		return diag.Errorf("Error creating Lambda function url: %s", err)
 	}
 	log.Printf("[DEBUG] Creating Lambda Function Url Config Output: %s", output)
 
@@ -138,17 +139,17 @@ func resourceFunctionUrlCreate(d *schema.ResourceData, meta interface{}) error {
 		permissionOutput, permissionErr := conn.AddPermission(permissionParams)
 
 		if permissionErr != nil {
-			return fmt.Errorf("Error adding permission for Lambda function url: %s", permissionErr)
+			return diag.Errorf("Error adding permission for Lambda function url: %s", permissionErr)
 		}
 		log.Printf("[DEBUG] Add permission for Lambda Function Url Output: %s", permissionOutput)
 	}
 
 	d.SetId(aws.StringValue(output.FunctionArn))
 
-	return resourceFunctionUrlRead(d, meta)
+	return resourceFunctionUrlRead(ctx, d, meta)
 }
 
-func resourceFunctionUrlRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionUrlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	input := &lambda.GetFunctionUrlConfigInput{
@@ -167,26 +168,18 @@ func resourceFunctionUrlRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error getting Lambda Function Url Config (%s): %w", d.Id(), err)
+		return diag.Errorf("error getting Lambda Function Url Config (%s): %w", d.Id(), err)
 	}
 
-	if err = d.Set("authorization_type", output.AuthType); err != nil {
-		return err
-	}
-	if err = d.Set("cors", flattenFunctionUrlCorsConfigs(output.Cors)); err != nil {
-		return err
-	}
-	if err = d.Set("function_arn", output.FunctionArn); err != nil {
-		return err
-	}
-	if err = d.Set("function_url", output.FunctionUrl); err != nil {
-		return err
-	}
+	d.Set("authorization_type", output.AuthType)
+	d.Set("cors", flattenFunctionUrlCorsConfigs(output.Cors))
+	d.Set("function_arn", output.FunctionArn)
+	d.Set("function_url", output.FunctionUrl)
 
 	return nil
 }
 
-func resourceFunctionUrlUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionUrlUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	log.Printf("[DEBUG] Updating Lambda Function Url: %s", d.Id())
@@ -210,13 +203,13 @@ func resourceFunctionUrlUpdate(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.UpdateFunctionUrlConfig(params)
 
 	if err != nil {
-		return fmt.Errorf("error updating Lambda Function Url (%s): %w", d.Id(), err)
+		return diag.Errorf("error updating Lambda Function Url (%s): %s", d.Id(), err)
 	}
 
-	return resourceFunctionUrlRead(d, meta)
+	return resourceFunctionUrlRead(ctx, d, meta)
 }
 
-func resourceFunctionUrlDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionUrlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	log.Printf("[INFO] Deleting Lambda Function Url: %s", d.Id())
@@ -236,7 +229,7 @@ func resourceFunctionUrlDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Lambda Function Url (%s): %w", d.Id(), err)
+		return diag.Errorf("error deleting Lambda Function Url (%s): %s", d.Id(), err)
 	}
 
 	return nil
