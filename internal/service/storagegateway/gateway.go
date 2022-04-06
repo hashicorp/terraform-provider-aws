@@ -29,24 +29,16 @@ func ResourceGateway() *schema.Resource {
 		Read:   resourceGatewayRead,
 		Update: resourceGatewayUpdate,
 		Delete: resourceGatewayDelete,
-		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("smb_active_directory_settings", func(_ context.Context, old, new, meta interface{}) bool {
-				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
-			}),
-			verify.SetTagsDiff,
-		),
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(15 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"activation_key": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -54,10 +46,32 @@ func ResourceGateway() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"gateway_ip_address"},
 			},
-			"gateway_vpc_endpoint": {
+			"arn": {
 				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Computed: true,
+			},
+			"average_download_rate_limit_in_bits_per_sec": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntAtLeast(102400),
+			},
+			"average_upload_rate_limit_in_bits_per_sec": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntAtLeast(51200),
+			},
+			"cloudwatch_log_group_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"ec2_instance_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"endpoint_type": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"gateway_id": {
 				Type:     schema.TypeString,
@@ -78,6 +92,18 @@ func ResourceGateway() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^[ -\.0-\[\]-~]*[!-\.0-\[\]-~][ -\.0-\[\]-~]*$`), ""),
 					validation.StringLenBetween(2, 255),
 				),
+			},
+			"gateway_network_interface": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ipv4_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"gateway_timezone": {
 				Type:     schema.TypeString,
@@ -100,6 +126,15 @@ func ResourceGateway() *schema.Resource {
 					"VTL",
 				}, false),
 			},
+			"gateway_vpc_endpoint": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"host_environment": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"medium_changer_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -116,41 +151,9 @@ func ResourceGateway() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"domain_name": {
+						"active_directory_status": {
 							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$`), ""),
-								validation.StringLenBetween(1, 1024),
-							),
-						},
-						"timeout_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      20,
-							ValidateFunc: validation.IntBetween(0, 3600),
-						},
-						"password": {
-							Type:      schema.TypeString,
-							Required:  true,
-							Sensitive: true,
-							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^[ -~]+$`), ""),
-								validation.StringLenBetween(1, 1024),
-							),
-						},
-						"username": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^\w[\w\.\- ]*$`), ""),
-								validation.StringLenBetween(1, 1024),
-							),
-						},
-						"organizational_unit": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 1024),
+							Computed: true,
 						},
 						"domain_controllers": {
 							Type:     schema.TypeSet,
@@ -163,12 +166,48 @@ func ResourceGateway() *schema.Resource {
 								),
 							},
 						},
-						"active_directory_status": {
+						"domain_name": {
 							Type:     schema.TypeString,
-							Computed: true,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringMatch(regexp.MustCompile(`^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$`), ""),
+								validation.StringLenBetween(1, 1024),
+							),
+						},
+						"organizational_unit": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 1024),
+						},
+						"password": {
+							Type:      schema.TypeString,
+							Required:  true,
+							Sensitive: true,
+							ValidateFunc: validation.All(
+								validation.StringMatch(regexp.MustCompile(`^[ -~]+$`), ""),
+								validation.StringLenBetween(1, 1024),
+							),
+						},
+						"timeout_in_seconds": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      20,
+							ValidateFunc: validation.IntBetween(0, 3600),
+						},
+						"username": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringMatch(regexp.MustCompile(`^\w[\w\.\- ]*$`), ""),
+								validation.StringLenBetween(1, 1024),
+							),
 						},
 					},
 				},
+			},
+			"smb_file_share_visibility": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"smb_guest_password": {
 				Type:      schema.TypeString,
@@ -179,6 +218,14 @@ func ResourceGateway() *schema.Resource {
 					validation.StringLenBetween(6, 512),
 				),
 			},
+			"smb_security_strategy": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(storagegateway.SMBSecurityStrategy_Values(), false),
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"tape_drive_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -187,58 +234,14 @@ func ResourceGateway() *schema.Resource {
 					"IBM-ULT3580-TD5",
 				}, false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"cloudwatch_log_group_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"smb_security_strategy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(storagegateway.SMBSecurityStrategy_Values(), false),
-			},
-			"smb_file_share_visibility": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"average_download_rate_limit_in_bits_per_sec": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(102400),
-			},
-			"average_upload_rate_limit_in_bits_per_sec": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(51200),
-			},
-			"ec2_instance_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"endpoint_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"host_environment": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"gateway_network_interface": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ipv4_address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ForceNewIfChange("smb_active_directory_settings", func(_ context.Context, old, new, meta interface{}) bool {
+				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
+			}),
+			verify.SetTagsDiff,
+		),
 	}
 }
 
