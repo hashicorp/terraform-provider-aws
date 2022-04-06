@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,12 +22,13 @@ func ResourceFunctionUrl() *schema.Resource {
 		Read:   resourceFunctionUrlRead,
 		Update: resourceFunctionUrlUpdate,
 		Delete: resourceFunctionUrlDelete,
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-		},
 
 		Importer: &schema.ResourceImporter{
 			State: resourceFunctionUrlImport,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -74,6 +75,10 @@ func ResourceFunctionUrl() *schema.Resource {
 					},
 				},
 			},
+			"function_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"function_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -86,26 +91,14 @@ func ResourceFunctionUrl() *schema.Resource {
 					return (oldFunctionName == new && oldFunctionNameErr == nil) || (newFunctionName == old && newFunctionNameErr == nil)
 				},
 			},
-			"qualifier": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-			},
-			"creation_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"function_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"function_url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"last_modified_time": {
+			"qualifier": {
 				Type:     schema.TypeString,
-				Computed: true,
+				ForceNew: true,
+				Optional: true,
 			},
 		},
 	}
@@ -183,16 +176,10 @@ func resourceFunctionUrlRead(d *schema.ResourceData, meta interface{}) error {
 	if err = d.Set("cors", flattenFunctionUrlCorsConfigs(output.Cors)); err != nil {
 		return err
 	}
-	if err = d.Set("creation_time", output.CreationTime); err != nil {
-		return err
-	}
 	if err = d.Set("function_arn", output.FunctionArn); err != nil {
 		return err
 	}
 	if err = d.Set("function_url", output.FunctionUrl); err != nil {
-		return err
-	}
-	if err = d.Set("last_modified_time", output.LastModifiedTime); err != nil {
 		return err
 	}
 
