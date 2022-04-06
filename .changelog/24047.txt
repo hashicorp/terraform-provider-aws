@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dms_replication_task: Fix when updating the task, it's is now stopped before, if required.
+```
