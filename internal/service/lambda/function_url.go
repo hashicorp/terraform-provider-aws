@@ -6,14 +6,15 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceFunctionUrl() *schema.Resource {
@@ -157,23 +158,16 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
-	input := &lambda.GetFunctionUrlConfigInput{
-		FunctionName: aws.String(d.Get("function_name").(string)),
-	}
+	output, err := FindFunctionURLByNameAndQualifier(ctx, conn, d.Id(), d.Get("qualifier").(string))
 
-	if v, ok := d.GetOk("qualifier"); ok {
-		input.Qualifier = aws.String(v.(string))
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Lambda Function URL %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
-
-	output, err := conn.GetFunctionUrlConfig(input)
-	log.Printf("[DEBUG] Getting Lambda Function Url Config Output: %s", output)
 
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == lambda.ErrCodeResourceNotFoundException && !d.IsNewResource() {
-			d.SetId("")
-			return nil
-		}
-		return diag.Errorf("error getting Lambda Function Url Config (%s): %w", d.Id(), err)
+		return diag.Errorf("error reading Lambda Function URL (%s): %w", d.Id(), err)
 	}
 
 	d.Set("authorization_type", output.AuthType)
@@ -277,4 +271,33 @@ func flattenFunctionUrlCorsConfigs(cors *lambda.Cors) []map[string]interface{} {
 	settings["max_age"] = cors.MaxAge
 
 	return []map[string]interface{}{settings}
+}
+
+func FindFunctionURLByNameAndQualifier(ctx context.Context, conn *lambda.Lambda, name, qualifier string) (*lambda.GetFunctionUrlConfigOutput, error) {
+	input := &lambda.GetFunctionUrlConfigInput{
+		FunctionName: aws.String(name),
+	}
+
+	if qualifier != "" {
+		input.Qualifier = aws.String(qualifier)
+	}
+
+	output, err := conn.GetFunctionUrlConfigWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
