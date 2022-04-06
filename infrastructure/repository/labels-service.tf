@@ -2,6 +2,7 @@
 
 variable "service_labels" {
   default = [
+    "0",
     "accessanalyzer",
     "account",
     "acm",
@@ -92,7 +93,9 @@ variable "service_labels" {
     "dynamodbstreams",
     "ebs",
     "ec2",
+    "ec2ebs",
     "ec2instanceconnect",
+    "ec2outposts",
     "ecr",
     "ecrpublic",
     "ecs",
@@ -192,13 +195,13 @@ variable "service_labels" {
     "mediastoredata",
     "mediatailor",
     "memorydb",
+    "meta",
     "mgh",
     "mgn",
     "migrationhubconfig",
     "migrationhubrefactorspaces",
     "migrationhubstrategy",
     "mobile",
-    "mobileanalytics",
     "mq",
     "mturk",
     "mwaa",

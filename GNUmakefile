@@ -26,6 +26,7 @@ gen:
 	rm -f website/docs/guides/custom-service-endpoints.html.md
 	rm -f website/allowed-subcategories.txt
 	rm -f .github/labeler-issue-triage.yml
+	rm -f .github/labeler-pr-triage.yml
 	rm -f infrastructure/repository/labels-service.tf
 	go generate ./...
 
