@@ -1215,19 +1215,18 @@ resource "aws_storagegateway_gateway" "test" {
 `, rName, rate)
 }
 
-func testAccAWSStorageGatewayGatewayMaintenanceStartTimeConfig(rName string, hour_of_day int, minute_of_hour int, day_of_week int, day_of_month int) string {
+func testAccAWSStorageGatewayGatewayMaintenanceStartTimeConfig(rName string, hour int, minute int, day_of_week int) string {
 	return testAccAWSStorageGateway_TapeAndVolumeGatewayBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
-  gateway_ip_address = aws_instance.test.public_ip
-  gateway_name       = %[1]q
-  gateway_timezone   = "GMT"
-  gateway_type       = "CACHED"
+  gateway_ip_address                          = aws_instance.test.public_ip
+  gateway_name                                = %[1]q
+  gateway_timezone                            = "GMT"
+  gateway_type                                = "CACHED"
   maintenance_start_time {
-    hour_of_day    = %[2]d
-    minute_of_hour = %[3]d
-    day_of_week    = %[4]d  
-    day_of_month   = %[5]d  
+	hour = %[2]d
+	minute = %[3]d
+	day_of_week = %[4]d  
   }
 }
-`, rName, hour_of_day, minute_of_hour, day_of_week, day_of_month)
+`, rName, hour, minute, day_of_week)
 }

@@ -223,43 +223,28 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 						"ipv4_address": {
 							Type:     schema.TypeString,
 							Computed: true,
-						},
-					},
-				},
-			},
 			"maintenance_start_time": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"hour_of_day": {
+						"hour": {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntBetween(0, 23),
-							Default:      0,
-							Computed: true,
 						},
-						"minute_of_hour": {
+						"minute": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 59),
 							Default:      0,
-							Computed: true,
 						},
 						"day_of_week": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 6),
 							Default:      0,
-							Computed: true,
-						},
-						"day_of_month": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 28),
-							Default:      0,
-							Computed: true,
 						},
 					},
 				},
@@ -420,10 +405,9 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 
 		input := &storagegateway.UpdateMaintenanceStartTimeInput{
 			DayOfWeek:    aws.Int64(int64(m["day_of_week"].(int))),
-			DayOfMonth:   aws.Int64(int64(m["day_of_month"].(int))),
 			GatewayARN:   aws.String(d.Id()),
-			HourOfDay:    aws.Int64(int64(m["hour_of_day"].(int))),
-			MinuteOfHour: aws.Int64(int64(m["minute_of_hour"].(int))),
+			HourOfDay:    aws.Int64(int64(m["hour"].(int))),
+			MinuteOfHour: aws.Int64(int64(m["minute"].(int))),
 		}
 
 		log.Printf("[DEBUG] Storage Gateway Gateway %q updating maintenance start time", d.Id())
@@ -598,10 +582,9 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 	}
 	if err == nil {
 		m := map[string]interface{}{
-			"hour_of_day":    aws.Int64Value(maintenanceStartTimeOutput.HourOfDay),
-			"minute_of_hour": aws.Int64Value(maintenanceStartTimeOutput.MinuteOfHour),
-			"day_of_week":    aws.Int64Value(maintenanceStartTimeOutput.DayOfWeek),
-			"day_of_month":   aws.Int64Value(maintenanceStartTimeOutput.DayOfMonth),
+			"hour":        aws.Int64Value(maintenanceStartTimeOutput.HourOfDay),
+			"minute":      aws.Int64Value(maintenanceStartTimeOutput.MinuteOfHour),
+			"day_of_week": aws.Int64Value(maintenanceStartTimeOutput.DayOfWeek),
 		}
 		if err := d.Set("maintenance_start_time", []map[string]interface{}{m}); err != nil {
 			return fmt.Errorf("error setting maintenance_start_time: %w", err)
@@ -744,10 +727,9 @@ func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interfa
 
 		input := &storagegateway.UpdateMaintenanceStartTimeInput{
 			DayOfWeek:    aws.Int64(int64(m["day_of_week"].(int))),
-			DayOfMonth:   aws.Int64(int64(m["day_of_month"].(int))),
 			GatewayARN:   aws.String(d.Id()),
-			HourOfDay:    aws.Int64(int64(m["hour_of_day"].(int))),
-			MinuteOfHour: aws.Int64(int64(m["minute_of_month"].(int))),
+			HourOfDay:    aws.Int64(int64(m["hour"].(int))),
+			MinuteOfHour: aws.Int64(int64(m["minute"].(int))),
 		}
 
 		log.Printf("[DEBUG] Storage Gateway Gateway %q updating maintenance start time", d.Id())
