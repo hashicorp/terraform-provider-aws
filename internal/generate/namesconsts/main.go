@@ -32,24 +32,27 @@ const (
 	//goV2Package             = 3
 	//providerPackageActual   = 4
 	//providerPackageCorrect  = 5
-	//aliases                 = 6
-	//providerNameUpper       = 7
-	//goV1ClientName          = 8
-	//skipClientGenerate      = 9
-	//sdkVersion              = 10
-	//resourcePrefixActual    = 11
-	//resourcePrefixCorrect   = 12
-	//humanFriendly           = 13
-	//brand                   = 14
-	//exclude                 = 15
-	//allowedSubcategory      = 16
-	//deprecatedEnvVar        = 17
-	//envVar                  = 18
-	//note                    = 19
+	//splitPackageRealPackage = 6
+	//aliases                 = 7
+	//providerNameUpper       = 8
+	//goV1ClientName          = 9
+	//skipClientGenerate      = 10
+	//sdkVersion              = 11
+	//resourcePrefixActual    = 12
+	//resourcePrefixCorrect   = 13
+	//filePrefix              = 14
+	//docPrefix               = 15
+	//humanFriendly           = 16
+	//brand                   = 17
+	//exclude                 = 18
+	//allowedSubcategory      = 19
+	//deprecatedEnvVar        = 20
+	//envVar                  = 21
+	//note                    = 22
 	providerPackageActual  = 4
 	providerPackageCorrect = 5
-	providerNameUpper      = 7
-	exclude                = 15
+	providerNameUpper      = 8
+	exclude                = 18
 )
 
 func main() {
