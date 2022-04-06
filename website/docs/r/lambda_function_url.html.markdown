@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_lambda_function_url
 
-Creates a Lambda function URL. Creates a https url that points to the specified Lambda function alias or the latest version.
+Creates a Lambda function URL, an HTTPS URL that points to the specified Lambda function alias or the latest version.
 
 A function URL is a dedicated HTTP(S) endpoint for your function. For information about Lambda function url, see [CreateFunctionUrlConfig][1] in the API docs.
 
@@ -56,7 +56,7 @@ resource "aws_lambda_function_url" "test_live" {
 
 ## Import
 
-Lambda Function Aliases can be imported using the `function_name/alias`, e.g.,
+Lambda Function URLs can be imported using the `function_name/alias`, e.g.,
 
 ```
 $ terraform import aws_lambda_function_url.test_lambda_url my_test_lambda_function/my_alias
