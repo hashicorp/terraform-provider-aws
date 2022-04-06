@@ -367,19 +367,19 @@ resource "aws_rds_cluster_parameter_group" "test" {
   parameter {
     name  = "binlog_format"
     value = "ROW"
-		apply_method = "pending-reboot"
+    apply_method = "pending-reboot"
   }
 
   parameter {
     name  = "binlog_row_image"
     value = "Full"
-		apply_method = "pending-reboot"
+    apply_method = "pending-reboot"
   }
 
   parameter {
     name  = "binlog_checksum"
     value = "NONE"
-		apply_method = "pending-reboot"
+    apply_method = "pending-reboot"
   }
 }
 
@@ -393,7 +393,7 @@ resource "aws_rds_cluster" "test1" {
   skip_final_snapshot             = true
   vpc_security_group_ids          = [aws_default_security_group.test.id]
   db_subnet_group_name            = aws_db_subnet_group.test.name
-	db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.test.name
+  db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.test.name
 }
 
 resource "aws_rds_cluster_instance" "test1" {
