@@ -586,36 +586,32 @@ func resourceGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChanges("gateway_name", "gateway_timezone", "cloudwatch_log_group_arn") {
 		input := &storagegateway.UpdateGatewayInformationInput{
+			CloudWatchLogGroupARN: aws.String(d.Get("cloudwatch_log_group_arn").(string)),
 			GatewayARN:            aws.String(d.Id()),
 			GatewayName:           aws.String(d.Get("gateway_name").(string)),
 			GatewayTimezone:       aws.String(d.Get("gateway_timezone").(string)),
-			CloudWatchLogGroupARN: aws.String(d.Get("cloudwatch_log_group_arn").(string)),
 		}
 
 		log.Printf("[DEBUG] Updating Storage Gateway Gateway: %s", input)
 		_, err := conn.UpdateGatewayInformation(input)
-		if err != nil {
-			return fmt.Errorf("error updating Storage Gateway Gateway: %w", err)
-		}
-	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+		if err != nil {
+			return fmt.Errorf("error updating Storage Gateway Gateway (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("smb_active_directory_settings") {
 		input := expandStorageGatewayGatewayDomain(d.Get("smb_active_directory_settings").([]interface{}), d.Id())
-		log.Printf("[DEBUG] Storage Gateway Gateway %q joining Active Directory domain: %s", d.Id(), aws.StringValue(input.DomainName))
+		domainName := aws.StringValue(input.DomainName)
+
 		_, err := conn.JoinDomain(input)
+
 		if err != nil {
-			return fmt.Errorf("error joining Active Directory domain: %w", err)
+			return fmt.Errorf("error joining Storage Gateway Gateway (%s) to Active Directory domain (%s): %w", d.Id(), domainName, err)
 		}
 
 		if _, err = waitStorageGatewayGatewayJoinDomainJoined(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for Storage Gateway Gateway (%q) to be Join domain (%s): %w", d.Id(), aws.StringValue(input.DomainName), err)
+			return fmt.Errorf("error waiting for Storage Gateway Gateway (%s) to join Active Directory domain (%s): %w", d.Id(), domainName, err)
 		}
 	}
 
@@ -625,10 +621,10 @@ func resourceGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 			Password:   aws.String(d.Get("smb_guest_password").(string)),
 		}
 
-		log.Printf("[DEBUG] Storage Gateway Gateway %q setting SMB guest password", d.Id())
 		_, err := conn.SetSMBGuestPassword(input)
+
 		if err != nil {
-			return fmt.Errorf("error setting SMB guest password: %w", err)
+			return fmt.Errorf("error updating Storage Gateway Gateway (%s) SMB guest password: %w", d.Id(), err)
 		}
 	}
 
@@ -638,29 +634,27 @@ func resourceGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 			SMBSecurityStrategy: aws.String(d.Get("smb_security_strategy").(string)),
 		}
 
-		log.Printf("[DEBUG] Storage Gateway Gateway %q updating SMB Security Strategy", input)
 		_, err := conn.UpdateSMBSecurityStrategy(input)
+
 		if err != nil {
-			return fmt.Errorf("error updating SMB Security Strategy: %w", err)
+			return fmt.Errorf("error updating Storage Gateway Gateway (%s) SMB security strategy: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("smb_file_share_visibility") {
 		input := &storagegateway.UpdateSMBFileShareVisibilityInput{
-			GatewayARN:        aws.String(d.Id()),
 			FileSharesVisible: aws.Bool(d.Get("smb_file_share_visibility").(bool)),
+			GatewayARN:        aws.String(d.Id()),
 		}
 
-		log.Printf("[DEBUG] Storage Gateway Gateway %q updating SMB File Share Visibility", input)
 		_, err := conn.UpdateSMBFileShareVisibility(input)
+
 		if err != nil {
 			return fmt.Errorf("error updating Storage Gateway Gateway (%s) SMB file share visibility: %w", d.Id(), err)
 		}
 	}
 
-	if d.HasChanges("average_download_rate_limit_in_bits_per_sec",
-		"average_upload_rate_limit_in_bits_per_sec") {
-
+	if d.HasChanges("average_download_rate_limit_in_bits_per_sec", "average_upload_rate_limit_in_bits_per_sec") {
 		deleteInput := &storagegateway.DeleteBandwidthRateLimitInput{
 			GatewayARN: aws.String(d.Id()),
 		}
@@ -674,7 +668,7 @@ func resourceGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 			updateInput.AverageDownloadRateLimitInBitsPerSec = aws.Int64(int64(v.(int)))
 			needsUpdate = true
 		} else if d.HasChange("average_download_rate_limit_in_bits_per_sec") {
-			deleteInput.BandwidthType = aws.String("DOWNLOAD")
+			deleteInput.BandwidthType = aws.String(bandwidthTypeDownload)
 			needsDelete = true
 		}
 
@@ -683,29 +677,36 @@ func resourceGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 			needsUpdate = true
 		} else if d.HasChange("average_upload_rate_limit_in_bits_per_sec") {
 			if needsDelete {
-				deleteInput.BandwidthType = aws.String("ALL")
+				deleteInput.BandwidthType = aws.String(bandwidthTypeAll)
 			} else {
-				deleteInput.BandwidthType = aws.String("UPLOAD")
+				deleteInput.BandwidthType = aws.String(bandwidthTypeUpload)
 				needsDelete = true
 			}
 		}
 
 		if needsUpdate {
-			log.Printf("[DEBUG] Storage Gateway Gateway (%q) updating Bandwidth Rate Limit: %#v", d.Id(), updateInput)
 			_, err := conn.UpdateBandwidthRateLimit(updateInput)
+
 			if err != nil {
-				return fmt.Errorf("error updating Bandwidth Rate Limit: %w", err)
+				return fmt.Errorf("error updating Storage Gateway Gateway (%s) bandwidth rate limit: %w", d.Id(), err)
 			}
 		}
 
 		if needsDelete {
-			log.Printf("[DEBUG] Storage Gateway Gateway (%q) unsetting Bandwidth Rate Limit: %#v", d.Id(), deleteInput)
 			_, err := conn.DeleteBandwidthRateLimit(deleteInput)
+
 			if err != nil {
-				return fmt.Errorf("error unsetting Bandwidth Rate Limit: %w", err)
+				return fmt.Errorf("error deleting Storage Gateway Gateway (%s) bandwidth rate limit: %w", d.Id(), err)
 			}
 		}
+	}
 
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %w", err)
+		}
 	}
 
 	return resourceGatewayRead(d, meta)

@@ -15,6 +15,12 @@ func authentication_Values() []string {
 }
 
 const (
+	bandwidthTypeAll      = "ALL"
+	bandwidthTypeDownload = "DOWNLOAD"
+	bandwidthTypeUpload   = "UPLOAD"
+)
+
+const (
 	defaultStorageClassS3IntelligentTiering = "S3_INTELLIGENT_TIERING"
 	defaultStorageClassS3OneZoneIA          = "S3_ONEZONE_IA"
 	defaultStorageClassS3Standard           = "S3_STANDARD"
