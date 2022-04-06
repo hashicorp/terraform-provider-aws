@@ -40,11 +40,11 @@ func ResourceGateway() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"activation_key": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"gateway_ip_address"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"activation_key", "gateway_ip_address"},
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -78,12 +78,12 @@ func ResourceGateway() *schema.Resource {
 				Computed: true,
 			},
 			"gateway_ip_address": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.IsIPv4Address,
-				ConflictsWith: []string{"activation_key"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsIPv4Address,
+				ExactlyOneOf: []string{"activation_key", "gateway_ip_address"},
 			},
 			"gateway_name": {
 				Type:     schema.TypeString,
@@ -714,17 +714,17 @@ func resourceGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
-	input := &storagegateway.DeleteGatewayInput{
+	log.Printf("[DEBUG] Deleting Storage Gateway Gateway: %s", d.Id())
+	_, err := conn.DeleteGateway(&storagegateway.DeleteGatewayInput{
 		GatewayARN: aws.String(d.Id()),
+	})
+
+	if operationErrorCode(err) == storagegateway.ErrorCodeGatewayNotFound {
+		return nil
 	}
 
-	log.Printf("[DEBUG] Deleting Storage Gateway Gateway: %s", input)
-	_, err := conn.DeleteGateway(input)
 	if err != nil {
-		if IsErrGatewayNotFound(err) {
-			return nil
-		}
-		return fmt.Errorf("error deleting Storage Gateway Gateway: %w", err)
+		return fmt.Errorf("error deleting Storage Gateway Gateway (%s): %w", d.Id(), err)
 	}
 
 	return nil
