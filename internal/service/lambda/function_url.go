@@ -2,7 +2,9 @@ package lambda
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -25,11 +27,7 @@ func ResourceFunctionUrl() *schema.Resource {
 		DeleteWithoutTimeout: resourceFunctionURLDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(_ context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("function_name", d.Id())
-
-				return []*schema.ResourceData{d}, nil
-			},
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -113,32 +111,34 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	name := d.Get("function_name").(string)
+	qualifier := d.Get("qualifier").(string)
+	id := FunctionURLCreateResourceID(name, qualifier)
 	input := &lambda.CreateFunctionUrlConfigInput{
 		AuthType:     aws.String(d.Get("authorization_type").(string)),
 		FunctionName: aws.String(name),
+	}
+
+	if qualifier != "" {
+		input.Qualifier = aws.String(qualifier)
 	}
 
 	if v, ok := d.GetOk("cors"); ok && len(v.([]interface{})) > 0 {
 		input.Cors = expandFunctionUrlCorsConfigs(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("qualifier"); ok {
-		input.Qualifier = aws.String(v.(string))
-	}
-
 	log.Printf("[DEBUG] Creating Lambda Function URL: %s", input)
 	_, err := conn.CreateFunctionUrlConfigWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating Lambda Function URL (%s): %s", name, err)
+		return diag.Errorf("error creating Lambda Function URL (%s): %s", id, err)
 	}
 
-	d.SetId(name)
+	d.SetId(id)
 
 	if v := d.Get("authorization_type").(string); v == lambda.FunctionUrlAuthTypeNone {
 		input := &lambda.AddPermissionInput{
 			Action:              aws.String("lambda:InvokeFunctionUrl"),
-			FunctionName:        aws.String(d.Id()),
+			FunctionName:        aws.String(name),
 			FunctionUrlAuthType: aws.String(v),
 			Principal:           aws.String("*"),
 			StatementId:         aws.String("FunctionURLAllowPublicAccess"),
@@ -158,7 +158,13 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
-	output, err := FindFunctionURLByNameAndQualifier(ctx, conn, d.Id(), d.Get("qualifier").(string))
+	name, qualifier, err := FunctionURLParseResourceID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	output, err := FindFunctionURLByNameAndQualifier(ctx, conn, name, qualifier)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Lambda Function URL %s not found, removing from state", d.Id())
@@ -173,7 +179,9 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("authorization_type", output.AuthType)
 	d.Set("cors", flattenFunctionUrlCorsConfigs(output.Cors))
 	d.Set("function_arn", output.FunctionArn)
+	d.Set("function_name", name)
 	d.Set("function_url", output.FunctionUrl)
+	d.Set("qualifier", qualifier)
 
 	return nil
 }
@@ -181,8 +189,18 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta i
 func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
+	name, qualifier, err := FunctionURLParseResourceID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	input := &lambda.UpdateFunctionUrlConfigInput{
-		FunctionName: aws.String(d.Get("function_name").(string)),
+		FunctionName: aws.String(name),
+	}
+
+	if qualifier != "" {
+		input.Qualifier = aws.String(qualifier)
 	}
 
 	if d.HasChange("authorization_type") {
@@ -193,12 +211,8 @@ func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input.Cors = expandFunctionUrlCorsConfigs(d.Get("cors").([]interface{}))
 	}
 
-	if v, ok := d.GetOk("qualifier"); ok {
-		input.Qualifier = aws.String(v.(string))
-	}
-
 	log.Printf("[DEBUG] Updating Lambda Function URL: %s", input)
-	_, err := conn.UpdateFunctionUrlConfigWithContext(ctx, input)
+	_, err = conn.UpdateFunctionUrlConfigWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("error updating Lambda Function URL (%s): %s", d.Id(), err)
@@ -210,16 +224,22 @@ func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta
 func resourceFunctionURLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
-	input := &lambda.DeleteFunctionUrlConfigInput{
-		FunctionName: aws.String(d.Id()),
+	name, qualifier, err := FunctionURLParseResourceID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
-	if v, ok := d.GetOk("qualifier"); ok {
-		input.Qualifier = aws.String(v.(string))
+	input := &lambda.DeleteFunctionUrlConfigInput{
+		FunctionName: aws.String(name),
+	}
+
+	if qualifier != "" {
+		input.Qualifier = aws.String(qualifier)
 	}
 
 	log.Printf("[INFO] Deleting Lambda Function URL: %s", d.Id())
-	_, err := conn.DeleteFunctionUrlConfigWithContext(ctx, input)
+	_, err = conn.DeleteFunctionUrlConfigWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 		return nil
@@ -300,4 +320,30 @@ func FindFunctionURLByNameAndQualifier(ctx context.Context, conn *lambda.Lambda,
 	}
 
 	return output, nil
+}
+
+const functionURLResourceIDSeparator = "/"
+
+func FunctionURLCreateResourceID(functionName, qualifier string) string {
+	if qualifier == "" {
+		return functionName
+	}
+
+	parts := []string{functionName, qualifier}
+	id := strings.Join(parts, functionURLResourceIDSeparator)
+
+	return id
+}
+
+func FunctionURLParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, functionURLResourceIDSeparator)
+
+	if len(parts) == 1 && parts[0] != "" {
+		return parts[0], "", nil
+	}
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected FUNCTION-NAME%[2]qQUALIFIER or FUNCTION-NAME", id, functionURLResourceIDSeparator)
 }

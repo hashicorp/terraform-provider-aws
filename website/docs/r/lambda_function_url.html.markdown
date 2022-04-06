@@ -56,7 +56,7 @@ resource "aws_lambda_function_url" "test_live" {
 
 ## Import
 
-Lambda Function URLs can be imported using the `function_name`, e.g.,
+Lambda Function URLs can be imported using the `function_name` or `function_name/qualifier`, e.g.,
 
 ```
 $ terraform import aws_lambda_function_url.test_lambda_url my_test_lambda_function
