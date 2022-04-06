@@ -436,21 +436,16 @@ func resourceGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &storagegateway.DescribeGatewayInformationInput{
-		GatewayARN: aws.String(d.Id()),
+	output, err := FindGatewayByARN(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Storage Gateway Gateway (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	log.Printf("[DEBUG] Reading Storage Gateway Gateway: %s", input)
-
-	output, err := conn.DescribeGatewayInformation(input)
-
 	if err != nil {
-		if IsErrGatewayNotFound(err) {
-			log.Printf("[WARN] Storage Gateway Gateway %q not found - removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading Storage Gateway Gateway: %w", err)
+		return fmt.Errorf("error reading Storage Gateway Gateway (%s): %w", d.Id(), err)
 	}
 
 	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -717,7 +712,7 @@ func resourceGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 		GatewayARN: aws.String(d.Id()),
 	})
 
-	if operationErrorCode(err) == operationErrCodeGatewayNotFound {
+	if operationErrorCode(err) == operationErrCodeGatewayNotFound || tfawserr.ErrCodeEquals(err, storagegateway.ErrorCodeGatewayNotFound) {
 		return nil
 	}
 
