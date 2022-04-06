@@ -78,6 +78,9 @@ The AWS Provider supports assuming an IAM role, either in
 the provider configuration block parameter `assume_role`
 or in [a named profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html).
 
+The AWS Provider supports assuming an IAM role using [web identity federation and OpenID Connect (OIDC)](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html#cli-configure-role-oidc).
+This can be configured either using environment variables or in a named profile.
+
 When using a named profile, the AWS Provider also supports [sourcing credentials from an external process](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sourcing-external.html).
 
 ### Provider Configuration
@@ -245,6 +248,23 @@ See the [assume role documentation](https://docs.aws.amazon.com/cli/latest/userg
 
 [envvars]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
 [config]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-settings
+
+### Assume Role with Web Identity Configuration Reference
+
+Configuration for assuming an IAM role using web identify federation can be done using environment variables or a named profile in shared configuration files.
+
+Provider configuration cannot be used to assume an IAM role using web identity federation.
+
+See the assume role documentation [section on web identities](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html#cli-configure-role-oidc) for more information.
+
+|Setting|Provider|[Environment Variable][envvars]|[Shared Config][config]|
+|-------|--------|-----------------------|
+|Role ARN|Not supported|`AWS_ROLE_ARN`|`role_arn`|
+|Web Identity Token|Not supported|`AWS_WEB_IDENTITY_TOKEN_FILE`|`web_identity_token_file`|
+|Duration|Not supported|N/A|`duration_seconds`|
+|Policy|Not supported|N/A|`policy`|
+|Policy ARNs|Not supported|N/A|`policy_arns`|
+|Session Name|Not supported|`AWS_ROLE_SESSION_NAME`|`role_session_name`|
 
 ## Custom User-Agent Information
 
