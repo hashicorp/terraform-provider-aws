@@ -240,13 +240,10 @@ func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	region := meta.(*conns.AWSClient).Region
 
 	activationKey := d.Get("activation_key").(string)
-	gatewayIpAddress := d.Get("gateway_ip_address").(string)
 
-	// Perform one time fetch of activation key from gateway IP address
-	if activationKey == "" {
-		if gatewayIpAddress == "" {
-			return fmt.Errorf("either activation_key or gateway_ip_address must be provided")
-		}
+	// Perform one time fetch of activation key from gateway IP address.
+	if v, ok := d.GetOk("gateway_ip_address"); ok {
+		gatewayIPAddress := v.(string)
 
 		client := &http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -255,7 +252,7 @@ func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 			Timeout: time.Second * 10,
 		}
 
-		requestURL := fmt.Sprintf("http://%s/?activationRegion=%s", gatewayIpAddress, region)
+		requestURL := fmt.Sprintf("http://%s/?activationRegion=%s", gatewayIPAddress, region)
 		if v, ok := d.GetOk("gateway_vpc_endpoint"); ok {
 			requestURL = fmt.Sprintf("%s&vpcEndpoint=%s", requestURL, v.(string))
 		}
@@ -295,7 +292,7 @@ func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 			response, err = client.Do(request)
 		}
 		if err != nil {
-			return fmt.Errorf("error retrieving activation key from IP Address (%s): %w", gatewayIpAddress, err)
+			return fmt.Errorf("error retrieving activation key from IP Address (%s): %w", gatewayIPAddress, err)
 		}
 
 		log.Printf("[DEBUG] Received HTTP response: %#v", response)
@@ -310,7 +307,7 @@ func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 
 		activationKey = redirectURL.Query().Get("activationKey")
 		if activationKey == "" {
-			return fmt.Errorf("empty activationKey received from IP Address: %s", gatewayIpAddress)
+			return fmt.Errorf("empty activationKey received from IP Address: %s", gatewayIPAddress)
 		}
 	}
 
@@ -720,7 +717,7 @@ func resourceGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 		GatewayARN: aws.String(d.Id()),
 	})
 
-	if operationErrorCode(err) == storagegateway.ErrorCodeGatewayNotFound {
+	if operationErrorCode(err) == operationErrCodeGatewayNotFound {
 		return nil
 	}
 
