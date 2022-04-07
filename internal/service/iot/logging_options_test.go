@@ -96,7 +96,7 @@ EOF
 resource "aws_iam_role_policy" "test" {
   name = %[1]q
   role = aws_iam_role.test.id
-  
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
