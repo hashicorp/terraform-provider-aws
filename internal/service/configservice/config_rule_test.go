@@ -5,13 +5,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func testAccConfigRule_basic(t *testing.T) {
@@ -70,6 +71,11 @@ func testAccConfigRule_ownerAws(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "scope.0.compliance_resource_types.*", "AWS::EC2::Instance"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -112,49 +118,6 @@ func testAccConfigRule_customlambda(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_value", "yes"),
 				),
 			},
-		},
-	})
-}
-
-func testAccConfigRule_importAws(t *testing.T) {
-	resourceName := "aws_config_config_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigRuleDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccConfigRuleConfig_ownerAws(rName),
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func testAccConfigRule_importLambda(t *testing.T) {
-	resourceName := "aws_config_config_rule.test"
-	rInt := sdkacctest.RandInt()
-
-	path := "test-fixtures/lambdatest.zip"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConfigRuleDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccConfigRuleConfig_customLambda(rInt, path),
-			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -294,6 +257,29 @@ func testAccConfigRule_tags(t *testing.T) {
 	})
 }
 
+func testAccConfigRule_disappears(t *testing.T) {
+	var cr configservice.ConfigRule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_config_config_rule.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckConfigRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigRuleConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigRuleExists(resourceName, &cr),
+					acctest.CheckResourceDisappears(acctest.Provider, tfconfig.ResourceConfigRule(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckConfigRuleName(n, desired string, obj *configservice.ConfigRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -319,18 +305,12 @@ func testAccCheckConfigRuleExists(n string, obj *configservice.ConfigRule) resou
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
-		out, err := conn.DescribeConfigRules(&configservice.DescribeConfigRulesInput{
-			ConfigRuleNames: []*string{aws.String(rs.Primary.Attributes["name"])},
-		})
-		if err != nil {
-			return fmt.Errorf("Failed to describe config rule: %s", err)
-		}
-		if len(out.ConfigRules) < 1 {
-			return fmt.Errorf("No config rule found when describing %q", rs.Primary.Attributes["name"])
-		}
 
-		cr := out.ConfigRules[0]
-		*obj = *cr
+		rule, err := tfconfig.FindConfigRule(conn, rs.Primary.ID)
+		if err != nil {
+			return fmt.Errorf("Failed to describe config rule: %w", err)
+		}
+		*obj = *rule
 
 		return nil
 	}
@@ -344,16 +324,17 @@ func testAccCheckConfigRuleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, err := conn.DescribeConfigRules(&configservice.DescribeConfigRulesInput{
-			ConfigRuleNames: []*string{aws.String(rs.Primary.Attributes["name"])},
-		})
+		_, err := tfconfig.FindConfigRule(conn, rs.Primary.ID)
 
-		if err == nil {
-			if len(resp.ConfigRules) != 0 &&
-				*resp.ConfigRules[0].ConfigRuleName == rs.Primary.Attributes["name"] {
-				return fmt.Errorf("config rule still exists: %s", rs.Primary.Attributes["name"])
-			}
+		if tfresource.NotFound(err) {
+			continue
 		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("ConfigService Rule %s still exists", rs.Primary.ID)
 	}
 
 	return nil

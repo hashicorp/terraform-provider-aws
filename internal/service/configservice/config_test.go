@@ -10,12 +10,11 @@ func TestAccConfigService_serial(t *testing.T) {
 			"basic":            testAccConfigRule_basic,
 			"ownerAws":         testAccConfigRule_ownerAws,
 			"customlambda":     testAccConfigRule_customlambda,
-			"importAws":        testAccConfigRule_importAws,
-			"importLambda":     testAccConfigRule_importLambda,
 			"scopeTagKey":      testAccConfigRule_Scope_TagKey,
 			"scopeTagKeyEmpty": testAccConfigRule_Scope_TagKey_Empty,
 			"scopeTagValue":    testAccConfigRule_Scope_TagValue,
 			"tags":             testAccConfigRule_tags,
+			"disappears":       testAccConfigRule_disappears,
 		},
 		"ConfigurationRecorderStatus": {
 			"basic":        testAccConfigurationRecorderStatus_basic,
