@@ -148,6 +148,10 @@ func TestAccGameLiftGameServerGroup_BalancingStrategy(t *testing.T) {
 }
 
 func TestAccGameLiftGameServerGroup_GameServerGroupName(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_game_server_group.test"
 
@@ -396,6 +400,10 @@ func TestAccGameLiftGameServerGroup_GameServerProtectionPolicy(t *testing.T) {
 }
 
 func TestAccGameLiftGameServerGroup_MaxSize(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_game_server_group.test"
 
@@ -434,6 +442,10 @@ func TestAccGameLiftGameServerGroup_MaxSize(t *testing.T) {
 }
 
 func TestAccGameLiftGameServerGroup_MinSize(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_game_server_group.test"
 
@@ -512,6 +524,10 @@ func TestAccGameLiftGameServerGroup_RoleArn(t *testing.T) {
 }
 
 func TestAccGameLiftGameServerGroup_VpcSubnets(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_game_server_group.test"
 
