@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -59,9 +60,10 @@ func ResourceReplicationGroup() *schema.Resource {
 				ConflictsWith: []string{"user_group_ids"},
 			},
 			"auto_minor_version_upgrade": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
+				Type:         nullable.TypeNullableBool,
+				Optional:     true,
+				Default:      "true",
+				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 			},
 			"automatic_failover_enabled": {
 				Type:     schema.TypeBool,
@@ -407,8 +409,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &elasticache.CreateReplicationGroupInput{
-		ReplicationGroupId:      aws.String(d.Get("replication_group_id").(string)),
-		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+		ReplicationGroupId: aws.String(d.Get("replication_group_id").(string)),
 	}
 
 	if len(tags) > 0 {
@@ -441,6 +442,12 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 
 	if v, ok := d.GetOk("engine_version"); ok {
 		params.EngineVersion = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("auto_minor_version_upgrade"); ok {
+		if v, null, _ := nullable.Bool(v.(string)).Value(); !null {
+			params.AutoMinorVersionUpgrade = aws.Bool(v)
+		}
 	}
 
 	if preferredAZs, ok := d.GetOk("preferred_cache_cluster_azs"); ok {
@@ -670,6 +677,21 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("arn", rgp.ARN)
 	d.Set("data_tiering_enabled", aws.StringValue(rgp.DataTiering) == elasticache.DataTieringStatusEnabled)
 
+	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(rgp.LogDeliveryConfigurations))
+	d.Set("snapshot_window", rgp.SnapshotWindow)
+	d.Set("snapshot_retention_limit", rgp.SnapshotRetentionLimit)
+
+	if rgp.ConfigurationEndpoint != nil {
+		d.Set("port", rgp.ConfigurationEndpoint.Port)
+		d.Set("configuration_endpoint_address", rgp.ConfigurationEndpoint.Address)
+	} else {
+		d.Set("port", rgp.NodeGroups[0].PrimaryEndpoint.Port)
+		d.Set("primary_endpoint_address", rgp.NodeGroups[0].PrimaryEndpoint.Address)
+		d.Set("reader_endpoint_address", rgp.NodeGroups[0].ReaderEndpoint.Address)
+	}
+
+	d.Set("user_group_ids", rgp.UserGroupIds)
+
 	// Tags cannot be read when the replication group is not Available
 	_, err = WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
@@ -700,12 +722,9 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	if rgp.NodeGroups != nil {
-		if len(rgp.NodeGroups[0].NodeGroupMembers) == 0 {
-			return nil
-		}
-
-		cacheCluster := *rgp.NodeGroups[0].NodeGroupMembers[0] // nosemgrep: prefer-aws-go-sdk-pointer-conversion-assignment // false positive
+	// This section reads settings that require checking the underlying cache clusters
+	if rgp.NodeGroups != nil && len(rgp.NodeGroups[0].NodeGroupMembers) != 0 {
+		cacheCluster := rgp.NodeGroups[0].NodeGroupMembers[0]
 
 		res, err := conn.DescribeCacheClusters(&elasticache.DescribeCacheClustersInput{
 			CacheClusterId:    cacheCluster.CacheClusterId,
@@ -725,23 +744,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 			return err
 		}
 
-		d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(rgp.LogDeliveryConfigurations))
-		d.Set("snapshot_window", rgp.SnapshotWindow)
-		d.Set("snapshot_retention_limit", rgp.SnapshotRetentionLimit)
-
-		if rgp.ConfigurationEndpoint != nil {
-			d.Set("port", rgp.ConfigurationEndpoint.Port)
-			d.Set("configuration_endpoint_address", rgp.ConfigurationEndpoint.Address)
-		} else {
-			d.Set("port", rgp.NodeGroups[0].PrimaryEndpoint.Port)
-			d.Set("primary_endpoint_address", rgp.NodeGroups[0].PrimaryEndpoint.Address)
-			d.Set("reader_endpoint_address", rgp.NodeGroups[0].ReaderEndpoint.Address)
-		}
-
-		d.Set("user_group_ids", rgp.UserGroupIds)
-
 		d.Set("at_rest_encryption_enabled", c.AtRestEncryptionEnabled)
-		d.Set("auto_minor_version_upgrade", c.AutoMinorVersionUpgrade)
 		d.Set("transit_encryption_enabled", c.TransitEncryptionEnabled)
 
 		if c.AuthTokenEnabled != nil && !aws.BoolValue(c.AuthTokenEnabled) {
@@ -800,7 +803,10 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if d.HasChange("auto_minor_version_upgrade") {
-		params.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
+		v := d.Get("auto_minor_version_upgrade")
+		if v, null, _ := nullable.Bool(v.(string)).Value(); !null {
+			params.AutoMinorVersionUpgrade = aws.Bool(v)
+		}
 		requestUpdate = true
 	}
 

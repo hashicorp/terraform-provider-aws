@@ -6,6 +6,7 @@ import (
 	"log"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -52,6 +54,12 @@ func ResourceCluster() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"auto_minor_version_upgrade": {
+				Type:         nullable.TypeNullableBool,
+				Optional:     true,
+				Default:      "true",
+				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 			},
 			"availability_zone": {
 				Type:     schema.TypeString,
@@ -340,8 +348,15 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		req.Engine = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("engine_version"); ok {
-		req.EngineVersion = aws.String(v.(string))
+	version := d.Get("engine_version").(string)
+	if version != "" {
+		req.EngineVersion = aws.String(version)
+	}
+
+	if v, ok := d.GetOk("auto_minor_version_upgrade"); ok {
+		if v, null, _ := nullable.Bool(v.(string)).Value(); !null {
+			req.AutoMinorVersionUpgrade = aws.Bool(v)
+		}
 	}
 
 	if v, ok := d.GetOk("port"); ok {
@@ -523,6 +538,7 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 	if err := setEngineVersionFromCacheCluster(d, c); err != nil {
 		return err
 	}
+	d.Set("auto_minor_version_upgrade", strconv.FormatBool(aws.BoolValue(c.AutoMinorVersionUpgrade)))
 
 	d.Set("subnet_group_name", c.CacheSubnetGroupName)
 	if err := d.Set("security_group_names", flattenSecurityGroupNames(c.CacheSecurityGroups)); err != nil {
@@ -594,7 +610,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		previousLogDeliveryConfig := oldLogDeliveryConfig.(*schema.Set).List()
 		for _, previous := range previousLogDeliveryConfig {
 			logDeliveryConfigurationRequest := expandEmptyLogDeliveryConfigurations(previous.(map[string]interface{}))
-			//if something was removed, send an empty request
+			// if something was removed, send an empty request
 			if !logTypesToSubmit[*logDeliveryConfigurationRequest.LogType] {
 				req.LogDeliveryConfigurations = append(req.LogDeliveryConfigurations, &logDeliveryConfigurationRequest)
 			}
@@ -620,6 +636,14 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("engine_version") {
 		req.EngineVersion = aws.String(d.Get("engine_version").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("auto_minor_version_upgrade") {
+		v := d.Get("auto_minor_version_upgrade")
+		if v, null, _ := nullable.Bool(v.(string)).Value(); !null {
+			req.AutoMinorVersionUpgrade = aws.Bool(v)
+		}
 		requestUpdate = true
 	}
 

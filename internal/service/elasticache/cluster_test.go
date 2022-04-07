@@ -43,7 +43,7 @@ func TestAccElastiCacheCluster_Engine_memcached(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_Engine_Memcached(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &ec),
 					resource.TestCheckResourceAttr(resourceName, "cache_nodes.0.id", "0001"),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration_endpoint"),
@@ -77,11 +77,46 @@ func TestAccElastiCacheCluster_Engine_redis(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_Engine_Redis(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &ec),
 					resource.TestCheckResourceAttr(resourceName, "cache_nodes.0.id", "0001"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "port", "6379"),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheCluster_Engine_redis_v5(t *testing.T) {
+	var ec elasticache.CacheCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_Engine_Redis_v5(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "5.0.6"),
+					// Even though it is ignored, the API returns `true` in this case
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 				),
 			},
 			{
@@ -763,6 +798,43 @@ func TestAccElastiCacheCluster_Redis_finalSnapshot(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheCluster_Redis_autoMinorVersionUpgrade(t *testing.T) {
+	var cluster elasticache.CacheCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_Redis_AutoMinorVersionUpgrade(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
+			},
+			{
+				Config: testAccClusterConfig_Redis_AutoMinorVersionUpgrade(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheCluster_Engine_Redis_LogDeliveryConfigurations(t *testing.T) {
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -1110,7 +1182,7 @@ func testAccCheckClusterEC2ClassicExists(n string, v *elasticache.CacheCluster) 
 func testAccClusterConfig_Engine_Memcached(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
-  cluster_id      = "%s"
+  cluster_id      = "%[1]s"
   engine          = "memcached"
   node_type       = "cache.t3.small"
   num_cache_nodes = 1
@@ -1121,7 +1193,19 @@ resource "aws_elasticache_cluster" "test" {
 func testAccClusterConfig_Engine_Redis(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
-  cluster_id      = "%s"
+  cluster_id      = "%[1]s"
+  engine          = "redis"
+  node_type       = "cache.t3.small"
+  num_cache_nodes = 1
+}
+`, rName)
+}
+
+func testAccClusterConfig_Engine_Redis_v5(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "test" {
+  cluster_id      = "%[1]s"
+  engine_version  = "5.0.6"
   engine          = "redis"
   node_type       = "cache.t3.small"
   num_cache_nodes = 1
@@ -1132,7 +1216,7 @@ resource "aws_elasticache_cluster" "test" {
 func testAccClusterConfig_Engine_None(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
-  cluster_id      = "%s"
+  cluster_id      = "%[1]s"
   node_type       = "cache.t3.small"
   num_cache_nodes = 1
 }
@@ -1617,6 +1701,20 @@ resource "aws_elasticache_cluster" "test" {
   final_snapshot_identifier = %[1]q
 }
 `, rName)
+}
+
+func testAccClusterConfig_Redis_AutoMinorVersionUpgrade(rName string, enable bool) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "test" {
+  cluster_id      = %[1]q
+  engine          = "redis"
+  engine_version  = "6.x"
+  node_type       = "cache.t3.small"
+  num_cache_nodes = 1
+
+  auto_minor_version_upgrade = %[2]t
+}
+`, rName, enable)
 }
 
 func testAccClusterConfig_Engine_Redis_LogDeliveryConfigurations(rName string, slowLogDeliveryEnabled bool, slowDeliveryDestination string, slowDeliveryFormat string, engineLogDeliveryEnabled bool, engineDeliveryDestination string, engineLogDeliveryFormat string) string {
