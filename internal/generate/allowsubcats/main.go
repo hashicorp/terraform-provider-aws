@@ -6,6 +6,7 @@ package main
 import (
 	"bytes"
 	"encoding/csv"
+	"fmt"
 	"log"
 	"os"
 	"sort"
@@ -69,12 +70,14 @@ func main() {
 
 	td := TemplateData{}
 
+	fmt.Printf("Generate allowed-subcategories.txt\n")
+
 	for i, l := range data {
 		if i < 1 { // no header
 			continue
 		}
 
-		if l[allowedSubcategory] == "" || l[exclude] != "" {
+		if l[exclude] != "" && l[allowedSubcategory] == "" {
 			continue
 		}
 
