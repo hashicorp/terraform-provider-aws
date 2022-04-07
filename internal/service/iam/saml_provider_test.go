@@ -25,12 +25,12 @@ func TestAccIAMSAMLProvider_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIAMSAMLProviderDestroy,
+		CheckDestroy: testAccCheckSAMLProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMSAMLProviderConfig(rName, idpEntityId),
+				Config: testAccSAMLProviderConfig(rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMSAMLProviderExists(resourceName),
+					testAccCheckSAMLProviderExists(resourceName),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("saml-provider/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "saml_metadata_document"),
@@ -39,9 +39,9 @@ func TestAccIAMSAMLProvider_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccIAMSAMLProviderConfigUpdate(rName, idpEntityIdModified),
+				Config: testAccSAMLProviderConfigUpdate(rName, idpEntityIdModified),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMSAMLProviderExists(resourceName),
+					testAccCheckSAMLProviderExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "saml_metadata_document"),
 				),
@@ -64,12 +64,12 @@ func TestAccIAMSAMLProvider_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIAMSAMLProviderDestroy,
+		CheckDestroy: testAccCheckSAMLProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMSAMLProviderConfigTags1(rName, idpEntityId, "key1", "value1"),
+				Config: testAccSAMLProviderConfigTags1(rName, idpEntityId, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMSAMLProviderExists(resourceName),
+					testAccCheckSAMLProviderExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -80,18 +80,18 @@ func TestAccIAMSAMLProvider_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIAMSAMLProviderConfigTags2(rName, idpEntityId, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSAMLProviderConfigTags2(rName, idpEntityId, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMSAMLProviderExists(resourceName),
+					testAccCheckSAMLProviderExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccIAMSAMLProviderConfigTags1(rName, idpEntityId, "key2", "value2"),
+				Config: testAccSAMLProviderConfigTags1(rName, idpEntityId, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMSAMLProviderExists(resourceName),
+					testAccCheckSAMLProviderExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -109,12 +109,12 @@ func TestAccIAMSAMLProvider_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIAMSAMLProviderDestroy,
+		CheckDestroy: testAccCheckSAMLProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMSAMLProviderConfig(rName, idpEntityId),
+				Config: testAccSAMLProviderConfig(rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMSAMLProviderExists(resourceName),
+					testAccCheckSAMLProviderExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceSAMLProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -123,7 +123,7 @@ func TestAccIAMSAMLProvider_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckIAMSAMLProviderDestroy(s *terraform.State) error {
+func testAccCheckSAMLProviderDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -147,7 +147,7 @@ func testAccCheckIAMSAMLProviderDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckIAMSAMLProviderExists(n string) resource.TestCheckFunc {
+func testAccCheckSAMLProviderExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -170,7 +170,7 @@ func testAccCheckIAMSAMLProviderExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccIAMSAMLProviderConfig(rName, idpEntityId string) string {
+func testAccSAMLProviderConfig(rName, idpEntityId string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_saml_provider" "test" {
   name                   = %[1]q
@@ -179,7 +179,7 @@ resource "aws_iam_saml_provider" "test" {
 `, rName, idpEntityId)
 }
 
-func testAccIAMSAMLProviderConfigUpdate(rName, idpEntityIdModified string) string {
+func testAccSAMLProviderConfigUpdate(rName, idpEntityIdModified string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_saml_provider" "test" {
   name                   = %[1]q
@@ -188,7 +188,7 @@ resource "aws_iam_saml_provider" "test" {
 `, rName, idpEntityIdModified)
 }
 
-func testAccIAMSAMLProviderConfigTags1(rName, idpEntityId, tagKey1, tagValue1 string) string {
+func testAccSAMLProviderConfigTags1(rName, idpEntityId, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_saml_provider" "test" {
   name                   = %[1]q
@@ -201,7 +201,7 @@ resource "aws_iam_saml_provider" "test" {
 `, rName, idpEntityId, tagKey1, tagValue1)
 }
 
-func testAccIAMSAMLProviderConfigTags2(rName, idpEntityId, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccSAMLProviderConfigTags2(rName, idpEntityId, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_saml_provider" "test" {
   name                   = %[1]q
