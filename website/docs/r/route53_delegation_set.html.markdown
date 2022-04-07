@@ -48,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route53 Delegation Sets can be imported using the `delegation set id`, e.g.
+Route53 Delegation Sets can be imported using the `delegation set id`, e.g.,
 
 ```
 $ terraform import aws_route53_delegation_set.set1 N1PA6795SAMPLE

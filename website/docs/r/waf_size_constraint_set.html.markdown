@@ -43,13 +43,13 @@ The following arguments are supported:
 
 * `field_to_match` - (Required) Specifies where in a web request to look for the size constraint.
 * `comparison_operator` - (Required) The type of comparison you want to perform.
-  e.g. `EQ`, `NE`, `LT`, `GT`.
+  e.g., `EQ`, `NE`, `LT`, `GT`.
   See [docs](https://docs.aws.amazon.com/waf/latest/APIReference/API_wafRegional_SizeConstraint.html) for all supported values.
 * `size` - (Required) The size in bytes that you want to compare against the size of the specified `field_to_match`.
   Valid values are between 0 - 21474836480 bytes (0 - 20 GB).
 * `text_transformation` - (Required) Text transformations used to eliminate unusual formatting that attackers use in web requests in an effort to bypass AWS WAF.
   If you specify a transformation, AWS WAF performs the transformation on `field_to_match` before inspecting a request for a match.
-  e.g. `CMD_LINE`, `HTML_ENTITY_DECODE` or `NONE`.
+  e.g., `CMD_LINE`, `HTML_ENTITY_DECODE` or `NONE`.
   See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_SizeConstraint.html#WAF-Type-SizeConstraint-TextTransformation)
   for all supported values.
   **Note:** if you choose `BODY` as `type`, you must choose `NONE` because CloudFront forwards only the first 8192 bytes for inspection.
@@ -58,10 +58,10 @@ The following arguments are supported:
 
 #### Arguments
 
-* `data` - (Optional) When `type` is `HEADER`, enter the name of the header that you want to search, e.g. `User-Agent` or `Referer`.
+* `data` - (Optional) When `type` is `HEADER`, enter the name of the header that you want to search, e.g., `User-Agent` or `Referer`.
   If `type` is any other value, omit this field.
 * `type` - (Required) The part of the web request that you want AWS WAF to search for a specified string.
-  e.g. `HEADER`, `METHOD` or `BODY`.
+  e.g., `HEADER`, `METHOD` or `BODY`.
   See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_FieldToMatch.html)
   for all supported values.
 
@@ -74,7 +74,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AWS WAF Size Constraint Set can be imported using their ID, e.g.
+AWS WAF Size Constraint Set can be imported using their ID, e.g.,
 
 ```
 $ terraform import aws_waf_size_constraint_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

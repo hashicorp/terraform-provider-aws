@@ -49,7 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EventBridge event buses can be imported using the `name` (which can also be a partner event source name), e.g.
+EventBridge event buses can be imported using the `name` (which can also be a partner event source name), e.g.,
 
 ```console
 $ terraform import aws_cloudwatch_event_bus.messenger chat-messages

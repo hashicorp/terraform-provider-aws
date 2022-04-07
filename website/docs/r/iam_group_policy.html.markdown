@@ -61,7 +61,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IAM Group Policies can be imported using the `group_name:group_policy_name`, e.g.
+IAM Group Policies can be imported using the `group_name:group_policy_name`, e.g.,
 
 ```
 $ terraform import aws_iam_group_policy.mypolicy group_of_mypolicy_name:mypolicy_name

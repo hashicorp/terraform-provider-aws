@@ -63,7 +63,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AutoScaling ScheduledAction can be imported using the `auto-scaling-group-name` and `scheduled-action-name`, e.g.
+AutoScaling ScheduledAction can be imported using the `auto-scaling-group-name` and `scheduled-action-name`, e.g.,
 
 ```
 $ terraform import aws_autoscaling_schedule.resource-name auto-scaling-group-name/scheduled-action-name

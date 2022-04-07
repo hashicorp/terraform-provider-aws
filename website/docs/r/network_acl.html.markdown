@@ -17,33 +17,33 @@ defined in-line. At this time you cannot use a Network ACL with in-line rules
 in conjunction with any Network ACL Rule resources. Doing so will cause
 a conflict of rule settings and will overwrite rules.
 
+~> **NOTE on Network ACLs and Network ACL Associations:** Terraform provides both a standalone [network ACL association](network_acl_association.html)
+resource and a network ACL resource with a `subnet_ids` attribute. Do not use the same subnet ID in both a network ACL
+resource and a network ACL association resource. Doing so will cause a conflict of associations and will overwrite the association.
+
 ## Example Usage
 
 ```terraform
 resource "aws_network_acl" "main" {
   vpc_id = aws_vpc.main.id
 
-  egress = [
-    {
-      protocol   = "tcp"
-      rule_no    = 200
-      action     = "allow"
-      cidr_block = "10.3.0.0/18"
-      from_port  = 443
-      to_port    = 443
-    }
-  ]
+  egress {
+    protocol   = "tcp"
+    rule_no    = 200
+    action     = "allow"
+    cidr_block = "10.3.0.0/18"
+    from_port  = 443
+    to_port    = 443
+  }
 
-  ingress = [
-    {
-      protocol   = "tcp"
-      rule_no    = 100
-      action     = "allow"
-      cidr_block = "10.3.0.0/18"
-      from_port  = 80
-      to_port    = 80
-    }
-  ]
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "10.3.0.0/18"
+    from_port  = 80
+    to_port    = 80
+  }
 
   tags = {
     Name = "main"
@@ -94,7 +94,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Network ACLs can be imported using the `id`, e.g.
+Network ACLs can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_network_acl.main acl-7aaabd18

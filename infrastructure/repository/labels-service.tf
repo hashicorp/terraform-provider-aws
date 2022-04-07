@@ -6,15 +6,18 @@
 variable "service_labels" {
   default = [
     "accessanalyzer",
+    "account",
     "acm",
     "acmpca",
     "alexaforbusiness",
+    "amp",
     "amplify",
     "apigateway",
     "apigatewaymanagementapi",
     "apigatewayv2",
     "appconfig",
     "appflow",
+    "appintegrations",
     "applicationautoscaling",
     "applicationdiscoveryservice",
     "applicationinsights",
@@ -32,6 +35,7 @@ variable "service_labels" {
     "budgets",
     "chime",
     "cloud9",
+    "cloudcontrolapi",
     "clouddirectory",
     "cloudformation",
     "cloudfront",
@@ -40,8 +44,8 @@ variable "service_labels" {
     "cloudsearch",
     "cloudtrail",
     "cloudwatch",
-    "cloudwatchevents",
     "cloudwatchlogs",
+    "cloudwatchrum",
     "codeartifact",
     "codebuild",
     "codecommit",
@@ -53,6 +57,7 @@ variable "service_labels" {
     "codestarconnections",
     "codestarnotifications",
     "cognito",
+    "cognitoidentityprovider",
     "comprehend",
     "comprehendmedical",
     "computeoptimizer",
@@ -79,7 +84,7 @@ variable "service_labels" {
     "ecs",
     "efs",
     "eks",
-    "elastic-transcoder",
+    "elastictranscoder",
     "elasticache",
     "elasticbeanstalk",
     "elasticinference",
@@ -88,7 +93,7 @@ variable "service_labels" {
     "elbv2",
     "emr",
     "emrcontainers",
-    "eventbridge",
+    "events",
     "firehose",
     "fms",
     "forecastservice",
@@ -98,6 +103,7 @@ variable "service_labels" {
     "glacier",
     "globalaccelerator",
     "glue",
+    "grafana",
     "greengrass",
     "groundstation",
     "guardduty",
@@ -114,7 +120,9 @@ variable "service_labels" {
     "iotthingsgraph",
     "ivs",
     "kafka",
+    "kafkaconnect",
     "kendra",
+    "keyspaces",
     "kinesis",
     "kinesisanalytics",
     "kinesisanalyticsv2",
@@ -122,7 +130,7 @@ variable "service_labels" {
     "kms",
     "lakeformation",
     "lambda",
-    "lexmodelbuildingservice",
+    "lexmodels",
     "licensemanager",
     "lightsail",
     "location",
@@ -146,6 +154,7 @@ variable "service_labels" {
     "neptune",
     "networkfirewall",
     "networkmanager",
+    "opensearch",
     "opsworks",
     "opsworkscm",
     "organizations",
@@ -157,7 +166,6 @@ variable "service_labels" {
     "pinpointsmsvoice",
     "polly",
     "pricing",
-    "prometheusservice",
     "qldb",
     "quicksight",
     "ram",
@@ -179,7 +187,7 @@ variable "service_labels" {
     "schemas",
     "secretsmanager",
     "securityhub",
-    "serverlessapplicationrepository",
+    "serverlessrepo",
     "servicecatalog",
     "servicediscovery",
     "servicequotas",
@@ -221,7 +229,8 @@ variable "service_labels" {
 resource "github_issue_label" "service" {
   for_each = var.service_labels
 
-  repository = "terraform-provider-aws"
-  name       = "service/${each.value}"
-  color      = "7b42bc" # color:terraform (logomark)
+  repository  = "terraform-provider-aws"
+  name        = "service/${each.value}"
+  color       = "7b42bc" # color:terraform (logomark)
+  description = "Issues and PRs that pertain to the ${each.value} service."
 }

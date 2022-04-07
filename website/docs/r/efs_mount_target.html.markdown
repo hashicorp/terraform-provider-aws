@@ -59,7 +59,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The EFS mount targets can be imported using the `id`, e.g.
+The EFS mount targets can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_efs_mount_target.alpha fsmt-52a643fb

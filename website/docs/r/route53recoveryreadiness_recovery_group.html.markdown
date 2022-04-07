@@ -38,7 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route53 Recovery Readiness recovery groups can be imported via the recovery group name, e.g.
+Route53 Recovery Readiness recovery groups can be imported via the recovery group name, e.g.,
 
 ```
 $ terraform import aws_route53recoveryreadiness_recovery_group.my-high-availability-app my-high-availability-app

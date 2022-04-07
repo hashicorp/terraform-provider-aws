@@ -42,7 +42,7 @@ resource "aws_s3_bucket_inventory" "test" {
 }
 ```
 
-### Add inventory configuration with S3 bucket object prefix
+### Add inventory configuration with S3 object prefix
 
 ```terraform
 resource "aws_s3_bucket" "test" {
@@ -125,7 +125,7 @@ No additional attributes are exported.
 
 ## Import
 
-S3 bucket inventory configurations can be imported using `bucket:inventory`, e.g.
+S3 bucket inventory configurations can be imported using `bucket:inventory`, e.g.,
 
 ```sh
 $ terraform import aws_s3_bucket_inventory.my-bucket-entire-bucket my-bucket:EntireBucket

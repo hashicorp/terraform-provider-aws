@@ -65,7 +65,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Instance Profiles can be imported using the `name`, e.g.
+Instance Profiles can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_iam_instance_profile.test_profile app-instance-profile-1

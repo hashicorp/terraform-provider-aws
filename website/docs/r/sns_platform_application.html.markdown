@@ -61,7 +61,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SNS platform applications can be imported using the ARN, e.g.
+SNS platform applications can be imported using the ARN, e.g.,
 
 ```
 $ terraform import aws_sns_platform_application.gcm_application arn:aws:sns:us-west-2:0123456789012:app/GCM/gcm_application

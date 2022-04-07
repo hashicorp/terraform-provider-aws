@@ -93,6 +93,10 @@ resource "aws_codestarconnections_connection" "example" {
 
 resource "aws_s3_bucket" "codepipeline_bucket" {
   bucket = "test-bucket"
+}
+
+resource "aws_s3_bucket_acl" "codepipeline_bucket_acl" {
+  bucket = aws_s3_bucket.codepipeline_bucket.id
   acl    = "private"
 }
 
@@ -217,7 +221,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodePipelines can be imported using the name, e.g.
+CodePipelines can be imported using the name, e.g.,
 
 ```
 $ terraform import aws_codepipeline.foo example

@@ -58,7 +58,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Traffic mirror sessions can be imported using the `id`, e.g.
+Traffic mirror sessions can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_ec2_traffic_mirror_session.session tms-0d8aa3ca35897b82e

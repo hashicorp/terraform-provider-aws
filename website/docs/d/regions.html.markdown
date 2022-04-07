@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_regions
 
-Provides information about AWS Regions. Can be used to filter regions i.e. by Opt-In status or only regions enabled for current account. To get details like endpoint and description of each region the data source can be combined with the [`aws_region` data source](/docs/providers/aws/d/region.html).
+Provides information about AWS Regions. Can be used to filter regions i.e., by Opt-In status or only regions enabled for current account. To get details like endpoint and description of each region the data source can be combined with the [`aws_region` data source](/docs/providers/aws/d/region.html).
 
 ## Example Usage
 
@@ -58,7 +58,7 @@ The following arguments are supported by the `filter` configuration block:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Identifier of the current partition (e.g. `aws` in AWS Commercial, `aws-cn` in AWS China).
+* `id` - Identifier of the current partition (e.g., `aws` in AWS Commercial, `aws-cn` in AWS China).
 * `names` - Names of regions that meets the criteria.
 
 [1]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-regions.html

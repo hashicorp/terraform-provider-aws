@@ -32,12 +32,16 @@ sweeper:
 # resource "aws_XXX"
 service/accessanalyzer:
   - '((\*|-) ?`?|(data|resource) "?)aws_accessanalyzer_'
+service/account:
+  - '((\*|-) ?`?|(data|resource) "?)aws_account_'
 service/acm:
   - '((\*|-) ?`?|(data|resource) "?)aws_acm_'
 service/acmpca:
   - '((\*|-) ?`?|(data|resource) "?)aws_acmpca_'
 service/alexaforbusiness:
   - '((\*|-) ?`?|(data|resource) "?)aws_alexaforbusiness_'
+service/amp:
+  - '((\*|-) ?`?|(data|resource) "?)aws_prometheus_'
 service/amplify:
   - '((\*|-) ?`?|(data|resource) "?)aws_amplify_'
 service/apigateway:
@@ -46,6 +50,8 @@ service/apigatewayv2:
   - '((\*|-) ?`?|(data|resource) "?)aws_apigatewayv2_'
 service/appconfig:
   - '((\*|-) ?`?|(data|resource) "?)aws_appconfig_'
+service/appintegrations:
+  - '((\*|-) ?`?|(data|resource) "?)aws_appintegrations_'
 service/applicationautoscaling:
   - '((\*|-) ?`?|(data|resource) "?)aws_appautoscaling_'
 service/applicationdiscoveryservice:
@@ -78,6 +84,8 @@ service/chime:
   - '((\*|-) ?`?|(data|resource) "?)aws_chime_'
 service/cloud9:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloud9_'
+service/cloudcontrolapi:
+  - '((\*|-) ?`?|(data|resource) "?)aws_cloudcontrolapi_'
 service/clouddirectory:
   - '((\*|-) ?`?|(data|resource) "?)aws_clouddirectory_'
 service/cloudformation:
@@ -92,10 +100,10 @@ service/cloudtrail:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudtrail'
 service/cloudwatch:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_(?!(event_|log_|query_))'
-service/cloudwatchevents:
-  - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_event_'
 service/cloudwatchlogs:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_(log_|query_)'
+service/cloudwatchrum:
+  - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatchrum_'
 service/codeartifact:
   - '((\*|-) ?`?|(data|resource) "?)aws_codeartifact_'
 service/codebuild:
@@ -154,7 +162,7 @@ service/efs:
   - '((\*|-) ?`?|(data|resource) "?)aws_efs_'
 service/eks:
   - '((\*|-) ?`?|(data|resource) "?)aws_eks_'
-elastic-transcoder:
+service/elastictranscoder:
   - '((\*|-) ?`?|(data|resource) "?)aws_elastictranscoder_'
 service/elasticache:
   - '((\*|-) ?`?|(data|resource) "?)aws_elasticache_'
@@ -170,7 +178,7 @@ service/emr:
   - '((\*|-) ?`?|(data|resource) "?)aws_emr_'
 service/emrcontainers:
   - '((\*|-) ?`?|(data|resource) "?)aws_emrcontainers_'
-service/eventbridge:
+service/events:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_event_'
 service/firehose:
   - '((\*|-) ?`?|(data|resource) "?)aws_kinesis_firehose_'
@@ -188,6 +196,8 @@ service/globalaccelerator:
   - '((\*|-) ?`?|(data|resource) "?)aws_globalaccelerator_'
 service/glue:
   - '((\*|-) ?`?|(data|resource) "?)aws_glue_'
+service/grafana:
+  - '((\*|-) ?`?|(data|resource) "?)aws_grafana_'
 service/greengrass:
   - '((\*|-) ?`?|(data|resource) "?)aws_greengrass_'
 service/guardduty:
@@ -208,6 +218,10 @@ service/iotevents:
   - '((\*|-) ?`?|(data|resource) "?)aws_iotevents_'
 service/kafka:
   - '((\*|-) ?`?|(data|resource) "?)aws_msk_'
+service/kafkaconnect:
+  - '((\*|-) ?`?|(data|resource) "?)aws_mskconnect_'
+service/keyspaces:
+  - '((\*|-) ?`?|(data|resource) "?)aws_keyspaces_'
 service/kinesis:
   - '((\*|-) ?`?|(data|resource) "?)aws_kinesis_stream'
 service/kinesisanalytics:
@@ -220,7 +234,7 @@ service/lakeformation:
   - '((\*|-) ?`?|(data|resource) "?)aws_lakeformation_'
 service/lambda:
   - '((\*|-) ?`?|(data|resource) "?)aws_lambda_'
-service/lexmodelbuildingservice:
+service/lexmodels:
   - '((\*|-) ?`?|(data|resource) "?)aws_lex_'
 service/licensemanager:
   - '((\*|-) ?`?|(data|resource) "?)aws_licensemanager_'
@@ -262,6 +276,8 @@ service/networkfirewall:
   - '((\*|-) ?`?|(data|resource) "?)aws_networkfirewall_'
 service/networkmanager:
   - '((\*|-) ?`?|(data|resource) "?)aws_networkmanager_'
+service/opensearch:
+  - '((\*|-) ?`?|(data|resource) "?)aws_opensearch_'
 service/opsworks:
   - '((\*|-) ?`?|(data|resource) "?)aws_opsworks_'
 service/organizations:
@@ -276,8 +292,6 @@ service/polly:
   - '((\*|-) ?`?|(data|resource) "?)aws_polly_'
 service/pricing:
   - '((\*|-) ?`?|(data|resource) "?)aws_pricing_'
-service/prometheusservice:
-  - '((\*|-) ?`?|(data|resource) "?)aws_prometheus_'
 service/qldb:
   - '((\*|-) ?`?|(data|resource) "?)aws_qldb_'
 service/quicksight:
@@ -299,7 +313,7 @@ service/route53:
 service/route53domains:
   - '((\*|-) ?`?|(data|resource) "?)aws_route53domains_'
 service/route53recoverycontrolconfig:
-  - '((\*|-) ?`?|(data|resource) "?)aws_route53recoverycontrolconfig_'  
+  - '((\*|-) ?`?|(data|resource) "?)aws_route53recoverycontrolconfig_'
 service/route53recoveryreadiness:
   - '((\*|-) ?`?|(data|resource) "?)aws_route53recoveryreadiness_'
 service/route53resolver:
@@ -318,7 +332,7 @@ service/secretsmanager:
   - '((\*|-) ?`?|(data|resource) "?)aws_secretsmanager_'
 service/securityhub:
   - '((\*|-) ?`?|(data|resource) "?)aws_securityhub_'
-service/serverlessapplicationrepository:
+service/serverlessrepo:
   - '((\*|-) ?`?|(data|resource) "?)aws_serverlessapplicationrepository_'
 service/servicecatalog:
   - '((\*|-) ?`?|(data|resource) "?)aws_servicecatalog_'

@@ -53,7 +53,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Report Definitions can be imported using the `report_name`, e.g.
+Report Definitions can be imported using the `report_name`, e.g.,
 
 ```
 $ terraform import aws_cur_report_definition.example_cur_report_definition example-cur-report-definition

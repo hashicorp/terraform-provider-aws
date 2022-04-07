@@ -43,7 +43,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-App Runner Connections can be imported by using the `connection_name`, e.g.
+App Runner Connections can be imported by using the `connection_name`, e.g.,
 
 ```
 $ terraform import aws_apprunner_connection.example example

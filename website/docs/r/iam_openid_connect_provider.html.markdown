@@ -42,7 +42,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IAM OpenID Connect Providers can be imported using the `arn`, e.g.
+IAM OpenID Connect Providers can be imported using the `arn`, e.g.,
 
 ```
 $ terraform import aws_iam_openid_connect_provider.default arn:aws:iam::123456789012:oidc-provider/accounts.google.com

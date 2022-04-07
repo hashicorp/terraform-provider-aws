@@ -53,7 +53,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Timestream databases can be imported using the `database_name`, e.g.
+Timestream databases can be imported using the `database_name`, e.g.,
 
 ```
 $ terraform import aws_timestreamwrite_database.example example

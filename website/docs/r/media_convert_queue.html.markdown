@@ -47,7 +47,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Media Convert Queue can be imported via the queue name, e.g.
+Media Convert Queue can be imported via the queue name, e.g.,
 
 ```
 $ terraform import aws_media_convert_queue.test tf-test-queue

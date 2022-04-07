@@ -27,19 +27,22 @@ data "aws_lambda_function" "existing" {
 The following arguments are supported:
 
 * `function_name` - (Required) Name of the lambda function.
-* `qualifier` - (Optional) Alias name or version number of the lambda function. e.g. `$LATEST`, `my-alias`, or `1`
+* `qualifier` - (Optional) Alias name or version number of the lambda functionE.g., `$LATEST`, `my-alias`, or `1`
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
+* `architectures` - The instruction set architecture for the Lambda function.
 * `arn` - Unqualified (no `:QUALIFIER` or `:VERSION` suffix) Amazon Resource Name (ARN) identifying your Lambda Function. See also `qualified_arn`.
 * `code_signing_config_arn` - Amazon Resource Name (ARN) for a Code Signing Configuration.
 * `dead_letter_config` - Configure the function's *dead letter queue*.
 * `description` - Description of what your Lambda Function does.
 * `environment` - The Lambda environment's configuration settings.
+* `ephemeral_storage` - The amount of Ephemeral storage(`/tmp`) allocated for the Lambda Function.
 * `file_system_config` - The connection settings for an Amazon EFS file system.
 * `handler` - The function entrypoint in your code.
+* `image_uri` - The URI of the container image.
 * `invoke_arn` - The ARN to be used for invoking Lambda Function from API Gateway.
 * `kms_key_arn` - The ARN for the KMS encryption key.
 * `last_modified` - The date this resource was last modified.

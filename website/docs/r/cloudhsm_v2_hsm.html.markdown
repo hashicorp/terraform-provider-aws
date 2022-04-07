@@ -44,7 +44,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-HSM modules can be imported using their HSM ID, e.g.
+HSM modules can be imported using their HSM ID, e.g.,
 
 ```
 $ terraform import aws_cloudhsm_v2_hsm.bar hsm-quo8dahtaca

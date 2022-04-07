@@ -4,8 +4,10 @@ ACM
 API Gateway (REST APIs)
 API Gateway v2 (WebSocket and HTTP APIs)
 Access Analyzer
+Account
 Amplify Console
 AppConfig
+AppIntegrations
 AppMesh
 App Runner
 AppSync
@@ -21,11 +23,14 @@ Batch
 Budgets
 Chime
 Cloud9
+Cloud Control API
 CloudFormation
 CloudFront
 CloudHSM v2
+CloudSearch
 CloudTrail
 CloudWatch
+CloudWatch RUM
 CodeArtifact
 CodeBuild
 CodeCommit
@@ -37,6 +42,7 @@ Cognito
 Config
 Connect
 Cost and Usage Report
+Data Exchange
 Data Lifecycle Manager (DLM)
 DataPipeline
 DataSync
@@ -61,7 +67,7 @@ Elastic Load Balancing v2 (ALB/NLB)
 Elastic Map Reduce (EMR)
 Elastic Map Reduce Containers
 Elastic Transcoder
-ElasticSearch
+Elasticsearch
 EventBridge (CloudWatch Events)
 EventBridge Schemas
 File System (FSx)
@@ -70,18 +76,20 @@ Gamelift
 Glacier
 Global Accelerator
 Glue
+Grafana
 GuardDuty
 IAM
 Identity Store
 Image Builder
 Inspector
 IoT
-KMS
+Keyspaces
 Kinesis
 Kinesis Data Analytics (SQL Applications)
 Kinesis Data Analytics v2 (SQL and Flink Applications)
 Kinesis Firehose
 Kinesis Video
+KMS
 Lake Formation
 Lambda
 Lex
@@ -92,6 +100,7 @@ MQ
 Macie
 Macie Classic
 Managed Streaming for Kafka (MSK)
+Kafka Connect (MSK Connect)
 MediaConvert
 MediaPackage
 MediaStore
@@ -99,6 +108,8 @@ MemoryDB
 Managed Workflows for Apache Airflow (MWAA)
 Neptune
 Network Firewall
+Network Manager
+OpenSearch
 OpsWorks
 Organizations
 Outposts
@@ -140,7 +151,6 @@ Storage Gateway
 Synthetics
 Timestream Write
 Transfer
-Transit Gateway Network Manager
 VPC
 WAF Regional
 WAF

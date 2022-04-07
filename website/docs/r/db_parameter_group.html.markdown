@@ -66,7 +66,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DB Parameter groups can be imported using the `name`, e.g.
+DB Parameter groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_db_parameter_group.rds_pg rds-pg

@@ -88,7 +88,7 @@ The following arguments are supported:
 
 * `rest_api_id` - (Required) The ID of the REST API
 * `stage_name` - (Required) The name of the stage
-* `method_path` - (Required) Method path defined as `{resource_path}/{http_method}` for an individual method override, or `*/*` for overriding all methods in the stage. Ensure to trim any leading forward slashes in the path (e.g. `trimprefix(aws_api_gateway_resource.example.path, "/")`).
+* `method_path` - (Required) Method path defined as `{resource_path}/{http_method}` for an individual method override, or `*/*` for overriding all methods in the stage. Ensure to trim any leading forward slashes in the path (e.g., `trimprefix(aws_api_gateway_resource.example.path, "/")`).
 * `settings` - (Required) The settings block, see below.
 
 ### `settings`
@@ -110,7 +110,7 @@ No additional attributes are exported.
 
 ## Import
 
-`aws_api_gateway_method_settings` can be imported using `REST-API-ID/STAGE-NAME/METHOD-PATH`, e.g.
+`aws_api_gateway_method_settings` can be imported using `REST-API-ID/STAGE-NAME/METHOD-PATH`, e.g.,
 
 ```
 $ terraform import aws_api_gateway_method_settings.example 12345abcde/example/test/GET

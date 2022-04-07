@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-VPN Gateways can be imported using the `vpn gateway id`, e.g.
+VPN Gateways can be imported using the `vpn gateway id`, e.g.,
 
 ```
 $ terraform import aws_vpn_gateway.testvpngateway vgw-9a4cacf3

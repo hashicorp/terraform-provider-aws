@@ -47,7 +47,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route53 Recovery Control Config Routing Control can be imported via the routing control arn, e.g.
+Route53 Recovery Control Config Routing Control can be imported via the routing control arn, e.g.,
 
 ```
 $ terraform import aws_route53recoverycontrolconfig_routing_control.mycontrol arn:aws:route53-recovery-control::313517334327:controlpanel/abd5fbfc052d4844a082dbf400f61da8/routingcontrol/d5d90e587870494b

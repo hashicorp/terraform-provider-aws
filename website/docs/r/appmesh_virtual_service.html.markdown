@@ -87,7 +87,7 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 App Mesh virtual services can be imported using `mesh_name` together with the virtual service's `name`,
-e.g.
+e.g.,
 
 ```
 $ terraform import aws_appmesh_virtual_service.servicea simpleapp/servicea.simpleapp.local

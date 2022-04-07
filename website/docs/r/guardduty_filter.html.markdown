@@ -78,7 +78,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-GuardDuty filters can be imported using the detector ID and filter's name separated by a colon, e.g.
+GuardDuty filters can be imported using the detector ID and filter's name separated by a colon, e.g.,
 
 ```
 $ terraform import aws_guardduty_filter.MyFilter 00b00fd5aecc0ab60a708659477e9617:MyFilter

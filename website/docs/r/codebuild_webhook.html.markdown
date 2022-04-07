@@ -40,7 +40,7 @@ resource "aws_codebuild_webhook" "example" {
 
 ### GitHub Enterprise
 
-When working with [GitHub Enterprise](https://enterprise.github.com/) source CodeBuild webhooks, the GHE repository webhook must be separately managed (e.g. manually or with the `github_repository_webhook` resource).
+When working with [GitHub Enterprise](https://enterprise.github.com/) source CodeBuild webhooks, the GHE repository webhook must be separately managed (e.g., manually or with the `github_repository_webhook` resource).
 
 More information creating webhooks with GitHub Enterprise can be found in the [CodeBuild User Guide](https://docs.aws.amazon.com/codebuild/latest/userguide/sample-github-enterprise.html).
 
@@ -96,7 +96,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeBuild Webhooks can be imported using the CodeBuild Project name, e.g.
+CodeBuild Webhooks can be imported using the CodeBuild Project name, e.g.,
 
 ```
 $ terraform import aws_codebuild_webhook.example MyProjectName

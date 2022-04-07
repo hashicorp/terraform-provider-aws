@@ -88,7 +88,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Workteams can be imported using the `workteam_name`, e.g.
+Sagemaker Workteams can be imported using the `workteam_name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_workteam.example example

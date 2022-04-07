@@ -138,9 +138,9 @@ The following arguments are optional:
 
 The following arguments are required:
 
-* `day_of_week` - (Required) Day of the week, e.g. `MONDAY`, `TUESDAY`, or `WEDNESDAY`.
-* `time_of_day` - (Required) Time, in 24-hour format, e.g. `02:00`.
-* `time_zone` - (Required) Time zone in either the Country/City format or the UTC offset format, e.g. `CET`.
+* `day_of_week` - (Required) Day of the week, e.g., `MONDAY`, `TUESDAY`, or `WEDNESDAY`.
+* `time_of_day` - (Required) Time, in 24-hour format, e.g., `02:00`.
+* `time_zone` - (Required) Time zone in either the Country/City format or the UTC offset format, e.g., `CET`.
 
 ~> **NOTE:** Amazon MQ currently does not support updating the maintenance window. Changes to the maintenance window start time will force a new broker to be created.
 
@@ -162,7 +162,7 @@ In addition to all arguments above, the following attributes are exported:
 * `instances` - List of information about allocated brokers (both active & standby).
     * `instances.0.console_url` - The URL of the broker's [ActiveMQ Web Console](http://activemq.apache.org/web-console.html).
     * `instances.0.ip_address` - IP Address of the broker.
-    * `instances.0.endpoints` - Broker's wire-level protocol endpoints in the following order & format referenceable e.g. as `instances.0.endpoints.0` (SSL):
+    * `instances.0.endpoints` - Broker's wire-level protocol endpoints in the following order & format referenceable e.g., as `instances.0.endpoints.0` (SSL):
         * For `ActiveMQ`:
             * `ssl://broker-id.mq.us-west-2.amazonaws.com:61617`
             * `amqp+ssl://broker-id.mq.us-west-2.amazonaws.com:5671`
@@ -175,7 +175,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MQ Brokers can be imported using their broker id, e.g.
+MQ Brokers can be imported using their broker id, e.g.,
 
 ```
 $ terraform import aws_mq_broker.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

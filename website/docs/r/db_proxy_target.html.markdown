@@ -71,16 +71,16 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `endpoint` - Hostname for the target RDS DB Instance. Only returned for `RDS_INSTANCE` type.
-* `id` - Identifier of  `db_proxy_name`, `target_group_name`, target type (e.g. `RDS_INSTANCE` or `TRACKED_CLUSTER`), and resource identifier separated by forward slashes (`/`).
+* `id` - Identifier of  `db_proxy_name`, `target_group_name`, target type (e.g., `RDS_INSTANCE` or `TRACKED_CLUSTER`), and resource identifier separated by forward slashes (`/`).
 * `port` - Port for the target RDS DB Instance or Aurora DB Cluster.
 * `rds_resource_id` - Identifier representing the DB Instance or DB Cluster target.
 * `target_arn` - Amazon Resource Name (ARN) for the DB instance or DB cluster. Currently not returned by the RDS API.
 * `tracked_cluster_id` - DB Cluster identifier for the DB Instance target. Not returned unless manually importing an `RDS_INSTANCE` target that is part of a DB Cluster.
-* `type` - Type of target. e.g. `RDS_INSTANCE` or `TRACKED_CLUSTER`
+* `type` - Type of targetE.g., `RDS_INSTANCE` or `TRACKED_CLUSTER`
 
 ## Import
 
-RDS DB Proxy Targets can be imported using the `db_proxy_name`, `target_group_name`, target type (e.g. `RDS_INSTANCE` or `TRACKED_CLUSTER`), and resource identifier separated by forward slashes (`/`), e.g.
+RDS DB Proxy Targets can be imported using the `db_proxy_name`, `target_group_name`, target type (e.g., `RDS_INSTANCE` or `TRACKED_CLUSTER`), and resource identifier separated by forward slashes (`/`), e.g.,
 
 Instances:
 

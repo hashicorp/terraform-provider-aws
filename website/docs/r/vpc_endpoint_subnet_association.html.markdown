@@ -47,3 +47,12 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the association.
+
+## Import
+
+VPC Endpoint Subnet Associations can be imported using `vpc_endpoint_id` together with `subnet_id`,
+e.g.,
+
+```
+$ terraform import aws_vpc_endpoint_subnet_association.example vpce-aaaaaaaa/subnet-bbbbbbbbbbbbbbbbb
+```

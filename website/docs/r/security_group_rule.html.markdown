@@ -62,7 +62,31 @@ resource "aws_vpc_endpoint" "my_endpoint" {
 }
 ```
 
-You can also find a specific Prefix List using the `aws_prefix_list` data source.
+You can also find a specific Prefix List using the [`aws_prefix_list`](/docs/providers/aws/d/prefix_list.html)
+or [`ec2_managed_prefix_list`](/docs/providers/aws/d/ec2_managed_prefix_list.html) data sources:
+
+```terraform
+data "aws_region" "current" {}
+
+data "aws_prefix_list" "s3" {
+  name = "com.amazonaws.${data.aws_region.current.name}.s3"
+}
+
+resource "aws_security_group_rule" "s3_gateway_egress" {
+  # S3 Gateway interfaces are implemented at the routing level which means we
+  # can avoid the metered billing of a VPC endpoint interface by allowing
+  # outbound traffic to the public IP ranges, which will be routed through
+  # the Gateway interface:
+  # https://docs.aws.amazon.com/AmazonS3/latest/userguide/privatelink-interface-endpoints.html
+  description       = "S3 Gateway Egress"
+  type              = "egress"
+  security_group_id = "sg-123456"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  prefix_list_ids   = [data.aws_prefix_list.s3.id]
+}
+```
 
 ## Argument Reference
 
@@ -92,7 +116,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Security Group Rules can be imported using the `security_group_id`, `type`, `protocol`, `from_port`, `to_port`, and source(s)/destination(s) (e.g. `cidr_block`) separated by underscores (`_`). All parts are required.
+Security Group Rules can be imported using the `security_group_id`, `type`, `protocol`, `from_port`, `to_port`, and source(s)/destination(s) (e.g., `cidr_block`) separated by underscores (`_`). All parts are required.
 
 Not all rule permissions (e.g., not all of a rule's CIDR blocks) need to be imported for Terraform to manage rule permissions. However, importing some of a rule's permissions but not others, and then making changes to the rule will result in the creation of an additional rule to capture the updated permissions. Rule permissions that were not imported are left intact in the original rule.
 
@@ -108,7 +132,7 @@ Import a rule with various IPv4 and IPv6 source CIDR blocks:
 $ terraform import aws_security_group_rule.ingress sg-4973616163_ingress_tcp_100_121_10.1.0.0/16_2001:db8::/48_10.2.0.0/16_2002:db8::/48
 ```
 
-Import a rule, applicable to all ports, with a protocol other than TCP/UDP/ICMP/ALL, e.g., Multicast Transport Protocol (MTP), using the IANA protocol number, e.g., 92.
+Import a rule, applicable to all ports, with a protocol other than TCP/UDP/ICMP/ICMPV6/ALL, e.g., Multicast Transport Protocol (MTP), using the IANA protocol number, e.g., 92.
 
 ```console
 $ terraform import aws_security_group_rule.ingress sg-6777656e646f6c796e_ingress_92_0_65536_10.0.3.0/24_10.0.4.0/24
