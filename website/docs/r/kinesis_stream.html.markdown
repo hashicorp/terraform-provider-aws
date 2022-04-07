@@ -15,7 +15,7 @@ For more details, see the [Amazon Kinesis Documentation][1].
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_kinesis_stream" "test_stream" {
   name             = "terraform-kinesis-test"
   shard_count      = 1
@@ -25,6 +25,10 @@ resource "aws_kinesis_stream" "test_stream" {
     "IncomingBytes",
     "OutgoingBytes",
   ]
+
+  stream_mode_details {
+    stream_mode = "PROVISIONED"
+  }
 
   tags = {
     Environment = "test"
@@ -37,25 +41,33 @@ resource "aws_kinesis_stream" "test_stream" {
 The following arguments are supported:
 
 * `name` - (Required) A name to identify the stream. This is unique to the AWS account and region the Stream is created in.
-* `shard_count` – (Required) The number of shards that the stream will use.
+* `shard_count` – (Optional) The number of shards that the stream will use. If the `stream_mode` is `PROVISIONED`, this field is required.
 Amazon has guidelines for specifying the Stream size that should be referenced when creating a Kinesis stream. See [Amazon Kinesis Streams][2] for more.
-* `retention_period` - (Optional) Length of time data records are accessible after they are added to the stream. The maximum value of a stream's retention period is 168 hours. Minimum value is 24. Default is 24.
+* `retention_period` - (Optional) Length of time data records are accessible after they are added to the stream. The maximum value of a stream's retention period is 8760 hours. Minimum value is 24. Default is 24.
 * `shard_level_metrics` - (Optional) A list of shard-level CloudWatch metrics which can be enabled for the stream. See [Monitoring with CloudWatch][3] for more. Note that the value ALL should not be used; instead you should provide an explicit list of metrics you wish to enable.
 * `enforce_consumer_deletion` - (Optional) A boolean that indicates all registered consumers should be deregistered from the stream so that the stream can be destroyed without error. The default value is `false`.
 * `encryption_type` - (Optional) The encryption type to use. The only acceptable values are `NONE` or `KMS`. The default value is `NONE`.
 * `kms_key_id` - (Optional) The GUID for the customer-managed KMS key to use for encryption. You can also use a Kinesis-owned master key by specifying the alias `alias/aws/kinesis`.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `stream_mode_details` - (Optional) Indicates the [capacity mode](https://docs.aws.amazon.com/streams/latest/dev/how-do-i-size-a-stream.html) of the data stream. Detailed below.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### stream_mode_details Configuration Block
+
+* `stream_mode` - (Required) Specifies the capacity mode of the stream. Must be either `PROVISIONED` or `ON_DEMAND`.
 
 ## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The unique Stream id
 * `name` - The unique Stream name
 * `shard_count` - The count of Shards for this Stream
 * `arn` - The Amazon Resource Name (ARN) specifying the Stream (same as `id`)
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_kinesis_stream` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+`aws_kinesis_stream` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `5 minutes`)  Used for Creating a Kinesis Stream
 - `update` - (Default `120 minutes`) Used for Updating a Kinesis Stream
@@ -63,7 +75,7 @@ Amazon has guidelines for specifying the Stream size that should be referenced w
 
 ## Import
 
-Kinesis Streams can be imported using the `name`, e.g.
+Kinesis Streams can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_kinesis_stream.test_stream terraform-kinesis-test

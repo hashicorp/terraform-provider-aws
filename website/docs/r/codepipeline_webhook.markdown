@@ -12,17 +12,17 @@ Provides a CodePipeline Webhook.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_codepipeline" "bar" {
   name     = "tf-test-pipeline"
-  role_arn = "${aws_iam_role.bar.arn}"
+  role_arn = aws_iam_role.bar.arn
 
   artifact_store {
-    location = "${aws_s3_bucket.bar.bucket}"
+    location = aws_s3_bucket.bar.bucket
     type     = "S3"
 
     encryption_key {
-      id   = "${data.aws_kms_alias.s3kmskey.arn}"
+      id   = data.aws_kms_alias.s3kmskey.arn
       type = "KMS"
     }
   }
@@ -76,10 +76,10 @@ resource "aws_codepipeline_webhook" "bar" {
   name            = "test-webhook-github-bar"
   authentication  = "GITHUB_HMAC"
   target_action   = "Source"
-  target_pipeline = "${aws_codepipeline.bar.name}"
+  target_pipeline = aws_codepipeline.bar.name
 
   authentication_configuration {
-    secret_token = "${local.webhook_secret}"
+    secret_token = local.webhook_secret
   }
 
   filter {
@@ -90,15 +90,15 @@ resource "aws_codepipeline_webhook" "bar" {
 
 # Wire the CodePipeline webhook into a GitHub repository.
 resource "github_repository_webhook" "bar" {
-  repository = "${github_repository.repo.name}"
+  repository = github_repository.repo.name
 
   name = "web"
 
   configuration {
-    url          = "${aws_codepipeline_webhook.bar.url}"
+    url          = aws_codepipeline_webhook.bar.url
     content_type = "json"
     insecure_ssl = true
-    secret       = "${local.webhook_secret}"
+    secret       = local.webhook_secret
   }
 
   events = ["push"]
@@ -115,7 +115,7 @@ The following arguments are supported:
 * `filter` (Required) One or more `filter` blocks. Filter blocks are documented below.
 * `target_action` - (Required) The name of the action in a pipeline you want to connect to the webhook. The action must be from the source (first) stage of the pipeline.
 * `target_pipeline` - (Required) The name of the pipeline.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 An `authentication_configuration` block supports the following arguments:
 
@@ -125,18 +125,20 @@ An `authentication_configuration` block supports the following arguments:
 A `filter` block supports the following arguments:
 
 * `json_path` - (Required) The [JSON path](https://github.com/json-path/JsonPath) to filter on.
-* `match_equals` - (Required) The value to match on (e.g. `refs/heads/{Branch}`). See [AWS docs](https://docs.aws.amazon.com/codepipeline/latest/APIReference/API_WebhookFilterRule.html) for details.
+* `match_equals` - (Required) The value to match on (e.g., `refs/heads/{Branch}`). See [AWS docs](https://docs.aws.amazon.com/codepipeline/latest/APIReference/API_WebhookFilterRule.html) for details.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The CodePipeline webhook's ARN.
 * `id` - The CodePipeline webhook's ARN.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `url` - The CodePipeline webhook's URL. POST events to this endpoint to trigger the target.
 
 ## Import
 
-CodePipeline Webhooks can be imported by their ARN, e.g.
+CodePipeline Webhooks can be imported by their ARN, e.g.,
 
 ```
 $ terraform import aws_codepipeline_webhook.example arn:aws:codepipeline:us-west-2:123456789012:webhook:example

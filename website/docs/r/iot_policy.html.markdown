@@ -12,24 +12,24 @@ Provides an IoT policy.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iot_policy" "pubsub" {
   name = "PubSubToAnyTopic"
 
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "iot:*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "iot:*",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+    ]
+  })
 }
 ```
 
@@ -48,3 +48,11 @@ In addition to all arguments above, the following attributes are exported:
 * `name` - The name of this policy.
 * `default_version_id` - The default version of this policy.
 * `policy` - The policy document.
+
+## Import
+
+IoT policies can be imported using the `name`, e.g.,
+
+```
+$ terraform import aws_iot_policy.pubsub PubSubToAnyTopic
+```

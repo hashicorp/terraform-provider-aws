@@ -18,11 +18,11 @@ COIP Pool.
 
 The following example returns a specific coip pool ID
 
-```hcl
+```terraform
 variable "coip_pool_id" {}
 
 data "aws_ec2_coip_pool" "selected" {
-  id = "${var.coip_pool_id}"
+  id = var.coip_pool_id
 }
 ```
 
@@ -55,6 +55,7 @@ result attributes. This data source will complete the data by populating
 any fields that are not included in the configuration with the data for
 the selected COIP Pool.
 
-The following attribute is additionally exported:
+In addition, the following attributes are exported:
 
+* `arn` - ARN of the COIP pool
 * `pool_cidrs` - Set of CIDR blocks in pool
