@@ -16,7 +16,7 @@ func TestAccLambdaFunctionURLDataSource_basic(t *testing.T) {
 	resourceName := "aws_lambda_function_url.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccFunctionURLPreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{

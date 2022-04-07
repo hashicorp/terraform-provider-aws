@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -15,6 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func testAccFunctionURLPreCheck(t *testing.T) {
+	if got, want := acctest.Partition(), endpoints.AwsPartitionID; got != want {
+		t.Skipf("Lambda Function URLs are not supported in %s partition", got)
+	}
+}
+
 func TestAccLambdaFunctionURL_basic(t *testing.T) {
 	var conf lambda.GetFunctionUrlConfigOutput
 	resourceName := "aws_lambda_function_url.test"
@@ -24,7 +31,7 @@ func TestAccLambdaFunctionURL_basic(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccFunctionURLPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFunctionURLDestroy,
@@ -61,7 +68,7 @@ func TestAccLambdaFunctionURL_Cors(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccFunctionURLPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFunctionURLDestroy,
@@ -126,7 +133,7 @@ func TestAccLambdaFunctionURL_Alias(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccFunctionURLPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFunctionURLDestroy,
