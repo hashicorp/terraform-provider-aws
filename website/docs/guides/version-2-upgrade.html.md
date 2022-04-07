@@ -202,8 +202,8 @@ Simply remove `current = true` from your Terraform configuration. The data sourc
 
 Since the API Gateway usage plans feature was launched on August 11, 2016, usage plans are now required to associate an API key with an API stage. To migrate your Terraform configuration, the AWS provider implements support for usage plans with the following resources:
 
-* [`aws_api_gateway_usage_plan`](/docs/providers/aws/r/api_gateway_usage_plan.html)
-* [`aws_api_gateway_usage_plan_key`](/docs/providers/aws/r/api_gateway_usage_plan_key.html)
+* [`aws_api_gateway_usage_plan`](/docs/providers/aws/r/apigateway_usage_plan.html)
+* [`aws_api_gateway_usage_plan_key`](/docs/providers/aws/r/apigateway_usage_plan_key.html)
 
 For example, given this previous configuration:
 
@@ -528,7 +528,7 @@ Choose one argument or the other. These arguments update the same underlying inf
 Default connections have been removed as part of LAG creation. To migrate your Terraform configuration, the AWS provider implements the following resources:
 
 * [`aws_dx_connection`](/docs/providers/aws/r/directconnect_connection.html)
-* [`aws_dx_connection_association`](/docs/providers/aws/r/dx_connection_association.html)
+* [`aws_dx_connection_association`](/docs/providers/aws/r/directconnect_connection_association.html)
 
 For example, given this previous configuration:
 
