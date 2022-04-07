@@ -3,27 +3,28 @@ subcategory: "Lambda"
 layout: "aws"
 page_title: "AWS: aws_lambda_function_url"
 description: |-
-  Creates a Lambda function URL.
+  Provides a Lambda function URL resource.
 ---
 
 # Resource: aws_lambda_function_url
 
-Creates a Lambda function URL, an HTTPS URL that points to the specified Lambda function alias or the latest version.
+Provides a Lambda function URL resource. A function URL is a dedicated HTTP(S) endpoint for a Lambda function.
 
-A function URL is a dedicated HTTP(S) endpoint for your function. For information about Lambda function url, see [CreateFunctionUrlConfig][1] in the API docs.
+See the [AWS Lambda documentation](https://docs.aws.amazon.com/lambda/latest/dg/lambda-urls.html) for more information.
 
 ## Example Usage
 
 ```terraform
 resource "aws_lambda_function_url" "test_latest" {
-  function_name    = aws_lambda_function.test.function_name
+  function_name      = aws_lambda_function.test.function_name
   authorization_type = "NONE"
 }
 
 resource "aws_lambda_function_url" "test_live" {
-  function_name    = aws_lambda_function.test.function_name
-  qualifier        = "my_alias"
+  function_name      = aws_lambda_function.test.function_name
+  qualifier          = "my_alias"
   authorization_type = "AWS_IAM"
+
   cors {
     allow_credentials = true
     allow_origins     = ["*"]
@@ -37,26 +38,32 @@ resource "aws_lambda_function_url" "test_live" {
 
 ## Argument Reference
 
-* `function_name` - (Required) Lambda Function name or ARN.
-* `qualifier` - (Optional) The Lambda alias name or '$LATEST'.
-* `authorization_type` - (Required) The authorization type for your function URL. Valid values are `"AWS_IAM"` and `"NONE"`.
-* `cors` - (Optional) Configure cross-origin resource sharing.
+* `authorization_type` - (Required) The type of authentication that the function URL uses. Set to `"AWS_IAM"` to restrict access to authenticated IAM users only. Set to `"NONE"` to bypass IAM authentication and create a public endpoint. See the [AWS documentation](https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html) for more details.
+* `cors` - (Optional) The [cross-origin resource sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) settings for the function URL. Documented below.
+* `function_name` - (Required) The name (or ARN) of the Lambda function.
+* `qualifier` - (Optional) The alias name or `"$LATEST"`.
 
 ### cors
 
-* `allow_credentials` - (Optional) allow cookies or other credentials in requests to your function URL.
-* `allow_origins` - (Optional) The origins that can access your function URL. You can list any number of specific origins. Alternatively, you can grant access to all origins with the wildcard character (*). For example: https://www.example.com, https://*, or *.
-* `allow_methods` - (Optional) The HTTP methods that are allowed when calling your function URL. For example: GET, POST, DELETE, *.
-* `allow_headers` - (Optional) The HTTP headers that origins can include in requests to your function URL. For example: Date, Keep-Alive, X-Custom-Header.
-* `expose_headers` - (Optional) The HTTP headers in your function response that you want to expose to origins that call your function URL. For example: Date, Keep-Alive, X-Custom-Header.
-* `max_age` - (Optional) The maximum amount of time (in seconds) that browsers can cache results of a preflight request. You cannot exceed 86400 seconds max age.
+This configuration block supports the following attributes:
 
+* `allow_credentials` - (Optional) Whether to allow cookies or other credentials in requests to the function URL. The default is `false`.
+* `allow_headers` - (Optional) The HTTP headers that origins can include in requests to the function URL. For example: `["date", "keep-alive", "x-custom-header"]`.
+* `allow_methods` - (Optional) The HTTP methods that are allowed when calling the function URL. For example: `["GET", "POST", "DELETE"]`, or the wildcard character (`["*"]`).
+* `allow_origins` - (Optional) The origins that can access the function URL. You can list any number of specific origins (or the wildcard character (`"*"`)), separated by a comma. For example: `["https://www.example.com", "http://localhost:60905"]`.
+* `expose_headers` - (Optional) The HTTP headers in your function response that you want to expose to origins that call the function URL.
+* `max_age` - (Optional) The maximum amount of time, in seconds, that web browsers can cache results of a preflight request. By default, this is set to `0`, which means that the browser doesn't cache results. The maximum value is `86400`.
 
-[1]: http://docs.aws.amazon.com/lambda/latest/dg/API_CreateFunctionUrlConfig.html
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `function_arn` - The Amazon Resource Name (ARN) of the function.
+* `function_url` - The HTTP URL endpoint for the function.
 
 ## Import
 
-Lambda Function URLs can be imported using the `function_name` or `function_name/qualifier`, e.g.,
+Lambda function URLs can be imported using the `function_name` or `function_name/qualifier`, e.g.,
 
 ```
 $ terraform import aws_lambda_function_url.test_lambda_url my_test_lambda_function

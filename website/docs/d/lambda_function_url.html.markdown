@@ -3,12 +3,12 @@ subcategory: "Lambda"
 layout: "aws"
 page_title: "AWS: aws_lambda_function_url"
 description: |-
-  Provides a Lambda function url data source.
+  Provides a Lambda function URL data source.
 ---
 
 # aws_lambda_function_url
 
-Provides information about a Lambda function url.
+Provides information about a Lambda function URL.
 
 ## Example Usage
 
@@ -26,16 +26,16 @@ data "aws_lambda_function_url" "existing" {
 
 The following arguments are supported:
 
-* `function_name` - (Required) Name of the lambda function.
-* `qualifier` - (Optional) Alias name or latest version of the lambda function E.g., `$LATEST`, or `my-alias`
+* `function_name` - (Required) he name (or ARN) of the Lambda function.
+* `qualifier` - (Optional) The alias name or `"$LATEST"`.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `authorization_type` - The authorization type for your function URL.
-* `cors` - Cross-Origin Resource Sharing configuration.
-* `function_arn` - Lambda Function full ARN which this URL points to.
-* `function_url` - The HTTPS endpoint of Lambda URL.
-* `creation_time` - The creation time.
-* `last_modified_time` - The last modified time.
+* `authorization_type` - The type of authentication that the function URL uses.
+* `cors` - The [cross-origin resource sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) settings for the function URL. See the [`aws_lambda_function_url` resource](/docs/providers/aws/r/lambda_function_url.html) documentation for more details.
+* `creation_time` - When the function URL was created, in [ISO-8601 format](https://www.w3.org/TR/NOTE-datetime).
+* `function_arn` - The Amazon Resource Name (ARN) of the function.
+* `function_url` - The HTTP URL endpoint for the function.
+* `last_modified_time` - When the function URL configuration was last updated, in [ISO-8601 format](https://www.w3.org/TR/NOTE-datetime).
