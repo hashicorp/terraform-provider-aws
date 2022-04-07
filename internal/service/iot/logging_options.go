@@ -33,7 +33,7 @@ func ResourceLoggingOptions() *schema.Resource {
 			},
 			"role_arn": {
 				Type:         schema.TypeString,
-				Optional:     true,
+				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 		},
