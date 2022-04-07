@@ -932,7 +932,7 @@ resource "aws_cognito_user_pool" "example" {
 
 ### Removal of Automatic aws_dx_gateway_association Import
 
-Previously when importing the `aws_dx_gateway` resource with the [`terraform import` command](https://www.terraform.io/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_dx_gateway_association` resource(s) as well. This automatic resource import has been removed. Use the [`aws_dx_gateway_association` resource import](/docs/providers/aws/r/dx_gateway_association.html#import) to import those resources separately.
+Previously when importing the `aws_dx_gateway` resource with the [`terraform import` command](https://www.terraform.io/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_dx_gateway_association` resource(s) as well. This automatic resource import has been removed. Use the [`aws_dx_gateway_association` resource import](/docs/providers/aws/r/directconnect_gateway_association.html#import) to import those resources separately.
 
 ## Resource: aws_dx_gateway_association
 
@@ -1377,7 +1377,7 @@ resource "aws_s3_bucket_metric" "example" {
 
 ### Removal of Automatic aws_security_group_rule Import
 
-Previously when importing the `aws_security_group` resource with the [`terraform import` command](https://www.terraform.io/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_security_group_rule` resource(s) as well. This automatic resource import has been removed. Use the [`aws_security_group_rule` resource import](/docs/providers/aws/r/security_group_rule.html#import) to import those resources separately.
+Previously when importing the `aws_security_group` resource with the [`terraform import` command](https://www.terraform.io/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_security_group_rule` resource(s) as well. This automatic resource import has been removed. Use the [`aws_security_group_rule` resource import](/docs/providers/aws/r/vpc_security_group_rule.html#import) to import those resources separately.
 
 ## Resource: aws_sns_platform_application
 

@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_regions
 
-Provides information about AWS Regions. Can be used to filter regions i.e., by Opt-In status or only regions enabled for current account. To get details like endpoint and description of each region the data source can be combined with the [`aws_region` data source](/docs/providers/aws/d/region.html).
+Provides information about AWS Regions. Can be used to filter regions i.e., by Opt-In status or only regions enabled for current account. To get details like endpoint and description of each region the data source can be combined with the [`aws_region` data source](/docs/providers/aws/d/meta_region.html).
 
 ## Example Usage
 

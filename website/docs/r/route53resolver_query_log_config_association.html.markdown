@@ -23,7 +23,7 @@ resource "aws_route53_resolver_query_log_config_association" "example" {
 
 The following arguments are supported:
 
-* `resolver_query_log_config_id` - (Required) The ID of the [Route 53 Resolver query logging configuration](route53_resolver_query_log_config.html) that you want to associate a VPC with.
+* `resolver_query_log_config_id` - (Required) The ID of the [Route 53 Resolver query logging configuration](route53resolver_query_log_config.html) that you want to associate a VPC with.
 * `resource_id` - (Required) The ID of a VPC that you want this query logging configuration to log queries for.
 
 ## Attributes Reference

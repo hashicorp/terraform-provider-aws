@@ -51,4 +51,4 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the launch template.
 
-This resource also exports a full set of attributes corresponding to the arguments of the [`aws_launch_template`](/docs/providers/aws/r/launch_template.html) resource.
+This resource also exports a full set of attributes corresponding to the arguments of the [`aws_launch_template`](/docs/providers/aws/r/ec2_launch_template.html) resource.

@@ -11,7 +11,7 @@ description: |-
 Provides an network ACL association resource which allows you to associate your network ACL with any subnet(s).
 
 ~> **NOTE on Network ACLs and Network ACL Associations:** Terraform provides both a standalone network ACL association resource
-and a [network ACL](network_acl.html) resource with a `subnet_ids` attribute. Do not use the same subnet ID in both a network ACL
+and a [network ACL](vpc_network_acl.html) resource with a `subnet_ids` attribute. Do not use the same subnet ID in both a network ACL
 resource and a network ACL association resource. Doing so will cause a conflict of associations and will overwrite the association.
 
 ## Example Usage

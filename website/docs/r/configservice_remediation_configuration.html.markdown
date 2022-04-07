@@ -10,7 +10,7 @@ description: |-
 
 Provides an AWS Config Remediation Configuration.
 
-~> **Note:** Config Remediation Configuration requires an existing [Config Rule](/docs/providers/aws/r/config_config_rule.html) to be present.
+~> **Note:** Config Remediation Configuration requires an existing [Config Rule](/docs/providers/aws/r/configservice_config_rule.html) to be present.
 
 ## Example Usage
 

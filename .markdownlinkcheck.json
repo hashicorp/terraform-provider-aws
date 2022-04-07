@@ -31,14 +31,6 @@
         {
             "pattern": "^file:///github/workspace/website/docs/guides/(.*)\\.markdown(#.*)?$",
             "replacement": "file:///github/workspace/website/docs/guides/$1.md$2"
-        },
-        {
-            "pattern": "^file:///github/workspace/website/docs/d/(cognito_user_pools)\\.html\\.markdown(#.*)?$",
-            "replacement": "file:///github/workspace/website/docs/d/$1.markdown$2"
-        },
-        {
-            "pattern": "^file:///github/workspace/website/docs/r/(cognito_identity_pool|cognito_user_pool|iam_role_policy_attachment|iam_user_policy_attachment|network_interface|ram_principal_association|ram_resource_share|ram_resource_share_accepter)\\.html\\.markdown(#.*)?$",
-            "replacement": "file:///github/workspace/website/docs/r/$1.markdown$2"
         }
     ]
 }

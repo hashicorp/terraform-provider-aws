@@ -14,7 +14,7 @@ can be found in the [API Gateway Developer Guide](https://docs.aws.amazon.com/ap
 This resource just establishes ownership of and the TLS settings for
 a particular domain name. An API can be attached to a particular path
 under the registered domain name using
-[the `aws_api_gateway_base_path_mapping` resource](api_gateway_base_path_mapping.html).
+[the `aws_api_gateway_base_path_mapping` resource](apigateway_base_path_mapping.html).
 
 API Gateway domains can be defined as either 'edge-optimized' or 'regional'.  In an edge-optimized configuration,
 API Gateway internally creates and manages a CloudFront distribution to route requests on the given hostname. In

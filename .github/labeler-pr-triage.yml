@@ -516,6 +516,9 @@ service/iottwinmaker:
 service/iotwireless:
   - 'internal/service/iotwireless/**/*'
   - 'website/**/iotwireless_*'
+service/ipam:
+  - 'internal/service/ec2/**/ipam_*'
+  - 'website/**/ipam_*'
 service/ivs:
   - 'internal/service/ivs/**/*'
   - 'website/**/ivs_*'
@@ -942,9 +945,12 @@ service/voiceid:
 service/vpc:
   - 'internal/service/ec2/**/vpc_*'
   - 'website/**/vpc_*'
-service/vpn:
-  - 'internal/service/ec2/**/vpn_*'
-  - 'website/**/vpn_*'
+service/vpnclient:
+  - 'internal/service/ec2/**/vpnclient_*'
+  - 'website/**/vpnclient_*'
+service/vpnsite:
+  - 'internal/service/ec2/**/vpnsite_*'
+  - 'website/**/vpnsite_*'
 service/waf:
   - 'internal/service/waf/**/*'
   - 'website/**/waf_*'

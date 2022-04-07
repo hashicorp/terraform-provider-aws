@@ -604,7 +604,7 @@ input.Filters = filters.Ec2Filters()
 
 ### Resource Filtering Documentation Implementation
 
-- In the resource's equivalent data source documentation (e.g., `website/docs/d/internet_gateway.html.markdown`), add the following to the arguments reference:
+- In the resource's equivalent data source documentation (e.g., `website/docs/d/vpc_internet_gateway.html.markdown`), add the following to the arguments reference:
 
 ```markdown
 * `filter` - (Optional) Custom filter block as described below.

@@ -11,7 +11,7 @@ description: |-
 Provides a resource to create a VPC routing table.
 
 ~> **NOTE on Route Tables and Routes:** Terraform currently
-provides both a standalone [Route resource](route.html) and a Route Table resource with routes
+provides both a standalone [Route resource](vpc_route.html) and a Route Table resource with routes
 defined in-line. At this time you cannot use a Route Table with in-line routes
 in conjunction with any Route resources. Doing so will cause
 a conflict of rule settings and will overwrite rules.
@@ -83,7 +83,7 @@ One of the following destination arguments must be supplied:
 
 * `cidr_block` - (Required) The CIDR block of the route.
 * `ipv6_cidr_block` - (Optional) The Ipv6 CIDR block of the route.
-* `destination_prefix_list_id` - (Optional) The ID of a [managed prefix list](ec2_managed_prefix_list.html) destination of the route.
+* `destination_prefix_list_id` - (Optional) The ID of a [managed prefix list](vpc_managed_prefix_list.html) destination of the route.
 
 One of the following target arguments must be supplied:
 

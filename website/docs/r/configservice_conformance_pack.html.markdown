@@ -15,7 +15,7 @@ Sample Conformance Pack templates may be found in the
 
 ~> **NOTE:** The account must have a Configuration Recorder with proper IAM permissions before the Conformance Pack will
 successfully create or update. See also the
-[`aws_config_configuration_recorder` resource](/docs/providers/aws/r/config_configuration_recorder.html).
+[`aws_config_configuration_recorder` resource](/docs/providers/aws/r/configservice_configuration_recorder.html).
 
 ## Example Usage
 

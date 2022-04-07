@@ -11,7 +11,7 @@ description: |-
 Provides a security group resource.
 
 ~> **NOTE on Security Groups and Security Group Rules:** Terraform currently
-provides both a standalone [Security Group Rule resource](security_group_rule.html) (a single `ingress` or
+provides both a standalone [Security Group Rule resource](vpc_security_group_rule.html) (a single `ingress` or
 `egress` rule), and a Security Group resource with `ingress` and `egress` rules
 defined in-line. At this time you cannot use a Security Group with in-line rules
 in conjunction with any Security Group Rule resources. Doing so will cause
@@ -73,7 +73,7 @@ resource "aws_security_group" "example" {
 ### Usage With Prefix List IDs
 
 Prefix Lists are either managed by AWS internally, or created by the customer using a
-[Prefix List resource](ec2_managed_prefix_list.html). Prefix Lists provided by
+[Prefix List resource](vpc_managed_prefix_list.html). Prefix Lists provided by
 AWS are associated with a prefix list name, or service name, that is linked to a specific region.
 Prefix list IDs are exported on VPC Endpoints, so you can use this format:
 

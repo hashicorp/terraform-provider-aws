@@ -41,7 +41,7 @@ resource "aws_security_group_rule" "example" {
 ### Usage With Prefix List IDs
 
 Prefix Lists are either managed by AWS internally, or created by the customer using a
-[Managed Prefix List resource](ec2_managed_prefix_list.html). Prefix Lists provided by
+[Managed Prefix List resource](vpc_managed_prefix_list.html). Prefix Lists provided by
 AWS are associated with a prefix list name, or service name, that is linked to a specific region.
 
 Prefix list IDs are exported on VPC Endpoints, so you can use this format:
@@ -62,8 +62,8 @@ resource "aws_vpc_endpoint" "my_endpoint" {
 }
 ```
 
-You can also find a specific Prefix List using the [`aws_prefix_list`](/docs/providers/aws/d/prefix_list.html)
-or [`ec2_managed_prefix_list`](/docs/providers/aws/d/ec2_managed_prefix_list.html) data sources:
+You can also find a specific Prefix List using the [`aws_prefix_list`](/docs/providers/aws/d/vpc_prefix_list.html)
+or [`ec2_managed_prefix_list`](/docs/providers/aws/d/vpc_managed_prefix_list.html) data sources:
 
 ```terraform
 data "aws_region" "current" {}

@@ -68,7 +68,7 @@ resource "aws_dx_hosted_transit_virtual_interface_accepter" "accepter" {
 
 The following arguments are supported:
 
-* `dx_gateway_id` - (Required) The ID of the [Direct Connect gateway](dx_gateway.html) to which to connect the virtual interface.
+* `dx_gateway_id` - (Required) The ID of the [Direct Connect gateway](directconnect_gateway.html) to which to connect the virtual interface.
 * `virtual_interface_id` - (Required) The ID of the Direct Connect virtual interface to accept.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 

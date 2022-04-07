@@ -46,5 +46,5 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-See the [LB Target Group Resource](/docs/providers/aws/r/lb_target_group.html) for details
+See the [LB Target Group Resource](/docs/providers/aws/r/elbv2_lb_target_group.html) for details
 on the returned attributes - they are identical.

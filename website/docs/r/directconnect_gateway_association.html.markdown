@@ -10,7 +10,7 @@ description: |-
 
 Associates a Direct Connect Gateway with a VGW or transit gateway.
 
-To create a cross-account association, create an [`aws_dx_gateway_association_proposal` resource](/docs/providers/aws/r/dx_gateway_association_proposal.html)
+To create a cross-account association, create an [`aws_dx_gateway_association_proposal` resource](/docs/providers/aws/r/directconnect_gateway_association_proposal.html)
 in the AWS account that owns the VGW or transit gateway and then accept the proposal in the AWS account that owns the Direct Connect Gateway
 by creating an `aws_dx_gateway_association` resource with the `proposal_id` and `associated_gateway_owner_account_id` attributes set.
 

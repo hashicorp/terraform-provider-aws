@@ -14,7 +14,7 @@ Provides a resource to manage a default route table of a VPC. This resource can 
 
 Every VPC has a default route table that can be managed but not destroyed. When Terraform first adopts a default route table, it **immediately removes all defined routes**. It then proceeds to create any routes specified in the configuration. This step is required so that only the routes specified in the configuration exist in the default route table.
 
-For more information, see the Amazon VPC User Guide on [Route Tables](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html). For information about managing normal route tables in Terraform, see [`aws_route_table`](/docs/providers/aws/r/route_table.html).
+For more information, see the Amazon VPC User Guide on [Route Tables](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html). For information about managing normal route tables in Terraform, see [`aws_route_table`](/docs/providers/aws/r/vpc_route_table.html).
 
 ## Example Usage
 
@@ -72,7 +72,7 @@ One of the following destination arguments must be supplied:
 
 * `cidr_block` - (Required) The CIDR block of the route.
 * `ipv6_cidr_block` - (Optional) The Ipv6 CIDR block of the route
-* `destination_prefix_list_id` - (Optional) The ID of a [managed prefix list](ec2_managed_prefix_list.html) destination of the route.
+* `destination_prefix_list_id` - (Optional) The ID of a [managed prefix list](vpc_managed_prefix_list.html) destination of the route.
 
 One of the following target arguments must be supplied:
 
@@ -114,5 +114,5 @@ $ terraform import aws_default_route_table.example vpc-33cc44dd
 ```
 
 [aws-route-tables]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html#Route_Replacing_Main_Table
-[tf-route-tables]: /docs/providers/aws/r/route_table.html
-[tf-main-route-table-association]: /docs/providers/aws/r/main_route_table_association.html
+[tf-route-tables]: /docs/providers/aws/r/vpc_route_table.html
+[tf-main-route-table-association]: /docs/providers/aws/r/vpc_main_route_table_association.html

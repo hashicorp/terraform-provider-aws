@@ -12,7 +12,7 @@ description: |-
 
 This resource can be useful for getting back a set of subnet ids for a vpc.
 
-~> **NOTE:** The `aws_subnet_ids` data source has been deprecated and will be removed in a future version. Use the [`aws_subnets`](subnets.html) data source instead.
+~> **NOTE:** The `aws_subnet_ids` data source has been deprecated and will be removed in a future version. Use the [`aws_subnets`](vpc_subnets.html) data source instead.
 
 ## Example Usage
 

@@ -9,7 +9,7 @@ description: |-
 # Resource: aws_s3control_object_lambda_access_point
 
 Provides a resource to manage an S3 Object Lambda Access Point.
-An Object Lambda access point is associated with exactly one [standard access point](s3_access_point.html) and thus one Amazon S3 bucket.
+An Object Lambda access point is associated with exactly one [standard access point](s3control_access_point.html) and thus one Amazon S3 bucket.
 
 ## Example Usage
 

@@ -11,7 +11,7 @@ description: |-
 Provides a managed prefix list resource.
 
 ~> **NOTE on Managed Prefix Lists and Managed Prefix List Entries:** Terraform
-currently provides both a standalone [Managed Prefix List Entry resource](ec2_managed_prefix_list_entry.html) (a single entry),
+currently provides both a standalone [Managed Prefix List Entry resource](vpc_managed_prefix_list_entry.html) (a single entry),
 and a Managed Prefix List resource with entries defined in-line. At this time you
 cannot use a Managed Prefix List with in-line rules in conjunction with any Managed
 Prefix List Entry resources. Doing so will cause a conflict of entries and will overwrite entries.

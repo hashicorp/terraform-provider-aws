@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_api_gateway_stage
 
-Manages an API Gateway Stage. A stage is a named reference to a deployment, which can be done via the [`aws_api_gateway_deployment` resource](apigateway_deployment.html). Stages can be optionally managed further with the [`aws_api_gateway_base_path_mapping` resource](api_gateway_base_path_mapping.html), [`aws_api_gateway_domain_name` resource](api_gateway_domain_name.html), and [`aws_api_method_settings` resource](api_gateway_method_settings.html). For more information, see the [API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-stages.html).
+Manages an API Gateway Stage. A stage is a named reference to a deployment, which can be done via the [`aws_api_gateway_deployment` resource](apigateway_deployment.html). Stages can be optionally managed further with the [`aws_api_gateway_base_path_mapping` resource](apigateway_base_path_mapping.html), [`aws_api_gateway_domain_name` resource](apigateway_domain_name.html), and [`aws_api_method_settings` resource](apigateway_method_settings.html). For more information, see the [API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-stages.html).
 
 ## Example Usage
 

@@ -13,7 +13,7 @@ Provides a resource to manage the default customer master key (CMK) that your AW
 Your AWS account has an AWS-managed default CMK that is used for encrypting an EBS volume when no CMK is specified in the API call that creates the volume.
 By using the `aws_ebs_default_kms_key` resource, you can specify a customer-managed CMK to use in place of the AWS-managed default CMK.
 
-~> **NOTE:** Creating an `aws_ebs_default_kms_key` resource does not enable default EBS encryption. Use the [`aws_ebs_encryption_by_default`](ebs_encryption_by_default.html) to enable default EBS encryption.
+~> **NOTE:** Creating an `aws_ebs_default_kms_key` resource does not enable default EBS encryption. Use the [`aws_ebs_encryption_by_default`](ec2ebs_encryption_by_default.html) to enable default EBS encryption.
 
 ~> **NOTE:** Destroying this resource will reset the default CMK to the account's AWS-managed default CMK for EBS.
 
