@@ -22,7 +22,9 @@ rules:
         - "internal/service/**/*_test.go"
         - "internal/service/**/sweep.go"
         - "internal/acctest/acctest.go"
-        - "internal/conns/conns.go"
+        - "internal/conns/awsclient_gen.go"
+        - "internal/conns/config_gen.go"
+        - "internal/conns/config.go"
     patterns:
       - pattern: |
           import ("$X")
@@ -560,6 +562,7 @@ rules:
         - internal/
       exclude:
         - providerlint/vendor/
+        - internal/generate/
     patterns:
       - pattern-either:
         - pattern: |
