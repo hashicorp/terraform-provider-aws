@@ -39,7 +39,7 @@ resource "aws_lambda_function_url" "test_live" {
 
 * `function_name` - (Required) Lambda Function name or ARN.
 * `qualifier` - (Optional) The Lambda alias name or '$LATEST'.
-* `authorization_type` - (Required) The authorization type for your function URL. Valid values are `["AWS_IAM"]` and `["NONE"]`.
+* `authorization_type` - (Required) The authorization type for your function URL. Valid values are `"AWS_IAM"` and `"NONE"`.
 * `cors` - (Optional) Configure cross-origin resource sharing.
 
 ### cors
