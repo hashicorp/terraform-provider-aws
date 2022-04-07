@@ -805,14 +805,14 @@ func TestAccStorageGatewayGateway_maintenanceStartTime(t *testing.T) {
 		CheckDestroy: testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayMaintenanceStartTimeConfig(rName, 22, 0, 3, 0),
+				Config: testAccGatewayMaintenanceStartTimeConfig(rName, 22, 0, "3", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.hour_of_day", "22"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.minute_of_hour", "0"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.day_of_week", "3"),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.day_of_month", "0"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.day_of_month", ""),
 				),
 			},
 			{
@@ -822,12 +822,12 @@ func TestAccStorageGatewayGateway_maintenanceStartTime(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"activation_key", "gateway_ip_address"},
 			},
 			{
-				Config: testAccGatewayMaintenanceStartTimeConfig(rName, 21, 10, 0, 12),
+				Config: testAccGatewayMaintenanceStartTimeConfig(rName, 21, 10, "", "12"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.hour_of_day", "21"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.minute_of_hour", "10"),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.day_of_week", "0"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.day_of_week", ""),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.day_of_month", "12"),
 				),
 			},
@@ -1433,13 +1433,12 @@ resource "aws_storagegateway_gateway" "test" {
 `, rName, rate))
 }
 
-func testAccGatewayMaintenanceStartTimeConfig(rName string, hourOfDay, minuteOfHour, dayOfWeek, dayOfMonth int) string {
-	nullOrValue := func(v int) string {
-		if v == 0 {
-			return "null"
-		}
-
-		return strconv.Quote(strconv.Itoa(v))
+func testAccGatewayMaintenanceStartTimeConfig(rName string, hourOfDay, minuteOfHour int, dayOfWeek, dayOfMonth string) string {
+	if dayOfWeek == "" {
+		dayOfWeek = strconv.Quote(dayOfWeek)
+	}
+	if dayOfMonth == "" {
+		dayOfMonth = strconv.Quote(dayOfMonth)
 	}
 
 	return acctest.ConfigCompose(testAcc_TapeAndVolumeGatewayBase(rName), fmt.Sprintf(`
@@ -1456,5 +1455,5 @@ resource "aws_storagegateway_gateway" "test" {
     day_of_month   = %[5]s
   }
 }
-`, rName, hourOfDay, minuteOfHour, nullOrValue(dayOfWeek), nullOrValue(dayOfMonth)))
+`, rName, hourOfDay, minuteOfHour, dayOfWeek, dayOfMonth))
 }
