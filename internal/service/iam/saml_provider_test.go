@@ -1,18 +1,18 @@
 package iam_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccIAMSAMLProvider_basic(t *testing.T) {
@@ -131,12 +131,9 @@ func testAccCheckIAMSAMLProviderDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &iam.GetSAMLProviderInput{
-			SAMLProviderArn: aws.String(rs.Primary.ID),
-		}
-		out, err := conn.GetSAMLProvider(input)
+		_, err := tfiam.FindSAMLProviderByARN(context.TODO(), conn, rs.Primary.ID)
 
-		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -144,29 +141,30 @@ func testAccCheckIAMSAMLProviderDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if out != nil {
-			return fmt.Errorf("IAM SAML Provider (%s) still exists", rs.Primary.ID)
-		}
+		return fmt.Errorf("IAM SAML Provider %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckIAMSAMLProviderExists(id string) resource.TestCheckFunc {
+func testAccCheckIAMSAMLProviderExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[id]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not Found: %s", id)
+			return fmt.Errorf("Not Found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No IAM SAML Provider ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
-		_, err := conn.GetSAMLProvider(&iam.GetSAMLProviderInput{
-			SAMLProviderArn: aws.String(rs.Primary.ID),
-		})
+
+		_, err := tfiam.FindSAMLProviderByARN(context.TODO(), conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
 
 		return err
 	}

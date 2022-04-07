@@ -164,6 +164,7 @@ func resourceSAMLProviderUpdate(ctx context.Context, d *schema.ResourceData, met
 			SAMLMetadataDocument: aws.String(d.Get("saml_metadata_document").(string)),
 		}
 
+		log.Printf("[DEBUG] Updating IAM SAML Provider: %s", input)
 		_, err := conn.UpdateSAMLProvider(input)
 
 		if err != nil {
