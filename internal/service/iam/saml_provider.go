@@ -75,21 +75,21 @@ func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	log.Printf("[DEBUG] Creating IAM SAML Provider: %s", input)
-	out, err := conn.CreateSAMLProvider(input)
+	output, err := conn.CreateSAMLProvider(input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
 	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
-		log.Printf("[WARN] failed creating IAM SAML Provider (%s) with tags: %s. Trying create without tags.", d.Get("name").(string), err)
+		log.Printf("[WARN] failed creating IAM SAML Provider (%s) with tags: %s. Trying create without tags.", name, err)
 		input.Tags = nil
 
-		out, err = conn.CreateSAMLProvider(input)
+		output, err = conn.CreateSAMLProvider(input)
 	}
 
 	if err != nil {
 		return diag.Errorf("creating IAM SAML Provider (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(out.SAMLProviderArn))
+	d.SetId(aws.StringValue(output.SAMLProviderArn))
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
 	if input.Tags == nil && len(tags) > 0 {
@@ -135,7 +135,11 @@ func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("arn", d.Id())
 	d.Set("name", name)
 	d.Set("saml_metadata_document", output.SAMLMetadataDocument)
-	d.Set("valid_until", output.ValidUntil.Format(time.RFC1123))
+	if output.ValidUntil != nil {
+		d.Set("valid_until", aws.TimeValue(output.ValidUntil).Format(time.RFC3339))
+	} else {
+		d.Set("valid_until", nil)
+	}
 
 	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
