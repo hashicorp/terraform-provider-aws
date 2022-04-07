@@ -307,11 +307,7 @@ func Provider() *schema.Provider {
 			"aws_iam_policy":                                 dataSourceAwsIAMPolicy(),
 			"aws_iam_policy_document":                        dataSourceAwsIamPolicyDocument(),
 			"aws_iam_role":                                   dataSourceAwsIAMRole(),
-<<<<<<< HEAD
 			"aws_iam_roles":                                  dataSourceAwsIAMRoles(),
-=======
-			"aws_iam_saml_provider":                          dataSourceAwsIAMSamlProvider(),
->>>>>>> fe5e9eaa5 (updates to PR for new standards)
 			"aws_iam_server_certificate":                     dataSourceAwsIAMServerCertificate(),
 			"aws_iam_session_context":                        dataSourceAwsIAMSessionContext(),
 			"aws_iam_user":                                   dataSourceAwsIAMUser(),

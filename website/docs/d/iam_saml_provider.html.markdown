@@ -1,5 +1,4 @@
 ---
-subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_saml_provider"
 description: |-

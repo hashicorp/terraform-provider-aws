@@ -7,7 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsIAMSamlProvider() *schema.Resource {
@@ -53,7 +54,7 @@ func dataSourceAwsIAMSamlProviderRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("no SAML provider found")
 	}
 
-	d.SetId(aws.StringValue(req.SAMLProviderArn))
+	d.SetId(*req.SAMLProviderArn)
 
 	validUntil := resp.ValidUntil.Format(time.RFC1123)
 	dateCreated := resp.CreateDate.Format(time.RFC1123)
