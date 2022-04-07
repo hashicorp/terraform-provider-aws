@@ -150,6 +150,10 @@ func TestDiffGameLiftPortSettings(t *testing.T) {
 }
 
 func TestAccGameLiftFleet_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf gamelift.FleetAttributes
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -240,6 +244,10 @@ func TestAccGameLiftFleet_basic(t *testing.T) {
 }
 
 func TestAccGameLiftFleet_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf gamelift.FleetAttributes
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -310,6 +318,10 @@ func TestAccGameLiftFleet_tags(t *testing.T) {
 }
 
 func TestAccGameLiftFleet_allFields(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf gamelift.FleetAttributes
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -452,6 +464,10 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 }
 
 func TestAccGameLiftFleet_cert(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf gamelift.FleetAttributes
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -505,6 +521,10 @@ func TestAccGameLiftFleet_cert(t *testing.T) {
 }
 
 func TestAccGameLiftFleet_script(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf gamelift.FleetAttributes
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -554,6 +574,10 @@ func TestAccGameLiftFleet_script(t *testing.T) {
 }
 
 func TestAccGameLiftFleet_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf gamelift.FleetAttributes
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

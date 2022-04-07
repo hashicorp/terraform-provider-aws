@@ -126,6 +126,10 @@ func TestAccGameLiftAlias_tags(t *testing.T) {
 }
 
 func TestAccGameLiftAlias_fleetRouting(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf gamelift.Alias
 
 	rString := sdkacctest.RandString(8)
