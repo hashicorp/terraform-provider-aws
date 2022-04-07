@@ -72,7 +72,7 @@ EventBridge (CloudWatch Events)
 EventBridge Schemas
 File System (FSx)
 Firewall Manager (FMS)
-Gamelift
+GameLift
 Glacier
 Global Accelerator
 Glue

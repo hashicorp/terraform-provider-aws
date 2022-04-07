@@ -1,14 +1,14 @@
 ---
-subcategory: "Gamelift"
+subcategory: "GameLift"
 layout: "aws"
 page_title: "AWS: aws_gamelift_script"
 description: |-
-  Provides a Gamelift Script resource.
+  Provides a GameLift Script resource.
 ---
 
 # Resource: aws_gamelift_script
 
-Provides an Gamelift Script resource.
+Provides an GameLift Script resource.
 
 ## Example Usage
 
@@ -47,13 +47,13 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Gamelift Script ID.
-* `arn` - Gamelift Script ARN.
+* `id` - GameLift Script ID.
+* `arn` - GameLift Script ARN.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-Gamelift Scripts can be imported using the ID, e.g.,
+GameLift Scripts can be imported using the ID, e.g.,
 
 ```
 $ terraform import aws_gamelift_script.example <script-id>
