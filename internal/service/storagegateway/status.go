@@ -11,7 +11,6 @@ import (
 const (
 	storageGatewayGatewayStatusConnected = "GatewayConnected"
 	storediSCSIVolumeStatusNotFound      = "NotFound"
-	nfsFileShareStatusNotFound           = "NotFound"
 )
 
 func statusStorageGatewayGateway(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {

@@ -75,7 +75,7 @@ func waitStorediSCSIVolumeAvailable(conn *storagegateway.StorageGateway, volumeA
 	return nil, err
 }
 
-func waitNFSFileShareCreated(conn *storagegateway.StorageGateway, arn string, timeout time.Duration) (*storagegateway.NFSFileShareInfo, error) { //nolint:unparam
+func waitNFSFileShareCreated(conn *storagegateway.StorageGateway, arn string, timeout time.Duration) (*storagegateway.NFSFileShareInfo, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fileShareStatusCreating},
 		Target:  []string{fileShareStatusAvailable},
@@ -112,7 +112,7 @@ func waitNFSFileShareDeleted(conn *storagegateway.StorageGateway, arn string, ti
 	return nil, err
 }
 
-func waitNFSFileShareUpdated(conn *storagegateway.StorageGateway, arn string, timeout time.Duration) (*storagegateway.NFSFileShareInfo, error) { //nolint:unparam
+func waitNFSFileShareUpdated(conn *storagegateway.StorageGateway, arn string, timeout time.Duration) (*storagegateway.NFSFileShareInfo, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fileShareStatusUpdating},
 		Target:  []string{fileShareStatusAvailable},

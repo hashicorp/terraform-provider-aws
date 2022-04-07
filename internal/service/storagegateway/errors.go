@@ -12,7 +12,6 @@ import (
 const (
 	operationErrCodeFileShareNotFound             = "FileShareNotFound"
 	operationErrCodeFileSystemAssociationNotFound = "FileSystemAssociationNotFound"
-	operationErrCodeGatewayNotConnected           = "GatewayNotConnected"
 	operationErrCodeGatewayNotFound               = "GatewayNotFound"
 )
 
