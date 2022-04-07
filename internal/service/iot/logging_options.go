@@ -3,13 +3,14 @@ package iot
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/iot"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -23,7 +24,7 @@ func ResourceLoggingOptions() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"default_log_level": {
 				Type:         schema.TypeString,
-				Optional:     true,
+				Required:     true,
 				ValidateFunc: validation.StringInSlice(iot.LogLevel_Values(), false),
 			},
 			"disable_all_logs": {
@@ -32,7 +33,7 @@ func ResourceLoggingOptions() *schema.Resource {
 			},
 			"role_arn": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 		},
@@ -56,7 +57,12 @@ func resourceLoggingOptionsPut(ctx context.Context, d *schema.ResourceData, meta
 		input.RoleArn = aws.String(v.(string))
 	}
 
-	_, err := conn.SetV2LoggingOptionsWithContext(ctx, input)
+	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, tfiam.PropagationTimeout,
+		func() (interface{}, error) {
+			return conn.SetV2LoggingOptionsWithContext(ctx, input)
+		},
+		iot.ErrCodeInvalidRequestException, "If the role was just created or updated, please try again in a few seconds.",
+	)
 
 	if err != nil {
 		return diag.Errorf("setting IoT logging options: %s", err)
