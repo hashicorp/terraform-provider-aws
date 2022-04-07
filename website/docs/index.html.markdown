@@ -215,7 +215,7 @@ credential_process = custom-process --username jdoe
 |Secret Access Key|`secret_key`|`AWS_SECRET_ACCESS_KEY`|`aws_secret_access_key`|
 |Session Token|`token`|`AWS_SESSION_TOKEN`|`aws_session_token`|
 |Region|`region`|`AWS_REGION` or `AWS_DEFAULT_REGION`|`region`|
-|Custom CA Bundle |`custom_ca_bundle`|`AWS_CA_BUNDLE`|Not supported|
+|Custom CA Bundle |`custom_ca_bundle`|`AWS_CA_BUNDLE`|`ca_bundle`|
 |EC2 IMDS Endpoint |`ec2_metadata_service_endpoint`|`AWS_EC2_METADATA_SERVICE_ENDPOINT`|N/A|
 |EC2 IMDS Endpoint Mode|`ec2_metadata_service_endpoint_mode`|`AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE`|N/A|
 |Disable EC2 IMDS|`skip_metadata_api_check`|`AWS_EC2_METADATA_DISABLED`|N/A|
