@@ -2,6 +2,7 @@ package rds_test
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"regexp"
 	"testing"
 
@@ -26,7 +27,10 @@ func TestAccAWSRDSClusterActivityStream_basic(t *testing.T) {
 	kmsKeyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckRegionNot(t, endpoints.UsGovWest1RegionID, endpoints.UsGovEast1RegionID, endpoints.CnNorthwest1RegionID, endpoints.CnNorth1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterActivityStreamDestroy,
@@ -60,7 +64,10 @@ func TestAccAWSRDSClusterActivityStream_disappears(t *testing.T) {
 	resourceName := "aws_rds_cluster_activity_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckRegionNot(t, endpoints.UsGovWest1RegionID, endpoints.UsGovEast1RegionID, endpoints.CnNorthwest1RegionID, endpoints.CnNorth1RegionID)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSClusterActivityStreamDestroy,
