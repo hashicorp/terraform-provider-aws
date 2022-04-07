@@ -9,7 +9,7 @@ description: |-
 # Data Source: aws_dx_location
 
 Retrieve information about a specific AWS Direct Connect location in the current AWS Region.
-These are the locations that can be specified when configuring [`aws_dx_connection`](/docs/providers/aws/r/dx_connection.html) or [`aws_dx_lag`](/docs/providers/aws/r/dx_lag.html) resources.
+These are the locations that can be specified when configuring [`aws_dx_connection`](/docs/providers/aws/r/directconnect_connection.html) or [`aws_dx_lag`](/docs/providers/aws/r/dx_lag.html) resources.
 
 ~> **Note:** This data source is different from the [`aws_dx_locations`](/docs/providers/aws/d/dx_locations.html) data source which retrieves information about all the AWS Direct Connect locations in the current AWS Region.
 

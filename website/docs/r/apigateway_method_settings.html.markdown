@@ -10,7 +10,7 @@ description: |-
 
 Manages API Gateway Stage Method Settings. For example, CloudWatch logging and metrics.
 
-~> **NOTE:** It is recommended to use this resource in conjunction with the [`aws_api_gateway_stage` resource](api_gateway_stage.html) instead of a stage managed by the [`aws_api_gateway_deployment` resource](api_gateway_deployment.html) optional `stage_name` argument. Stages managed by the `aws_api_gateway_deployment` resource are recreated on redeployment and this resource will require a second apply to recreate the method settings.
+~> **NOTE:** It is recommended to use this resource in conjunction with the [`aws_api_gateway_stage` resource](apigateway_stage.html) instead of a stage managed by the [`aws_api_gateway_deployment` resource](apigateway_deployment.html) optional `stage_name` argument. Stages managed by the `aws_api_gateway_deployment` resource are recreated on redeployment and this resource will require a second apply to recreate the method settings.
 
 ## Example Usage
 

@@ -527,7 +527,7 @@ Choose one argument or the other. These arguments update the same underlying inf
 
 Default connections have been removed as part of LAG creation. To migrate your Terraform configuration, the AWS provider implements the following resources:
 
-* [`aws_dx_connection`](/docs/providers/aws/r/dx_connection.html)
+* [`aws_dx_connection`](/docs/providers/aws/r/directconnect_connection.html)
 * [`aws_dx_connection_association`](/docs/providers/aws/r/dx_connection_association.html)
 
 For example, given this previous configuration:
