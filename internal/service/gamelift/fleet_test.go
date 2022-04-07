@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestDiffGameliftPortSettings(t *testing.T) {
+func TestDiffGameLiftPortSettings(t *testing.T) {
 	testCases := []struct {
 		Old           []interface{}
 		New           []interface{}
@@ -609,7 +609,7 @@ func testAccCheckFleetExists(n string, res *gamelift.FleetAttributes) resource.T
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Gamelift Fleet ID is set")
+			return fmt.Errorf("No GameLift Fleet ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
@@ -620,7 +620,7 @@ func testAccCheckFleetExists(n string, res *gamelift.FleetAttributes) resource.T
 		}
 
 		if aws.StringValue(fleet.FleetId) != rs.Primary.ID {
-			return fmt.Errorf("Gamelift Fleet not found")
+			return fmt.Errorf("GameLift Fleet not found")
 		}
 
 		*res = *fleet
