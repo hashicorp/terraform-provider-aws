@@ -2,7 +2,10 @@ package lambda
 
 import (
 	"context"
+	"net/url"
+	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -77,6 +80,10 @@ func DataSourceFunctionURL() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"url_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -93,6 +100,8 @@ func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("error reading Lambda Function URL (%s): %s", id, err)
 	}
 
+	functionURL := aws.StringValue(output.FunctionUrl)
+
 	d.SetId(id)
 	d.Set("authorization_type", output.AuthType)
 	if output.Cors != nil {
@@ -105,9 +114,19 @@ func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("creation_time", output.CreationTime)
 	d.Set("function_arn", output.FunctionArn)
 	d.Set("function_name", name)
-	d.Set("function_url", output.FunctionUrl)
+	d.Set("function_url", functionURL)
 	d.Set("last_modified_time", output.LastModifiedTime)
 	d.Set("qualifier", qualifier)
+
+	// Function URL endpoints have the following format:
+	// https://<url-id>.lambda-url.<region>.on.aws
+	if v, err := url.Parse(functionURL); err != nil {
+		return diag.Errorf("error parsing URL (%s): %s", functionURL, err)
+	} else if v := strings.Split(v.Host, "."); len(v) > 0 {
+		d.Set("url_id", v[0])
+	} else {
+		d.Set("url_id", nil)
+	}
 
 	return nil
 }

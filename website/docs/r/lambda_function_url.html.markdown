@@ -59,7 +59,8 @@ This configuration block supports the following attributes:
 In addition to all arguments above, the following attributes are exported:
 
 * `function_arn` - The Amazon Resource Name (ARN) of the function.
-* `function_url` - The HTTP URL endpoint for the function.
+* `function_url` - The HTTP URL endpoint for the function in the format `https://<url_id>.lambda-url.<region>.on.aws`.
+* `url_id` - A generated ID for the endpoint.
 
 ## Import
 

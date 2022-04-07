@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/url"
 	"strings"
 	"time"
 
@@ -103,6 +104,10 @@ func ResourceFunctionUrl() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 			},
+			"url_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -176,6 +181,8 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("error reading Lambda Function URL (%s): %s", d.Id(), err)
 	}
 
+	functionURL := aws.StringValue(output.FunctionUrl)
+
 	d.Set("authorization_type", output.AuthType)
 	if output.Cors != nil {
 		if err := d.Set("cors", []interface{}{flattenCors(output.Cors)}); err != nil {
@@ -186,8 +193,18 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("function_arn", output.FunctionArn)
 	d.Set("function_name", name)
-	d.Set("function_url", output.FunctionUrl)
+	d.Set("function_url", functionURL)
 	d.Set("qualifier", qualifier)
+
+	// Function URL endpoints have the following format:
+	// https://<url-id>.lambda-url.<region>.on.aws
+	if v, err := url.Parse(functionURL); err != nil {
+		return diag.Errorf("error parsing URL (%s): %s", functionURL, err)
+	} else if v := strings.Split(v.Host, "."); len(v) > 0 {
+		d.Set("url_id", v[0])
+	} else {
+		d.Set("url_id", nil)
+	}
 
 	return nil
 }

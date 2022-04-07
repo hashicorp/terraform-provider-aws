@@ -39,6 +39,7 @@ func TestAccLambdaFunctionURL_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "function_name", funcName),
 					resource.TestCheckResourceAttrSet(resourceName, "function_url"),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "url_id"),
 				),
 			},
 			{
