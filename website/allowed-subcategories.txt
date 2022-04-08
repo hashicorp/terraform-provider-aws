@@ -152,7 +152,7 @@ CloudWatch Synthetics
 Timestream Write
 Transfer Family
 VPC
-WAF Regional
+WAF Classic Regional
 WAF
 WAFv2
 WorkLink
