@@ -127,7 +127,7 @@ Route53 Recovery Control Config
 Route 53 Recovery Readiness
 Route53 Resolver
 Route 53
-S3
+S3 (Simple Storage)
 S3 Control
 S3 Outposts
 SES (Simple Email)
