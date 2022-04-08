@@ -26,7 +26,7 @@ Cloud9
 Cloud Control API
 CloudFormation
 CloudFront
-CloudHSM v2
+CloudHSM
 CloudSearch
 CloudTrail
 CloudWatch
