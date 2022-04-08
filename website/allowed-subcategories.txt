@@ -154,7 +154,7 @@ Transfer
 VPC
 WAF Regional
 WAF
-WAFv2
+WAF
 WorkLink
 WorkMail
 WorkSpaces
