@@ -58,8 +58,8 @@ EC2
 ECR (Elastic Container Registry)
 ECR Public
 ECS (Elastic Container)
-EFS
 EKS (Elastic Kubernetes)
+EFS (Elastic File System)
 ElastiCache
 Elastic Beanstalk
 ELB Classic
