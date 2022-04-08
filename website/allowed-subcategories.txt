@@ -65,7 +65,7 @@ Elastic Beanstalk
 ELB Classic
 EMR
 ELB (Elastic Load Balancing)
-Elastic Map Reduce Containers
+EMR Containers
 Elastic Transcoder
 Elasticsearch
 EventBridge
