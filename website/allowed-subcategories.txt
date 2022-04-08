@@ -123,8 +123,8 @@ Redshift
 Resource Groups
 Resource Groups Tagging
 Route53 Domains
-Route53 Recovery Control Config
 Route 53 Recovery Readiness
+Route 53 Recovery Control Config
 Route53 Resolver
 Route 53
 S3 (Simple Storage)
