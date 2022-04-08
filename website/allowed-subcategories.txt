@@ -89,7 +89,7 @@ Kinesis Data Analytics (SQL Applications)
 Kinesis Data Analytics v2 (SQL and Flink Applications)
 Kinesis Firehose
 Kinesis Video
-KMS
+KMS (Key Management)
 Lake Formation
 Lambda
 Lex
