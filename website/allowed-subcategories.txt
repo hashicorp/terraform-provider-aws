@@ -20,7 +20,7 @@ Autoscaling Plans
 AMP (Managed Prometheus)
 Backup
 Batch
-Budgets
+Web Services Budgets
 Chime
 Cloud9
 Cloud Control API
