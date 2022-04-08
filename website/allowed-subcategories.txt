@@ -16,7 +16,7 @@ Application Autoscaling
 Athena
 Audit Manager
 Auto Scaling
-Autoscaling Plans
+Auto Scaling Plans
 AMP (Managed Prometheus)
 Backup
 Batch
