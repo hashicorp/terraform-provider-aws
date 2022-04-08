@@ -1,5 +1,5 @@
 ---
-subcategory: "Keyspaces"
+subcategory: "Keyspaces (for Apache Cassandra)"
 layout: "aws"
 page_title: "AWS: aws_keyspaces_keyspace"
 description: |-
