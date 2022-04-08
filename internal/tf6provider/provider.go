@@ -14,36 +14,36 @@ func New() tfsdk.Provider {
 }
 
 type config struct {
-	AccessKey                      types.String `tfsdk:"access_key"`
-	AssumeRole                     types.List   `tfsdk:"assume_role"`
-	AllowedAccountIDs              types.Set    `tfsdk:"allowed_account_ids"`
-	CustomCABundle                 types.String `tfsdk:"custom_ca_bundle"`
-	DefaultTags                    types.List   `tfsdk:"default_tags"`
-	EC2MetadataServiceEndpoint     types.String `tfsdk:"ec2_metadata_service_endpoint"`
-	EC2MetadataServiceEndpointMode types.String `tfsdk:"ec2_metadata_service_endpoint_mode"`
-	Endpoints                      types.Set    `tfsdk:"endpoints"`
-	ForbiddenAccountIDs            types.Set    `tfsdk:"forbidden_account_ids"`
-	HTTPProxy                      types.String `tfsdk:"http_proxy"`
-	IgnoreTags                     types.List   `tfsdk:"ignore_tags"`
-	Insecure                       types.Bool   `tfsdk:"insecure"`
-	MaxRetries                     types.Int64  `tfsdk:"max_retries"`
-	Profile                        types.String `tfsdk:"profile"`
-	Region                         types.String `tfsdk:"region"`
-	S3ForcePathStyle               types.Bool   `tfsdk:"s3_force_path_style"`
-	S3UsePathStyle                 types.Bool   `tfsdk:"s3_use_path_style"`
-	SecretKey                      types.String `tfsdk:"secret_key"`
-	SharedConfigFiles              types.List   `tfsdk:"shared_config_files"`
-	SharedCredentialsFile          types.String `tfsdk:"shared_credentials_file"`
-	SharedCredentialsFiles         types.List   `tfsdk:"shared_credentials_files"`
-	SkipCredentialsValidation      types.Bool   `tfsdk:"skip_credentials_validation"`
-	SkipGetEC2Platforms            types.Bool   `tfsdk:"skip_get_ec2_platforms"`
-	SkipMetadataAPICheck           types.Bool   `tfsdk:"skip_metadata_api_check"`
-	SkipRegionValidation           types.Bool   `tfsdk:"skip_region_validation"`
-	SkipRequestingAccountID        types.Bool   `tfsdk:"skip_requesting_account_id"`
-	STSRegion                      types.String `tfsdk:"sts_region"`
-	Token                          types.String `tfsdk:"token"`
-	UseDualStackEndpoint           types.Bool   `tfsdk:"use_dualstack_endpoint"`
-	UseFIPSEndpoint                types.Bool   `tfsdk:"use_fips_endpoint"`
+	AccessKey                      *string     `tfsdk:"access_key"`
+	AssumeRole                     types.List  `tfsdk:"assume_role"`
+	AllowedAccountIDs              types.Set   `tfsdk:"allowed_account_ids"`
+	CustomCABundle                 *string     `tfsdk:"custom_ca_bundle"`
+	DefaultTags                    types.List  `tfsdk:"default_tags"`
+	EC2MetadataServiceEndpoint     *string     `tfsdk:"ec2_metadata_service_endpoint"`
+	EC2MetadataServiceEndpointMode *string     `tfsdk:"ec2_metadata_service_endpoint_mode"`
+	Endpoints                      types.Set   `tfsdk:"endpoints"`
+	ForbiddenAccountIDs            types.Set   `tfsdk:"forbidden_account_ids"`
+	HTTPProxy                      *string     `tfsdk:"http_proxy"`
+	IgnoreTags                     types.List  `tfsdk:"ignore_tags"`
+	Insecure                       types.Bool  `tfsdk:"insecure"`
+	MaxRetries                     types.Int64 `tfsdk:"max_retries"`
+	Profile                        *string     `tfsdk:"profile"`
+	Region                         *string     `tfsdk:"region"`
+	S3ForcePathStyle               types.Bool  `tfsdk:"s3_force_path_style"`
+	S3UsePathStyle                 types.Bool  `tfsdk:"s3_use_path_style"`
+	SecretKey                      *string     `tfsdk:"secret_key"`
+	SharedConfigFiles              types.List  `tfsdk:"shared_config_files"`
+	SharedCredentialsFile          *string     `tfsdk:"shared_credentials_file"`
+	SharedCredentialsFiles         types.List  `tfsdk:"shared_credentials_files"`
+	SkipCredentialsValidation      types.Bool  `tfsdk:"skip_credentials_validation"`
+	SkipGetEC2Platforms            types.Bool  `tfsdk:"skip_get_ec2_platforms"`
+	SkipMetadataAPICheck           types.Bool  `tfsdk:"skip_metadata_api_check"`
+	SkipRegionValidation           types.Bool  `tfsdk:"skip_region_validation"`
+	SkipRequestingAccountID        types.Bool  `tfsdk:"skip_requesting_account_id"`
+	STSRegion                      *string     `tfsdk:"sts_region"`
+	Token                          *string     `tfsdk:"token"`
+	UseDualStackEndpoint           types.Bool  `tfsdk:"use_dualstack_endpoint"`
+	UseFIPSEndpoint                types.Bool  `tfsdk:"use_fips_endpoint"`
 
 	assumeRole       *assumeRoleConfig
 	defaultTags      *defaultTagsConfig
@@ -53,15 +53,15 @@ type config struct {
 }
 
 type assumeRoleConfig struct {
-	Duration          Duration     `tfsdk:"duration"`
-	DurationSeconds   types.Int64  `tfsdk:"duration_seconds"`
-	ExternalID        types.String `tfsdk:"external_id"`
-	Policy            types.String `tfsdk:"policy"`
-	PolicyARNs        types.Set    `tfsdk:"policy_arns"`
-	RoleARN           types.String `tfsdk:"role_arn"`
-	SessionName       types.String `tfsdk:"session_name"`
-	Tags              types.Map    `tfsdk:"tags"`
-	TransitiveTagKeys types.Set    `tfsdk:"transitive_tag_keys"`
+	Duration          Duration    `tfsdk:"duration"`
+	DurationSeconds   types.Int64 `tfsdk:"duration_seconds"`
+	ExternalID        *string     `tfsdk:"external_id"`
+	Policy            *string     `tfsdk:"policy"`
+	PolicyARNs        types.Set   `tfsdk:"policy_arns"`
+	RoleARN           *string     `tfsdk:"role_arn"`
+	SessionName       *string     `tfsdk:"session_name"`
+	Tags              types.Map   `tfsdk:"tags"`
+	TransitiveTagKeys types.Set   `tfsdk:"transitive_tag_keys"`
 }
 
 type defaultTagsConfig struct {
