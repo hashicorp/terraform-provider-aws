@@ -86,7 +86,7 @@ IoT
 Keyspaces (for Apache Cassandra)
 Kinesis
 Kinesis Analytics
-Kinesis Data Analytics v2 (SQL and Flink Applications)
+Kinesis Analytics V2
 Kinesis Firehose
 Kinesis Video
 KMS (Key Management)
