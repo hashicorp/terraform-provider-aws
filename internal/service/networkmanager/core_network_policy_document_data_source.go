@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
@@ -50,7 +51,6 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-
 									"type": {
 										Type:     schema.TypeString,
 										Required: true,
@@ -94,10 +94,6 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 									"association_method": {
 										Type:     schema.TypeString,
 										Required: true,
-										// AtLeastOneOf: []string{
-										// 	"attachment_policies.#.actions.0.segment",
-										// 	"attachment_policies.#.actions.0.tag_value_of_key",
-										// },
 										ValidateFunc: validation.StringInSlice([]string{
 											"tag",
 											"constant",
@@ -106,13 +102,11 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 									"segment": {
 										Type:     schema.TypeString,
 										Optional: true,
-										// ConflictsWith: "tag_value_of_key",
 										//"^[a-zA-Z][A-Za-z0-9]{0,63}$"
 									},
 									"tag_value_of_key": {
 										Type:     schema.TypeString,
 										Optional: true,
-										// ConflictsWith: "segment",
 									},
 									"require_acceptance": {
 										Type:     schema.TypeBool,
@@ -131,14 +125,26 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						// TODO: required
-						"asn_ranges": setOfString,
+						"asn_ranges": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								// ValidateFunc: validation.StringMatch(regexp.MustCompile(validAsnRanges), ""),
+							},
+						},
 						"vpn_ecmp_support": {
 							Type:     schema.TypeBool,
 							Default:  false,
 							Optional: true,
 						},
-						"inside_cidr_blocks": setOfString,
+						"inside_cidr_blocks": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
 						"edge_locations": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -149,19 +155,23 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 									"location": {
 										Type:     schema.TypeString,
 										Required: true,
-										// a-z, 0-9
+										// Not all regions are valid but we will not maintain a hardcoded list
+										ValidateFunc: verify.ValidRegionName,
 									},
 									"asn": {
 										Type:     schema.TypeInt,
 										Default:  false,
 										Optional: true,
-										// validate asn-like
+										ValidateFunc: validation.Any(
+											validation.IntBetween(64512, 65534),
+											validation.IntBetween(4200000000, 4294967294),
+										),
 									},
 									// TODO: recheck type?
 									"inside_cidr_blocks": {
 										Type:     schema.TypeList,
 										Optional: true,
-										// validate either ipv4 or 6?
+										// "(^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])/([1-2][0-9]|3[0-2]|[0-9])$)|(^((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:)))(%.+)?s*(/([0-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8]))$)"
 										Elem: &schema.Schema{Type: schema.TypeString},
 									},
 								},
@@ -180,15 +190,26 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"allow_filter": setOfString,
-						"deny_filter":  setOfString,
+						"allow_filter": setOfString, // "^[a-zA-Z][A-Za-z0-9]{0,63}$"
+						"deny_filter":  setOfString, // "^[a-zA-Z][A-Za-z0-9]{0,63}$"
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
-							// a-z, 0-9
-							// ValidateFunc: validation.StringInSlice([]string{"Allow", "Deny"}, false),
+							// "^[a-zA-Z][A-Za-z0-9]{0,63}$"
 						},
-						"edge_locations": setOfString,
+						"description": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"edge_locations": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: verify.ValidRegionName,
+							},
+						},
+
 						"isolate_attachments": {
 							Type:     schema.TypeBool,
 							Default:  false,
@@ -239,16 +260,9 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 							Required: true,
 							//"^[a-zA-Z][A-Za-z0-9]{0,63}$"
 						},
-						/*
-							share_with can be array or string or object
-							share_with = ["segment-ids", "..."] # subset of all segments
-							share_with = "*"                    # all segments
-							share_with = {                      # setsubtraction of all segments
-								except = ["segment-ids", "..."]
-							}
-						*/
-						// "share_with":        setOfString,
-						// "share_with_except": setOfString,
+
+						"share_with":        setOfString,
+						"share_with_except": setOfString,
 					},
 				},
 			},
@@ -265,9 +279,8 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 }
 
 func dataSourceCoreNetworkPolicyDocumentRead(d *schema.ResourceData, meta interface{}) error {
-	mergedDoc := &CoreNetworkPolicyDoc{}
 
-	doc := &CoreNetworkPolicyDoc{
+	mergedDoc := &CoreNetworkPolicyDoc{
 		Version: d.Get("version").(string),
 	}
 
@@ -297,9 +310,8 @@ func dataSourceCoreNetworkPolicyDocumentRead(d *schema.ResourceData, meta interf
 	if err != nil {
 		return err
 	}
-	doc.Segments = segments
+	mergedDoc.Segments = segments
 
-	mergedDoc.Merge(doc)
 	jsonDoc, err := json.MarshalIndent(mergedDoc, "", "  ")
 	if err != nil {
 		// should never happen if the above code is correct
@@ -319,11 +331,6 @@ func expandDataCoreNetworkPolicySegmentActions(d *schema.ResourceData) ([]*CoreN
 	for i, sgmtActionI := range cfgSegmentActionsIntf {
 		cfgSA := sgmtActionI.(map[string]interface{})
 		sgmtAction := &CoreNetworkPolicySegmentAction{}
-		/* 2 types of segment actions
-		share: mode = "attachment-route", share-with (list), segment (source of what is sharing) 1 to many segment to many segments
-
-		create-route: destination_cidr_blocks, destination (array), segment (no mode, )
-		*/
 		action := cfgSA["action"].(string)
 		sgmtAction.Action = action
 
@@ -342,7 +349,6 @@ func expandDataCoreNetworkPolicySegmentActions(d *schema.ResourceData) ([]*CoreN
 			if sgmt, ok := cfgSA["segment"]; ok {
 				sgmtAction.Segment = sgmt.(string)
 			}
-
 		}
 
 		if action == "create-route" {
@@ -362,8 +368,24 @@ func expandDataCoreNetworkPolicySegmentActions(d *schema.ResourceData) ([]*CoreN
 		if sgmt, ok := cfgSA["segment"]; ok {
 			sgmtAction.Segment = sgmt.(string)
 		}
+
+		var shareWith, shareWithExcept interface{}
+
+		if sW := cfgSA["share_with"].(*schema.Set).List(); len(sW) > 0 {
+			shareWith = CoreNetworkPolicyDecodeConfigStringList(sW)
+			sgmtAction.ShareWith = shareWith
+		}
+
+		if sWE := cfgSA["share_with_except"].(*schema.Set).List(); len(sWE) > 0 {
+			shareWithExcept = CoreNetworkPolicyDecodeConfigStringList(sWE)
+			sgmtAction.ShareWithExcept = shareWithExcept
+		}
+
+		if (shareWith != nil && shareWithExcept != nil) || (shareWith == nil && shareWithExcept == nil) {
+			return nil, fmt.Errorf("You must specify only 1 of \"share_with\" or \"share_with_except\".")
+		}
+
 		sgmtActions[i] = sgmtAction
-		// TODO: share_with
 
 	}
 	return sgmtActions, nil
@@ -393,7 +415,10 @@ func expandDataCoreNetworkPolicyAttachmentPolicies(d *schema.ResourceData) ([]*C
 			policy.ConditionLogic = cL.(string)
 		}
 
-		action := expandDataCoreNetworkPolicyAttachmentPoliciesAction(cfgPol["action"].([]interface{}))
+		action, err := expandDataCoreNetworkPolicyAttachmentPoliciesAction(cfgPol["action"].([]interface{}))
+		if err != nil {
+			return nil, err
+		}
 		policy.Action = action
 
 		conditions, err := expandDataCoreNetworkPolicyAttachmentPoliciesConditions(cfgPol["conditions"].([]interface{}))
@@ -411,15 +436,6 @@ func expandDataCoreNetworkPolicyAttachmentPolicies(d *schema.ResourceData) ([]*C
 }
 
 func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{}) ([]*CoreNetworkAttachmentPolicyCondition, error) {
-	/* 5 situations by type
-	any:        no other fields allowed (op, key, value)
-	tag-exists: only key allowed. no operator, value
-	tag-value:  all fields required
-
-	{region,resource-id,account-id}: operator, value required. no key
-	attachment-type:                 operator must be "equals". value is required. key is not allowed
-	*/
-
 	conditions := make([]*CoreNetworkAttachmentPolicyCondition, len(tfList))
 
 	for i, condI := range tfList {
@@ -479,28 +495,29 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{
 	return conditions, nil
 }
 
-func expandDataCoreNetworkPolicyAttachmentPoliciesAction(tfList []interface{}) *CoreNetworkAttachmentPolicyAction {
-	// TODO:
-	/*
-		if association_method = "tag", must also specify tag_value_of_key
-		if association_method = "constant", can be either segment
-	*/
-
+func expandDataCoreNetworkPolicyAttachmentPoliciesAction(tfList []interface{}) (*CoreNetworkAttachmentPolicyAction, error) {
 	cfgAP := tfList[0].(map[string]interface{})
+	assocMethod := cfgAP["association_method"].(string)
 	aP := &CoreNetworkAttachmentPolicyAction{
-		AssociationMethod: cfgAP["association_method"].(string),
+		AssociationMethod: assocMethod,
 	}
 
-	if segment, ok := cfgAP["segment"]; ok {
+	if segment, _ := cfgAP["segment"]; segment != "" {
+		if assocMethod == "tag" {
+			return nil, fmt.Errorf("Cannot set \"segment\" argument if association_method = \"tag\" .")
+		}
 		aP.Segment = segment.(string)
 	}
-	if tag, ok := cfgAP["tag_value_of_key"]; ok {
+	if tag, _ := cfgAP["tag_value_of_key"]; tag != "" {
+		if assocMethod == "constant" {
+			return nil, fmt.Errorf("Cannot set \"tag_value_of_key\" argument if association_method = \"constant\" .")
+		}
 		aP.TagValueOfKey = tag.(string)
 	}
 	if acceptance, ok := cfgAP["require_acceptance"]; ok {
 		aP.RequireAcceptance = acceptance.(bool)
 	}
-	return aP
+	return aP, nil
 }
 
 func expandDataCoreNetworkPolicySegments(d *schema.ResourceData) ([]*CoreNetworkPolicySegment, error) {
@@ -521,11 +538,17 @@ func expandDataCoreNetworkPolicySegments(d *schema.ResourceData) ([]*CoreNetwork
 				nameMap[sgmt.Name] = struct{}{}
 			}
 		}
+		if description, ok := cfgSgmt["description"]; ok {
+			sgmt.Description = description.(string)
+		}
 		if actions := cfgSgmt["allow_filter"].(*schema.Set).List(); len(actions) > 0 {
 			sgmt.AllowFilter = CoreNetworkPolicyDecodeConfigStringList(actions)
 		}
 		if actions := cfgSgmt["deny_filter"].(*schema.Set).List(); len(actions) > 0 {
 			sgmt.DenyFilter = CoreNetworkPolicyDecodeConfigStringList(actions)
+		}
+		if edgeLocations := cfgSgmt["edge_locations"].(*schema.Set).List(); len(edgeLocations) > 0 {
+			sgmt.EdgeLocations = CoreNetworkPolicyDecodeConfigStringList(edgeLocations)
 		}
 		if b, ok := cfgSgmt["require_attachment_acceptance"]; ok {
 			sgmt.RequireAttachmentAcceptance = b.(bool)
@@ -551,9 +574,7 @@ func expandDataCoreNetworkPolicyNetworkConfiguration(d *schema.ResourceData) (*C
 		nc.InsideCidrBlocks = CoreNetworkPolicyDecodeConfigStringList(cidrs)
 	}
 
-	if vpn, ok := m["vpn_ecmp_support"]; ok {
-		nc.VpnEcmpSupport = vpn.(bool)
-	}
+	nc.VpnEcmpSupport = m["vpn_ecmp_support"].(bool)
 
 	el, err := expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(m["edge_locations"].([]interface{}))
 
@@ -563,7 +584,6 @@ func expandDataCoreNetworkPolicyNetworkConfiguration(d *schema.ResourceData) (*C
 	nc.EdgeLocations = el
 
 	return nc, nil
-
 }
 
 func expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(tfList []interface{}) ([]*CoreNetworkEdgeLocation, error) {
@@ -591,6 +611,10 @@ func expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(tfList []inter
 
 		if v, ok := cfgEdgeLocation["asn"]; ok {
 			edgeLocation.Asn = v.(int)
+		}
+
+		if cidrs := cfgEdgeLocation["inside_cidr_blocks"].([]interface{}); len(cidrs) > 0 {
+			edgeLocation.InsideCidrBlocks = CoreNetworkPolicyDecodeConfigStringList(cidrs)
 		}
 
 		edgeLocations[i] = edgeLocation

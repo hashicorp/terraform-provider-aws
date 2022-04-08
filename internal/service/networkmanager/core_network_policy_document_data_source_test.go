@@ -34,7 +34,7 @@ var testAccPolicyDocumentConfig = `
 data "aws_networkmanager_core_network_policy_document" test {
 
   core_network_configuration {
-      vpn_ecmp_support = true
+      vpn_ecmp_support = false
       asn_ranges = ["64512-64555"]
       edge_locations {
           location = "us-east-1"
@@ -47,10 +47,28 @@ data "aws_networkmanager_core_network_policy_document" test {
   }
 
   segments {
-    name = "test"
+    name = "shared"
+    description = "Segment for shared services"
+    require_attachment_acceptance = true
   }
   segments {
-    name = "test2"
+    name = "prod"
+    description = "Segment for prod services"
+    require_attachment_acceptance = true
+  }
+    segments {
+    name = "finance"
+    description = "Segment for finance services"
+    require_attachment_acceptance = true
+  }
+  segments {
+    name = "hr"
+    description = "Segment for hr services"
+    require_attachment_acceptance = true
+  }
+  segments {
+    name = "vpn"
+    description = "Segment for vpn services"
     require_attachment_acceptance = true
   }
 
@@ -58,9 +76,15 @@ data "aws_networkmanager_core_network_policy_document" test {
     action = "share"
     mode =  "attachment-route"
     segment = "shared"
-    # share-with = "*"
+    share_with = ["*"]
   }
 
+  segment_actions {
+    action = "share"
+    mode =  "attachment-route"
+    segment = "vpn"
+    share_with = ["*"]
+  }
   attachment_policies {
     rule_number = 100
     condition_logic = "or"
@@ -69,14 +93,21 @@ data "aws_networkmanager_core_network_policy_document" test {
       type = "tag-value"
       operator = "equals"
       key = "segment"
-      value = "prod"
+      value = "shared"
     }
-    conditions {
-      type = "any"
+    action {
+      association_method = "constant"
+      segment = "shared"
     }
+  }
+  attachment_policies {
+    rule_number = 200
+    condition_logic = "or"
+
     conditions {
-      type = "attachment-type"
+      type = "tag-value"
       operator = "equals"
+      key = "segment"
       value = "prod"
     }
     action {
@@ -84,59 +115,194 @@ data "aws_networkmanager_core_network_policy_document" test {
       segment = "prod"
     }
   }
+  attachment_policies {
+    rule_number = 300
+    condition_logic = "or"
+
+    conditions {
+      type = "tag-value"
+      operator = "equals"
+      key = "segment"
+      value = "finance"
+    }
+    action {
+      association_method = "constant"
+      segment = "finance"
+    }
+  }
+  attachment_policies {
+    rule_number = 400
+    condition_logic = "or"
+
+    conditions {
+      type = "tag-value"
+      operator = "equals"
+      key = "segment"
+      value = "hr"
+    }
+    action {
+      association_method = "constant"
+      segment = "hr"
+    }
+  }
+  attachment_policies {
+    rule_number = 500
+    condition_logic = "or"
+
+    conditions {
+      type = "tag-value"
+      operator = "equals"
+      key = "segment"
+      value = "vpn"
+    }
+    action {
+      association_method = "constant"
+      segment = "vpn"
+    }
+  }
 }`
 
 func testAccPolicyDocumentExpectedJSON() string {
 	return fmt.Sprint(`{
-  "Version": "2021.12",
-  "AttachmentPolicies": [
-    {
-      "RuleNumber": 100,
-      "Action": {
-        "AssociationMethod": "constant",
-        "Segment": "prod"
-      },
-      "Conditions": [
-        {
-          "Type": "tag-value",
-          "Operator": "equals",
-          "Key": "segment",
-          "Value": "prod"
-        },
-        {
-          "Type": "any"
-        },
-        {
-          "Type": "attachment-type",
-          "Operator": "equals",
-          "Value": "prod"
-        }
-      ],
-      "ConditionLogic": "or"
-    }
-  ],
-  "Segments": [
-    {
-      "Name": "test"
-    },
-    {
-      "Name": "test2",
-      "RequireAttachmentAcceptance": true
-    }
-  ],
-  "CoreNetworkConfiguration": {
-    "AsnRanges": "64512-64555",
-    "VpnEcmpSupport": true,
-    "EdgeLocations": [
+  "version": "2021.12",
+  "core-network-configuration": {
+    "asn-ranges": [
+      "64512-64555"
+    ],
+    "vpn-ecmp-support": false,
+    "edge-locations": [
       {
-        "Location": "us-east-1",
-        "Asn": 64512
+        "location": "us-east-1",
+        "asn": 64512
       },
       {
-        "Location": "eu-central-1",
-        "Asn": 64513
+        "location": "eu-central-1",
+        "asn": 64513
       }
     ]
-  }
+  },
+  "segments": [
+    {
+      "name": "shared",
+      "description": "Segment for shared services",
+      "require-attachment-acceptance": true
+    },
+    {
+      "name": "prod",
+      "description": "Segment for prod services",
+      "require-attachment-acceptance": true
+    },
+    {
+      "name": "finance",
+      "description": "Segment for finance services",
+      "require-attachment-acceptance": true
+    },
+    {
+      "name": "hr",
+      "description": "Segment for hr services",
+      "require-attachment-acceptance": true
+    },
+    {
+      "name": "vpn",
+      "description": "Segment for vpn services",
+      "require-attachment-acceptance": true
+    }
+  ],
+  "attachment-policies": [
+    {
+      "rule-number": 100,
+      "action": {
+        "association-method": "constant",
+        "segment": "shared"
+      },
+      "conditions": [
+        {
+          "type": "tag-value",
+          "operator": "equals",
+          "key": "segment",
+          "value": "shared"
+        }
+      ],
+      "condition-logic": "or"
+    },
+    {
+      "rule-number": 200,
+      "action": {
+        "association-method": "constant",
+        "segment": "prod"
+      },
+      "conditions": [
+        {
+          "type": "tag-value",
+          "operator": "equals",
+          "key": "segment",
+          "value": "prod"
+        }
+      ],
+      "condition-logic": "or"
+    },
+    {
+      "rule-number": 300,
+      "action": {
+        "association-method": "constant",
+        "segment": "finance"
+      },
+      "conditions": [
+        {
+          "type": "tag-value",
+          "operator": "equals",
+          "key": "segment",
+          "value": "finance"
+        }
+      ],
+      "condition-logic": "or"
+    },
+    {
+      "rule-number": 400,
+      "action": {
+        "association-method": "constant",
+        "segment": "hr"
+      },
+      "conditions": [
+        {
+          "type": "tag-value",
+          "operator": "equals",
+          "key": "segment",
+          "value": "hr"
+        }
+      ],
+      "condition-logic": "or"
+    },
+    {
+      "rule-number": 500,
+      "action": {
+        "association-method": "constant",
+        "segment": "vpn"
+      },
+      "conditions": [
+        {
+          "type": "tag-value",
+          "operator": "equals",
+          "key": "segment",
+          "value": "vpn"
+        }
+      ],
+      "condition-logic": "or"
+    }
+  ],
+  "segment-actions": [
+    {
+      "action": "share",
+      "mode": "attachment-route",
+      "segment": "shared",
+      "share-with": "*"
+    },
+    {
+      "action": "share",
+      "mode": "attachment-route",
+      "segment": "vpn",
+      "share-with": "*"
+    }
+  ]
 }`)
 }

@@ -1,6 +1,7 @@
 package networkmanager
 
 import (
+	"encoding/json"
 	"sort"
 )
 
@@ -9,105 +10,96 @@ const (
 )
 
 type CoreNetworkPolicyDoc struct {
-	Version                  string `json:",omitempty"`
-	Id                       string `json:",omitempty"`
-	CoreNetworkConfiguration *CoreNetworkPolicyCoreNetworkConfiguration
-	Segments                 []*CoreNetworkPolicySegment
-	AttachmentPolicies       []*CoreNetworkAttachmentPolicy    `json:"AttachmentPolicies,omitempty"`
-	SegmentActions           []*CoreNetworkPolicySegmentAction `json:"SegmentActions,omitempty"`
+	Version                  string                                     `json:"version,omitempty"`
+	CoreNetworkConfiguration *CoreNetworkPolicyCoreNetworkConfiguration `json:"core-network-configuration"`
+	Segments                 []*CoreNetworkPolicySegment                `json:"segments"`
+	AttachmentPolicies       []*CoreNetworkAttachmentPolicy             `json:"attachment-policies,omitempty"`
+	SegmentActions           []*CoreNetworkPolicySegmentAction          `json:"segment-actions,omitempty"`
 }
 
 type CoreNetworkPolicySegmentAction struct {
-	Action                string
-	Destinations          interface{} `json:",omitempty"`
-	DestinationCidrBlocks interface{} `json:",omitempty"`
-	Mode                  string      `json:",omitempty"`
-	Segment               string      `json:",omitempty"`
+	Action                string      `json:"action"`
+	Destinations          interface{} `json:"destinations,omitempty"`
+	DestinationCidrBlocks interface{} `json:"destination-cidr-blocks,omitempty"`
+	Mode                  string      `json:"mode,omitempty"`
+	Segment               string      `json:"segment,omitempty"`
 
-	// ShareWith       []string{} `json:"ShareWith,omitempty"`
-	// ShareWithExcept []string{} `json:"ShareWith,omitempty"`
+	ShareWith       interface{} `json:"share-with,omitempty"`
+	ShareWithExcept interface{} `json:",omitempty"`
 }
 
 type CoreNetworkAttachmentPolicy struct {
-	RuleNumber     int
-	Action         *CoreNetworkAttachmentPolicyAction
-	Conditions     []*CoreNetworkAttachmentPolicyCondition
-	Description    string `json:"Description,omitempty"`
-	ConditionLogic string `json:"ConditionLogic,omitempty"`
+	RuleNumber     int                                     `json:"rule-number,omitempty"`
+	Action         *CoreNetworkAttachmentPolicyAction      `json:"action"`
+	Conditions     []*CoreNetworkAttachmentPolicyCondition `json:"conditions"`
+	Description    string                                  `json:"description,omitempty"`
+	ConditionLogic string                                  `json:"condition-logic,omitempty"`
 }
 
 type CoreNetworkAttachmentPolicyAction struct {
-	AssociationMethod string
-	Segment           string `json:"Segment,omitempty"`
-	TagValueOfKey     string `json:"TagValueOfKey,omitempty"`
-	RequireAcceptance bool   `json:"RequireAcceptance,omitempty"`
+	AssociationMethod string `json:"association-method,omitempty"`
+	Segment           string `json:"segment,omitempty"`
+	TagValueOfKey     string `json:"tag-value-of-key,omitempty"`
+	RequireAcceptance bool   `json:"require-acceptance,omitempty"`
 }
 
 type CoreNetworkAttachmentPolicyCondition struct {
-	Type     string
-	Operator string `json:"Operator,omitempty"`
-	Key      string `json:"Key,omitempty"`
-	Value    string `json:"Value,omitempty"`
+	Type     string `json:"type,omitempty"`
+	Operator string `json:"operator,omitempty"`
+	Key      string `json:"key,omitempty"`
+	Value    string `json:"value,omitempty"`
 }
 
 type CoreNetworkPolicySegment struct {
-	Name                        string
-	AllowFilter                 interface{} `json:"AllowFilter,omitempty"`
-	DenyFilter                  interface{} `json:"DenyFilter,omitempty"`
-	EdgeLocations               interface{} `json:"EdgeLocations,omitempty"`
-	IsolateAttachments          bool        `json:"IsolateAttachments,omitempty"`
-	RequireAttachmentAcceptance bool        `json:"RequireAttachmentAcceptance,omitempty"`
+	Name                        string      `json:"name"`
+	Description                 string      `json:"description,omitempty"`
+	AllowFilter                 interface{} `json:"allow-filter,omitempty"`
+	DenyFilter                  interface{} `json:"deny-filter,omitempty"`
+	EdgeLocations               interface{} `json:"edge-locations,omitempty"`
+	IsolateAttachments          bool        `json:"isolate-attachments,omitempty"`
+	RequireAttachmentAcceptance bool        `json:"require-attachment-acceptance,omitempty"`
 }
 
 type CoreNetworkPolicyCoreNetworkConfiguration struct {
-	AsnRanges        interface{}
-	VpnEcmpSupport   bool                       `json:"VpnEcmpSupport,omitempty"`
-	EdgeLocations    []*CoreNetworkEdgeLocation `json:"EdgeLocations,omitempty"`
-	InsideCidrBlocks interface{}                `json:"InsideCidrBlocks,omitempty"`
+	AsnRanges        interface{}                `json:"asn-ranges"`
+	VpnEcmpSupport   bool                       `json:"vpn-ecmp-support"`
+	EdgeLocations    []*CoreNetworkEdgeLocation `json:"edge-locations,omitempty"`
+	InsideCidrBlocks interface{}                `json:"inside-cidr-blocks,omitempty"`
 }
 
 type CoreNetworkEdgeLocation struct {
-	Location         string
-	Asn              int         `json:"Asn,omitempty"`
-	InsideCidrBlocks interface{} `json:"InsideCidrBlocks,omitempty"`
+	Location         string      `json:"location"`
+	Asn              int         `json:"asn,omitempty"`
+	InsideCidrBlocks interface{} `json:"inside-cidr-blocks,omitempty"`
 }
 
-func (s *CoreNetworkPolicyDoc) Merge(newDoc *CoreNetworkPolicyDoc) {
-	// adopt newDoc's Id
-	if len(newDoc.Id) > 0 {
-		s.Id = newDoc.Id
+func (c *CoreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
+	type Alias CoreNetworkPolicySegmentAction
+
+	var share interface{}
+	sWIntf := c.ShareWith.([]string)
+
+	if c.ShareWith != nil {
+		if sWIntf[0] == "*" {
+			share = sWIntf[0]
+		} else {
+			share = sWIntf
+		}
 	}
 
-	// let newDoc upgrade our Version
-	if newDoc.Version > s.Version {
-		s.Version = newDoc.Version
+	if c.ShareWithExcept != nil {
+		share = c.ShareWithExcept.([]string)
 	}
 
-	// merge in newDoc's segments, overwriting any existing Names
-	var seen bool
-	for _, newSegment := range newDoc.Segments {
-		if len(newSegment.Name) == 0 {
-			s.Segments = append(s.Segments, newSegment)
-			continue
-		}
-		seen = false
-		for i, existingSegment := range s.Segments {
-			if existingSegment.Name == newSegment.Name {
-				s.Segments[i] = newSegment
-				seen = true
-				break
-			}
-		}
-		if !seen {
-			s.Segments = append(s.Segments, newSegment)
-		}
-	}
+	return json.Marshal(&Alias{
+		Action:    c.Action,
+		Mode:      c.Mode,
+		Segment:   c.Segment,
+		ShareWith: share,
+	})
 }
 
 func CoreNetworkPolicyDecodeConfigStringList(lI []interface{}) interface{} {
-	if len(lI) == 1 {
-		return lI[0].(string)
-	}
 	ret := make([]string, len(lI))
 	for i, vI := range lI {
 		ret[i] = vI.(string)
