@@ -17,7 +17,7 @@ Athena
 Audit Manager
 Autoscaling
 Autoscaling Plans
-Amazon Managed Service for Prometheus (AMP)
+AMP (Managed Prometheus)
 Backup
 Batch
 Budgets
