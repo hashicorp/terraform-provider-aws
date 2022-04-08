@@ -71,7 +71,7 @@ Elasticsearch
 EventBridge
 EventBridge Schemas
 File System (FSx)
-Firewall Manager (FMS)
+FMS (Firewall Manager)
 GameLift
 Glacier
 Global Accelerator
