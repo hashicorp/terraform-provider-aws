@@ -11,7 +11,7 @@ AppIntegrations
 AppMesh
 App Runner
 AppSync
-AppStream
+AppStream 2.0
 Application Autoscaling
 Athena
 Audit Manager
