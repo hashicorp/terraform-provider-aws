@@ -114,8 +114,8 @@ OpsWorks
 Organizations
 Outposts
 Pinpoint
-Pricing
 QLDB (Quantum Ledger Database)
+Pricing Calculator
 QuickSight
 RDS (Relational Database)
 RAM (Resource Access Manager)
