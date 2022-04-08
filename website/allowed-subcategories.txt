@@ -82,8 +82,8 @@ IAM (Identity & Access Management)
 EC2 Image Builder
 SSO Identity Store
 Inspector
-IoT
 Keyspaces (for Apache Cassandra)
+IoT Core
 Kinesis
 Kinesis Analytics
 Kinesis Data Analytics v2 (SQL and Flink Applications)
