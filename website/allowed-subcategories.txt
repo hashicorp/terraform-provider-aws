@@ -3,7 +3,7 @@ ACM PCA (Certificate Manager Private Certificate Authority)
 ACM (Certificate Manager)
 API Gateway
 API Gateway V2
-Access Analyzer
+IAM Access Analyzer
 Account Management
 Amplify
 AppConfig
@@ -51,15 +51,15 @@ Detective
 Device Farm
 Direct Connect
 DS (Directory Service)
-DocumentDB
+DocDB (DocumentDB)
 DynamoDB Accelerator (DAX)
 DynamoDB
 EC2
 ECR (Elastic Container Registry)
 ECR Public
 ECS (Elastic Container)
-EFS
 EKS (Elastic Kubernetes)
+EFS (Elastic File System)
 ElastiCache
 Elastic Beanstalk
 ELB Classic
@@ -79,8 +79,8 @@ Glue
 Managed Grafana
 GuardDuty
 IAM (Identity & Access Management)
-Identity Store
 EC2 Image Builder
+SSO Identity Store
 Inspector
 IoT
 Keyspaces (for Apache Cassandra)
@@ -114,8 +114,8 @@ OpsWorks
 Organizations
 Outposts
 Pinpoint
-Pricing
 QLDB (Quantum Ledger Database)
+Pricing Calculator
 QuickSight
 RDS (Relational Database)
 RAM (Resource Access Manager)
@@ -123,15 +123,15 @@ Redshift
 Resource Groups
 Resource Groups Tagging
 Route53 Domains
-Route53 Recovery Control Config
 Route 53 Recovery Readiness
+Route 53 Recovery Control Config
 Route53 Resolver
 Route 53
 S3 (Simple Storage)
 S3 Control
-S3 Outposts
 SES (Simple Email)
 SNS (Simple Notification)
+S3 on Outposts
 SSM (Systems Manager)
 SQS (Simple Queue)
 SSO Admin
