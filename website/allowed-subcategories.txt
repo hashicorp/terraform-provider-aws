@@ -158,4 +158,4 @@ WAFv2
 WorkLink
 WorkMail
 WorkSpaces
-XRay
+X-Ray
