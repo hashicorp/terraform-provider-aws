@@ -1,29 +1,28 @@
 
-ACM PCA (Certificate Manager Private Certificate Authority)
+Account Management
 ACM (Certificate Manager)
+ACM PCA (Certificate Manager Private Certificate Authority)
+AMP (Managed Prometheus)
+Amplify
 API Gateway
 API Gateway V2
-IAM Access Analyzer
-Account Management
-Amplify
-AppConfig
-AppIntegrations
 App Mesh
 App Runner
-AppSync
-AppStream 2.0
+AppConfig
+AppIntegrations
 Application Auto Scaling
+AppStream 2.0
+AppSync
 Athena
 Audit Manager
 Auto Scaling
 Auto Scaling Plans
-AMP (Managed Prometheus)
 Backup
 Batch
-Web Services Budgets
 Chime
-Cloud9
 Cloud Control API
+Cloud Map
+Cloud9
 CloudFormation
 CloudFront
 CloudHSM
@@ -31,6 +30,7 @@ CloudSearch
 CloudTrail
 CloudWatch
 CloudWatch RUM
+CloudWatch Synthetics
 CodeArtifact
 CodeBuild
 CodeCommit
@@ -43,47 +43,48 @@ Config
 Connect
 Cost and Usage Report
 Data Exchange
-DLM (Data Lifecycle Manager)
 Data Pipeline
 DataSync
-DMS (Database Migration)
 Detective
 Device Farm
 Direct Connect
-DS (Directory Service)
+DLM (Data Lifecycle Manager)
+DMS (Database Migration)
 DocDB (DocumentDB)
-DynamoDB Accelerator (DAX)
+DS (Directory Service)
 DynamoDB
+DynamoDB Accelerator (DAX)
 EC2
+EC2 Image Builder
 ECR (Elastic Container Registry)
 ECR Public
 ECS (Elastic Container)
-EKS (Elastic Kubernetes)
 EFS (Elastic File System)
-ElastiCache
+EKS (Elastic Kubernetes)
 Elastic Beanstalk
-ELB Classic
-EMR
-ELB (Elastic Load Balancing)
-EMR Containers
 Elastic Transcoder
+ElastiCache
 Elasticsearch
+ELB (Elastic Load Balancing)
+ELB Classic
+Elemental MediaConvert
+Elemental MediaPackage
+Elemental MediaStore
+EMR
+EMR Containers
 EventBridge
 EventBridge Schemas
 FMS (Firewall Manager)
 FSx
 GameLift
-S3 Glacier
 Global Accelerator
 Glue
-Managed Grafana
 GuardDuty
 IAM (Identity & Access Management)
-EC2 Image Builder
-SSO Identity Store
+IAM Access Analyzer
 Inspector
-Keyspaces (for Apache Cassandra)
 IoT Core
+Keyspaces (for Apache Cassandra)
 Kinesis
 Kinesis Analytics
 Kinesis Analytics V2
@@ -96,17 +97,14 @@ Lex Model Building
 License Manager
 Lightsail
 Location
-MQ
 Macie
 Macie Classic
+Managed Grafana
 Managed Streaming for Kafka
-Kafka Connect (MSK Connect)
-Elemental MediaConvert
-Elemental MediaStore
-Elemental MediaPackage
+Managed Streaming for Kafka Connect
 MemoryDB for Redis
+MQ
 MWAA (Managed Workflows for Apache Airflow)
-MemoryDB for Redis
 Neptune
 Network Firewall
 Network Manager
@@ -115,48 +113,49 @@ OpsWorks
 Organizations
 Outposts
 Pinpoint
-QLDB (Quantum Ledger Database)
 Pricing Calculator
+QLDB (Quantum Ledger Database)
 QuickSight
-RDS (Relational Database)
 RAM (Resource Access Manager)
+RDS (Relational Database)
 Redshift
 Resource Groups
 Resource Groups Tagging
-Route 53 Domains
-Route53 Recovery Control Config
-Route 53 Recovery Readiness
-Route 53 Recovery Control Config
-Route53 Resolver
 Route 53
+Route 53 Domains
+Route 53 Recovery Control Config
+Route 53 Recovery Readiness
+Route53 Recovery Control Config
+Route53 Resolver
 S3 (Simple Storage)
 S3 Control
-SES (Simple Email)
-SNS (Simple Notification)
+S3 Glacier
 S3 on Outposts
-SSM (Systems Manager)
-SQS (Simple Queue)
-SSO Admin
-SWF (Simple Workflow)
 Sagemaker
+SDB (SimpleDB)
 Secrets Manager
 Security Hub
 Serverless Application Repository
 Service Catalog
-Cloud Map
 Service Quotas
-Shield
-SDB (SimpleDB)
-Signer
+SES (Simple Email)
 SFN (Step Functions)
+Shield
+Signer
+SNS (Simple Notification)
+SQS (Simple Queue)
+SSM (Systems Manager)
+SSO Admin
+SSO Identity Store
 Storage Gateway
-CloudWatch Synthetics
+SWF (Simple Workflow)
 Timestream Write
 Transfer Family
 VPC
-WAF Classic Regional
 WAF
 WAF Classic
+WAF Classic Regional
+Web Services Budgets
 WorkLink
 WorkMail
 WorkSpaces
