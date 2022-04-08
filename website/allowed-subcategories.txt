@@ -101,7 +101,7 @@ Macie
 Macie Classic
 Managed Streaming for Kafka (MSK)
 Kafka Connect (MSK Connect)
-MediaConvert
+Elemental MediaConvert
 MediaPackage
 Elemental MediaStore
 MemoryDB
