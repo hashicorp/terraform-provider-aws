@@ -103,7 +103,7 @@ Managed Streaming for Kafka (MSK)
 Kafka Connect (MSK Connect)
 MediaConvert
 MediaPackage
-MediaStore
+Elemental MediaStore
 MemoryDB
 Managed Workflows for Apache Airflow (MWAA)
 Neptune
