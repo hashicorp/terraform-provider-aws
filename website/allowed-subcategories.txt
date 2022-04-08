@@ -55,7 +55,8 @@ DocDB (DocumentDB)
 DS (Directory Service)
 DynamoDB
 DynamoDB Accelerator (DAX)
-EC2
+EBS (EC2)
+EC2 (Elastic Compute Cloud)
 EC2 Image Builder
 ECR (Elastic Container Registry)
 ECR Public
@@ -113,6 +114,7 @@ OpenSearch
 OpsWorks
 Organizations
 Outposts
+Outposts (EC2)
 Pinpoint
 Pricing Calculator
 QLDB (Quantum Ledger Database)
@@ -151,10 +153,15 @@ Storage Gateway
 SWF (Simple Workflow)
 Timestream Write
 Transfer Family
-VPC
+Transit Gateway
+VPC (Virtual Private Cloud)
+VPC IPAM (IP Address Manager)
+VPN (Client)
+VPN (Site-to-Site)
 WAF
 WAF Classic
 WAF Classic Regional
+Wavelength
 Web Services Budgets
 WorkLink
 WorkMail
