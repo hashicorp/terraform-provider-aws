@@ -50,7 +50,7 @@ Database Migration Service (DMS)
 Detective
 Device Farm
 Direct Connect
-Directory Service
+DS (Directory Service)
 DocumentDB
 DynamoDB Accelerator (DAX)
 DynamoDB
