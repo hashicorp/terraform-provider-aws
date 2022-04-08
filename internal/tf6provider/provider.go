@@ -25,25 +25,25 @@ type config struct {
 	ForbiddenAccountIDs            types.Set   `tfsdk:"forbidden_account_ids"`
 	HTTPProxy                      *string     `tfsdk:"http_proxy"`
 	IgnoreTags                     types.List  `tfsdk:"ignore_tags"`
-	Insecure                       types.Bool  `tfsdk:"insecure"`
+	Insecure                       *bool       `tfsdk:"insecure"`
 	MaxRetries                     types.Int64 `tfsdk:"max_retries"`
 	Profile                        *string     `tfsdk:"profile"`
 	Region                         *string     `tfsdk:"region"`
-	S3ForcePathStyle               types.Bool  `tfsdk:"s3_force_path_style"`
-	S3UsePathStyle                 types.Bool  `tfsdk:"s3_use_path_style"`
+	S3ForcePathStyle               *bool       `tfsdk:"s3_force_path_style"`
+	S3UsePathStyle                 *bool       `tfsdk:"s3_use_path_style"`
 	SecretKey                      *string     `tfsdk:"secret_key"`
 	SharedConfigFiles              types.List  `tfsdk:"shared_config_files"`
 	SharedCredentialsFile          *string     `tfsdk:"shared_credentials_file"`
 	SharedCredentialsFiles         types.List  `tfsdk:"shared_credentials_files"`
-	SkipCredentialsValidation      types.Bool  `tfsdk:"skip_credentials_validation"`
-	SkipGetEC2Platforms            types.Bool  `tfsdk:"skip_get_ec2_platforms"`
-	SkipMetadataAPICheck           types.Bool  `tfsdk:"skip_metadata_api_check"`
-	SkipRegionValidation           types.Bool  `tfsdk:"skip_region_validation"`
-	SkipRequestingAccountID        types.Bool  `tfsdk:"skip_requesting_account_id"`
+	SkipCredentialsValidation      *bool       `tfsdk:"skip_credentials_validation"`
+	SkipGetEC2Platforms            *bool       `tfsdk:"skip_get_ec2_platforms"`
+	SkipMetadataAPICheck           *bool       `tfsdk:"skip_metadata_api_check"`
+	SkipRegionValidation           *bool       `tfsdk:"skip_region_validation"`
+	SkipRequestingAccountID        *bool       `tfsdk:"skip_requesting_account_id"`
 	STSRegion                      *string     `tfsdk:"sts_region"`
 	Token                          *string     `tfsdk:"token"`
-	UseDualStackEndpoint           types.Bool  `tfsdk:"use_dualstack_endpoint"`
-	UseFIPSEndpoint                types.Bool  `tfsdk:"use_fips_endpoint"`
+	UseDualStackEndpoint           *bool       `tfsdk:"use_dualstack_endpoint"`
+	UseFIPSEndpoint                *bool       `tfsdk:"use_fips_endpoint"`
 
 	assumeRole       *assumeRoleConfig
 	defaultTags      *defaultTagsConfig
