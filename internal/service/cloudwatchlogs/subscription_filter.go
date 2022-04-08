@@ -82,6 +82,9 @@ func resourceSubscriptionFilterCreate(d *schema.ResourceData, meta interface{}) 
 		if tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeInvalidParameterException, "Could not execute the lambda function") {
 			return resource.RetryableError(err)
 		}
+		if tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeOperationAbortedException, "Please try again") {
+			return resource.RetryableError(err)
+		}
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -115,6 +118,9 @@ func resourceSubscriptionFilterUpdate(d *schema.ResourceData, meta interface{}) 
 			return resource.RetryableError(err)
 		}
 		if tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeInvalidParameterException, "Could not execute the lambda function") {
+			return resource.RetryableError(err)
+		}
+		if tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeOperationAbortedException, "Please try again") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
