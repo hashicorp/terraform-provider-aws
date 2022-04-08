@@ -95,7 +95,7 @@ Lambda
 Lex
 License Manager
 Lightsail
-Location Service
+Location
 MQ
 Macie
 Macie Classic
