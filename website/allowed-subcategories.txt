@@ -148,7 +148,7 @@ SimpleDB
 Signer
 Step Function (SFN)
 Storage Gateway
-Synthetics
+CloudWatch Synthetics
 Timestream Write
 Transfer
 VPC
