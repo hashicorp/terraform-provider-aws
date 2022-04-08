@@ -130,7 +130,7 @@ Route53
 S3
 S3 Control
 S3 Outposts
-SES
+SES (Simple Email)
 SNS
 SQS
 SSM
