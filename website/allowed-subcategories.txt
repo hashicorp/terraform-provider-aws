@@ -43,7 +43,7 @@ Config
 Connect
 Cost and Usage Report
 Data Exchange
-Data Lifecycle Manager (DLM)
+DLM (Data Lifecycle Manager)
 DataPipeline
 DataSync
 Database Migration Service (DMS)

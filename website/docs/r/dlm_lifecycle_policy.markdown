@@ -1,5 +1,5 @@
 ---
-subcategory: "Data Lifecycle Manager (DLM)"
+subcategory: "DLM (Data Lifecycle Manager)"
 layout: "aws"
 page_title: "AWS: aws_dlm_lifecycle_policy"
 description: |-
