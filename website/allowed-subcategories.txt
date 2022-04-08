@@ -99,7 +99,7 @@ Location
 MQ
 Macie
 Macie Classic
-Managed Streaming for Kafka (MSK)
+Managed Streaming for Kafka
 Kafka Connect (MSK Connect)
 Elemental MediaConvert
 MediaPackage
