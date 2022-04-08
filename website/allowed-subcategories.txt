@@ -79,8 +79,8 @@ Glue
 Managed Grafana
 GuardDuty
 IAM (Identity & Access Management)
-Identity Store
 EC2 Image Builder
+SSO Identity Store
 Inspector
 IoT
 Keyspaces (for Apache Cassandra)
