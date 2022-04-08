@@ -68,7 +68,7 @@ Elastic Map Reduce (EMR)
 Elastic Map Reduce Containers
 Elastic Transcoder
 Elasticsearch
-EventBridge (CloudWatch Events)
+EventBridge
 EventBridge Schemas
 File System (FSx)
 Firewall Manager (FMS)
