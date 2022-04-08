@@ -132,8 +132,8 @@ S3 Control
 SES (Simple Email)
 SNS (Simple Notification)
 S3 on Outposts
-SQS
 SSM (Systems Manager)
+SQS (Simple Queue)
 SSO Admin
 SWF (Simple Workflow)
 Sagemaker
