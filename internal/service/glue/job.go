@@ -151,7 +151,7 @@ func ResourceJob() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ConflictsWith: []string{"max_capacity"},
-				ValidateFunc:  validation.IntAtLeast(2),
+				ValidateFunc:  validation.IntAtLeast(1),
 			},
 			"non_overridable_arguments": {
 				Type:     schema.TypeMap,

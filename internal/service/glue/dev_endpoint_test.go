@@ -260,8 +260,15 @@ func TestAccGlueDevEndpoint_numberOfWorkers(t *testing.T) {
 		CheckDestroy: testAccCheckDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccGlueDevEndpointConfig_NumberOfWorkers(rName, 1),
+				Config:      testAccGlueDevEndpointConfig_NumberOfWorkers(rName, 0),
 				ExpectError: regexp.MustCompile(`expected number_of_workers to be at least`),
+			},
+			{
+				Config: testAccGlueDevEndpointConfig_NumberOfWorkers(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDevEndpointExists(resourceName, &endpoint),
+					resource.TestCheckResourceAttr(resourceName, "number_of_workers", "1"),
+				),
 			},
 			{
 				Config: testAccGlueDevEndpointConfig_NumberOfWorkers(rName, 2),
