@@ -63,8 +63,8 @@ EKS (Elastic Kubernetes)
 ElastiCache
 Elastic Beanstalk
 ELB Classic
-Elastic Load Balancing v2 (ALB/NLB)
 EMR
+ELB (Elastic Load Balancing)
 Elastic Map Reduce Containers
 Elastic Transcoder
 Elasticsearch
