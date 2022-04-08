@@ -5,7 +5,7 @@ API Gateway (REST APIs)
 API Gateway v2 (WebSocket and HTTP APIs)
 Access Analyzer
 Account Management
-Amplify Console
+Amplify
 AppConfig
 AppIntegrations
 AppMesh
