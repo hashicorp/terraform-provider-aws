@@ -78,7 +78,7 @@ Global Accelerator
 Glue
 Grafana
 GuardDuty
-IAM
+IAM (Identity & Access Management)
 Identity Store
 Image Builder
 Inspector
