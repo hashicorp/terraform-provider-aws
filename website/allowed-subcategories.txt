@@ -55,7 +55,7 @@ DocumentDB
 DynamoDB Accelerator (DAX)
 DynamoDB
 EC2
-ECR
+ECR (Elastic Container Registry)
 ECR Public
 ECS
 EFS
