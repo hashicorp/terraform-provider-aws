@@ -83,7 +83,7 @@ Identity Store
 EC2 Image Builder
 Inspector
 IoT
-Keyspaces
+Keyspaces (for Apache Cassandra)
 Kinesis
 Kinesis Analytics
 Kinesis Data Analytics v2 (SQL and Flink Applications)
