@@ -90,6 +90,10 @@ func main() {
 			log.Fatal("in names_data.csv, HumanFriendly cannot be blank")
 		}
 
+		// TODO: Check for duplicates in HumanFriendly, ProviderPackageActual,
+		// ProviderPackageCorrect, ProviderNameUpper, GoV1ClientName,
+		// ResourcePrefixActual, ResourcePrefixCorrect, FilePrefix, DocPrefix
+
 		if l[awsCLIV2Command] != "" && strings.Replace(l[awsCLIV2Command], "-", "", -1) != l[awsCLIV2CommandNoDashes] {
 			log.Fatalf("in names_data.csv, for service %s, AWSCLIV2CommandNoDashes must be the same as AWSCLIV2Command without dashes (%s)", l[humanFriendly], strings.Replace(l[awsCLIV2Command], "-", "", -1))
 		}
