@@ -59,7 +59,7 @@ ECR (Elastic Container Registry)
 ECR Public
 ECS (Elastic Container)
 EFS
-EKS
+EKS (Elastic Kubernetes)
 ElastiCache
 Elastic Beanstalk
 ELB Classic
