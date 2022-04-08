@@ -38,7 +38,8 @@ CodeDeploy
 CodePipeline
 CodeStar Connections
 CodeStar Notifications
-Cognito
+Cognito Identity
+Cognito IDP (Identity Provider)
 Config
 Connect
 Cost and Usage Report
