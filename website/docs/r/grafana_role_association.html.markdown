@@ -1,5 +1,5 @@
 ---
-subcategory: "Grafana"
+subcategory: "Managed Grafana"
 layout: "aws"
 page_title: "AWS: aws_grafana_role_association"
 description: |-
