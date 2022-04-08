@@ -1,5 +1,5 @@
 ---
-subcategory: "Managed Workflows for Apache Airflow (MWAA)"
+subcategory: "MWAA (Managed Workflows for Apache Airflow)"
 layout: "aws"
 page_title: "AWS: aws_mwaa_environment"
 description: |-

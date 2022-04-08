@@ -105,7 +105,7 @@ MediaConvert
 MediaPackage
 MediaStore
 MemoryDB
-Managed Workflows for Apache Airflow (MWAA)
+MWAA (Managed Workflows for Apache Airflow)
 Neptune
 Network Firewall
 Network Manager
