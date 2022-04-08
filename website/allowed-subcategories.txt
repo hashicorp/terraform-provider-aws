@@ -1,5 +1,5 @@
 
-ACM PCA
+ACM PCA (Certificate Manager Private Certificate Authority)
 ACM (Certificate Manager)
 API Gateway (REST APIs)
 API Gateway v2 (WebSocket and HTTP APIs)
