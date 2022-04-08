@@ -65,12 +65,12 @@ type assumeRoleConfig struct {
 }
 
 type defaultTagsConfig struct {
-	Tags types.Map `tfsdk:"tags"`
+	Tags *map[string]string `tfsdk:"tags"`
 }
 
 type ignoreTagsConfig struct {
-	Keys        types.Set `tfsdk:"keys"`
-	KeyPrefixes types.Set `tfsdk:"key_prefixes"`
+	Keys        []string `tfsdk:"keys"`
+	KeyPrefixes []string `tfsdk:"key_prefixes"`
 }
 
 // provider represents a Terraform Protocol v6 provider.
