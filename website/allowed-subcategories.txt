@@ -70,8 +70,8 @@ Elastic Transcoder
 Elasticsearch
 EventBridge
 EventBridge Schemas
-File System (FSx)
 FMS (Firewall Manager)
+FSx
 GameLift
 S3 Glacier
 Global Accelerator
