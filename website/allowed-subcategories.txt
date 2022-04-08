@@ -51,7 +51,7 @@ Detective
 Device Farm
 Direct Connect
 DS (Directory Service)
-DocumentDB
+DocDB (DocumentDB)
 DynamoDB Accelerator (DAX)
 DynamoDB
 EC2
