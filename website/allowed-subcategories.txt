@@ -15,7 +15,7 @@ AppStream
 Application Autoscaling
 Athena
 Audit Manager
-Autoscaling
+Auto Scaling
 Autoscaling Plans
 Amazon Managed Service for Prometheus (AMP)
 Backup
