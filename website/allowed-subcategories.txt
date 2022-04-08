@@ -27,6 +27,7 @@ Audit Manager
 Auto Scaling
 Auto Scaling Plans
 Backup
+Backup Gateway
 Batch
 Billing Conductor
 Braket
@@ -43,26 +44,47 @@ CloudFormation
 CloudFront
 CloudHSM
 CloudSearch
+CloudSearch Domain
 CloudTrail
 CloudWatch
+CloudWatch Application Insights
+CloudWatch Evidently
+CloudWatch Logs
 CloudWatch RUM
 CloudWatch Synthetics
 CodeArtifact
 CodeBuild
 CodeCommit
 CodeDeploy
+CodeGuru Profiler
+CodeGuru Reviewer
 CodePipeline
+CodeStar
 CodeStar Connections
 CodeStar Notifications
-Cognito Identity
 Cognito IDP (Identity Provider)
+Cognito Identity
+Cognito Sync
+Comprehend
+Comprehend Medical
+Compute Optimizer
 Config
 Connect
+Connect Contact Lens
+Connect Customer Profiles
+Connect Participant
+Connect Voice ID
+Connect Wisdom
 Cost and Usage Report
+DLM (Data Lifecycle Manager)
+DMS (Database Migration)
+DRS (Elastic Disaster Recovery)
+DS (Directory Service)
 Data Exchange
 Data Pipeline
 DataSync
 Detective
+DevOps Guru
 Device Farm
 Direct Connect
 DocDB (DocumentDB)
@@ -184,11 +206,17 @@ Mobile
 Neptune
 Network Firewall
 Network Manager
+Nimble Studio
 OpenSearch
 OpsWorks
+OpsWorks CM
 Organizations
 Outposts
 Outposts (EC2)
+Panorama
+Personalize
+Personalize Events
+Personalize Runtime
 Pinpoint
 Pinpoint Email
 Pinpoint SMS and Voice
@@ -204,6 +232,9 @@ RDS Data
 RDS Performance Insights (PI)
 Recycle Bin (RBin)
 Redshift
+Redshift Data
+Rekognition
+Resilience Hub
 Resource Groups
 Resource Groups Tagging
 RoboMaker
@@ -243,19 +274,22 @@ Secrets Manager
 Security Hub
 Serverless Application Repository
 Service Catalog
+Service Catalog AppRegistry
 Service Quotas
 Shield
 Signer
-SNS (Simple Notification)
-SQS (Simple Queue)
-SSM (Systems Manager)
-SSO Admin
-SSO Identity Store
+Snow Device Management
+Snow Family
 Storage Gateway
-SWF (Simple Workflow)
+Support
+Textract
+Timestream Query
 Timestream Write
+Transcribe
+Transcribe Streaming
 Transfer Family
 Transit Gateway
+Translate
 VPC (Virtual Private Cloud)
 VPC IPAM (IP Address Manager)
 VPN (Client)
@@ -269,5 +303,7 @@ Well-Architected Tool
 WorkDocs
 WorkLink
 WorkMail
+WorkMail Message Flow
 WorkSpaces
+WorkSpaces Web
 X-Ray
