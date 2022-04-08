@@ -1,6 +1,6 @@
 
 ACM PCA
-ACM
+ACM (Certificate Manager)
 API Gateway (REST APIs)
 API Gateway v2 (WebSocket and HTTP APIs)
 Access Analyzer

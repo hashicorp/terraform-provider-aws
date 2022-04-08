@@ -1,5 +1,5 @@
 ---
-subcategory: "ACM"
+subcategory: "ACM (Certificate Manager)"
 layout: "aws"
 page_title: "AWS: aws_acm_certificate"
 description: |-
