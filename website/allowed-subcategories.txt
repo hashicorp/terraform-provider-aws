@@ -115,7 +115,7 @@ Organizations
 Outposts
 Pinpoint
 Pricing
-Quantum Ledger Database (QLDB)
+QLDB (Quantum Ledger Database)
 QuickSight
 RAM
 RDS
