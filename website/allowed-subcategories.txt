@@ -15,7 +15,7 @@ AppStream 2.0
 Application Autoscaling
 Athena
 Audit Manager
-Autoscaling
+Auto Scaling
 Autoscaling Plans
 AMP (Managed Prometheus)
 Backup
