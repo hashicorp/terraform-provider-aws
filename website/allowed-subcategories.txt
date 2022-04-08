@@ -121,7 +121,7 @@ RAM
 RDS
 Redshift
 Resource Groups
-Resource Groups Tagging API
+Resource Groups Tagging
 Route53 Domains
 Route53 Recovery Control Config
 Route53 Recovery Readiness
