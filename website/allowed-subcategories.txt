@@ -86,7 +86,7 @@ Keyspaces (for Apache Cassandra)
 IoT Core
 Kinesis
 Kinesis Analytics
-Kinesis Data Analytics v2 (SQL and Flink Applications)
+Kinesis Analytics V2
 Kinesis Firehose
 Kinesis Video
 KMS (Key Management)
@@ -106,6 +106,7 @@ Elemental MediaStore
 Elemental MediaPackage
 MemoryDB for Redis
 MWAA (Managed Workflows for Apache Airflow)
+MemoryDB for Redis
 Neptune
 Network Firewall
 Network Manager
