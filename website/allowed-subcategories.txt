@@ -12,7 +12,7 @@ App Mesh
 App Runner
 AppSync
 AppStream 2.0
-Application Autoscaling
+Application Auto Scaling
 Athena
 Audit Manager
 Auto Scaling
