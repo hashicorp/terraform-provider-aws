@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -100,6 +101,33 @@ func ResourceConfigRule() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"custom_policy_details": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enable_debug_log_delivery": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
+									"policy_runtime": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(0, 64),
+											validation.StringMatch(regexp.MustCompile(`^guard\-2\.x\.x$`), "Must match cloudformation-guard version"),
+										),
+									},
+									"policy_text": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(0, 10000),
+									},
+								},
+							},
+						},
 						"owner": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -113,25 +141,27 @@ func ResourceConfigRule() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"event_source": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "aws.config",
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "aws.config",
+										ValidateFunc: validation.StringInSlice(configservice.EventSource_Values(), false),
 									},
 									"maximum_execution_frequency": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validExecutionFrequency(),
+										ValidateFunc: validation.StringInSlice(configservice.MaximumExecutionFrequency_Values(), false),
 									},
 									"message_type": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(configservice.MessageType_Values(), false),
 									},
 								},
 							},
 						},
 						"source_identifier": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 256),
 						},
 					},

@@ -10,6 +10,7 @@ func TestAccConfigService_serial(t *testing.T) {
 			"basic":            testAccConfigRule_basic,
 			"ownerAws":         testAccConfigRule_ownerAws,
 			"customlambda":     testAccConfigRule_customlambda,
+			"customPolicy":     testAccConfigRule_ownerPolicy,
 			"scopeTagKey":      testAccConfigRule_Scope_TagKey,
 			"scopeTagKeyEmpty": testAccConfigRule_Scope_TagKey_Empty,
 			"scopeTagValue":    testAccConfigRule_Scope_TagValue,

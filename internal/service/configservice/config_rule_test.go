@@ -127,6 +127,45 @@ func testAccConfigRule_customlambda(t *testing.T) {
 	})
 }
 
+func testAccConfigRule_ownerPolicy(t *testing.T) {
+	var cr configservice.ConfigRule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_config_config_rule.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckConfigRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigRuleConfig_ownerPolicy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigRuleExists(resourceName, &cr),
+					testAccCheckConfigRuleName(resourceName, rName, &cr),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile("config-rule/config-rule-[a-z0-9]+$")),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestMatchResourceAttr(resourceName, "rule_id", regexp.MustCompile("config-rule-[a-z0-9]+$")),
+					resource.TestCheckResourceAttr(resourceName, "description", "Terraform Acceptance tests"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.owner", "CUSTOM_POLICY"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.0.message_type", "ConfigurationItemChangeNotification"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.custom_policy_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.custom_policy_details.0.policy_runtime", "guard-2.x.x"),
+					resource.TestCheckResourceAttrSet(resourceName, "source.0.custom_policy_details.0.policy_text"),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccConfigRule_Scope_TagKey(t *testing.T) {
 	var configRule configservice.ConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -413,6 +452,45 @@ resource "aws_config_config_rule" "test" {
   "tag2Key": "Owner"
 }
 PARAMS
+
+  depends_on = [aws_config_configuration_recorder.test]
+}
+`, rName)
+}
+
+func testAccConfigRuleConfig_ownerPolicy(rName string) string {
+	return testAccConfigRuleConfig_base(rName) + fmt.Sprintf(`
+resource "aws_config_config_rule" "test" {
+  name        = %q
+  description = "Terraform Acceptance tests"
+
+  source {
+    owner             = "CUSTOM_POLICY"
+
+    source_detail {
+      message_type = "ConfigurationItemChangeNotification"
+    }	
+
+	custom_policy_details {
+      policy_runtime = "guard-2.x.x"
+      policy_text    = <<EOF
+	  # This rule checks if point in time recovery (PITR) is enabled on active Amazon DynamoDB tables
+	  let status = ['ACTIVE']
+	  
+	  rule tableisactive when
+		  resourceType == "AWS::DynamoDB::Table" {
+		  configuration.tableStatus == %%status
+	  }
+	  
+	  rule checkcompliance when
+		  resourceType == "AWS::DynamoDB::Table"
+		  tableisactive {
+			  let pitr = supplementaryConfiguration.ContinuousBackupsDescription.pointInTimeRecoveryDescription.pointInTimeRecoveryStatus
+			  %%pitr == "ENABLED"
+	  }
+EOF					
+	}
+  }
 
   depends_on = [aws_config_configuration_recorder.test]
 }
