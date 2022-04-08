@@ -122,7 +122,8 @@ RAM (Resource Access Manager)
 Redshift
 Resource Groups
 Resource Groups Tagging
-Route53 Domains
+Route 53 Domains
+Route53 Recovery Control Config
 Route 53 Recovery Readiness
 Route 53 Recovery Control Config
 Route53 Resolver
