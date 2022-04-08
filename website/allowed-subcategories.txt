@@ -99,7 +99,7 @@ Location Service
 MQ
 Macie
 Macie Classic
-Managed Streaming for Kafka (MSK)
+Managed Streaming for Kafka
 Kafka Connect (MSK Connect)
 MediaConvert
 MediaPackage
