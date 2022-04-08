@@ -154,7 +154,7 @@ func testAccCheckScriptExists(n string, res *gamelift.Script) resource.TestCheck
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Gamelift Script ID is set")
+			return fmt.Errorf("No GameLift Script ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
@@ -165,7 +165,7 @@ func testAccCheckScriptExists(n string, res *gamelift.Script) resource.TestCheck
 		}
 
 		if aws.StringValue(script.ScriptId) != rs.Primary.ID {
-			return fmt.Errorf("Gamelift Script not found")
+			return fmt.Errorf("GameLift Script not found")
 		}
 
 		*res = *script
