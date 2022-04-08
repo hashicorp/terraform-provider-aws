@@ -135,7 +135,7 @@ SNS
 SQS
 SSM (Systems Manager)
 SSO Admin
-SWF
+SWF (Simple Workflow)
 Sagemaker
 Secrets Manager
 Security Hub
