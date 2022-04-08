@@ -46,7 +46,7 @@ Data Exchange
 Data Lifecycle Manager (DLM)
 DataPipeline
 DataSync
-Database Migration Service (DMS)
+DMS (Database Migration)
 Detective
 Device Farm
 Direct Connect
