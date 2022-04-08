@@ -118,7 +118,7 @@ Pricing
 QLDB (Quantum Ledger Database)
 QuickSight
 RAM
-RDS
+RDS (Relational Database)
 Redshift
 Resource Groups
 Resource Groups Tagging API
