@@ -1,5 +1,5 @@
 ---
-subcategory: "IAM (Identity & Access Management)"
+subcategory: "IAM (Identity & Access Management)}"
 layout: "aws"
 page_title: "AWS: aws_iam_saml_provider"
 description: |-
