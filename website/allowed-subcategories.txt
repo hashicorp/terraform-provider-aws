@@ -57,7 +57,7 @@ DynamoDB
 EC2
 ECR (Elastic Container Registry)
 ECR Public
-ECS
+ECS (Elastic Container)
 EFS
 EKS
 ElastiCache
