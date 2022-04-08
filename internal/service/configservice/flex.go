@@ -100,7 +100,7 @@ func expandRuleSource(configured []interface{}) *configservice.Source {
 		Owner: aws.String(cfg["owner"].(string)),
 	}
 
-	if v, ok := cfg["source_detail"].(string); ok && v != "" {
+	if v, ok := cfg["source_identifier"].(string); ok && v != "" {
 		source.SourceIdentifier = aws.String(v)
 	}
 
