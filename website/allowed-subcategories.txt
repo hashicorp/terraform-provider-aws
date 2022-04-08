@@ -85,7 +85,7 @@ Inspector
 IoT
 Keyspaces
 Kinesis
-Kinesis Data Analytics (SQL Applications)
+Kinesis Analytics
 Kinesis Data Analytics v2 (SQL and Flink Applications)
 Kinesis Firehose
 Kinesis Video
