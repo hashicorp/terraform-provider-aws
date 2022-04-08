@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway v2 (WebSocket and HTTP APIs)"
+subcategory: "API Gateway V2"
 layout: "aws"
 page_title: "AWS: aws_apigatewayv2_domain_name"
 description: |-
