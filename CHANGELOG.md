@@ -1,5 +1,9 @@
 ## 4.10.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_iam_saml_provider` ([#10498](https://github.com/hashicorp/terraform-provider-aws/issues/10498))
+
 ## 4.9.0 (April 07, 2022)
 
 NOTES:
