@@ -76,7 +76,7 @@ GameLift
 Glacier
 Global Accelerator
 Glue
-Grafana
+Managed Grafana
 GuardDuty
 IAM (Identity & Access Management)
 Identity Store
