@@ -104,8 +104,8 @@ Kafka Connect (MSK Connect)
 Elemental MediaConvert
 MediaPackage
 Elemental MediaStore
-MemoryDB
 MWAA (Managed Workflows for Apache Airflow)
+MemoryDB for Redis
 Neptune
 Network Firewall
 Network Manager
