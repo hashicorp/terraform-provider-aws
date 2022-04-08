@@ -16,13 +16,13 @@ func New() tfsdk.Provider {
 type config struct {
 	AccessKey                      *string    `tfsdk:"access_key"`
 	AssumeRole                     types.List `tfsdk:"assume_role"`
-	AllowedAccountIDs              types.Set  `tfsdk:"allowed_account_ids"`
+	AllowedAccountIDs              []string   `tfsdk:"allowed_account_ids"`
 	CustomCABundle                 *string    `tfsdk:"custom_ca_bundle"`
 	DefaultTags                    types.List `tfsdk:"default_tags"`
 	EC2MetadataServiceEndpoint     *string    `tfsdk:"ec2_metadata_service_endpoint"`
 	EC2MetadataServiceEndpointMode *string    `tfsdk:"ec2_metadata_service_endpoint_mode"`
 	Endpoints                      types.Set  `tfsdk:"endpoints"`
-	ForbiddenAccountIDs            types.Set  `tfsdk:"forbidden_account_ids"`
+	ForbiddenAccountIDs            []string   `tfsdk:"forbidden_account_ids"`
 	HTTPProxy                      *string    `tfsdk:"http_proxy"`
 	IgnoreTags                     types.List `tfsdk:"ignore_tags"`
 	Insecure                       *bool      `tfsdk:"insecure"`
@@ -32,9 +32,9 @@ type config struct {
 	S3ForcePathStyle               *bool      `tfsdk:"s3_force_path_style"`
 	S3UsePathStyle                 *bool      `tfsdk:"s3_use_path_style"`
 	SecretKey                      *string    `tfsdk:"secret_key"`
-	SharedConfigFiles              types.List `tfsdk:"shared_config_files"`
+	SharedConfigFiles              []string   `tfsdk:"shared_config_files"`
 	SharedCredentialsFile          *string    `tfsdk:"shared_credentials_file"`
-	SharedCredentialsFiles         types.List `tfsdk:"shared_credentials_files"`
+	SharedCredentialsFiles         []string   `tfsdk:"shared_credentials_files"`
 	SkipCredentialsValidation      *bool      `tfsdk:"skip_credentials_validation"`
 	SkipGetEC2Platforms            *bool      `tfsdk:"skip_get_ec2_platforms"`
 	SkipMetadataAPICheck           *bool      `tfsdk:"skip_metadata_api_check"`
@@ -57,11 +57,11 @@ type assumeRoleConfig struct {
 	DurationSeconds   *int64    `tfsdk:"duration_seconds"`
 	ExternalID        *string   `tfsdk:"external_id"`
 	Policy            *string   `tfsdk:"policy"`
-	PolicyARNs        types.Set `tfsdk:"policy_arns"`
+	PolicyARNs        []string  `tfsdk:"policy_arns"`
 	RoleARN           *string   `tfsdk:"role_arn"`
 	SessionName       *string   `tfsdk:"session_name"`
 	Tags              types.Map `tfsdk:"tags"`
-	TransitiveTagKeys types.Set `tfsdk:"transitive_tag_keys"`
+	TransitiveTagKeys []string  `tfsdk:"transitive_tag_keys"`
 }
 
 type defaultTagsConfig struct {
