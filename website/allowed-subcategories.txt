@@ -100,9 +100,9 @@ MQ
 Macie
 Macie Classic
 Managed Streaming for Kafka
-Kafka Connect (MSK Connect)
 Elemental MediaConvert
-MediaPackage
+Managed Streaming for Kafka Connect
+Elemental MediaPackage
 Elemental MediaStore
 MemoryDB
 MWAA (Managed Workflows for Apache Airflow)
