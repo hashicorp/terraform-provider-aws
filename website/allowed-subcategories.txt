@@ -92,7 +92,7 @@ Kinesis Video
 KMS
 Lake Formation
 Lambda
-Lex
+Lex Model Building
 License Manager
 Lightsail
 Location Service
