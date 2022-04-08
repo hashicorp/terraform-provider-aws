@@ -154,7 +154,7 @@ Transfer Family
 VPC
 WAF Classic Regional
 WAF
-WAF
+WAF Classic
 WorkLink
 WorkMail
 WorkSpaces
