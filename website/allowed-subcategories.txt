@@ -102,9 +102,9 @@ Macie Classic
 Managed Streaming for Kafka
 Kafka Connect (MSK Connect)
 Elemental MediaConvert
-MediaPackage
 Elemental MediaStore
-MemoryDB
+Elemental MediaPackage
+MemoryDB for Redis
 MWAA (Managed Workflows for Apache Airflow)
 Neptune
 Network Firewall
