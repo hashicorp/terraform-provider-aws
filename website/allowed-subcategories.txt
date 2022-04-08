@@ -144,7 +144,7 @@ Service Catalog
 Service Discovery
 Service Quotas
 Shield
-SimpleDB
+SDB (SimpleDB)
 Signer
 Step Function (SFN)
 Storage Gateway
