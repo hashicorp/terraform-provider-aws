@@ -1,5 +1,5 @@
 ---
-subcategory: "AppMesh"
+subcategory: "App Mesh"
 layout: "aws"
 page_title: "AWS: aws_appmesh_gateway_route"
 description: |-
