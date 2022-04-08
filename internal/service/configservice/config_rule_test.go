@@ -146,7 +146,6 @@ func testAccConfigRule_ownerPolicy(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile("config-rule/config-rule-[a-z0-9]+$")),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestMatchResourceAttr(resourceName, "rule_id", regexp.MustCompile("config-rule-[a-z0-9]+$")),
-					resource.TestCheckResourceAttr(resourceName, "description", "Terraform Acceptance tests"),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.owner", "CUSTOM_POLICY"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.#", "1"),
