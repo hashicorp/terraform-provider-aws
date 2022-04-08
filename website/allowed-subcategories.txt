@@ -133,7 +133,7 @@ S3 Outposts
 SES
 SNS
 SQS
-SSM
+SSM (Systems Manager)
 SSO Admin
 SWF
 Sagemaker
