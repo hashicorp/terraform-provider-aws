@@ -153,7 +153,7 @@ func testAccConfigRule_ownerPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.0.message_type", "ConfigurationItemChangeNotification"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.custom_policy_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.custom_policy_details.0.policy_runtime", "guard-2.x.x"),
-					resource.TestCheckResourceAttrSet(resourceName, "source.0.custom_policy_details.0.policy_text"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.custom_policy_details.0.enable_debug_log_delivery", "false"),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
 				),
 			},
@@ -474,19 +474,15 @@ resource "aws_config_config_rule" "test" {
 	custom_policy_details {
       policy_runtime = "guard-2.x.x"
       policy_text    = <<EOF
-	  # This rule checks if point in time recovery (PITR) is enabled on active Amazon DynamoDB tables
-	  let status = ['ACTIVE']
-	  
 	  rule tableisactive when
 		  resourceType == "AWS::DynamoDB::Table" {
-		  configuration.tableStatus == %%status
+		  configuration.tableStatus == ['ACTIVE']
 	  }
 	  
 	  rule checkcompliance when
 		  resourceType == "AWS::DynamoDB::Table"
 		  tableisactive {
-			  let pitr = supplementaryConfiguration.ContinuousBackupsDescription.pointInTimeRecoveryDescription.pointInTimeRecoveryStatus
-			  %%pitr == "ENABLED"
+			  supplementaryConfiguration.ContinuousBackupsDescription.pointInTimeRecoveryDescription.pointInTimeRecoveryStatus == "ENABLED"
 	  }
 EOF					
 	}

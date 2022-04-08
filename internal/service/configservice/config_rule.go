@@ -124,6 +124,12 @@ func ResourceConfigRule() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(0, 10000),
+										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool { // policy_text always returns empty
+											if d.Id() != "" && old == "" {
+												return true
+											}
+											return false
+										},
 									},
 								},
 							},
