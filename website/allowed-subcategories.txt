@@ -141,7 +141,7 @@ Secrets Manager
 Security Hub
 Serverless Application Repository
 Service Catalog
-Service Discovery
+Cloud Map
 Service Quotas
 Shield
 SimpleDB
