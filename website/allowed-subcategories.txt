@@ -80,7 +80,7 @@ Grafana
 GuardDuty
 IAM
 Identity Store
-Image Builder
+EC2 Image Builder
 Inspector
 IoT
 Keyspaces
