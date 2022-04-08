@@ -3,7 +3,7 @@ ACM PCA (Certificate Manager Private Certificate Authority)
 ACM (Certificate Manager)
 API Gateway
 API Gateway V2
-Access Analyzer
+IAM Access Analyzer
 Account Management
 Amplify
 AppConfig
