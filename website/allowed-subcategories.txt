@@ -59,7 +59,7 @@ ECR
 ECR Public
 ECS
 EFS
-EKS
+EKS (Elastic Kubernetes)
 ElastiCache
 Elastic Beanstalk
 Elastic Load Balancing (ELB Classic)
