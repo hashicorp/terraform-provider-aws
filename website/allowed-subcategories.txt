@@ -44,7 +44,7 @@ Connect
 Cost and Usage Report
 Data Exchange
 DLM (Data Lifecycle Manager)
-DataPipeline
+Data Pipeline
 DataSync
 DMS (Database Migration)
 Detective
