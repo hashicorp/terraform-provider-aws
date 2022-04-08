@@ -146,7 +146,7 @@ Service Quotas
 Shield
 SimpleDB
 Signer
-Step Function (SFN)
+SFN (Step Functions)
 Storage Gateway
 Synthetics
 Timestream Write
