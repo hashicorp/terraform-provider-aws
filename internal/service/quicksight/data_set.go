@@ -186,17 +186,15 @@ func ResourceDataSet() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"data_set_arn": {
-										Type:         schema.TypeString,
-										Computed:     true,
-										Optional:     true,
-										ExactlyOneOf: []string{"data_set_arn", "join_instruction", "physical_table_id"},
+										Type:     schema.TypeString,
+										Computed: true,
+										Optional: true,
 									},
 									"join_instruction": {
-										Type:         schema.TypeList,
-										Computed:     true,
-										Optional:     true,
-										MaxItems:     1,
-										ExactlyOneOf: []string{"data_set_arn", "join_instruction", "physical_table_id"},
+										Type:     schema.TypeList,
+										Computed: true,
+										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"left_operand": {
@@ -256,7 +254,6 @@ func ResourceDataSet() *schema.Resource {
 										Type:         schema.TypeString,
 										Computed:     true,
 										Optional:     true,
-										ExactlyOneOf: []string{"data_set_arn", "join_instruction", "physical_table_id"},
 										ValidateFunc: validation.StringLenBetween(1, 64),
 									},
 								},
@@ -500,10 +497,9 @@ func ResourceDataSet() *schema.Resource {
 							Required: true,
 						},
 						"custom_sql": {
-							Type:         schema.TypeList,
-							Optional:     true,
-							MaxItems:     1,
-							ExactlyOneOf: []string{"custom_sql", "relational_table", "s3_source"},
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"data_source_arn": {
@@ -545,10 +541,9 @@ func ResourceDataSet() *schema.Resource {
 							},
 						},
 						"relational_table": {
-							Type:         schema.TypeList,
-							Optional:     true,
-							MaxItems:     1,
-							ExactlyOneOf: []string{"custom_sql", "relational_table", "s3_source"},
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"data_source_arn": {
@@ -595,11 +590,10 @@ func ResourceDataSet() *schema.Resource {
 							},
 						},
 						"s3_source": {
-							Type:         schema.TypeList,
-							Computed:     true,
-							Optional:     true,
-							MaxItems:     1,
-							ExactlyOneOf: []string{"custom_sql", "relational_table", "s3_source"},
+							Type:     schema.TypeList,
+							Computed: true,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"data_source_arn": {
@@ -825,12 +819,10 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if _, err := waitDataSetCreated(ctx, conn, awsAccountId, id); err != nil {
 		return diag.Errorf("error waiting from QuickSight Data Set (%s) creation: %s", d.Id(), err)
 	}
-
 	return resourceDataSetRead(ctx, d, meta)
 }
 
 func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	// arn.IsARN(d.Id()
 
 	conn := meta.(*conns.AWSClient).QuickSightConn
@@ -878,6 +870,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("column_level_permission_rules", flattenColumnLevelPermissionRules(dataSet.ColumnLevelPermissionRules)); err != nil {
 		return diag.Errorf("error setting column_level_permission_rules: %s", err)
 	}
+
 	if err := d.Set("data_set_usage_configuration", flattenDataSetUsageConfiguration(dataSet.DataSetUsageConfiguration)); err != nil {
 		return diag.Errorf("error setting data_set_usage_configuration: %s", err)
 	}
@@ -2444,16 +2437,90 @@ func flattenPhysicalTableMap(maps map[string]*quicksight.PhysicalTable) *schema.
 		tfMap := flattenPhysicalTable(k, v)
 		tfSet.Add(tfMap)
 	}
-
 	return tfSet
 }
 
 func physicalTableMapHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s", m["custom_sql"].(string)))
-	buf.WriteString(fmt.Sprintf("%s", m["relational_table"].(string)))
-	buf.WriteString(fmt.Sprintf("%s", m["s3_source"].(string)))
+	if v, ok := m["custom_sql"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", customSqlHash(v)))
+	}
+	if v, ok := m["relational_table"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", customRelationalTableHash(v)))
+	}
+	if v, ok := m["s3_source"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", customS3SourceHash(v)))
+	}
+
+	return create.StringHashcode(buf.String())
+}
+
+func customSqlHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.([]interface{})[0].(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%s-", m["data_source_arn"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["sql_query"].(string)))
+	if v, ok := m["columns"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", customColumnsHash(v)))
+	}
+	return create.StringHashcode(buf.String())
+}
+
+func customColumnsHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.([]interface{})[0].(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
+	return create.StringHashcode(buf.String())
+}
+
+func customRelationalTableHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.([]interface{})[0].(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%s-", m["data_source_arn"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
+	if v, ok := m["catalog"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["input_columns"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", customColumnsHash(v)))
+	}
+	return create.StringHashcode(buf.String())
+}
+
+func customS3SourceHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.([]interface{})[0].(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%s-", m["data_source_arn"].(string)))
+	if v, ok := m["upload_settings"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", customUploadSettingsHash(v)))
+	}
+	buf.WriteString(fmt.Sprintf("%d-", customColumnsHash(m["input_columns"])))
+	return create.StringHashcode(buf.String())
+}
+
+func customUploadSettingsHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.([]interface{})[0].(map[string]interface{})
+
+	if v, ok := m["contains_header"]; ok {
+		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
+	}
+	if v, ok := m["delimiter"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["format"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["start_from_row"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
+	}
+	if v, ok := m["text_qualifier"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
 	return create.StringHashcode(buf.String())
 }
 
