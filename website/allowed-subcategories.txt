@@ -64,7 +64,7 @@ ElastiCache
 Elastic Beanstalk
 ELB Classic
 Elastic Load Balancing v2 (ALB/NLB)
-Elastic Map Reduce (EMR)
+EMR
 Elastic Map Reduce Containers
 Elastic Transcoder
 Elasticsearch
