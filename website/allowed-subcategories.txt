@@ -126,7 +126,7 @@ Route53 Domains
 Route53 Recovery Control Config
 Route53 Recovery Readiness
 Route53 Resolver
-Route53
+Route 53
 S3
 S3 Control
 S3 Outposts
