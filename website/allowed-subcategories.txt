@@ -129,9 +129,9 @@ Route53 Resolver
 Route 53
 S3 (Simple Storage)
 S3 Control
-S3 Outposts
 SES (Simple Email)
 SNS (Simple Notification)
+S3 on Outposts
 SQS
 SSM (Systems Manager)
 SSO Admin
