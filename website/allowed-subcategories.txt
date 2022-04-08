@@ -117,8 +117,8 @@ Pinpoint
 Pricing
 QLDB (Quantum Ledger Database)
 QuickSight
-RAM
 RDS (Relational Database)
+RAM (Resource Access Manager)
 Redshift
 Resource Groups
 Resource Groups Tagging
