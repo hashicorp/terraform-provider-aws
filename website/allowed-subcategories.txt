@@ -73,7 +73,7 @@ EventBridge Schemas
 File System (FSx)
 Firewall Manager (FMS)
 GameLift
-Glacier
+S3 Glacier
 Global Accelerator
 Glue
 Grafana
