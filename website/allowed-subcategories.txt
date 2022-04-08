@@ -62,7 +62,7 @@ EFS
 EKS
 ElastiCache
 Elastic Beanstalk
-Elastic Load Balancing (ELB Classic)
+ELB Classic
 Elastic Load Balancing v2 (ALB/NLB)
 Elastic Map Reduce (EMR)
 Elastic Map Reduce Containers
