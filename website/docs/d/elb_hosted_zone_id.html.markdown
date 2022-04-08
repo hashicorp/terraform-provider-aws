@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing (ELB Classic)"
+subcategory: "ELB (Elastic Load Balancing) Classic"
 layout: "aws"
 page_title: "AWS: aws_elb_hosted_zone_id"
 description: |-

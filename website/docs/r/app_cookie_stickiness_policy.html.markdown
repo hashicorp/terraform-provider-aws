@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing (ELB Classic)"
+subcategory: "ELB (Elastic Load Balancing) Classic"
 layout: "aws"
 page_title: "AWS: aws_app_cookie_stickiness_policy"
 description: |-
