@@ -152,7 +152,7 @@ Synthetics
 Timestream Write
 Transfer
 VPC
-WAF Regional
+WAF Classic Regional
 WAF
 WAFv2
 WorkLink
