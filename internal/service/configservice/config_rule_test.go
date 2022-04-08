@@ -461,17 +461,16 @@ PARAMS
 func testAccConfigRuleConfig_ownerPolicy(rName string) string {
 	return testAccConfigRuleConfig_base(rName) + fmt.Sprintf(`
 resource "aws_config_config_rule" "test" {
-  name        = %q
-  description = "Terraform Acceptance tests"
+  name = %q
 
   source {
-    owner             = "CUSTOM_POLICY"
+    owner = "CUSTOM_POLICY"
 
     source_detail {
       message_type = "ConfigurationItemChangeNotification"
-    }	
+    }
 
-	custom_policy_details {
+    custom_policy_details {
       policy_runtime = "guard-2.x.x"
       policy_text    = <<EOF
 	  rule tableisactive when
@@ -484,8 +483,8 @@ resource "aws_config_config_rule" "test" {
 		  tableisactive {
 			  supplementaryConfiguration.ContinuousBackupsDescription.pointInTimeRecoveryDescription.pointInTimeRecoveryStatus == "ENABLED"
 	  }
-EOF					
-	}
+EOF
+    }
   }
 
   depends_on = [aws_config_configuration_recorder.test]
