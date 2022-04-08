@@ -125,8 +125,7 @@ Route 53
 Route 53 Domains
 Route 53 Recovery Control Config
 Route 53 Recovery Readiness
-Route53 Recovery Control Config
-Route53 Resolver
+Route 53 Resolver
 S3 (Simple Storage)
 S3 Control
 S3 Glacier
