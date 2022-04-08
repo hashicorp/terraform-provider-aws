@@ -1,7 +1,7 @@
 
 ACM PCA (Certificate Manager Private Certificate Authority)
 ACM (Certificate Manager)
-API Gateway (REST APIs)
+API Gateway
 API Gateway V2
 Access Analyzer
 Account Management
