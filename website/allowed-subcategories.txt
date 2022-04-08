@@ -150,7 +150,7 @@ Step Function (SFN)
 Storage Gateway
 CloudWatch Synthetics
 Timestream Write
-Transfer
+Transfer Family
 VPC
 WAF Regional
 WAF
