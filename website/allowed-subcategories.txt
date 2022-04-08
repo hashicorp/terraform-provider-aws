@@ -124,7 +124,7 @@ Resource Groups
 Resource Groups Tagging
 Route53 Domains
 Route53 Recovery Control Config
-Route53 Recovery Readiness
+Route 53 Recovery Readiness
 Route53 Resolver
 Route53
 S3
