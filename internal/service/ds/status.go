@@ -1,6 +1,8 @@
 package ds
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -20,5 +22,21 @@ func statusDirectoryStage(conn *directoryservice.DirectoryService, id string) re
 		}
 
 		return output, aws.StringValue(output.Stage), nil
+	}
+}
+
+func statusSharedDirectory(ctx context.Context, conn *directoryservice.DirectoryService, ownerId, sharedId string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findDirectoryShareByIDs(ctx, conn, ownerId, sharedId)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.ShareStatus), nil
 	}
 }

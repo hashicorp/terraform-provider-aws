@@ -1,6 +1,7 @@
 package ds
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -11,8 +12,9 @@ import (
 )
 
 const (
-	directoryCreatedTimeout = 60 * time.Minute
-	directoryDeletedTimeout = 60 * time.Minute
+	directoryCreatedTimeout      = 60 * time.Minute
+	directoryDeletedTimeout      = 60 * time.Minute
+	directoryShareDeletedTimeout = 60 * time.Minute
 )
 
 func waitDirectoryCreated(conn *directoryservice.DirectoryService, id string) (*directoryservice.DirectoryDescription, error) {
@@ -46,6 +48,32 @@ func waitDirectoryDeleted(conn *directoryservice.DirectoryService, id string) (*
 
 	if output, ok := outputRaw.(*directoryservice.DirectoryDescription); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StageReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDirectoryShareDeleted(ctx context.Context, conn *directoryservice.DirectoryService, ownerId, sharedId string) (*directoryservice.SharedDirectory, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			directoryservice.ShareStatusDeleting,
+			directoryservice.ShareStatusShared,
+			directoryservice.ShareStatusPendingAcceptance,
+			directoryservice.ShareStatusRejectFailed,
+			directoryservice.ShareStatusRejected,
+			directoryservice.ShareStatusRejecting,
+		},
+		Target:  []string{},
+		Refresh: statusSharedDirectory(ctx, conn, ownerId, sharedId),
+		Timeout: directoryShareDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*directoryservice.SharedDirectory); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ShareStatus)))
 
 		return output, err
 	}
