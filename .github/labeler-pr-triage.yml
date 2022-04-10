@@ -155,6 +155,9 @@ service/cloudwatch:
   - 'internal/service/cloudwatch/**/*'
   - 'website/**/cloudwatch_dashboard*'
   - 'website/**/cloudwatch_metric_alarm*'
+service/cloudwatchevidently:
+  - 'internal/service/cloudwatchevidently/**/*'
+  - 'website/**/cloudwatchevidently_*'
 service/cloudwatchlogs:
   - 'internal/service/cloudwatchlogs/**/*'
   - 'website/**/cloudwatch_log_*'
