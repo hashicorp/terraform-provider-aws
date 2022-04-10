@@ -1,6 +1,7 @@
 package athena
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"regexp"
@@ -22,6 +23,9 @@ func ResourceDatabase() *schema.Resource {
 		Read:   resourceDatabaseRead,
 		Update: schema.Noop,
 		Delete: resourceDatabaseDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"acl_configuration": {
@@ -86,6 +90,12 @@ func ResourceDatabase() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile("^[_a-z0-9]+$"), "must be lowercase letters, numbers, or underscore ('_')"),
 			},
+			"properties": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -94,16 +104,31 @@ func resourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AthenaConn
 
 	name := d.Get("name").(string)
-	var queryString string
+	var queryString bytes.Buffer
 
-	if v, ok := d.GetOk("comment"); ok {
-		queryString = fmt.Sprintf("create database `%[1]s` comment '%[2]s';", name, strings.Replace(v.(string), "'", "\\'", -1))
-	} else {
-		queryString = fmt.Sprintf("create database `%[1]s`;", name)
+	createStmt := fmt.Sprintf("create database `%[1]s`", name)
+	queryString.WriteString(createStmt)
+
+	if v, ok := d.GetOk("comment"); ok && v.(string) != "" {
+		commentStmt := fmt.Sprintf(" comment '%[1]s';", name, strings.Replace(v.(string), "'", "\\'", -1))
+		queryString.WriteString(commentStmt)
 	}
 
+	if v, ok := d.GetOk("properties"); ok && len(v.(map[string]interface{})) > 0 {
+		var props []string
+		for k, v := range v.(map[string]interface{}) {
+			prop := fmt.Sprintf(" '%[1]s' = '%[2]s' ", k, v.(string))
+			props = append(props, prop)
+		}
+
+		propStmt := fmt.Sprintf(" WITH DBPROPERTIES(%[1]s)", strings.Join(props, ","))
+		queryString.WriteString(propStmt)
+	}
+
+	queryString.WriteString(";")
+
 	input := &athena.StartQueryExecutionInput{
-		QueryString:         aws.String(queryString),
+		QueryString:         aws.String(queryString.String()),
 		ResultConfiguration: expandAthenaResultConfiguration(d),
 	}
 
@@ -144,6 +169,8 @@ func resourceDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 	db := res.Database
 
 	d.Set("name", db.Name)
+	d.Set("comment", db.Description)
+	d.Set("properties", db.Parameters)
 
 	return nil
 }

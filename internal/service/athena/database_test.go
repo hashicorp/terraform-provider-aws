@@ -34,7 +34,44 @@ func TestAccAthenaDatabase_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "acl_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "properties.%", "0"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bucket", "force_destroy"},
+			},
+		},
+	})
+}
+
+func TestAccAthenaDatabase_properties(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dbName := sdkacctest.RandString(8)
+	resourceName := "aws_athena_database.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDatabaseDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaDatabasePropertiesConfig(rName, dbName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", dbName),
+					resource.TestCheckResourceAttr(resourceName, "properties.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "properties.creator", "Jane D."),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bucket", "force_destroy"},
 			},
 		},
 	})
@@ -60,6 +97,12 @@ func TestAccAthenaDatabase_acl(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "acl_configuration.0.s3_acl_option", "BUCKET_OWNER_FULL_CONTROL"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bucket", "acl_configuration", "force_destroy"},
+			},
 		},
 	})
 }
@@ -84,6 +127,12 @@ func TestAccAthenaDatabase_encryption(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key", "aws_kms_key.test", "arn"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bucket", "force_destroy", "encryption_configuration"},
+			},
 		},
 	})
 }
@@ -105,6 +154,12 @@ func TestAccAthenaDatabase_nameStartsWithUnderscore(t *testing.T) {
 					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", dbName),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bucket", "force_destroy"},
 			},
 		},
 	})
@@ -188,7 +243,14 @@ func TestAccAthenaDatabase_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", dbName),
+					resource.TestCheckResourceAttr(resourceName, "comment", "athena is a goddess"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bucket", "force_destroy"},
 			},
 		},
 	})
@@ -210,7 +272,14 @@ func TestAccAthenaDatabase_unescaped_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", dbName),
+					resource.TestCheckResourceAttr(resourceName, "comment", "athena's a goddess"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bucket", "force_destroy"},
 			},
 		},
 	})
@@ -399,6 +468,25 @@ resource "aws_athena_database" "test" {
   name          = %[2]q
   bucket        = aws_s3_bucket.test.bucket
   force_destroy = %[3]t
+}
+`, rName, dbName, forceDestroy)
+}
+
+func testAccAthenaDatabasePropertiesConfig(rName string, dbName string, forceDestroy bool) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_athena_database" "test" {
+  name          = %[2]q
+  bucket        = aws_s3_bucket.test.bucket
+  force_destroy = %[3]t
+
+  properties = {
+    creator = "Jane D."
+  }
 }
 `, rName, dbName, forceDestroy)
 }
