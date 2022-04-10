@@ -106,11 +106,11 @@ func resourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	var queryString bytes.Buffer
 
-	createStmt := fmt.Sprintf("create database `%[1]s`", name)
+	createStmt := fmt.Sprintf("create database `%s`", name)
 	queryString.WriteString(createStmt)
 
 	if v, ok := d.GetOk("comment"); ok && v.(string) != "" {
-		commentStmt := fmt.Sprintf(" comment '%[1]s';", name, strings.Replace(v.(string), "'", "\\'", -1))
+		commentStmt := fmt.Sprintf(" comment '%s'", strings.Replace(v.(string), "'", "\\'", -1))
 		queryString.WriteString(commentStmt)
 	}
 
@@ -121,7 +121,7 @@ func resourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 			props = append(props, prop)
 		}
 
-		propStmt := fmt.Sprintf(" WITH DBPROPERTIES(%[1]s)", strings.Join(props, ","))
+		propStmt := fmt.Sprintf(" WITH DBPROPERTIES(%s)", strings.Join(props, ","))
 		queryString.WriteString(propStmt)
 	}
 
