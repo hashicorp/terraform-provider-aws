@@ -52,6 +52,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudsearchdomain"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
+	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
@@ -369,6 +370,7 @@ type AWSClient struct {
 	CloudSearchDomainConn             *cloudsearchdomain.CloudSearchDomain
 	CloudTrailConn                    *cloudtrail.CloudTrail
 	CloudWatchConn                    *cloudwatch.CloudWatch
+	CloudWatchEvidentlyConn           *cloudwatchevidently.CloudWatchEvidently
 	CloudWatchLogsConn                *cloudwatchlogs.CloudWatchLogs
 	CloudWatchRUMConn                 *cloudwatchrum.CloudWatchRUM
 	CodeArtifactConn                  *codeartifact.CodeArtifact
@@ -771,6 +773,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		CloudSearchDomainConn:             cloudsearchdomain.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CloudSearchDomain])})),
 		CloudTrailConn:                    cloudtrail.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CloudTrail])})),
 		CloudWatchConn:                    cloudwatch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CloudWatch])})),
+		CloudWatchEvidentlyConn:           cloudwatchevidently.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CloudWatchEvidently])})),
 		CloudWatchLogsConn:                cloudwatchlogs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CloudWatchLogs])})),
 		CloudWatchRUMConn:                 cloudwatchrum.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CloudWatchRUM])})),
 		CodeArtifactConn:                  codeartifact.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CodeArtifact])})),
