@@ -29,6 +29,7 @@ CloudHSM
 CloudSearch
 CloudTrail
 CloudWatch
+CloudWatch Evidently
 CloudWatch RUM
 CloudWatch Synthetics
 CodeArtifact
