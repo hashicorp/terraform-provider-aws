@@ -54,7 +54,7 @@ The following arguments are supported:
 
 * `identifier` - (Required) An identifier for the resource server.
 * `name` - (Required) A name for the resource server.
-* `scope` - (Optional) A list of [Authorization Scope](#authorization_scope).
+* `scope` - (Optional) A list of [Authorization Scope](#authorization-scope).
 
 ### Authorization Scope
 

@@ -337,7 +337,7 @@ AWS documentation: [Amazon Cognito Authentication for Kibana](https://docs.aws.a
 
 AWS documentation: [VPC Support for Amazon OpenSearch Service Domains](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/es-vpc.html)
 
-~> **Note:** You must have created the service linked role for the OpenSearch service to use `vpc_options`. If you need to create the service linked role at the same time as the OpenSearch domain then you must use `depends_on` to make sure that the role is created before the OpenSearch domain. See the [VPC based ES domain example](#vpc-based-es) above.
+~> **Note:** You must have created the service linked role for the OpenSearch service to use `vpc_options`. If you need to create the service linked role at the same time as the OpenSearch domain then you must use `depends_on` to make sure that the role is created before the OpenSearch domain. See the [VPC based ES domain example](#vpc-based-opensearch) above.
 
 -> Security Groups and Subnets referenced in these attributes must all be within the same VPC. This determines what VPC the endpoints are created in.
 

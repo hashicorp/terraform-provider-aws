@@ -581,7 +581,7 @@ More details about this code generation can be found in the [namevaluesfilters d
 - Determine if the service API includes functionality for filtering resources (usually a `Filters` argument to a `DescribeThing` API call). If so, add the AWS Go SDK service name (e.g., `rds`) to `sliceServiceNames` in `internal/generate/namevaluesfilters/generators/servicefilters/main.go`.
 - Run `make gen` (`go generate ./...`) and ensure there are no errors via `make test` (`go test ./...`)
 
-### Resource Filter Code Implementation
+### Resource Filtering Code Implementation
 
 - In the resource's equivalent data source Go file (e.g., `internal/service/ec2/internet_gateway_data_source.go`), add the following Go import: `"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"`
 - In the resource schema, add `"filter": namevaluesfilters.Schema(),`
@@ -635,7 +635,7 @@ guidelines.
    only submit **1 resource at a time**.
 - [ ] __Acceptance tests__: New resources should include acceptance tests
    covering their behavior. See [Writing Acceptance
-   Tests](#writing-acceptance-tests) below for a detailed guide on how to
+   Tests](./running-and-writing-acceptance-tests.md#writing-an-acceptance-test) for a detailed guide on how to
    approach these.
 - [ ] __Resource Naming__: Resources should be named `aws_<service>_<name>`,
    using underscores (`_`) as the separator. Resources are namespaced with the
