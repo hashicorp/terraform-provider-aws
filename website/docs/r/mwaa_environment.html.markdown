@@ -136,7 +136,7 @@ The following arguments are supported:
 * `max_workers` - (Optional) The maximum number of workers that can be automatically scaled up. Value need to be between `1` and `25`. Will be `10` by default.
 * `min_workers` - (Optional) The minimum number of workers that you want to run in your environment. Will be `1` by default.
 * `name` - (Required) The name of the Apache Airflow Environment
-* `network_configuration` - (Required) Specifies the network configuration for your Apache Airflow Environment. This includes two private subnets as well as security groups for the Airflow environment. Each subnet requires internet connection, otherwise the deployment will fail. See [Network configuration](#network) below for details.
+* `network_configuration` - (Required) Specifies the network configuration for your Apache Airflow Environment. This includes two private subnets as well as security groups for the Airflow environment. Each subnet requires internet connection, otherwise the deployment will fail. See [Network configuration](#network-configuration) below for details.
 * `plugins_s3_object_version` - (Optional) The plugins.zip file version you want to use.
 * `plugins_s3_path` - (Optional) The relative path to the plugins.zip file on your Amazon S3 storage bucket. For example, plugins.zip. If a relative path is provided in the request, then plugins_s3_object_version is required. For more information, see [Importing DAGs on Amazon MWAA](https://docs.aws.amazon.com/mwaa/latest/userguide/configuring-dag-import.html).
 * `requirements_s3_object_version` - (Optional) The requirements.txt file version you want to use.

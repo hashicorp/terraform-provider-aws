@@ -149,6 +149,9 @@ test-compile:
 website-link-check:
 	@scripts/markdown-link-check.sh
 
+website-link-check-ghrc:
+	@LINK_CHECK_CONTAINER="ghcr.io/tcort/markdown-link-check:stable" scripts/markdown-link-check.sh	
+
 website-lint:
 	@echo "==> Checking website against linters..."
 	@misspell -error -source=text website/ || (echo; \
