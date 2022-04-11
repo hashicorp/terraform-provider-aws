@@ -109,17 +109,27 @@ func ResourceVPCIpamScopeRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	scope, err := findIpamScopeById(conn, d.Id())
-	ipamId := strings.Split(*scope.IpamArn, "/")[1]
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, InvalidIpamScopeIdNotFound) {
-		return err
-	}
-
-	if !d.IsNewResource() && scope == nil {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IPAM Scope (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
+	if err != nil {
+		return fmt.Errorf("error reading IPAM Scope (%s): %w", d.Id(), err)
+	}
+
+	if scope == nil {
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading IPAM Scope (%s): not found after creation", d.Id())
+		}
+		log.Printf("[WARN] IPAM Scope (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	ipamId := strings.Split(aws.StringValue(scope.IpamArn), "/")[1]
 
 	d.Set("arn", scope.IpamScopeArn)
 	d.Set("description", scope.Description)
@@ -199,17 +209,44 @@ func findIpamScopeById(conn *ec2.EC2, id string) (*ec2.IpamScope, error) {
 		IpamScopeIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := conn.DescribeIpamScopes(input)
+	var results []*ec2.IpamScope
+
+	err := conn.DescribeIpamScopesPages(input, func(page *ec2.DescribeIpamScopesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, scope := range page.IpamScopes {
+			if scope == nil {
+				continue
+			}
+
+			results = append(results, scope)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, InvalidIpamScopeIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.IpamScopes) == 0 || output.IpamScopes[0] == nil {
-		return nil, nil
+	if len(results) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output.IpamScopes[0], nil
+	if count := len(results); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return results[0], nil
 }
 
 func waitIpamScopeAvailable(conn *ec2.EC2, ipamScopeId string, timeout time.Duration) (*ec2.IpamScope, error) {
