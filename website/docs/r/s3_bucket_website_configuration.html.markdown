@@ -12,6 +12,8 @@ Provides an S3 bucket website configuration resource. For more information, see 
 
 ## Example Usage
 
+### With `routing_rule` configured
+
 ```terraform
 resource "aws_s3_bucket_website_configuration" "example" {
   bucket = aws_s3_bucket.example.bucket
@@ -35,6 +37,33 @@ resource "aws_s3_bucket_website_configuration" "example" {
 }
 ```
 
+### With `routing_rules` configured
+
+```terraform
+resource "aws_s3_bucket_website_configuration" "example" {
+  bucket = aws_s3_bucket.example.bucket
+
+  index_document {
+    suffix = "index.html"
+  }
+
+  error_document {
+    key = "error.html"
+  }
+
+  routing_rules = <<EOF
+[{
+    "Condition": {
+        "KeyPrefixEquals": "docs/"
+    },
+    "Redirect": {
+        "ReplaceKeyPrefixWith": ""
+    }
+}]
+EOF
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -44,7 +73,9 @@ The following arguments are supported:
 * `expected_bucket_owner` - (Optional, Forces new resource) The account ID of the expected bucket owner.
 * `index_document` - (Optional, Required if `redirect_all_requests_to` is not specified) The name of the index document for the website [detailed below](#index_document).
 * `redirect_all_requests_to` - (Optional, Required if `index_document` is not specified) The redirect behavior for every request to this bucket's website endpoint [detailed below](#redirect_all_requests_to). Conflicts with `error_document`, `index_document`, and `routing_rule`.
-* `routing_rule` - (Optional, Conflicts with `redirect_all_requests_to`) List of rules that define when a redirect is applied and the redirect behavior [detailed below](#routing_rule).
+* `routing_rule` - (Optional, Conflicts with `redirect_all_requests_to` and `routing_rules`) List of rules that define when a redirect is applied and the redirect behavior [detailed below](#routing_rule).
+* `routing_rules` - (Optional, Conflicts with `routing_rule` and `redirect_all_requests_to`) A json array containing [routing rules](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-websiteconfiguration-routingrules.html)
+  describing redirect behavior and when redirects are applied. Use this parameter when your routing rules contain empty String values (`""`) as seen in the [example above](#with-routing_rules-configured).
 
 ### error_document
 
