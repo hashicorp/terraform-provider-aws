@@ -33,7 +33,7 @@ jobs:
           folder-path: "website/docs"
           file-extension: ".markdown"
           base-branch: "main"
-          check-modified-files-only: "yes"
+          check-modified-files-only: "no"
       - uses: YakDriver/md-check-links@v2.0.3
         name: markdown-link-check website/docs/**/*.md
         with:
