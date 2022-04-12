@@ -122,7 +122,7 @@ resource "aws_iam_role" "test" {
       Principal = {
         Service = "qldb.amazonaws.com"
       }
-    },]
+    }]
   })
 
   inline_policy {
