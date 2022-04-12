@@ -1,5 +1,5 @@
 ---
-subcategory: "Quantum Ledger Database (QLDB) Stream"
+subcategory: "QLDB (Quantum Ledger Database)"
 layout: "aws"
 page_title: "AWS: aws_qldb_stream"
 description: |-
@@ -48,10 +48,5 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Name of the QLDB Ledger
-* `arn` - The ARN of the QLDB Ledger
-
-## Import
-
-QLDB Streams cannot currently be imported.
-
+* `id` - The ID of the QLDB Stream
+* `arn` - The ARN of the QLDB Stream
