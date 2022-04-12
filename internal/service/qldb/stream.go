@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/qldb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -24,10 +24,10 @@ import (
 
 func ResourceStream() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceStreamCreate,
-		Read:   resourceStreamRead,
-		Update: resourceStreamUpdate,
-		Delete: resourceStreamDelete,
+		CreateWithoutTimeout: resourceStreamCreate,
+		ReadWithoutTimeout:   resourceStreamRead,
+		UpdateWithoutTimeout: resourceStreamUpdate,
+		Delete:               resourceStreamDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -39,14 +39,16 @@ func ResourceStream() *schema.Resource {
 				Computed: true,
 			},
 			"exclusive_end_time": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsRFC3339Time,
 			},
 			"inclusive_start_time": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsRFC3339Time,
 			},
 			"kinesis_configuration": {
 				Type:     schema.TypeList,
@@ -95,182 +97,127 @@ func ResourceStream() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QLDBConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	// Create the QLDB Stream
-	createOpts := &qldb.StreamJournalToKinesisInput{
-		LedgerName: aws.String(d.Get("ledger_name").(string)),
+	ledgerName := d.Get("ledger_name").(string)
+	name := d.Get("stream_name").(string)
+	input := &qldb.StreamJournalToKinesisInput{
+		LedgerName: aws.String(ledgerName),
 		RoleArn:    aws.String(d.Get("role_arn").(string)),
-		StreamName: aws.String(d.Get("stream_name").(string)),
+		StreamName: aws.String(name),
 		Tags:       Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("exclusive_end_time"); ok {
-		log.Printf("DEBUG - exclusive_end_time: %#v", v)
-		exclusiveEndTimeValue, _ := time.Parse("2006-01-02T15:04:05Z", v.(string))
-		createOpts.ExclusiveEndTime = &exclusiveEndTimeValue
+		v, _ := time.Parse(time.RFC3339, v.(string))
+		input.ExclusiveEndTime = aws.Time(v)
 	}
 
 	if v, ok := d.GetOk("inclusive_start_time"); ok {
-		log.Printf("DEBUG - inclusive_start_time: %#v", v)
-		inclusiveStartTimeValue, _ := time.Parse("2006-01-02T15:04:05Z", v.(string))
-		createOpts.InclusiveStartTime = &inclusiveStartTimeValue
-	} else {
-		return errors.New("Missing 'inclusive_start_time'")
+		v, _ := time.Parse(time.RFC3339, v.(string))
+		input.InclusiveStartTime = aws.Time(v)
 	}
 
-	if v, ok := d.GetOk("kinesis_configuration"); ok {
-		createOpts.KinesisConfiguration = &qldb.KinesisConfiguration{}
-
-		values := v.(map[string]interface{})
-		// values := v.(*schema.TypeMap)
-		if value, ok := values["aggregation_enabled"]; ok {
-			aggregationEnabled, err := strconv.ParseBool(value.(string))
-			if err != nil {
-				return errors.New("Error parsing kinesis_configuration.aggregation_enabled")
-			}
-			createOpts.KinesisConfiguration.AggregationEnabled = &aggregationEnabled
-		}
-
-		if value, ok := values["stream_arn"]; ok {
-			streamArn := value.(string)
-			createOpts.KinesisConfiguration.StreamArn = &streamArn
-		}
-	} else if !ok {
-		return errors.New("Missing 'kinesis_configuration'")
+	if v, ok := d.GetOk("kinesis_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.KinesisConfiguration = expandKinesisConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	log.Printf("[DEBUG] QLDB Stream create config: %#v", *createOpts)
-	qldbResp, err := conn.StreamJournalToKinesis(createOpts)
+	log.Printf("[DEBUG] Creating QLDB Stream: %s", input)
+	output, err := conn.StreamJournalToKinesisWithContext(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating QLDB Ledger Stream: %s", err)
+		return diag.Errorf("creating QLDB Stream (%s): %s", name, err)
 	}
 
-	// Set QLDB Stream ID
-	d.SetId(aws.StringValue(qldbResp.StreamId))
-	log.Printf("[INFO] QLDB Ledger Stream Id: %s", d.Id())
+	d.SetId(aws.StringValue(output.StreamId))
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{qldb.StreamStatusImpaired},
-		Target:     []string{qldb.StreamStatusActive},
-		Refresh:    qldbStreamRefreshStatusFunc(conn, d.Get("ledger_name").(string), d.Id()),
-		Timeout:    8 * time.Minute,
-		MinTimeout: 3 * time.Second,
+	if _, err := waitStreamCreated(ctx, conn, ledgerName, d.Id()); err != nil {
+		return diag.Errorf("waiting for QLDB Stream (%s) create: %s", d.Id(), err)
 	}
 
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for QLDB Ledger status to be \"%s\": %s", qldb.LedgerStateActive, err)
-	}
-
-	// Update our attributes and return
-	return resourceStreamRead(d, meta)
+	return resourceStreamRead(ctx, d, meta)
 }
 
-//TODO: Another edge case to account for?:  Stream resources that are in a terminal state (CANCELED, COMPLETED, and FAILED) are subject to a 7-day retention period. They are automatically hard-deleted after this limit expires.
-func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QLDBConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	var ledgerName string
-	if ledgerNameValue, ok := d.GetOk("ledger_name"); ok {
-		ledgerName = ledgerNameValue.(string)
-	}
+	ledgerName := d.Get("ledger_name").(string)
+	stream, err := FindStream(ctx, conn, ledgerName, d.Id())
 
-	// Refresh the QLDB Stream state
-	input := &qldb.DescribeJournalKinesisStreamInput{
-		LedgerName: aws.String(ledgerName),
-		StreamId:   aws.String(d.Id()),
-	}
-
-	qldbStream, err := conn.DescribeJournalKinesisStream(input)
-
-	if tfawserr.ErrMessageContains(err, qldb.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] QLDB Stream (%s) not found, removing from state", d.Id())
-		d.Set("ledger_name", "")
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] QLDB Stream %s not found, removing from state", d.Id())
+		d.SetId("")
 		return nil
 	}
 
-	log.Printf("DEBUG - QLDB Stream: %#v", qldbStream)
-
 	if err != nil {
-		return fmt.Errorf("error describing QLDB Stream (%s): %s", d.Id(), err)
+		return diag.Errorf("reading QLDB Stream (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("arn", qldbStream.Stream.Arn); err != nil {
-		return fmt.Errorf("error setting ARN: %s", err)
+	d.Set("arn", stream.Arn)
+	if stream.ExclusiveEndTime != nil {
+		d.Set("exclusive_end_time", aws.TimeValue(stream.ExclusiveEndTime).Format(time.RFC3339))
+	} else {
+		d.Set("exclusive_end_time", nil)
 	}
-
-	if qldbStream.Stream.ExclusiveEndTime != nil {
-		if err := d.Set("exclusive_end_time", qldbStream.Stream.ExclusiveEndTime.Format("2006-01-02T15:04:05Z")); err != nil {
-			return fmt.Errorf("error setting Exclusive End Time: %s", err)
+	if stream.InclusiveStartTime != nil {
+		d.Set("inclusive_start_time", aws.TimeValue(stream.InclusiveStartTime).Format(time.RFC3339))
+	} else {
+		d.Set("inclusive_start_time", nil)
+	}
+	if stream.KinesisConfiguration != nil {
+		if err := d.Set("kinesis_configuration", []interface{}{flattenKinesisConfiguration(stream.KinesisConfiguration)}); err != nil {
+			return diag.Errorf("setting kinesis_configuration: %s", err)
 		}
+	} else {
+		d.Set("kinesis_configuration", nil)
 	}
+	d.Set("ledger_name", stream.LedgerName)
+	d.Set("role_arn", stream.RoleArn)
+	d.Set("stream_name", stream.StreamName)
 
-	if err := d.Set("inclusive_start_time", qldbStream.Stream.InclusiveStartTime.Format("2006-01-02T15:04:05Z")); err != nil {
-		return fmt.Errorf("error setting Inclusive Start Time: %s", err)
-	}
-
-	if qldbStream.Stream.KinesisConfiguration != nil {
-		kinesisConfiguration := map[string]interface{}{
-			"aggregation_enabled": strconv.FormatBool(*qldbStream.Stream.KinesisConfiguration.AggregationEnabled),
-			"stream_arn":          *qldbStream.Stream.KinesisConfiguration.StreamArn,
-		}
-
-		if err := d.Set("kinesis_configuration", kinesisConfiguration); err != nil {
-			return fmt.Errorf("error setting Kinesis Configuration: %s", err)
-		}
-	}
-
-	if err := d.Set("ledger_name", qldbStream.Stream.LedgerName); err != nil {
-		return fmt.Errorf("error setting Ledger Name: %s", err)
-	}
-
-	if err := d.Set("role_arn", qldbStream.Stream.RoleArn); err != nil {
-		return fmt.Errorf("error setting Role Arn: %s", err)
-	}
-
-	if err := d.Set("stream_name", qldbStream.Stream.StreamName); err != nil {
-		return fmt.Errorf("error setting Stream Name: %s", err)
-	}
-
-	log.Printf("[INFO] Fetching tags for %s", d.Id())
 	tags, err := ListTags(conn, d.Get("arn").(string))
+
 	if err != nil {
-		return fmt.Errorf("Error listing tags for QLDB Stream: %s", err)
+		return diag.Errorf("listing tags for QLDB Stream (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	if err != nil {
-		return fmt.Errorf("Error listing tags for QLDB Stream: %s", err)
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.Errorf("setting tags: %s", err)
 	}
 
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QLDBConn
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
+
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return diag.Errorf("updating tags: %s", err)
 		}
 	}
 
-	return resourceStreamRead(d, meta)
+	return resourceStreamRead(ctx, d, meta)
 }
 
 func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
@@ -364,12 +311,31 @@ func waitForQLDBStreamDeletion(conn *qldb.QLDB, ledgerName string, streamID stri
 	return err
 }
 
-func FindJournalKinesisStream(ctx context.Context, conn *qldb.QLDB, ledgerName, streamID string) (*qldb.JournalKinesisStreamDescription, error) {
+func FindStream(ctx context.Context, conn *qldb.QLDB, ledgerName, streamID string) (*qldb.JournalKinesisStreamDescription, error) {
 	input := &qldb.DescribeJournalKinesisStreamInput{
 		LedgerName: aws.String(ledgerName),
 		StreamId:   aws.String(streamID),
 	}
 
+	output, err := findJournalKinesisStream(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// See https://docs.aws.amazon.com/qldb/latest/developerguide/streams.create.html#streams.create.states.
+	switch status := aws.StringValue(output.Status); status {
+	case qldb.StreamStatusCompleted, qldb.StreamStatusCanceled, qldb.StreamStatusFailed:
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findJournalKinesisStream(ctx context.Context, conn *qldb.QLDB, input *qldb.DescribeJournalKinesisStreamInput) (*qldb.JournalKinesisStreamDescription, error) {
 	output, err := conn.DescribeJournalKinesisStreamWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, qldb.ErrCodeResourceNotFoundException) {
@@ -388,4 +354,80 @@ func FindJournalKinesisStream(ctx context.Context, conn *qldb.QLDB, ledgerName, 
 	}
 
 	return output.Stream, nil
+}
+
+func statusStream(ctx context.Context, conn *qldb.QLDB, ledgerName, streamID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		// Don't call FindStream as it maps useful statuses to NotFoundError.
+		output, err := findJournalKinesisStream(ctx, conn, &qldb.DescribeJournalKinesisStreamInput{
+			LedgerName: aws.String(ledgerName),
+			StreamId:   aws.String(streamID),
+		})
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitStreamCreated(ctx context.Context, conn *qldb.QLDB, ledgerName, streamID string) (*qldb.JournalKinesisStreamDescription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{qldb.StreamStatusImpaired},
+		Target:     []string{qldb.StreamStatusActive},
+		Refresh:    statusStream(ctx, conn, ledgerName, streamID),
+		Timeout:    8 * time.Minute,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*qldb.JournalKinesisStreamDescription); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ErrorCause)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func expandKinesisConfiguration(tfMap map[string]interface{}) *qldb.KinesisConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &qldb.KinesisConfiguration{}
+
+	if v, ok := tfMap["aggregation_enabled"].(bool); ok {
+		apiObject.AggregationEnabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["stream_arn"].(string); ok && v != "" {
+		apiObject.StreamArn = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenKinesisConfiguration(apiObject *qldb.KinesisConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AggregationEnabled; v != nil {
+		tfMap["aggregation_enabled"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.StreamArn; v != nil {
+		tfMap["stream_arn"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
