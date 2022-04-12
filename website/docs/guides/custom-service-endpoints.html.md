@@ -109,6 +109,7 @@ provider "aws" {
   <li><code>cloudsearchdomain</code></li>
   <li><code>cloudtrail</code></li>
   <li><code>cloudwatch</code></li>
+  <li><code>cloudwatchevidently</code></li>
   <li><code>cloudwatchlogs</code></li>
   <li><code>cloudwatchrum</code></li>
   <li><code>codeartifact</code></li>

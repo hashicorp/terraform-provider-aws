@@ -45,6 +45,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudsearchdomain"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
+	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
@@ -322,6 +323,7 @@ const (
 	CloudSearchDomain             = "cloudsearchdomain"
 	CloudTrail                    = "cloudtrail"
 	CloudWatch                    = "cloudwatch"
+	CloudWatchEvidently           = "cloudwatchevidently"
 	CloudWatchLogs                = "cloudwatchlogs"
 	CloudWatchRUM                 = "cloudwatchrum"
 	CodeArtifact                  = "codeartifact"
@@ -623,6 +625,7 @@ func init() {
 	serviceData[CloudSearchDomain] = &ServiceDatum{AWSClientName: "CloudSearchDomain", AWSServiceName: cloudsearchdomain.ServiceName, AWSEndpointsID: cloudsearchdomain.EndpointsID, AWSServiceID: cloudsearchdomain.ServiceID, ProviderNameUpper: "CloudSearchDomain", HCLKeys: []string{"cloudsearchdomain"}}
 	serviceData[CloudTrail] = &ServiceDatum{AWSClientName: "CloudTrail", AWSServiceName: cloudtrail.ServiceName, AWSEndpointsID: cloudtrail.EndpointsID, AWSServiceID: cloudtrail.ServiceID, ProviderNameUpper: "CloudTrail", HCLKeys: []string{"cloudtrail"}}
 	serviceData[CloudWatch] = &ServiceDatum{AWSClientName: "CloudWatch", AWSServiceName: cloudwatch.ServiceName, AWSEndpointsID: cloudwatch.EndpointsID, AWSServiceID: cloudwatch.ServiceID, ProviderNameUpper: "CloudWatch", HCLKeys: []string{"cloudwatch"}}
+	serviceData[CloudWatchEvidently] = &ServiceDatum{AWSClientName: "CloudWatchEvidently", AWSServiceName: cloudwatchevidently.ServiceName, AWSEndpointsID: cloudwatchevidently.EndpointsID, AWSServiceID: cloudwatchevidently.ServiceID, ProviderNameUpper: "CloudWatchEvidently", HCLKeys: []string{"cloudwatchevidently"}}
 	serviceData[CloudWatchLogs] = &ServiceDatum{AWSClientName: "CloudWatchLogs", AWSServiceName: cloudwatchlogs.ServiceName, AWSEndpointsID: cloudwatchlogs.EndpointsID, AWSServiceID: cloudwatchlogs.ServiceID, ProviderNameUpper: "CloudWatchLogs", HCLKeys: []string{"cloudwatchlogs"}}
 	serviceData[CloudWatchRUM] = &ServiceDatum{AWSClientName: "CloudWatchRUM", AWSServiceName: cloudwatchrum.ServiceName, AWSEndpointsID: cloudwatchrum.EndpointsID, AWSServiceID: cloudwatchrum.ServiceID, ProviderNameUpper: "CloudWatchRUM", HCLKeys: []string{"cloudwatchrum"}}
 	serviceData[CodeArtifact] = &ServiceDatum{AWSClientName: "CodeArtifact", AWSServiceName: codeartifact.ServiceName, AWSEndpointsID: codeartifact.EndpointsID, AWSServiceID: codeartifact.ServiceID, ProviderNameUpper: "CodeArtifact", HCLKeys: []string{"codeartifact"}}
