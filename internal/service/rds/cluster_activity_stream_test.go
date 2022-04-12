@@ -169,11 +169,7 @@ func testAccCheckClusterActivityStreamDestroyWithProvider(s *terraform.State, pr
 }
 
 func testAccClusterActivityStreamConfigBase(clusterName, instanceName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "Testing for AWS RDS Cluster Activity Stream"
   deletion_window_in_days = 7
@@ -196,13 +192,11 @@ resource "aws_rds_cluster_instance" "test" {
   engine             = aws_rds_cluster.test.engine
   instance_class     = "db.r6g.large"
 }
-`, clusterName, instanceName)
+`, clusterName, instanceName))
 }
 
 func testAccClusterActivityStreamConfig(clusterName, instanceName string) string {
-	return acctest.ConfigCompose(
-		testAccClusterActivityStreamConfigBase(clusterName, instanceName),
-		`
+	return acctest.ConfigCompose(testAccClusterActivityStreamConfigBase(clusterName, instanceName), `
 resource "aws_rds_cluster_activity_stream" "test" {
   resource_arn = aws_rds_cluster.test.arn
   kms_key_id   = aws_kms_key.test.key_id
@@ -210,5 +204,5 @@ resource "aws_rds_cluster_activity_stream" "test" {
 
   depends_on = [aws_rds_cluster_instance.test]
 }
-		`)
+`)
 }
