@@ -3,7 +3,6 @@ package qldb
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
@@ -27,7 +26,7 @@ func ResourceStream() *schema.Resource {
 		CreateWithoutTimeout: resourceStreamCreate,
 		ReadWithoutTimeout:   resourceStreamRead,
 		UpdateWithoutTimeout: resourceStreamUpdate,
-		Delete:               resourceStreamDelete,
+		DeleteWithoutTimeout: resourceStreamDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -220,95 +219,34 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return resourceStreamRead(ctx, d, meta)
 }
 
-func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QLDBConn
-	deleteQLDBStreamOpts := &qldb.CancelJournalKinesisStreamInput{
-		LedgerName: aws.String(d.Get("ledger_name").(string)),
+
+	ledgerName := d.Get("ledger_name").(string)
+	input := &qldb.CancelJournalKinesisStreamInput{
+		LedgerName: aws.String(ledgerName),
 		StreamId:   aws.String(d.Id()),
 	}
-	log.Printf("[INFO] Cancelling QLDB Ledger: %s %s", d.Get("ledger_name"), d.Id())
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.CancelJournalKinesisStream(deleteQLDBStreamOpts)
+	log.Printf("[INFO] Deleting QLDB Stream: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 5*time.Minute,
+		func() (interface{}, error) {
+			return conn.CancelJournalKinesisStreamWithContext(ctx, input)
+		}, qldb.ErrCodeResourceInUseException)
 
-		if tfawserr.ErrMessageContains(err, qldb.ErrCodeResourceInUseException, "") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.CancelJournalKinesisStream(deleteQLDBStreamOpts)
-	}
-
-	if tfawserr.ErrMessageContains(err, qldb.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, qldb.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error cancelling QLDB Stream (%s, %s): %s", d.Get("ledger_name"), d.Id(), err)
+		return diag.Errorf("deleting QLDB Stream (%s): %s", d.Id(), err)
 	}
 
-	if err := waitForQLDBStreamDeletion(conn, d.Get("ledger_name").(string), d.Id()); err != nil {
-		return fmt.Errorf("error waiting for QLDB Stream (%s, %s) deletion: %s", d.Get("ledger_name"), d.Id(), err)
+	if _, err := waitStreamDeleted(ctx, conn, ledgerName, d.Id()); err != nil {
+		return diag.Errorf("waiting for QLDB Stream (%s) delete: %s", d.Id(), err)
 	}
 
-	return err
-}
-
-func qldbStreamRefreshStatusFunc(conn *qldb.QLDB, ledgerName string, streamID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &qldb.DescribeJournalKinesisStreamInput{
-			LedgerName: aws.String(ledgerName),
-			StreamId:   aws.String(streamID),
-		}
-		resp, err := conn.DescribeJournalKinesisStream(input)
-		if err != nil {
-			return nil, "failed", err
-		}
-		return resp, aws.StringValue(resp.Stream.Status), nil
-	}
-}
-
-func waitForQLDBStreamDeletion(conn *qldb.QLDB, ledgerName string, streamID string) error {
-	stateConf := resource.StateChangeConf{
-		Pending: []string{
-			qldb.StreamStatusActive,
-			qldb.StreamStatusImpaired,
-		},
-		Target: []string{
-			qldb.StreamStatusCompleted,
-			qldb.StreamStatusFailed,
-			qldb.StreamStatusCanceled,
-		},
-		Timeout:    5 * time.Minute,
-		MinTimeout: 1 * time.Second,
-		Refresh: func() (interface{}, string, error) {
-			resp, err := conn.DescribeJournalKinesisStream(&qldb.DescribeJournalKinesisStreamInput{
-				LedgerName: aws.String(ledgerName),
-				StreamId:   aws.String(streamID),
-			})
-
-			if tfawserr.ErrMessageContains(err, qldb.ErrCodeResourceNotFoundException, "") {
-				return 1, "", nil
-			}
-
-			if err != nil {
-				return nil, qldb.ErrCodeResourceInUseException, err
-			}
-
-			return resp, aws.StringValue(resp.Stream.Status), nil
-		},
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
+	return nil
 }
 
 func FindStream(ctx context.Context, conn *qldb.QLDB, ledgerName, streamID string) (*qldb.JournalKinesisStreamDescription, error) {
@@ -383,6 +321,26 @@ func waitStreamCreated(ctx context.Context, conn *qldb.QLDB, ledgerName, streamI
 		Refresh:    statusStream(ctx, conn, ledgerName, streamID),
 		Timeout:    8 * time.Minute,
 		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*qldb.JournalKinesisStreamDescription); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ErrorCause)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitStreamDeleted(ctx context.Context, conn *qldb.QLDB, ledgerName, streamID string) (*qldb.JournalKinesisStreamDescription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{qldb.StreamStatusActive, qldb.StreamStatusImpaired},
+		Target:     []string{},
+		Refresh:    statusStream(ctx, conn, ledgerName, streamID),
+		Timeout:    5 * time.Minute,
+		MinTimeout: 1 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
