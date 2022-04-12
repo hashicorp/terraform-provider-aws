@@ -120,15 +120,6 @@ func ResourceVPCIpamScopeRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading IPAM Scope (%s): %w", d.Id(), err)
 	}
 
-	if scope == nil {
-		if d.IsNewResource() {
-			return fmt.Errorf("error reading IPAM Scope (%s): not found after creation", d.Id())
-		}
-		log.Printf("[WARN] IPAM Scope (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
 	ipamId := strings.Split(aws.StringValue(scope.IpamArn), "/")[1]
 
 	d.Set("arn", scope.IpamScopeArn)
@@ -290,7 +281,7 @@ func statusIpamScopeStatus(conn *ec2.EC2, ipamScopeId string) resource.StateRefr
 
 		output, err := findIpamScopeById(conn, ipamScopeId)
 
-		if tfawserr.ErrCodeEquals(err, InvalidIpamScopeIdNotFound) {
+		if tfresource.NotFound(err) {
 			return output, InvalidIpamScopeIdNotFound, nil
 		}
 
