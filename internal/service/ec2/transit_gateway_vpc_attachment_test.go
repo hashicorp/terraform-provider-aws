@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -155,6 +155,7 @@ func testAccTransitGatewayVPCAttachment_DNSSupport(t *testing.T) {
 func testAccTransitGatewayVPCAttachment_IPv6Support(t *testing.T) {
 	var transitGatewayVpcAttachment1, transitGatewayVpcAttachment2 ec2.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
@@ -163,7 +164,7 @@ func testAccTransitGatewayVPCAttachment_IPv6Support(t *testing.T) {
 		CheckDestroy: testAccCheckTransitGatewayVPCAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayVPCAttachmentIPv6SupportConfig(ec2.Ipv6SupportValueEnable),
+				Config: testAccTransitGatewayVPCAttachmentIPv6SupportConfig(rName, ec2.Ipv6SupportValueEnable),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment1),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_support", ec2.Ipv6SupportValueEnable),
@@ -175,13 +176,12 @@ func testAccTransitGatewayVPCAttachment_IPv6Support(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayVPCAttachmentIPv6SupportConfig(ec2.Ipv6SupportValueDisable),
+				Config: testAccTransitGatewayVPCAttachmentIPv6SupportConfig(rName, ec2.Ipv6SupportValueDisable),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment2),
 					testAccCheckTransitGatewayVPCAttachmentNotRecreated(&transitGatewayVpcAttachment1, &transitGatewayVpcAttachment2),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_support", ec2.Ipv6SupportValueDisable),
 				),
-				ExpectError: regexp.MustCompile(`Ipv6 cannot be disabled`),
 			},
 		},
 	})
@@ -324,8 +324,8 @@ func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociati
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway1),
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment1),
-					testAccCheckTransitGatewayAssociationDefaultRouteTableVPCAttachmentNotAssociated(&transitGateway1, &transitGatewayVpcAttachment1),
-					testAccCheckTransitGatewayPropagationDefaultRouteTableVPCAttachmentNotPropagated(&transitGateway1, &transitGatewayVpcAttachment1),
+					testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociated(&transitGateway1, &transitGatewayVpcAttachment1),
+					testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagated(&transitGateway1, &transitGatewayVpcAttachment1),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", "false"),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", "false"),
 				),
@@ -356,7 +356,7 @@ func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociati
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway1),
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment1),
-					testAccCheckTransitGatewayAssociationDefaultRouteTableVPCAttachmentNotAssociated(&transitGateway1, &transitGatewayVpcAttachment1),
+					testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociated(&transitGateway1, &transitGatewayVpcAttachment1),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", "false"),
 				),
 			},
@@ -371,7 +371,7 @@ func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociati
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway2),
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment2),
 					testAccCheckTransitGatewayVPCAttachmentNotRecreated(&transitGatewayVpcAttachment1, &transitGatewayVpcAttachment2),
-					testAccCheckTransitGatewayAssociationDefaultRouteTableVPCAttachmentAssociated(&transitGateway2, &transitGatewayVpcAttachment2),
+					testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(&transitGateway2, &transitGatewayVpcAttachment2),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", "true"),
 				),
 			},
@@ -381,7 +381,7 @@ func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociati
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway3),
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment3),
 					testAccCheckTransitGatewayVPCAttachmentNotRecreated(&transitGatewayVpcAttachment2, &transitGatewayVpcAttachment3),
-					testAccCheckTransitGatewayAssociationDefaultRouteTableVPCAttachmentNotAssociated(&transitGateway3, &transitGatewayVpcAttachment3),
+					testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociated(&transitGateway3, &transitGatewayVpcAttachment3),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", "false"),
 				),
 			},
@@ -406,7 +406,7 @@ func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTablePropagati
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway1),
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment1),
-					testAccCheckTransitGatewayPropagationDefaultRouteTableVPCAttachmentNotPropagated(&transitGateway1, &transitGatewayVpcAttachment1),
+					testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagated(&transitGateway1, &transitGatewayVpcAttachment1),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", "false"),
 				),
 			},
@@ -421,7 +421,7 @@ func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTablePropagati
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway2),
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment2),
 					testAccCheckTransitGatewayVPCAttachmentNotRecreated(&transitGatewayVpcAttachment1, &transitGatewayVpcAttachment2),
-					testAccCheckTransitGatewayPropagationDefaultRouteTableVPCAttachmentPropagated(&transitGateway2, &transitGatewayVpcAttachment2),
+					testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(&transitGateway2, &transitGatewayVpcAttachment2),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", "true"),
 				),
 			},
@@ -431,7 +431,7 @@ func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTablePropagati
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway3),
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment3),
 					testAccCheckTransitGatewayVPCAttachmentNotRecreated(&transitGatewayVpcAttachment2, &transitGatewayVpcAttachment3),
-					testAccCheckTransitGatewayPropagationDefaultRouteTableVPCAttachmentNotPropagated(&transitGateway3, &transitGatewayVpcAttachment3),
+					testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagated(&transitGateway3, &transitGatewayVpcAttachment3),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", "false"),
 				),
 			},
@@ -482,7 +482,7 @@ func testAccCheckTransitGatewayVPCAttachmentDestroy(s *terraform.State) error {
 
 		vpcAttachment, err := tfec2.DescribeTransitGatewayVPCAttachment(conn, rs.Primary.ID)
 
-		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
 			continue
 		}
 
@@ -514,7 +514,7 @@ func testAccCheckTransitGatewayVPCAttachmentDisappears(transitGatewayVpcAttachme
 			return err
 		}
 
-		return tfec2.WaitForTransitGatewayVPCAttachmentDeletion(conn, aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId))
+		return tfec2.WaitForTransitGatewayAttachmentDeletion(conn, aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId))
 	}
 }
 
@@ -525,6 +525,24 @@ func testAccCheckTransitGatewayVPCAttachmentNotRecreated(i, j *ec2.TransitGatewa
 		}
 
 		return nil
+	}
+}
+
+func testAccPreCheckTransitGatewayVpcAttachment(t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
+	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{
+		MaxResults: aws.Int64(5),
+	}
+
+	_, err := conn.DescribeTransitGatewayVpcAttachments(input)
+
+	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InvalidAction", "") {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
@@ -622,14 +640,14 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 `, dnsSupport))
 }
 
-func testAccTransitGatewayVPCAttachmentIPv6SupportConfig(ipv6Support string) string {
+func testAccTransitGatewayVPCAttachmentIPv6SupportConfig(rName, ipv6Support string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = true
   cidr_block                       = "10.0.0.0/16"
 
   tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
+    Name = %[1]q
   }
 }
 
@@ -640,20 +658,27 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
+    Name = %[1]q
   }
 }
 
 resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  ipv6_support       = %[1]q
+  ipv6_support       = %[2]q
   subnet_ids         = [aws_subnet.test.id]
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpc_id             = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, ipv6Support))
+`, rName, ipv6Support))
 }
 
 func testAccTransitGatewayVPCAttachmentSharedTransitGatewayConfig(rName string) string {

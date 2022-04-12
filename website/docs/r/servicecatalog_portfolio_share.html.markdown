@@ -50,6 +50,16 @@ In addition to all arguments above, the following attributes are exported:
 
 * `accepted` - Whether the shared portfolio is imported by the recipient account. If the recipient is organizational, the share is automatically imported, and the field is always set to true.
 
+## Timeouts
+
+`aws_servicecatalog_portfolio_share` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `3 minutes`)
+- `read` - (Default `10 minutes`)
+- `update` - (Default `3 minutes`)
+- `delete` - (Default `3 minutes`)
+
 ## Import
 
 `aws_servicecatalog_portfolio_share` can be imported using the portfolio share ID, e.g.,

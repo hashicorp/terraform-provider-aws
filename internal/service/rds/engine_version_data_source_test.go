@@ -81,7 +81,7 @@ func TestAccRDSEngineVersionDataSource_preferred(t *testing.T) {
 			{
 				Config: testAccEngineVersionPreferredDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "version", "5.7.19"),
+					resource.TestCheckResourceAttr(dataSourceName, "version", "8.0.27"),
 				),
 			},
 		},
@@ -129,9 +129,9 @@ func testAccEngineVersionPreCheck(t *testing.T) {
 func testAccEngineVersionBasicDataSourceConfig(engine, version, paramGroup string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
-  engine                 = %q
-  version                = %q
-  parameter_group_family = %q
+  engine                 = %[1]q
+  version                = %[2]q
+  parameter_group_family = %[3]q
 }
 `, engine, version, paramGroup)
 }
@@ -140,7 +140,7 @@ func testAccEngineVersionUpgradeTargetsDataSourceConfig() string {
 	return `
 data "aws_rds_engine_version" "test" {
   engine  = "mysql"
-  version = "5.7.17"
+  version = "8.0.27"
 }
 `
 }
@@ -149,7 +149,7 @@ func testAccEngineVersionPreferredDataSourceConfig() string {
 	return `
 data "aws_rds_engine_version" "test" {
   engine             = "mysql"
-  preferred_versions = ["85.9.12", "5.7.19", "5.7.17"]
+  preferred_versions = ["85.9.12", "8.0.27", "8.0.26"]
 }
 `
 }

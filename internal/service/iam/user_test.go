@@ -2,13 +2,12 @@ package iam_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -189,6 +188,35 @@ func TestAccIAMUser_ForceDestroy_sshKey(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					testAccCheckUserUploadsSSHKey(&user),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
+func TestAccIAMUser_ForceDestroy_serviceSpecificCred(t *testing.T) {
+	var user iam.GetUserOutput
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserForceDestroyConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					testAccCheckUserServiceSpecificCredential(&user),
 				),
 			},
 			{
@@ -440,7 +468,7 @@ func testAccCheckUserDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error is what we want
-		if !tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if !tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return err
 		}
 	}
@@ -621,16 +649,35 @@ func testAccCheckUserUploadsSSHKey(getUserOutput *iam.GetUserOutput) resource.Te
 	}
 }
 
+// Creates an IAM User Service Specific Credential outside of Terraform to verify that it is deleted when `force_destroy` is set
+func testAccCheckUserServiceSpecificCredential(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+
+		input := &iam.CreateServiceSpecificCredentialInput{
+			UserName:    getUserOutput.User.UserName,
+			ServiceName: aws.String("codecommit.amazonaws.com"),
+		}
+
+		_, err := conn.CreateServiceSpecificCredential(input)
+		if err != nil {
+			return fmt.Errorf("error uploading IAM User (%s) Service Specifc Credential: %w", aws.StringValue(getUserOutput.User.UserName), err)
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckUserUploadSigningCertificate(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
-		signingCertificate, err := os.ReadFile("./test-fixtures/iam-ssl-unix-line-endings.pem")
-		if err != nil {
-			return fmt.Errorf("error reading signing certificate fixture: %s", err)
-		}
+		key := acctest.TLSRSAPrivateKeyPEM(2048)
+		certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+
 		input := &iam.UploadSigningCertificateInput{
-			CertificateBody: aws.String(string(signingCertificate)),
+			CertificateBody: aws.String(certificate),
 			UserName:        getUserOutput.User.UserName,
 		}
 

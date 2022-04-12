@@ -10,9 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2NatGatewayDataSource_basic(t *testing.T) {
-	// This is used as a portion of CIDR network addresses.
-	rInt := sdkacctest.RandIntRange(4, 254)
+func TestAccEC2NATGatewayDataSource_basic(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceNameById := "data.aws_nat_gateway.test_by_id"
+	dataSourceNameBySubnetId := "data.aws_nat_gateway.test_by_subnet_id"
+	dataSourceNameByTags := "data.aws_nat_gateway.test_by_tags"
+	resourceName := "aws_nat_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -20,62 +23,58 @@ func TestAccEC2NatGatewayDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNatGatewayDataSourceConfig(rInt),
+				Config: testAccNATGatewayDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair("data.aws_nat_gateway.test_by_id", "connectivity_type", "aws_nat_gateway.test", "connectivity_type"),
-					resource.TestCheckResourceAttrPair(
-						"data.aws_nat_gateway.test_by_id", "id",
-						"aws_nat_gateway.test", "id"),
-					resource.TestCheckResourceAttrPair(
-						"data.aws_nat_gateway.test_by_subnet_id", "subnet_id",
-						"aws_nat_gateway.test", "subnet_id"),
-					resource.TestCheckResourceAttrPair(
-						"data.aws_nat_gateway.test_by_tags", "tags.Name",
-						"aws_nat_gateway.test", "tags.Name"),
-					resource.TestCheckResourceAttrSet("data.aws_nat_gateway.test_by_id", "state"),
-					resource.TestCheckResourceAttrSet("data.aws_nat_gateway.test_by_id", "allocation_id"),
-					resource.TestCheckResourceAttrSet("data.aws_nat_gateway.test_by_id", "network_interface_id"),
-					resource.TestCheckResourceAttrSet("data.aws_nat_gateway.test_by_id", "public_ip"),
-					resource.TestCheckResourceAttrSet("data.aws_nat_gateway.test_by_id", "private_ip"),
-					resource.TestCheckNoResourceAttr("data.aws_nat_gateway.test_by_id", "attached_vpc_id"),
-					resource.TestCheckResourceAttrSet("data.aws_nat_gateway.test_by_id", "tags.OtherTag"),
+					resource.TestCheckResourceAttrPair(dataSourceNameById, "connectivity_type", resourceName, "connectivity_type"),
+					resource.TestCheckResourceAttrPair(dataSourceNameById, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceNameBySubnetId, "subnet_id", resourceName, "subnet_id"),
+					resource.TestCheckResourceAttrPair(dataSourceNameByTags, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttrSet(dataSourceNameById, "state"),
+					resource.TestCheckResourceAttrSet(dataSourceNameById, "allocation_id"),
+					resource.TestCheckResourceAttrSet(dataSourceNameById, "network_interface_id"),
+					resource.TestCheckResourceAttrSet(dataSourceNameById, "public_ip"),
+					resource.TestCheckResourceAttrSet(dataSourceNameById, "private_ip"),
+					resource.TestCheckNoResourceAttr(dataSourceNameById, "attached_vpc_id"),
+					resource.TestCheckResourceAttrSet(dataSourceNameById, "tags.OtherTag"),
 				),
 			},
 		},
 	})
 }
 
-func testAccNatGatewayDataSourceConfig(rInt int) string {
+func testAccNATGatewayDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block = "172.%[1]d.0.0/16"
+  cidr_block = "172.5.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-nat-gw-data-source"
+    Name = %[1]q
   }
 }
 
 resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%[1]d.123.0/24"
+  cidr_block        = "172.5.123.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
-    Name = "tf-acc-nat-gw-data-source"
+    Name = %[1]q
   }
 }
 
-# EIPs are not taggable
 resource "aws_eip" "test" {
   vpc = true
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-# IGWs are required for an NGW to spin up; manual dependency
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "terraform-testacc-nat-gateway-data-source-%[1]d"
+    Name = %[1]q
   }
 }
 
@@ -84,7 +83,7 @@ resource "aws_nat_gateway" "test" {
   allocation_id = aws_eip.test.id
 
   tags = {
-    Name     = "terraform-testacc-nat-gw-data-source-%[1]d"
+    Name     = %[1]q
     OtherTag = "some-value"
   }
 
@@ -104,5 +103,5 @@ data "aws_nat_gateway" "test_by_tags" {
     Name = aws_nat_gateway.test.tags["Name"]
   }
 }
-`, rInt))
+`, rName))
 }

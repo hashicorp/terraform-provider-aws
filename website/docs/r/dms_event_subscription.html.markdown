@@ -1,5 +1,5 @@
 ---
-subcategory: "Database Migration Service (DMS)"
+subcategory: "DMS (Database Migration)"
 layout: "aws"
 page_title: "AWS: aws_dms_event_subscription"
 description: |-

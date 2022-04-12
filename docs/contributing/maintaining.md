@@ -11,7 +11,7 @@
             - [Terraform Plugin SDK Updates](#terraform-plugin-sdk-updates)
             - [tfproviderdocs Updates](#tfproviderdocs-updates)
             - [tfproviderlint Updates](#tfproviderlint-updates)
-            - [yaml.v2 Updates](#yaml-v2-updates)
+            - [yaml.v2 Updates](#yamlv2-updates)
     - [Pull Request Merge Process](#pull-request-merge-process)
 - [Breaking Changes](#breaking-changes)
 - [Branch Dictionary](#branch-dictionary)
@@ -304,7 +304,7 @@ Run the acceptance testing pattern, `TestAccCloudFormationStack(_dataSource)?_ya
 - Add any linked issues that will be closed by the pull request to the same upcoming release milestone
 - Merge the pull request
 - Delete the branch (if the branch is on this repository)
-- Determine if the pull request should have a CHANGELOG entry by reviewing the [Pull Request Types to CHANGELOG section](#pull-request-types-to-changelog), and follow the CHANGELOG specification [here](./pullrequest-submission-and-lifecycle.md#changelog-process)
+- Determine if the pull request should have a CHANGELOG entry by reviewing the [Pull Request Types to CHANGELOG section](./pullrequest-submission-and-lifecycle.md#pull-request-types-to-changelog), and follow the CHANGELOG specification [here](./pullrequest-submission-and-lifecycle.md#changelog-process)
 - Leave a comment on any issues closed by the pull request noting that it has been merged and when to expect the release containing it, e.g.
 
 ```markdown
@@ -380,6 +380,7 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `AWS_CODEBUILD_BITBUCKET_SOURCE_LOCATION` | BitBucket source URL for CodeBuild testing. CodeBuild must have access to this repository via OAuth or Source Credentials. Defaults to `https://terraform@bitbucket.org/terraform/aws-test.git`. |
 | `AWS_CODEBUILD_GITHUB_SOURCE_LOCATION` | GitHub source URL for CodeBuild testing. CodeBuild must have access to this repository via OAuth or Source Credentials. Defaults to `https://github.com/hashibot-test/aws-test.git`. |
 | `AWS_DEFAULT_REGION` | Primary AWS region for tests. Defaults to `us-west-2`. |
+| `AWS_DETECTIVE_MEMBER_EMAIL` | Email address for Detective Member testing. A valid email address associated with an AWS root account is required for tests to pass. |
 | `AWS_EC2_CLASSIC_REGION` | AWS region for EC2-Classic testing. Defaults to `us-east-1` in AWS Commercial and `AWS_DEFAULT_REGION` otherwise. |
 | `AWS_EC2_CLIENT_VPN_LIMIT` | Concurrency limit for Client VPN acceptance tests. [Default is 5](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/limits.html) if not specified. |
 | `AWS_EC2_EIP_PUBLIC_IPV4_POOL` | Identifier for EC2 Public IPv4 Pool for EC2 EIP testing. |
@@ -395,7 +396,11 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `EVENT_BRIDGE_PARTNER_EVENT_SOURCE_NAME` | Amazon EventBridge partner event source name. |
 | `GCM_API_KEY` | API Key for Google Cloud Messaging in Pinpoint and SNS Platform Application testing. |
 | `GITHUB_TOKEN` | GitHub token for CodePipeline testing. |
+| `GRAFANA_SSO_GROUP_ID` | AWS SSO group ID for Grafana testing. |
+| `GRAFANA_SSO_USER_ID` | AWS SSO user ID for Grafana testing. |
 | `MACIE_MEMBER_ACCOUNT_ID` | Identifier of AWS Account for Macie Member testing. **DEPRECATED:** Should be replaced with standard alternate account handling for tests. |
+| `QUICKSIGHT_NAMESPACE` | QuickSight namespace name for testing. |
+| `ROUTE53DOMAINS_DOMAIN_NAME` | Registered domain for Route 53 Domains testing. |
 | `SAGEMAKER_IMAGE_VERSION_BASE_IMAGE` | Sagemaker base image to use for tests. |
 | `SERVICEQUOTAS_INCREASE_ON_CREATE_QUOTA_CODE` | Quota Code for Service Quotas testing (submits support case). |
 | `SERVICEQUOTAS_INCREASE_ON_CREATE_SERVICE_CODE` | Service Code for Service Quotas testing (submits support case). |

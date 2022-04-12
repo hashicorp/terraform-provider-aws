@@ -28,6 +28,11 @@ func DataSourceParametersByPath() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"recursive": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"types": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -54,6 +59,7 @@ func dataSourceParametersReadByPath(d *schema.ResourceData, meta interface{}) er
 	path := d.Get("path").(string)
 	input := &ssm.GetParametersByPathInput{
 		Path:           aws.String(path),
+		Recursive:      aws.Bool(d.Get("recursive").(bool)),
 		WithDecryption: aws.Bool(d.Get("with_decryption").(bool)),
 	}
 

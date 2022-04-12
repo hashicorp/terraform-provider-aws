@@ -7,20 +7,21 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccEC2VPCsDataSource_basic(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCsDataSourceConfig(),
+				Config: testAccVPCsDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCsExistsDataSource("data.aws_vpcs.all"),
+					acctest.CheckResourceAttrGreaterThanValue("data.aws_vpcs.test", "ids.#", "0"),
 				),
 			},
 		},
@@ -28,7 +29,8 @@ func TestAccEC2VPCsDataSource_basic(t *testing.T) {
 }
 
 func TestAccEC2VPCsDataSource_tags(t *testing.T) {
-	rName := sdkacctest.RandString(5)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -37,8 +39,7 @@ func TestAccEC2VPCsDataSource_tags(t *testing.T) {
 			{
 				Config: testAccVPCsDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCsExistsDataSource("data.aws_vpcs.selected"),
-					resource.TestCheckResourceAttr("data.aws_vpcs.selected", "ids.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_vpcs.test", "ids.#", "1"),
 				),
 			},
 		},
@@ -46,7 +47,8 @@ func TestAccEC2VPCsDataSource_tags(t *testing.T) {
 }
 
 func TestAccEC2VPCsDataSource_filters(t *testing.T) {
-	rName := sdkacctest.RandString(5)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -55,102 +57,89 @@ func TestAccEC2VPCsDataSource_filters(t *testing.T) {
 			{
 				Config: testAccVPCsDataSourceConfig_filters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCsExistsDataSource("data.aws_vpcs.selected"),
-					testCheckResourceAttrGreaterThanValue("data.aws_vpcs.selected", "ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue("data.aws_vpcs.test", "ids.#", "0"),
 				),
 			},
 		},
 	})
 }
 
-func testCheckResourceAttrGreaterThanValue(name, key, value string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		ms := s.RootModule()
-		rs, ok := ms.Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s in %s", name, ms.Path)
-		}
+func TestAccEC2VPCsDataSource_empty(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-		is := rs.Primary
-		if is == nil {
-			return fmt.Errorf("No primary instance: %s in %s", name, ms.Path)
-		}
-
-		if v, ok := is.Attributes[key]; !ok || !(v > value) {
-			if !ok {
-				return fmt.Errorf("%s: Attribute '%s' not found", name, key)
-			}
-
-			return fmt.Errorf(
-				"%s: Attribute '%s' is not greater than %#v, got %#v",
-				name,
-				key,
-				value,
-				v)
-		}
-		return nil
-
-	}
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  acctest.Providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCsDataSourceConfig_empty(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_vpcs.test", "ids.#", "0"),
+				),
+			},
+		},
+	})
 }
 
-func testAccCheckVPCsExistsDataSource(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Can't find aws_vpcs data source: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("aws_vpcs data source ID not set")
-		}
-		return nil
-	}
-}
-
-func testAccVPCsDataSourceConfig() string {
-	return `
-resource "aws_vpc" "test-vpc" {
+func testAccVPCsDataSourceConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-data "aws_vpcs" "all" {}
-`
+data "aws_vpcs" "test" {}
+`, rName)
 }
 
 func testAccVPCsDataSourceConfig_tags(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "test-vpc" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/24"
 
   tags = {
-    Name    = "testacc-vpc-%s"
+    Name    = %[1]q
     Service = "testacc-test"
   }
 }
 
-data "aws_vpcs" "selected" {
+data "aws_vpcs" "test" {
   tags = {
-    Name    = "testacc-vpc-%s"
-    Service = aws_vpc.test-vpc.tags["Service"]
+    Name    = %[1]q
+    Service = aws_vpc.test.tags["Service"]
   }
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccVPCsDataSourceConfig_filters(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "test-vpc" {
+resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/25"
 
   tags = {
-    Name = "testacc-vpc-%s"
+    Name = %[1]q
   }
 }
 
-data "aws_vpcs" "selected" {
+data "aws_vpcs" "test" {
   filter {
     name   = "cidr"
-    values = [aws_vpc.test-vpc.cidr_block]
+    values = [aws_vpc.test.cidr_block]
+  }
+}
+`, rName)
+}
+
+func testAccVPCsDataSourceConfig_empty(rName string) string {
+	return fmt.Sprintf(`
+data "aws_vpcs" "test" {
+  tags = {
+    Name = %[1]q
   }
 }
 `, rName)

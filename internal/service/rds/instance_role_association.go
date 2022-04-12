@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -74,7 +74,7 @@ func resourceInstanceRoleAssociationCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(fmt.Sprintf("%s,%s", dbInstanceIdentifier, roleArn))
 
-	if err := waitForRdsDbInstanceRoleAssociation(conn, dbInstanceIdentifier, roleArn); err != nil {
+	if err := waitForDBInstanceRoleAssociation(conn, dbInstanceIdentifier, roleArn); err != nil {
 		return fmt.Errorf("error waiting for RDS DB Instance (%s) IAM Role (%s) association: %s", dbInstanceIdentifier, roleArn, err)
 	}
 
@@ -92,7 +92,7 @@ func resourceInstanceRoleAssociationRead(d *schema.ResourceData, meta interface{
 
 	dbInstanceRole, err := DescribeInstanceRole(conn, dbInstanceIdentifier, roleArn)
 
-	if tfawserr.ErrMessageContains(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
 		log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", dbInstanceIdentifier)
 		d.SetId("")
 		return nil
@@ -133,11 +133,11 @@ func resourceInstanceRoleAssociationDelete(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] RDS DB Instance (%s) IAM Role disassociating: %s", dbInstanceIdentifier, roleArn)
 	_, err = conn.RemoveRoleFromDBInstance(input)
 
-	if tfawserr.ErrMessageContains(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
 		return nil
 	}
 
-	if tfawserr.ErrMessageContains(err, rds.ErrCodeDBInstanceRoleNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceRoleNotFoundFault) {
 		return nil
 	}
 
@@ -199,7 +199,7 @@ func DescribeInstanceRole(conn *rds.RDS, dbInstanceIdentifier, roleArn string) (
 	return dbInstanceRole, nil
 }
 
-func waitForRdsDbInstanceRoleAssociation(conn *rds.RDS, dbInstanceIdentifier, roleArn string) error {
+func waitForDBInstanceRoleAssociation(conn *rds.RDS, dbInstanceIdentifier, roleArn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{rdsDbInstanceRoleStatusPending},
 		Target:  []string{rdsDbInstanceRoleStatusActive},
@@ -236,7 +236,7 @@ func WaitForInstanceRoleDisassociation(conn *rds.RDS, dbInstanceIdentifier, role
 		Refresh: func() (interface{}, string, error) {
 			dbInstanceRole, err := DescribeInstanceRole(conn, dbInstanceIdentifier, roleArn)
 
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
 				return &rds.DBInstanceRole{}, rdsDbInstanceRoleStatusDeleted, nil
 			}
 

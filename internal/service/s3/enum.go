@@ -10,12 +10,23 @@ const DefaultKmsKeyAlias = "alias/aws/s3"
 const (
 	BucketCannedACLExecRead         = "aws-exec-read"
 	BucketCannedACLLogDeliveryWrite = "log-delivery-write"
+
+	BucketVersioningStatusDisabled = "Disabled"
+
+	LifecycleRuleStatusEnabled  = "Enabled"
+	LifecycleRuleStatusDisabled = "Disabled"
 )
 
 func BucketCannedACL_Values() []string {
 	result := s3.BucketCannedACL_Values()
 	result = appendUniqueString(result, BucketCannedACLExecRead)
 	result = appendUniqueString(result, BucketCannedACLLogDeliveryWrite)
+	return result
+}
+
+func BucketVersioningStatus_Values() []string {
+	result := s3.BucketVersioningStatus_Values()
+	result = appendUniqueString(result, BucketVersioningStatusDisabled)
 	return result
 }
 

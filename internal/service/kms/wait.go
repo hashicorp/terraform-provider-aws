@@ -5,12 +5,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
 const (
@@ -18,12 +18,12 @@ const (
 	KeyStatePendingDeletionTimeout = 20 * time.Minute
 
 	KeyDeletedTimeout                = 20 * time.Minute
-	KeyDescriptionPropagationTimeout = 5 * time.Minute
+	KeyDescriptionPropagationTimeout = 10 * time.Minute
 	KeyMaterialImportedTimeout       = 10 * time.Minute
 	KeyPolicyPropagationTimeout      = 5 * time.Minute
 	KeyRotationUpdatedTimeout        = 10 * time.Minute
 	KeyStatePropagationTimeout       = 20 * time.Minute
-	KeyTagsPropagationTimeout        = 5 * time.Minute
+	KeyTagsPropagationTimeout        = 10 * time.Minute
 	KeyValidToPropagationTimeout     = 5 * time.Minute
 
 	PropagationTimeout = 2 * time.Minute

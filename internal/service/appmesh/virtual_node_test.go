@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -102,7 +102,7 @@ func testAccVirtualNode_backendClientPolicyACM(t *testing.T) {
 				Config: testAccAppmeshVirtualNodeConfigRootCA(domain),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckACMPCACertificateAuthorityExists(acmCAResourceName, &ca),
-					acctest.CheckACMPCACertificateAuthorityActivateCA(&ca),
+					acctest.CheckACMPCACertificateAuthorityActivateRootCA(&ca),
 				),
 			},
 			{
@@ -940,7 +940,7 @@ func testAccVirtualNode_listenerTLS(t *testing.T) {
 				Config: testAccAppmeshVirtualNodeConfigRootCA(domain),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckACMPCACertificateAuthorityExists(acmCAResourceName, &ca),
-					acctest.CheckACMPCACertificateAuthorityActivateCA(&ca),
+					acctest.CheckACMPCACertificateAuthorityActivateRootCA(&ca),
 				),
 			},
 			{
@@ -1227,7 +1227,7 @@ func testAccCheckAppmeshVirtualNodeDestroy(s *terraform.State) error {
 			MeshName:        aws.String(rs.Primary.Attributes["mesh_name"]),
 			VirtualNodeName: aws.String(rs.Primary.Attributes["name"]),
 		})
-		if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 			continue
 		}
 		if err != nil {

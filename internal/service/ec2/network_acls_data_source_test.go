@@ -2,7 +2,6 @@ package ec2_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -12,7 +11,7 @@ import (
 )
 
 func TestAccEC2NetworkACLsDataSource_basic(t *testing.T) {
-	rName := sdkacctest.RandString(5)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_network_acls.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -22,14 +21,9 @@ func TestAccEC2NetworkACLsDataSource_basic(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				// Ensure at least 1 network ACL exists. We cannot use depends_on.
-				Config: testAccNetworkACLsDataSourceConfig_Base(rName),
-			},
-			{
 				Config: testAccNetworkACLsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					// At least 1
-					resource.TestMatchResourceAttr(dataSourceName, "ids.#", regexp.MustCompile(`^[1-9][0-9]*`)),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "1"),
 				),
 			},
 		},
@@ -37,7 +31,7 @@ func TestAccEC2NetworkACLsDataSource_basic(t *testing.T) {
 }
 
 func TestAccEC2NetworkACLsDataSource_filter(t *testing.T) {
-	rName := sdkacctest.RandString(5)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_network_acls.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -57,7 +51,7 @@ func TestAccEC2NetworkACLsDataSource_filter(t *testing.T) {
 }
 
 func TestAccEC2NetworkACLsDataSource_tags(t *testing.T) {
-	rName := sdkacctest.RandString(5)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_network_acls.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -77,7 +71,7 @@ func TestAccEC2NetworkACLsDataSource_tags(t *testing.T) {
 }
 
 func TestAccEC2NetworkACLsDataSource_vpcID(t *testing.T) {
-	rName := sdkacctest.RandString(5)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_network_acls.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -97,59 +91,97 @@ func TestAccEC2NetworkACLsDataSource_vpcID(t *testing.T) {
 	})
 }
 
+func TestAccEC2NetworkACLsDataSource_empty(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_network_acls.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetworkACLsDataSourceConfig_Empty(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccNetworkACLsDataSourceConfig_Base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "testacc-acl-%[1]s"
+    Name = %[1]q
   }
 }
 
-resource "aws_network_acl" "acl" {
+resource "aws_network_acl" "test" {
   count = 2
 
   vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "testacc-acl-%[1]s"
+    Name = %[1]q
   }
 }
 `, rName)
 }
 
 func testAccNetworkACLsDataSourceConfig_basic(rName string) string {
-	return testAccNetworkACLsDataSourceConfig_Base(rName) + `
-data "aws_network_acls" "test" {}
-`
+	return acctest.ConfigCompose(testAccNetworkACLsDataSourceConfig_Base(rName), `
+data "aws_network_acls" "test" {
+  depends_on = [aws_network_acl.test[0], aws_network_acl.test[1]]
+}
+`)
 }
 
 func testAccNetworkACLsDataSourceConfig_Filter(rName string) string {
-	return testAccNetworkACLsDataSourceConfig_Base(rName) + `
+	return acctest.ConfigCompose(testAccNetworkACLsDataSourceConfig_Base(rName), `
 data "aws_network_acls" "test" {
   filter {
     name   = "network-acl-id"
-    values = [aws_network_acl.acl[0].id]
+    values = [aws_network_acl.test[0].id]
   }
+
+  depends_on = [aws_network_acl.test[0], aws_network_acl.test[1]]
 }
-`
+`)
 }
 
 func testAccNetworkACLsDataSourceConfig_Tags(rName string) string {
-	return testAccNetworkACLsDataSourceConfig_Base(rName) + `
+	return acctest.ConfigCompose(testAccNetworkACLsDataSourceConfig_Base(rName), `
 data "aws_network_acls" "test" {
   tags = {
-    Name = aws_network_acl.acl[0].tags.Name
+    Name = aws_network_acl.test[0].tags.Name
   }
+
+  depends_on = [aws_network_acl.test[0], aws_network_acl.test[1]]
 }
-`
+`)
 }
 
 func testAccNetworkACLsDataSourceConfig_VPCID(rName string) string {
-	return testAccNetworkACLsDataSourceConfig_Base(rName) + `
+	return acctest.ConfigCompose(testAccNetworkACLsDataSourceConfig_Base(rName), `
 data "aws_network_acls" "test" {
-  vpc_id = aws_network_acl.acl[0].vpc_id
+  vpc_id = aws_network_acl.test[0].vpc_id
+
+  depends_on = [aws_network_acl.test[0], aws_network_acl.test[1]]
 }
-`
+`)
+}
+
+func testAccNetworkACLsDataSourceConfig_Empty(rName string) string {
+	return fmt.Sprintf(`
+data "aws_network_acls" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
 }

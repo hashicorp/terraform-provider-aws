@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -144,7 +144,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	resp, err := conn.GetQueue(getOpts)
-	if tfawserr.ErrMessageContains(err, mediaconvert.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, mediaconvert.ErrCodeNotFoundException) {
 		log.Printf("[WARN] Media Convert Queue (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -206,7 +206,7 @@ func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		_, err = conn.UpdateQueue(updateOpts)
-		if tfawserr.ErrMessageContains(err, mediaconvert.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, mediaconvert.ErrCodeNotFoundException) {
 			log.Printf("[WARN] Media Convert Queue (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -237,7 +237,7 @@ func resourceQueueDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	_, err = conn.DeleteQueue(delOpts)
-	if tfawserr.ErrMessageContains(err, mediaconvert.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, mediaconvert.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {

@@ -45,35 +45,62 @@ resource "aws_config_remediation_configuration" "this" {
     name         = "SSEAlgorithm"
     static_value = "AES256"
   }
+
+  automatic                  = true
+  maximum_automatic_attempts = 10
+  retry_attempt_seconds      = 600
+
+  execution_controls {
+    ssm_controls {
+      concurrent_execution_rate_percentage = 25
+      error_percentage                     = 20
+    }
+  }
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
-* `config_rule_name` - (Required) The name of the AWS Config rule
-* `resource_type` - (Optional) The type of a resource
-* `target_id` - (Required) Target ID is the name of the public document
-* `target_type` - (Required) The type of the target. Target executes remediation. For example, SSM document
+* `config_rule_name` - (Required) Name of the AWS Config rule.
+* `target_id` - (Required) Target ID is the name of the public document.
+* `target_type` - (Required) Type of the target. Target executes remediation. For example, SSM document.
+
+The following arguments are optional:
+
+* `automatic` - (Optional) Remediation is triggered automatically if `true`.
+* `execution_controls` - (Optional) Configuration block for execution controls. See below.
+* `maximum_automatic_attempts` - (Optional) Maximum number of failed attempts for auto-remediation. If you do not select a number, the default is 5.
+* `parameter` - (Optional) Can be specified multiple times for each parameter. Each parameter block supports arguments below.
+* `resource_type` - (Optional) Type of resource.
+* `retry_attempt_seconds` - (Optional) Maximum time in seconds that AWS Config runs auto-remediation. If you do not select a number, the default is 60 seconds.
 * `target_version` - (Optional) Version of the target. For example, version of the SSM document
-* `parameter` - (Optional) Can be specified multiple times for each
-   parameter. Each parameter block supports fields documented below.
 
-The `parameter` block supports:
+### `execution_controls`
 
-The value is either a dynamic (resource) value or a static value.
-You must select either a dynamic value or a static value.
+* `ssm_controls` - (Required) Configuration block for SSM controls. See below.
 
-* `name` - (Required) The name of the attribute.
-* `resource_value` - (Optional) The value is dynamic and changes at run-time.
-* `static_value` - (Optional) The value is static and does not change at run-time.
+#### `ssm_controls`
+
+One or both of these values are required.
+
+* `concurrent_execution_rate_percentage` - (Optional) Maximum percentage of remediation actions allowed to run in parallel on the non-compliant resources for that specific rule. The default value is 10%.
+* `error_percentage` - (Optional) Percentage of errors that are allowed before SSM stops running automations on non-compliant resources for that specific rule. The default is 50%.
+
+### `parameter`
+
+The value is either a dynamic (resource) value or a static value. You must select either a dynamic value or a static value.
+
+* `name` - (Required) Name of the attribute.
+* `resource_value` - (Optional) Value is dynamic and changes at run-time.
+* `static_value` - (Optional) Value is static and does not change at run-time.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Amazon Resource Name (ARN) of the Config Remediation Configuration.
+* `arn` - ARN of the Config Remediation Configuration.
 
 ## Import
 

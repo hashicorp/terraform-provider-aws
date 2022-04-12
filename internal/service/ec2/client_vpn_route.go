@@ -3,12 +3,14 @@ package ec2
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -18,7 +20,12 @@ func ResourceClientVPNRoute() *schema.Resource {
 		Read:   resourceClientVPNRouteRead,
 		Delete: resourceClientVPNRouteDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceClientVPNRouteImport,
+			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(ClientVPNRouteCreatedTimeout),
+			Delete: schema.DefaultTimeout(ClientVPNRouteDeletedTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -27,25 +34,25 @@ func ResourceClientVPNRoute() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"destination_cidr_block": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 			},
-			"description": {
+			"origin": {
 				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			"target_vpc_subnet_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-			"origin": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"type": {
 				Type:     schema.TypeString,
@@ -60,27 +67,32 @@ func resourceClientVPNRouteCreate(d *schema.ResourceData, meta interface{}) erro
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	targetSubnetID := d.Get("target_vpc_subnet_id").(string)
-	destinationCidr := d.Get("destination_cidr_block").(string)
-
-	req := &ec2.CreateClientVpnRouteInput{
+	destinationCIDR := d.Get("destination_cidr_block").(string)
+	id := ClientVPNRouteCreateResourceID(endpointID, targetSubnetID, destinationCIDR)
+	input := &ec2.CreateClientVpnRouteInput{
 		ClientVpnEndpointId:  aws.String(endpointID),
-		DestinationCidrBlock: aws.String(destinationCidr),
+		DestinationCidrBlock: aws.String(destinationCIDR),
 		TargetVpcSubnetId:    aws.String(targetSubnetID),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		req.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 
-	id := ClientVPNRouteCreateID(endpointID, targetSubnetID, destinationCidr)
-
-	_, err := conn.CreateClientVpnRoute(req)
+	log.Printf("[DEBUG] Creating EC2 Client VPN Route: %s", input)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, func() (interface{}, error) {
+		return conn.CreateClientVpnRoute(input)
+	}, ErrCodeInvalidClientVpnActiveAssociationNotFound)
 
 	if err != nil {
-		return fmt.Errorf("error creating client VPN route %q: %w", id, err)
+		return fmt.Errorf("error creating EC2 Client VPN Route (%s): %w", id, err)
 	}
 
 	d.SetId(id)
+
+	if _, err := WaitClientVPNRouteCreated(conn, endpointID, targetSubnetID, destinationCIDR, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for EC2 Client VPN Route (%s) create: %w", d.Id(), err)
+	}
 
 	return resourceClientVPNRouteRead(d, meta)
 }
@@ -88,38 +100,29 @@ func resourceClientVPNRouteCreate(d *schema.ResourceData, meta interface{}) erro
 func resourceClientVPNRouteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	resp, err := FindClientVPNRoute(conn,
-		d.Get("client_vpn_endpoint_id").(string),
-		d.Get("target_vpc_subnet_id").(string),
-		d.Get("destination_cidr_block").(string),
-	)
+	endpointID, targetSubnetID, destinationCIDR, err := ClientVPNRouteParseResourceID(d.Id())
 
-	if tfawserr.ErrMessageContains(err, ErrCodeClientVPNRouteNotFound, "") {
+	if err != nil {
+		return err
+	}
+
+	route, err := FindClientVPNRouteByThreePartKey(conn, endpointID, targetSubnetID, destinationCIDR)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Client VPN Route (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading client VPN route (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading EC2 Client VPN Route (%s): %w", d.Id(), err)
 	}
 
-	if resp == nil || len(resp.Routes) == 0 || resp.Routes[0] == nil {
-		log.Printf("[WARN] EC2 Client VPN Route (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if len(resp.Routes) > 1 {
-		return fmt.Errorf("internal error: found %d results for Client VPN route (%s) status, need 1", len(resp.Routes), d.Id())
-	}
-
-	route := resp.Routes[0]
 	d.Set("client_vpn_endpoint_id", route.ClientVpnEndpointId)
-	d.Set("destination_cidr_block", route.DestinationCidr)
 	d.Set("description", route.Description)
-	d.Set("target_vpc_subnet_id", route.TargetSubnet)
+	d.Set("destination_cidr_block", route.DestinationCidr)
 	d.Set("origin", route.Origin)
+	d.Set("target_vpc_subnet_id", route.TargetSubnet)
 	d.Set("type", route.Type)
 
 	return nil
@@ -128,47 +131,49 @@ func resourceClientVPNRouteRead(d *schema.ResourceData, meta interface{}) error 
 func resourceClientVPNRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	err := deleteClientVpnRoute(conn, &ec2.DeleteClientVpnRouteInput{
-		ClientVpnEndpointId:  aws.String(d.Get("client_vpn_endpoint_id").(string)),
-		DestinationCidrBlock: aws.String(d.Get("destination_cidr_block").(string)),
-		TargetVpcSubnetId:    aws.String(d.Get("target_vpc_subnet_id").(string)),
-	})
+	endpointID, targetSubnetID, destinationCIDR, err := ClientVPNRouteParseResourceID(d.Id())
+
 	if err != nil {
-		return fmt.Errorf("error deleting client VPN route %q: %w", d.Id(), err)
+		return err
+	}
+
+	log.Printf("[DEBUG] Deleting EC2 Client VPN Route: %s", d.Id())
+	_, err = conn.DeleteClientVpnRoute(&ec2.DeleteClientVpnRouteInput{
+		ClientVpnEndpointId:  aws.String(endpointID),
+		DestinationCidrBlock: aws.String(destinationCIDR),
+		TargetVpcSubnetId:    aws.String(targetSubnetID),
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidClientVpnEndpointIdNotFound, ErrCodeInvalidClientVpnRouteNotFound) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting EC2 Client VPN Route (%s): %w", d.Id(), err)
+	}
+
+	if _, err := WaitClientVPNRouteDeleted(conn, endpointID, targetSubnetID, destinationCIDR, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for EC2 Client VPN Route (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func deleteClientVpnRoute(conn *ec2.EC2, input *ec2.DeleteClientVpnRouteInput) error {
-	id := ClientVPNRouteCreateID(
-		aws.StringValue(input.ClientVpnEndpointId),
-		aws.StringValue(input.TargetVpcSubnetId),
-		aws.StringValue(input.DestinationCidrBlock),
-	)
+const clientVPNRouteIDSeparator = ","
 
-	_, err := conn.DeleteClientVpnRoute(input)
-	if tfawserr.ErrMessageContains(err, ErrCodeClientVPNRouteNotFound, "") {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
+func ClientVPNRouteCreateResourceID(endpointID, targetSubnetID, destinationCIDR string) string {
+	parts := []string{endpointID, targetSubnetID, destinationCIDR}
+	id := strings.Join(parts, clientVPNRouteIDSeparator)
 
-	_, err = WaitClientVPNRouteDeleted(conn, id)
-
-	return err
+	return id
 }
 
-func resourceClientVPNRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	endpointID, targetSubnetID, destinationCidr, err := ClientVPNRouteParseID(d.Id())
-	if err != nil {
-		return nil, err
+func ClientVPNRouteParseResourceID(id string) (string, string, string, error) {
+	parts := strings.Split(id, clientVPNRouteIDSeparator)
+
+	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
+		return parts[0], parts[1], parts[2], nil
 	}
 
-	d.Set("client_vpn_endpoint_id", endpointID)
-	d.Set("target_vpc_subnet_id", targetSubnetID)
-	d.Set("destination_cidr_block", destinationCidr)
-
-	return []*schema.ResourceData{d}, nil
+	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected EndpointID%[2]sTargetSubnetID%[2]sDestinationCIDRBlock", id, clientVPNRouteIDSeparator)
 }

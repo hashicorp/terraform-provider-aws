@@ -10,6 +10,14 @@ import (
 
 func TestAccEC2TransitGatewayDataSource_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
+		"Connect": {
+			"Filter": testAccTransitGatewayConnectDataSource_Filter,
+			"ID":     testAccTransitGatewayConnectDataSource_ID,
+		},
+		"ConnectPeer": {
+			"Filter": testAccTransitGatewayConnectPeerDataSource_Filter,
+			"ID":     testAccTransitGatewayConnectPeerDataSource_ID,
+		},
 		"DxGatewayAttachment": {
 			"Filter":                         testAccTransitGatewayDxGatewayAttachmentDataSource_filter,
 			"TransitGatewayIdAndDxGatewayId": testAccTransitGatewayDxGatewayAttachmentDataSource_TransitGatewayIdAndDxGatewayID,
@@ -17,6 +25,10 @@ func TestAccEC2TransitGatewayDataSource_serial(t *testing.T) {
 		"Gateway": {
 			"Filter": testAccTransitGatewayDataSource_Filter,
 			"ID":     testAccTransitGatewayDataSource_ID,
+		},
+		"MulticastDomain": {
+			"Filter": testAccTransitGatewayMulticastDomainDataSource_Filter,
+			"ID":     testAccTransitGatewayMulticastDomainDataSource_ID,
 		},
 		"PeeringAttachment": {
 			"FilterSameAccount":      testAccTransitGatewayPeeringAttachmentDataSource_Filter_sameAccount,
@@ -31,11 +43,16 @@ func TestAccEC2TransitGatewayDataSource_serial(t *testing.T) {
 		},
 		"RouteTables": {
 			"basic":  testAccTransitGatewayRouteTablesDataSource_basic,
-			"Filter": testAccTransitGatewayRouteTablesDataSource_Filter,
+			"Filter": testAccTransitGatewayRouteTablesDataSource_filter,
+			"Tags":   testAccTransitGatewayRouteTablesDataSource_tags,
+			"Empty":  testAccTransitGatewayRouteTablesDataSource_empty,
 		},
 		"VpcAttachment": {
 			"Filter": testAccTransitGatewayVPCAttachmentDataSource_Filter,
 			"ID":     testAccTransitGatewayVPCAttachmentDataSource_ID,
+		},
+		"VpcAttachments": {
+			"Filter": testAccTransitGatewayVPCAttachmentsDataSource_Filter,
 		},
 		"VpnAttachment": {
 			"Filter":                             testAccTransitGatewayVPNAttachmentDataSource_filter,
@@ -77,9 +94,11 @@ func testAccTransitGatewayDataSource_Filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "default_route_table_propagation", dataSourceName, "default_route_table_propagation"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_support", dataSourceName, "dns_support"),
+					resource.TestCheckResourceAttrPair(resourceName, "multicast_support", dataSourceName, "multicast_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "owner_id", dataSourceName, "owner_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "propagation_default_route_table_id", dataSourceName, "propagation_default_route_table_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_cidr_blocks.#", dataSourceName, "transit_gateway_cidr_blocks.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpn_ecmp_support", dataSourceName, "vpn_ecmp_support"),
 				),
 			},
@@ -111,6 +130,7 @@ func testAccTransitGatewayDataSource_ID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "owner_id", dataSourceName, "owner_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "propagation_default_route_table_id", dataSourceName, "propagation_default_route_table_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_cidr_blocks.#", dataSourceName, "transit_gateway_cidr_blocks.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpn_ecmp_support", dataSourceName, "vpn_ecmp_support"),
 				),
 			},

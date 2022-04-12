@@ -95,17 +95,25 @@ func DataSourceResponseHeadersPolicy() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"header": {
-							Type:     schema.TypeString,
+						"items": {
+							Type:     schema.TypeSet,
 							Computed: true,
-						},
-						"override": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"value": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"header": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"override": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
 						},
 					},
 				},

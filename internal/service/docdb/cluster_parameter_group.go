@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -143,7 +143,7 @@ func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{})
 
 	describeResp, err := conn.DescribeDBClusterParameterGroups(describeOpts)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBParameterGroupNotFoundFault) {
 			log.Printf("[WARN] DocDB Cluster Parameter Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -230,7 +230,7 @@ func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{
 				log.Printf("[DEBUG] Modify DocDB Cluster Parameter Group: %#v", modifyOpts)
 				_, err := conn.ModifyDBClusterParameterGroup(&modifyOpts)
 				if err != nil {
-					if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
+					if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBParameterGroupNotFoundFault) {
 						log.Printf("[WARN] DocDB Cluster Parameter Group (%s) not found, removing from state", d.Id())
 						d.SetId("")
 						return nil
@@ -261,7 +261,7 @@ func resourceClusterParameterGroupDelete(d *schema.ResourceData, meta interface{
 
 	_, err := conn.DeleteDBClusterParameterGroup(deleteOpts)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBParameterGroupNotFoundFault) {
 			return nil
 		}
 		return err
@@ -278,7 +278,7 @@ func WaitForClusterParameterGroupDeletion(conn *docdb.DocDB, name string) error 
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeDBClusterParameterGroups(params)
 
-		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBParameterGroupNotFoundFault) {
 			return nil
 		}
 
@@ -290,7 +290,7 @@ func WaitForClusterParameterGroupDeletion(conn *docdb.DocDB, name string) error 
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.DescribeDBClusterParameterGroups(params)
-		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBParameterGroupNotFoundFault) {
 			return nil
 		}
 	}

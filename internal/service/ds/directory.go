@@ -3,10 +3,12 @@ package ds
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -14,6 +16,10 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+)
+
+const (
+	directoryApplicationDeauthorizedPropagationTimeout = 2 * time.Minute
 )
 
 func ResourceDirectory() *schema.Resource {
@@ -463,7 +469,7 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("alias", dir.Alias)
 	d.Set("description", dir.Description)
 
-	if *dir.Type == directoryservice.DirectoryTypeAdconnector {
+	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
 		d.Set("dns_ip_addresses", flex.FlattenStringSet(dir.ConnectSettings.ConnectIps))
 	} else {
 		d.Set("dns_ip_addresses", flex.FlattenStringSet(dir.DnsIpAddrs))
@@ -517,10 +523,24 @@ func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 		DirectoryId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteDirectory(input)
+	log.Printf("[DEBUG] Deleting Directory Service Directory: (%s)", d.Id())
+	err := resource.Retry(directoryApplicationDeauthorizedPropagationTimeout, func() *resource.RetryError {
+		_, err := conn.DeleteDirectory(input)
 
-	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
+		if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
+			return nil
+		}
+		if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeClientException, "authorized applications") {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
 		return nil
+	})
+	if tfresource.TimedOut(err) {
+		_, err = conn.DeleteDirectory(input)
 	}
 
 	if err != nil {

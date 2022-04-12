@@ -3,16 +3,15 @@ package ec2_test
 import (
 	"fmt"
 	"testing"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccEC2SpotDatafeedSubscription_serial(t *testing.T) {
@@ -54,30 +53,6 @@ func testAccSpotDatafeedSubscription_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckSpotDatafeedSubscriptionDisappears(subscription *ec2.SpotDatafeedSubscription) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-		_, err := conn.DeleteSpotDatafeedSubscription(&ec2.DeleteSpotDatafeedSubscriptionInput{})
-		if err != nil {
-			return err
-		}
-
-		return resource.Retry(40*time.Minute, func() *resource.RetryError {
-			_, err := conn.DescribeSpotDatafeedSubscription(&ec2.DescribeSpotDatafeedSubscriptionInput{})
-			if err != nil {
-				cgw, ok := err.(awserr.Error)
-				if ok && cgw.Code() == "InvalidSpotDatafeed.NotFound" {
-					return nil
-				}
-				return resource.NonRetryableError(
-					fmt.Errorf("Error retrieving Spot Datafeed Subscription: %s", err))
-			}
-			return resource.RetryableError(fmt.Errorf("Waiting for Spot Datafeed Subscription"))
-		})
-	}
-}
-
 func testAccSpotDatafeedSubscription_disappears(t *testing.T) {
 	var subscription ec2.SpotDatafeedSubscription
 	resourceName := "aws_spot_datafeed_subscription.test"
@@ -93,7 +68,7 @@ func testAccSpotDatafeedSubscription_disappears(t *testing.T) {
 				Config: testAccSpotDatafeedSubscription(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpotDatafeedSubscriptionExists(resourceName, &subscription),
-					testAccCheckSpotDatafeedSubscriptionDisappears(&subscription),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSpotDataFeedSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -135,12 +110,12 @@ func testAccCheckSpotDatafeedSubscriptionDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeSpotDatafeedSubscription(&ec2.DescribeSpotDatafeedSubscriptionInput{})
 
-		if tfawserr.ErrCodeEquals(err, "InvalidSpotDatafeed.NotFound") {
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidSpotDatafeedNotFound) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("error descripting EC2 Spot Datafeed Subscription: %w", err)
+			return fmt.Errorf("error describing EC2 Spot Datafeed Subscription: %w", err)
 		}
 	}
 
@@ -158,7 +133,7 @@ func testAccPreCheckSpotDatafeedSubscription(t *testing.T) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
-	if tfawserr.ErrCodeEquals(err, "InvalidSpotDatafeed.NotFound") {
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidSpotDatafeedNotFound) {
 		return
 	}
 
@@ -173,21 +148,37 @@ data "aws_canonical_user_id" "current" {}
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
 
-  grant {
-    id          = data.aws_canonical_user_id.current.id
-    permissions = ["FULL_CONTROL"]
-    type        = "CanonicalUser"
-  }
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  access_control_policy {
+    grant {
+      grantee {
+        id   = data.aws_canonical_user_id.current.id
+        type = "CanonicalUser"
+      }
+      permission = "FULL_CONTROL"
+    }
 
-  grant {
-    id          = "c4c1ede66af53448b93c283ce9448c4ba468c9432aa01d700d3878632f77d2d0" # EC2 Account
-    permissions = ["FULL_CONTROL"]
-    type        = "CanonicalUser"
+    grant {
+      grantee {
+        id   = "c4c1ede66af53448b93c283ce9448c4ba468c9432aa01d700d3878632f77d2d0" # EC2 Account
+        type = "CanonicalUser"
+      }
+      permission = "FULL_CONTROL"
+    }
+
+    owner {
+      id = data.aws_canonical_user_id.current.id
+    }
   }
 }
 
 resource "aws_spot_datafeed_subscription" "test" {
+  # Must have bucket grants configured
+  depends_on = [aws_s3_bucket_acl.test]
+
   bucket = aws_s3_bucket.test.bucket
 }
 `, rName)

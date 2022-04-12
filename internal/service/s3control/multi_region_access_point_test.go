@@ -215,7 +215,7 @@ func TestAccS3ControlMultiRegionAccessPoint_threeRegions(t *testing.T) {
 }
 
 func testAccCheckMultiRegionAccessPointDestroy(s *terraform.State) error {
-	conn, err := tfs3control.S3ControlConn(acctest.Provider.Meta().(*conns.AWSClient))
+	conn, err := tfs3control.S3ControlConnForMRAP(acctest.Provider.Meta().(*conns.AWSClient))
 
 	if err != nil {
 		return err
@@ -265,7 +265,7 @@ func testAccCheckMultiRegionAccessPointExists(n string, v *s3control.MultiRegion
 			return err
 		}
 
-		conn, err := tfs3control.S3ControlConn(acctest.Provider.Meta().(*conns.AWSClient))
+		conn, err := tfs3control.S3ControlConnForMRAP(acctest.Provider.Meta().(*conns.AWSClient))
 
 		if err != nil {
 			return err

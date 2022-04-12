@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -31,49 +31,6 @@ func ResourceEventDestination() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_-]+$`), "must contain only alphanumeric, underscore, and hyphen characters"),
-				),
-			},
-
-			"configuration_set_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
-			},
-
-			"matching_types": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Set:      schema.HashString,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						ses.EventTypeSend,
-						ses.EventTypeReject,
-						ses.EventTypeBounce,
-						ses.EventTypeComplaint,
-						ses.EventTypeDelivery,
-						ses.EventTypeOpen,
-						ses.EventTypeClick,
-						ses.EventTypeRenderingFailure,
-					}, false),
-				},
-			},
-
 			"cloudwatch_destination": {
 				Type:          schema.TypeSet,
 				Optional:      true,
@@ -86,10 +43,9 @@ func ResourceEventDestination() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 256),
-								validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_-]+$`), "must contain only alphanumeric, underscore, and hyphen characters"),
+								validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_\-\.@]+$`), "must contain only alphanumeric, underscore, hyphen, period, and at signs characters"),
 							),
 						},
-
 						"dimension_name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -98,20 +54,25 @@ func ResourceEventDestination() *schema.Resource {
 								validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_:-]+$`), "must contain only alphanumeric, underscore, and hyphen characters"),
 							),
 						},
-
 						"value_source": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								ses.DimensionValueSourceMessageTag,
-								ses.DimensionValueSourceEmailHeader,
-								ses.DimensionValueSourceLinkTag,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(ses.DimensionValueSource_Values(), false),
 						},
 					},
 				},
 			},
-
+			"configuration_set_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
+			},
 			"kinesis_destination": {
 				Type:          schema.TypeList,
 				Optional:      true,
@@ -120,13 +81,12 @@ func ResourceEventDestination() *schema.Resource {
 				ConflictsWith: []string{"cloudwatch_destination", "sns_destination"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"stream_arn": {
+						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-
-						"role_arn": {
+						"stream_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -134,7 +94,25 @@ func ResourceEventDestination() *schema.Resource {
 					},
 				},
 			},
-
+			"matching_types": {
+				Type:     schema.TypeSet,
+				Required: true,
+				ForceNew: true,
+				Set:      schema.HashString,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(ses.EventType_Values(), false),
+				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_-]+$`), "must contain only alphanumeric, underscore, and hyphen characters"),
+				),
+			},
 			"sns_destination": {
 				Type:          schema.TypeList,
 				MaxItems:      1,
@@ -221,7 +199,7 @@ func resourceEventDestinationRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	output, err := conn.DescribeConfigurationSet(input)
-	if tfawserr.ErrMessageContains(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
+	if tfawserr.ErrCodeEquals(err, ses.ErrCodeConfigurationSetDoesNotExistException) {
 		log.Printf("[WARN] SES Configuration Set (%s) not found, removing from state", configurationSetName)
 		d.SetId("")
 		return nil

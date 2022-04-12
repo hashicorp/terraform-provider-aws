@@ -4,6 +4,7 @@
 - [Running an Acceptance Test](#running-an-acceptance-test)
     - [Running Cross-Account Tests](#running-cross-account-tests)
     - [Running Cross-Region Tests](#running-cross-region-tests)
+    - [Running Only Short Tests](#running-only-short-tests)
 - [Writing an Acceptance Test](#writing-an-acceptance-test)
     - [Anatomy of an Acceptance Test](#anatomy-of-an-acceptance-test)
     - [Resource Acceptance Testing](#resource-acceptance-testing)
@@ -20,11 +21,12 @@
         - [ErrorChecks](#errorchecks)
             - [Common ErrorCheck](#common-errorcheck)
             - [Service-Specific ErrorChecks](#service-specific-errorchecks)
+        - [Long-Running Test Guards](#long-running-test-guards)
         - [Disappears Acceptance Tests](#disappears-acceptance-tests)
         - [Per Attribute Acceptance Tests](#per-attribute-acceptance-tests)
         - [Cross-Account Acceptance Tests](#cross-account-acceptance-tests)
         - [Cross-Region Acceptance Tests](#cross-region-acceptance-tests)
-        - [Service-Specific Region Acceptance Tests](#service-specific-region-acceptance-tests)
+        - [Service-Specific Region Acceptance Tests](#service-specific-region-acceptance-testing)
         - [Acceptance Test Concurrency](#acceptance-test-concurrency)
     - [Data Source Acceptance Testing](#data-source-acceptance-testing)
 - [Acceptance Test Sweepers](#acceptance-test-sweepers)
@@ -94,7 +96,7 @@ Tests can then be run by specifying a regular expression defining the tests to
 run and the package in which the tests are defined:
 
 ```sh
-$ make testacc TESTARGS='-run=TestAccCloudWatchDashboard_updateName' PKG_NAME=internal/service/cloudwatch
+$ make testacc TESTS=TestAccCloudWatchDashboard_updateName PKG=cloudwatch
 ==> Checking that code complies with gofmt requirements...
 TF_ACC=1 go test ./internal/service/cloudwatch/... -v -count 1 -parallel 20 -run=TestAccCloudWatchDashboard_updateName -timeout 180m
 === RUN   TestAccCloudWatchDashboard_updateName
@@ -111,7 +113,7 @@ write the regular expression. For example, to run all tests of the
 can start testing like this:
 
 ```sh
-$ make testacc TESTARGS='-run=TestAccCloudWatchDashboard' PKG_NAME=internal/service/cloudwatch
+$ make testacc TESTS=TestAccCloudWatchDashboard PKG=cloudwatch
 ==> Checking that code complies with gofmt requirements...
 TF_ACC=1 go test ./internal/service/cloudwatch/... -v -count 1 -parallel 20 -run=TestAccCloudWatchDashboard -timeout 180m
 === RUN   TestAccCloudWatchDashboard_basic
@@ -141,7 +143,7 @@ Please Note: On macOS 10.14 and later (and some Linux distributions), the defaul
 Certain testing requires multiple AWS accounts. This additional setup is not typically required and the testing will return an error (shown below) if your current setup does not have the secondary AWS configuration:
 
 ```console
-$ make testacc TESTARGS='-run=TestAccRDSInstance_DBSubnetGroupName_ramShared' PKG_NAME=internal/service/rds
+$ make testacc TESTS=TestAccRDSInstance_DBSubnetGroupName_ramShared PKG=rds
 TF_ACC=1 go test ./internal/service/rds/... -v -count 1 -parallel 20 -run=TestAccRDSInstance_DBSubnetGroupName_ramShared -timeout 180m
 === RUN   TestAccRDSInstance_DBSubnetGroupName_ramShared
 === PAUSE TestAccRDSInstance_DBSubnetGroupName_ramShared
@@ -171,6 +173,26 @@ Running these acceptance tests is the same as before, but if you wish to overrid
 ```sh
 export AWS_ALTERNATE_REGION=...
 export AWS_THIRD_REGION=...
+```
+
+### Running Only Short Tests
+
+Some tests have been manually marked as long-running (longer than 300 seconds) and can be skipped using the `-short` flag. However, we are adding long-running guards little by little and many services have no guarded tests.
+
+Where guards have been implemented, do not always skip long-running tests. However, for intermediate test runs during development, or to verify functionality unrelated to the specific long-running tests, skipping long-running tests makes work more efficient. We recommend that for the final test run before submitting a PR that you run affected tests without the `-short` flag.
+
+If you want to run only short-running tests, you can use either one of these equivalent statements. Note the use of `-short`.
+
+For example:
+
+```console
+% make testacc TESTS='TestAccECSTaskDefinition_' PKG=ecs TESTARGS=-short
+```
+
+Or:
+
+```console
+% TF_ACC=1 go test ./internal/service/ecs/... -v -count 1 -parallel 20 -run='TestAccECSTaskDefinition_' -short -timeout 180m
 ```
 
 ## Writing an Acceptance Test
@@ -446,6 +468,22 @@ resource "aws_example_thing" "test" {
 
 Typically the `rName` is always the first argument to the test configuration function, if used, for consistency.
 
+Note that if `rName` (or any other variable) is used multiple times in the `fmt.Sprintf()` statement, _do not_ repeat `rName` in the `fmt.Sprintf()` arguments. Using `fmt.Sprintf(..., rName, rName)`, for example, would not be correct. Instead, use the indexed `%[1]q` (or `%[x]q`, `%[x]s`, `%[x]t`, or `%[x]d`, where `x` represents the index number) verb multiple times. For example:
+
+```go
+func testAccExampleThingConfigName(rName string) string {
+  return fmt.Sprintf(`
+resource "aws_example_thing" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+```
+
 #### Other Recommended Variables
 
 We also typically recommend saving a `resourceName` variable in the test that contains the resource reference, e.g., `aws_example_thing.test`, which is repeatedly used in the checks.
@@ -664,6 +702,28 @@ func testAccErrorCheckSkipService(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 ```
+
+#### Long-Running Test Guards
+
+For any acceptance tests that typically run longer than 300 seconds (5 minutes), add a `-short` test guard at the top of the test function.
+
+For example:
+
+```go
+func TestAccExampleThing_longRunningTest(t *testing.T) {
+  if testing.Short() {
+    t.Skip("skipping long-running test in short mode")
+  }
+
+  // ... omitted for brevity ...
+
+  resource.ParallelTest(t, resource.TestCase{
+    // ... omitted for brevity ...
+  })
+}
+```
+
+When running acceptances tests, tests with these guards can be skipped using the Go `-short` flag. See [Running Only Short Tests](#running-only-short-tests) for examples.
 
 #### Disappears Acceptance Tests
 
@@ -1162,7 +1222,7 @@ The first step is to initialize the resource into the test sweeper framework:
 func init() {
   resource.AddTestSweepers("aws_example_thing", &resource.Sweeper{
     Name: "aws_example_thing",
-    F:    testSweepExampleThings,
+    F:    sweepThings,
     // Optionally
     Dependencies: []string{
       "aws_other_thing",
@@ -1174,15 +1234,15 @@ func init() {
 Then add the actual implementation. Preferably, if a paginated SDK call is available:
 
 ```go
-func testSweepExampleThings(region string) error {
-  client, err := acctest.SharedRegionalSweeperClient(region)
+func sweepThings(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
 
   if err != nil {
     return fmt.Errorf("error getting client: %w", err)
   }
 
   conn := client.(*conns.AWSClient).ExampleConn
-  sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*sweep.SweepResource, 0)
   var errs *multierror.Error
 
   input := &example.ListThingsInput{}
@@ -1214,7 +1274,7 @@ func testSweepExampleThings(region string) error {
         continue
       }
 
-      sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
     }
 
     return !lastPage
@@ -1224,11 +1284,11 @@ func testSweepExampleThings(region string) error {
     errs = multierror.Append(errs, fmt.Errorf("error listing Example Thing for %s: %w", region, err))
   }
 
-  if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
     errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
   }
 
-  if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if sweep.SkipSweepError(err) {
     log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
     return nil
   }
@@ -1240,15 +1300,15 @@ func testSweepExampleThings(region string) error {
 Otherwise, if no paginated SDK call is available:
 
 ```go
-func testSweepExampleThings(region string) error {
-  client, err := acctest.SharedRegionalSweeperClient(region)
+func sweepThings(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
 
   if err != nil {
     return fmt.Errorf("error getting client: %w", err)
   }
 
   conn := client.(*conns.AWSClient).ExampleConn
-  sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*sweep.SweepResource, 0)
   var errs *multierror.Error
 
   input := &example.ListThingsInput{}
@@ -1278,7 +1338,7 @@ func testSweepExampleThings(region string) error {
         continue
       }
 
-      sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
     }
 
     if aws.StringValue(output.NextToken) == "" {
@@ -1288,11 +1348,11 @@ func testSweepExampleThings(region string) error {
     input.NextToken = output.NextToken
   }
 
-  if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
     errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
   }
 
-  if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if sweep.SkipSweepError(err) {
     log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
     return nil
   }

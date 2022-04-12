@@ -23,13 +23,13 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(lambda.EndpointsID, testAccErrorCheckSkipLambda)
-
+	acctest.RegisterServiceErrorCheckFunc(lambda.EndpointsID, testAccErrorCheckSkip)
 }
 
-func testAccErrorCheckSkipLambda(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"InvalidParameterValueException: Unsupported source arn",
+		"InvalidParameterValueException: CompatibleArchitectures are not",
 	)
 }
 
@@ -47,20 +47,23 @@ func TestAccLambdaFunction_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
+					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureX8664),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.0.size", "512"),
+					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, tflambda.FunctionVersionLatest)),
 					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "version", tflambda.FunctionVersionLatest),
-					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
-					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureX8664),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, tflambda.FunctionVersionLatest)),
 				),
 			},
 			{
@@ -74,6 +77,10 @@ func TestAccLambdaFunction_basic(t *testing.T) {
 }
 
 func TestAccLambdaFunction_unpublishedCodeUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf1, conf2 lambda.GetFunctionOutput
 
 	initialFilename := "test-fixtures/lambdatest.zip"
@@ -96,7 +103,7 @@ func TestAccLambdaFunction_unpublishedCodeUpdate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFilenameConfig(initialFilename, funcName, policyName, roleName, sgName),
@@ -143,7 +150,7 @@ func TestAccLambdaFunction_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasicConfig(rName, rName, rName, rName),
@@ -164,8 +171,10 @@ func TestAccLambdaFunction_codeSigning(t *testing.T) {
 
 	// We are hardcoding the region here, because go aws sdk endpoints
 	// package does not support Signer service
-	if got, want := acctest.Region(), endpoints.ApNortheast3RegionID; got == want {
-		t.Skipf("Lambda code signing config is not supported in %s region", got)
+	for _, want := range []string{endpoints.ApNortheast3RegionID, endpoints.ApSoutheast3RegionID} {
+		if got := acctest.Region(); got == want {
+			t.Skipf("Lambda code signing config is not supported in %s region", got)
+		}
 	}
 
 	var conf lambda.GetFunctionOutput
@@ -177,10 +186,10 @@ func TestAccLambdaFunction_codeSigning(t *testing.T) {
 	cscUpdateResourceName := "aws_lambda_code_signing_config.code_signing_config_2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSignerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCSCCreateConfig(roleName, funcName),
@@ -226,6 +235,10 @@ func TestAccLambdaFunction_codeSigning(t *testing.T) {
 }
 
 func TestAccLambdaFunction_concurrency(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -239,7 +252,7 @@ func TestAccLambdaFunction_concurrency(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasicConcurrencyConfig(funcName, policyName, roleName, sgName),
@@ -270,6 +283,10 @@ func TestAccLambdaFunction_concurrency(t *testing.T) {
 }
 
 func TestAccLambdaFunction_concurrencyCycle(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -283,7 +300,7 @@ func TestAccLambdaFunction_concurrencyCycle(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
@@ -333,7 +350,7 @@ func TestAccLambdaFunction_expectFilenameAndS3Attributes(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccWithoutFilenameAndS3AttributesConfig(funcName, policyName, roleName, sgName),
@@ -344,6 +361,10 @@ func TestAccLambdaFunction_expectFilenameAndS3Attributes(t *testing.T) {
 }
 
 func TestAccLambdaFunction_envVariables(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -357,7 +378,7 @@ func TestAccLambdaFunction_envVariables(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
@@ -407,6 +428,10 @@ func TestAccLambdaFunction_envVariables(t *testing.T) {
 }
 
 func TestAccLambdaFunction_EnvironmentVariables_noValue(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
@@ -415,7 +440,7 @@ func TestAccLambdaFunction_EnvironmentVariables_noValue(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentVariablesNoValueConfig(rName),
@@ -435,6 +460,10 @@ func TestAccLambdaFunction_EnvironmentVariables_noValue(t *testing.T) {
 }
 
 func TestAccLambdaFunction_encryptedEnvVariables(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -449,7 +478,7 @@ func TestAccLambdaFunction_encryptedEnvVariables(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEncryptedEnvVariablesConfig(keyDesc, funcName, policyName, roleName, sgName),
@@ -482,6 +511,10 @@ func TestAccLambdaFunction_encryptedEnvVariables(t *testing.T) {
 }
 
 func TestAccLambdaFunction_versioned(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -497,7 +530,7 @@ func TestAccLambdaFunction_versioned(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublishableConfig("test-fixtures/lambdatest.zip", funcName, policyName, roleName, sgName, true),
@@ -520,6 +553,10 @@ func TestAccLambdaFunction_versioned(t *testing.T) {
 }
 
 func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	path, zipFile, err := createTempFile("lambda_localUpdate")
@@ -544,7 +581,7 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublishableConfig("test-fixtures/lambdatest.zip", funcName, policyName, roleName, sgName, true),
@@ -578,14 +615,14 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 				PreConfig: func() {
 					timeBeforeUpdate = time.Now()
 				},
-				Config: testAccVersionedNodeJs10xRuntimeConfig(path, funcName, policyName, roleName, sgName),
+				Config: testAccVersionedNodeJs14xRuntimeConfig(path, funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "version", versionUpdated),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, versionUpdated)),
-					resource.TestCheckResourceAttr(resourceName, "runtime", lambda.RuntimeNodejs10X),
+					resource.TestCheckResourceAttr(resourceName, "runtime", lambda.RuntimeNodejs14X),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
 					},
@@ -602,6 +639,10 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 }
 
 func TestAccLambdaFunction_enablePublish(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf1, conf2, conf3 lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -619,7 +660,7 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublishableConfig(fileName, funcName, policyName, roleName, sgName, false),
@@ -666,6 +707,10 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 }
 
 func TestAccLambdaFunction_disablePublish(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf1, conf2 lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -683,7 +728,7 @@ func TestAccLambdaFunction_disablePublish(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublishableConfig(fileName, funcName, policyName, roleName, sgName, true),
@@ -719,6 +764,10 @@ func TestAccLambdaFunction_disablePublish(t *testing.T) {
 }
 
 func TestAccLambdaFunction_deadLetter(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -733,7 +782,7 @@ func TestAccLambdaFunction_deadLetter(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithDeadLetterConfig(funcName, topicName, policyName, roleName, sgName),
@@ -770,6 +819,10 @@ func TestAccLambdaFunction_deadLetter(t *testing.T) {
 }
 
 func TestAccLambdaFunction_deadLetterUpdated(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -785,7 +838,7 @@ func TestAccLambdaFunction_deadLetterUpdated(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithDeadLetterConfig(funcName, topic1Name, policyName, roleName, sgName),
@@ -815,6 +868,10 @@ func TestAccLambdaFunction_deadLetterUpdated(t *testing.T) {
 }
 
 func TestAccLambdaFunction_nilDeadLetter(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rString := sdkacctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_nil_dlcfg_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_nil_dlcfg_%s", rString)
@@ -825,7 +882,7 @@ func TestAccLambdaFunction_nilDeadLetter(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithNilDeadLetterConfig(funcName, policyName, roleName, sgName),
@@ -837,6 +894,10 @@ func TestAccLambdaFunction_nilDeadLetter(t *testing.T) {
 }
 
 func TestAccLambdaFunction_fileSystem(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 	resourceName := "aws_lambda_function.test"
 
@@ -850,7 +911,7 @@ func TestAccLambdaFunction_fileSystem(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			// Ensure a function with lambda file system configuration can be created
 			{
@@ -919,7 +980,7 @@ func TestAccLambdaFunction_image(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			// Ensure a function with lambda image configuration can be created
 			{
@@ -965,6 +1026,10 @@ func TestAccLambdaFunction_image(t *testing.T) {
 }
 
 func TestAccLambdaFunction_architectures(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 	resourceName := "aws_lambda_function.test"
 
@@ -978,7 +1043,7 @@ func TestAccLambdaFunction_architectures(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			// Ensure function with arm64 architecture can be created
 			{
@@ -1018,6 +1083,10 @@ func TestAccLambdaFunction_architectures(t *testing.T) {
 }
 
 func TestAccLambdaFunction_architecturesUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 	resourceName := "aws_lambda_function.test"
 
@@ -1031,7 +1100,7 @@ func TestAccLambdaFunction_architecturesUpdate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			// Ensure function with arm64 architecture can be created
 			{
@@ -1071,6 +1140,10 @@ func TestAccLambdaFunction_architecturesUpdate(t *testing.T) {
 }
 
 func TestAccLambdaFunction_architecturesWithLayer(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 	resourceName := "aws_lambda_function.test"
 
@@ -1085,7 +1158,7 @@ func TestAccLambdaFunction_architecturesWithLayer(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			// Ensure function with arm64 architecture can be created
 			{
@@ -1124,7 +1197,56 @@ func TestAccLambdaFunction_architecturesWithLayer(t *testing.T) {
 	})
 }
 
+func TestAccLambdaFunction_ephemeralStorage(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+	rString := sdkacctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_ephemeral_storage_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_ephemeral_storage_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_ephemeral_storage_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_ephemeral_storage_%s", rString)
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckFunctionDestroy,
+
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWithEphemeralStorage(funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.0.size", "1024"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+			{
+				Config: testAccWithUpdateEphemeralStorage(funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.0.size", "2048"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLambdaFunction_tracing(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	if got, want := acctest.Partition(), endpoints.AwsUsGovPartitionID; got == want {
 		t.Skipf("Lambda tracing config is not supported in %s partition", got)
 	}
@@ -1141,7 +1263,7 @@ func TestAccLambdaFunction_tracing(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithTracingConfig(funcName, policyName, roleName, sgName),
@@ -1176,6 +1298,10 @@ func TestAccLambdaFunction_tracing(t *testing.T) {
 // value and the kms_key_arn check begins failing, the documentation should be updated.
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6366
 func TestAccLambdaFunction_KMSKeyARN_noEnvironmentVariables(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var function1 lambda.GetFunctionOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1185,7 +1311,7 @@ func TestAccLambdaFunction_KMSKeyARN_noEnvironmentVariables(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKMSKeyARNNoEnvironmentVariablesConfig(rName),
@@ -1206,6 +1332,10 @@ func TestAccLambdaFunction_KMSKeyARN_noEnvironmentVariables(t *testing.T) {
 }
 
 func TestAccLambdaFunction_layers(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1220,7 +1350,7 @@ func TestAccLambdaFunction_layers(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithLayersConfig(funcName, layerName, policyName, roleName, sgName),
@@ -1243,6 +1373,10 @@ func TestAccLambdaFunction_layers(t *testing.T) {
 }
 
 func TestAccLambdaFunction_layersUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1258,7 +1392,7 @@ func TestAccLambdaFunction_layersUpdate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithLayersConfig(funcName, layerName, policyName, roleName, sgName),
@@ -1291,6 +1425,10 @@ func TestAccLambdaFunction_layersUpdate(t *testing.T) {
 }
 
 func TestAccLambdaFunction_vpc(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1304,7 +1442,7 @@ func TestAccLambdaFunction_vpc(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithVPCConfig(funcName, policyName, roleName, sgName),
@@ -1330,6 +1468,10 @@ func TestAccLambdaFunction_vpc(t *testing.T) {
 }
 
 func TestAccLambdaFunction_vpcRemoval(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1339,7 +1481,7 @@ func TestAccLambdaFunction_vpcRemoval(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithVPCConfig(rName, rName, rName, rName),
@@ -1366,6 +1508,10 @@ func TestAccLambdaFunction_vpcRemoval(t *testing.T) {
 }
 
 func TestAccLambdaFunction_vpcUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1380,7 +1526,7 @@ func TestAccLambdaFunction_vpcUpdate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithVPCConfig(funcName, policyName, roleName, sgName),
@@ -1419,6 +1565,10 @@ func TestAccLambdaFunction_vpcUpdate(t *testing.T) {
 // See https://github.com/hashicorp/terraform/issues/5767
 // and https://github.com/hashicorp/terraform/issues/10272
 func TestAccLambdaFunction_VPC_withInvocation(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1432,7 +1582,7 @@ func TestAccLambdaFunction_VPC_withInvocation(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithVPCConfig(funcName, policyName, roleName, sgName),
@@ -1454,6 +1604,10 @@ func TestAccLambdaFunction_VPC_withInvocation(t *testing.T) {
 // See https://github.com/hashicorp/terraform-provider-aws/issues/17385
 // When the vpc config doesn't change the version shouldn't change
 func TestAccLambdaFunction_VPCPublishNo_changes(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1466,7 +1620,7 @@ func TestAccLambdaFunction_VPCPublishNo_changes(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithVPCPublishConfig(funcName, policyName, roleName, sgName),
@@ -1495,6 +1649,10 @@ func TestAccLambdaFunction_VPCPublishNo_changes(t *testing.T) {
 // See https://github.com/hashicorp/terraform-provider-aws/issues/17385
 // When the vpc config changes the version should change
 func TestAccLambdaFunction_VPCPublishHas_changes(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1508,7 +1666,7 @@ func TestAccLambdaFunction_VPCPublishHas_changes(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 
 		Steps: []resource.TestStep{
 			{
@@ -1537,6 +1695,10 @@ func TestAccLambdaFunction_VPCPublishHas_changes(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10044
 func TestAccLambdaFunction_VPC_properIAMDependencies(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var function lambda.GetFunctionOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1547,7 +1709,7 @@ func TestAccLambdaFunction_VPC_properIAMDependencies(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCProperIAMDependenciesConfig(rName),
@@ -1577,7 +1739,7 @@ func TestAccLambdaFunction_emptyVPC(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWithEmptyVPCConfig(funcName, policyName, roleName, sgName),
@@ -1609,7 +1771,7 @@ func TestAccLambdaFunction_s3(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3Config(bucketName, roleName, funcName),
@@ -1631,6 +1793,10 @@ func TestAccLambdaFunction_s3(t *testing.T) {
 }
 
 func TestAccLambdaFunction_localUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	path, zipFile, err := createTempFile("lambda_localUpdate")
@@ -1650,7 +1816,7 @@ func TestAccLambdaFunction_localUpdate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
@@ -1695,6 +1861,10 @@ func TestAccLambdaFunction_localUpdate(t *testing.T) {
 }
 
 func TestAccLambdaFunction_LocalUpdate_nameOnly(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf lambda.GetFunctionOutput
 
 	rString := sdkacctest.RandString(8)
@@ -1718,7 +1888,7 @@ func TestAccLambdaFunction_LocalUpdate_nameOnly(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
@@ -1779,7 +1949,7 @@ func TestAccLambdaFunction_S3Update_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
@@ -1842,7 +2012,7 @@ func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
@@ -1898,7 +2068,7 @@ func TestAccLambdaFunction_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
@@ -1943,6 +2113,10 @@ func TestAccLambdaFunction_tags(t *testing.T) {
 }
 
 func TestAccLambdaFunction_runtimes(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v lambda.GetFunctionOutput
 	resourceName := "aws_lambda_function.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1962,6 +2136,8 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 		case lambda.RuntimeDotnetcore20:
 			fallthrough
 		case lambda.RuntimeDotnetcore10:
+			fallthrough
+		case lambda.RuntimeNodejs10X:
 			fallthrough
 		case lambda.RuntimeNodejs810:
 			fallthrough
@@ -1992,7 +2168,7 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps:        steps,
 	})
 }
@@ -2008,7 +2184,7 @@ func TestAccLambdaFunction_Zip_validation(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		CheckDestroy: testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccZipWithoutHandlerConfig(funcName, policyName, roleName, sgName),
@@ -2022,7 +2198,7 @@ func TestAccLambdaFunction_Zip_validation(t *testing.T) {
 	})
 }
 
-func testAccCheckLambdaFunctionDestroy(s *terraform.State) error {
+func testAccCheckFunctionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -2764,7 +2940,7 @@ resource "aws_lambda_function" "test" {
 `, layerName, funcName)
 }
 
-func testAccVersionedNodeJs10xRuntimeConfig(fileName, funcName, policyName, roleName, sgName string) string {
+func testAccVersionedNodeJs14xRuntimeConfig(fileName, funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "%s"
@@ -2772,7 +2948,7 @@ resource "aws_lambda_function" "test" {
   publish       = true
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs10.x"
+  runtime       = "nodejs14.x"
 }
 `, fileName, funcName)
 }
@@ -3141,7 +3317,7 @@ resource "aws_s3_bucket" "lambda_bucket" {
   bucket = "%s"
 }
 
-resource "aws_s3_bucket_object" "lambda_code" {
+resource "aws_s3_object" "lambda_code" {
   bucket = aws_s3_bucket.lambda_bucket.id
   key    = "lambdatest.zip"
   source = "test-fixtures/lambdatest.zip"
@@ -3169,7 +3345,7 @@ EOF
 
 resource "aws_lambda_function" "test" {
   s3_bucket     = aws_s3_bucket.lambda_bucket.id
-  s3_key        = aws_s3_bucket_object.lambda_code.id
+  s3_key        = aws_s3_object.lambda_code.id
   function_name = "%s"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
@@ -3286,15 +3462,25 @@ func testAccFunctionConfig_s3(bucketName, key, path, roleName, funcName string) 
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "artifacts" {
   bucket        = "%s"
-  acl           = "private"
   force_destroy = true
+}
 
-  versioning {
-    enabled = true
+resource "aws_s3_bucket_acl" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_versioning" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
-resource "aws_s3_bucket_object" "o" {
+resource "aws_s3_object" "o" {
+  # Must have versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.artifacts]
+
   bucket = aws_s3_bucket.artifacts.bucket
   key    = "%s"
   source = "%s"
@@ -3322,9 +3508,9 @@ EOF
 }
 
 resource "aws_lambda_function" "test" {
-  s3_bucket         = aws_s3_bucket_object.o.bucket
-  s3_key            = aws_s3_bucket_object.o.key
-  s3_object_version = aws_s3_bucket_object.o.version_id
+  s3_bucket         = aws_s3_object.o.bucket
+  s3_key            = aws_s3_object.o.key
+  s3_object_version = aws_s3_object.o.version_id
   function_name     = "%s"
   role              = aws_iam_role.iam_for_lambda.arn
   handler           = "exports.example"
@@ -3337,11 +3523,15 @@ func testAccFunctionConfig_s3_unversioned_tpl(bucketName, roleName, funcName, ke
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "artifacts" {
   bucket        = "%s"
-  acl           = "private"
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "o" {
+resource "aws_s3_bucket_acl" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+  acl    = "private"
+}
+
+resource "aws_s3_object" "o" {
   bucket = aws_s3_bucket.artifacts.bucket
   key    = "%s"
   source = "%s"
@@ -3369,8 +3559,8 @@ EOF
 }
 
 resource "aws_lambda_function" "test" {
-  s3_bucket     = aws_s3_bucket_object.o.bucket
-  s3_key        = aws_s3_bucket_object.o.key
+  s3_bucket     = aws_s3_object.o.bucket
+  s3_key        = aws_s3_object.o.key
   function_name = "%s"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
@@ -3413,18 +3603,35 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func TestFlattenLambdaImageConfigShouldNotFailWithEmptyImageConfig(t *testing.T) {
+func TestFlattenImageConfigShouldNotFailWithEmptyImageConfig(t *testing.T) {
 	t.Parallel()
 	response := lambda.ImageConfigResponse{}
 	tflambda.FlattenImageConfig(&response)
 }
 
-func testAccPreCheckSingerSigningProfile(t *testing.T, platformID string) {
+func testAccPreCheckSignerSigningProfile(t *testing.T, platformID string) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn
 
-	input := &signer.ListSigningPlatformsInput{}
+	var foundPlatform bool
+	err := conn.ListSigningPlatformsPages(&signer.ListSigningPlatformsInput{}, func(page *signer.ListSigningPlatformsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
 
-	output, err := conn.ListSigningPlatforms(input)
+		for _, platform := range page.Platforms {
+			if platform == nil {
+				continue
+			}
+
+			if aws.StringValue(platform.PlatformId) == platformID {
+				foundPlatform = true
+
+				return false
+			}
+		}
+
+		return !lastPage
+	})
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -3434,19 +3641,39 @@ func testAccPreCheckSingerSigningProfile(t *testing.T, platformID string) {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 
-	if output == nil {
-		t.Skip("skipping acceptance testing: empty response")
+	if !foundPlatform {
+		t.Skipf("skipping acceptance testing: Signing Platform (%s) not found", platformID)
 	}
+}
 
-	for _, platform := range output.Platforms {
-		if platform == nil {
-			continue
-		}
+func testAccWithEphemeralStorage(funcName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
 
-		if aws.StringValue(platform.PlatformId) == platformID {
-			return
-		}
-	}
+  ephemeral_storage {
+    size = 1024
+  }
+}
+`, funcName)
+}
 
-	t.Skipf("skipping acceptance testing: Signing Platform (%s) not found", platformID)
+func testAccWithUpdateEphemeralStorage(funcName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+
+  ephemeral_storage {
+    size = 2048
+  }
+}
+`, funcName)
 }

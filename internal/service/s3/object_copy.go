@@ -1,6 +1,7 @@
 package s3
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,10 +11,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -267,7 +269,7 @@ func ResourceObjectCopy() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice(s3.StorageClass_Values(), false),
+				ValidateFunc: validation.StringInSlice(s3.ObjectStorageClass_Values(), false),
 			},
 			"tagging_directive": {
 				Type:         schema.TypeString,
@@ -323,7 +325,7 @@ func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading S3 Object (%s): empty response", d.Id())
 	}
 
-	log.Printf("[DEBUG] Reading S3 Bucket Object meta: %s", resp)
+	log.Printf("[DEBUG] Reading S3 Object meta: %s", resp)
 
 	d.Set("bucket_key_enabled", resp.BucketKeyEnabled)
 	d.Set("cache_control", resp.CacheControl)
@@ -331,7 +333,7 @@ func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("content_encoding", resp.ContentEncoding)
 	d.Set("content_language", resp.ContentLanguage)
 	d.Set("content_type", resp.ContentType)
-	metadata := verify.PointersMapToStringList(resp.Metadata)
+	metadata := flex.PointersMapToStringList(resp.Metadata)
 
 	// AWS Go SDK capitalizes metadata, this is a workaround. https://github.com/aws/aws-sdk-go/issues/445
 	for k, v := range metadata {
@@ -349,8 +351,8 @@ func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("object_lock_mode", resp.ObjectLockMode)
 	d.Set("object_lock_retain_until_date", flattenS3ObjectDate(resp.ObjectLockRetainUntilDate))
 
-	if err := resourceBucketObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
-		return fmt.Errorf("bucket object KMS: %w", err)
+	if err := resourceObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
+		return fmt.Errorf("object KMS: %w", err)
 	}
 
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
@@ -358,7 +360,7 @@ func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
 
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
-	d.Set("storage_class", s3.StorageClassStandard)
+	d.Set("storage_class", s3.ObjectStorageClassStandard)
 	if resp.StorageClass != nil {
 		d.Set("storage_class", resp.StorageClass)
 	}
@@ -460,7 +462,7 @@ func resourceObjectCopyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		err = DeleteAllObjectVersions(conn, bucket, key, d.Get("force_destroy").(bool), false)
+		_, err = DeleteAllObjectVersions(conn, bucket, key, d.Get("force_destroy").(bool), false)
 	} else {
 		err = deleteS3ObjectVersion(conn, bucket, key, "", false)
 	}
@@ -647,7 +649,7 @@ func resourceObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) error {
 	d.Set("version_id", output.VersionId)
 
 	d.SetId(d.Get("key").(string))
-	return resourceBucketObjectRead(d, meta)
+	return resourceObjectRead(d, meta)
 }
 
 type s3Grants struct {
@@ -748,4 +750,27 @@ func expandS3Grants(tfList []interface{}) *s3Grants {
 	}
 
 	return apiObjects
+}
+
+func grantHash(v interface{}) int {
+	var buf bytes.Buffer
+	m, ok := v.(map[string]interface{})
+
+	if !ok {
+		return 0
+	}
+
+	if v, ok := m["id"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["type"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["uri"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if p, ok := m["permissions"]; ok {
+		buf.WriteString(fmt.Sprintf("%v-", p.(*schema.Set).List()))
+	}
+	return create.StringHashcode(buf.String())
 }

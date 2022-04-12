@@ -203,7 +203,7 @@ func dataSourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("owner_id", ownerID)
 	d.Set("private_dns_name", eni.PrivateDnsName)
 	d.Set("private_ip", eni.PrivateIpAddress)
-	d.Set("private_ips", flattenNetworkInterfacePrivateIpAddresses(eni.PrivateIpAddresses))
+	d.Set("private_ips", FlattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses))
 	d.Set("requester_id", eni.RequesterId)
 	d.Set("subnet_id", eni.SubnetId)
 	d.Set("vpc_id", eni.VpcId)

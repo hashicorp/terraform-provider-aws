@@ -1,11 +1,12 @@
 package iam
 
 import (
+	"context"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -170,4 +171,138 @@ func FindRoleByName(conn *iam.IAM, name string) (*iam.Role, error) {
 	}
 
 	return output.Role, nil
+}
+
+func FindVirtualMFADevice(conn *iam.IAM, serialNum string) (*iam.VirtualMFADevice, error) {
+	input := &iam.ListVirtualMFADevicesInput{}
+
+	output, err := conn.ListVirtualMFADevices(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output.VirtualMFADevices) == 0 || output.VirtualMFADevices[0] == nil {
+		return nil, tfresource.NewEmptyResultError(output)
+	}
+
+	var device *iam.VirtualMFADevice
+
+	for _, dvs := range output.VirtualMFADevices {
+		if aws.StringValue(dvs.SerialNumber) == serialNum {
+			device = dvs
+			break
+		}
+	}
+
+	if device == nil {
+		return nil, tfresource.NewEmptyResultError(device)
+	}
+
+	return device, nil
+}
+
+func FindServiceSpecificCredential(conn *iam.IAM, serviceName, userName, credID string) (*iam.ServiceSpecificCredentialMetadata, error) {
+	input := &iam.ListServiceSpecificCredentialsInput{
+		ServiceName: aws.String(serviceName),
+		UserName:    aws.String(userName),
+	}
+
+	output, err := conn.ListServiceSpecificCredentials(input)
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output.ServiceSpecificCredentials) == 0 || output.ServiceSpecificCredentials[0] == nil {
+		return nil, tfresource.NewEmptyResultError(output)
+	}
+
+	var cred *iam.ServiceSpecificCredentialMetadata
+
+	for _, crd := range output.ServiceSpecificCredentials {
+		if aws.StringValue(crd.ServiceName) == serviceName &&
+			aws.StringValue(crd.UserName) == userName &&
+			aws.StringValue(crd.ServiceSpecificCredentialId) == credID {
+			cred = crd
+			break
+		}
+	}
+
+	if cred == nil {
+		return nil, tfresource.NewEmptyResultError(cred)
+	}
+
+	return cred, nil
+}
+
+func FindSigningCertificate(conn *iam.IAM, userName, certId string) (*iam.SigningCertificate, error) {
+	input := &iam.ListSigningCertificatesInput{
+		UserName: aws.String(userName),
+	}
+
+	output, err := conn.ListSigningCertificates(input)
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output.Certificates) == 0 || output.Certificates[0] == nil {
+		return nil, tfresource.NewEmptyResultError(output)
+	}
+
+	var cert *iam.SigningCertificate
+
+	for _, crt := range output.Certificates {
+		if aws.StringValue(crt.UserName) == userName &&
+			aws.StringValue(crt.CertificateId) == certId {
+			cert = crt
+			break
+		}
+	}
+
+	if cert == nil {
+		return nil, tfresource.NewEmptyResultError(cert)
+	}
+
+	return cert, nil
+}
+
+func FindSAMLProviderByARN(ctx context.Context, conn *iam.IAM, arn string) (*iam.GetSAMLProviderOutput, error) {
+	input := &iam.GetSAMLProviderInput{
+		SAMLProviderArn: aws.String(arn),
+	}
+
+	output, err := conn.GetSAMLProviderWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

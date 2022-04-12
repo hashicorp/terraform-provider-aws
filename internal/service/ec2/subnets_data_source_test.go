@@ -26,7 +26,7 @@ func TestAccEC2SubnetsDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_subnets.selected", "ids.#", "4"),
 					resource.TestCheckResourceAttr("data.aws_subnets.private", "ids.#", "2"),
-					testCheckResourceAttrGreaterThanValue("data.aws_subnets.all", "ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue("data.aws_subnets.all", "ids.#", "0"),
 					resource.TestCheckResourceAttr("data.aws_subnets.none", "ids.#", "0"),
 				),
 			},
@@ -68,7 +68,7 @@ resource "aws_subnet" "test_public_a" {
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
-    Name = "%[1]s-public-a"
+    Name = %[1]q
     Tier = "Public"
   }
 }
@@ -79,7 +79,7 @@ resource "aws_subnet" "test_public_b" {
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
-    Name = "%[1]s-public-b"
+    Name = %[1]q
     Tier = "Public"
   }
 }
@@ -90,7 +90,7 @@ resource "aws_subnet" "test_private_a" {
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
-    Name = "%[1]s-private-a"
+    Name = %[1]q
     Tier = "Private"
   }
 }
@@ -101,7 +101,7 @@ resource "aws_subnet" "test_private_b" {
   availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
-    Name = "%[1]s-private-b"
+    Name = %[1]q
     Tier = "Private"
   }
 }
@@ -160,7 +160,7 @@ resource "aws_subnet" "test_a_one" {
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
-    Name = "%[1]s-a1"
+    Name = %[1]q
   }
 }
 
@@ -170,7 +170,7 @@ resource "aws_subnet" "test_a_two" {
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
-    Name = "%[1]s-a2"
+    Name = %[1]q
   }
 }
 
@@ -180,7 +180,7 @@ resource "aws_subnet" "test_b" {
   availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
-    Name = "%[1]s-b"
+    Name = %[1]q
   }
 }
 

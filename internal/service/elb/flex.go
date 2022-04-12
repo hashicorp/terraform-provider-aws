@@ -174,15 +174,19 @@ func ExpandPolicyAttributes(configured []interface{}) []*elb.PolicyAttribute {
 
 // Flattens an array of PolicyAttributes into a []interface{}
 func FlattenPolicyAttributes(list []*elb.PolicyAttributeDescription) []interface{} {
-	attributes := []interface{}{}
+	var attributes []interface{}
+
 	for _, attrdef := range list {
+		if attrdef == nil {
+			continue
+		}
+
 		attribute := map[string]string{
-			"name":  *attrdef.AttributeName,
-			"value": *attrdef.AttributeValue,
+			"name":  aws.StringValue(attrdef.AttributeName),
+			"value": aws.StringValue(attrdef.AttributeValue),
 		}
 
 		attributes = append(attributes, attribute)
-
 	}
 
 	return attributes

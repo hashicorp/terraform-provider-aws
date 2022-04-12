@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_vpc_ipam_pool_cidr_allocation: update `cidr` and `netmask_length` attributes netmask to a minimum of 0 and maximum of 32
+```

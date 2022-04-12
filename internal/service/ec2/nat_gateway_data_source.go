@@ -2,31 +2,47 @@ package ec2
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func DataSourceNatGateway() *schema.Resource {
+func DataSourceNATGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceNatGatewayRead,
+		Read: dataSourceNATGatewayRead,
 
 		Schema: map[string]*schema.Schema{
+			"allocation_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"connectivity_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"filter": CustomFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"state": {
+			"network_interface_id": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
-			"vpc_id": {
+			"private_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"public_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -36,104 +52,59 @@ func DataSourceNatGateway() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"allocation_id": {
+			"tags": tftags.TagsSchemaComputed(),
+			"vpc_id": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
-			"connectivity_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"network_interface_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"public_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tags":   tftags.TagsSchemaComputed(),
-			"filter": CustomFiltersSchema(),
 		},
 	}
 }
 
-func dataSourceNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceNATGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	req := &ec2.DescribeNatGatewaysInput{}
-
-	if id, ok := d.GetOk("id"); ok {
-		req.NatGatewayIds = aws.StringSlice([]string{id.(string)})
+	input := &ec2.DescribeNatGatewaysInput{
+		Filter: BuildAttributeFilterList(
+			map[string]string{
+				"state":     d.Get("state").(string),
+				"subnet-id": d.Get("subnet_id").(string),
+				"vpc-id":    d.Get("vpc_id").(string),
+			},
+		),
 	}
 
-	if vpc_id, ok := d.GetOk("vpc_id"); ok {
-		req.Filter = append(req.Filter, BuildAttributeFilterList(
-			map[string]string{
-				"vpc-id": vpc_id.(string),
-			},
-		)...)
-	}
-
-	if state, ok := d.GetOk("state"); ok {
-		req.Filter = append(req.Filter, BuildAttributeFilterList(
-			map[string]string{
-				"state": state.(string),
-			},
-		)...)
-	}
-
-	if subnet_id, ok := d.GetOk("subnet_id"); ok {
-		req.Filter = append(req.Filter, BuildAttributeFilterList(
-			map[string]string{
-				"subnet-id": subnet_id.(string),
-			},
-		)...)
+	if v, ok := d.GetOk("id"); ok {
+		input.NatGatewayIds = aws.StringSlice([]string{v.(string)})
 	}
 
 	if tags, ok := d.GetOk("tags"); ok {
-		req.Filter = append(req.Filter, BuildTagFilterList(
+		input.Filter = append(input.Filter, BuildTagFilterList(
 			Tags(tftags.New(tags.(map[string]interface{}))),
 		)...)
 	}
 
-	req.Filter = append(req.Filter, BuildCustomFilterList(
+	input.Filter = append(input.Filter, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
-	if len(req.Filter) == 0 {
+	if len(input.Filter) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
-		req.Filter = nil
+		input.Filter = nil
 	}
-	log.Printf("[DEBUG] Reading NAT Gateway: %s", req)
-	resp, err := conn.DescribeNatGateways(req)
+
+	ngw, err := FindNATGateway(conn, input)
+
 	if err != nil {
-		return err
+		return tfresource.SingularDataSourceFindError("EC2 NAT Gateway", err)
 	}
-	if resp == nil || len(resp.NatGateways) == 0 {
-		return fmt.Errorf("no matching NAT gateway found: %s", req)
-	}
-	if len(resp.NatGateways) > 1 {
-		return fmt.Errorf("multiple NAT gateways matched; use additional constraints to reduce matches to a single NAT gateway")
-	}
-
-	ngw := resp.NatGateways[0]
-
-	log.Printf("[DEBUG] NAT Gateway response: %s", ngw)
 
 	d.SetId(aws.StringValue(ngw.NatGatewayId))
 	d.Set("connectivity_type", ngw.ConnectivityType)
 	d.Set("state", ngw.State)
 	d.Set("subnet_id", ngw.SubnetId)
 	d.Set("vpc_id", ngw.VpcId)
-
-	if err := d.Set("tags", KeyValueTags(ngw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
 
 	for _, address := range ngw.NatGatewayAddresses {
 		if aws.StringValue(address.AllocationId) != "" {
@@ -143,6 +114,10 @@ func dataSourceNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set("public_ip", address.PublicIp)
 			break
 		}
+	}
+
+	if err := d.Set("tags", KeyValueTags(ngw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil

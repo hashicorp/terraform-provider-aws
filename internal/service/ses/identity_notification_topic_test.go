@@ -119,11 +119,11 @@ func testAccCheckIdentityNotificationTopicExists(n string) resource.TestCheckFun
 		var headersIncluded bool
 		switch notificationType {
 		case ses.NotificationTypeBounce:
-			headersIncluded = *response.NotificationAttributes[identity].HeadersInBounceNotificationsEnabled
+			headersIncluded = aws.BoolValue(response.NotificationAttributes[identity].HeadersInBounceNotificationsEnabled)
 		case ses.NotificationTypeComplaint:
-			headersIncluded = *response.NotificationAttributes[identity].HeadersInComplaintNotificationsEnabled
+			headersIncluded = aws.BoolValue(response.NotificationAttributes[identity].HeadersInComplaintNotificationsEnabled)
 		case ses.NotificationTypeDelivery:
-			headersIncluded = *response.NotificationAttributes[identity].HeadersInDeliveryNotificationsEnabled
+			headersIncluded = aws.BoolValue(response.NotificationAttributes[identity].HeadersInDeliveryNotificationsEnabled)
 		}
 
 		if headersIncluded != headersExpected {

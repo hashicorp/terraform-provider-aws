@@ -128,7 +128,7 @@ func dataSourceInfrastructureConfigurationRead(d *schema.ResourceData, meta inte
 	d.Set("instance_types", aws.StringValueSlice(infrastructureConfiguration.InstanceTypes))
 	d.Set("key_pair", infrastructureConfiguration.KeyPair)
 	if infrastructureConfiguration.Logging != nil {
-		d.Set("logging", []interface{}{flattenImageBuilderLogging(infrastructureConfiguration.Logging)})
+		d.Set("logging", []interface{}{flattenLogging(infrastructureConfiguration.Logging)})
 	} else {
 		d.Set("logging", nil)
 	}

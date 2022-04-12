@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -36,6 +36,7 @@ func testAccAppSyncDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "http_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "relational_database_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
 				),
@@ -345,6 +346,97 @@ func testAccAppSyncDataSource_Type_http(t *testing.T) {
 	})
 }
 
+func testAccAppSyncDataSource_Type_http_auth(t *testing.T) {
+	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
+	resourceName := "aws_appsync_datasource.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDestroyDataSource,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncDatasourceConfig_Type_HTTPAuth(rName, acctest.Region()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistsDataSource(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "http_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_config.0.endpoint", fmt.Sprintf("https://appsync.%s.amazonaws.com/", acctest.Region())),
+					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.0.authorization_type", "AWS_IAM"),
+					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.0.aws_iam_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.0.aws_iam_config.0.signing_region", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.0.aws_iam_config.0.signing_service_name", "appsync"),
+					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAppsyncDatasource_Type_RelationalDatabase(t *testing.T) {
+	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
+	resourceName := "aws_appsync_datasource.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDestroyDataSource,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncDatasourceConfigTypeRelationalDatabase(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistsDataSource(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "relational_database_config.0.http_endpoint_config.0.region", acctest.Region()),
+					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.db_cluster_identifier", "aws_rds_cluster.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.aws_secret_store_arn", "aws_secretsmanager_secret.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAppsyncDatasource_Type_RelationalDatabaseWithOptions(t *testing.T) {
+	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
+	resourceName := "aws_appsync_datasource.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDestroyDataSource,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncDatasourceConfigTypeRelationalDatabaseWithOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistsDataSource(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "relational_database_config.0.http_endpoint_config.0.schema", "mydb"),
+					resource.TestCheckResourceAttr(resourceName, "relational_database_config.0.http_endpoint_config.0.region", acctest.Region()),
+					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.db_cluster_identifier", "aws_rds_cluster.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.database_name", "aws_rds_cluster.test", "database_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.aws_secret_store_arn", "aws_secretsmanager_secret.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccAppSyncDataSource_Type_lambda(t *testing.T) {
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	iamRoleResourceName := "aws_iam_role.test"
@@ -422,7 +514,7 @@ func testAccCheckDestroyDataSource(s *terraform.State) error {
 
 		_, err = conn.GetDataSource(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
 				return nil
 			}
 			return err
@@ -786,19 +878,192 @@ func testAccAppsyncDatasourceConfig_Type_HTTP(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
-  name                = %q
+  name                = %[1]q
 }
 
 resource "aws_appsync_datasource" "test" {
   api_id = aws_appsync_graphql_api.test.id
-  name   = %q
+  name   = %[1]q
   type   = "HTTP"
 
   http_config {
     endpoint = "http://example.com"
   }
 }
-`, rName, rName)
+`, rName)
+}
+
+func testAccAppsyncDatasourceConfig_Type_HTTPAuth(rName, region string) string {
+	return fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name                = %[1]q
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  assume_role_policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Action" : "sts:AssumeRole",
+        "Principal" : {
+          "Service" : "appsync.amazonaws.com"
+        },
+        "Effect" : "Allow"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  role = aws_iam_role.test.id
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Action" : [
+          "appsync:ListGraphqlApis"
+        ],
+        "Effect" : "Allow",
+        "Resource" : [
+          "*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_appsync_datasource" "test" {
+  api_id           = aws_appsync_graphql_api.test.id
+  name             = %[1]q
+  type             = "HTTP"
+  service_role_arn = aws_iam_role.test.arn
+
+  http_config {
+    endpoint = "https://appsync.%[2]s.amazonaws.com/"
+
+    authorization_config {
+      authorization_type = "AWS_IAM"
+
+      aws_iam_config {
+        signing_region       = %[2]q
+        signing_service_name = "appsync"
+      }
+    }
+  }
+}
+`, rName, region)
+}
+
+func testAccAppsyncDatasourceConfigBaseRelationalDatabase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id = aws_secretsmanager_secret.test.id
+  secret_string = jsonencode(
+    {
+      username = "foo"
+      password = "mustbeeightcharaters"
+    }
+  )
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier              = %[1]q
+  engine_mode                     = "serverless"
+  database_name                   = "mydb"
+  master_username                 = "foo"
+  master_password                 = "mustbeeightcharaters"
+  db_cluster_parameter_group_name = "default.aurora5.6"
+  skip_final_snapshot             = true
+
+  scaling_configuration {
+    min_capacity = 1
+    max_capacity = 2
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  assume_role_policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Action" : "sts:AssumeRole",
+        "Principal" : {
+          "Service" : "appsync.amazonaws.com"
+        },
+        "Effect" : "Allow"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  role = aws_iam_role.test.id
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Action" : [
+          "rds:*"
+        ],
+        "Effect" : "Allow",
+        "Resource" : [
+          aws_rds_cluster.test.arn
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name                = %[1]q
+}
+`, rName)
+}
+
+func testAccAppsyncDatasourceConfigTypeRelationalDatabase(rName string) string {
+	return testAccAppsyncDatasourceConfigBaseRelationalDatabase(rName) + fmt.Sprintf(`
+resource "aws_appsync_datasource" "test" {
+  api_id           = aws_appsync_graphql_api.test.id
+  name             = %[1]q
+  service_role_arn = aws_iam_role.test.arn
+  type             = "RELATIONAL_DATABASE"
+
+  relational_database_config {
+    http_endpoint_config {
+      db_cluster_identifier = aws_rds_cluster.test.id
+      aws_secret_store_arn  = aws_secretsmanager_secret.test.arn
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAppsyncDatasourceConfigTypeRelationalDatabaseWithOptions(rName string) string {
+	return testAccAppsyncDatasourceConfigBaseRelationalDatabase(rName) + fmt.Sprintf(`
+resource "aws_appsync_datasource" "test" {
+  api_id           = aws_appsync_graphql_api.test.id
+  name             = %[1]q
+  service_role_arn = aws_iam_role.test.arn
+  type             = "RELATIONAL_DATABASE"
+
+  relational_database_config {
+    http_endpoint_config {
+      db_cluster_identifier = aws_rds_cluster.test.id
+      database_name         = aws_rds_cluster.test.database_name
+      aws_secret_store_arn  = aws_secretsmanager_secret.test.arn
+      schema                = "mydb"
+    }
+  }
+}
+`, rName)
 }
 
 func testAccAppsyncDatasourceConfig_Type_Lambda(rName string) string {

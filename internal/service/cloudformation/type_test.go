@@ -377,7 +377,7 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.bucket
   key    = "test"
   source = %[2]q
@@ -406,7 +406,7 @@ resource "aws_iam_role" "test" {
 
 resource "aws_cloudformation_type" "test" {
   execution_role_arn     = aws_iam_role.test.arn
-  schema_handler_package = "s3://${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
+  schema_handler_package = "s3://${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
   type                   = "RESOURCE"
   type_name              = %[2]q
 }
@@ -437,7 +437,7 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_cloudformation_type" "test" {
-  schema_handler_package = "s3://${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
+  schema_handler_package = "s3://${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
   type                   = "RESOURCE"
   type_name              = %[2]q
 
@@ -454,7 +454,7 @@ func testAccCloudformationTypeConfigTypeName(rName string, zipPath string, typeN
 		testAccCloudformationTypeConfigBase(rName, zipPath),
 		fmt.Sprintf(`
 resource "aws_cloudformation_type" "test" {
-  schema_handler_package = "s3://${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
+  schema_handler_package = "s3://${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
   type                   = "RESOURCE"
   type_name              = %[1]q
 }

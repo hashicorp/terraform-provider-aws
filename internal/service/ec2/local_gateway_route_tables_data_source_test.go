@@ -19,7 +19,7 @@ func TestAccEC2LocalGatewayRouteTablesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccLocalGatewayRouteTablesDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "0"),
 				),
 			},
 		},

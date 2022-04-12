@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -172,7 +172,7 @@ func testAccCheckUserDestroyWithProvider(s *terraform.State, provider *schema.Pr
 			continue
 		}
 
-		user, err := tfelasticache.FindElastiCacheUserByID(conn, rs.Primary.ID)
+		user, err := tfelasticache.FindUserByID(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserNotFoundFault) || tfresource.NotFound(err) {
 			continue
@@ -207,7 +207,7 @@ func testAccCheckUserExistsWithProvider(n string, v *elasticache.User, providerF
 
 		provider := providerF()
 		conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn
-		resp, err := tfelasticache.FindElastiCacheUserByID(conn, rs.Primary.ID)
+		resp, err := tfelasticache.FindUserByID(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("ElastiCache User (%s) not found: %w", rs.Primary.ID, err)
 		}

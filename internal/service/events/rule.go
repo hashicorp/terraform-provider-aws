@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -120,23 +120,14 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating EventBridge Rule: %s", input)
-	// IAM Roles take some time to propagate
-	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
-		_, err = conn.PutRule(input)
 
-		if tfawserr.ErrMessageContains(err, "ValidationException", "cannot be assumed by principal") {
-			return resource.RetryableError(err)
-		}
+	arn, err := retryPutRule(conn, input)
 
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.PutRule(input)
+	// Some partitions may not support tag-on-create
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] EventBridge Rule (%s) create failed (%s) with tags. Trying create without tags.", name, err)
+		input.Tags = nil
+		arn, err = retryPutRule(conn, input)
 	}
 
 	if err != nil {
@@ -144,6 +135,20 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(RuleCreateResourceID(aws.StringValue(input.EventBusName), aws.StringValue(input.Name)))
+
+	// Post-create tagging supported in some partitions
+	if input.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(conn, arn, nil, tags)
+
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] error adding tags after create for EventBridge Rule (%s): %s", d.Id(), err)
+			return resourceRuleRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error creating EventBridge Rule (%s) tags: %w", name, err)
+		}
+	}
 
 	return resourceRuleRead(d, meta)
 }
@@ -196,6 +201,12 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("is_enabled", enabled)
 
 	tags, err := ListTags(conn, arn)
+
+	// ISO partitions may not support tagging, giving error
+	if verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] Unable to list tags for EventBridge Rule %s: %s", d.Id(), err)
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for EventBridge Rule (%s): %w", arn, err)
@@ -257,8 +268,15 @@ func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating CloudwWatch Event Rule (%s) tags: %w", arn, err)
+		err := UpdateTags(conn, arn, o, n)
+
+		if verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] Unable to update tags for EventBridge Rule %s: %s", d.Id(), err)
+			return resourceRuleRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error updating EventBridge Rule tags: %w", err)
 		}
 	}
 
@@ -309,6 +327,38 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func retryPutRule(conn *eventbridge.EventBridge, input *eventbridge.PutRuleInput) (string, error) {
+	var output *eventbridge.PutRuleOutput
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		var err error
+		output, err = conn.PutRule(input)
+
+		if tfawserr.ErrMessageContains(err, "ValidationException", "cannot be assumed by principal") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		output, err = conn.PutRule(input)
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	if output == nil || output.RuleArn == nil {
+		return "", fmt.Errorf("empty output returned putting EventBridge Rule (%s)", aws.StringValue(input.EventBusName))
+	}
+
+	return aws.StringValue(output.RuleArn), nil
 }
 
 func buildPutRuleInputStruct(d *schema.ResourceData, name string) (*eventbridge.PutRuleInput, error) {

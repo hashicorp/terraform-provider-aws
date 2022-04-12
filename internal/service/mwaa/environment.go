@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mwaa"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -199,6 +199,11 @@ func ResourceEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"schedulers": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"service_role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -292,6 +297,10 @@ func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 		input.RequirementsS3Path = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("schedulers"); ok {
+		input.Schedulers = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("webserver_access_mode"); ok {
 		input.WebserverAccessMode = aws.String(v.(string))
 	}
@@ -329,7 +338,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	environment, err := findEnvironmentByName(conn, d.Id())
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, mwaa.ErrCodeResourceNotFoundException, "") && !d.IsNewResource() {
+		if tfawserr.ErrCodeEquals(err, mwaa.ErrCodeResourceNotFoundException) && !d.IsNewResource() {
 			log.Printf("[WARN] MWAA Environment %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -366,6 +375,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("plugins_s3_path", environment.PluginsS3Path)
 	d.Set("requirements_s3_object_version", environment.RequirementsS3ObjectVersion)
 	d.Set("requirements_s3_path", environment.RequirementsS3Path)
+	d.Set("schedulers", environment.Schedulers)
 	d.Set("service_role_arn", environment.ServiceRoleArn)
 	d.Set("source_bucket_arn", environment.SourceBucketArn)
 	d.Set("status", environment.Status)
@@ -452,6 +462,10 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.RequirementsS3Path = aws.String(d.Get("requirements_s3_path").(string))
 		}
 
+		if d.HasChange("schedulers") {
+			input.Schedulers = aws.Int64(int64(d.Get("schedulers").(int)))
+		}
+
 		if d.HasChange("source_bucket_arn") {
 			input.SourceBucketArn = aws.String(d.Get("source_bucket_arn").(string))
 		}
@@ -495,7 +509,7 @@ func resourceEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
 		Name: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, mwaa.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, mwaa.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 

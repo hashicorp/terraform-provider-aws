@@ -368,6 +368,58 @@ func TestAccEventsTarget_http(t *testing.T) {
 	})
 }
 
+//https://github.com/hashicorp/terraform-provider-aws/issues/23805
+func TestAccEventsTarget_http_params(t *testing.T) {
+	resourceName := "aws_cloudwatch_event_target.test"
+
+	var v eventbridge.Target
+	rName := sdkacctest.RandomWithPrefix("tf_http_target")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetHTTPParameterConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "http_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.path_parameter_values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.path_parameter_values.0", "test"),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.header_parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.header_parameters.X-Test", "test"),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.query_string_parameters.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.query_string_parameters.Env", "test"),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.query_string_parameters.Path", "$.detail.path"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTargetHTTPParameterConfigUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "http_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.path_parameter_values.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.path_parameter_values.0", "test"),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.path_parameter_values.1", "test2"),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.header_parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.header_parameters.X-Test", "test"),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.query_string_parameters.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.query_string_parameters.Env", "test"),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.query_string_parameters.Path", "$.detail.path"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEventsTarget_ecs(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	iamRoleResourceName := "aws_iam_role.test"
@@ -437,7 +489,70 @@ func TestAccEventsTarget_redshift(t *testing.T) {
 	})
 }
 
+// TestAccEventsTarget_ecsWithoutLaunchType verifies Event Target resources
+// can be created without a specified LaunchType
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16078
+func TestAccEventsTarget_ecsWithoutLaunchType(t *testing.T) {
+	resourceName := "aws_cloudwatch_event_target.test"
+	iamRoleResourceName := "aws_iam_role.test"
+	ecsTaskDefinitionResourceName := "aws_ecs_task_definition.task"
+	var v eventbridge.Target
+	rName := sdkacctest.RandomWithPrefix("tf_ecs_target")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetECSWithoutLaunchTypeConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "ecs_target.0.task_definition_arn", ecsTaskDefinitionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", ""),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.0.subnets.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTargetECSConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", "FARGATE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTargetECSWithoutLaunchTypeConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEventsTarget_ecsWithBlankLaunchType(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resourceName := "aws_cloudwatch_event_target.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	ecsTaskDefinitionResourceName := "aws_ecs_task_definition.task"
@@ -1214,29 +1329,13 @@ data "aws_partition" "current" {}
 `, rName)
 }
 
-func testAccTargetHTTPConfig(rName string) string {
+func testAccTargetHTTPConfigBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name        = %[1]q
   description = "schedule_http_test"
 
   schedule_expression = "rate(5 minutes)"
-}
-
-resource "aws_cloudwatch_event_target" "test" {
-  arn  = "${aws_api_gateway_stage.test.execution_arn}/GET"
-  rule = aws_cloudwatch_event_rule.test.id
-
-  http_target {
-    path_parameter_values = []
-    query_string_parameters = {
-      Env  = "test"
-      Path = "$.detail.path"
-    }
-    header_parameters = {
-      X-Test = "test"
-    }
-  }
 }
 
 resource "aws_api_gateway_rest_api" "test" {
@@ -1282,6 +1381,66 @@ resource "aws_api_gateway_stage" "test" {
 
 data "aws_partition" "current" {}
 `, rName)
+}
+
+func testAccTargetHTTPConfig(rName string) string {
+	return testAccTargetHTTPConfigBase(rName) + `
+resource "aws_cloudwatch_event_target" "test" {
+  arn  = "${aws_api_gateway_stage.test.execution_arn}/GET"
+  rule = aws_cloudwatch_event_rule.test.id
+
+  http_target {
+    path_parameter_values = []
+    query_string_parameters = {
+      Env  = "test"
+      Path = "$.detail.path"
+    }
+    header_parameters = {
+      X-Test = "test"
+    }
+  }
+}
+`
+}
+
+func testAccTargetHTTPParameterConfig(rName string) string {
+	return testAccTargetHTTPConfigBase(rName) + `
+resource "aws_cloudwatch_event_target" "test" {
+  arn  = "${aws_api_gateway_stage.test.execution_arn}/*/*/GET"
+  rule = aws_cloudwatch_event_rule.test.id
+
+  http_target {
+    path_parameter_values = ["test"]
+    query_string_parameters = {
+      Env  = "test"
+      Path = "$.detail.path"
+    }
+    header_parameters = {
+      X-Test = "test"
+    }
+  }
+}
+`
+}
+
+func testAccTargetHTTPParameterConfigUpdated(rName string) string {
+	return testAccTargetHTTPConfigBase(rName) + `
+resource "aws_cloudwatch_event_target" "test" {
+  arn  = "${aws_api_gateway_stage.test.execution_arn}/*/*/*/GET"
+  rule = aws_cloudwatch_event_rule.test.id
+
+  http_target {
+    path_parameter_values = ["test", "test2"]
+    query_string_parameters = {
+      Env  = "test"
+      Path = "$.detail.path"
+    }
+    header_parameters = {
+      X-Test = "test"
+    }
+  }
+}
+`
 }
 
 func testAccTargetECSBaseConfig(rName string) string {
@@ -1421,6 +1580,25 @@ resource "aws_redshift_cluster" "test" {
 `, 123))
 }
 
+func testAccTargetECSWithoutLaunchTypeConfig(rName string) string {
+	return testAccTargetECSBaseConfig(rName) + `
+resource "aws_cloudwatch_event_target" "test" {
+  arn      = aws_ecs_cluster.test.id
+  rule     = aws_cloudwatch_event_rule.test.id
+  role_arn = aws_iam_role.test.arn
+
+  ecs_target {
+    task_count          = 1
+    task_definition_arn = aws_ecs_task_definition.task.arn
+
+    network_configuration {
+      subnets = [aws_subnet.subnet.id]
+    }
+  }
+}
+`
+}
+
 func testAccTargetECSWithBlankLaunchTypeConfig(rName string) string {
 	return testAccTargetECSBaseConfig(rName) + `
 resource "aws_cloudwatch_event_target" "test" {
@@ -1431,7 +1609,7 @@ resource "aws_cloudwatch_event_target" "test" {
   ecs_target {
     task_count          = 1
     task_definition_arn = aws_ecs_task_definition.task.arn
-    launch_type         = ""
+    launch_type         = null
 
     network_configuration {
       subnets = [aws_subnet.subnet.id]

@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/qldb"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -130,7 +130,7 @@ func resourceLedgerRead(d *schema.ResourceData, meta interface{}) error {
 
 	qldbLedger, err := conn.DescribeLedger(input)
 
-	if tfawserr.ErrMessageContains(err, qldb.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, qldb.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] QLDB Ledger (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -227,7 +227,7 @@ func resourceLedgerDelete(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteLedger(deleteLedgerOpts)
 
-		if tfawserr.ErrMessageContains(err, qldb.ErrCodeResourceInUseException, "") {
+		if tfawserr.ErrCodeEquals(err, qldb.ErrCodeResourceInUseException) {
 			return resource.RetryableError(err)
 		}
 
@@ -242,7 +242,7 @@ func resourceLedgerDelete(d *schema.ResourceData, meta interface{}) error {
 		_, err = conn.DeleteLedger(deleteLedgerOpts)
 	}
 
-	if tfawserr.ErrMessageContains(err, qldb.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, qldb.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
@@ -283,7 +283,7 @@ func WaitForLedgerDeletion(conn *qldb.QLDB, ledgerName string) error {
 				Name: aws.String(ledgerName),
 			})
 
-			if tfawserr.ErrMessageContains(err, qldb.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, qldb.ErrCodeResourceNotFoundException) {
 				return 1, "", nil
 			}
 

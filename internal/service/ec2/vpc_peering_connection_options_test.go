@@ -6,10 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/google/go-cmp/cmp"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccEC2VPCPeeringConnectionOptions_basic(t *testing.T) {
@@ -24,7 +28,7 @@ func TestAccEC2VPCPeeringConnectionOptions_basic(t *testing.T) {
 		CheckDestroy: testAccCheckVPCPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcPeeringConnectionOptionsConfig_sameRegion_sameAccount(rName, true, true),
+				Config: testAccVPCPeeringConnectionOptionsSameRegionSameAccountConfig(rName, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					// Requester's view:
 					resource.TestCheckResourceAttr(resourceName, "requester.#", "1"),
@@ -62,7 +66,7 @@ func TestAccEC2VPCPeeringConnectionOptions_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVpcPeeringConnectionOptionsConfig_sameRegion_sameAccount(rName, false, false),
+				Config: testAccVPCPeeringConnectionOptionsSameRegionSameAccountConfig(rName, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					// Requester's view:
 					resource.TestCheckResourceAttr(
@@ -118,7 +122,7 @@ func TestAccEC2VPCPeeringConnectionOptions_differentRegionSameAccount(t *testing
 		CheckDestroy:      testAccCheckVPCPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcPeeringConnectionOptionsConfig_differentRegion_sameAccount(rName, true, true),
+				Config: testAccVPCPeeringConnectionOptionsDifferentRegionSameAccountConfig(rName, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					// Requester's view:
 					resource.TestCheckResourceAttr(resourceName, "requester.#", "1"),
@@ -152,13 +156,13 @@ func TestAccEC2VPCPeeringConnectionOptions_differentRegionSameAccount(t *testing
 				),
 			},
 			{
-				Config:            testAccVpcPeeringConnectionOptionsConfig_differentRegion_sameAccount(rName, true, true),
+				Config:            testAccVPCPeeringConnectionOptionsDifferentRegionSameAccountConfig(rName, true, true),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVpcPeeringConnectionOptionsConfig_differentRegion_sameAccount(rName, false, false),
+				Config: testAccVPCPeeringConnectionOptionsDifferentRegionSameAccountConfig(rName, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					// Requester's view:
 					resource.TestCheckResourceAttr(
@@ -214,7 +218,7 @@ func TestAccEC2VPCPeeringConnectionOptions_sameRegionDifferentAccount(t *testing
 		CheckDestroy:      testAccCheckVPCPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcPeeringConnectionOptionsConfig_sameRegion_differentAccount(rName),
+				Config: testAccVPCPeeringConnectionOptionsSameRegionDifferentAccountConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// Requester's view:
 					resource.TestCheckResourceAttr(resourceName, "requester.#", "1"),
@@ -238,7 +242,7 @@ func TestAccEC2VPCPeeringConnectionOptions_sameRegionDifferentAccount(t *testing
 				),
 			},
 			{
-				Config:            testAccVpcPeeringConnectionOptionsConfig_sameRegion_differentAccount(rName),
+				Config:            testAccVPCPeeringConnectionOptionsSameRegionDifferentAccountConfig(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -247,7 +251,43 @@ func TestAccEC2VPCPeeringConnectionOptions_sameRegionDifferentAccount(t *testing
 	})
 }
 
-func testAccVpcPeeringConnectionOptionsConfig_sameRegion_sameAccount(rName string, accepterDnsResolution, requesterRemoteClassicLink bool) string {
+func testAccCheckVPCPeeringConnectionOptions(n, block string, options *ec2.VpcPeeringConnectionOptionsDescription) resource.TestCheckFunc {
+	return testAccCheckVPCPeeringConnectionOptionsWithProvider(n, block, options, func() *schema.Provider { return acctest.Provider })
+}
+
+func testAccCheckVPCPeeringConnectionOptionsWithProvider(n, block string, options *ec2.VpcPeeringConnectionOptionsDescription, providerF func() *schema.Provider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No EC2 VPC Peering Connection ID is set.")
+		}
+
+		conn := providerF().Meta().(*conns.AWSClient).EC2Conn
+
+		output, err := tfec2.FindVPCPeeringConnectionByID(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		o := output.AccepterVpcInfo
+		if block == "requester" {
+			o = output.RequesterVpcInfo
+		}
+
+		if diff := cmp.Diff(options, o.PeeringOptions); diff != "" {
+			return fmt.Errorf("VPC Peering Connection Options mismatch (-want +got):\n%s", diff)
+		}
+
+		return nil
+	}
+}
+
+func testAccVPCPeeringConnectionOptionsSameRegionSameAccountConfig(rName string, accepterDnsResolution, requesterRemoteClassicLink bool) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -291,7 +331,7 @@ resource "aws_vpc_peering_connection_options" "test" {
 `, rName, accepterDnsResolution, requesterRemoteClassicLink)
 }
 
-func testAccVpcPeeringConnectionOptionsConfig_differentRegion_sameAccount(rName string, dnsResolution, dnsResolutionPeer bool) string {
+func testAccVPCPeeringConnectionOptionsDifferentRegionSameAccountConfig(rName string, dnsResolution, dnsResolutionPeer bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
@@ -361,7 +401,7 @@ resource "aws_vpc_peering_connection_options" "peer" {
 `, rName, acctest.AlternateRegion(), dnsResolution, dnsResolutionPeer))
 }
 
-func testAccVpcPeeringConnectionOptionsConfig_sameRegion_differentAccount(rName string) string {
+func testAccVPCPeeringConnectionOptionsSameRegionDifferentAccountConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"

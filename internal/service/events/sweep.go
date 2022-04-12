@@ -308,98 +308,41 @@ func sweepPermissions(region string) error {
 func sweepRules(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %w", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*conns.AWSClient).EventsConn
-
+	input := &eventbridge.ListEventBusesInput{}
 	var sweeperErrs *multierror.Error
-	var count int
 
-	rulesInput := &eventbridge.ListRulesInput{}
-
-	err = listRulesPages(conn, rulesInput, func(rulesPage *eventbridge.ListRulesOutput, lastPage bool) bool {
-		if rulesPage == nil {
+	err = listEventBusesPages(conn, input, func(page *eventbridge.ListEventBusesOutput, lastPage bool) bool {
+		if page == nil {
 			return !lastPage
 		}
 
-		for _, rule := range rulesPage.Rules {
-			count++
-			name := aws.StringValue(rule.Name)
+		for _, eventBus := range page.EventBuses {
+			eventBusName := aws.StringValue(eventBus.Name)
 
-			log.Printf("[INFO] Deleting EventBridge rule (%s)", name)
-			_, err := conn.DeleteRule(&eventbridge.DeleteRuleInput{
-				Name:  aws.String(name),
-				Force: aws.Bool(true), // Required for AWS-managed rules, ignored otherwise
-			})
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting EventBridge rule (%s): %w", name, err))
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EventBridge rule sweeper for %q: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge rules: %w", err))
-	}
-
-	log.Printf("[INFO] Deleted %d EventBridge rules", count)
-
-	return sweeperErrs.ErrorOrNil()
-}
-
-func sweepTargets(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("Error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).EventsConn
-
-	var sweeperErrs *multierror.Error
-	var rulesCount, targetsCount int
-
-	rulesInput := &eventbridge.ListRulesInput{}
-
-	err = listRulesPages(conn, rulesInput, func(rulesPage *eventbridge.ListRulesOutput, lastPage bool) bool {
-		if rulesPage == nil {
-			return !lastPage
-		}
-
-		for _, rule := range rulesPage.Rules {
-			rulesCount++
-			ruleName := aws.StringValue(rule.Name)
-
-			log.Printf("[INFO] Deleting EventBridge targets for rule (%s)", ruleName)
-			targetsInput := &eventbridge.ListTargetsByRuleInput{
-				Rule:  rule.Name,
-				Limit: aws.Int64(100), // Set limit to allowed maximum to prevent API throttling
+			input := &eventbridge.ListRulesInput{
+				EventBusName: aws.String(eventBusName),
 			}
 
-			err := listTargetsByRulePages(conn, targetsInput, func(targetsPage *eventbridge.ListTargetsByRuleOutput, lastPage bool) bool {
-				if targetsPage == nil {
+			err := listRulesPages(conn, input, func(page *eventbridge.ListRulesOutput, lastPage bool) bool {
+				if page == nil {
 					return !lastPage
 				}
 
-				for _, target := range targetsPage.Targets {
-					targetsCount++
-					removeTargetsInput := &eventbridge.RemoveTargetsInput{
-						Ids:   []*string{target.Id},
-						Rule:  rule.Name,
-						Force: aws.Bool(true), // Required for AWS-managed rules, ignored otherwise
-					}
-					targetID := aws.StringValue(target.Id)
+				for _, rule := range page.Rules {
+					ruleName := aws.StringValue(rule.Name)
 
-					log.Printf("[INFO] Deleting EventBridge target (%s/%s)", ruleName, targetID)
-					_, err := conn.RemoveTargets(removeTargetsInput)
+					log.Printf("[DEBUG] Deleting EventBridge Rule: %s/%s", eventBusName, ruleName)
+					_, err := conn.DeleteRule(&eventbridge.DeleteRuleInput{
+						EventBusName: aws.String(eventBusName),
+						Force:        aws.Bool(true),
+						Name:         aws.String(ruleName),
+					})
 
 					if err != nil {
-						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("Error deleting EventBridge target (%s/%s): %w", ruleName, targetID, err))
+						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting EventBridge Rule (%s/%s): %w", eventBusName, ruleName, err))
 						continue
 					}
 				}
@@ -408,11 +351,11 @@ func sweepTargets(region string) error {
 			})
 
 			if sweep.SkipSweepError(err) {
-				log.Printf("[WARN] Skipping EventBridge target sweeper for %q: %s", region, err)
-				return false
+				continue
 			}
+
 			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge targets for rule (%s): %w", ruleName, err))
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge Rules (%s): %w", region, err))
 			}
 		}
 
@@ -420,15 +363,108 @@ func sweepTargets(region string) error {
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EventBridge rule target sweeper for %q: %s", region, err)
+		log.Printf("[WARN] Skipping EventBridge Rule sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge rules: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge event buses (%s): %w", region, err))
 	}
 
-	log.Printf("[INFO] Deleted %d EventBridge targets across %d EventBridge rules", targetsCount, rulesCount)
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepTargets(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).EventsConn
+	input := &eventbridge.ListEventBusesInput{}
+	var sweeperErrs *multierror.Error
+
+	err = listEventBusesPages(conn, input, func(page *eventbridge.ListEventBusesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, eventBus := range page.EventBuses {
+			eventBusName := aws.StringValue(eventBus.Name)
+
+			input := &eventbridge.ListRulesInput{
+				EventBusName: aws.String(eventBusName),
+			}
+
+			err := listRulesPages(conn, input, func(page *eventbridge.ListRulesOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, rule := range page.Rules {
+					ruleName := aws.StringValue(rule.Name)
+
+					input := &eventbridge.ListTargetsByRuleInput{
+						EventBusName: aws.String(eventBusName),
+						Rule:         aws.String(ruleName),
+					}
+
+					err := listTargetsByRulePages(conn, input, func(page *eventbridge.ListTargetsByRuleOutput, lastPage bool) bool {
+						if page == nil {
+							return !lastPage
+						}
+
+						for _, target := range page.Targets {
+							targetID := aws.StringValue(target.Id)
+
+							log.Printf("[DEBUG] Deleting EventBridge Target: %s/%s/%s", eventBusName, ruleName, targetID)
+							_, err := conn.RemoveTargets(&eventbridge.RemoveTargetsInput{
+								EventBusName: aws.String(eventBusName),
+								Force:        aws.Bool(true),
+								Ids:          aws.StringSlice([]string{targetID}),
+								Rule:         aws.String(ruleName),
+							})
+
+							if err != nil {
+								sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting EventBridge Target (%s/%s/%s): %w", eventBusName, ruleName, targetID, err))
+								continue
+							}
+						}
+
+						return !lastPage
+					})
+
+					if sweep.SkipSweepError(err) {
+						continue
+					}
+
+					if err != nil {
+						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge Targets (%s): %w", region, err))
+					}
+				}
+
+				return !lastPage
+			})
+
+			if sweep.SkipSweepError(err) {
+				continue
+			}
+
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge Rules (%s): %w", region, err))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EventBridge Rule sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge event buses (%s): %w", region, err))
+	}
 
 	return sweeperErrs.ErrorOrNil()
 }

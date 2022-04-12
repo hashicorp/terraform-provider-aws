@@ -14,7 +14,7 @@ import (
 )
 
 func TestAccCloudWatchLogsResourcePolicy_basic(t *testing.T) {
-	name := sdkacctest.RandString(5)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_resource_policy.test"
 	var resourcePolicy cloudwatchlogs.ResourcePolicy
 
@@ -22,14 +22,14 @@ func TestAccCloudWatchLogsResourcePolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudWatchLogResourcePolicyDestroy,
+		CheckDestroy: testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckResourcePolicyResourceBasic1Config(name),
+				Config: testAccCheckResourcePolicyResourceBasic1Config(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogResourcePolicy(resourceName, &resourcePolicy),
-					resource.TestCheckResourceAttr(resourceName, "policy_name", name),
-					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"rds.%s\"},\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Resource\":\"arn:%s:logs:*:*:log-group:/aws/rds/*\"}]}", acctest.PartitionDNSSuffix(), acctest.Partition())),
+					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Statement\":[{\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"rds.%s\"},\"Resource\":\"arn:%s:logs:*:*:log-group:/aws/rds/*\",\"Sid\":\"\"}],\"Version\":\"2012-10-17\"}", acctest.PartitionDNSSuffix(), acctest.Partition())),
 				),
 			},
 			{
@@ -38,11 +38,42 @@ func TestAccCloudWatchLogsResourcePolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCheckResourcePolicyResourceBasic2Config(name),
+				Config: testAccCheckResourcePolicyResourceBasic2Config(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogResourcePolicy(resourceName, &resourcePolicy),
-					resource.TestCheckResourceAttr(resourceName, "policy_name", name),
-					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"rds.%s\"},\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Resource\":\"arn:%s:logs:*:*:log-group:/aws/rds/example.com\"}]}", acctest.PartitionDNSSuffix(), acctest.Partition())),
+					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Statement\":[{\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"rds.%s\"},\"Resource\":\"arn:%s:logs:*:*:log-group:/aws/rds/example.com\",\"Sid\":\"\"}],\"Version\":\"2012-10-17\"}", acctest.PartitionDNSSuffix(), acctest.Partition())),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudWatchLogsResourcePolicy_ignoreEquivalent(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_resource_policy.test"
+	var resourcePolicy cloudwatchlogs.ResourcePolicy
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckResourcePolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckResourcePolicyResourceOrderConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchLogResourcePolicy(resourceName, &resourcePolicy),
+					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Statement\":[{\"Action\":[\"logs:CreateLogStream\",\"logs:PutLogEvents\"],\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"rds.%s\"]},\"Resource\":[\"arn:%s:logs:*:*:log-group:/aws/rds/example.com\"]}],\"Version\":\"2012-10-17\"}", acctest.PartitionDNSSuffix(), acctest.Partition())),
+				),
+			},
+			{
+				Config: testAccCheckResourcePolicyResourceNewOrderConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchLogResourcePolicy(resourceName, &resourcePolicy),
+					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Statement\":[{\"Action\":[\"logs:CreateLogStream\",\"logs:PutLogEvents\"],\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"rds.%s\"]},\"Resource\":[\"arn:%s:logs:*:*:log-group:/aws/rds/example.com\"]}],\"Version\":\"2012-10-17\"}", acctest.PartitionDNSSuffix(), acctest.Partition())),
 				),
 			},
 		},
@@ -75,7 +106,7 @@ func testAccCheckCloudWatchLogResourcePolicy(pr string, resourcePolicy *cloudwat
 	}
 }
 
-func testAccCheckCloudWatchLogResourcePolicyDestroy(s *terraform.State) error {
+func testAccCheckResourcePolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -97,7 +128,7 @@ func testAccCheckCloudWatchLogResourcePolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckResourcePolicyResourceBasic1Config(name string) string {
+func testAccCheckResourcePolicyResourceBasic1Config(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -118,13 +149,13 @@ data "aws_iam_policy_document" "test" {
 }
 
 resource "aws_cloudwatch_log_resource_policy" "test" {
-  policy_name     = "%s"
+  policy_name     = %[1]q
   policy_document = data.aws_iam_policy_document.test.json
 }
-`, name)
+`, rName)
 }
 
-func testAccCheckResourcePolicyResourceBasic2Config(name string) string {
+func testAccCheckResourcePolicyResourceBasic2Config(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -145,8 +176,64 @@ data "aws_iam_policy_document" "test" {
 }
 
 resource "aws_cloudwatch_log_resource_policy" "test" {
-  policy_name     = "%s"
+  policy_name     = %[1]q
   policy_document = data.aws_iam_policy_document.test.json
 }
-`, name)
+`, rName)
+}
+
+func testAccCheckResourcePolicyResourceOrderConfig(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_cloudwatch_log_resource_policy" "test" {
+  policy_name = %[1]q
+  policy_document = jsonencode({
+    Statement = [{
+      Action = [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+      ]
+      Effect = "Allow"
+      Resource = [
+        "arn:${data.aws_partition.current.partition}:logs:*:*:log-group:/aws/rds/example.com",
+      ]
+      Principal = {
+        Service = [
+          "rds.${data.aws_partition.current.dns_suffix}",
+        ]
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+`, rName)
+}
+
+func testAccCheckResourcePolicyResourceNewOrderConfig(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_cloudwatch_log_resource_policy" "test" {
+  policy_name = %[1]q
+  policy_document = jsonencode({
+    Statement = [{
+      Action = [
+        "logs:PutLogEvents",
+        "logs:CreateLogStream",
+      ]
+      Effect = "Allow"
+      Resource = [
+        "arn:${data.aws_partition.current.partition}:logs:*:*:log-group:/aws/rds/example.com",
+      ]
+      Principal = {
+        Service = [
+          "rds.${data.aws_partition.current.dns_suffix}",
+        ]
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+`, rName)
 }

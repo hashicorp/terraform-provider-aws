@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -34,7 +34,6 @@ func TestAccEC2SpotInstanceRequest_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_bid_status", "fulfilled"),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behavior", "terminate"),
-					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behaviour", "terminate"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -542,7 +541,7 @@ func testAccCheckSpotInstanceRequest_InstanceAttributes(sir *ec2.SpotInstanceReq
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		instance, err := tfec2.InstanceFindByID(conn, aws.StringValue(sir.InstanceId))
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
+			if tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
 				return fmt.Errorf("Spot Instance %q not found", aws.StringValue(sir.InstanceId))
 			}
 			return err
@@ -616,7 +615,6 @@ func TestAccEC2SpotInstanceRequest_interruptStop(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_bid_status", "fulfilled"),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behavior", "stop"),
-					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behaviour", "stop"),
 				),
 			},
 			{
@@ -646,7 +644,6 @@ func TestAccEC2SpotInstanceRequest_interruptHibernate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_bid_status", "fulfilled"),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behavior", "hibernate"),
-					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behaviour", "hibernate"),
 				),
 			},
 			{
@@ -674,7 +671,6 @@ func TestAccEC2SpotInstanceRequest_interruptUpdate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(resourceName, &sir1),
 					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behavior", "hibernate"),
-					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behaviour", "hibernate"),
 				),
 			},
 			{
@@ -683,99 +679,6 @@ func TestAccEC2SpotInstanceRequest_interruptUpdate(t *testing.T) {
 					testAccCheckSpotInstanceRequestExists(resourceName, &sir2),
 					testAccCheckSpotInstanceRequestRecreated(&sir1, &sir2),
 					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behavior", "terminate"),
-					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behaviour", "terminate"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccEC2SpotInstanceRequest_interruptDeprecated(t *testing.T) {
-	var sir ec2.SpotInstanceRequest
-	resourceName := "aws_spot_instance_request.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSpotInstanceRequestDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSpotInstanceRequestInterruptConfig_Deprecated("hibernate"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotInstanceRequestExists(resourceName, &sir),
-					resource.TestCheckResourceAttr(resourceName, "spot_bid_status", "fulfilled"),
-					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behavior", "hibernate"),
-					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behaviour", "hibernate"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
-			},
-		},
-	})
-}
-
-func TestAccEC2SpotInstanceRequest_interruptFixDeprecated(t *testing.T) {
-	var sir1, sir2 ec2.SpotInstanceRequest
-	resourceName := "aws_spot_instance_request.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSpotInstanceRequestDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSpotInstanceRequestInterruptConfig_Deprecated("hibernate"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotInstanceRequestExists(resourceName, &sir1),
-					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behavior", "hibernate"),
-					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behaviour", "hibernate"),
-				),
-			},
-			{
-				Config: testAccSpotInstanceRequestInterruptConfig("hibernate"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotInstanceRequestExists(resourceName, &sir2),
-					testAccCheckSpotInstanceRequestNotRecreated(&sir1, &sir2),
-					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behavior", "hibernate"),
-					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behaviour", "hibernate"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccEC2SpotInstanceRequest_interruptUpdateFromDeprecated(t *testing.T) {
-	var sir1, sir2 ec2.SpotInstanceRequest
-	resourceName := "aws_spot_instance_request.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSpotInstanceRequestDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSpotInstanceRequestInterruptConfig_Deprecated("hibernate"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotInstanceRequestExists(resourceName, &sir1),
-					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behavior", "hibernate"),
-					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behaviour", "hibernate"),
-				),
-			},
-			{
-				Config: testAccSpotInstanceRequestInterruptConfig("stop"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotInstanceRequestExists(resourceName, &sir2),
-					testAccCheckSpotInstanceRequestRecreated(&sir1, &sir2),
-					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behavior", "stop"),
-					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behaviour", "stop"),
 				),
 			},
 		},
@@ -786,16 +689,6 @@ func testAccCheckSpotInstanceRequestRecreated(before, after *ec2.SpotInstanceReq
 	return func(s *terraform.State) error {
 		if before, after := aws.StringValue(before.InstanceId), aws.StringValue(after.InstanceId); before == after {
 			return fmt.Errorf("Spot Instance (%s) not recreated", before)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckSpotInstanceRequestNotRecreated(before, after *ec2.SpotInstanceRequest) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.InstanceId), aws.StringValue(after.InstanceId); before != after {
-			return fmt.Errorf("Spot Instance (%s/%s) recreated", before, after)
 		}
 
 		return nil
@@ -1076,21 +969,6 @@ resource "aws_spot_instance_request" "test" {
   spot_price                     = "0.07"
   wait_for_fulfillment           = true
   instance_interruption_behavior = %[1]q
-}
-`, interruptionBehavior))
-}
-
-func testAccSpotInstanceRequestInterruptConfig_Deprecated(interruptionBehavior string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		acctest.AvailableEC2InstanceTypeForRegion("c5.large", "c4.large"),
-		fmt.Sprintf(`
-resource "aws_spot_instance_request" "test" {
-  ami                             = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type                   = data.aws_ec2_instance_type_offering.available.instance_type
-  spot_price                      = "0.07"
-  wait_for_fulfillment            = true
-  instance_interruption_behaviour = %[1]q
 }
 `, interruptionBehavior))
 }

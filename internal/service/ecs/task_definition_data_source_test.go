@@ -23,6 +23,7 @@ func TestAccECSTaskDefinitionDataSource_ecsTaskDefinition(t *testing.T) {
 			{
 				Config: testAccCheckTaskDefinitionDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ecs_task_definition.mongo", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "family", rName),
 					resource.TestCheckResourceAttr(resourceName, "network_mode", "bridge"),
 					resource.TestMatchResourceAttr(resourceName, "revision", regexp.MustCompile("^[1-9][0-9]*$")),
