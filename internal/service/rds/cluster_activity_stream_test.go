@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAWSRDSClusterActivityStream_basic(t *testing.T) {
+func TestAccRDSClusterActivityStream_basic(t *testing.T) {
 	var dbCluster rds.DBCluster
 	clusterName := sdkacctest.RandomWithPrefix("tf-testacc-aurora-cluster")
 	instanceName := sdkacctest.RandomWithPrefix("tf-testacc-aurora-instance")
@@ -33,13 +33,13 @@ func TestAccAWSRDSClusterActivityStream_basic(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSClusterActivityStreamDestroy,
+		CheckDestroy: testAccCheckClusterActivityStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSClusterActivityStreamConfig(clusterName, instanceName),
+				Config: testAccClusterActivityStreamConfig(clusterName, instanceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
-					testAccCheckAWSRDSClusterActivityStreamAttributes(&dbCluster),
+					testAccCheckClusterActivityStreamAttributes(&dbCluster),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "resource_arn", "rds", regexp.MustCompile("cluster:"+clusterName)),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", rdsClusterResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "key_id"),
@@ -57,7 +57,7 @@ func TestAccAWSRDSClusterActivityStream_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSClusterActivityStream_disappears(t *testing.T) {
+func TestAccRDSClusterActivityStream_disappears(t *testing.T) {
 	var dbCluster rds.DBCluster
 	clusterName := sdkacctest.RandomWithPrefix("tf-testacc-aurora-cluster")
 	instanceName := sdkacctest.RandomWithPrefix("tf-testacc-aurora-instance")
@@ -70,10 +70,10 @@ func TestAccAWSRDSClusterActivityStream_disappears(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSClusterActivityStreamDestroy,
+		CheckDestroy: testAccCheckClusterActivityStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSClusterActivityStreamConfig(clusterName, instanceName),
+				Config: testAccClusterActivityStreamConfig(clusterName, instanceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRDSClusterActivityStreamExists(resourceName, &dbCluster),
 					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceClusterActivityStream(), resourceName),
@@ -112,7 +112,7 @@ func testAccCheckAWSRDSClusterActivityStreamExistsWithProvider(resourceName stri
 	}
 }
 
-func testAccCheckAWSRDSClusterActivityStreamAttributes(v *rds.DBCluster) resource.TestCheckFunc {
+func testAccCheckClusterActivityStreamAttributes(v *rds.DBCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		if aws.StringValue(v.DBClusterArn) == "" {
@@ -139,11 +139,11 @@ func testAccCheckAWSRDSClusterActivityStreamAttributes(v *rds.DBCluster) resourc
 	}
 }
 
-func testAccCheckAWSClusterActivityStreamDestroy(s *terraform.State) error {
-	return testAccCheckAWSClusterActivityStreamDestroyWithProvider(s, acctest.Provider)
+func testAccCheckClusterActivityStreamDestroy(s *terraform.State) error {
+	return testAccCheckClusterActivityStreamDestroyWithProvider(s, acctest.Provider)
 }
 
-func testAccCheckAWSClusterActivityStreamDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
+func testAccCheckClusterActivityStreamDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
 	conn := provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -168,7 +168,7 @@ func testAccCheckAWSClusterActivityStreamDestroyWithProvider(s *terraform.State,
 	return nil
 }
 
-func testAccAWSClusterActivityStreamConfigBase(clusterName, instanceName string) string {
+func testAccClusterActivityStreamConfigBase(clusterName, instanceName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -199,9 +199,9 @@ resource "aws_rds_cluster_instance" "test" {
 `, clusterName, instanceName)
 }
 
-func testAccAWSClusterActivityStreamConfig(clusterName, instanceName string) string {
+func testAccClusterActivityStreamConfig(clusterName, instanceName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSClusterActivityStreamConfigBase(clusterName, instanceName),
+		testAccClusterActivityStreamConfigBase(clusterName, instanceName),
 		`
 resource "aws_rds_cluster_activity_stream" "test" {
   resource_arn = aws_rds_cluster.test.arn
