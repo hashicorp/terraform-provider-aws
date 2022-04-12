@@ -322,14 +322,12 @@ func expandCloudFormationOperationPreferences(tfMap map[string]interface{}) *clo
 
 	if v, ok := tfMap["failure_tolerance_count"].(int); ok {
 		apiObject.FailureToleranceCount = aws.Int64(int64(v))
-	}
-	if v, ok := tfMap["failure_tolerance_percentage"].(int); ok {
+	} else if v, ok := tfMap["failure_tolerance_percentage"].(int); ok {
 		apiObject.FailureTolerancePercentage = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["max_concurrent_count"].(int); ok {
 		apiObject.MaxConcurrentCount = aws.Int64(int64(v))
-	}
-	if v, ok := tfMap["max_concurrent_percentage"].(int); ok {
+	} else if v, ok := tfMap["max_concurrent_percentage"].(int); ok {
 		apiObject.MaxConcurrentPercentage = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["region_concurrency_type"].(string); ok && v != "" {
