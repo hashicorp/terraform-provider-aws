@@ -1,6 +1,7 @@
 package qldb
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/qldb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -20,10 +22,10 @@ import (
 
 func ResourceLedger() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceLedgerCreate,
-		Read:   resourceLedgerRead,
-		Update: resourceLedgerUpdate,
-		Delete: resourceLedgerDelete,
+		Create:               resourceLedgerCreate,
+		Read:                 resourceLedgerRead,
+		Update:               resourceLedgerUpdate,
+		DeleteWithoutTimeout: resourceLedgerDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -213,41 +215,29 @@ func resourceLedgerUpdate(d *schema.ResourceData, meta interface{}) error {
 	return resourceLedgerRead(d, meta)
 }
 
-func resourceLedgerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceLedgerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QLDBConn
-	deleteLedgerOpts := &qldb.DeleteLedgerInput{
+
+	input := &qldb.DeleteLedgerInput{
 		Name: aws.String(d.Id()),
 	}
+
 	log.Printf("[INFO] Deleting QLDB Ledger: %s", d.Id())
-
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteLedger(deleteLedgerOpts)
-
-		if tfawserr.ErrCodeEquals(err, qldb.ErrCodeResourceInUseException) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteLedger(deleteLedgerOpts)
-	}
+	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 5*time.Minute,
+		func() (interface{}, error) {
+			return conn.DeleteLedgerWithContext(ctx, input)
+		}, qldb.ErrCodeResourceInUseException)
 
 	if tfawserr.ErrCodeEquals(err, qldb.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting QLDB Ledger (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting QLDB Ledger (%s): %s", d.Id(), err)
 	}
 
-	if err := WaitForLedgerDeletion(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for QLDB Ledger (%s) deletion: %s", d.Id(), err)
+	if _, err := waitLedgerDeleted(ctx, conn, d.Id()); err != nil {
+		return diag.Errorf("waiting for QLDB Ledger (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
@@ -294,4 +284,70 @@ func WaitForLedgerDeletion(conn *qldb.QLDB, ledgerName string) error {
 	_, err := stateConf.WaitForState()
 
 	return err
+}
+
+func FindLedgerByName(ctx context.Context, conn *qldb.QLDB, name string) (*qldb.DescribeLedgerOutput, error) {
+	input := &qldb.DescribeLedgerInput{
+		Name: aws.String(name),
+	}
+
+	output, err := conn.DescribeLedgerWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, qldb.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if state := aws.StringValue(output.State); state == qldb.LedgerStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func statusLedgerState(ctx context.Context, conn *qldb.QLDB, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindLedgerByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func waitLedgerDeleted(ctx context.Context, conn *qldb.QLDB, name string) (*qldb.DescribeLedgerOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{qldb.LedgerStateActive, qldb.LedgerStateDeleting},
+		Target:     []string{},
+		Refresh:    statusLedgerState(ctx, conn, name),
+		Timeout:    5 * time.Minute,
+		MinTimeout: 1 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*qldb.DescribeLedgerOutput); ok {
+		return output, err
+	}
+
+	return nil, err
 }
