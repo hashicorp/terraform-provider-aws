@@ -1,6 +1,7 @@
 package qldb
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -9,13 +10,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/qldb"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // TODO:  Account for fact that streams can become "completed" and may impact future plans if this is not recognized as a valid state that does not need a re-apply to resolve...
@@ -26,17 +28,16 @@ func ResourceStream() *schema.Resource {
 		Read:   resourceStreamRead,
 		Update: resourceStreamUpdate,
 		Delete: resourceStreamDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		// https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-qldb-stream.html
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"exclusive_end_time": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -49,14 +50,27 @@ func ResourceStream() *schema.Resource {
 			},
 
 			"kinesis_configuration": {
-				Type:     schema.TypeMap,
-				ForceNew: true,
+				Type:     schema.TypeList,
 				Required: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"aggregation_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+							ForceNew: true,
+						},
+						"stream_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
 				},
 			},
-
 			"ledger_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -65,14 +79,12 @@ func ResourceStream() *schema.Resource {
 					validation.StringLenBetween(1, 32),
 				),
 			},
-
 			"role_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				Optional: false,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
-
 			"stream_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -81,9 +93,7 @@ func ResourceStream() *schema.Resource {
 					validation.StringLenBetween(1, 32),
 				),
 			},
-
-			"tags": tftags.TagsSchema(),
-
+			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
@@ -353,4 +363,30 @@ func waitForQLDBStreamDeletion(conn *qldb.QLDB, ledgerName string, streamID stri
 	_, err := stateConf.WaitForState()
 
 	return err
+}
+
+func FindJournalKinesisStream(ctx context.Context, conn *qldb.QLDB, ledgerName, streamID string) (*qldb.JournalKinesisStreamDescription, error) {
+	input := &qldb.DescribeJournalKinesisStreamInput{
+		LedgerName: aws.String(ledgerName),
+		StreamId:   aws.String(streamID),
+	}
+
+	output, err := conn.DescribeJournalKinesisStreamWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, qldb.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Stream == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Stream, nil
 }
