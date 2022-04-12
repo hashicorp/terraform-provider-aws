@@ -52,25 +52,25 @@ func dataSourceNATGatewaysRead(d *schema.ResourceData, meta interface{}) error {
 	input.Filter = append(input.Filter, BuildFiltersDataSource(
 		d.Get("filter").(*schema.Set),
 	)...)
+
 	if len(input.Filter) == 0 {
-		// Don't send an empty filters list; the EC2 API won't accept it.
 		input.Filter = nil
 	}
 
-	ngws, err := FindNATGateways(conn, input)
+	output, err := FindNATGateways(conn, input)
 
 	if err != nil {
 		return fmt.Errorf("error reading EC2 NAT Gateways: %w", err)
 	}
 
-	var natGatewayIds []string
+	var natGatewayIDs []string
 
-	for _, v := range ngws {
-		natGatewayIds = append(natGatewayIds, aws.StringValue(v.NatGatewayId))
+	for _, v := range output {
+		natGatewayIDs = append(natGatewayIDs, aws.StringValue(v.NatGatewayId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", natGatewayIds)
+	d.Set("ids", natGatewayIDs)
 
 	return nil
 }

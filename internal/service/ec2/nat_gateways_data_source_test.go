@@ -17,7 +17,6 @@ func TestAccEC2NATGatewaysDataSource_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNATGatewaysDataSourceConfig(rName),
@@ -43,11 +42,11 @@ resource "aws_vpc" "test1" {
 }
 
 resource "aws_vpc" "test2" {
-	cidr_block = "172.5.0.0/16"
+  cidr_block = "172.5.0.0/16"
 
-	tags = {
-		Name = %[1]q
-	}
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test1" {
@@ -97,11 +96,11 @@ resource "aws_eip" "test2" {
 }
 
 resource "aws_eip" "test3" {
-	vpc = true
+  vpc = true
 
-	tags = {
-		Name = %[1]q
-	}
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_internet_gateway" "test1" {
@@ -159,7 +158,7 @@ resource "aws_nat_gateway" "test3" {
 data "aws_nat_gateways" "by_vpc_id" {
   vpc_id = aws_vpc.test2.id
 
-	depends_on = [aws_nat_gateway.test1, aws_nat_gateway.test2, aws_nat_gateway.test3]
+  depends_on = [aws_nat_gateway.test1, aws_nat_gateway.test2, aws_nat_gateway.test3]
 }
 
 data "aws_nat_gateways" "by_tags" {
@@ -168,30 +167,30 @@ data "aws_nat_gateways" "by_tags" {
     values = ["available"]
   }
 
-	tags = {
-		OtherTag = "some-value"
-	}
+  tags = {
+    OtherTag = "some-value"
+  }
 
-	depends_on = [aws_nat_gateway.test1, aws_nat_gateway.test2, aws_nat_gateway.test3]
+  depends_on = [aws_nat_gateway.test1, aws_nat_gateway.test2, aws_nat_gateway.test3]
 }
 
 data "aws_nat_gateways" "by_filter" {
   filter {
-		name   = "vpc-id"
-		values = [aws_vpc.test1.id, aws_vpc.test2.id]
+    name   = "vpc-id"
+    values = [aws_vpc.test1.id, aws_vpc.test2.id]
   }
 
-	depends_on = [aws_nat_gateway.test1, aws_nat_gateway.test2, aws_nat_gateway.test3]
+  depends_on = [aws_nat_gateway.test1, aws_nat_gateway.test2, aws_nat_gateway.test3]
 }
 
 data "aws_nat_gateways" "empty" {
-	vpc_id = aws_vpc.test2.id
+  vpc_id = aws_vpc.test2.id
 
-	tags = {
-		OtherTag = "some-value"
-	}
+  tags = {
+    OtherTag = "some-value"
+  }
 
-	depends_on = [aws_nat_gateway.test1, aws_nat_gateway.test2, aws_nat_gateway.test3]
+  depends_on = [aws_nat_gateway.test1, aws_nat_gateway.test2, aws_nat_gateway.test3]
 }
 `, rName))
 }
