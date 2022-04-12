@@ -82,6 +82,9 @@ func resourceUserGroupAssociationRead(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	groupID, userID, err := UserGroupAssociationParseID(d.Id())
+	if err != nil {
+		return fmt.Errorf("reading ElastiCache User Group Association (%s): %w", d.Id(), err)
+	}
 
 	output, err := FindUserGroupByID(conn, groupID)
 	if !d.IsNewResource() && (tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserGroupNotFoundFault)) {
