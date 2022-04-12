@@ -94,10 +94,10 @@ func TestAccDataSyncLocationFSxOpenZfsFileSystem_subdirectory(t *testing.T) {
 		CheckDestroy: testAccCheckLocationFSxOpenZfsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxOpenZfsSubdirectoryConfig("/subdirectory1/"),
+				Config: testAccLocationFSxOpenZfsSubdirectoryConfig("/fsx/subdirectory1/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxOpenZfsExists(resourceName, &locationFsxOpenZfs1),
-					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/subdirectory1/"),
+					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/fsx/subdirectory1/"),
 				),
 			},
 			{
