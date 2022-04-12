@@ -39,11 +39,11 @@ The following arguments are supported:
 
 ### Protocol
 
-* `nfs` - (Required) The type of protocol that DataSync uses to access your file system. See [nfs](#nfs).
+* `nfs` - (Required) Represents the Network File System (NFS) protocol that DataSync uses to access your FSx for OpenZFS file system. See [nfs](#nfs).
 
 #### NFS
 
-* `mount_options` - (Required) The type of protocol that DataSync uses to access your file system. See [Mount Options](#mount-options).
+* `mount_options` - (Required) Represents the mount options that are available for DataSync to access an NFS location. See [Mount Options](#mount-options).
 
 ##### Mount Options
 
