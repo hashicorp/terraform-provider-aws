@@ -28,10 +28,6 @@ func ResourceStream() *schema.Resource {
 		UpdateWithoutTimeout: resourceStreamUpdate,
 		DeleteWithoutTimeout: resourceStreamDelete,
 
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
-
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -294,7 +290,7 @@ func findJournalKinesisStream(ctx context.Context, conn *qldb.QLDB, input *qldb.
 	return output.Stream, nil
 }
 
-func statusStream(ctx context.Context, conn *qldb.QLDB, ledgerName, streamID string) resource.StateRefreshFunc {
+func statusStreamCreated(ctx context.Context, conn *qldb.QLDB, ledgerName, streamID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// Don't call FindStream as it maps useful statuses to NotFoundError.
 		output, err := findJournalKinesisStream(ctx, conn, &qldb.DescribeJournalKinesisStreamInput{
@@ -318,7 +314,7 @@ func waitStreamCreated(ctx context.Context, conn *qldb.QLDB, ledgerName, streamI
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{qldb.StreamStatusImpaired},
 		Target:     []string{qldb.StreamStatusActive},
-		Refresh:    statusStream(ctx, conn, ledgerName, streamID),
+		Refresh:    statusStreamCreated(ctx, conn, ledgerName, streamID),
 		Timeout:    8 * time.Minute,
 		MinTimeout: 3 * time.Second,
 	}
@@ -334,11 +330,27 @@ func waitStreamCreated(ctx context.Context, conn *qldb.QLDB, ledgerName, streamI
 	return nil, err
 }
 
+func statusStreamDeleted(ctx context.Context, conn *qldb.QLDB, ledgerName, streamID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindStream(ctx, conn, ledgerName, streamID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
 func waitStreamDeleted(ctx context.Context, conn *qldb.QLDB, ledgerName, streamID string) (*qldb.JournalKinesisStreamDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{qldb.StreamStatusActive, qldb.StreamStatusImpaired},
 		Target:     []string{},
-		Refresh:    statusStream(ctx, conn, ledgerName, streamID),
+		Refresh:    statusStreamDeleted(ctx, conn, ledgerName, streamID),
 		Timeout:    5 * time.Minute,
 		MinTimeout: 1 * time.Second,
 	}

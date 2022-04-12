@@ -19,7 +19,7 @@ resource "aws_qldb_stream" "example" {
   role_arn             = "sample-role-arn"
   inclusive_start_time = "2021-01-01T00:00:00Z"
 
-  kinesis_configuration = {
+  kinesis_configuration {
     aggegation_enabled = false
     stream_arn         = "arn:aws:kinesis:us-east-1:xxxxxxxxxxxx:stream/example-kinesis-stream"
   }
