@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/qldb"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -18,157 +19,124 @@ func init() {
 	resource.AddTestSweepers("aws_qldb_ledger", &resource.Sweeper{
 		Name: "aws_qldb_ledger",
 		F:    sweepLedgers,
+		Dependencies: []string{
+			"aws_qldb_stream",
+		},
 	})
+
 	resource.AddTestSweepers("aws_qldb_stream", &resource.Sweeper{
 		Name: "aws_qldb_stream",
-		F:    testSweepQLDBStreams,
+		F:    sweepStreams,
 	})
 
 }
 
 func sweepLedgers(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
-
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.(*conns.AWSClient).QLDBConn
 	input := &qldb.ListLedgersInput{}
-	page, err := conn.ListLedgers(input)
+	sweepResources := make([]*sweep.SweepResource, 0)
 
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping QLDB Ledger sweep for %s: %s", region, err)
-			return nil
+	err = conn.ListLedgersPages(input, func(page *qldb.ListLedgersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		return fmt.Errorf("Error listing QLDB Ledgers: %s", err)
+
+		for _, v := range page.Ledgers {
+			r := ResourceLedger()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.Name))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping QLDB Ledger sweep for %s: %s", region, err)
+		return nil
 	}
 
-	for _, item := range page.Ledgers {
-		input := &qldb.DeleteLedgerInput{
-			Name: item.Name,
-		}
-		name := aws.StringValue(item.Name)
+	if err != nil {
+		return fmt.Errorf("error listing QLDB Ledgers (%s): %w", region, err)
+	}
 
-		log.Printf("[INFO] Deleting QLDB Ledger: %s", name)
-		_, err = conn.DeleteLedger(input)
+	err = sweep.SweepOrchestrator(sweepResources)
 
-		if err != nil {
-			log.Printf("[ERROR] Failed to delete QLDB Ledger %s: %s", name, err)
-			continue
-		}
-
-		if err := WaitForLedgerDeletion(conn, name); err != nil {
-			log.Printf("[ERROR] Error waiting for QLDB Ledger (%s) deletion: %s", name, err)
-		}
+	if err != nil {
+		return fmt.Errorf("error sweeping QLDB Ledgers (%s): %w", region, err)
 	}
 
 	return nil
 }
 
-func testSweepQLDBStreams(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)(region)
-
+func sweepStreams(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
-
-	conn := client.(*AWSClient).qldbconn
+	conn := client.(*conns.AWSClient).QLDBConn
 	input := &qldb.ListLedgersInput{}
-	page, err := conn.ListLedgers(input)
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]*sweep.SweepResource, 0)
 
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping QLDB Stream sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error listing QLDB Ledgers for QLDB Stream Sweep: %s", err)
-	}
-
-	for _, item := range page.Ledgers {
-		ledgerName := aws.StringValue(item.Name)
-		err := testSweepQLDBLedgerStreams(conn, region, ledgerName)
-		if err != nil {
-			log.Printf("[ERROR] Failed to delete QLDB Stream for Ledger %s: %s", ledgerName, err)
-			continue
-		}
-	}
-
-	return nil
-}
-
-func testSweepQLDBLedgerStreams(conn *qldb.QLDB, region string, ledgerName string) error {
-	input := &qldb.ListJournalKinesisStreamsForLedgerInput{
-		LedgerName: aws.String(ledgerName),
-	}
-	page, err := conn.ListJournalKinesisStreamsForLedger(input)
-
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping QLDB Stream sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error listing QLDB Streams: %s", err)
-	}
-
-	for _, item := range page.Streams {
-		input := &qldb.CancelJournalKinesisStreamInput{
-			LedgerName: item.LedgerName,
-			StreamId:   item.StreamId,
+	err = conn.ListLedgersPages(input, func(page *qldb.ListLedgersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		ledgerName := aws.StringValue(item.LedgerName)
-		streamID := aws.StringValue(item.StreamId)
+		for _, v := range page.Ledgers {
+			input := &qldb.ListJournalKinesisStreamsForLedgerInput{
+				LedgerName: v.Name,
+			}
 
-		log.Printf("[INFO] Cancelling QLDB Stream: (%s, %s)", ledgerName, streamID)
-		_, err = conn.CancelJournalKinesisStream(input)
+			err := conn.ListJournalKinesisStreamsForLedgerPages(input, func(page *qldb.ListJournalKinesisStreamsForLedgerOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
 
-		if err != nil {
-			log.Printf("[ERROR] Failed to cancel QLDB Ledger: (%s, %s): %s", ledgerName, streamID, err)
-			continue
-		}
+				for _, v := range page.Streams {
+					r := ResourceStream()
+					d := r.Data(nil)
+					d.SetId(aws.StringValue(v.StreamId))
+					d.Set("ledger_name", v.LedgerName)
 
-		if err := waitForQLDBStreamCancellation(conn, ledgerName, streamID); err != nil {
-			log.Printf("[ERROR] Error waiting for QLDB Ledger (%s, %s) deletion: %s", ledgerName, streamID, err)
-		}
-	}
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
 
-	return nil
-}
-
-func waitForQLDBStreamCancellation(conn *qldb.QLDB, ledgerName string, streamID string) error {
-	stateConf := resource.StateChangeConf{
-		Pending: []string{
-			qldb.StreamStatusActive,
-			qldb.StreamStatusImpaired,
-		},
-		Target: []string{
-			qldb.StreamStatusCanceled,
-			qldb.StreamStatusCompleted,
-			qldb.StreamStatusFailed,
-		},
-		Timeout:    5 * time.Minute,
-		MinTimeout: 1 * time.Second,
-		Refresh: func() (interface{}, string, error) {
-			resp, err := conn.DescribeJournalKinesisStream(&qldb.DescribeJournalKinesisStreamInput{
-				LedgerName: aws.String(ledgerName),
-				StreamId:   aws.String(streamID),
+				return !lastPage
 			})
 
-			if tfawserr.ErrMessageContains(err, qldb.ErrCodeResourceNotFoundException, "") {
-				return 1, "", nil
+			if sweep.SkipSweepError(err) {
+				continue
 			}
 
 			if err != nil {
-				return nil, qldb.ErrCodeResourceInUseException, err
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing QLDB Streams (%s): %w", region, err))
 			}
+		}
 
-			return resp, aws.StringValue(resp.Stream.Status), nil
-		},
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping QLDB Stream sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
-	_, err := stateConf.WaitForState()
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing QLDB Ledgers (%s): %w", region, err))
+	}
 
-	return err
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping QLDB Streams (%s): %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }

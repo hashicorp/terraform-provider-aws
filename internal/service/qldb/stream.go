@@ -19,8 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// TODO:  Account for fact that streams can become "completed" and may impact future plans if this is not recognized as a valid state that does not need a re-apply to resolve...
-
 func ResourceStream() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStreamCreate,
