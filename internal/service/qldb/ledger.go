@@ -24,6 +24,7 @@ func ResourceLedger() *schema.Resource {
 		Read:   resourceLedgerRead,
 		Update: resourceLedgerUpdate,
 		Delete: resourceLedgerDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -33,7 +34,11 @@ func ResourceLedger() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"deletion_protection": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -44,21 +49,12 @@ func ResourceLedger() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
 				),
 			},
-
 			"permissions_mode": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(qldb.PermissionsMode_Values(), false),
 			},
-
-			"deletion_protection": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-
-			"tags": tftags.TagsSchema(),
-
+			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
