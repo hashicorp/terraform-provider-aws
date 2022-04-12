@@ -558,6 +558,7 @@ func Provider() *schema.Provider {
 			"aws_key_pair":                                   ec2.DataSourceKeyPair(),
 			"aws_launch_template":                            ec2.DataSourceLaunchTemplate(),
 			"aws_nat_gateway":                                ec2.DataSourceNATGateway(),
+			"aws_nat_gateways":                               ec2.DataSourceNATGateways(),
 			"aws_network_acls":                               ec2.DataSourceNetworkACLs(),
 			"aws_network_interface":                          ec2.DataSourceNetworkInterface(),
 			"aws_network_interfaces":                         ec2.DataSourceNetworkInterfaces(),
