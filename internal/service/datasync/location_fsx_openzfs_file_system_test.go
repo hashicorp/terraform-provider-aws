@@ -228,8 +228,8 @@ resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
     nfs {
       mount_options {
         version = "AUTOMATIC"
-	  }
-	}
+      }
+    }
   }
 }
 `)
@@ -246,9 +246,9 @@ resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
     nfs {
       mount_options {
         version = "AUTOMATIC"
-	  }
-	}
-  }  
+      }
+    }
+  }
 }
 `, subdirectory))
 }
@@ -263,9 +263,9 @@ resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
     nfs {
       mount_options {
         version = "AUTOMATIC"
-	  }
-	}
-  }  
+      }
+    }
+  }
 
   tags = {
     %[1]q = %[2]q
@@ -284,9 +284,9 @@ resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
     nfs {
       mount_options {
         version = "AUTOMATIC"
-	  }
-	}
-  }  
+      }
+    }
+  }
 
   tags = {
     %[1]q = %[2]q
