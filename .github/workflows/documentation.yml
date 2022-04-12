@@ -18,7 +18,11 @@ jobs:
       UV_THREADPOOL_SIZE: 128
     steps:
     - uses: actions/checkout@v3
+<<<<<<< HEAD
     - uses: YakDriver/md-check-links@v2.0.3
+=======
+    - uses: gaurav-nelson/github-action-markdown-link-check@v1
+>>>>>>> f2a5c0f5ee (CI test)
       with:
         use-quiet-mode: 'yes'
         use-verbose-mode: 'yes'
