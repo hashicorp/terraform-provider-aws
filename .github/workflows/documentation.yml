@@ -18,8 +18,8 @@ jobs:
       UV_THREADPOOL_SIZE: 128
     steps:
     - uses: actions/checkout@v3
-    - run: git config --global --add safe.directory /github/workspace
     - uses: gaurav-nelson/github-action-markdown-link-check@v1
+    - run: git config --global --add safe.directory /github/workspace
       with:
         use-quiet-mode: 'yes'
         use-verbose-mode: 'yes'
