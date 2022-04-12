@@ -3,12 +3,12 @@ subcategory: "DataSync"
 layout: "aws"
 page_title: "AWS: aws_datasync_location_fsx_openzfs_file_system"
 description: |-
-  Manages an FSx openzfs Location within AWS DataSync.
+  Manages an FSx OpenZfs Location within AWS DataSync.
 ---
 
 # Resource: aws_datasync_location_fsx_openzfs_file_system
 
-Manages an AWS DataSync FSx openzfs Location.
+Manages an AWS DataSync FSx OpenZfs Location.
 
 ## Example Usage
 
@@ -31,10 +31,10 @@ resource "aws_datasync_location_fsx_openzfs_file_system" "example" {
 
 The following arguments are supported:
 
-* `fsx_filesystem_arn` - (Required) The Amazon Resource Name (ARN) for the FSx for openzfs file system.
+* `fsx_filesystem_arn` - (Required) The Amazon Resource Name (ARN) for the FSx for OpenZfs file system.
 * `protocol` - (Required) The type of protocol that DataSync uses to access your file system. See [Protocol](#protocol) Below.
 * `security_group_arns` - (Optional) The Amazon Resource Names (ARNs) of the security groups that are to use to configure the FSx for openzfs file system.
-* `subdirectory` - (Optional) Subdirectory to perform actions as source or destination. Must start with `/fsx`
+* `subdirectory` - (Optional) Subdirectory to perform actions as source or destination. Must start with `/fsx`.
 * `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Protocol
@@ -48,7 +48,6 @@ The following arguments are supported:
 ##### Mount Options
 
 * `version` - (Optional) The specific NFS version that you want DataSync to use for mounting your NFS share. Valid values: `AUTOMATIC`, `NFS3`, `NFS4_0` and `NFS4_1`. Default: `AUTOMATIC`
-
 
 ## Attributes Reference
 
