@@ -48,7 +48,6 @@ func ResourceStream() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-
 			"kinesis_configuration": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -64,7 +63,7 @@ func ResourceStream() *schema.Resource {
 						},
 						"stream_arn": {
 							Type:         schema.TypeString,
-							Optional:     true,
+							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
