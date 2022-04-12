@@ -163,6 +163,11 @@ data "aws_nat_gateways" "by_vpc_id" {
 }
 
 data "aws_nat_gateways" "by_tags" {
+  filter {
+    name   = "state"
+    values = ["available"]
+  }
+
 	tags = {
 		OtherTag = "some-value"
 	}
