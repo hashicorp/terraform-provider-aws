@@ -47,6 +47,95 @@ func TestAccQLDBStream_basic(t *testing.T) {
 	})
 }
 
+func TestAccQLDBStream_disappears(t *testing.T) {
+	var v qldb.JournalKinesisStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_qldb_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, qldb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfqldb.ResourceStream(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccQLDBStream_tags(t *testing.T) {
+	var v qldb.JournalKinesisStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_qldb_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, qldb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccStreamConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccStreamConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccQLDBStream_withEndTime(t *testing.T) {
+	var v qldb.JournalKinesisStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_qldb_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, qldb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamEndTimeConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "exclusive_end_time"),
+					resource.TestCheckResourceAttrSet(resourceName, "inclusive_start_time"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_configuration.0.aggregation_enabled", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "kinesis_configuration.0.stream_arn"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckStreamExists(n string, v *qldb.JournalKinesisStreamDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -96,7 +185,7 @@ func testAccCheckStreamDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccStreamConfig(rName string) string {
+func testAccStreamBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_qldb_ledger" "test" {
   name                = %[1]q
@@ -141,7 +230,11 @@ resource "aws_iam_role" "test" {
     })
   }
 }
+`, rName)
+}
 
+func testAccStreamConfig(rName string) string {
+	return acctest.ConfigCompose(testAccStreamBaseConfig(rName), fmt.Sprintf(`
 resource "aws_qldb_stream" "test" {
   stream_name          = %[1]q
   ledger_name          = aws_qldb_ledger.test.id
@@ -152,5 +245,61 @@ resource "aws_qldb_stream" "test" {
     stream_arn = aws_kinesis_stream.test.arn
   }
 }
-`, rName)
+`, rName))
+}
+
+func testAccStreamEndTimeConfig(rName string) string {
+	return acctest.ConfigCompose(testAccStreamBaseConfig(rName), fmt.Sprintf(`
+resource "aws_qldb_stream" "test" {
+  stream_name          = %[1]q
+  ledger_name          = aws_qldb_ledger.test.id
+  exclusive_end_time   = "2021-12-31T23:59:59Z"
+  inclusive_start_time = "2021-01-01T00:00:00Z"
+  role_arn             = aws_iam_role.test.arn
+
+  kinesis_configuration {
+    aggregation_enabled = false
+    stream_arn          = aws_kinesis_stream.test.arn
+  }
+}
+`, rName))
+}
+
+func testAccStreamConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccStreamBaseConfig(rName), fmt.Sprintf(`
+resource "aws_qldb_stream" "test" {
+  stream_name          = %[1]q
+  ledger_name          = aws_qldb_ledger.test.id
+  inclusive_start_time = "2021-01-01T00:00:00Z"
+  role_arn             = aws_iam_role.test.arn
+
+  kinesis_configuration {
+    stream_arn = aws_kinesis_stream.test.arn
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccStreamConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccStreamBaseConfig(rName), fmt.Sprintf(`
+resource "aws_qldb_stream" "test" {
+  stream_name          = %[1]q
+  ledger_name          = aws_qldb_ledger.test.id
+  inclusive_start_time = "2021-01-01T00:00:00Z"
+  role_arn             = aws_iam_role.test.arn
+
+  kinesis_configuration {
+    stream_arn = aws_kinesis_stream.test.arn
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
