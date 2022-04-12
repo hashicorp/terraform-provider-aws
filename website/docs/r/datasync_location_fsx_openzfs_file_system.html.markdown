@@ -21,8 +21,8 @@ resource "aws_datasync_location_fsx_openzfs_file_system" "example" {
     nfs {
       mount_options {
         version = "AUTOMATIC"
-	    }
-	  }
+      }
+    }
   }
 }
 ```
