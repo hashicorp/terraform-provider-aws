@@ -29,7 +29,7 @@ func TestAccAWSRDSClusterActivityStream_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckRegionNot(t, endpoints.UsGovWest1RegionID, endpoints.UsGovEast1RegionID, endpoints.CnNorthwest1RegionID, endpoints.CnNorth1RegionID)
+			acctest.PreCheckPartition(endpoints.AwsPartitionID, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
@@ -66,7 +66,7 @@ func TestAccAWSRDSClusterActivityStream_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckRegionNot(t, endpoints.UsGovWest1RegionID, endpoints.UsGovEast1RegionID, endpoints.CnNorthwest1RegionID, endpoints.CnNorth1RegionID)
+			acctest.PreCheckPartition(endpoints.AwsPartitionID, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
