@@ -36,7 +36,7 @@ jobs:
     - uses: actions/checkout@v3
     # See also: https://github.com/actions/setup-go/pull/62
     - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-    - uses: actions/setup-go@v2
+    - uses: actions/setup-go@v3
       with:
         go-version: ${{ env.GO_VERSION }}
     - uses: actions/cache@v3
@@ -65,7 +65,7 @@ jobs:
     # See also: https://github.com/actions/setup-go/pull/62
     - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
     - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v3
       with:
         go-version: ${{ env.GO_VERSION }}
     # See also: https://github.com/actions/setup-go/issues/54
@@ -130,7 +130,7 @@ jobs:
     - uses: actions/checkout@v3
     # See also: https://github.com/actions/setup-go/pull/62
     - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-    - uses: actions/setup-go@v2
+    - uses: actions/setup-go@v3
       with:
         go-version: ${{ env.GO_VERSION }}
     # See also: https://github.com/actions/setup-go/issues/54
@@ -161,7 +161,7 @@ jobs:
     - uses: actions/checkout@v3
     # See also: https://github.com/actions/setup-go/pull/62
     - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-    - uses: actions/setup-go@v2
+    - uses: actions/setup-go@v3
       with:
         go-version: ${{ env.GO_VERSION }}
     # See also: https://github.com/actions/setup-go/issues/54
@@ -197,7 +197,7 @@ jobs:
         fetch-depth: 0
     # See also: https://github.com/actions/setup-go/pull/62
     - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-    - uses: actions/setup-go@v2
+    - uses: actions/setup-go@v3
       with:
         go-version: ${{ env.GO_VERSION }}
     # See also: https://github.com/actions/setup-go/issues/54
@@ -274,7 +274,7 @@ jobs:
     - uses: actions/checkout@v3
     # See also: https://github.com/actions/setup-go/pull/62
     - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-    - uses: actions/setup-go@v2
+    - uses: actions/setup-go@v3
       with:
         go-version: ${{ env.GO_VERSION }}
     # See also: https://github.com/actions/setup-go/issues/54
@@ -304,7 +304,7 @@ jobs:
     - uses: actions/checkout@v3
     # See also: https://github.com/actions/setup-go/pull/62
     - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-    - uses: actions/setup-go@v2
+    - uses: actions/setup-go@v3
       with:
         go-version: ${{ env.GO_VERSION }}
     # See also: https://github.com/actions/setup-go/issues/54
@@ -342,7 +342,7 @@ jobs:
     - uses: actions/checkout@v3
     # See also: https://github.com/actions/setup-go/pull/62
     - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-    - uses: actions/setup-go@v2
+    - uses: actions/setup-go@v3
       with:
         go-version: ${{ env.GO_VERSION }}
     - uses: actions/cache@v3
@@ -378,7 +378,7 @@ jobs:
           fetch-depth: 0
       # See also: https://github.com/actions/setup-go/pull/62
       - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v3
         with:
           go-version: ${{ env.GO_VERSION }}
       # See also: https://github.com/actions/setup-go/issues/54
