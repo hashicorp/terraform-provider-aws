@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSAMILaunchPermission_Account_basic(t *testing.T) {
+func TestAccAWSAMILaunchPermission_basic(t *testing.T) {
 	resourceName := "aws_ami_launch_permission.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -22,7 +22,7 @@ func TestAccAWSAMILaunchPermission_Account_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAMILaunchPermissionAccountIdConfig(rName),
+				Config: testAccAWSAMILaunchPermissionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAMILaunchPermissionExists(resourceName),
 				),
@@ -37,7 +37,7 @@ func TestAccAWSAMILaunchPermission_Account_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAMILaunchPermission_Group_basic(t *testing.T) {
+func TestAccAWSAMILaunchPermission_Disappears_LaunchPermission(t *testing.T) {
 	resourceName := "aws_ami_launch_permission.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -48,55 +48,7 @@ func TestAccAWSAMILaunchPermission_Group_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAMILaunchPermissionGroupNameConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAMILaunchPermissionExists(resourceName),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAMILaunchPermissionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSAMILaunchPermission_Account_Disappears_LaunchPermission(t *testing.T) {
-	resourceName := "aws_ami_launch_permission.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAMILaunchPermissionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAMILaunchPermissionAccountIdConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAMILaunchPermissionExists(resourceName),
-					testAccCheckAWSAMILaunchPermissionDisappears(resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSAMILaunchPermission_Group_Disappears_LaunchPermission(t *testing.T) {
-	resourceName := "aws_ami_launch_permission.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAMILaunchPermissionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAMILaunchPermissionGroupNameConfig(rName),
+				Config: testAccAWSAMILaunchPermissionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAMILaunchPermissionExists(resourceName),
 					testAccCheckAWSAMILaunchPermissionDisappears(resourceName),
@@ -109,7 +61,7 @@ func TestAccAWSAMILaunchPermission_Group_Disappears_LaunchPermission(t *testing.
 
 // Bug reference: https://github.com/hashicorp/terraform-provider-aws/issues/6222
 // Images with <group>all</group> will not have <userId> and can cause a panic
-func TestAccAWSAMILaunchPermission_Account_Disappears_LaunchPermission_Public(t *testing.T) {
+func TestAccAWSAMILaunchPermission_Disappears_LaunchPermission_Public(t *testing.T) {
 	resourceName := "aws_ami_launch_permission.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -120,7 +72,7 @@ func TestAccAWSAMILaunchPermission_Account_Disappears_LaunchPermission_Public(t 
 		CheckDestroy: testAccCheckAWSAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAMILaunchPermissionAccountIdConfig(rName),
+				Config: testAccAWSAMILaunchPermissionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAMILaunchPermissionExists(resourceName),
 					testAccCheckAWSAMILaunchPermissionAddPublic(resourceName),
@@ -132,7 +84,7 @@ func TestAccAWSAMILaunchPermission_Account_Disappears_LaunchPermission_Public(t 
 	})
 }
 
-func TestAccAWSAMILaunchPermission_Account_Disappears_AMI(t *testing.T) {
+func TestAccAWSAMILaunchPermission_Disappears_AMI(t *testing.T) {
 	imageID := ""
 	resourceName := "aws_ami_launch_permission.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -144,7 +96,7 @@ func TestAccAWSAMILaunchPermission_Account_Disappears_AMI(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAMILaunchPermissionAccountIdConfig(rName),
+				Config: testAccAWSAMILaunchPermissionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAMILaunchPermissionExists(resourceName),
 				),
@@ -152,38 +104,7 @@ func TestAccAWSAMILaunchPermission_Account_Disappears_AMI(t *testing.T) {
 			// Here we delete the AMI to verify the follow-on refresh after this step
 			// should not error.
 			{
-				Config: testAccAWSAMILaunchPermissionAccountIdConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckResourceGetAttr("aws_ami_copy.test", "id", &imageID),
-					testAccAWSAMIDisappears(&imageID),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSAMILaunchPermission_Group_Disappears_AMI(t *testing.T) {
-	imageID := ""
-	resourceName := "aws_ami_launch_permission.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAMILaunchPermissionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAMILaunchPermissionGroupNameConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAMILaunchPermissionExists(resourceName),
-				),
-			},
-			// Here we delete the AMI to verify the follow-on refresh after this step
-			// should not error.
-			{
-				Config: testAccAWSAMILaunchPermissionGroupNameConfig(rName),
+				Config: testAccAWSAMILaunchPermissionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckResourceGetAttr("aws_ami_copy.test", "id", &imageID),
 					testAccAWSAMIDisappears(&imageID),
@@ -225,13 +146,12 @@ func testAccCheckAWSAMILaunchPermissionExists(resourceName string) resource.Test
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 		accountID := rs.Primary.Attributes["account_id"]
-		groupName := rs.Primary.Attributes["group_name"]
 		imageID := rs.Primary.Attributes["image_id"]
 
-		if has, err := hasLaunchPermission(conn, imageID, accountID, groupName); err != nil {
+		if has, err := hasLaunchPermission(conn, imageID, accountID); err != nil {
 			return err
 		} else if !has {
-			return fmt.Errorf("launch permission does not exist for account: '%s' group: '%s' on '%s'", accountID, groupName, imageID)
+			return fmt.Errorf("launch permission does not exist for '%s' on '%s'", accountID, imageID)
 		}
 		return nil
 	}
@@ -245,13 +165,12 @@ func testAccCheckAWSAMILaunchPermissionDestroy(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 		accountID := rs.Primary.Attributes["account_id"]
-		groupName := rs.Primary.Attributes["group_name"]
 		imageID := rs.Primary.Attributes["image_id"]
 
-		if has, err := hasLaunchPermission(conn, imageID, accountID, groupName); err != nil {
+		if has, err := hasLaunchPermission(conn, imageID, accountID); err != nil {
 			return err
 		} else if has {
-			return fmt.Errorf("launch permission still exists for account: '%s'  group: '%s' on '%s'", accountID, groupName, imageID)
+			return fmt.Errorf("launch permission still exists for '%s' on '%s'", accountID, imageID)
 		}
 	}
 
@@ -302,22 +221,13 @@ func testAccCheckAWSAMILaunchPermissionDisappears(resourceName string) resource.
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 		accountID := rs.Primary.Attributes["account_id"]
 		imageID := rs.Primary.Attributes["image_id"]
-		groupName := rs.Primary.Attributes["group_name"]
-
-		var launch_permission *ec2.LaunchPermission
-
-		if accountID != "" {
-			launch_permission = &ec2.LaunchPermission{UserId: aws.String(accountID)}
-		} else {
-			launch_permission = &ec2.LaunchPermission{Group: aws.String(groupName)}
-		}
 
 		input := &ec2.ModifyImageAttributeInput{
 			ImageId:   aws.String(imageID),
 			Attribute: aws.String(ec2.ImageAttributeNameLaunchPermission),
 			LaunchPermission: &ec2.LaunchPermissionModifications{
 				Remove: []*ec2.LaunchPermission{
-					launch_permission,
+					{UserId: aws.String(accountID)},
 				},
 			},
 		}
@@ -350,7 +260,7 @@ func testAccAWSAMIDisappears(imageID *string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAWSAMILaunchPermissionAccountIdConfig(rName string) string {
+func testAccAWSAMILaunchPermissionConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ami" "amzn-ami-minimal-hvm" {
   most_recent = true
@@ -385,41 +295,6 @@ resource "aws_ami_launch_permission" "test" {
 `, rName, rName)
 }
 
-func testAccAWSAMILaunchPermissionGroupNameConfig(rName string) string {
-	return fmt.Sprintf(`
-data "aws_ami" "amzn-ami-minimal-hvm" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
-data "aws_caller_identity" "current" {}
-
-data "aws_region" "current" {}
-
-resource "aws_ami_copy" "test" {
-  description       = %q
-  name              = %q
-  source_ami_id     = data.aws_ami.amzn-ami-minimal-hvm.id
-  source_ami_region = data.aws_region.current.name
-}
-
-resource "aws_ami_launch_permission" "test" {
-  group_name = "all"
-  image_id   = aws_ami_copy.test.id
-}
-`, rName, rName)
-}
-
 func testAccAWSAMILaunchPermissionImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -427,10 +302,6 @@ func testAccAWSAMILaunchPermissionImportStateIdFunc(resourceName string) resourc
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		if rs.Primary.Attributes["account_id"] != "" {
-			return fmt.Sprintf("%s/%s", rs.Primary.Attributes["account_id"], rs.Primary.Attributes["image_id"]), nil
-		} else {
-			return fmt.Sprintf("group/%s/%s", rs.Primary.Attributes["group_name"], rs.Primary.Attributes["image_id"]), nil
-		}
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["account_id"], rs.Primary.Attributes["image_id"]), nil
 	}
 }

@@ -19,32 +19,14 @@ func resourceAwsAmiLaunchPermission() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
-
-				parseError := fmt.Errorf("Unexpected format of ID (%q), expected ACCOUNT-ID/IMAGE-ID or group/GROUP-NAME/ACCOUNT-ID", d.Id())
-				if len(idParts) == 2 {
-					// Parsing the ACCOUNT-ID/IMAGE-ID branch
-					if idParts[0] == "" || idParts[1] == "" {
-						return nil, parseError
-					}
-					accountId := idParts[0]
-					imageId := idParts[1]
-					d.Set("account_id", accountId)
-					d.Set("image_id", imageId)
-					d.SetId(fmt.Sprintf("%s-account-%s", imageId, accountId))
-				} else if len(idParts) == 3 && idParts[0] == "group" {
-					// Parsing the group/GROUP-NAME/ACCOUNT-ID branch
-					if idParts[1] == "" || idParts[2] == "" {
-						return nil, parseError
-					}
-					groupName := idParts[1]
-					imageId := idParts[2]
-					d.Set("group_name", groupName)
-					d.Set("image_id", imageId)
-					d.SetId(fmt.Sprintf("%s-group-%s", imageId, groupName))
-				} else {
-					return nil, parseError
+				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected ACCOUNT-ID/IMAGE-ID", d.Id())
 				}
-
+				accountId := idParts[0]
+				imageId := idParts[1]
+				d.Set("account_id", accountId)
+				d.Set("image_id", imageId)
+				d.SetId(fmt.Sprintf("%s-%s", imageId, accountId))
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -57,21 +39,8 @@ func resourceAwsAmiLaunchPermission() *schema.Resource {
 			},
 			"account_id": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
-				ExactlyOneOf: []string{
-					"account_id",
-					"group_name",
-				},
-			},
-			"group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ExactlyOneOf: []string{
-					"account_id",
-					"group_name",
-				},
 			},
 		},
 	}
@@ -82,22 +51,13 @@ func resourceAwsAmiLaunchPermissionCreate(d *schema.ResourceData, meta interface
 
 	image_id := d.Get("image_id").(string)
 	account_id := d.Get("account_id").(string)
-	group_name := d.Get("group_name").(string)
-
-	var launch_permission *ec2.LaunchPermission
-
-	if account_id != "" {
-		launch_permission = &ec2.LaunchPermission{UserId: aws.String(account_id)}
-	} else {
-		launch_permission = &ec2.LaunchPermission{Group: aws.String(group_name)}
-	}
 
 	_, err := conn.ModifyImageAttribute(&ec2.ModifyImageAttributeInput{
 		ImageId:   aws.String(image_id),
 		Attribute: aws.String(ec2.ImageAttributeNameLaunchPermission),
 		LaunchPermission: &ec2.LaunchPermissionModifications{
 			Add: []*ec2.LaunchPermission{
-				launch_permission,
+				{UserId: aws.String(account_id)},
 			},
 		},
 	})
@@ -105,19 +65,14 @@ func resourceAwsAmiLaunchPermissionCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error creating AMI launch permission: %w", err)
 	}
 
-	if account_id != "" {
-		d.SetId(fmt.Sprintf("%s-account-%s", image_id, account_id))
-	} else {
-		d.SetId(fmt.Sprintf("%s-group-%s", image_id, group_name))
-	}
-
+	d.SetId(fmt.Sprintf("%s-%s", image_id, account_id))
 	return nil
 }
 
 func resourceAwsAmiLaunchPermissionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	exists, err := hasLaunchPermission(conn, d.Get("image_id").(string), d.Get("account_id").(string), d.Get("group_name").(string))
+	exists, err := hasLaunchPermission(conn, d.Get("image_id").(string), d.Get("account_id").(string))
 	if err != nil {
 		return fmt.Errorf("error reading AMI launch permission (%s): %w", d.Id(), err)
 	}
@@ -139,21 +94,13 @@ func resourceAwsAmiLaunchPermissionDelete(d *schema.ResourceData, meta interface
 
 	image_id := d.Get("image_id").(string)
 	account_id := d.Get("account_id").(string)
-	group_name := d.Get("group_name").(string)
 
-	var launch_permission *ec2.LaunchPermission
-
-	if account_id != "" {
-		launch_permission = &ec2.LaunchPermission{UserId: aws.String(account_id)}
-	} else {
-		launch_permission = &ec2.LaunchPermission{Group: aws.String(group_name)}
-	}
 	_, err := conn.ModifyImageAttribute(&ec2.ModifyImageAttributeInput{
 		ImageId:   aws.String(image_id),
 		Attribute: aws.String(ec2.ImageAttributeNameLaunchPermission),
 		LaunchPermission: &ec2.LaunchPermissionModifications{
 			Remove: []*ec2.LaunchPermission{
-				launch_permission,
+				{UserId: aws.String(account_id)},
 			},
 		},
 	})
@@ -164,7 +111,7 @@ func resourceAwsAmiLaunchPermissionDelete(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func hasLaunchPermission(conn *ec2.EC2, image_id string, account_id string, group_name string) (bool, error) {
+func hasLaunchPermission(conn *ec2.EC2, image_id string, account_id string) (bool, error) {
 	attrs, err := conn.DescribeImageAttribute(&ec2.DescribeImageAttributeInput{
 		ImageId:   aws.String(image_id),
 		Attribute: aws.String(ec2.ImageAttributeNameLaunchPermission),
@@ -180,9 +127,7 @@ func hasLaunchPermission(conn *ec2.EC2, image_id string, account_id string, grou
 	}
 
 	for _, lp := range attrs.LaunchPermissions {
-		if account_id != "" && aws.StringValue(lp.UserId) == account_id {
-			return true, nil
-		} else if group_name != "" && aws.StringValue(lp.Group) == group_name {
+		if aws.StringValue(lp.UserId) == account_id {
 			return true, nil
 		}
 	}
