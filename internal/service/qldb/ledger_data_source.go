@@ -25,6 +25,10 @@ func DataSourceLedger() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"kms_key": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -56,6 +60,11 @@ func dataSourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(aws.StringValue(ledger.Name))
 	d.Set("arn", ledger.Arn)
 	d.Set("deletion_protection", ledger.DeletionProtection)
+	if ledger.EncryptionDescription != nil {
+		d.Set("kms_key", ledger.EncryptionDescription.KmsKeyArn)
+	} else {
+		d.Set("kms_key", nil)
+	}
 	d.Set("name", ledger.Name)
 	d.Set("permissions_mode", ledger.PermissionsMode)
 
