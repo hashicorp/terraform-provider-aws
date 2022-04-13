@@ -1684,6 +1684,7 @@ func Provider() *schema.Provider {
 			"aws_pinpoint_sms_channel":               pinpoint.ResourceSMSChannel(),
 
 			"aws_qldb_ledger": qldb.ResourceLedger(),
+			"aws_qldb_stream": qldb.ResourceStream(),
 
 			"aws_quicksight_data_source":      quicksight.ResourceDataSource(),
 			"aws_quicksight_group":            quicksight.ResourceGroup(),
