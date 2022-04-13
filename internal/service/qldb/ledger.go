@@ -160,34 +160,34 @@ func resourceLedgerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).QLDBConn
 
 	if d.HasChange("permissions_mode") {
-		updateOpts := &qldb.UpdateLedgerPermissionsModeInput{
+		input := &qldb.UpdateLedgerPermissionsModeInput{
 			Name:            aws.String(d.Id()),
 			PermissionsMode: aws.String(d.Get("permissions_mode").(string)),
 		}
-		if _, err := conn.UpdateLedgerPermissionsMode(updateOpts); err != nil {
-			return diag.Errorf("error updating permissions mode: %s", err)
+
+		log.Printf("[INFO] Updating QLDB Ledger permissions mode: %s", input)
+		if _, err := conn.UpdateLedgerPermissionsModeWithContext(ctx, input); err != nil {
+			return diag.Errorf("updating QLDB Ledger (%s) permissions mode: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("deletion_protection") {
-		val := d.Get("deletion_protection").(bool)
-		modifyOpts := &qldb.UpdateLedgerInput{
+		input := &qldb.UpdateLedgerInput{
+			DeletionProtection: aws.Bool(d.Get("deletion_protection").(bool)),
 			Name:               aws.String(d.Id()),
-			DeletionProtection: aws.Bool(val),
 		}
-		log.Printf(
-			"[INFO] Modifying deletion_protection QLDB attribute for %s: %#v",
-			d.Id(), modifyOpts)
-		if _, err := conn.UpdateLedger(modifyOpts); err != nil {
 
-			return diag.FromErr(err)
+		log.Printf("[INFO] Updating QLDB Ledger: %s", input)
+		if _, err := conn.UpdateLedgerWithContext(ctx, input); err != nil {
+			return diag.Errorf("updating QLDB Ledger (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
+
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating tags: %s", err)
+			return diag.Errorf("updating tags: %s", err)
 		}
 	}
 
