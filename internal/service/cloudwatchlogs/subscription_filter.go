@@ -64,17 +64,35 @@ func ResourceSubscriptionFilter() *schema.Resource {
 				Default:      cloudwatchlogs.DistributionByLogStream,
 				ValidateFunc: validation.StringInSlice(cloudwatchlogs.Distribution_Values(), false),
 			},
+			"region": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
 
 func resourceSubscriptionFilterCreate(d *schema.ResourceData, meta interface{}) error {
+	awsRegion := d.Get("region").(string)
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 	params := getSubscriptionFilterInput(d)
-	log.Printf("[DEBUG] Creating SubscriptionFilter %#v", params)
+
+	cloudWatchLogsConn := conn
+	if awsRegion != "" {
+		session, err := conns.NewSessionForRegion(&conn.Config, awsRegion, meta.(*conns.AWSClient).TerraformVersion)
+		if err != nil {
+			return fmt.Errorf("error creating AWS session: %w", err)
+		}
+
+		cloudWatchLogsConn = cloudwatchlogs.New(session)
+		log.Printf("[DEBUG] Creating SubscriptionFilter: %#v, using region: %s", params, awsRegion)
+	} else {
+		log.Printf("[DEBUG] Creating SubscriptionFilter %#v", params)
+	}
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.PutSubscriptionFilter(&params)
+		_, err := cloudWatchLogsConn.PutSubscriptionFilter(&params)
 
 		if tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeInvalidParameterException, "Could not deliver test message to specified") {
 			return resource.RetryableError(err)
@@ -105,14 +123,26 @@ func resourceSubscriptionFilterCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceSubscriptionFilterUpdate(d *schema.ResourceData, meta interface{}) error {
+	awsRegion := d.Get("region").(string)
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	params := getSubscriptionFilterInput(d)
 
-	log.Printf("[DEBUG] Update SubscriptionFilter %#v", params)
+	cloudWatchLogsConn := conn
+	if awsRegion != "" {
+		session, err := conns.NewSessionForRegion(&conn.Config, awsRegion, meta.(*conns.AWSClient).TerraformVersion)
+		if err != nil {
+			return fmt.Errorf("error creating AWS session: %w", err)
+		}
+
+		cloudWatchLogsConn = cloudwatchlogs.New(session)
+		log.Printf("[DEBUG] Update SubscriptionFilter: %#v, using region: %s", params, awsRegion)
+	} else {
+		log.Printf("[DEBUG] Update SubscriptionFilter %#v", params)
+	}
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.PutSubscriptionFilter(&params)
+		_, err := cloudWatchLogsConn.PutSubscriptionFilter(&params)
 
 		if tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeInvalidParameterException, "Could not deliver test message to specified") {
 			return resource.RetryableError(err)
@@ -130,7 +160,7 @@ func resourceSubscriptionFilterUpdate(d *schema.ResourceData, meta interface{}) 
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.PutSubscriptionFilter(&params)
+		_, err = cloudWatchLogsConn.PutSubscriptionFilter(&params)
 	}
 
 	if err != nil {
@@ -161,12 +191,23 @@ func getSubscriptionFilterInput(d *schema.ResourceData) cloudwatchlogs.PutSubscr
 }
 
 func resourceSubscriptionFilterRead(d *schema.ResourceData, meta interface{}) error {
+	awsRegion := d.Get("region").(string)
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 
 	log_group_name := d.Get("log_group_name").(string)
 	name := d.Get("name").(string) // "name" is a required field in the schema
 
-	subscriptionFilter, err := FindSubscriptionFilter(conn, log_group_name, name)
+	cloudWatchLogsConn := conn
+	if awsRegion != "" {
+		session, err := conns.NewSessionForRegion(&conn.Config, awsRegion, meta.(*conns.AWSClient).TerraformVersion)
+		if err != nil {
+			return fmt.Errorf("error creating AWS session: %w", err)
+		}
+
+		cloudWatchLogsConn = cloudwatchlogs.New(session)
+	}
+
+	subscriptionFilter, err := FindSubscriptionFilter(cloudWatchLogsConn, log_group_name, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Cloudwatch Logs Subscription Filter (%s) not found, removing from state", d.Id())
@@ -188,16 +229,27 @@ func resourceSubscriptionFilterRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceSubscriptionFilterDelete(d *schema.ResourceData, meta interface{}) error {
+	awsRegion := d.Get("region").(string)
 	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
 	log.Printf("[INFO] Deleting CloudWatch Log Group Subscription: %s", d.Id())
 	log_group_name := d.Get("log_group_name").(string)
 	name := d.Get("name").(string)
 
+	cloudWatchLogsConn := conn
+	if awsRegion != "" {
+		session, err := conns.NewSessionForRegion(&conn.Config, awsRegion, meta.(*conns.AWSClient).TerraformVersion)
+		if err != nil {
+			return fmt.Errorf("error creating AWS session: %w", err)
+		}
+
+		cloudWatchLogsConn = cloudwatchlogs.New(session)
+	}
+
 	params := &cloudwatchlogs.DeleteSubscriptionFilterInput{
 		FilterName:   aws.String(name),           // Required
 		LogGroupName: aws.String(log_group_name), // Required
 	}
-	_, err := conn.DeleteSubscriptionFilter(params)
+	_, err := cloudWatchLogsConn.DeleteSubscriptionFilter(params)
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeResourceNotFoundException, "The specified log group does not exist") {
 			return nil
