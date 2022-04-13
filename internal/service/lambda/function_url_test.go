@@ -157,8 +157,8 @@ func TestAccLambdaFunctionURL_Alias(t *testing.T) {
 
 func TestAccLambdaFunctionURL_TwoURLs(t *testing.T) {
 	var conf lambda.GetFunctionUrlConfigOutput
-	LatestURLName := "aws_lambda_function_url.latest"
-	LiveURLName := "aws_lambda_function_url.live"
+	latestResourceName := "aws_lambda_function_url.latest"
+	liveResourceName := "aws_lambda_function_url.live"
 	rString := sdkacctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
 	aliasName := "live"
@@ -174,32 +174,32 @@ func TestAccLambdaFunctionURL_TwoURLs(t *testing.T) {
 			{
 				Config: testAccFunctionURLTwoURLsConfig(funcName, aliasName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFunctionURLExists(LatestURLName, &conf),
-					resource.TestCheckResourceAttr(LatestURLName, "authorization_type", lambda.FunctionUrlAuthTypeNone),
-					resource.TestCheckResourceAttr(LatestURLName, "cors.#", "0"),
-					resource.TestCheckResourceAttrSet(LatestURLName, "function_arn"),
-					resource.TestCheckResourceAttr(LatestURLName, "function_name", funcName),
-					resource.TestCheckResourceAttrSet(LatestURLName, "function_url"),
-					resource.TestCheckResourceAttr(LatestURLName, "qualifier", ""),
-					resource.TestCheckResourceAttrSet(LatestURLName, "url_id"),
+					testAccCheckFunctionURLExists(latestResourceName, &conf),
+					resource.TestCheckResourceAttr(latestResourceName, "authorization_type", lambda.FunctionUrlAuthTypeNone),
+					resource.TestCheckResourceAttr(latestResourceName, "cors.#", "0"),
+					resource.TestCheckResourceAttrSet(latestResourceName, "function_arn"),
+					resource.TestCheckResourceAttr(latestResourceName, "function_name", funcName),
+					resource.TestCheckResourceAttrSet(latestResourceName, "function_url"),
+					resource.TestCheckResourceAttr(latestResourceName, "qualifier", ""),
+					resource.TestCheckResourceAttrSet(latestResourceName, "url_id"),
 
-					testAccCheckFunctionURLExists(LiveURLName, &conf),
-					resource.TestCheckResourceAttr(LiveURLName, "authorization_type", lambda.FunctionUrlAuthTypeNone),
-					resource.TestCheckResourceAttr(LiveURLName, "cors.#", "0"),
-					resource.TestCheckResourceAttrSet(LiveURLName, "function_arn"),
-					resource.TestCheckResourceAttr(LiveURLName, "function_name", funcName),
-					resource.TestCheckResourceAttrSet(LiveURLName, "function_url"),
-					resource.TestCheckResourceAttr(LiveURLName, "qualifier", "live"),
-					resource.TestCheckResourceAttrSet(LiveURLName, "url_id"),
+					testAccCheckFunctionURLExists(liveResourceName, &conf),
+					resource.TestCheckResourceAttr(liveResourceName, "authorization_type", lambda.FunctionUrlAuthTypeNone),
+					resource.TestCheckResourceAttr(liveResourceName, "cors.#", "0"),
+					resource.TestCheckResourceAttrSet(liveResourceName, "function_arn"),
+					resource.TestCheckResourceAttr(liveResourceName, "function_name", funcName),
+					resource.TestCheckResourceAttrSet(liveResourceName, "function_url"),
+					resource.TestCheckResourceAttr(liveResourceName, "qualifier", "live"),
+					resource.TestCheckResourceAttrSet(liveResourceName, "url_id"),
 				),
 			},
 			{
-				ResourceName:      LatestURLName,
+				ResourceName:      latestResourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ResourceName:      LiveURLName,
+				ResourceName:      liveResourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -477,7 +477,6 @@ resource "aws_lambda_function_url" "live" {
   function_name      = aws_lambda_function.test.function_name
   qualifier          = aws_lambda_alias.live.name
   authorization_type = "NONE"
-
 }
 `, funcName, aliasName))
 }
