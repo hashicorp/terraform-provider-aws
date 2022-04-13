@@ -47,6 +47,29 @@ func TestAccQLDBLedger_basic(t *testing.T) {
 	})
 }
 
+func TestAccQLDBLedger_disappears(t *testing.T) {
+	var v qldb.DescribeLedgerOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_qldb_ledger.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, qldb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckLedgerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLedgerConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLedgerExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfqldb.ResourceLedger(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccQLDBLedger_nameGenerated(t *testing.T) {
 	var v qldb.DescribeLedgerOutput
 	resourceName := "aws_qldb_ledger.test"
