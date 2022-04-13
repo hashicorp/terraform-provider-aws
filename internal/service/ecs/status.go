@@ -1,11 +1,12 @@
 package ecs
 
 import (
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -21,6 +22,10 @@ const (
 
 	clusterStatusError = "ERROR"
 	clusterStatusNone  = "NONE"
+
+	taskSetStatusActive   = "ACTIVE"
+	taskSetStatusDraining = "DRAINING"
+	taskSetStatusPrimary  = "PRIMARY"
 )
 
 func statusCapacityProvider(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
@@ -81,11 +86,11 @@ func statusService(conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc 
 	}
 }
 
-func statusCluster(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *ecs.ECS, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClusterByARN(conn, arn)
+		cluster, err := FindClusterByNameOrARN(ctx, conn, arn)
 
-		if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
+		if tfresource.NotFound(err) {
 			return nil, clusterStatusNone, nil
 		}
 
@@ -93,10 +98,50 @@ func statusCluster(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
 			return nil, clusterStatusError, err
 		}
 
-		if len(output.Clusters) == 0 {
-			return nil, clusterStatusNone, nil
+		return cluster, aws.StringValue(cluster.Status), err
+	}
+}
+
+func stabilityStatusTaskSet(conn *ecs.ECS, taskSetID, service, cluster string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &ecs.DescribeTaskSetsInput{
+			Cluster:  aws.String(cluster),
+			Service:  aws.String(service),
+			TaskSets: aws.StringSlice([]string{taskSetID}),
 		}
 
-		return output, aws.StringValue(output.Clusters[0].Status), err
+		output, err := conn.DescribeTaskSets(input)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil || len(output.TaskSets) == 0 {
+			return nil, "", nil
+		}
+
+		return output.TaskSets[0], aws.StringValue(output.TaskSets[0].StabilityStatus), nil
+	}
+}
+
+func statusTaskSet(conn *ecs.ECS, taskSetID, service, cluster string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &ecs.DescribeTaskSetsInput{
+			Cluster:  aws.String(cluster),
+			Service:  aws.String(service),
+			TaskSets: aws.StringSlice([]string{taskSetID}),
+		}
+
+		output, err := conn.DescribeTaskSets(input)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil || len(output.TaskSets) == 0 {
+			return nil, "", nil
+		}
+
+		return output.TaskSets[0], aws.StringValue(output.TaskSets[0].Status), nil
 	}
 }

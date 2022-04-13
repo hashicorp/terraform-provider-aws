@@ -1,5 +1,5 @@
-//go:build ignore
-// +build ignore
+//go:build generate
+// +build generate
 
 package main
 
@@ -256,7 +256,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	{{- end }}
 	{{- if .ParentNotFoundErrCode }}
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	{{- end }}
 	{{- if .TfResourcePkg }}
@@ -786,6 +786,8 @@ func awsServiceName(s string) (string, error) {
 	}
 
 	switch s {
+	case "amp":
+		return "prometheusservice", nil
 	case "cloudcontrol":
 		return "cloudcontrolapi", nil
 	case "cognitoidp":
@@ -794,9 +796,11 @@ func awsServiceName(s string) (string, error) {
 		return "databasemigrationservice", nil
 	case "ds":
 		return "directoryservice", nil
-	case "resourcegroupstagging":
-		return "resourcegroupstaggingapi", nil
-	case "serverlessapprepo":
+	case "events":
+		return "eventbridge", nil
+	case "lexmodels":
+		return "lexmodelbuildingservice", nil
+	case "serverlessrepo":
 		return "serverlessapplicationrepository", nil
 	}
 
@@ -815,6 +819,8 @@ func awsServiceNameUpper(s string) (string, error) {
 	}
 
 	switch s {
+	case "amp":
+		return awsServiceNames["prometheusservice"], nil
 	case "appautoscaling":
 		return awsServiceNames["applicationautoscaling"], nil
 	case "cloudcontrol":
@@ -825,9 +831,11 @@ func awsServiceNameUpper(s string) (string, error) {
 		return awsServiceNames["databasemigrationservice"], nil
 	case "ds":
 		return awsServiceNames["directoryservice"], nil
-	case "resourcegroupstagging":
-		return awsServiceNames["resourcegroupstaggingapi"], nil
-	case "serverlessapprepo":
+	case "events":
+		return awsServiceNames["eventbridge"], nil
+	case "lexmodels":
+		return awsServiceNames["lexmodelbuildingservice"], nil
+	case "serverlessrepo":
 		return awsServiceNames["serverlessapplicationrepository"], nil
 	}
 
@@ -893,7 +901,7 @@ func init() {
 	awsServiceNames["cloudsearchdomain"] = "CloudSearchDomain"
 	awsServiceNames["cloudtrail"] = "CloudTrail"
 	awsServiceNames["cloudwatch"] = "CloudWatch"
-	awsServiceNames["cloudwatchevents"] = "CloudWatchEvents"
+	awsServiceNames["cloudwatchevidently"] = "CloudWatchEvidently"
 	awsServiceNames["cloudwatchlogs"] = "CloudWatchLogs"
 	awsServiceNames["codeartifact"] = "CodeArtifact"
 	awsServiceNames["codebuild"] = "CodeBuild"
@@ -994,6 +1002,7 @@ func init() {
 	awsServiceNames["ivs"] = "IVS"
 	awsServiceNames["kafka"] = "Kafka"
 	awsServiceNames["kendra"] = "Kendra"
+	awsServiceNames["keyspaces"] = "Keyspaces"
 	awsServiceNames["kinesis"] = "Kinesis"
 	awsServiceNames["kinesisanalytics"] = "KinesisAnalytics"
 	awsServiceNames["kinesisanalyticsv2"] = "KinesisAnalyticsV2"
@@ -1004,7 +1013,7 @@ func init() {
 	awsServiceNames["kms"] = "KMS"
 	awsServiceNames["lakeformation"] = "LakeFormation"
 	awsServiceNames["lambda"] = "Lambda"
-	awsServiceNames["lexmodelbuilding"] = "LexModelBuilding"
+	awsServiceNames["lexmodelbuildingservice"] = "LexModelBuildingService"
 	awsServiceNames["lexmodelsv2"] = "LexModelsV2"
 	awsServiceNames["lexruntime"] = "LexRuntime"
 	awsServiceNames["lexruntimev2"] = "LexRuntimeV2"
@@ -1043,6 +1052,7 @@ func init() {
 	awsServiceNames["networkfirewall"] = "NetworkFirewall"
 	awsServiceNames["networkmanager"] = "NetworkManager"
 	awsServiceNames["nimblestudio"] = "NimbleStudio"
+	awsServiceNames["opensearchservice"] = "OpenSearchService"
 	awsServiceNames["opsworks"] = "OpsWorks"
 	awsServiceNames["opsworkscm"] = "OpsWorksCM"
 	awsServiceNames["organizations"] = "Organizations"
@@ -1056,7 +1066,7 @@ func init() {
 	awsServiceNames["pinpointsmsvoice"] = "PinpointSMSVoice"
 	awsServiceNames["polly"] = "Polly"
 	awsServiceNames["pricing"] = "Pricing"
-	awsServiceNames["prometheus"] = "Prometheus"
+	awsServiceNames["prometheusservice"] = "PrometheusService"
 	awsServiceNames["proton"] = "Proton"
 	awsServiceNames["qldb"] = "QLDB"
 	awsServiceNames["qldbsession"] = "QLDBSession"

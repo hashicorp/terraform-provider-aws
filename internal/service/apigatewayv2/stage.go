@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -251,7 +251,7 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 		ApiId:     aws.String(apiId),
 		StageName: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
 		log.Printf("[WARN] API Gateway v2 stage (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -294,7 +294,7 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error setting route_settings: %s", err)
 	}
-	err = d.Set("stage_variables", verify.PointersMapToStringList(resp.StageVariables))
+	err = d.Set("stage_variables", flex.PointersMapToStringList(resp.StageVariables))
 	if err != nil {
 		return fmt.Errorf("error setting stage_variables: %s", err)
 	}
@@ -384,7 +384,7 @@ func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 					RouteKey:  aws.String(routeKey),
 					StageName: aws.String(d.Id()),
 				})
-				if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+				if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 					continue
 				}
 				if err != nil {
@@ -433,7 +433,7 @@ func resourceStageDelete(d *schema.ResourceData, meta interface{}) error {
 		ApiId:     aws.String(d.Get("api_id").(string)),
 		StageName: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {

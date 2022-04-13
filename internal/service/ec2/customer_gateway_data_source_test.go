@@ -13,7 +13,7 @@ import (
 func TestAccEC2CustomerGatewayDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_customer_gateway.test"
 	resourceName := "aws_customer_gateway.test"
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	asn := sdkacctest.RandIntRange(64512, 65534)
 	hostOctet := sdkacctest.RandIntRange(1, 254)
 
@@ -24,13 +24,15 @@ func TestAccEC2CustomerGatewayDataSource_filter(t *testing.T) {
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomerGatewayFilterDataSourceConfig(asn, hostOctet),
+				Config: testAccCustomerGatewayFilterDataSourceConfig(rName, asn, hostOctet),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "bgp_asn", dataSourceName, "bgp_asn"),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", dataSourceName, "certificate_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "device_name", dataSourceName, "device_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "ip_address", dataSourceName, "ip_address"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(resourceName, "type", dataSourceName, "type"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 				),
 			},
 		},
@@ -40,7 +42,7 @@ func TestAccEC2CustomerGatewayDataSource_filter(t *testing.T) {
 func TestAccEC2CustomerGatewayDataSource_id(t *testing.T) {
 	dataSourceName := "data.aws_customer_gateway.test"
 	resourceName := "aws_customer_gateway.test"
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	asn := sdkacctest.RandIntRange(64512, 65534)
 	hostOctet := sdkacctest.RandIntRange(1, 254)
 
@@ -51,29 +53,30 @@ func TestAccEC2CustomerGatewayDataSource_id(t *testing.T) {
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomerGatewayIDDataSourceConfig(asn, hostOctet),
+				Config: testAccCustomerGatewayIDDataSourceConfig(rName, asn, hostOctet),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "bgp_asn", dataSourceName, "bgp_asn"),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", dataSourceName, "certificate_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "device_name", dataSourceName, "device_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "ip_address", dataSourceName, "ip_address"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(resourceName, "type", dataSourceName, "type"),
-					resource.TestCheckResourceAttrPair(resourceName, "device_name", dataSourceName, "device_name"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCustomerGatewayFilterDataSourceConfig(asn, hostOctet int) string {
-	name := sdkacctest.RandomWithPrefix("test-filter")
+func testAccCustomerGatewayFilterDataSourceConfig(rName string, asn, hostOctet int) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
-  bgp_asn    = %d
-  ip_address = "50.0.0.%d"
+  bgp_asn    = %[2]d
+  ip_address = "50.0.0.%[3]d"
   type       = "ipsec.1"
 
   tags = {
-    Name = "%s"
+    Name = %[1]q
   }
 }
 
@@ -83,20 +86,24 @@ data "aws_customer_gateway" "test" {
     values = [aws_customer_gateway.test.tags.Name]
   }
 }
-`, asn, hostOctet, name)
+`, rName, asn, hostOctet)
 }
 
-func testAccCustomerGatewayIDDataSourceConfig(asn, hostOctet int) string {
+func testAccCustomerGatewayIDDataSourceConfig(rName string, asn, hostOctet int) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
-  bgp_asn     = %d
-  ip_address  = "50.0.0.%d"
+  bgp_asn     = %[2]d
+  ip_address  = "50.0.0.%[3]d"
   device_name = "test"
   type        = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_customer_gateway" "test" {
   id = aws_customer_gateway.test.id
 }
-`, asn, hostOctet)
+`, rName, asn, hostOctet)
 }

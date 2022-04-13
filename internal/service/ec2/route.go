@@ -8,9 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -24,6 +23,7 @@ var routeValidDestinations = []string{
 
 var routeValidTargets = []string{
 	"carrier_gateway_id",
+	"core_network_arn",
 	"egress_only_gateway_id",
 	"gateway_id",
 	"instance_id",
@@ -46,7 +46,7 @@ func ResourceRoute() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(2 * time.Minute),
+			Create: schema.DefaultTimeout(5 * time.Minute),
 			Update: schema.DefaultTimeout(2 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
@@ -62,28 +62,25 @@ func ResourceRoute() *schema.Resource {
 			// Destinations.
 			///
 			"destination_cidr_block": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.Any(
-					validation.StringIsEmpty,
-					verify.ValidIPv4CIDRNetworkAddress,
-				),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+				ExactlyOneOf: []string{"destination_cidr_block", "destination_ipv6_cidr_block", "destination_prefix_list_id"},
 			},
 			"destination_ipv6_cidr_block": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.Any(
-					validation.StringIsEmpty,
-					verify.ValidIPv6CIDRNetworkAddress,
-				),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateFunc:     verify.ValidIPv6CIDRNetworkAddress,
 				DiffSuppressFunc: suppressEqualCIDRBlockDiffs,
+				ExactlyOneOf:     []string{"destination_cidr_block", "destination_ipv6_cidr_block", "destination_prefix_list_id"},
 			},
 			"destination_prefix_list_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"destination_cidr_block", "destination_ipv6_cidr_block", "destination_prefix_list_id"},
 			},
 
 			//
@@ -94,6 +91,11 @@ func ResourceRoute() *schema.Resource {
 				Optional:      true,
 				ExactlyOneOf:  routeValidTargets,
 				ConflictsWith: []string{"destination_ipv6_cidr_block"}, // IPv4 destinations only.
+			},
+			"core_network_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: routeValidTargets,
 			},
 			"egress_only_gateway_id": {
 				Type:          schema.TypeString,
@@ -110,6 +112,7 @@ func ResourceRoute() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
+				Deprecated:   "Use network_interface_id instead",
 				ExactlyOneOf: routeValidTargets,
 			},
 			"local_gateway_id": {
@@ -118,10 +121,9 @@ func ResourceRoute() *schema.Resource {
 				ExactlyOneOf: routeValidTargets,
 			},
 			"nat_gateway_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ExactlyOneOf:  routeValidTargets,
-				ConflictsWith: []string{"destination_ipv6_cidr_block"}, // IPv4 destinations only.
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: routeValidTargets,
 			},
 			"network_interface_id": {
 				Type:         schema.TypeString,
@@ -207,6 +209,8 @@ func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	switch target := aws.String(target); targetAttributeKey {
 	case "carrier_gateway_id":
 		input.CarrierGatewayId = target
+	case "core_network_arn":
+		input.CoreNetworkArn = target
 	case "egress_only_gateway_id":
 		input.EgressOnlyInternetGatewayId = target
 	case "gateway_id":
@@ -243,13 +247,13 @@ func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
+	d.SetId(RouteCreateID(routeTableID, destination))
+
 	_, err = WaitRouteReady(conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to become available: %w", routeTableID, destination, err)
 	}
-
-	d.SetId(RouteCreateID(routeTableID, destination))
 
 	return resourceRouteRead(d, meta)
 }
@@ -291,6 +295,7 @@ func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("carrier_gateway_id", route.CarrierGatewayId)
+	d.Set("core_network_arn", route.CoreNetworkArn)
 	d.Set("destination_cidr_block", route.DestinationCidrBlock)
 	d.Set("destination_ipv6_cidr_block", route.DestinationIpv6CidrBlock)
 	d.Set("destination_prefix_list_id", route.DestinationPrefixListId)
@@ -355,6 +360,8 @@ func resourceRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 	switch target := aws.String(target); targetAttributeKey {
 	case "carrier_gateway_id":
 		input.CarrierGatewayId = target
+	case "core_network_arn":
+		input.CoreNetworkArn = target
 	case "egress_only_gateway_id":
 		input.EgressOnlyInternetGatewayId = target
 	case "gateway_id":

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -40,6 +40,17 @@ func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "last_record_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_successful_provisioning_record_id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					// One output will default to the launched CloudFormation Stack (provisioned outside terraform).
+					// While another output will describe the output parameter configured in the S3 object resource,
+					// which we can check as follows.
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+						"description": "VPC ID",
+						"key":         "VpcID",
+					}),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]*regexp.Regexp{
+						"value": regexp.MustCompile(`vpc-.+`),
+					}),
 					resource.TestCheckResourceAttrPair(resourceName, "path_id", "data.aws_servicecatalog_launch_paths.test", "summaries.0.path_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_name", "aws_servicecatalog_product.test", "provisioning_artifact_parameters.0.name"),
@@ -127,7 +138,7 @@ func testAccCheckProvisionedProductDestroy(s *terraform.State) error {
 			continue
 		}
 
-		err := tfservicecatalog.WaitProvisionedProductTerminated(conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "")
+		err := tfservicecatalog.WaitProvisionedProductTerminated(conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "", tfservicecatalog.ProvisionedProductDeleteTimeout)
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 			continue
@@ -151,7 +162,7 @@ func testAccCheckProvisionedProductExists(resourceName string) resource.TestChec
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
-		_, err := tfservicecatalog.WaitProvisionedProductReady(conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "")
+		_, err := tfservicecatalog.WaitProvisionedProductReady(conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "", tfservicecatalog.ProvisionedProductReadyTimeout)
 
 		if err != nil {
 			return fmt.Errorf("error describing Service Catalog Provisioned Product (%s): %w", rs.Primary.ID, err)
@@ -165,11 +176,15 @@ func testAccProvisionedProductTemplateURLBaseConfig(rName, domain, email string)
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = "%[1]s.json"
 
@@ -232,7 +247,7 @@ resource "aws_servicecatalog_product" "test" {
     description                 = "artefaktbeskrivning"
     disable_template_validation = true
     name                        = %[1]q
-    template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
+    template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
     type                        = "CLOUD_FORMATION_TEMPLATE"
   }
 

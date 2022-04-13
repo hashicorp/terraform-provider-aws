@@ -20,11 +20,11 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(elasticache.EndpointsID, testAccErrorCheckSkipElasticache)
+	acctest.RegisterServiceErrorCheckFunc(elasticache.EndpointsID, testAccErrorCheckSkip)
 
 }
 
-func testAccErrorCheckSkipElasticache(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"is not suppored in this region",
 	)
@@ -43,7 +43,7 @@ func TestAccElastiCacheCluster_Engine_memcached(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_Engine_Memcached(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &ec),
 					resource.TestCheckResourceAttr(resourceName, "cache_nodes.0.id", "0001"),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration_endpoint"),
@@ -77,11 +77,13 @@ func TestAccElastiCacheCluster_Engine_redis(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_Engine_Redis(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &ec),
 					resource.TestCheckResourceAttr(resourceName, "cache_nodes.0.id", "0001"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "port", "6379"),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 				),
 			},
 			{
@@ -91,6 +93,58 @@ func TestAccElastiCacheCluster_Engine_redis(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
 				},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheCluster_Engine_redis_v5(t *testing.T) {
+	var ec elasticache.CacheCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_Engine_Redis_v5(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "5.0.6"),
+					// Even though it is ignored, the API returns `true` in this case
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheCluster_Engine_None(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_Engine_None(rName),
+				// Verify "ExactlyOneOf" in the schema for "engine" and "replication_group_id"
+				// throws a plan-time error when neither are configured.
+				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
 			},
 		},
 	})
@@ -744,6 +798,256 @@ func TestAccElastiCacheCluster_Redis_finalSnapshot(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheCluster_Redis_autoMinorVersionUpgrade(t *testing.T) {
+	var cluster elasticache.CacheCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_Redis_AutoMinorVersionUpgrade(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
+			},
+			{
+				Config: testAccClusterConfig_Redis_AutoMinorVersionUpgrade(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheCluster_Engine_Redis_LogDeliveryConfigurations(t *testing.T) {
+	var ec elasticache.CacheCluster
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_elasticache_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_Engine_Redis_LogDeliveryConfigurations(rName, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination_type", "cloudwatch-logs"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_format", "text"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_type", "engine-log"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.destination_type", "cloudwatch-logs"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.log_format", "text"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.log_type", "slow-log"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"},
+			},
+			{
+				Config: testAccClusterConfig_Engine_Redis_LogDeliveryConfigurations(rName, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination_type", "kinesis-firehose"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_type", "engine-log"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.destination_type", "kinesis-firehose"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.log_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.log_type", "slow-log"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"},
+			},
+			{
+				Config: testAccClusterConfig_Engine_Redis_LogDeliveryConfigurations(rName, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination_type", "cloudwatch-logs"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_format", "text"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_type", "slow-log"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.destination_type", "kinesis-firehose"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.log_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.log_type", "engine-log"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_Engine_Redis_LogDeliveryConfigurations(rName, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination_type", "cloudwatch-logs"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_format", "text"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_type", "engine-log"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.destination_type", "kinesis-firehose"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.log_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.1.log_type", "slow-log"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_Engine_Redis_LogDeliveryConfigurations(rName, false, "", "", false, "", ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.0.destination"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.0.destination_type"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.0.log_format"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.0.log_type"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.1.destination"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.1.destination_type"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.1.log_format"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.1.log_type"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_Engine_Redis_LogDeliveryConfigurations(rName, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson, false, "", ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.destination_type", "kinesis-firehose"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.log_type", "slow-log"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.1.destination"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.1.destination_type"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.1.log_format"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configuration.1.log_type"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheCluster_tags(t *testing.T) {
+	var cluster elasticache.CacheCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"}, //not in the API
+			},
+			{
+				Config: testAccClusterConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccClusterConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheCluster_tagWithOtherModification(t *testing.T) {
+	var cluster elasticache.CacheCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterVersionAndTagConfig(rName, "5.0.4", "key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.4"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccClusterVersionAndTagConfig(rName, "5.0.6", "key1", "value1updated"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.6"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1updated"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckClusterAttributes(v *elasticache.CacheCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if v.NotificationConfiguration == nil {
@@ -878,7 +1182,7 @@ func testAccCheckClusterEC2ClassicExists(n string, v *elasticache.CacheCluster) 
 func testAccClusterConfig_Engine_Memcached(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
-  cluster_id      = "%s"
+  cluster_id      = "%[1]s"
   engine          = "memcached"
   node_type       = "cache.t3.small"
   num_cache_nodes = 1
@@ -889,8 +1193,30 @@ resource "aws_elasticache_cluster" "test" {
 func testAccClusterConfig_Engine_Redis(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
-  cluster_id      = "%s"
+  cluster_id      = "%[1]s"
   engine          = "redis"
+  node_type       = "cache.t3.small"
+  num_cache_nodes = 1
+}
+`, rName)
+}
+
+func testAccClusterConfig_Engine_Redis_v5(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "test" {
+  cluster_id      = "%[1]s"
+  engine_version  = "5.0.6"
+  engine          = "redis"
+  node_type       = "cache.t3.small"
+  num_cache_nodes = 1
+}
+`, rName)
+}
+
+func testAccClusterConfig_Engine_None(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "test" {
+  cluster_id      = "%[1]s"
   node_type       = "cache.t3.small"
   num_cache_nodes = 1
 }
@@ -1375,4 +1701,190 @@ resource "aws_elasticache_cluster" "test" {
   final_snapshot_identifier = %[1]q
 }
 `, rName)
+}
+
+func testAccClusterConfig_Redis_AutoMinorVersionUpgrade(rName string, enable bool) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "test" {
+  cluster_id      = %[1]q
+  engine          = "redis"
+  engine_version  = "6.x"
+  node_type       = "cache.t3.small"
+  num_cache_nodes = 1
+
+  auto_minor_version_upgrade = %[2]t
+}
+`, rName, enable)
+}
+
+func testAccClusterConfig_Engine_Redis_LogDeliveryConfigurations(rName string, slowLogDeliveryEnabled bool, slowDeliveryDestination string, slowDeliveryFormat string, engineLogDeliveryEnabled bool, engineDeliveryDestination string, engineLogDeliveryFormat string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "p" {
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = ["${aws_cloudwatch_log_group.lg.arn}:log-stream:*"]
+    principals {
+      identifiers = ["delivery.logs.amazonaws.com"]
+      type        = "Service"
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_resource_policy" "rp" {
+  policy_document = data.aws_iam_policy_document.p.json
+  policy_name     = "%[1]s"
+  depends_on = [
+    aws_cloudwatch_log_group.lg
+  ]
+}
+
+resource "aws_cloudwatch_log_group" "lg" {
+  retention_in_days = 1
+  name              = "%[1]s"
+}
+
+resource "aws_s3_bucket" "b" {
+  force_destroy = true
+}
+
+resource "aws_iam_role" "r" {
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "firehose.amazonaws.com"
+        }
+      },
+    ]
+  })
+  inline_policy {
+    name = "my_inline_s3_policy"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action = [
+            "s3:AbortMultipartUpload",
+            "s3:GetBucketLocation",
+            "s3:GetObject",
+            "s3:ListBucket",
+            "s3:ListBucketMultipartUploads",
+            "s3:PutObject",
+            "s3:PutObjectAcl",
+          ]
+          Effect   = "Allow"
+          Resource = ["${aws_s3_bucket.b.arn}", "${aws_s3_bucket.b.arn}/*"]
+        },
+      ]
+    })
+  }
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "ds" {
+  name        = "%[1]s"
+  destination = "s3"
+  s3_configuration {
+    role_arn   = aws_iam_role.r.arn
+    bucket_arn = aws_s3_bucket.b.arn
+  }
+  lifecycle {
+    ignore_changes = [
+      tags["LogDeliveryEnabled"],
+    ]
+  }
+}
+
+resource "aws_elasticache_cluster" "test" {
+  cluster_id        = "%[1]s"
+  engine            = "redis"
+  node_type         = "cache.t3.micro"
+  num_cache_nodes   = 1
+  port              = 6379
+  apply_immediately = true
+  dynamic "log_delivery_configuration" {
+    for_each = tobool("%[2]t") ? [""] : []
+    content {
+      destination      = ("%[3]s" == "cloudwatch-logs") ? aws_cloudwatch_log_group.lg.name : (("%[3]s" == "kinesis-firehose") ? aws_kinesis_firehose_delivery_stream.ds.name : null)
+      destination_type = "%[3]s"
+      log_format       = "%[4]s"
+      log_type         = "slow-log"
+    }
+  }
+  dynamic "log_delivery_configuration" {
+    for_each = tobool("%[5]t") ? [""] : []
+    content {
+      destination      = ("%[6]s" == "cloudwatch-logs") ? aws_cloudwatch_log_group.lg.name : (("%[6]s" == "kinesis-firehose") ? aws_kinesis_firehose_delivery_stream.ds.name : null)
+      destination_type = "%[6]s"
+      log_format       = "%[7]s"
+      log_type         = "engine-log"
+    }
+  }
+}
+
+data "aws_elasticache_cluster" "test" {
+  cluster_id = aws_elasticache_cluster.test.cluster_id
+}
+`, rName, slowLogDeliveryEnabled, slowDeliveryDestination, slowDeliveryFormat, engineLogDeliveryEnabled, engineDeliveryDestination, engineLogDeliveryFormat)
+
+}
+
+func testAccClusterConfigTags1(rName, tag1Key, tag1Value string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_elasticache_cluster" "test" {
+  cluster_id      = %[1]q
+  engine          = "memcached"
+  node_type       = "cache.t3.small"
+  num_cache_nodes = 1
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tag1Key, tag1Value))
+}
+
+func testAccClusterConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_elasticache_cluster" "test" {
+  cluster_id      = %[1]q
+  engine          = "memcached"
+  node_type       = "cache.t3.small"
+  num_cache_nodes = 1
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value))
+}
+
+func testAccClusterVersionAndTagConfig(rName, version, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(
+		fmt.Sprintf(`
+resource "aws_elasticache_cluster" "test" {
+  cluster_id        = %[1]q
+  node_type         = "cache.t3.small"
+  num_cache_nodes   = 1
+  engine            = "redis"
+  engine_version    = %[2]q
+  apply_immediately = true
+
+  tags = {
+    %[3]q = %[4]q
+  }
+}
+`, rName, version, tagKey1, tagValue1),
+	)
 }

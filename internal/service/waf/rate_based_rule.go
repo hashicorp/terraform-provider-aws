@@ -244,7 +244,7 @@ func updateWafRateBasedRuleResource(id string, oldP, newP []interface{}, rateLim
 		req := &waf.UpdateRateBasedRuleInput{
 			ChangeToken: token,
 			RuleId:      aws.String(id),
-			Updates:     diffWafRulePredicates(oldP, newP),
+			Updates:     DiffRulePredicates(oldP, newP),
 			RateLimit:   aws.Int64(int64(rateLimit.(int))),
 		}
 

@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/worklink"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -116,7 +116,7 @@ func testAccCheckWebsiteCertificateAuthorityAssociationDestroy(s *terraform.Stat
 		})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, worklink.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, worklink.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 
@@ -201,24 +201,23 @@ func testAccCheckWebsiteCertificateAuthorityAssociationExists(n string) resource
 }
 
 func testAccWebsiteCertificateAuthorityAssociationConfig(r string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(
+		testAccFleetConfig(r), `
 resource "aws_worklink_website_certificate_authority_association" "test" {
   fleet_arn   = aws_worklink_fleet.test.arn
   certificate = file("test-fixtures/worklink-website-certificate-authority-association.pem")
 }
-`, testAccFleetConfig(r))
+`)
 }
 
 func testAccWebsiteCertificateAuthorityAssociationDisplayNameConfig(r, displayName string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(
+		testAccFleetConfig(r),
+		fmt.Sprintf(`
 resource "aws_worklink_website_certificate_authority_association" "test" {
   fleet_arn    = aws_worklink_fleet.test.arn
   certificate  = file("test-fixtures/worklink-website-certificate-authority-association.pem")
   display_name = "%s"
 }
-`, testAccFleetConfig(r), displayName)
+`, displayName))
 }

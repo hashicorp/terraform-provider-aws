@@ -1,7 +1,6 @@
 package ec2
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,13 +13,13 @@ import (
 func DataSourceNetworkInterfaces() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceNetworkInterfacesRead,
+
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
+			"filter": DataSourceFiltersSchema(),
 			"ids": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 			"tags": tftags.TagsSchemaComputed(),
 		},
@@ -32,17 +31,13 @@ func dataSourceNetworkInterfacesRead(d *schema.ResourceData, meta interface{}) e
 
 	input := &ec2.DescribeNetworkInterfacesInput{}
 
-	if v, ok := d.GetOk("tags"); ok {
-		input.Filters = BuildTagFilterList(
-			Tags(tftags.New(v.(map[string]interface{}))),
-		)
-	}
+	input.Filters = append(input.Filters, BuildTagFilterList(
+		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+	)...)
 
-	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = append(input.Filters, BuildCustomFilterList(
-			v.(*schema.Set),
-		)...)
-	}
+	input.Filters = append(input.Filters, BuildFiltersDataSource(
+		d.Get("filter").(*schema.Set),
+	)...)
 
 	if len(input.Filters) == 0 {
 		input.Filters = nil
@@ -56,19 +51,12 @@ func dataSourceNetworkInterfacesRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error reading EC2 Network Interfaces: %w", err)
 	}
 
-	if len(output) == 0 {
-		return errors.New("no matching network interfaces found")
-	}
-
 	for _, v := range output {
 		networkInterfaceIDs = append(networkInterfaceIDs, aws.StringValue(v.NetworkInterfaceId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-
-	if err := d.Set("ids", networkInterfaceIDs); err != nil {
-		return fmt.Errorf("error setting ids: %w", err)
-	}
+	d.Set("ids", networkInterfaceIDs)
 
 	return nil
 }

@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -90,7 +90,7 @@ func resourceCodeSigningConfigCreate(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG] Creating Lambda code signing config")
 
 	configInput := &lambda.CreateCodeSigningConfigInput{
-		AllowedPublishers: expandLambdaCodeSigningConfigAllowedPublishers(d.Get("allowed_publishers").([]interface{})),
+		AllowedPublishers: expandCodeSigningConfigAllowedPublishers(d.Get("allowed_publishers").([]interface{})),
 		Description:       aws.String(d.Get("description").(string)),
 	}
 
@@ -153,7 +153,7 @@ func resourceCodeSigningConfigRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error setting lambda code signing config last modified: %s", err)
 	}
 
-	if err := d.Set("allowed_publishers", flattenLambdaCodeSigningConfigAllowedPublishers(codeSigningConfig.AllowedPublishers)); err != nil {
+	if err := d.Set("allowed_publishers", flattenCodeSigningConfigAllowedPublishers(codeSigningConfig.AllowedPublishers)); err != nil {
 		return fmt.Errorf("error setting lambda code signing config allowed publishers: %s", err)
 	}
 
@@ -173,7 +173,7 @@ func resourceCodeSigningConfigUpdate(d *schema.ResourceData, meta interface{}) e
 
 	configUpdate := false
 	if d.HasChange("allowed_publishers") {
-		configInput.AllowedPublishers = expandLambdaCodeSigningConfigAllowedPublishers(d.Get("allowed_publishers").([]interface{}))
+		configInput.AllowedPublishers = expandCodeSigningConfigAllowedPublishers(d.Get("allowed_publishers").([]interface{}))
 		configUpdate = true
 	}
 	if d.HasChange("policies") {
@@ -219,7 +219,7 @@ func resourceCodeSigningConfigDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func expandLambdaCodeSigningConfigAllowedPublishers(allowedPublishers []interface{}) *lambda.AllowedPublishers {
+func expandCodeSigningConfigAllowedPublishers(allowedPublishers []interface{}) *lambda.AllowedPublishers {
 	if len(allowedPublishers) == 0 || allowedPublishers[0] == nil {
 		return nil
 	}
@@ -231,7 +231,7 @@ func expandLambdaCodeSigningConfigAllowedPublishers(allowedPublishers []interfac
 	}
 }
 
-func flattenLambdaCodeSigningConfigAllowedPublishers(allowedPublishers *lambda.AllowedPublishers) []interface{} {
+func flattenCodeSigningConfigAllowedPublishers(allowedPublishers *lambda.AllowedPublishers) []interface{} {
 	if allowedPublishers == nil {
 		return []interface{}{}
 	}

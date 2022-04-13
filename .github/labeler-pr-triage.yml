@@ -17,6 +17,9 @@ generators:
   - 'internal/**/*_gen_test.go'
   - 'internal/**/generate.go'
   - 'internal/generate/**/*'
+github_actions:
+  - '.github/*.yml'
+  - '.github/workflows/*.yml'
 linter:
   - '.github/workflows/acctest-terraform-lint.yml'
   - '.github/workflows/terraform_provider.yml'
@@ -48,6 +51,9 @@ repository:
 service/accessanalyzer:
   - 'internal/service/accessanalyzer/**/*'
   - 'website/**/accessanalyzer_*'
+service/account:
+  - 'internal/service/account/**/*'
+  - 'website/**/account_*'
 service/acm:
   - 'internal/service/acm/**/*'
   - 'website/**/acm_*'
@@ -57,6 +63,9 @@ service/acmpca:
 service/alexaforbusiness:
   - 'internal/service/alexaforbusiness/**/*'
   - 'website/**/alexaforbusiness_*'
+service/amp:
+  - 'internal/service/amp/**/*'
+  - 'website/**/prometheus_*'
 service/amplify:
   - 'internal/service/amplify/**/*'
   - 'website/**/amplify_*'
@@ -71,6 +80,9 @@ service/apigatewayv2:
 service/appconfig:
   - 'internal/service/appconfig/**/*'
   - 'website/**/appconfig_*'
+service/appintegrations:
+  - 'internal/service/appintegrations/**/*'
+  - 'website/**/appintegrations_*'
 service/applicationautoscaling:
   - 'internal/service/appautoscaling/**/*'
   - 'website/**/appautoscaling_*'
@@ -143,13 +155,16 @@ service/cloudwatch:
   - 'internal/service/cloudwatch/**/*'
   - 'website/**/cloudwatch_dashboard*'
   - 'website/**/cloudwatch_metric_alarm*'
-service/cloudwatchevents:
-  - 'internal/service/cloudwatchevents/**/*'
-  - 'website/**/cloudwatch_event_*'
+service/cloudwatchevidently:
+  - 'internal/service/cloudwatchevidently/**/*'
+  - 'website/**/cloudwatchevidently_*'
 service/cloudwatchlogs:
   - 'internal/service/cloudwatchlogs/**/*'
   - 'website/**/cloudwatch_log_*'
   - 'website/**/cloudwatch_query_definition*'
+service/cloudwatchrum:
+  - 'internal/service/cloudwatchrum/**/*'
+  - 'website/**/cloudwatchrum_*'
 service/codeartifact:
   - 'internal/service/codeartifact/**/*'
   - 'website/**/codeartifact_*'
@@ -186,7 +201,7 @@ service/comprehend:
   - 'internal/service/comprehend/**/*'
   - 'website/**/comprehend_*'
 service/configservice:
-  - 'internal/service/config/**/*'
+  - 'internal/service/configservice/**/*'
   - 'website/**/config_*'
 service/connect:
   - 'internal/service/connect/**/*'
@@ -278,7 +293,7 @@ service/efs:
 service/eks:
   - 'internal/service/eks/**/*'
   - 'website/**/eks_*'
-service/elastic-transcoder:
+service/elastictranscoder:
   - 'internal/service/elastictranscoder/**/*'
   - 'website/**/elastictranscoder_*'
   - 'website/**/elastic_transcoder_*'
@@ -289,7 +304,7 @@ service/elasticbeanstalk:
   - 'internal/service/elasticbeanstalk/**/*'
   - 'website/**/elastic_beanstalk_*'
 service/elasticsearch:
-  - 'internal/service/elasticsearchservice/**/*'
+  - 'internal/service/elasticsearch/**/*'
   - 'website/**/elasticsearch_*'
 service/elb:
   - 'internal/service/elb/**/*'
@@ -310,6 +325,9 @@ service/emr:
 service/emrcontainers:
   - 'internal/service/emrcontainers/**/*'
   - 'website/**/emrcontainers_*'
+service/events:
+  - 'internal/service/events/**/*'
+  - 'website/**/cloudwatch_event_*'
 service/firehose:
   - 'internal/service/firehose/**/*'
   - 'website/**/firehose_*'
@@ -331,6 +349,9 @@ service/globalaccelerator:
 service/glue:
   - 'internal/service/glue/**/*'
   - 'website/**/glue_*'
+service/grafana:
+  - 'internal/service/grafana/**/*'
+  - 'website/**/grafana_*'
 service/greengrass:
   - 'internal/service/greengrass/**/*'
   - 'website/**/greengrass_*'
@@ -361,6 +382,12 @@ service/iotevents:
 service/kafka:
   - 'internal/service/kafka/**/*'
   - 'website/**/msk_*'
+service/kafkaconnect:
+  - 'internal/service/kafkaconnect/**/*'
+  - 'website/**/mskconnect_*'
+service/keyspaces:
+  - 'internal/service/keyspaces/**/*'
+  - 'website/**/keyspaces_*'
 service/kinesis:
   - 'internal/service/kinesis/**/*'
   - '*_aws_kinesis_stream*'
@@ -380,8 +407,8 @@ service/lakeformation:
 service/lambda:
   - 'internal/service/lambda/**/*'
   - 'website/**/lambda_*'
-service/lexmodelbuildingservice:
-  - 'internal/service/lexmodelbuilding/**/*'
+service/lexmodels:
+  - 'internal/service/lexmodels/**/*'
   - 'website/**/lex_*'
 service/licensemanager:
   - 'internal/service/licensemanager/**/*'
@@ -451,6 +478,9 @@ service/networkfirewall:
 service/networkmanager:
   - 'internal/service/networkmanager/**/*'
   - 'website/**/networkmanager_*'
+service/opensearch:
+  - 'internal/service/opensearch/**/*'
+  - 'website/**/opensearch_*'
 service/opsworks:
   - 'internal/service/opsworks/**/*'
   - 'website/**/opsworks_*'
@@ -469,9 +499,6 @@ service/polly:
 service/pricing:
   - 'internal/service/pricing/**/*'
   - 'website/**/pricing_*'
-service/prometheusservice:
-  - 'internal/service/prometheus/**/*'
-  - 'website/**/prometheus_*'
 service/qldb:
   - 'internal/service/qldb/**/*'
   - 'website/**/qldb_*'
@@ -492,7 +519,7 @@ service/resourcegroups:
   - 'internal/service/resourcegroups/**/*'
   - 'website/**/resourcegroups_*'
 service/resourcegroupstaggingapi:
-  - 'internal/service/resourcegroupstagging/**/*'
+  - 'internal/service/resourcegroupstaggingapi/**/*'
   - 'website/**/resourcegroupstaggingapi_*'
 service/robomaker:
   - 'internal/service/robomaker/**/*'
@@ -541,8 +568,8 @@ service/secretsmanager:
 service/securityhub:
   - 'internal/service/securityhub/**/*'
   - 'website/**/securityhub_*'
-service/serverlessapplicationrepository:
-  - 'internal/service/serverlessapprepo/**/*'
+service/serverlessrepo:
+  - 'internal/service/serverlessrepo/**/*'
   - 'website/**/serverlessapplicationrepository_*'
 service/servicecatalog:
   - 'internal/service/servicecatalog/**/*'

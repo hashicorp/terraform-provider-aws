@@ -6,8 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -27,6 +28,10 @@ func ResourcePermissionSetInlinePolicy() *schema.Resource {
 				Required:         true,
 				ValidateFunc:     verify.ValidIAMPolicyJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 
 			"instance_arn": {
@@ -52,13 +57,19 @@ func resourcePermissionSetInlinePolicyPut(d *schema.ResourceData, meta interface
 	instanceArn := d.Get("instance_arn").(string)
 	permissionSetArn := d.Get("permission_set_arn").(string)
 
+	policy, err := structure.NormalizeJsonString(d.Get("inline_policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("inline_policy").(string), err)
+	}
+
 	input := &ssoadmin.PutInlinePolicyToPermissionSetInput{
-		InlinePolicy:     aws.String(d.Get("inline_policy").(string)),
+		InlinePolicy:     aws.String(policy),
 		InstanceArn:      aws.String(instanceArn),
 		PermissionSetArn: aws.String(permissionSetArn),
 	}
 
-	_, err := conn.PutInlinePolicyToPermissionSet(input)
+	_, err = conn.PutInlinePolicyToPermissionSet(input)
 	if err != nil {
 		return fmt.Errorf("error putting Inline Policy for SSO Permission Set (%s): %w", permissionSetArn, err)
 	}
@@ -102,7 +113,14 @@ func resourcePermissionSetInlinePolicyRead(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error reading Inline Policy for SSO Permission Set (%s): empty output", permissionSetArn)
 	}
 
-	d.Set("inline_policy", output.InlinePolicy)
+	policyToSet, err := verify.PolicyToSet(d.Get("inline_policy").(string), aws.StringValue(output.InlinePolicy))
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("inline_policy", policyToSet)
+
 	d.Set("instance_arn", instanceArn)
 	d.Set("permission_set_arn", permissionSetArn)
 

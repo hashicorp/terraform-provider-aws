@@ -224,6 +224,10 @@ func TestAccEC2DefaultRouteTable_swap(t *testing.T) {
 }
 
 func TestAccEC2DefaultRouteTable_ipv4ToTransitGateway(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	tgwResourceName := "aws_ec2_transit_gateway.test"
@@ -256,6 +260,10 @@ func TestAccEC2DefaultRouteTable_ipv4ToTransitGateway(t *testing.T) {
 }
 
 func TestAccEC2DefaultRouteTable_ipv4ToVPCEndpoint(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	vpceResourceName := "aws_vpc_endpoint.test"
@@ -1034,8 +1042,8 @@ resource "aws_default_route_table" "test" {
   default_route_table_id = aws_vpc.test.default_route_table_id
 
   route {
-    cidr_block      = local.ipv6 ? "" : local.destination
-    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
+    cidr_block      = local.ipv6 ? null : local.destination
+    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : null
     gateway_id      = aws_internet_gateway.test.id
   }
 

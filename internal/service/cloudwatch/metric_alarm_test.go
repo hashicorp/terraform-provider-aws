@@ -262,10 +262,140 @@ func TestAccCloudWatchMetricAlarm_extendedStatistic(t *testing.T) {
 		CheckDestroy: testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricAlarmExtendedStatisticConfig(rName),
+				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "IQM(1:2)"), // IQM accepts no args
+				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			},
+			{
+				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "iqm10"), // IQM accepts no args
+				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			},
+			// {  TODO: more complex regex to reject this
+			// 	Config: testAccMetricAlarmExtendedStatisticConfig(rName, "PR(5%:10%)"),  // PR args must be absolute
+			// 	ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			// },
+			// {  TODO: more complex regex to reject this
+			// 	Config: testAccMetricAlarmExtendedStatisticConfig(rName, "TC(:)"),  // at least one arg must be provided
+			// 	ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			// },
+			{
+				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "WM"), // missing syntax
+				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			},
+			{
+				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "p"), // missing arg
+				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			},
+			{
+				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "AB(1:2)"), // unknown stat 'AB'
+				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			},
+			{
+				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "cd42"), // unknown stat 'cd'
+				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
+			},
+			{
+				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "p88.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "p88.0"),
+				),
+			},
+			{
+				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "p0.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "p0.0"),
+				),
+			},
+			{
+				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "p100"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "p100"),
+				),
+			},
+			{
+				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "p95"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "p95"),
+				),
+			},
+			{
+				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "tm90"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "tm90"),
+				),
+			},
+			{
+				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "TM(2%:98%)"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "TM(2%:98%)"),
+				),
+			},
+			{
+				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "TM(150:1000)"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "TM(150:1000)"),
+				),
+			},
+			{
+				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "IQM"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "IQM"),
+				),
+			},
+			{
+				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "wm98"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "wm98"),
+				),
+			},
+			{
+				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "PR(:300)"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "PR(:300)"),
+				),
+			},
+			{
+				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "PR(100:2000)"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "PR(100:2000)"),
+				),
+			},
+			{
+				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "tc90"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "tc90"),
+				),
+			},
+			{
+				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "TC(0.005:0.030)"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "TC(0.005:0.030)"),
+				),
+			},
+			{
+				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "TS(80%:)"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "TS(80%:)"),
+				),
+			},
+			{
+				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "TC(:0.5)"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "TC(:0.5)"),
 				),
 			},
 		},
@@ -614,7 +744,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName)
 }
 
-func testAccMetricAlarmExtendedStatisticConfig(rName string) string {
+func testAccMetricAlarmExtendedStatisticConfig(rName string, stat string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
@@ -623,7 +753,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   metric_name               = "CPUUtilization"
   namespace                 = "AWS/EC2"
   period                    = "120"
-  extended_statistic        = "p88.0"
+  extended_statistic        = "%s"
   threshold                 = "80"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
@@ -632,7 +762,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
     InstanceId = "i-abc123"
   }
 }
-`, rName)
+`, rName, stat)
 }
 
 func testAccMetricAlarmMissingStatisticConfig(rName string) string {

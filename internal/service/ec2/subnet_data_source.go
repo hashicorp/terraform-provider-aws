@@ -2,13 +2,13 @@ package ec2
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceSubnet() *schema.Resource {
@@ -52,6 +52,18 @@ func DataSourceSubnet() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"enable_dns64": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"enable_resource_name_dns_aaaa_record_on_launch": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"enable_resource_name_dns_a_record_on_launch": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"filter": CustomFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
@@ -67,6 +79,10 @@ func DataSourceSubnet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"ipv6_native": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"map_customer_owned_ip_on_launch": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -80,6 +96,10 @@ func DataSourceSubnet() *schema.Resource {
 				Computed: true,
 			},
 			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"private_dns_hostname_type_on_launch": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -102,10 +122,10 @@ func dataSourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	req := &ec2.DescribeSubnetsInput{}
+	input := &ec2.DescribeSubnetsInput{}
 
 	if id, ok := d.GetOk("id"); ok {
-		req.SubnetIds = []*string{aws.String(id.(string))}
+		input.SubnetIds = []*string{aws.String(id.(string))}
 	}
 
 	// We specify default_for_az as boolean, but EC2 filters want
@@ -134,35 +154,27 @@ func dataSourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 		filters["ipv6-cidr-block-association.ipv6-cidr-block"] = v.(string)
 	}
 
-	req.Filters = BuildAttributeFilterList(filters)
+	input.Filters = BuildAttributeFilterList(filters)
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		req.Filters = append(req.Filters, BuildTagFilterList(
+		input.Filters = append(input.Filters, BuildTagFilterList(
 			Tags(tftags.New(tags.(map[string]interface{}))),
 		)...)
 	}
 
-	req.Filters = append(req.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
-	if len(req.Filters) == 0 {
+	if len(input.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
-		req.Filters = nil
+		input.Filters = nil
 	}
 
-	log.Printf("[DEBUG] Reading Subnet: %s", req)
-	resp, err := conn.DescribeSubnets(req)
+	subnet, err := FindSubnet(conn, input)
+
 	if err != nil {
-		return err
+		return tfresource.SingularDataSourceFindError("EC2 Subnet", err)
 	}
-	if resp == nil || len(resp.Subnets) == 0 {
-		return fmt.Errorf("no matching subnet found")
-	}
-	if len(resp.Subnets) > 1 {
-		return fmt.Errorf("multiple subnets matched; use additional constraints to reduce matches to a single subnet")
-	}
-
-	subnet := resp.Subnets[0]
 
 	d.SetId(aws.StringValue(subnet.SubnetId))
 
@@ -174,11 +186,17 @@ func dataSourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cidr_block", subnet.CidrBlock)
 	d.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
 	d.Set("default_for_az", subnet.DefaultForAz)
+	d.Set("enable_dns64", subnet.EnableDns64)
+	d.Set("ipv6_native", subnet.Ipv6Native)
 
-	for _, a := range subnet.Ipv6CidrBlockAssociationSet {
-		if a.Ipv6CidrBlockState != nil && aws.StringValue(a.Ipv6CidrBlockState.State) == ec2.VpcCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
-			d.Set("ipv6_cidr_block_association_id", a.AssociationId)
-			d.Set("ipv6_cidr_block", a.Ipv6CidrBlock)
+	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop.
+	d.Set("ipv6_cidr_block_association_id", nil)
+	d.Set("ipv6_cidr_block", nil)
+
+	for _, v := range subnet.Ipv6CidrBlockAssociationSet {
+		if v.Ipv6CidrBlockState != nil && aws.StringValue(v.Ipv6CidrBlockState.State) == ec2.VpcCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
+			d.Set("ipv6_cidr_block_association_id", v.AssociationId)
+			d.Set("ipv6_cidr_block", v.Ipv6CidrBlock)
 		}
 	}
 
@@ -187,6 +205,16 @@ func dataSourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("outpost_arn", subnet.OutpostArn)
 	d.Set("owner_id", subnet.OwnerId)
 	d.Set("state", subnet.State)
+
+	if subnet.PrivateDnsNameOptionsOnLaunch != nil {
+		d.Set("enable_resource_name_dns_aaaa_record_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsAAAARecord)
+		d.Set("enable_resource_name_dns_a_record_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsARecord)
+		d.Set("private_dns_hostname_type_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.HostnameType)
+	} else {
+		d.Set("enable_resource_name_dns_aaaa_record_on_launch", nil)
+		d.Set("enable_resource_name_dns_a_record_on_launch", nil)
+		d.Set("private_dns_hostname_type_on_launch", nil)
+	}
 
 	if err := d.Set("tags", KeyValueTags(subnet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)

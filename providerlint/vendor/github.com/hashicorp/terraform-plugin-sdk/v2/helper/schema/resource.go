@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/logging"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -31,35 +32,44 @@ var ReservedResourceFields = []string{
 	"provisioner",
 }
 
-// Resource represents a thing in Terraform that has a set of configurable
-// attributes and a lifecycle (create, read, update, delete).
+// Resource is an abstraction for multiple Terraform concepts:
 //
-// The Resource schema is an abstraction that allows provider writers to
-// worry only about CRUD operations while off-loading validation, diff
-// generation, etc. to this higher level library.
+// - Managed Resource: An infrastructure component with a schema, lifecycle
+//                     operations such as create, read, update, and delete
+//                     (CRUD), and optional implementation details such as
+//                     import support, upgrade state support, and difference
+//                     customization.
+// - Data Resource: Also known as a data source. An infrastructure component
+//                  with a schema and only the read lifecycle operation.
+// - Block: When implemented within a Schema type Elem field, a configuration
+//          block that contains nested schema information such as attributes
+//          and blocks.
 //
-// In spite of the name, this struct is not used only for terraform resources,
-// but also for data sources. In the case of data sources, the Create,
-// Update and Delete functions must not be provided.
+// To fully implement managed resources, the Provider type ResourcesMap field
+// should include a reference to an implementation of this type. To fully
+// implement data resources, the Provider type DataSourcesMap field should
+// include a reference to an implementation of this type.
+//
+// Each field further documents any constraints based on the Terraform concept
+// being implemented.
 type Resource struct {
-	// Schema is the schema for the configuration of this resource.
+	// Schema is the structure and type information for this component. This
+	// field is required for all Resource concepts.
 	//
-	// The keys of this map are the configuration keys, and the values
-	// describe the schema of the configuration value.
-	//
-	// The schema is used to represent both configurable data as well
-	// as data that might be computed in the process of creating this
-	// resource.
+	// The keys of this map are the names used in a practitioner configuration,
+	// such as the attribute or block name. The values describe the structure
+	// and type information of that attribute or block.
 	Schema map[string]*Schema
 
 	// SchemaVersion is the version number for this resource's Schema
-	// definition. The current SchemaVersion stored in the state for each
-	// resource. Provider authors can increment this version number
-	// when Schema semantics change. If the State's SchemaVersion is less than
-	// the current SchemaVersion, the InstanceState is yielded to the
-	// MigrateState callback, where the provider can make whatever changes it
-	// needs to update the state to be compatible to the latest version of the
-	// Schema.
+	// definition. This field is only valid when the Resource is a managed
+	// resource.
+	//
+	// The current SchemaVersion stored in the state for each resource.
+	// Provider authors can increment this version number when Schema semantics
+	// change in an incompatible manner. If the state's SchemaVersion is less
+	// than the current SchemaVersion, the MigrateState and StateUpgraders
+	// functionality is executed to upgrade the state information.
 	//
 	// When unset, SchemaVersion defaults to 0, so provider authors can start
 	// their Versioning at any integer >= 1
@@ -67,6 +77,7 @@ type Resource struct {
 
 	// MigrateState is responsible for updating an InstanceState with an old
 	// version to the format expected by the current version of the Schema.
+	// This field is only valid when the Resource is a managed resource.
 	//
 	// It is called during Refresh if the State's stored SchemaVersion is less
 	// than the current SchemaVersion of the Resource.
@@ -86,7 +97,8 @@ type Resource struct {
 	// StateUpgraders contains the functions responsible for upgrading an
 	// existing state with an old schema version to a newer schema. It is
 	// called specifically by Terraform when the stored schema version is less
-	// than the current SchemaVersion of the Resource.
+	// than the current SchemaVersion of the Resource. This field is only valid
+	// when the Resource is a managed resource.
 	//
 	// StateUpgraders map specific schema versions to a StateUpgrader
 	// function. The registered versions are expected to be ordered,
@@ -95,54 +107,261 @@ type Resource struct {
 	// MigrateState.
 	StateUpgraders []StateUpgrader
 
-	// The functions below are the CRUD operations for this resource.
+	// Create is called when the provider must create a new instance of a
+	// managed resource. This field is only valid when the Resource is a
+	// managed resource. Only one of Create, CreateContext, or
+	// CreateWithoutTimeout should be implemented.
 	//
-	// Deprecated: Please use the context aware equivalents instead. Only one of
-	// the operations or context aware equivalent can be set, not both.
+	// The *ResourceData parameter contains the plan and state data for this
+	// managed resource instance. The available data in the Get* methods is the
+	// the proposed state, which is the merged data of the practitioner
+	// configuration and any CustomizeDiff field logic.
+	//
+	// The SetId method must be called with a non-empty value for the managed
+	// resource instance to be properly saved into the Terraform state and
+	// avoid a "inconsistent result after apply" error.
+	//
+	// The interface{} parameter is the result of the Provider type
+	// ConfigureFunc field execution. If the Provider does not define
+	// a ConfigureFunc, this will be nil. This parameter is conventionally
+	// used to store API clients and other provider instance specific data.
+	//
+	// The error return parameter, if not nil, will be converted into an error
+	// diagnostic when passed back to Terraform.
+	//
+	// Deprecated: Use CreateContext or CreateWithoutTimeout instead. This
+	// implementation does not support request cancellation initiated by
+	// Terraform, such as a system or practitioner sending SIGINT (Ctrl-c).
+	// This implementation also does not support warning diagnostics.
 	Create CreateFunc
-	Read   ReadFunc
+
+	// Read is called when the provider must refresh the state of a managed
+	// resource instance or data resource instance. This field is only valid
+	// when the Resource is a managed resource or data resource. Only one of
+	// Read, ReadContext, or ReadWithoutTimeout should be implemented.
+	//
+	// The *ResourceData parameter contains the state data for this managed
+	// resource instance or data resource instance.
+	//
+	// Managed resources can signal to Terraform that the managed resource
+	// instance no longer exists and potentially should be recreated by calling
+	// the SetId method with an empty string ("") parameter and without
+	// returning an error.
+	//
+	// Data resources that are designed to return state for a singular
+	// infrastructure component should conventionally return an error if that
+	// infrastructure does not exist and omit any calls to the
+	// SetId method.
+	//
+	// The interface{} parameter is the result of the Provider type
+	// ConfigureFunc field execution. If the Provider does not define
+	// a ConfigureFunc, this will be nil. This parameter is conventionally
+	// used to store API clients and other provider instance specific data.
+	//
+	// The error return parameter, if not nil, will be converted into an error
+	// diagnostic when passed back to Terraform.
+	//
+	// Deprecated: Use ReadContext or ReadWithoutTimeout instead. This
+	// implementation does not support request cancellation initiated by
+	// Terraform, such as a system or practitioner sending SIGINT (Ctrl-c).
+	// This implementation also does not support warning diagnostics.
+	Read ReadFunc
+
+	// Update is called when the provider must update an instance of a
+	// managed resource. This field is only valid when the Resource is a
+	// managed resource. Only one of Update, UpdateContext, or
+	// UpdateWithoutTimeout should be implemented.
+	//
+	// This implementation is optional. If omitted, all Schema must enable
+	// the ForceNew field and any practitioner changes that would have
+	// caused and update will instead destroy and recreate the infrastructure
+	// compontent.
+	//
+	// The *ResourceData parameter contains the plan and state data for this
+	// managed resource instance. The available data in the Get* methods is the
+	// the proposed state, which is the merged data of the prior state,
+	// practitioner configuration, and any CustomizeDiff field logic. The
+	// available data for the GetChange* and HasChange* methods is the prior
+	// state and proposed state.
+	//
+	// The interface{} parameter is the result of the Provider type
+	// ConfigureFunc field execution. If the Provider does not define
+	// a ConfigureFunc, this will be nil. This parameter is conventionally
+	// used to store API clients and other provider instance specific data.
+	//
+	// The error return parameter, if not nil, will be converted into an error
+	// diagnostic when passed back to Terraform.
+	//
+	// Deprecated: Use UpdateContext or UpdateWithoutTimeout instead. This
+	// implementation does not support request cancellation initiated by
+	// Terraform, such as a system or practitioner sending SIGINT (Ctrl-c).
+	// This implementation also does not support warning diagnostics.
 	Update UpdateFunc
+
+	// Delete is called when the provider must destroy the instance of a
+	// managed resource. This field is only valid when the Resource is a
+	// managed resource. Only one of Delete, DeleteContext, or
+	// DeleteWithoutTimeout should be implemented.
+	//
+	// The *ResourceData parameter contains the state data for this managed
+	// resource instance.
+	//
+	// The interface{} parameter is the result of the Provider type
+	// ConfigureFunc field execution. If the Provider does not define
+	// a ConfigureFunc, this will be nil. This parameter is conventionally
+	// used to store API clients and other provider instance specific data.
+	//
+	// The error return parameter, if not nil, will be converted into an error
+	// diagnostic when passed back to Terraform.
+	//
+	// Deprecated: Use DeleteContext or DeleteWithoutTimeout instead. This
+	// implementation does not support request cancellation initiated by
+	// Terraform, such as a system or practitioner sending SIGINT (Ctrl-c).
+	// This implementation also does not support warning diagnostics.
 	Delete DeleteFunc
 
 	// Exists is a function that is called to check if a resource still
-	// exists. If this returns false, then this will affect the diff
+	// exists. This field is only valid when the Resource is a managed
+	// resource.
+	//
+	// If this returns false, then this will affect the diff
 	// accordingly. If this function isn't set, it will not be called. You
 	// can also signal existence in the Read method by calling d.SetId("")
 	// if the Resource is no longer present and should be removed from state.
 	// The *ResourceData passed to Exists should _not_ be modified.
 	//
-	// Deprecated: ReadContext should be able to encapsulate the logic of Exists
+	// Deprecated: Remove in preference of ReadContext or ReadWithoutTimeout.
 	Exists ExistsFunc
 
-	// The functions below are the CRUD operations for this resource.
+	// CreateContext is called when the provider must create a new instance of
+	// a managed resource. This field is only valid when the Resource is a
+	// managed resource. Only one of Create, CreateContext, or
+	// CreateWithoutTimeout should be implemented.
 	//
-	// The only optional operation is Update. If Update is not
-	// implemented, then updates will not be supported for this resource.
+	// The Context parameter stores SDK information, such as loggers and
+	// timeout deadlines. It also is wired to receive any cancellation from
+	// Terraform such as a system or practitioner sending SIGINT (Ctrl-c).
 	//
-	// The ResourceData parameter in the functions below are used to
-	// query configuration and changes for the resource as well as to set
-	// the ID, computed data, etc.
+	// By default, CreateContext has a 20 minute timeout. Use the Timeouts
+	// field to control the default duration or implement CreateWithoutTimeout
+	// instead of CreateContext to remove the default timeout.
 	//
-	// The interface{} parameter is the result of the ConfigureFunc in
-	// the provider for this resource. If the provider does not define
-	// a ConfigureFunc, this will be nil. This parameter should be used
-	// to store API clients, configuration structures, etc.
+	// The *ResourceData parameter contains the plan and state data for this
+	// managed resource instance. The available data in the Get* methods is the
+	// the proposed state, which is the merged data of the practitioner
+	// configuration and any CustomizeDiff field logic.
 	//
-	// These functions are passed a context configured to timeout with whatever
-	// was set as the timeout for this operation. Useful for forwarding on to
-	// backend SDK's that accept context. The context will also cancel if
-	// Terraform sends a cancellation signal.
+	// The SetId method must be called with a non-empty value for the managed
+	// resource instance to be properly saved into the Terraform state and
+	// avoid a "inconsistent result after apply" error.
 	//
-	// These functions return diagnostics, allowing developers to build
-	// a list of warnings and errors to be presented to the Terraform user.
-	// The AttributePath of those diagnostics should be built within these
-	// functions, please consult go-cty documentation for building a cty.Path
+	// The interface{} parameter is the result of the Provider type
+	// ConfigureFunc field execution. If the Provider does not define
+	// a ConfigureFunc, this will be nil. This parameter is conventionally
+	// used to store API clients and other provider instance specific data.
+	//
+	// The diagnostics return parameter, if not nil, can contain any
+	// combination and multiple of warning and/or error diagnostics.
 	CreateContext CreateContextFunc
-	ReadContext   ReadContextFunc
+
+	// ReadContext is called when the provider must refresh the state of a managed
+	// resource instance or data resource instance. This field is only valid
+	// when the Resource is a managed resource or data resource. Only one of
+	// Read, ReadContext, or ReadWithoutTimeout should be implemented.
+	//
+	// The Context parameter stores SDK information, such as loggers and
+	// timeout deadlines. It also is wired to receive any cancellation from
+	// Terraform such as a system or practitioner sending SIGINT (Ctrl-c).
+	//
+	// By default, ReadContext has a 20 minute timeout. Use the Timeouts
+	// field to control the default duration or implement ReadWithoutTimeout
+	// instead of ReadContext to remove the default timeout.
+	//
+	// The *ResourceData parameter contains the state data for this managed
+	// resource instance or data resource instance.
+	//
+	// Managed resources can signal to Terraform that the managed resource
+	// instance no longer exists and potentially should be recreated by calling
+	// the SetId method with an empty string ("") parameter and without
+	// returning an error.
+	//
+	// Data resources that are designed to return state for a singular
+	// infrastructure component should conventionally return an error if that
+	// infrastructure does not exist and omit any calls to the
+	// SetId method.
+	//
+	// The interface{} parameter is the result of the Provider type
+	// ConfigureFunc field execution. If the Provider does not define
+	// a ConfigureFunc, this will be nil. This parameter is conventionally
+	// used to store API clients and other provider instance specific data.
+	//
+	// The diagnostics return parameter, if not nil, can contain any
+	// combination and multiple of warning and/or error diagnostics.
+	ReadContext ReadContextFunc
+
+	// UpdateContext is called when the provider must update an instance of a
+	// managed resource. This field is only valid when the Resource is a
+	// managed resource. Only one of Update, UpdateContext, or
+	// UpdateWithoutTimeout should be implemented.
+	//
+	// This implementation is optional. If omitted, all Schema must enable
+	// the ForceNew field and any practitioner changes that would have
+	// caused and update will instead destroy and recreate the infrastructure
+	// compontent.
+	//
+	// The Context parameter stores SDK information, such as loggers and
+	// timeout deadlines. It also is wired to receive any cancellation from
+	// Terraform such as a system or practitioner sending SIGINT (Ctrl-c).
+	//
+	// By default, UpdateContext has a 20 minute timeout. Use the Timeouts
+	// field to control the default duration or implement UpdateWithoutTimeout
+	// instead of UpdateContext to remove the default timeout.
+	//
+	// The *ResourceData parameter contains the plan and state data for this
+	// managed resource instance. The available data in the Get* methods is the
+	// the proposed state, which is the merged data of the prior state,
+	// practitioner configuration, and any CustomizeDiff field logic. The
+	// available data for the GetChange* and HasChange* methods is the prior
+	// state and proposed state.
+	//
+	// The interface{} parameter is the result of the Provider type
+	// ConfigureFunc field execution. If the Provider does not define
+	// a ConfigureFunc, this will be nil. This parameter is conventionally
+	// used to store API clients and other provider instance specific data.
+	//
+	// The diagnostics return parameter, if not nil, can contain any
+	// combination and multiple of warning and/or error diagnostics.
 	UpdateContext UpdateContextFunc
+
+	// DeleteContext is called when the provider must destroy the instance of a
+	// managed resource. This field is only valid when the Resource is a
+	// managed resource. Only one of Delete, DeleteContext, or
+	// DeleteWithoutTimeout should be implemented.
+	//
+	// The Context parameter stores SDK information, such as loggers and
+	// timeout deadlines. It also is wired to receive any cancellation from
+	// Terraform such as a system or practitioner sending SIGINT (Ctrl-c).
+	//
+	// By default, DeleteContext has a 20 minute timeout. Use the Timeouts
+	// field to control the default duration or implement DeleteWithoutTimeout
+	// instead of DeleteContext to remove the default timeout.
+	//
+	// The *ResourceData parameter contains the state data for this managed
+	// resource instance.
+	//
+	// The interface{} parameter is the result of the Provider type
+	// ConfigureFunc field execution. If the Provider does not define
+	// a ConfigureFunc, this will be nil. This parameter is conventionally
+	// used to store API clients and other provider instance specific data.
+	//
+	// The diagnostics return parameter, if not nil, can contain any
+	// combination and multiple of warning and/or error diagnostics.
 	DeleteContext DeleteContextFunc
 
-	// CreateWithoutTimeout is equivalent to CreateContext with no context timeout.
+	// CreateWithoutTimeout is called when the provider must create a new
+	// instance of a managed resource. This field is only valid when the
+	// Resource is a managed resource. Only one of Create, CreateContext, or
+	// CreateWithoutTimeout should be implemented.
 	//
 	// Most resources should prefer CreateContext with properly implemented
 	// operation timeout values, however there are cases where operation
@@ -150,9 +369,34 @@ type Resource struct {
 	// logic, such as a mutex, to prevent remote system errors. Since these
 	// operations would have an indeterminate timeout that scales with the
 	// number of resources, this allows resources to control timeout behavior.
+	//
+	// The Context parameter stores SDK information, such as loggers. It also
+	// is wired to receive any cancellation from Terraform such as a system or
+	// practitioner sending SIGINT (Ctrl-c).
+	//
+	// The *ResourceData parameter contains the plan and state data for this
+	// managed resource instance. The available data in the Get* methods is the
+	// the proposed state, which is the merged data of the practitioner
+	// configuration and any CustomizeDiff field logic.
+	//
+	// The SetId method must be called with a non-empty value for the managed
+	// resource instance to be properly saved into the Terraform state and
+	// avoid a "inconsistent result after apply" error.
+	//
+	// The interface{} parameter is the result of the Provider type
+	// ConfigureFunc field execution. If the Provider does not define
+	// a ConfigureFunc, this will be nil. This parameter is conventionally
+	// used to store API clients and other provider instance specific data.
+	//
+	// The diagnostics return parameter, if not nil, can contain any
+	// combination and multiple of warning and/or error diagnostics.
 	CreateWithoutTimeout CreateContextFunc
 
-	// ReadWithoutTimeout is equivalent to ReadContext with no context timeout.
+	// ReadWithoutTimeout is called when the provider must refresh the state of
+	// a managed resource instance or data resource instance. This field is
+	// only valid when the Resource is a managed resource or data resource.
+	// Only one of Read, ReadContext, or ReadWithoutTimeout should be
+	// implemented.
 	//
 	// Most resources should prefer ReadContext with properly implemented
 	// operation timeout values, however there are cases where operation
@@ -160,9 +404,37 @@ type Resource struct {
 	// logic, such as a mutex, to prevent remote system errors. Since these
 	// operations would have an indeterminate timeout that scales with the
 	// number of resources, this allows resources to control timeout behavior.
+	//
+	// The Context parameter stores SDK information, such as loggers. It also
+	// is wired to receive any cancellation from Terraform such as a system or
+	// practitioner sending SIGINT (Ctrl-c).
+	//
+	// The *ResourceData parameter contains the state data for this managed
+	// resource instance or data resource instance.
+	//
+	// Managed resources can signal to Terraform that the managed resource
+	// instance no longer exists and potentially should be recreated by calling
+	// the SetId method with an empty string ("") parameter and without
+	// returning an error.
+	//
+	// Data resources that are designed to return state for a singular
+	// infrastructure component should conventionally return an error if that
+	// infrastructure does not exist and omit any calls to the
+	// SetId method.
+	//
+	// The interface{} parameter is the result of the Provider type
+	// ConfigureFunc field execution. If the Provider does not define
+	// a ConfigureFunc, this will be nil. This parameter is conventionally
+	// used to store API clients and other provider instance specific data.
+	//
+	// The diagnostics return parameter, if not nil, can contain any
+	// combination and multiple of warning and/or error diagnostics.
 	ReadWithoutTimeout ReadContextFunc
 
-	// UpdateWithoutTimeout is equivalent to UpdateContext with no context timeout.
+	// UpdateWithoutTimeout is called when the provider must update an instance
+	// of a managed resource. This field is only valid when the Resource is a
+	// managed resource. Only one of Update, UpdateContext, or
+	// UpdateWithoutTimeout should be implemented.
 	//
 	// Most resources should prefer UpdateContext with properly implemented
 	// operation timeout values, however there are cases where operation
@@ -170,9 +442,36 @@ type Resource struct {
 	// logic, such as a mutex, to prevent remote system errors. Since these
 	// operations would have an indeterminate timeout that scales with the
 	// number of resources, this allows resources to control timeout behavior.
+	//
+	// This implementation is optional. If omitted, all Schema must enable
+	// the ForceNew field and any practitioner changes that would have
+	// caused and update will instead destroy and recreate the infrastructure
+	// compontent.
+	//
+	// The Context parameter stores SDK information, such as loggers. It also
+	// is wired to receive any cancellation from Terraform such as a system or
+	// practitioner sending SIGINT (Ctrl-c).
+	//
+	// The *ResourceData parameter contains the plan and state data for this
+	// managed resource instance. The available data in the Get* methods is the
+	// the proposed state, which is the merged data of the prior state,
+	// practitioner configuration, and any CustomizeDiff field logic. The
+	// available data for the GetChange* and HasChange* methods is the prior
+	// state and proposed state.
+	//
+	// The interface{} parameter is the result of the Provider type
+	// ConfigureFunc field execution. If the Provider does not define
+	// a ConfigureFunc, this will be nil. This parameter is conventionally
+	// used to store API clients and other provider instance specific data.
+	//
+	// The diagnostics return parameter, if not nil, can contain any
+	// combination and multiple of warning and/or error diagnostics.
 	UpdateWithoutTimeout UpdateContextFunc
 
-	// DeleteWithoutTimeout is equivalent to DeleteContext with no context timeout.
+	// DeleteWithoutTimeout is called when the provider must destroy the
+	// instance of a managed resource. This field is only valid when the
+	// Resource is a managed resource. Only one of Delete, DeleteContext, or
+	// DeleteWithoutTimeout should be implemented.
 	//
 	// Most resources should prefer DeleteContext with properly implemented
 	// operation timeout values, however there are cases where operation
@@ -180,15 +479,37 @@ type Resource struct {
 	// logic, such as a mutex, to prevent remote system errors. Since these
 	// operations would have an indeterminate timeout that scales with the
 	// number of resources, this allows resources to control timeout behavior.
+	//
+	// The Context parameter stores SDK information, such as loggers. It also
+	// is wired to receive any cancellation from Terraform such as a system or
+	// practitioner sending SIGINT (Ctrl-c).
+	//
+	// The *ResourceData parameter contains the state data for this managed
+	// resource instance.
+	//
+	// The interface{} parameter is the result of the Provider type
+	// ConfigureFunc field execution. If the Provider does not define
+	// a ConfigureFunc, this will be nil. This parameter is conventionally
+	// used to store API clients and other provider instance specific data.
+	//
+	// The diagnostics return parameter, if not nil, can contain any
+	// combination and multiple of warning and/or error diagnostics.
 	DeleteWithoutTimeout DeleteContextFunc
 
-	// CustomizeDiff is a custom function for working with the diff that
-	// Terraform has created for this resource - it can be used to customize the
-	// diff that has been created, diff values not controlled by configuration,
-	// or even veto the diff altogether and abort the plan. It is passed a
-	// *ResourceDiff, a structure similar to ResourceData but lacking most write
-	// functions like Set, while introducing new functions that work with the
-	// diff such as SetNew, SetNewComputed, and ForceNew.
+	// CustomizeDiff is called after a difference (plan) has been generated
+	// for the Resource and allows for customizations, such as setting values
+	// not controlled by configuration, conditionally triggering resource
+	// recreation, or implementing additional validation logic to abort a plan.
+	// This field is only valid when the Resource is a managed resource.
+	//
+	// The Context parameter stores SDK information, such as loggers. It also
+	// is wired to receive any cancellation from Terraform such as a system or
+	// practitioner sending SIGINT (Ctrl-c).
+	//
+	// The *ResourceDiff parameter is similar to ResourceData but replaces the
+	// Set method with other difference handling methods, such as SetNew,
+	// SetNewComputed, and ForceNew. In general, only Schema with Computed
+	// enabled can have those methods executed against them.
 	//
 	// The phases Terraform runs this in, and the state available via functions
 	// like Get and GetChange, are as follows:
@@ -202,41 +523,60 @@ type Resource struct {
 	//
 	// This function needs to be resilient to support all scenarios.
 	//
-	// For the most part, only computed fields can be customized by this
-	// function.
+	// The interface{} parameter is the result of the Provider type
+	// ConfigureFunc field execution. If the Provider does not define
+	// a ConfigureFunc, this will be nil. This parameter is conventionally
+	// used to store API clients and other provider instance specific data.
 	//
-	// This function is only allowed on regular resources (not data sources).
+	// The error return parameter, if not nil, will be converted into an error
+	// diagnostic when passed back to Terraform.
 	CustomizeDiff CustomizeDiffFunc
 
-	// Importer is the ResourceImporter implementation for this resource.
+	// Importer is called when the provider must import an instance of a
+	// managed resource. This field is only valid when the Resource is a
+	// managed resource.
+	//
 	// If this is nil, then this resource does not support importing. If
 	// this is non-nil, then it supports importing and ResourceImporter
 	// must be validated. The validity of ResourceImporter is verified
 	// by InternalValidate on Resource.
 	Importer *ResourceImporter
 
-	// If non-empty, this string is emitted as a warning during Validate.
+	// If non-empty, this string is emitted as the details of a warning
+	// diagnostic during validation (validate, plan, and apply operations).
+	// This field is only valid when the Resource is a managed resource or
+	// data resource.
 	DeprecationMessage string
 
-	// Timeouts allow users to specify specific time durations in which an
-	// operation should time out, to allow them to extend an action to suit their
-	// usage. For example, a user may specify a large Creation timeout for their
-	// AWS RDS Instance due to it's size, or restoring from a snapshot.
-	// Resource implementors must enable Timeout support by adding the allowed
-	// actions (Create, Read, Update, Delete, Default) to the Resource struct, and
-	// accessing them in the matching methods.
+	// Timeouts configures the default time duration allowed before a create,
+	// read, update, or delete operation is considered timed out, which returns
+	// an error to practitioners. This field is only valid when the Resource is
+	// a managed resource or data resource.
+	//
+	// When implemented, practitioners can add a timeouts configuration block
+	// within their managed resource or data resource configuration to further
+	// customize the create, read, update, or delete operation timeouts. For
+	// example, a configuration may specify a longer create timeout for a
+	// database resource due to its data size.
+	//
+	// The ResourceData that is passed to create, read, update, and delete
+	// functionality can access the merged time duration of the Resource
+	// default timeouts configured in this field and the practitioner timeouts
+	// configuration via the Timeout method. Practitioner configuration
+	// always overrides any default values set here, whether shorter or longer.
 	Timeouts *ResourceTimeout
 
 	// Description is used as the description for docs, the language server and
 	// other user facing usage. It can be plain-text or markdown depending on the
-	// global DescriptionKind setting.
+	// global DescriptionKind setting. This field is valid for any Resource.
 	Description string
 
 	// UseJSONNumber should be set when state upgraders will expect
 	// json.Numbers instead of float64s for numbers. This is added as a
 	// toggle for backwards compatibility for type assertions, but should
 	// be used in all new resources to avoid bugs with sufficiently large
-	// user input.
+	// user input. This field is only valid when the Resource is a managed
+	// resource.
 	//
 	// See github.com/hashicorp/terraform-plugin-sdk/issues/655 for more
 	// details.
@@ -268,9 +608,17 @@ func (r *Resource) ShimInstanceStateFromValue(state cty.Value) (*terraform.Insta
 //
 // Deprecated: Please use the context aware equivalents instead.
 type CreateFunc func(*ResourceData, interface{}) error
+
+// Deprecated: Please use the context aware equivalents instead.
 type ReadFunc func(*ResourceData, interface{}) error
+
+// Deprecated: Please use the context aware equivalents instead.
 type UpdateFunc func(*ResourceData, interface{}) error
+
+// Deprecated: Please use the context aware equivalents instead.
 type DeleteFunc func(*ResourceData, interface{}) error
+
+// Deprecated: Please use the context aware equivalents instead.
 type ExistsFunc func(*ResourceData, interface{}) (bool, error)
 
 // See Resource documentation.
@@ -289,6 +637,7 @@ type DeleteContextFunc func(context.Context, *ResourceData, interface{}) diag.Di
 type StateMigrateFunc func(
 	int, *terraform.InstanceState, interface{}) (*terraform.InstanceState, error)
 
+// Implementation of a single schema version state upgrade.
 type StateUpgrader struct {
 	// Version is the version schema that this Upgrader will handle, converting
 	// it to Version+1.
@@ -307,7 +656,36 @@ type StateUpgrader struct {
 	Upgrade StateUpgradeFunc
 }
 
-// See StateUpgrader
+// Function signature for a schema version state upgrade handler.
+//
+// The Context parameter stores SDK information, such as loggers. It also
+// is wired to receive any cancellation from Terraform such as a system or
+// practitioner sending SIGINT (Ctrl-c).
+//
+// The map[string]interface{} parameter contains the previous schema version
+// state data for a managed resource instance. The keys are top level attribute
+// or block names mapped to values that can be type asserted similar to
+// fetching values using the ResourceData Get* methods:
+//
+//     - TypeBool: bool
+//     - TypeFloat: float
+//     - TypeInt: int
+//     - TypeList: []interface{}
+//     - TypeMap: map[string]interface{}
+//     - TypeSet: *Set
+//     - TypeString: string
+//
+// In certain scenarios, the map may be nil, so checking for that condition
+// upfront is recommended to prevent potential panics.
+//
+// The interface{} parameter is the result of the Provider type
+// ConfigureFunc field execution. If the Provider does not define
+// a ConfigureFunc, this will be nil. This parameter is conventionally
+// used to store API clients and other provider instance specific data.
+//
+// The map[string]interface{} return parameter should contain the upgraded
+// schema version state data for a managed resource instance. Values must
+// align to the typing mentioned above.
 type StateUpgradeFunc func(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error)
 
 // See Resource documentation.
@@ -425,7 +803,10 @@ func (r *Resource) Apply(
 	if d.Destroy || d.RequiresNew() {
 		if s.ID != "" {
 			// Destroy the resource since it is created
+			logging.HelperSchemaTrace(ctx, "Calling downstream")
 			diags = append(diags, r.delete(ctx, data, meta)...)
+			logging.HelperSchemaTrace(ctx, "Called downstream")
+
 			if diags.HasError() {
 				return r.recordCurrentSchemaVersion(data.State()), diags
 			}
@@ -453,7 +834,9 @@ func (r *Resource) Apply(
 	if data.Id() == "" {
 		// We're creating, it is a new resource.
 		data.MarkNewResource()
+		logging.HelperSchemaTrace(ctx, "Calling downstream")
 		diags = append(diags, r.create(ctx, data, meta)...)
+		logging.HelperSchemaTrace(ctx, "Called downstream")
 	} else {
 		if !r.updateFuncSet() {
 			return s, append(diags, diag.Diagnostic{
@@ -461,7 +844,9 @@ func (r *Resource) Apply(
 				Summary:  "doesn't support update",
 			})
 		}
+		logging.HelperSchemaTrace(ctx, "Calling downstream")
 		diags = append(diags, r.update(ctx, data, meta)...)
+		logging.HelperSchemaTrace(ctx, "Called downstream")
 	}
 
 	return r.recordCurrentSchemaVersion(data.State()), diags
@@ -555,7 +940,10 @@ func (r *Resource) ReadDataApply(
 		return nil, diag.FromErr(err)
 	}
 
+	logging.HelperSchemaTrace(ctx, "Calling downstream")
 	diags := r.read(ctx, data, meta)
+	logging.HelperSchemaTrace(ctx, "Called downstream")
+
 	state := data.State()
 	if state != nil && state.ID == "" {
 		// Data sources can set an ID if they want, but they aren't
@@ -601,7 +989,10 @@ func (r *Resource) RefreshWithoutUpgrade(
 			data.providerMeta = s.ProviderMeta
 		}
 
+		logging.HelperSchemaTrace(ctx, "Calling downstream")
 		exists, err := r.Exists(data, meta)
+		logging.HelperSchemaTrace(ctx, "Called downstream")
+
 		if err != nil {
 			return s, diag.FromErr(err)
 		}
@@ -621,12 +1012,16 @@ func (r *Resource) RefreshWithoutUpgrade(
 		data.providerMeta = s.ProviderMeta
 	}
 
+	logging.HelperSchemaTrace(ctx, "Calling downstream")
 	diags := r.read(ctx, data, meta)
+	logging.HelperSchemaTrace(ctx, "Called downstream")
+
 	state := data.State()
 	if state != nil && state.ID == "" {
 		state = nil
 	}
 
+	schemaMap(r.Schema).handleDiffSuppressOnRefresh(ctx, s, state)
 	return r.recordCurrentSchemaVersion(state), diags
 }
 
@@ -726,8 +1121,8 @@ func (r *Resource) InternalValidate(topSchemaMap schemaMap, writable bool) error
 			}
 		}
 
-		for k, f := range tsm {
-			if isReservedResourceFieldName(k, f) {
+		for k := range tsm {
+			if isReservedResourceFieldName(k) {
 				return fmt.Errorf("%s is a reserved field name", k)
 			}
 		}
@@ -833,13 +1228,13 @@ func validateResourceID(s *Schema) error {
 
 	// ID should at least be computed. If unspecified it will be set to Computed and Optional,
 	// but Optional is unnecessary if undesired.
-	if s.Computed != true {
+	if !s.Computed {
 		return fmt.Errorf(`the "id" attribute must be marked Computed`)
 	}
 	return nil
 }
 
-func isReservedResourceFieldName(name string, s *Schema) bool {
+func isReservedResourceFieldName(name string) bool {
 	for _, reservedName := range ReservedResourceFields {
 		if name == reservedName {
 			return true

@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -23,11 +23,6 @@ func ResourceDNSSECConfig() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,7 +85,6 @@ func resourceDNSSECConfigRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	d.Set("id", config.Id)
 	d.Set("owner_id", config.OwnerId)
 	d.Set("resource_id", config.ResourceId)
 	d.Set("validation_status", config.ValidationStatus)

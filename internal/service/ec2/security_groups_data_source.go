@@ -2,7 +2,6 @@ package ec2
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -17,20 +16,19 @@ func DataSourceSecurityGroups() *schema.Resource {
 		Read: dataSourceSecurityGroupsRead,
 
 		Schema: map[string]*schema.Schema{
+			"arns": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"filter": DataSourceFiltersSchema(),
-			"tags":   tftags.TagsSchemaComputed(),
-
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"tags": tftags.TagsSchemaComputed(),
 			"vpc_ids": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"arns": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -41,75 +39,46 @@ func DataSourceSecurityGroups() *schema.Resource {
 
 func dataSourceSecurityGroupsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
-	req := &ec2.DescribeSecurityGroupsInput{}
 
-	filters, filtersOk := d.GetOk("filter")
-	tags, tagsOk := d.GetOk("tags")
+	input := &ec2.DescribeSecurityGroupsInput{}
 
-	if !filtersOk && !tagsOk {
-		return fmt.Errorf("One of filters or tags must be assigned")
+	input.Filters = append(input.Filters, BuildTagFilterList(
+		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+	)...)
+
+	input.Filters = append(input.Filters, BuildFiltersDataSource(
+		d.Get("filter").(*schema.Set),
+	)...)
+
+	if len(input.Filters) == 0 {
+		input.Filters = nil
 	}
 
-	if filtersOk {
-		req.Filters = append(req.Filters,
-			BuildFiltersDataSource(filters.(*schema.Set))...)
-	}
-	if tagsOk {
-		req.Filters = append(req.Filters, BuildTagFilterList(
-			Tags(tftags.New(tags.(map[string]interface{}))),
-		)...)
+	output, err := FindSecurityGroups(conn, input)
+
+	if err != nil {
+		return fmt.Errorf("error reading EC2 Security Groups: %w", err)
 	}
 
-	log.Printf("[DEBUG] Reading Security Groups with request: %s", req)
+	var arns, securityGroupIDs, vpcIDs []string
 
-	var ids, vpcIds, arns []string
-	for {
-		resp, err := conn.DescribeSecurityGroups(req)
-		if err != nil {
-			return fmt.Errorf("error reading security groups: %w", err)
-		}
-
-		for _, sg := range resp.SecurityGroups {
-			ids = append(ids, aws.StringValue(sg.GroupId))
-			vpcIds = append(vpcIds, aws.StringValue(sg.VpcId))
-
-			arn := arn.ARN{
-				Partition: meta.(*conns.AWSClient).Partition,
-				Service:   ec2.ServiceName,
-				Region:    meta.(*conns.AWSClient).Region,
-				AccountID: aws.StringValue(sg.OwnerId),
-				Resource:  fmt.Sprintf("security-group/%s", aws.StringValue(sg.GroupId)),
-			}.String()
-
-			arns = append(arns, arn)
-		}
-
-		if resp.NextToken == nil {
-			break
-		}
-		req.NextToken = resp.NextToken
+	for _, v := range output {
+		arn := arn.ARN{
+			Partition: meta.(*conns.AWSClient).Partition,
+			Service:   ec2.ServiceName,
+			Region:    meta.(*conns.AWSClient).Region,
+			AccountID: aws.StringValue(v.OwnerId),
+			Resource:  fmt.Sprintf("security-group/%s", aws.StringValue(v.GroupId)),
+		}.String()
+		arns = append(arns, arn)
+		securityGroupIDs = append(securityGroupIDs, aws.StringValue(v.GroupId))
+		vpcIDs = append(vpcIDs, aws.StringValue(v.VpcId))
 	}
-
-	if len(ids) < 1 {
-		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
-	}
-
-	log.Printf("[DEBUG] Found %d security groups via given filter: %s", len(ids), req)
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-
-	err := d.Set("ids", ids)
-	if err != nil {
-		return err
-	}
-
-	if err = d.Set("vpc_ids", vpcIds); err != nil {
-		return fmt.Errorf("error setting vpc_ids: %s", err)
-	}
-
-	if err = d.Set("arns", arns); err != nil {
-		return fmt.Errorf("error setting arns: %s", err)
-	}
+	d.Set("arns", arns)
+	d.Set("ids", securityGroupIDs)
+	d.Set("vpc_ids", vpcIDs)
 
 	return nil
 }

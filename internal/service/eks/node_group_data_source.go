@@ -127,6 +127,26 @@ func DataSourceNodeGroup() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"tags": tftags.TagsSchemaComputed(),
+			"taints": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"effect": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"version": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -184,6 +204,10 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	if err := d.Set("tags", KeyValueTags(nodeGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("error setting tags: %s", err)
+	}
+
+	if err := d.Set("taints", flattenEksTaints(nodeGroup.Taints)); err != nil {
+		return diag.Errorf("error setting taint: %s", err)
 	}
 
 	d.Set("version", nodeGroup.Version)

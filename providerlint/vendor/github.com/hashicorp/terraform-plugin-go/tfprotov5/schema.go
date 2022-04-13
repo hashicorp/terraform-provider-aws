@@ -68,6 +68,19 @@ type Schema struct {
 	Block *SchemaBlock
 }
 
+// ValueType returns the tftypes.Type for a Schema.
+//
+// If Schema is missing, an empty Object is returned.
+func (s *Schema) ValueType() tftypes.Type {
+	if s == nil {
+		return tftypes.Object{
+			AttributeTypes: map[string]tftypes.Type{},
+		}
+	}
+
+	return s.Block.ValueType()
+}
+
 // SchemaBlock represents a block in a schema. Blocks are how Terraform creates
 // groupings of attributes. In configurations, they don't use the equals sign
 // and use dynamic instead of list comprehensions.
@@ -103,6 +116,51 @@ type SchemaBlock struct {
 	// experiences. Providers should set it when deprecating blocks in
 	// preparation for these tools.
 	Deprecated bool
+}
+
+// ValueType returns the tftypes.Type for a SchemaBlock.
+//
+// If SchemaBlock is missing, an empty Object is returned.
+func (s *SchemaBlock) ValueType() tftypes.Type {
+	if s == nil {
+		return tftypes.Object{
+			AttributeTypes: map[string]tftypes.Type{},
+		}
+	}
+
+	attributeTypes := map[string]tftypes.Type{}
+
+	for _, attribute := range s.Attributes {
+		if attribute == nil {
+			continue
+		}
+
+		attributeType := attribute.ValueType()
+
+		if attributeType == nil {
+			continue
+		}
+
+		attributeTypes[attribute.Name] = attributeType
+	}
+
+	for _, block := range s.BlockTypes {
+		if block == nil {
+			continue
+		}
+
+		blockType := block.ValueType()
+
+		if blockType == nil {
+			continue
+		}
+
+		attributeTypes[block.TypeName] = blockType
+	}
+
+	return tftypes.Object{
+		AttributeTypes: attributeTypes,
+	}
 }
 
 // SchemaAttribute represents a single attribute within a schema block.
@@ -162,6 +220,17 @@ type SchemaAttribute struct {
 	Deprecated bool
 }
 
+// ValueType returns the tftypes.Type for a SchemaAttribute.
+//
+// If SchemaAttribute is missing, nil is returned.
+func (s *SchemaAttribute) ValueType() tftypes.Type {
+	if s == nil {
+		return nil
+	}
+
+	return s.Type
+}
+
 // SchemaNestedBlock is a nested block within another block. See SchemaBlock
 // for more information on blocks.
 type SchemaNestedBlock struct {
@@ -196,6 +265,39 @@ type SchemaNestedBlock struct {
 	// block is required to be set. All other SchemaNestedBlockNestingModes
 	// must leave MaxItems set to 0.
 	MaxItems int64
+}
+
+// ValueType returns the tftypes.Type for a SchemaNestedBlock.
+//
+// If SchemaNestedBlock is missing or the Nesting mode is invalid, nil is
+// returned.
+func (s *SchemaNestedBlock) ValueType() tftypes.Type {
+	if s == nil {
+		return nil
+	}
+
+	blockType := s.Block.ValueType()
+
+	switch s.Nesting {
+	case SchemaNestedBlockNestingModeGroup:
+		return blockType
+	case SchemaNestedBlockNestingModeList:
+		return tftypes.List{
+			ElementType: blockType,
+		}
+	case SchemaNestedBlockNestingModeMap:
+		return tftypes.Map{
+			ElementType: blockType,
+		}
+	case SchemaNestedBlockNestingModeSet:
+		return tftypes.Set{
+			ElementType: blockType,
+		}
+	case SchemaNestedBlockNestingModeSingle:
+		return blockType
+	default:
+		return nil
+	}
 }
 
 // SchemaNestedBlockNestingMode indicates the nesting mode for

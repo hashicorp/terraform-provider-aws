@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -87,7 +87,7 @@ func TestAccS3BucketPublicAccessBlock_Disappears_bucket(t *testing.T) {
 				Config: testAccBucketPublicAccessBlockConfig(name, "false", "false", "false", "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPublicAccessBlockExists(resourceName, &config),
-					testAccCheckDestroyBucket(bucketResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucket(), bucketResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

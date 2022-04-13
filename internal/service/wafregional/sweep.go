@@ -10,10 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -84,7 +85,7 @@ func sweepRateBasedRules(region string) error {
 				return conn.DeleteRateBasedRule(deleteInput)
 			})
 
-			if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonEmptyEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonEmptyEntityException) {
 				getRateBasedRuleInput := &waf.GetRateBasedRuleInput{
 					RuleId: rule.RuleId,
 				}
@@ -218,7 +219,7 @@ func sweepRuleGroups(region string) error {
 		if err != nil {
 			return err
 		}
-		oldRules := FlattenWAFActivatedRules(rResp.ActivatedRules)
+		oldRules := tfwaf.FlattenActivatedRules(rResp.ActivatedRules)
 		err = DeleteRuleGroup(*group.RuleGroupId, oldRules, conn, region)
 		if err != nil {
 			return err
@@ -262,7 +263,7 @@ func sweepRules(region string) error {
 				return conn.DeleteRule(deleteInput)
 			})
 
-			if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonEmptyEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonEmptyEntityException) {
 				getRuleInput := &waf.GetRuleInput{
 					RuleId: rule.RuleId,
 				}
@@ -354,7 +355,7 @@ func sweepWebACLs(region string) error {
 				return conn.DeleteWebACL(deleteInput)
 			})
 
-			if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonEmptyEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonEmptyEntityException) {
 				getWebACLInput := &waf.GetWebACLInput{
 					WebACLId: webACL.WebACLId,
 				}

@@ -39,7 +39,6 @@ func TestAccS3BucketDataSource_basic(t *testing.T) {
 
 func TestAccS3BucketDataSource_website(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	region := acctest.Region()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -50,8 +49,9 @@ func TestAccS3BucketDataSource_website(t *testing.T) {
 				Config: testAccBucketWebsiteDataSourceConfig(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists("data.aws_s3_bucket.bucket"),
-					testAccCheckBucketWebsite("data.aws_s3_bucket.bucket", "index.html", "error.html", "", ""),
-					testAccCheckS3BucketWebsiteEndpoint("data.aws_s3_bucket.bucket", "website_endpoint", bucketName, region),
+					resource.TestCheckResourceAttrPair("data.aws_s3_bucket.bucket", "bucket", "aws_s3_bucket.bucket", "id"),
+					resource.TestCheckResourceAttrPair("data.aws_s3_bucket.bucket", "website_domain", "aws_s3_bucket_website_configuration.test", "website_domain"),
+					resource.TestCheckResourceAttrPair("data.aws_s3_bucket.bucket", "website_endpoint", "aws_s3_bucket_website_configuration.test", "website_endpoint"),
 				),
 			},
 		},
@@ -74,16 +74,26 @@ func testAccBucketWebsiteDataSourceConfig(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
-  acl    = "public-read"
+}
 
-  website {
-    index_document = "index.html"
-    error_document = "error.html"
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "public-read"
+}
+
+resource "aws_s3_bucket_website_configuration" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  index_document {
+    suffix = "index.html"
+  }
+  error_document {
+    key = "error.html"
   }
 }
 
 data "aws_s3_bucket" "bucket" {
-  bucket = aws_s3_bucket.bucket.id
+  # Must have bucket website configured first
+  bucket = aws_s3_bucket_website_configuration.test.id
 }
 `, bucketName)
 }

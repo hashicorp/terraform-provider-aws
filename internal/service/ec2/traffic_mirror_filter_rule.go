@@ -356,7 +356,7 @@ func buildTrafficMirrorFilterRulePortRangeSchema(portRange *ec2.TrafficMirrorPor
 		return nil
 	}
 
-	var out [1]interface{}
+	out := make([]interface{}, 1)
 	elem := make(map[string]interface{})
 	elem["from_port"] = portRange.FromPort
 	elem["to_port"] = portRange.ToPort

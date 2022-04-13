@@ -19,7 +19,10 @@ data "aws_redshift_service_account" "main" {}
 resource "aws_s3_bucket" "bucket" {
   bucket        = "tf-redshift-logging-test-bucket"
   force_destroy = true
+}
 
+resource "aws_s3_bucket_policy" "allow_audit_logging" {
+  bucket = aws_s3_bucket.bucket.id
   policy = <<EOF
 {
 	"Version": "2008-10-17",

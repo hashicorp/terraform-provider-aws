@@ -2,46 +2,24 @@ package ec2
 
 import (
 	"fmt"
-	"log"
 	"strconv"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceLaunchTemplate() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceLaunchTemplateRead,
+
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"default_version": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"latest_version": {
-				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"block_device_mappings": {
@@ -50,14 +28,6 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"device_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"no_device": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"virtual_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -101,6 +71,58 @@ func DataSourceLaunchTemplate() *schema.Resource {
 								},
 							},
 						},
+						"no_device": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"virtual_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"capacity_reservation_specification": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"capacity_reservation_preference": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"capacity_reservation_target": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"capacity_reservation_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"capacity_reservation_resource_group_arn": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"cpu_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"core_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"threads_per_core": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -115,6 +137,14 @@ func DataSourceLaunchTemplate() *schema.Resource {
 						},
 					},
 				},
+			},
+			"default_version": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"disable_api_termination": {
 				Type:     schema.TypeBool,
@@ -136,6 +166,43 @@ func DataSourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
+			"elastic_inference_accelerator": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"enclave_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"filter": DataSourceFiltersSchema(),
+			"hibernation_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"configured": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"iam_instance_profile": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -152,11 +219,15 @@ func DataSourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
+			"id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"image_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"instance_initiated_shutdown_behavior": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -213,6 +284,22 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"latest_version": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"license_specification": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"license_configuration_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"metadata_options": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -226,24 +313,16 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"http_tokens": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"http_put_response_hop_limit": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-					},
-				},
-			},
-			"enclave_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
+						"http_tokens": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"instance_metadata_tags": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
@@ -260,6 +339,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 						},
 					},
 				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"network_interfaces": {
 				Type:     schema.TypeList,
@@ -286,7 +370,24 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"security_groups": {
+						"interface_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ipv4_address_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"ipv4_addresses": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"ipv4_prefix_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"ipv4_prefixes": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -300,9 +401,18 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"ipv6_prefix_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"ipv6_prefixes": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"network_card_index": {
 							Type:     schema.TypeInt,
-							Optional: true,
+							Computed: true,
 						},
 						"network_interface_id": {
 							Type:     schema.TypeString,
@@ -312,20 +422,12 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"ipv4_addresses": {
+						"security_groups": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"ipv4_address_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
 						"subnet_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"interface_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -357,6 +459,10 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"partition_number": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
 						"spread_domain": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -365,8 +471,24 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"partition_number": {
-							Type:     schema.TypeInt,
+					},
+				},
+			},
+			"private_dns_name_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enable_resource_name_dns_aaaa_record": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"enable_resource_name_dns_a_record": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"hostname_type": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
@@ -377,11 +499,6 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 			},
 			"security_group_names": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -399,24 +516,16 @@ func DataSourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
+			"tags": tftags.TagsSchemaComputed(),
 			"user_data": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"hibernation_options": {
-				Type:     schema.TypeList,
+			"vpc_security_group_ids": {
+				Type:     schema.TypeSet,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"configured": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":   tftags.TagsSchemaComputed(),
-			"filter": DataSourceFiltersSchema(),
 		},
 	}
 }
@@ -425,52 +534,41 @@ func dataSourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	filters, filtersOk := d.GetOk("filter")
-	id, idOk := d.GetOk("id")
-	name, nameOk := d.GetOk("name")
-	tags, tagsOk := d.GetOk("tags")
+	input := &ec2.DescribeLaunchTemplatesInput{}
 
-	params := &ec2.DescribeLaunchTemplatesInput{}
-	if filtersOk {
-		params.Filters = BuildFiltersDataSource(filters.(*schema.Set))
-	}
-	if idOk {
-		params.LaunchTemplateIds = []*string{aws.String(id.(string))}
-	}
-	if nameOk {
-		params.LaunchTemplateNames = []*string{aws.String(name.(string))}
-	}
-	if tagsOk {
-		params.Filters = append(params.Filters, ec2TagFiltersFromMap(tags.(map[string]interface{}))...)
+	if v, ok := d.GetOk("id"); ok {
+		input.LaunchTemplateIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	dlt, err := conn.DescribeLaunchTemplates(params)
+	if v, ok := d.GetOk("name"); ok {
+		input.LaunchTemplateNames = aws.StringSlice([]string{v.(string)})
+	}
+
+	input.Filters = append(input.Filters, BuildFiltersDataSource(
+		d.Get("filter").(*schema.Set),
+	)...)
+
+	input.Filters = append(input.Filters, BuildTagFilterList(
+		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+	)...)
+
+	if len(input.Filters) == 0 {
+		input.Filters = nil
+	}
+
+	lt, err := FindLaunchTemplate(conn, input)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") ||
-			tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateName.NotFoundException", "") {
-			return fmt.Errorf("Launch Template not found")
-		}
-		return fmt.Errorf("Error getting launch template: %w", err)
+		return tfresource.SingularDataSourceFindError("EC2 Launch Template", err)
 	}
-
-	if dlt == nil || len(dlt.LaunchTemplates) == 0 {
-		return fmt.Errorf("error reading launch template: empty output")
-	}
-
-	if len(dlt.LaunchTemplates) > 1 {
-		return fmt.Errorf("Search returned %d result(s), please revise so only one is returned", len(dlt.LaunchTemplates))
-	}
-
-	lt := dlt.LaunchTemplates[0]
-	log.Printf("[DEBUG] Found launch template %s", aws.StringValue(lt.LaunchTemplateId))
 
 	d.SetId(aws.StringValue(lt.LaunchTemplateId))
-	d.Set("name", lt.LaunchTemplateName)
-	d.Set("latest_version", lt.LatestVersionNumber)
-	d.Set("default_version", lt.DefaultVersionNumber)
-	if err := d.Set("tags", KeyValueTags(lt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+
+	version := strconv.FormatInt(aws.Int64Value(lt.LatestVersionNumber), 10)
+	ltv, err := FindLaunchTemplateVersionByTwoPartKey(conn, d.Id(), version)
+
+	if err != nil {
+		return fmt.Errorf("error reading EC2 Launch Template (%s) Version (%s): %w", d.Id(), version, err)
 	}
 
 	arn := arn.ARN{
@@ -481,92 +579,17 @@ func dataSourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) erro
 		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
+	d.Set("default_version", lt.DefaultVersionNumber)
+	d.Set("description", ltv.VersionDescription)
+	d.Set("latest_version", lt.LatestVersionNumber)
+	d.Set("name", lt.LaunchTemplateName)
 
-	version := strconv.Itoa(int(*lt.LatestVersionNumber))
-	dltv, err := conn.DescribeLaunchTemplateVersions(&ec2.DescribeLaunchTemplateVersionsInput{
-		LaunchTemplateId: aws.String(d.Id()),
-		Versions:         []*string{aws.String(version)},
-	})
-	if err != nil {
-		return fmt.Errorf("error reading launch template version (%s) for launch template (%s): %w", version, d.Id(), err)
+	if err := flattenResponseLaunchTemplateData(d, ltv.LaunchTemplateData); err != nil {
+		return err
 	}
 
-	if dltv == nil || len(dltv.LaunchTemplateVersions) == 0 {
-		return fmt.Errorf("error reading launch template version (%s) for launch template (%s): empty output", version, d.Id())
-	}
-
-	log.Printf("[DEBUG] Received launch template version %q (version %d)", d.Id(), aws.Int64Value(lt.LatestVersionNumber))
-
-	ltData := dltv.LaunchTemplateVersions[0].LaunchTemplateData
-
-	d.Set("disable_api_termination", ltData.DisableApiTermination)
-	d.Set("image_id", ltData.ImageId)
-	d.Set("instance_initiated_shutdown_behavior", ltData.InstanceInitiatedShutdownBehavior)
-	d.Set("instance_type", ltData.InstanceType)
-	d.Set("kernel_id", ltData.KernelId)
-	d.Set("key_name", ltData.KeyName)
-	d.Set("ram_disk_id", ltData.RamDiskId)
-	if err := d.Set("security_group_names", aws.StringValueSlice(ltData.SecurityGroups)); err != nil {
-		return fmt.Errorf("error setting security_group_names: %w", err)
-	}
-	d.Set("user_data", ltData.UserData)
-	if err := d.Set("vpc_security_group_ids", aws.StringValueSlice(ltData.SecurityGroupIds)); err != nil {
-		return fmt.Errorf("error setting vpc_security_group_ids: %w", err)
-	}
-	d.Set("ebs_optimized", "")
-
-	if ltData.EbsOptimized != nil {
-		d.Set("ebs_optimized", strconv.FormatBool(aws.BoolValue(ltData.EbsOptimized)))
-	}
-
-	if err := d.Set("block_device_mappings", getBlockDeviceMappings(ltData.BlockDeviceMappings)); err != nil {
-		return fmt.Errorf("error setting block_device_mappings: %w", err)
-	}
-
-	if strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t3") {
-		if err := d.Set("credit_specification", getCreditSpecification(ltData.CreditSpecification)); err != nil {
-			return fmt.Errorf("error setting credit_specification: %w", err)
-		}
-	}
-
-	if err := d.Set("elastic_gpu_specifications", getElasticGpuSpecifications(ltData.ElasticGpuSpecifications)); err != nil {
-		return fmt.Errorf("error setting elastic_gpu_specifications: %w", err)
-	}
-
-	if err := d.Set("iam_instance_profile", getIamInstanceProfile(ltData.IamInstanceProfile)); err != nil {
-		return fmt.Errorf("error setting iam_instance_profile: %w", err)
-	}
-
-	if err := d.Set("instance_market_options", getInstanceMarketOptions(ltData.InstanceMarketOptions)); err != nil {
-		return fmt.Errorf("error setting instance_market_options: %w", err)
-	}
-
-	if err := d.Set("metadata_options", flattenLaunchTemplateInstanceMetadataOptions(ltData.MetadataOptions)); err != nil {
-		return fmt.Errorf("error setting metadata_options: %w", err)
-	}
-
-	if err := d.Set("enclave_options", getEnclaveOptions(ltData.EnclaveOptions)); err != nil {
-		return fmt.Errorf("error setting enclave_options: %w", err)
-	}
-
-	if err := d.Set("monitoring", getMonitoring(ltData.Monitoring)); err != nil {
-		return fmt.Errorf("error setting monitoring: %w", err)
-	}
-
-	if err := d.Set("network_interfaces", getNetworkInterfaces(ltData.NetworkInterfaces)); err != nil {
-		return fmt.Errorf("error setting network_interfaces: %w", err)
-	}
-
-	if err := d.Set("placement", getPlacement(ltData.Placement)); err != nil {
-		return fmt.Errorf("error setting placement: %w", err)
-	}
-
-	if err := d.Set("hibernation_options", flattenLaunchTemplateHibernationOptions(ltData.HibernationOptions)); err != nil {
-		return fmt.Errorf("error setting hibernation_options: %w", err)
-	}
-
-	if err := d.Set("tag_specifications", getTagSpecifications(ltData.TagSpecifications)); err != nil {
-		return fmt.Errorf("error setting tag_specifications: %w", err)
+	if err := d.Set("tags", KeyValueTags(lt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil

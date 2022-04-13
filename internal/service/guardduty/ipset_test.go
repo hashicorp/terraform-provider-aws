@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -166,12 +166,16 @@ func testAccGuardDutyIpsetConfig_basic(bucketName, keyName, ipsetName string, ac
 resource "aws_guardduty_detector" "test" {}
 
 resource "aws_s3_bucket" "test" {
-  acl           = "private"
   bucket        = "%s"
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_object" "test" {
   acl     = "public-read"
   content = "10.0.0.0/8\n"
   bucket  = aws_s3_bucket.test.id
@@ -182,7 +186,7 @@ resource "aws_guardduty_ipset" "test" {
   name        = "%s"
   detector_id = aws_guardduty_detector.test.id
   format      = "TXT"
-  location    = "https://s3.amazonaws.com/${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
+  location    = "https://s3.amazonaws.com/${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
   activate    = %t
 }
 `, bucketName, keyName, ipsetName, activate)
@@ -193,12 +197,16 @@ func testAccGuardDutyIpsetConfigTags1(rName, tagKey1, tagValue1 string) string {
 resource "aws_guardduty_detector" "test" {}
 
 resource "aws_s3_bucket" "test" {
-  acl           = "private"
   bucket        = %[1]q
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_object" "test" {
   acl     = "public-read"
   content = "10.0.0.0/8\n"
   bucket  = aws_s3_bucket.test.id
@@ -209,7 +217,7 @@ resource "aws_guardduty_ipset" "test" {
   activate    = true
   detector_id = aws_guardduty_detector.test.id
   format      = "TXT"
-  location    = "https://s3.amazonaws.com/${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
+  location    = "https://s3.amazonaws.com/${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
   name        = %[1]q
 
   tags = {
@@ -224,12 +232,16 @@ func testAccGuardDutyIpsetConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagVal
 resource "aws_guardduty_detector" "test" {}
 
 resource "aws_s3_bucket" "test" {
-  acl           = "private"
   bucket        = %[1]q
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_object" "test" {
   acl     = "public-read"
   content = "10.0.0.0/8\n"
   bucket  = aws_s3_bucket.test.id
@@ -240,7 +252,7 @@ resource "aws_guardduty_ipset" "test" {
   activate    = true
   detector_id = aws_guardduty_detector.test.id
   format      = "TXT"
-  location    = "https://s3.amazonaws.com/${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
+  location    = "https://s3.amazonaws.com/${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
   name        = %[1]q
 
   tags = {

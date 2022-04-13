@@ -71,6 +71,11 @@ func DataSourceRouteTable() *schema.Resource {
 							Computed: true,
 						},
 
+						"core_network_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
 						"egress_only_gateway_id": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -284,6 +289,9 @@ func dataSourceRoutesRead(conn *ec2.EC2, ec2Routes []*ec2.Route) []map[string]in
 		}
 		if r.CarrierGatewayId != nil {
 			m["carrier_gateway_id"] = *r.CarrierGatewayId
+		}
+		if r.CoreNetworkArn != nil {
+			m["core_network_arn"] = *r.CoreNetworkArn
 		}
 		if r.EgressOnlyInternetGatewayId != nil {
 			m["egress_only_gateway_id"] = *r.EgressOnlyInternetGatewayId

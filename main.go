@@ -27,5 +27,8 @@ func main() {
 		return
 	}
 
+	logFlags := log.Flags()
+	logFlags = logFlags &^ (log.Ldate | log.Ltime)
+	log.SetFlags(logFlags)
 	plugin.Serve(opts)
 }

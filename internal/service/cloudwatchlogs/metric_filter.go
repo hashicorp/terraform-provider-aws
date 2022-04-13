@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -172,7 +172,7 @@ func LookupMetricFilter(conn *cloudwatchlogs.CloudWatchLogs,
 	log.Printf("[DEBUG] Reading CloudWatch Log Metric Filter: %s", input)
 	resp, err := conn.DescribeMetricFilters(&input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeResourceNotFoundException) {
 			return nil, &resource.NotFoundError{
 				Message: fmt.Sprintf("CloudWatch Log Metric Filter %q / %q not found via"+
 					" initial DescribeMetricFilters call", name, logGroupName),
@@ -277,7 +277,7 @@ func flattenCloudWatchLogMetricTransformations(ts []*cloudwatchlogs.MetricTransf
 	}
 
 	if dims := transform.Dimensions; len(dims) > 0 {
-		m["dimensions"] = verify.PointersMapToStringList(dims)
+		m["dimensions"] = flex.PointersMapToStringList(dims)
 	} else {
 		m["dimensions"] = nil
 	}

@@ -7,11 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -33,6 +34,10 @@ func ResourceCapacityReservation() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"availability_zone": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -50,13 +55,10 @@ func ResourceCapacityReservation() *schema.Resource {
 				ValidateFunc: validation.IsRFC3339Time,
 			},
 			"end_date_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ec2.EndDateTypeUnlimited,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.EndDateTypeUnlimited,
-					ec2.EndDateTypeLimited,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.EndDateTypeUnlimited,
+				ValidateFunc: validation.StringInSlice(ec2.EndDateType_Values(), false),
 			},
 			"ephemeral_storage": {
 				Type:     schema.TypeBool,
@@ -69,32 +71,17 @@ func ResourceCapacityReservation() *schema.Resource {
 				Required: true,
 			},
 			"instance_match_criteria": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  ec2.InstanceMatchCriteriaOpen,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.InstanceMatchCriteriaOpen,
-					ec2.InstanceMatchCriteriaTargeted,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      ec2.InstanceMatchCriteriaOpen,
+				ValidateFunc: validation.StringInSlice(ec2.InstanceMatchCriteria_Values(), false),
 			},
 			"instance_platform": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.CapacityReservationInstancePlatformLinuxUnix,
-					ec2.CapacityReservationInstancePlatformRedHatEnterpriseLinux,
-					ec2.CapacityReservationInstancePlatformSuselinux,
-					ec2.CapacityReservationInstancePlatformWindows,
-					ec2.CapacityReservationInstancePlatformWindowswithSqlserver,
-					ec2.CapacityReservationInstancePlatformWindowswithSqlserverEnterprise,
-					ec2.CapacityReservationInstancePlatformWindowswithSqlserverStandard,
-					ec2.CapacityReservationInstancePlatformWindowswithSqlserverWeb,
-					ec2.CapacityReservationInstancePlatformLinuxwithSqlserverStandard,
-					ec2.CapacityReservationInstancePlatformLinuxwithSqlserverWeb,
-					ec2.CapacityReservationInstancePlatformLinuxwithSqlserverEnterprise,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.CapacityReservationInstancePlatform_Values(), false),
 			},
 			"instance_type": {
 				Type:     schema.TypeString,
@@ -113,18 +100,11 @@ func ResourceCapacityReservation() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"tenancy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  ec2.CapacityReservationTenancyDefault,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.CapacityReservationTenancyDefault,
-					ec2.CapacityReservationTenancyDedicated,
-				}, false),
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      ec2.CapacityReservationTenancyDefault,
+				ValidateFunc: validation.StringInSlice(ec2.CapacityReservationTenancy_Values(), false),
 			},
 		},
 	}
@@ -135,7 +115,7 @@ func resourceCapacityReservationCreate(d *schema.ResourceData, meta interface{})
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	opts := &ec2.CreateCapacityReservationInput{
+	input := &ec2.CreateCapacityReservationInput{
 		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
 		EndDateType:       aws.String(d.Get("end_date_type").(string)),
 		InstanceCount:     aws.Int64(int64(d.Get("instance_count").(int))),
@@ -145,40 +125,44 @@ func resourceCapacityReservationCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("ebs_optimized"); ok {
-		opts.EbsOptimized = aws.Bool(v.(bool))
+		input.EbsOptimized = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("end_date"); ok {
-		t, err := time.Parse(time.RFC3339, v.(string))
-		if err != nil {
-			return fmt.Errorf("Error parsing EC2 Capacity Reservation end date: %s", err.Error())
-		}
-		opts.EndDate = aws.Time(t)
+		v, _ := time.Parse(time.RFC3339, v.(string))
+
+		input.EndDate = aws.Time(v)
 	}
 
 	if v, ok := d.GetOk("ephemeral_storage"); ok {
-		opts.EphemeralStorage = aws.Bool(v.(bool))
+		input.EphemeralStorage = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("instance_match_criteria"); ok {
-		opts.InstanceMatchCriteria = aws.String(v.(string))
+		input.InstanceMatchCriteria = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("outpost_arn"); ok {
-		opts.OutpostArn = aws.String(v.(string))
+		input.OutpostArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("tenancy"); ok {
-		opts.Tenancy = aws.String(v.(string))
+		input.Tenancy = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Capacity reservation: %s", opts)
+	log.Printf("[DEBUG] Creating EC2 Capacity Reservation: %s", input)
+	output, err := conn.CreateCapacityReservation(input)
 
-	out, err := conn.CreateCapacityReservation(opts)
 	if err != nil {
-		return fmt.Errorf("Error creating EC2 Capacity Reservation: %s", err)
+		return fmt.Errorf("error creating EC2 Capacity Reservation: %w", err)
 	}
-	d.SetId(aws.StringValue(out.CapacityReservation.CapacityReservationId))
+
+	d.SetId(aws.StringValue(output.CapacityReservation.CapacityReservationId))
+
+	if _, err := WaitCapacityReservationActive(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for EC2 Capacity Reservation (%s) create: %w", d.Id(), err)
+	}
+
 	return resourceCapacityReservationRead(d, meta)
 }
 
@@ -187,39 +171,26 @@ func resourceCapacityReservationRead(d *schema.ResourceData, meta interface{}) e
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.DescribeCapacityReservations(&ec2.DescribeCapacityReservationsInput{
-		CapacityReservationIds: []*string{aws.String(d.Id())},
-	})
+	reservation, err := FindCapacityReservationByID(conn, d.Id())
 
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidCapacityReservationId.NotFound", "") {
-			log.Printf("[WARN] EC2 Capacity Reservation (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading EC2 Capacity Reservation %s: %s", d.Id(), err)
-	}
-
-	if resp == nil || len(resp.CapacityReservations) == 0 || resp.CapacityReservations[0] == nil {
-		return fmt.Errorf("error reading EC2 Capacity Reservation (%s): empty response", d.Id())
-	}
-
-	reservation := resp.CapacityReservations[0]
-
-	if aws.StringValue(reservation.State) == ec2.CapacityReservationStateCancelled || aws.StringValue(reservation.State) == ec2.CapacityReservationStateExpired {
-		log.Printf("[WARN] EC2 Capacity Reservation (%s) no longer active, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Capacity Reservation %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	d.Set("availability_zone", reservation.AvailabilityZone)
-	d.Set("ebs_optimized", reservation.EbsOptimized)
-
-	d.Set("end_date", "")
-	if reservation.EndDate != nil {
-		d.Set("end_date", aws.TimeValue(reservation.EndDate).Format(time.RFC3339))
+	if err != nil {
+		return fmt.Errorf("error reading EC2 Capacity Reservation (%s): %w", d.Id(), err)
 	}
 
+	d.Set("arn", reservation.CapacityReservationArn)
+	d.Set("availability_zone", reservation.AvailabilityZone)
+	d.Set("ebs_optimized", reservation.EbsOptimized)
+	if reservation.EndDate != nil {
+		d.Set("end_date", aws.TimeValue(reservation.EndDate).Format(time.RFC3339))
+	} else {
+		d.Set("end_date", nil)
+	}
 	d.Set("end_date_type", reservation.EndDateType)
 	d.Set("ephemeral_storage", reservation.EphemeralStorage)
 	d.Set("instance_count", reservation.TotalInstanceCount)
@@ -228,6 +199,7 @@ func resourceCapacityReservationRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("instance_type", reservation.InstanceType)
 	d.Set("outpost_arn", reservation.OutpostArn)
 	d.Set("owner_id", reservation.OwnerId)
+	d.Set("tenancy", reservation.Tenancy)
 
 	tags := KeyValueTags(reservation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -240,34 +212,35 @@ func resourceCapacityReservationRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	d.Set("tenancy", reservation.Tenancy)
-	d.Set("arn", reservation.CapacityReservationArn)
-
 	return nil
 }
 
 func resourceCapacityReservationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	opts := &ec2.ModifyCapacityReservationInput{
-		CapacityReservationId: aws.String(d.Id()),
-		EndDateType:           aws.String(d.Get("end_date_type").(string)),
-		InstanceCount:         aws.Int64(int64(d.Get("instance_count").(int))),
-	}
-
-	if v, ok := d.GetOk("end_date"); ok {
-		t, err := time.Parse(time.RFC3339, v.(string))
-		if err != nil {
-			return fmt.Errorf("Error parsing EC2 Capacity Reservation end date: %s", err.Error())
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &ec2.ModifyCapacityReservationInput{
+			CapacityReservationId: aws.String(d.Id()),
+			EndDateType:           aws.String(d.Get("end_date_type").(string)),
+			InstanceCount:         aws.Int64(int64(d.Get("instance_count").(int))),
 		}
-		opts.EndDate = aws.Time(t)
-	}
 
-	log.Printf("[DEBUG] Capacity reservation: %s", opts)
+		if v, ok := d.GetOk("end_date"); ok {
+			v, _ := time.Parse(time.RFC3339, v.(string))
 
-	_, err := conn.ModifyCapacityReservation(opts)
-	if err != nil {
-		return fmt.Errorf("Error modifying EC2 Capacity Reservation: %s", err)
+			input.EndDate = aws.Time(v)
+		}
+
+		log.Printf("[DEBUG] Updating EC2 Capacity Reservation: %s", input)
+		_, err := conn.ModifyCapacityReservation(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating EC2 Capacity Reservation (%s): %w", d.Id(), err)
+		}
+
+		if _, err := WaitCapacityReservationActive(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for EC2 Capacity Reservation (%s) update: %w", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags_all") {
@@ -284,13 +257,21 @@ func resourceCapacityReservationUpdate(d *schema.ResourceData, meta interface{})
 func resourceCapacityReservationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	opts := &ec2.CancelCapacityReservationInput{
+	log.Printf("[DEBUG] Deleting EC2 Capacity Reservation: %s", d.Id())
+	_, err := conn.CancelCapacityReservation(&ec2.CancelCapacityReservationInput{
 		CapacityReservationId: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidCapacityReservationIdNotFound) {
+		return nil
 	}
 
-	_, err := conn.CancelCapacityReservation(opts)
 	if err != nil {
-		return fmt.Errorf("Error cancelling EC2 Capacity Reservation: %s", err)
+		return fmt.Errorf("error deleting EC2 Capacity Reservation (%s): %w", d.Id(), err)
+	}
+
+	if _, err := WaitCapacityReservationDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for EC2 Capacity Reservation (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil

@@ -15,15 +15,12 @@ func DataSourceTransitGatewayRouteTables() *schema.Resource {
 		Read: dataSourceTransitGatewayRouteTablesRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
-
+			"filter": DataSourceFiltersSchema(),
 			"ids": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
-
 			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
@@ -38,50 +35,28 @@ func dataSourceTransitGatewayRouteTablesRead(d *schema.ResourceData, meta interf
 		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, BuildFiltersDataSource(
 		d.Get("filter").(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
-		// Don't send an empty filters list; the EC2 API won't accept it.
 		input.Filters = nil
 	}
 
-	var transitGatewayRouteTables []*ec2.TransitGatewayRouteTable
-
-	err := conn.DescribeTransitGatewayRouteTablesPages(input, func(page *ec2.DescribeTransitGatewayRouteTablesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		transitGatewayRouteTables = append(transitGatewayRouteTables, page.TransitGatewayRouteTables...)
-
-		return !lastPage
-	})
+	output, err := FindTransitGatewayRouteTables(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error describing EC2 Transit Gateway Route Tables: %w", err)
+		return fmt.Errorf("error reading EC2 Transit Gateway Route Tables: %w", err)
 	}
 
-	if len(transitGatewayRouteTables) == 0 {
-		return fmt.Errorf("no matching EC2 Transit Gateway Route Tables found")
-	}
+	var routeTableIDs []string
 
-	var ids []string
-
-	for _, transitGatewayRouteTable := range transitGatewayRouteTables {
-		if transitGatewayRouteTable == nil {
-			continue
-		}
-
-		ids = append(ids, aws.StringValue(transitGatewayRouteTable.TransitGatewayRouteTableId))
+	for _, v := range output {
+		routeTableIDs = append(routeTableIDs, aws.StringValue(v.TransitGatewayRouteTableId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-
-	if err = d.Set("ids", ids); err != nil {
-		return fmt.Errorf("error setting ids: %w", err)
-	}
+	d.Set("ids", routeTableIDs)
 
 	return nil
 }

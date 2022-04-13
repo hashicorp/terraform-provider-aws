@@ -40,7 +40,7 @@ The following arguments are supported:
 * `number_of_buckets` - (Optional) Must be specified if the table contains any dimension columns.
 * `ser_de_info` - (Optional) [Serialization/deserialization (SerDe)](#ser_de_info) information.
 * `bucket_columns` - (Optional) A list of reducer grouping columns, clustering columns, and bucketing columns in the table.
-* `sort_columns` - (Optional) A list of [Order](#sort_column) objects specifying the sort order of each bucket in the table.
+* `sort_columns` - (Optional) A list of [Order](#sort_columns) objects specifying the sort order of each bucket in the table.
 * `parameters` - (Optional) User-supplied properties in key-value form.
 * `skewed_info` - (Optional) Information about values that appear very frequently in a column (skewed values).
 * `stored_as_sub_directories` - (Optional) True if the table data is stored in subdirectories, or False if not.

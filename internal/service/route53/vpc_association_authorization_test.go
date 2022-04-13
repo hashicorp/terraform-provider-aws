@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -87,7 +87,7 @@ func testAccCheckRoute53VPCAssociationAuthorizationDestroy(s *terraform.State) e
 		}
 
 		res, err := conn.ListVPCAssociationAuthorizations(&req)
-		if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchHostedZone, "") {
+		if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
 			return nil
 		}
 		if err != nil {

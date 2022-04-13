@@ -6,14 +6,13 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -30,7 +29,6 @@ const (
 var (
 	r53NoRecordsFound    = errors.New("No matching records found")
 	r53NoHostedZoneFound = errors.New("No matching Hosted Zone found")
-	r53ValidRecordTypes  = regexp.MustCompile("^(A|AAAA|CAA|CNAME|MX|NAPTR|NS|PTR|SOA|SPF|SRV|TXT|DS)$")
 )
 
 func ResourceRecord() *schema.Resource {
@@ -65,23 +63,9 @@ func ResourceRecord() *schema.Resource {
 			},
 
 			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					route53.RRTypeSoa,
-					route53.RRTypeA,
-					route53.RRTypeTxt,
-					route53.RRTypeNs,
-					route53.RRTypeCname,
-					route53.RRTypeMx,
-					route53.RRTypeNaptr,
-					route53.RRTypePtr,
-					route53.RRTypeSrv,
-					route53.RRTypeSpf,
-					route53.RRTypeAaaa,
-					route53.RRTypeCaa,
-					route53.RRTypeDs,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(route53.RRType_Values(), false),
 			},
 
 			"zone_id": {
@@ -482,7 +466,7 @@ func ChangeRecordSet(conn *route53.Route53, input *route53.ChangeResourceRecordS
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
 		out, err = conn.ChangeResourceRecordSets(input)
-		if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchHostedZone, "") {
+		if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
 			log.Print("[DEBUG] Hosted Zone not found, retrying...")
 			return resource.RetryableError(err)
 		}
@@ -640,7 +624,7 @@ func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceReco
 	// get expanded name
 	zoneRecord, err := conn.GetHostedZone(&route53.GetHostedZoneInput{Id: aws.String(zone)})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchHostedZone, "") {
+		if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
 			return nil, r53NoHostedZoneFound
 		}
 
@@ -782,7 +766,7 @@ func resourceRecordDelete(d *schema.ResourceData, meta interface{}) error {
 
 func DeleteRecordSet(conn *route53.Route53, input *route53.ChangeResourceRecordSetsInput) (interface{}, error) {
 	out, err := conn.ChangeResourceRecordSets(input)
-	if tfawserr.ErrMessageContains(err, route53.ErrCodeInvalidChangeBatch, "") {
+	if tfawserr.ErrCodeEquals(err, route53.ErrCodeInvalidChangeBatch) {
 		return out, nil
 	}
 
@@ -975,24 +959,33 @@ func NormalizeAliasName(alias interface{}) string {
 
 func ParseRecordID(id string) [4]string {
 	var recZone, recType, recName, recSet string
-	parts := strings.SplitN(id, "_", 2)
-	if len(parts) == 2 {
+	parts := strings.Split(id, "_")
+	if len(parts) > 1 {
 		recZone = parts[0]
-		firstUnderscore := strings.Index(parts[1][:], "_")
-		// Handles the case of having a DNS name that starts with _
-		if firstUnderscore == 0 {
-			firstUnderscore = strings.Index(parts[1][1:], "_") + 1
-		}
-		if firstUnderscore != -1 {
-			recName, recType = parts[1][0:firstUnderscore], parts[1][firstUnderscore+1:]
-		}
-		if !r53ValidRecordTypes.MatchString(recType) {
-			firstUnderscore = strings.Index(recType, "_")
-			if firstUnderscore != -1 {
-				recType, recSet = recType[0:firstUnderscore], recType[firstUnderscore+1:]
+	}
+	if len(parts) >= 3 {
+		var recTypeIndex int = -1
+		for i, maybeRecType := range parts[1:] {
+			if validRecordType(maybeRecType) {
+				recTypeIndex = i + 1
+				break
 			}
 		}
+		if recTypeIndex > 1 {
+			recName = strings.Join(parts[1:recTypeIndex], "_")
+			recName = strings.TrimSuffix(recName, ".")
+			recType = parts[recTypeIndex]
+			recSet = strings.Join(parts[recTypeIndex+1:], "_")
+		}
 	}
-	recName = strings.TrimSuffix(recName, ".")
 	return [4]string{recZone, recName, recType, recSet}
+}
+
+func validRecordType(s string) bool {
+	for _, v := range route53.RRType_Values() {
+		if v == s {
+			return true
+		}
+	}
+	return false
 }

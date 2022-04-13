@@ -96,22 +96,27 @@ func TestParseRecordId(t *testing.T) {
 		{"ABCDEF__underscore.example.com_A_set1", "ABCDEF", "_underscore.example.com", "A", "set1"},
 		{"ABCDEF__underscore.example.com_A_set_with1", "ABCDEF", "_underscore.example.com", "A", "set_with1"},
 		{"ABCDEF__underscore.example.com_A_set_with_1", "ABCDEF", "_underscore.example.com", "A", "set_with_1"},
+		{"ABCDEF_prefix._underscore.example.com_A", "ABCDEF", "prefix._underscore.example.com", "A", ""},
+		{"ABCDEF_prefix._underscore.example.com_A_set", "ABCDEF", "prefix._underscore.example.com", "A", "set"},
+		{"ABCDEF_prefix._underscore.example.com_A_set_underscore", "ABCDEF", "prefix._underscore.example.com", "A", "set_underscore"},
 	}
 
 	for _, tc := range cases {
-		parts := tfroute53.ParseRecordID(tc.Input)
-		if parts[0] != tc.Zone {
-			t.Fatalf("input: %s\noutput: %s\nexpected:%s", tc.Input, parts[0], tc.Zone)
-		}
-		if parts[1] != tc.Name {
-			t.Fatalf("input: %s\noutput: %s\nexpected:%s", tc.Input, parts[1], tc.Name)
-		}
-		if parts[2] != tc.Type {
-			t.Fatalf("input: %s\noutput: %s\nexpected:%s", tc.Input, parts[2], tc.Type)
-		}
-		if parts[3] != tc.Set {
-			t.Fatalf("input: %s\noutput: %s\nexpected:%s", tc.Input, parts[3], tc.Set)
-		}
+		t.Run(tc.Input, func(t *testing.T) {
+			parts := tfroute53.ParseRecordID(tc.Input)
+			if parts[0] != tc.Zone {
+				t.Fatalf("input: %s\nzone: %s\nexpected:%s", tc.Input, parts[0], tc.Zone)
+			}
+			if parts[1] != tc.Name {
+				t.Fatalf("input: %s\nname: %s\nexpected:%s", tc.Input, parts[1], tc.Name)
+			}
+			if parts[2] != tc.Type {
+				t.Fatalf("input: %s\ntype: %s\nexpected:%s", tc.Input, parts[2], tc.Type)
+			}
+			if parts[3] != tc.Set {
+				t.Fatalf("input: %s\nset: %s\nexpected:%s", tc.Input, parts[3], tc.Set)
+			}
+		})
 	}
 }
 
@@ -1761,10 +1766,17 @@ resource "aws_route53_zone" "main" {
 
 resource "aws_s3_bucket" "website" {
   bucket = %[1]q
-  acl    = "public-read"
+}
 
-  website {
-    index_document = "index.html"
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.website.id
+  acl    = "public-read"
+}
+
+resource "aws_s3_bucket_website_configuration" "test" {
+  bucket = aws_s3_bucket.website.id
+  index_document {
+    suffix = "index.html"
   }
 }
 
@@ -1775,7 +1787,7 @@ resource "aws_route53_record" "alias" {
 
   alias {
     zone_id                = aws_s3_bucket.website.hosted_zone_id
-    name                   = aws_s3_bucket.website.website_domain
+    name                   = aws_s3_bucket_website_configuration.test.website_domain
     evaluate_target_health = true
   }
 }

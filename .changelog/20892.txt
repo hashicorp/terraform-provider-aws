@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticsearch_domain_saml_option: Fix difference caused by `subject_key` default not matching AWS default; old and new defaults are equivalent
+```

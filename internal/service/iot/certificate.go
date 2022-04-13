@@ -32,7 +32,13 @@ func ResourceCertificate() *schema.Resource {
 			},
 			"certificate_pem": {
 				Type:      schema.TypeString,
+				Optional:  true,
 				Computed:  true,
+				Sensitive: true,
+			},
+			"ca_pem": {
+				Type:      schema.TypeString,
+				Optional:  true,
 				Sensitive: true,
 			},
 			"public_key": {
@@ -52,6 +58,14 @@ func ResourceCertificate() *schema.Resource {
 func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
+	_, okcert := d.GetOk("certificate_pem")
+	_, okCA := d.GetOk("ca_pem")
+
+	cert_status := "INACTIVE"
+	if d.Get("active").(bool) {
+		cert_status = "ACTIVE"
+	}
+
 	if _, ok := d.GetOk("csr"); ok {
 		log.Printf("[DEBUG] Creating certificate from CSR")
 		out, err := conn.CreateCertificateFromCsr(&iot.CreateCertificateFromCsrInput{
@@ -62,6 +76,31 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error creating certificate from CSR: %v", err)
 		}
 		log.Printf("[DEBUG] Created certificate from CSR")
+
+		d.SetId(aws.StringValue(out.CertificateId))
+	} else if okcert && okCA {
+		log.Printf("[DEBUG] Registering certificate with CA")
+		out, err := conn.RegisterCertificate(&iot.RegisterCertificateInput{
+			CaCertificatePem: aws.String(d.Get("ca_pem").(string)),
+			CertificatePem:   aws.String(d.Get("certificate_pem").(string)),
+			Status:           aws.String(cert_status),
+		})
+		if err != nil {
+			return fmt.Errorf("error registering certificate with CA: %v", err)
+		}
+		log.Printf("[DEBUG] Certificate with CA registered")
+
+		d.SetId(aws.StringValue(out.CertificateId))
+	} else if okcert {
+		log.Printf("[DEBUG] Registering certificate without CA")
+		out, err := conn.RegisterCertificateWithoutCA(&iot.RegisterCertificateWithoutCAInput{
+			CertificatePem: aws.String(d.Get("certificate_pem").(string)),
+			Status:         aws.String(cert_status),
+		})
+		if err != nil {
+			return fmt.Errorf("error registering certificate without CA: %v", err)
+		}
+		log.Printf("[DEBUG] Certificate without CA registered")
 
 		d.SetId(aws.StringValue(out.CertificateId))
 	} else {
@@ -92,7 +131,7 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading certificate details: %v", err)
 	}
 
-	d.Set("active", aws.Bool(*out.CertificateDescription.Status == iot.CertificateStatusActive))
+	d.Set("active", aws.Bool(aws.StringValue(out.CertificateDescription.Status) == iot.CertificateStatusActive))
 	d.Set("arn", out.CertificateDescription.CertificateArn)
 	d.Set("certificate_pem", out.CertificateDescription.CertificatePem)
 

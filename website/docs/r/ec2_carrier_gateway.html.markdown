@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Wavelength"
 layout: "aws"
 page_title: "AWS: aws_ec2_carrier_gateway"
 description: |-

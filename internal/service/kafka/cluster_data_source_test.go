@@ -19,10 +19,10 @@ func TestAccKafkaClusterDataSource_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMskClusterDestroy,
+		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMskClusterDataSourceConfig(rName),
+				Config: testAccClusterDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bootstrap_brokers", resourceName, "bootstrap_brokers"),
@@ -33,14 +33,15 @@ func TestAccKafkaClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "number_of_broker_nodes", resourceName, "number_of_broker_nodes"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "zookeeper_connect_string", resourceName, "zookeeper_connect_string"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "zookeeper_connect_string_tls", resourceName, "zookeeper_connect_string_tls"),
 				),
 			},
 		},
 	})
 }
 
-func testAccMskClusterDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+func testAccClusterDataSourceConfig(rName string) string {
+	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.2.1"

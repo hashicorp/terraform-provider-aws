@@ -236,7 +236,7 @@ func TestAccEMRInstanceGroup_Disappears_emrCluster(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(emrClusterResourceName, &cluster),
 					testAccCheckInstanceGroupExists(resourceName, &ig),
-					testAccCheckClusterDisappears(&cluster),
+					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceCluster(), emrClusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

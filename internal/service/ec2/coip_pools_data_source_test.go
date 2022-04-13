@@ -19,7 +19,7 @@ func TestAccEC2CoIPPoolsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCoIPPoolsDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckResourceAttrGreaterThanValue(dataSourceName, "pool_ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "pool_ids.#", "0"),
 				),
 			},
 		},

@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -350,7 +350,7 @@ func resourcePatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetPatchBaseline(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
+		if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 			log.Printf("[WARN] Patch Baseline %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

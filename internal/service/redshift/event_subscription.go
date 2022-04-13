@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -189,7 +189,7 @@ func resourceEventSubscriptionRetrieve(name string, conn *redshift.Redshift) (*r
 
 	describeResp, err := conn.DescribeEventSubscriptions(request)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSubscriptionNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSubscriptionNotFoundFault) {
 			log.Printf("[WARN] No Redshift Event Subscription by name (%s) found", name)
 			return nil, nil
 		}
@@ -240,7 +240,7 @@ func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if _, err := conn.DeleteEventSubscription(&deleteOpts); err != nil {
-		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSubscriptionNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSubscriptionNotFoundFault) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting Redshift Event Subscription %s: %s", d.Id(), err)

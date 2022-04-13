@@ -148,6 +148,8 @@ func validEngine() schema.SchemaValidateFunc {
 		"aurora",
 		"aurora-mysql",
 		"aurora-postgresql",
+		"postgres",
+		"mysql",
 	}, false)
 }
 

@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecrpublic"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -153,7 +153,7 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 		out, err = conn.DescribeRepositories(input)
-		if d.IsNewResource() && tfawserr.ErrMessageContains(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, ecrpublic.ErrCodeRepositoryNotFoundException) {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -166,7 +166,7 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 		out, err = conn.DescribeRepositories(input)
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ecrpublic.ErrCodeRepositoryNotFoundException) {
 		log.Printf("[WARN] ECR Public Repository (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -237,7 +237,7 @@ func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.DeleteRepository(deleteInput)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, ecrpublic.ErrCodeRepositoryNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error deleting ECR Public repository: %s", err)
@@ -250,7 +250,7 @@ func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err = conn.DescribeRepositories(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, ecrpublic.ErrCodeRepositoryNotFoundException) {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -262,7 +262,7 @@ func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 		_, err = conn.DescribeRepositories(input)
 	}
 
-	if tfawserr.ErrMessageContains(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, ecrpublic.ErrCodeRepositoryNotFoundException) {
 		return nil
 	}
 

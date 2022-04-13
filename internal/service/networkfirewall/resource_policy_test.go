@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -16,7 +16,7 @@ import (
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 )
 
-func TestAccNetworkFirewallResourcePolicy_firewallPolicy(t *testing.T) {
+func TestAccNetworkFirewallResourcePolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_resource_policy.test"
 
@@ -27,7 +27,7 @@ func TestAccNetworkFirewallResourcePolicy_firewallPolicy(t *testing.T) {
 		CheckDestroy: testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkFirewallResourcePolicy_firewallPolicy(rName),
+				Config: testAccResourcePolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_networkfirewall_firewall_policy.test", "arn"),
@@ -35,17 +35,38 @@ func TestAccNetworkFirewallResourcePolicy_firewallPolicy(t *testing.T) {
 				),
 			},
 			{
-				// Update the policy's Actions
-				Config: testAccNetworkFirewallResourcePolicy_firewallPolicy_updatePolicy(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourcePolicyExists(resourceName),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Action":\["network-firewall:UpdateFirewall","network-firewall:AssociateFirewallPolicy","network-firewall:ListFirewallPolicies","network-firewall:CreateFirewall"\]`)),
-				),
-			},
-			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallResourcePolicy_ignoreEquivalent(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_resource_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckResourcePolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourcePolicyConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourcePolicyExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_networkfirewall_firewall_policy.test", "arn"),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Action":\["network-firewall:CreateFirewall","network-firewall:UpdateFirewall","network-firewall:AssociateFirewallPolicy","network-firewall:ListFirewallPolicies"\]`)),
+				),
+			},
+			{
+				Config: testAccResourcePolicyEquivalentConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourcePolicyExists(resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Action":\["network-firewall:CreateFirewall","network-firewall:UpdateFirewall","network-firewall:AssociateFirewallPolicy","network-firewall:ListFirewallPolicies"\]`)),
+				),
 			},
 		},
 	})
@@ -62,7 +83,7 @@ func TestAccNetworkFirewallResourcePolicy_ruleGroup(t *testing.T) {
 		CheckDestroy: testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkFirewallResourcePolicy_ruleGroup(rName),
+				Config: testAccResourcePolicy_ruleGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_networkfirewall_rule_group.test", "arn"),
@@ -71,10 +92,10 @@ func TestAccNetworkFirewallResourcePolicy_ruleGroup(t *testing.T) {
 			},
 			{
 				// Update the policy's Actions
-				Config: testAccNetworkFirewallResourcePolicy_ruleGroup_updatePolicy(rName),
+				Config: testAccResourcePolicy_ruleGroup_updatePolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(resourceName),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Action":\["network-firewall:UpdateFirewallPolicy","network-firewall:ListRuleGroups","network-firewall:CreateFirewallPolicy"\]`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Action":\["network-firewall:CreateFirewallPolicy","network-firewall:UpdateFirewallPolicy","network-firewall:ListRuleGroups"\]`)),
 				),
 			},
 			{
@@ -97,7 +118,7 @@ func TestAccNetworkFirewallResourcePolicy_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkFirewallResourcePolicy_firewallPolicy(rName),
+				Config: testAccResourcePolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkfirewall.ResourceResourcePolicy(), resourceName),
@@ -119,7 +140,7 @@ func TestAccNetworkFirewallResourcePolicy_Disappears_firewallPolicy(t *testing.T
 		CheckDestroy: testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkFirewallResourcePolicy_firewallPolicy(rName),
+				Config: testAccResourcePolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkfirewall.ResourceFirewallPolicy(), "aws_networkfirewall_firewall_policy.test"),
@@ -141,7 +162,7 @@ func TestAccNetworkFirewallResourcePolicy_Disappears_ruleGroup(t *testing.T) {
 		CheckDestroy: testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkFirewallResourcePolicy_ruleGroup(rName),
+				Config: testAccResourcePolicy_ruleGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkfirewall.ResourceRuleGroup(), "aws_networkfirewall_rule_group.test"),
@@ -200,14 +221,14 @@ func testAccCheckResourcePolicyExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccNetworkFirewallResourcePolicyFirewallPolicyBaseConfig(rName string) string {
+func testAccResourcePolicyFirewallPolicyBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_caller_identity" "current" {}
 
 resource "aws_networkfirewall_firewall_policy" "test" {
-  name = %q
+  name = %[1]q
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
@@ -216,9 +237,9 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 `, rName)
 }
 
-func testAccNetworkFirewallResourcePolicy_firewallPolicy(rName string) string {
+func testAccResourcePolicyConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccNetworkFirewallResourcePolicyFirewallPolicyBaseConfig(rName), `
+		testAccResourcePolicyFirewallPolicyBaseConfig(rName), `
 resource "aws_networkfirewall_resource_policy" "test" {
   resource_arn = aws_networkfirewall_firewall_policy.test.arn
   # policy's Action element must include all of the following operations
@@ -228,7 +249,7 @@ resource "aws_networkfirewall_resource_policy" "test" {
         "network-firewall:CreateFirewall",
         "network-firewall:UpdateFirewall",
         "network-firewall:AssociateFirewallPolicy",
-        "network-firewall:ListFirewallPolicies"
+        "network-firewall:ListFirewallPolicies",
       ]
       Effect   = "Allow"
       Resource = aws_networkfirewall_firewall_policy.test.arn
@@ -242,9 +263,9 @@ resource "aws_networkfirewall_resource_policy" "test" {
 `)
 }
 
-func testAccNetworkFirewallResourcePolicy_firewallPolicy_updatePolicy(rName string) string {
+func testAccResourcePolicyEquivalentConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccNetworkFirewallResourcePolicyFirewallPolicyBaseConfig(rName), `
+		testAccResourcePolicyFirewallPolicyBaseConfig(rName), `
 resource "aws_networkfirewall_resource_policy" "test" {
   resource_arn = aws_networkfirewall_firewall_policy.test.arn
   # policy's Action element must include all of the following operations
@@ -254,7 +275,7 @@ resource "aws_networkfirewall_resource_policy" "test" {
         "network-firewall:UpdateFirewall",
         "network-firewall:AssociateFirewallPolicy",
         "network-firewall:ListFirewallPolicies",
-        "network-firewall:CreateFirewall"
+        "network-firewall:CreateFirewall",
       ]
       Effect   = "Allow"
       Resource = aws_networkfirewall_firewall_policy.test.arn
@@ -268,7 +289,7 @@ resource "aws_networkfirewall_resource_policy" "test" {
 `)
 }
 
-func testAccNetworkFirewallResourcePolicyRuleGroupBaseConfig(rName string) string {
+func testAccResourcePolicyRuleGroupBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -291,9 +312,9 @@ resource "aws_networkfirewall_rule_group" "test" {
 `, rName)
 }
 
-func testAccNetworkFirewallResourcePolicy_ruleGroup(rName string) string {
+func testAccResourcePolicy_ruleGroup(rName string) string {
 	return acctest.ConfigCompose(
-		testAccNetworkFirewallResourcePolicyRuleGroupBaseConfig(rName), `
+		testAccResourcePolicyRuleGroupBaseConfig(rName), `
 resource "aws_networkfirewall_resource_policy" "test" {
   resource_arn = aws_networkfirewall_rule_group.test.arn
   # policy's Action element must include all of the following operations
@@ -316,9 +337,9 @@ resource "aws_networkfirewall_resource_policy" "test" {
 `)
 }
 
-func testAccNetworkFirewallResourcePolicy_ruleGroup_updatePolicy(rName string) string {
+func testAccResourcePolicy_ruleGroup_updatePolicy(rName string) string {
 	return acctest.ConfigCompose(
-		testAccNetworkFirewallResourcePolicyRuleGroupBaseConfig(rName), `
+		testAccResourcePolicyRuleGroupBaseConfig(rName), `
 resource "aws_networkfirewall_resource_policy" "test" {
   resource_arn = aws_networkfirewall_rule_group.test.arn
   # policy's Action element must include all of the following operations
@@ -327,7 +348,7 @@ resource "aws_networkfirewall_resource_policy" "test" {
       Action = [
         "network-firewall:UpdateFirewallPolicy",
         "network-firewall:ListRuleGroups",
-        "network-firewall:CreateFirewallPolicy"
+        "network-firewall:CreateFirewallPolicy",
       ]
       Effect   = "Allow"
       Resource = aws_networkfirewall_rule_group.test.arn

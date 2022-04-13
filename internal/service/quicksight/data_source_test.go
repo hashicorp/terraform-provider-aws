@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -445,7 +445,7 @@ func testAccCheckQuickSightDataSourceDestroy(s *terraform.State) error {
 			DataSourceId: aws.String(dataSourceId),
 		})
 
-		if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 			continue
 		}
 
@@ -466,12 +466,16 @@ func testAccBaseDataSourceConfig(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "test" {
-  acl           = "public-read"
   bucket        = %[1]q
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "public-read"
+}
+
+resource "aws_s3_object" "test" {
   bucket  = aws_s3_bucket.test.bucket
   key     = %[1]q
   content = <<EOF
@@ -505,7 +509,7 @@ resource "aws_quicksight_data_source" "test" {
     s3 {
       manifest_file_location {
         bucket = aws_s3_bucket.test.bucket
-        key    = aws_s3_bucket_object.test.key
+        key    = aws_s3_object.test.key
       }
     }
   }
@@ -527,7 +531,7 @@ resource "aws_quicksight_data_source" "test" {
     s3 {
       manifest_file_location {
         bucket = aws_s3_bucket.test.bucket
-        key    = aws_s3_bucket_object.test.key
+        key    = aws_s3_object.test.key
       }
     }
   }
@@ -553,7 +557,7 @@ resource "aws_quicksight_data_source" "test" {
     s3 {
       manifest_file_location {
         bucket = aws_s3_bucket.test.bucket
-        key    = aws_s3_bucket_object.test.key
+        key    = aws_s3_object.test.key
       }
     }
   }
@@ -598,7 +602,7 @@ resource "aws_quicksight_data_source" "test" {
     s3 {
       manifest_file_location {
         bucket = aws_s3_bucket.test.bucket
-        key    = aws_s3_bucket_object.test.key
+        key    = aws_s3_object.test.key
       }
     }
   }
@@ -631,7 +635,7 @@ resource "aws_quicksight_data_source" "test" {
     s3 {
       manifest_file_location {
         bucket = aws_s3_bucket.test.bucket
-        key    = aws_s3_bucket_object.test.key
+        key    = aws_s3_object.test.key
       }
     }
   }

@@ -57,6 +57,20 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"organization_arns": {
+													Type:     schema.TypeSet,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+												"organizational_unit_arns": {
+													Type:     schema.TypeSet,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
 												"user_groups": {
 													Type:     schema.TypeSet,
 													Computed: true,
@@ -84,6 +98,61 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
+									},
+								},
+							},
+						},
+						"container_distribution_configuration": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"container_tags": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"description": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"target_repository": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"repository_name": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"service": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"launch_template_configuration": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"account_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"default": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+									"launch_template_id": {
+										Type:     schema.TypeString,
+										Computed: true,
 									},
 								},
 							},
@@ -138,7 +207,7 @@ func dataSourceDistributionConfigurationRead(d *schema.ResourceData, meta interf
 	d.Set("date_created", distributionConfiguration.DateCreated)
 	d.Set("date_updated", distributionConfiguration.DateUpdated)
 	d.Set("description", distributionConfiguration.Description)
-	d.Set("distribution", flattenImageBuilderDistributions(distributionConfiguration.Distributions))
+	d.Set("distribution", flattenDistributions(distributionConfiguration.Distributions))
 	d.Set("name", distributionConfiguration.Name)
 	d.Set("tags", KeyValueTags(distributionConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 

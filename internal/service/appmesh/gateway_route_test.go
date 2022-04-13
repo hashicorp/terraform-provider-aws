@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -374,7 +374,7 @@ func testAccCheckAppmeshGatewayRouteDestroy(s *terraform.State) error {
 		}
 
 		_, err := tfappmesh.FindGatewayRoute(conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["virtual_gateway_name"], rs.Primary.Attributes["name"], rs.Primary.Attributes["mesh_owner"])
-		if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 			continue
 		}
 		if err != nil {

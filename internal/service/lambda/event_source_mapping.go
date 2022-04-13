@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -110,6 +110,30 @@ func ResourceEventSourceMapping() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ExactlyOneOf: []string{"event_source_arn", "self_managed_event_source"},
+			},
+
+			"filter_criteria": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"filter": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MaxItems: 5,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"pattern": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 4096),
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 
 			"function_arn": {
@@ -305,7 +329,7 @@ func resourceEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("destination_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DestinationConfig = expandLambdaDestinationConfig(v.([]interface{})[0].(map[string]interface{}))
+		input.DestinationConfig = expandDestinationConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("event_source_arn"); ok {
@@ -313,6 +337,10 @@ func resourceEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) 
 
 		input.EventSourceArn = aws.String(v)
 		target = v
+	}
+
+	if v, ok := d.GetOk("filter_criteria"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.FilterCriteria = expandFilterCriteria(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("function_response_types"); ok && v.(*schema.Set).Len() > 0 {
@@ -340,13 +368,13 @@ func resourceEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("self_managed_event_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.SelfManagedEventSource = expandLambdaSelfManagedEventSource(v.([]interface{})[0].(map[string]interface{}))
+		input.SelfManagedEventSource = expandSelfManagedEventSource(v.([]interface{})[0].(map[string]interface{}))
 
 		target = "Self-Managed Apache Kafka"
 	}
 
 	if v, ok := d.GetOk("source_access_configuration"); ok && v.(*schema.Set).Len() > 0 {
-		input.SourceAccessConfigurations = expandLambdaSourceAccessConfigurations(v.(*schema.Set).List())
+		input.SourceAccessConfigurations = expandSourceAccessConfigurations(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("starting_position"); ok {
@@ -435,13 +463,20 @@ func resourceEventSourceMappingRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("batch_size", eventSourceMappingConfiguration.BatchSize)
 	d.Set("bisect_batch_on_function_error", eventSourceMappingConfiguration.BisectBatchOnFunctionError)
 	if eventSourceMappingConfiguration.DestinationConfig != nil {
-		if err := d.Set("destination_config", []interface{}{flattenLambdaDestinationConfig(eventSourceMappingConfiguration.DestinationConfig)}); err != nil {
+		if err := d.Set("destination_config", []interface{}{flattenDestinationConfig(eventSourceMappingConfiguration.DestinationConfig)}); err != nil {
 			return fmt.Errorf("error setting destination_config: %w", err)
 		}
 	} else {
 		d.Set("destination_config", nil)
 	}
 	d.Set("event_source_arn", eventSourceMappingConfiguration.EventSourceArn)
+	if v := eventSourceMappingConfiguration.FilterCriteria; v != nil {
+		if err := d.Set("filter_criteria", []interface{}{flattenFilterCriteria(v)}); err != nil {
+			return fmt.Errorf("error setting filter criteria: %w", err)
+		}
+	} else {
+		d.Set("filter_criteria", nil)
+	}
 	d.Set("function_arn", eventSourceMappingConfiguration.FunctionArn)
 	d.Set("function_name", eventSourceMappingConfiguration.FunctionArn)
 	d.Set("function_response_types", aws.StringValueSlice(eventSourceMappingConfiguration.FunctionResponseTypes))
@@ -457,13 +492,13 @@ func resourceEventSourceMappingRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("parallelization_factor", eventSourceMappingConfiguration.ParallelizationFactor)
 	d.Set("queues", aws.StringValueSlice(eventSourceMappingConfiguration.Queues))
 	if eventSourceMappingConfiguration.SelfManagedEventSource != nil {
-		if err := d.Set("self_managed_event_source", []interface{}{flattenLambdaSelfManagedEventSource(eventSourceMappingConfiguration.SelfManagedEventSource)}); err != nil {
+		if err := d.Set("self_managed_event_source", []interface{}{flattenSelfManagedEventSource(eventSourceMappingConfiguration.SelfManagedEventSource)}); err != nil {
 			return fmt.Errorf("error setting self_managed_event_source: %w", err)
 		}
 	} else {
 		d.Set("self_managed_event_source", nil)
 	}
-	if err := d.Set("source_access_configuration", flattenLambdaSourceAccessConfigurations(eventSourceMappingConfiguration.SourceAccessConfigurations)); err != nil {
+	if err := d.Set("source_access_configuration", flattenSourceAccessConfigurations(eventSourceMappingConfiguration.SourceAccessConfigurations)); err != nil {
 		return fmt.Errorf("error setting source_access_configuration: %w", err)
 	}
 	d.Set("starting_position", eventSourceMappingConfiguration.StartingPosition)
@@ -510,12 +545,21 @@ func resourceEventSourceMappingUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if d.HasChange("destination_config") {
 		if v, ok := d.GetOk("destination_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.DestinationConfig = expandLambdaDestinationConfig(v.([]interface{})[0].(map[string]interface{}))
+			input.DestinationConfig = expandDestinationConfig(v.([]interface{})[0].(map[string]interface{}))
 		}
 	}
 
 	if d.HasChange("enabled") {
 		input.Enabled = aws.Bool(d.Get("enabled").(bool))
+	}
+
+	if d.HasChange("filter_criteria") {
+		if v, ok := d.GetOk("filter_criteria"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.FilterCriteria = expandFilterCriteria(v.([]interface{})[0].(map[string]interface{}))
+		} else {
+			// AWS ignores the removal if this is left as nil.
+			input.FilterCriteria = &lambda.FilterCriteria{}
+		}
 	}
 
 	if d.HasChange("function_name") {
@@ -544,7 +588,7 @@ func resourceEventSourceMappingUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if d.HasChange("source_access_configuration") {
 		if v, ok := d.GetOk("source_access_configuration"); ok && v.(*schema.Set).Len() > 0 {
-			input.SourceAccessConfigurations = expandLambdaSourceAccessConfigurations(v.(*schema.Set).List())
+			input.SourceAccessConfigurations = expandSourceAccessConfigurations(v.(*schema.Set).List())
 		}
 	}
 
@@ -623,7 +667,7 @@ func resourceEventSourceMappingDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func expandLambdaDestinationConfig(tfMap map[string]interface{}) *lambda.DestinationConfig {
+func expandDestinationConfig(tfMap map[string]interface{}) *lambda.DestinationConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -631,13 +675,13 @@ func expandLambdaDestinationConfig(tfMap map[string]interface{}) *lambda.Destina
 	apiObject := &lambda.DestinationConfig{}
 
 	if v, ok := tfMap["on_failure"].([]interface{}); ok && len(v) > 0 {
-		apiObject.OnFailure = expandLambdaOnFailure(v[0].(map[string]interface{}))
+		apiObject.OnFailure = expandOnFailure(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandLambdaOnFailure(tfMap map[string]interface{}) *lambda.OnFailure {
+func expandOnFailure(tfMap map[string]interface{}) *lambda.OnFailure {
 	if tfMap == nil {
 		return nil
 	}
@@ -651,7 +695,7 @@ func expandLambdaOnFailure(tfMap map[string]interface{}) *lambda.OnFailure {
 	return apiObject
 }
 
-func flattenLambdaDestinationConfig(apiObject *lambda.DestinationConfig) map[string]interface{} {
+func flattenDestinationConfig(apiObject *lambda.DestinationConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -659,13 +703,13 @@ func flattenLambdaDestinationConfig(apiObject *lambda.DestinationConfig) map[str
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.OnFailure; v != nil {
-		tfMap["on_failure"] = []interface{}{flattenLambdaOnFailure(v)}
+		tfMap["on_failure"] = []interface{}{flattenOnFailure(v)}
 	}
 
 	return tfMap
 }
 
-func flattenLambdaOnFailure(apiObject *lambda.OnFailure) map[string]interface{} {
+func flattenOnFailure(apiObject *lambda.OnFailure) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -679,7 +723,7 @@ func flattenLambdaOnFailure(apiObject *lambda.OnFailure) map[string]interface{} 
 	return tfMap
 }
 
-func expandLambdaSelfManagedEventSource(tfMap map[string]interface{}) *lambda.SelfManagedEventSource {
+func expandSelfManagedEventSource(tfMap map[string]interface{}) *lambda.SelfManagedEventSource {
 	if tfMap == nil {
 		return nil
 	}
@@ -699,7 +743,7 @@ func expandLambdaSelfManagedEventSource(tfMap map[string]interface{}) *lambda.Se
 	return apiObject
 }
 
-func flattenLambdaSelfManagedEventSource(apiObject *lambda.SelfManagedEventSource) map[string]interface{} {
+func flattenSelfManagedEventSource(apiObject *lambda.SelfManagedEventSource) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -719,7 +763,7 @@ func flattenLambdaSelfManagedEventSource(apiObject *lambda.SelfManagedEventSourc
 	return tfMap
 }
 
-func expandLambdaSourceAccessConfiguration(tfMap map[string]interface{}) *lambda.SourceAccessConfiguration {
+func expandSourceAccessConfiguration(tfMap map[string]interface{}) *lambda.SourceAccessConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -737,7 +781,7 @@ func expandLambdaSourceAccessConfiguration(tfMap map[string]interface{}) *lambda
 	return apiObject
 }
 
-func expandLambdaSourceAccessConfigurations(tfList []interface{}) []*lambda.SourceAccessConfiguration {
+func expandSourceAccessConfigurations(tfList []interface{}) []*lambda.SourceAccessConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -751,7 +795,7 @@ func expandLambdaSourceAccessConfigurations(tfList []interface{}) []*lambda.Sour
 			continue
 		}
 
-		apiObject := expandLambdaSourceAccessConfiguration(tfMap)
+		apiObject := expandSourceAccessConfiguration(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -763,7 +807,7 @@ func expandLambdaSourceAccessConfigurations(tfList []interface{}) []*lambda.Sour
 	return apiObjects
 }
 
-func flattenLambdaSourceAccessConfiguration(apiObject *lambda.SourceAccessConfiguration) map[string]interface{} {
+func flattenSourceAccessConfiguration(apiObject *lambda.SourceAccessConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -781,7 +825,7 @@ func flattenLambdaSourceAccessConfiguration(apiObject *lambda.SourceAccessConfig
 	return tfMap
 }
 
-func flattenLambdaSourceAccessConfigurations(apiObjects []*lambda.SourceAccessConfiguration) []interface{} {
+func flattenSourceAccessConfigurations(apiObjects []*lambda.SourceAccessConfiguration) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -793,8 +837,109 @@ func flattenLambdaSourceAccessConfigurations(apiObjects []*lambda.SourceAccessCo
 			continue
 		}
 
-		tfList = append(tfList, flattenLambdaSourceAccessConfiguration(apiObject))
+		tfList = append(tfList, flattenSourceAccessConfiguration(apiObject))
 	}
 
 	return tfList
+}
+
+func expandFilterCriteria(tfMap map[string]interface{}) *lambda.FilterCriteria {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &lambda.FilterCriteria{}
+
+	if v, ok := tfMap["filter"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Filters = expandFilters(v.List())
+	}
+
+	return apiObject
+}
+
+func flattenFilterCriteria(apiObject *lambda.FilterCriteria) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Filters; len(v) > 0 {
+		tfMap["filter"] = flattenFilters(v)
+	}
+
+	return tfMap
+}
+
+func expandFilters(tfList []interface{}) []*lambda.Filter {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*lambda.Filter
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandFilter(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenFilters(apiObjects []*lambda.Filter) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenFilter(apiObject))
+	}
+
+	return tfList
+}
+
+func expandFilter(tfMap map[string]interface{}) *lambda.Filter {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &lambda.Filter{}
+
+	if v, ok := tfMap["pattern"].(string); ok {
+		// The API permits patterns of length >= 0, so accept the empty string.
+		apiObject.Pattern = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenFilter(apiObject *lambda.Filter) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Pattern; v != nil {
+		tfMap["pattern"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }

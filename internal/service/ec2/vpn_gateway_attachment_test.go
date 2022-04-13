@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEC2VPNGatewayAttachment_basic(t *testing.T) {
@@ -66,22 +66,18 @@ func testAccCheckVpnGatewayAttachmentExists(n string, v *ec2.VpcAttachment) reso
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No EC2 VPN Gateway Attachment ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		out, err := tfec2.FindVPNGatewayVPCAttachment(conn, rs.Primary.Attributes["vpn_gateway_id"], rs.Primary.Attributes["vpc_id"])
+
+		output, err := tfec2.FindVPNGatewayVPCAttachment(conn, rs.Primary.Attributes["vpn_gateway_id"], rs.Primary.Attributes["vpc_id"])
+
 		if err != nil {
 			return err
 		}
-		if out == nil {
-			return fmt.Errorf("VPN Gateway Attachment not found")
-		}
-		if state := aws.StringValue(out.State); state != ec2.AttachmentStatusAttached {
-			return fmt.Errorf("VPN Gateway Attachment in incorrect state. Expected: %s, got: %s", ec2.AttachmentStatusAttached, state)
-		}
 
-		*v = *out
+		*v = *output
 
 		return nil
 	}
@@ -95,16 +91,17 @@ func testAccCheckVpnGatewayAttachmentDestroy(s *terraform.State) error {
 			continue
 		}
 
-		out, err := tfec2.FindVPNGatewayVPCAttachment(conn, rs.Primary.Attributes["vpn_gateway_id"], rs.Primary.Attributes["vpc_id"])
+		_, err := tfec2.FindVPNGatewayVPCAttachment(conn, rs.Primary.Attributes["vpn_gateway_id"], rs.Primary.Attributes["vpc_id"])
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
 		if err != nil {
 			return err
 		}
-		if out == nil {
-			continue
-		}
-		if state := aws.StringValue(out.State); state != ec2.AttachmentStatusDetached {
-			return fmt.Errorf("VPN Gateway Attachment in incorrect state. Expected: %s, got: %s", ec2.AttachmentStatusDetached, state)
-		}
+
+		return fmt.Errorf("EC2 VPN Gateway Attachment %s still exists", rs.Primary.ID)
 	}
 
 	return nil

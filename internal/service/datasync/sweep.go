@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -32,6 +32,11 @@ func init() {
 		F:    sweepLocationFSxWindows,
 	})
 
+	resource.AddTestSweepers("aws_datasync_location_fsx_lustre_file_system", &resource.Sweeper{
+		Name: "aws_datasync_location_fsx_lustre_file_system",
+		F:    sweepLocationFSxLustres,
+	})
+
 	resource.AddTestSweepers("aws_datasync_location_nfs", &resource.Sweeper{
 		Name: "aws_datasync_location_nfs",
 		F:    sweepLocationNFSs,
@@ -45,6 +50,11 @@ func init() {
 	resource.AddTestSweepers("aws_datasync_location_smb", &resource.Sweeper{
 		Name: "aws_datasync_location_smb",
 		F:    sweepLocationSMBs,
+	})
+
+	resource.AddTestSweepers("aws_datasync_location_hdfs", &resource.Sweeper{
+		Name: "aws_datasync_location_hdfs",
+		F:    sweepLocationHdfss,
 	})
 
 	resource.AddTestSweepers("aws_datasync_task", &resource.Sweeper{
@@ -88,7 +98,7 @@ func sweepAgents(region string) error {
 
 			_, err := conn.DeleteAgent(input)
 
-			if tfawserr.ErrMessageContains(err, "InvalidRequestException", "does not exist") {
+			if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "does not exist") {
 				continue
 			}
 
@@ -145,7 +155,7 @@ func sweepLocationEFSs(region string) error {
 
 			_, err := conn.DeleteLocation(input)
 
-			if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
+			if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 				continue
 			}
 
@@ -221,6 +231,61 @@ func sweepLocationFSxWindows(region string) error {
 	return nil
 }
 
+func sweepLocationFSxLustres(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).DataSyncConn
+
+	input := &datasync.ListLocationsInput{}
+	for {
+		output, err := conn.ListLocations(input)
+
+		if sweep.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping DataSync Location FSX Lustre sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error retrieving DataSync Location FSX Lustre: %w", err)
+		}
+
+		if len(output.Locations) == 0 {
+			log.Print("[DEBUG] No DataSync Location FSX Lustre File System to sweep")
+			return nil
+		}
+
+		for _, location := range output.Locations {
+			uri := aws.StringValue(location.LocationUri)
+			if !strings.HasPrefix(uri, "fsxl://") {
+				log.Printf("[INFO] Skipping DataSync Location FSX Lustre File System: %s", uri)
+				continue
+			}
+			log.Printf("[INFO] Deleting DataSync Location FSX Lustre File System: %s", uri)
+			r := ResourceLocationFSxLustreFileSystem()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(location.LocationArn))
+			err = r.Delete(d, client)
+			if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+				continue
+			}
+
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete DataSync Location Lustre File System (%s): %s", uri, err)
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
+
 func sweepLocationNFSs(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
@@ -258,7 +323,7 @@ func sweepLocationNFSs(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(location.LocationArn))
 			err = r.Delete(d, client)
-			if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
+			if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 				continue
 			}
 
@@ -315,7 +380,7 @@ func sweepLocationS3s(region string) error {
 
 			_, err := conn.DeleteLocation(input)
 
-			if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
+			if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 				continue
 			}
 
@@ -371,12 +436,68 @@ func sweepLocationSMBs(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(location.LocationArn))
 			err = r.Delete(d, client)
-			if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
+			if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 				continue
 			}
 
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete DataSync Location SMB (%s): %s", uri, err)
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
+
+func sweepLocationHdfss(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).DataSyncConn
+
+	input := &datasync.ListLocationsInput{}
+	for {
+		output, err := conn.ListLocations(input)
+
+		if sweep.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping DataSync Location Hdfs sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("Error retrieving DataSync Location Hdfss: %w", err)
+		}
+
+		if len(output.Locations) == 0 {
+			log.Print("[DEBUG] No DataSync Location Hdfss to sweep")
+			return nil
+		}
+
+		for _, location := range output.Locations {
+			uri := aws.StringValue(location.LocationUri)
+			if !strings.HasPrefix(uri, "hdfs://") {
+				log.Printf("[INFO] Skipping DataSync Location Hdfs: %s", uri)
+				continue
+			}
+			log.Printf("[INFO] Deleting DataSync Location Hdfs: %s", uri)
+
+			r := ResourceLocationHdfs()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(location.LocationArn))
+			err = r.Delete(d, client)
+			if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+				continue
+			}
+
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete DataSync Location Hdfs (%s): %s", uri, err)
 			}
 		}
 

@@ -58,7 +58,7 @@ provider "aws" {
 }
 ```
 
-<!-- markdownlint-disable MD033 -->
+<!-- markdownlint-disable no-inline-html -->
 <!--
     The division splits this long list into multiple columns without manually
     maintaining a table. The terraform.io Markdown parser previously allowed
@@ -68,9 +68,11 @@ provider "aws" {
 <div style="column-width: 14em;">
 <ul>
   <li><code>accessanalyzer</code></li>
+  <li><code>account</code></li>
   <li><code>acm</code></li>
   <li><code>acmpca</code></li>
   <li><code>alexaforbusiness</code></li>
+  <li><code>amp</code> (or <code>prometheus</code>, <code>prometheusservice</code>)</li>
   <li><code>amplify</code></li>
   <li><code>amplifybackend</code></li>
   <li><code>apigateway</code></li>
@@ -102,14 +104,14 @@ provider "aws" {
   <li><code>clouddirectory</code></li>
   <li><code>cloudformation</code></li>
   <li><code>cloudfront</code></li>
-  <li><code>cloudhsmv1</code></li>
   <li><code>cloudhsm</code> (or <code>cloudhsmv2</code>)</li>
   <li><code>cloudsearch</code></li>
   <li><code>cloudsearchdomain</code></li>
   <li><code>cloudtrail</code></li>
   <li><code>cloudwatch</code></li>
-  <li><code>cloudwatchevents</code></li>
+  <li><code>cloudwatchevidently</code></li>
   <li><code>cloudwatchlogs</code></li>
+  <li><code>cloudwatchrum</code></li>
   <li><code>codeartifact</code></li>
   <li><code>codebuild</code></li>
   <li><code>codecommit</code></li>
@@ -161,6 +163,7 @@ provider "aws" {
   <li><code>elbv2</code></li>
   <li><code>emr</code></li>
   <li><code>emrcontainers</code></li>
+  <li><code>eventbridge</code> (or <code>cloudwatchevents</code>, <code>events</code>)</li>
   <li><code>finspace</code></li>
   <li><code>finspacedata</code></li>
   <li><code>firehose</code></li>
@@ -175,6 +178,7 @@ provider "aws" {
   <li><code>globalaccelerator</code></li>
   <li><code>glue</code></li>
   <li><code>gluedatabrew</code></li>
+  <li><code>grafana</code> (or <code>managedgrafana</code>, <code>amg</code>)</li>
   <li><code>greengrass</code></li>
   <li><code>greengrassv2</code></li>
   <li><code>groundstation</code></li>
@@ -201,7 +205,9 @@ provider "aws" {
   <li><code>iotthingsgraph</code></li>
   <li><code>iotwireless</code></li>
   <li><code>kafka</code></li>
+  <li><code>kafkaconnect</code></li>
   <li><code>kendra</code></li>
+  <li><code>keyspaces</code></li>
   <li><code>kinesis</code></li>
   <li><code>kinesisanalytics</code></li>
   <li><code>kinesisanalyticsv2</code></li>
@@ -264,7 +270,6 @@ provider "aws" {
   <li><code>pinpointsmsvoice</code></li>
   <li><code>polly</code></li>
   <li><code>pricing</code></li>
-  <li><code>prometheus</code> (or <code>prometheusservice</code>)</li>
   <li><code>proton</code></li>
   <li><code>qldb</code></li>
   <li><code>qldbsession</code></li>
@@ -338,7 +343,15 @@ provider "aws" {
   <li><code>xray</code></li>
 </ul>
 </div>
-<!-- markdownlint-enable MD033 -->
+<!-- markdownlint-enable no-inline-html -->
+
+As a convenience, for compatibility with the [Terraform S3 Backend](https://www.terraform.io/language/settings/backends/s3),
+the following service endpoints can be configured using environment variables:
+
+* DynamoDB: `TF_AWS_DYNAMODB_ENDPOINT` (or **Deprecated** `AWS_DYNAMODB_ENDPOINT`)
+* IAM: `TF_AWS_IAM_ENDPOINT` (or **Deprecated** `AWS_IAM_ENDPOINT`)
+* S3: `TF_AWS_S3_ENDPOINT` (or **Deprecated** `AWS_S3_ENDPOINT`)
+* STS: `TF_AWS_STS_ENDPOINT` (or **Deprecated** `AWS_STS_ENDPOINT`)
 
 ## Connecting to Local AWS Compatible Solutions
 

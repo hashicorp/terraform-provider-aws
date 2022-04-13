@@ -32,6 +32,24 @@ func TestAccIAMPolicyDocumentDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccIAMPolicyDocumentDataSource_singleConditionValue(t *testing.T) {
+	dataSourceName := "data.aws_iam_policy_document.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
+		Providers:  acctest.Providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyDocumentConfig_SingleConditionValue,
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "json", testAccPolicyDocumentConfig_SingleConditionValue_ExpectedJSON),
+				),
+			},
+		},
+	})
+}
+
 func TestAccIAMPolicyDocumentDataSource_source(t *testing.T) {
 	// This really ought to be able to be a unit test rather than an
 	// acceptance test, but just instantiating the AWS provider requires
@@ -42,7 +60,7 @@ func TestAccIAMPolicyDocumentDataSource_source(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDocumentSourceConfig,
+				Config: testAccPolicyDocumentSourceConfigDeprecated,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_source", "json",
 						testAccPolicyDocumentSourceExpectedJSON(),
@@ -50,7 +68,7 @@ func TestAccIAMPolicyDocumentDataSource_source(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPolicyDocumentSourceBlankConfig,
+				Config: testAccPolicyDocumentSourceBlankConfigDeprecated,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_source_blank", "json",
 						testAccPolicyDocumentSourceBlankExpectedJSON,
@@ -86,7 +104,7 @@ func TestAccIAMPolicyDocumentDataSource_sourceConflicting(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDocumentSourceConflictingConfig,
+				Config: testAccPolicyDocumentSourceConflictingConfigDeprecated,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_source_conflicting", "json",
 						testAccPolicyDocumentSourceConflictingExpectedJSON,
@@ -118,7 +136,7 @@ func TestAccIAMPolicyDocumentDataSource_override(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDocumentOverrideConfig,
+				Config: testAccPolicyDocumentOverrideConfigDeprecated,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test_override", "json",
 						testAccPolicyDocumentOverrideExpectedJSON,
@@ -154,7 +172,7 @@ func TestAccIAMPolicyDocumentDataSource_noStatementMerge(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDocumentNoStatementMergeConfig,
+				Config: testAccPolicyDocumentNoStatementMergeConfigDeprecated,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.yak_politik", "json",
 						testAccPolicyDocumentNoStatementMergeExpectedJSON,
@@ -172,7 +190,7 @@ func TestAccIAMPolicyDocumentDataSource_noStatementOverride(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDocumentNoStatementOverrideConfig,
+				Config: testAccPolicyDocumentNoStatementOverrideConfigDeprecated,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.yak_politik", "json",
 						testAccPolicyDocumentNoStatementOverrideExpectedJSON,
@@ -453,7 +471,50 @@ func testAccPolicyDocumentExpectedJSON() string {
 }`, acctest.Partition())
 }
 
-var testAccPolicyDocumentSourceConfig = `
+const testAccPolicyDocumentConfig_SingleConditionValue = `
+data "aws_iam_policy_document" "test" {
+  statement {
+    effect = "Deny"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    actions = ["elasticfilesystem:*"]
+
+    resources = ["*"]
+
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
+}
+`
+
+const testAccPolicyDocumentConfig_SingleConditionValue_ExpectedJSON = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Deny",
+      "Action": "elasticfilesystem:*",
+      "Resource": "*",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Condition": {
+        "Bool": {
+          "aws:SecureTransport": "false"
+        }
+      }
+    }
+  ]
+}`
+
+var testAccPolicyDocumentSourceConfigDeprecated = `
 data "aws_partition" "current" {}
 
 data "aws_iam_policy_document" "test" {
@@ -696,7 +757,7 @@ var testAccPolicyDocumentSourceListExpectedJSON = `{
   ]
 }`
 
-var testAccPolicyDocumentSourceBlankConfig = `
+var testAccPolicyDocumentSourceBlankConfigDeprecated = `
 data "aws_iam_policy_document" "test_source_blank" {
   source_json = ""
 
@@ -720,7 +781,7 @@ var testAccPolicyDocumentSourceBlankExpectedJSON = `{
   ]
 }`
 
-var testAccPolicyDocumentSourceConflictingConfig = `
+var testAccPolicyDocumentSourceConflictingConfigDeprecated = `
 data "aws_iam_policy_document" "test_source" {
   statement {
     sid       = "SourceJSONTestConflicting"
@@ -794,7 +855,7 @@ data "aws_iam_policy_document" "test_source_list_conflicting" {
 }
 `
 
-var testAccPolicyDocumentOverrideConfig = `
+var testAccPolicyDocumentOverrideConfigDeprecated = `
 data "aws_partition" "current" {}
 
 data "aws_iam_policy_document" "override" {
@@ -908,7 +969,7 @@ var testAccPolicyDocumentOverrideListExpectedJSON = `{
   ]
 }`
 
-var testAccPolicyDocumentNoStatementMergeConfig = `
+var testAccPolicyDocumentNoStatementMergeConfigDeprecated = `
 data "aws_iam_policy_document" "source" {
   statement {
     sid       = ""
@@ -949,7 +1010,7 @@ var testAccPolicyDocumentNoStatementMergeExpectedJSON = `{
   ]
 }`
 
-var testAccPolicyDocumentNoStatementOverrideConfig = `
+var testAccPolicyDocumentNoStatementOverrideConfigDeprecated = `
 data "aws_iam_policy_document" "source" {
   statement {
     sid       = "OverridePlaceholder"

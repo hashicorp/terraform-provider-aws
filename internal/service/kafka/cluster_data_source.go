@@ -54,6 +54,10 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"zookeeper_connect_string_tls": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -116,6 +120,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("zookeeper_connect_string", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectString)))
+	d.Set("zookeeper_connect_string_tls", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectStringTls)))
 
 	d.SetId(aws.StringValue(cluster.ClusterArn))
 

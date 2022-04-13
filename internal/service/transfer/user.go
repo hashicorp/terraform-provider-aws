@@ -6,8 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -71,6 +72,10 @@ func ResourceUser() *schema.Resource {
 				Optional:         true,
 				ValidateFunc:     verify.ValidIAMPolicyJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 
 			"posix_profile": {
@@ -151,7 +156,13 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("policy"); ok {
-		input.Policy = aws.String(v.(string))
+		policy, err := structure.NormalizeJsonString(v.(string))
+
+		if err != nil {
+			return fmt.Errorf("policy (%s) is invalid JSON: %w", v.(string), err)
+		}
+
+		input.Policy = aws.String(policy)
 	}
 
 	if v, ok := d.GetOk("posix_profile"); ok {
@@ -203,7 +214,15 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting home_directory_mappings: %w", err)
 	}
 	d.Set("home_directory_type", user.HomeDirectoryType)
-	d.Set("policy", user.Policy)
+
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(user.Policy))
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("policy", policyToSet)
+
 	if err := d.Set("posix_profile", flattenTransferUserPosixUser(user.PosixProfile)); err != nil {
 		return fmt.Errorf("error setting posix_profile: %w", err)
 	}
@@ -252,7 +271,13 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("policy") {
-			input.Policy = aws.String(d.Get("policy").(string))
+			policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+			if err != nil {
+				return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
+			}
+
+			input.Policy = aws.String(policy)
 		}
 
 		if d.HasChange("posix_profile") {

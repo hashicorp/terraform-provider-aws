@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -179,7 +179,7 @@ func resourceOptionGroupRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Describe DB Option Group: %#v", params)
 	options, err := conn.DescribeOptionGroups(params)
 
-	if tfawserr.ErrMessageContains(err, rds.ErrCodeOptionGroupNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeOptionGroupNotFoundFault) {
 		log.Printf("[WARN] RDS Option Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -327,7 +327,7 @@ func resourceOptionGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.DeleteOptionGroup(deleteOpts)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidOptionGroupStateFault, "") {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidOptionGroupStateFault) {
 				log.Printf(`[DEBUG] AWS believes the RDS Option Group is still in use, this could be because of a internal snapshot create by AWS, see github issue #4597 for more info. retrying...`)
 				return resource.RetryableError(err)
 			}

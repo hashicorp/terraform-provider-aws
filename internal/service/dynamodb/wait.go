@@ -11,7 +11,7 @@ import (
 const (
 	kinesisStreamingDestinationActiveTimeout   = 5 * time.Minute
 	kinesisStreamingDestinationDisabledTimeout = 5 * time.Minute
-	createTableTimeout                         = 20 * time.Minute
+	createTableTimeout                         = 30 * time.Minute
 	updateTableTimeoutTotal                    = 60 * time.Minute
 	replicaUpdateTimeout                       = 30 * time.Minute
 	updateTableTimeout                         = 20 * time.Minute
@@ -257,4 +257,30 @@ func waitDynamoDBSSEUpdated(conn *dynamodb.DynamoDB, tableName string) (*dynamod
 	}
 
 	return nil, err
+}
+
+func waitContributorInsightsCreated(ctx context.Context, conn *dynamodb.DynamoDB, tableName, indexName string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{dynamodb.ContributorInsightsStatusEnabling},
+		Target:  []string{dynamodb.ContributorInsightsStatusEnabled},
+		Timeout: timeout,
+		Refresh: statusContributorInsights(ctx, conn, tableName, indexName),
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func waitContributorInsightsDeleted(ctx context.Context, conn *dynamodb.DynamoDB, tableName, indexName string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{dynamodb.ContributorInsightsStatusDisabling},
+		Target:  []string{},
+		Timeout: timeout,
+		Refresh: statusContributorInsights(ctx, conn, tableName, indexName),
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
 }

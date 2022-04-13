@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -140,7 +140,6 @@ func ResourceCluster() *schema.Resource {
 			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Computed: true,
 			},
 
@@ -450,7 +449,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBClusterNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
 			d.SetId("")
 			log.Printf("[DEBUG] Neptune Cluster (%s) not found", d.Id())
 			return nil
@@ -625,8 +624,14 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		req.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
 		requestUpdate = true
 	}
+
 	if d.HasChange("deletion_protection") {
 		req.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
+		requestUpdate = true
+	}
+
+	if d.HasChange("engine_version") {
+		req.EngineVersion = aws.String(d.Get("engine_version").(string))
 		requestUpdate = true
 	}
 
@@ -637,7 +642,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 					return resource.RetryableError(err)
 				}
-				if tfawserr.ErrMessageContains(err, neptune.ErrCodeInvalidDBClusterStateFault, "") {
+				if tfawserr.ErrCodeEquals(err, neptune.ErrCodeInvalidDBClusterStateFault) {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -725,7 +730,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 			if tfawserr.ErrMessageContains(err, neptune.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
 				return resource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBClusterNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -741,7 +746,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = WaitDBClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBClusterNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
 			return nil
 		}
 		return fmt.Errorf("error waiting for Neptune Cluster (%q) to be Deleted: %w", d.Id(), err)

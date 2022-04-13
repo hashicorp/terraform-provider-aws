@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -73,7 +73,7 @@ func resourceRegexPatternSetRead(d *schema.ResourceData, meta interface{}) error
 
 	resp, err := conn.GetRegexPatternSet(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, waf.ErrCodeNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
 			log.Printf("[WARN] WAF Regex Pattern Set (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -147,7 +147,7 @@ func updateWafRegexPatternSetPatternStrings(id string, oldPatterns, newPatterns 
 		req := &waf.UpdateRegexPatternSetInput{
 			ChangeToken:       token,
 			RegexPatternSetId: aws.String(id),
-			Updates:           diffWafRegexPatternSetPatternStrings(oldPatterns, newPatterns),
+			Updates:           DiffRegexPatternSetPatternStrings(oldPatterns, newPatterns),
 		}
 
 		return conn.UpdateRegexPatternSet(req)
