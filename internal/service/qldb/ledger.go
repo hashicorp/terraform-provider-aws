@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -68,49 +69,27 @@ func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	var name string
-	if v, ok := d.GetOk("name"); ok {
-		name = v.(string)
-	} else {
-		name = resource.PrefixedUniqueId("tf")
-	}
-
-	if err := d.Set("name", name); err != nil {
-		return diag.Errorf("error setting name: %s", err)
-	}
-
+	name := create.Name(d.Get("name").(string), "tf")
 	input := &qldb.CreateLedgerInput{
 		DeletionProtection: aws.Bool(d.Get("deletion_protection").(bool)),
-		Name:               aws.String(d.Get("name").(string)),
+		Name:               aws.String(name),
 		PermissionsMode:    aws.String(d.Get("permissions_mode").(string)),
 		Tags:               Tags(tags.IgnoreAWS()),
 	}
 
-	log.Printf("[DEBUG] QLDB Ledger create config: %#v", *input)
-	output, err := conn.CreateLedger(input)
+	log.Printf("[DEBUG] Creating QLDB Ledger: %s", input)
+	output, err := conn.CreateLedgerWithContext(ctx, input)
+
 	if err != nil {
-		return diag.Errorf("Error creating QLDB Ledger: %s", err)
+		return diag.Errorf("creating QLDB Ledger (%s): %s", name, err)
 	}
 
-	// Set QLDB ledger name
 	d.SetId(aws.StringValue(output.Name))
 
-	log.Printf("[INFO] QLDB Ledger name: %s", d.Id())
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{qldb.LedgerStateCreating},
-		Target:     []string{qldb.LedgerStateActive},
-		Refresh:    qldbLedgerRefreshStatusFunc(conn, d.Id()),
-		Timeout:    8 * time.Minute,
-		MinTimeout: 3 * time.Second,
+	if _, err := waitLedgerCreated(ctx, conn, d.Id()); err != nil {
+		return diag.Errorf("waiting for QLDB Ledger (%s) create: %s", d.Id(), err)
 	}
 
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return diag.Errorf("Error waiting for QLDB Ledger status to be \"%s\": %s", qldb.LedgerStateActive, err)
-	}
-
-	// Update our attributes and return
 	return resourceLedgerRead(ctx, d, meta)
 }
 
@@ -222,49 +201,6 @@ func resourceLedgerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return nil
 }
 
-func qldbLedgerRefreshStatusFunc(conn *qldb.QLDB, ledger string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &qldb.DescribeLedgerInput{
-			Name: aws.String(ledger),
-		}
-		resp, err := conn.DescribeLedger(input)
-		if err != nil {
-			return nil, "failed", err
-		}
-		return resp, aws.StringValue(resp.State), nil
-	}
-}
-
-func WaitForLedgerDeletion(conn *qldb.QLDB, ledgerName string) error {
-	stateConf := resource.StateChangeConf{
-		Pending: []string{qldb.LedgerStateCreating,
-			qldb.LedgerStateActive,
-			qldb.LedgerStateDeleting},
-		Target:     []string{""},
-		Timeout:    5 * time.Minute,
-		MinTimeout: 1 * time.Second,
-		Refresh: func() (interface{}, string, error) {
-			resp, err := conn.DescribeLedger(&qldb.DescribeLedgerInput{
-				Name: aws.String(ledgerName),
-			})
-
-			if tfawserr.ErrCodeEquals(err, qldb.ErrCodeResourceNotFoundException) {
-				return 1, "", nil
-			}
-
-			if err != nil {
-				return nil, qldb.ErrCodeResourceInUseException, err
-			}
-
-			return resp, aws.StringValue(resp.State), nil
-		},
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
 func FindLedgerByName(ctx context.Context, conn *qldb.QLDB, name string) (*qldb.DescribeLedgerOutput, error) {
 	input := &qldb.DescribeLedgerInput{
 		Name: aws.String(name),
@@ -311,6 +247,24 @@ func statusLedgerState(ctx context.Context, conn *qldb.QLDB, name string) resour
 
 		return output, aws.StringValue(output.State), nil
 	}
+}
+
+func waitLedgerCreated(ctx context.Context, conn *qldb.QLDB, name string) (*qldb.DescribeLedgerOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{qldb.LedgerStateCreating},
+		Target:     []string{qldb.LedgerStateActive},
+		Refresh:    statusLedgerState(ctx, conn, name),
+		Timeout:    8 * time.Minute,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*qldb.DescribeLedgerOutput); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func waitLedgerDeleted(ctx context.Context, conn *qldb.QLDB, name string) (*qldb.DescribeLedgerOutput, error) {
