@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -129,7 +130,7 @@ func testAccCheckAMILaunchPermissionExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		_, err = tfec2.FindImageLaunchPermission(conn, imageID, accountID)
+		_, err = tfec2.FindImageLaunchPermission(context.TODO(), conn, imageID, accountID)
 
 		if err != nil {
 			return err
@@ -153,7 +154,7 @@ func testAccCheckAMILaunchPermissionDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfec2.FindImageLaunchPermission(conn, imageID, accountID)
+		_, err = tfec2.FindImageLaunchPermission(context.TODO(), conn, imageID, accountID)
 
 		if tfresource.NotFound(err) {
 			continue

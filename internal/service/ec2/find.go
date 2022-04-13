@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -590,8 +591,8 @@ func FindHost(conn *ec2.EC2, input *ec2.DescribeHostsInput) (*ec2.Host, error) {
 	return host, nil
 }
 
-func FindImageAttribute(conn *ec2.EC2, input *ec2.DescribeImageAttributeInput) (*ec2.DescribeImageAttributeOutput, error) {
-	output, err := conn.DescribeImageAttribute(input)
+func FindImageAttribute(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeImageAttributeInput) (*ec2.DescribeImageAttributeOutput, error) {
+	output, err := conn.DescribeImageAttributeWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAMIIDNotFound, ErrCodeInvalidAMIIDUnavailable) {
 		return nil, &resource.NotFoundError{
@@ -611,13 +612,13 @@ func FindImageAttribute(conn *ec2.EC2, input *ec2.DescribeImageAttributeInput) (
 	return output, nil
 }
 
-func FindImageLaunchPermissionsByID(conn *ec2.EC2, id string) ([]*ec2.LaunchPermission, error) {
+func FindImageLaunchPermissionsByID(ctx context.Context, conn *ec2.EC2, id string) ([]*ec2.LaunchPermission, error) {
 	input := &ec2.DescribeImageAttributeInput{
 		Attribute: aws.String(ec2.ImageAttributeNameLaunchPermission),
 		ImageId:   aws.String(id),
 	}
 
-	output, err := FindImageAttribute(conn, input)
+	output, err := FindImageAttribute(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -630,8 +631,8 @@ func FindImageLaunchPermissionsByID(conn *ec2.EC2, id string) ([]*ec2.LaunchPerm
 	return output.LaunchPermissions, nil
 }
 
-func FindImageLaunchPermission(conn *ec2.EC2, imageID, accountID string) (*ec2.LaunchPermission, error) {
-	output, err := FindImageLaunchPermissionsByID(conn, imageID)
+func FindImageLaunchPermission(ctx context.Context, conn *ec2.EC2, imageID, accountID string) (*ec2.LaunchPermission, error) {
+	output, err := FindImageLaunchPermissionsByID(ctx, conn, imageID)
 
 	if err != nil {
 		return nil, err
