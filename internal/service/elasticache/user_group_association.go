@@ -49,7 +49,7 @@ func resourceUserGroupAssociationCreate(d *schema.ResourceData, meta interface{}
 
 	id := userGroupAssociationID(d.Get("user_group_id").(string), d.Get("user_id").(string))
 
-	_, err := tfresource.RetryWhenNotFound(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenNotFound(30*time.Second, func() (interface{}, error) {
 		return conn.ModifyUserGroup(input)
 	})
 
@@ -64,9 +64,9 @@ func resourceUserGroupAssociationCreate(d *schema.ResourceData, meta interface{}
 		Target:         []string{"active"},
 		Refresh:        resourceUserGroupStateRefreshFunc(d.Get("user_group_id").(string), conn),
 		Timeout:        d.Timeout(schema.TimeoutCreate),
-		MinTimeout:     10 * time.Second,
+		MinTimeout:     2 * time.Second,
 		NotFoundChecks: 5,
-		Delay:          30 * time.Second, // Wait 30 secs before starting
+		Delay:          10 * time.Second,
 	}
 
 	log.Printf("[INFO] Waiting for ElastiCache User Group (%s) to be available", d.Id())
@@ -103,6 +103,16 @@ func resourceUserGroupAssociationRead(d *schema.ResourceData, meta interface{}) 
 			gotUserID = aws.StringValue(v)
 			break
 		}
+	}
+
+	if !d.IsNewResource() && gotUserID == "" {
+		d.SetId("")
+		log.Printf("[DEBUG] ElastiCache User Group Association (%s) not found", d.Id())
+		return nil
+	}
+
+	if gotUserID == "" {
+		return fmt.Errorf("reading ElastiCache User Group Association, user ID (%s) not associated with user group (%s)", userID, groupID)
 	}
 
 	d.Set("user_id", gotUserID)

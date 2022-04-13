@@ -25,7 +25,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: gaurav-nelson/github-action-markdown-link-check@v1
-      - run: git config --global --add safe.directory /github/workspace
         name: markdown-link-check website/docs/**/*.markdown
         with:
           use-quiet-mode: "yes"
@@ -36,7 +35,6 @@ jobs:
           base-branch: "main"
           check-modified-files-only: "yes"
       - uses: gaurav-nelson/github-action-markdown-link-check@v1
-      - run: git config --global --add safe.directory /github/workspace
         name: markdown-link-check website/docs/**/*.md
         with:
           use-quiet-mode: "yes"
