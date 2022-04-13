@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -25,11 +26,15 @@ func ResourceAMILaunchPermission() *schema.Resource {
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				const importIDSeparator = "/"
 				parts := strings.Split(d.Id(), importIDSeparator)
-				if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-					return nil, fmt.Errorf("unexpected format for ID (%[1]s), expected ACCOUNT-ID%[2]sIMAGE-ID", d.Id(), importIDSeparator)
-				}
 
-				d.SetId(AMILaunchPermissionCreateResourceID(parts[1], parts[0]))
+				switch {
+				case len(parts) == 2 && parts[0] != "" && parts[1] != "":
+					d.SetId(AMILaunchPermissionCreateResourceID(parts[1], parts[0], ""))
+				case len(parts) == 3 && parts[0] == "group" && parts[1] != "" && parts[2] != "":
+					d.SetId(AMILaunchPermissionCreateResourceID(parts[2], "", parts[1]))
+				default:
+					return nil, fmt.Errorf("unexpected format for ID (%[1]s), expected ACCOUNT-ID%[2]sIMAGE-ID or group%[2]sGROUP-NAME%[2]sIMAGE-ID", d.Id(), importIDSeparator)
+				}
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -37,9 +42,17 @@ func ResourceAMILaunchPermission() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"account_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"account_id", "group"},
+			},
+			"group": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.PermissionGroup_Values(), false),
+				ExactlyOneOf: []string{"account_id", "group"},
 			},
 			"image_id": {
 				Type:     schema.TypeString,
@@ -55,12 +68,13 @@ func resourceAMILaunchPermissionCreate(ctx context.Context, d *schema.ResourceDa
 
 	imageID := d.Get("image_id").(string)
 	accountID := d.Get("account_id").(string)
-	id := AMILaunchPermissionCreateResourceID(imageID, accountID)
+	group := d.Get("group").(string)
+	id := AMILaunchPermissionCreateResourceID(imageID, accountID, group)
 	input := &ec2.ModifyImageAttributeInput{
 		Attribute: aws.String(ec2.ImageAttributeNameLaunchPermission),
 		ImageId:   aws.String(imageID),
 		LaunchPermission: &ec2.LaunchPermissionModifications{
-			Add: expandLaunchPermissions(accountID),
+			Add: expandLaunchPermissions(accountID, group),
 		},
 	}
 
@@ -79,13 +93,13 @@ func resourceAMILaunchPermissionCreate(ctx context.Context, d *schema.ResourceDa
 func resourceAMILaunchPermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	imageID, accountID, err := AMILaunchPermissionParseResourceID(d.Id())
+	imageID, accountID, group, err := AMILaunchPermissionParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	_, err = FindImageLaunchPermission(ctx, conn, imageID, accountID)
+	_, err = FindImageLaunchPermission(ctx, conn, imageID, accountID, group)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AMI Launch Permission %s not found, removing from state", d.Id())
@@ -98,6 +112,7 @@ func resourceAMILaunchPermissionRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.Set("account_id", accountID)
+	d.Set("group", group)
 	d.Set("image_id", imageID)
 
 	return nil
@@ -106,7 +121,7 @@ func resourceAMILaunchPermissionRead(ctx context.Context, d *schema.ResourceData
 func resourceAMILaunchPermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	imageID, accountID, err := AMILaunchPermissionParseResourceID(d.Id())
+	imageID, accountID, group, err := AMILaunchPermissionParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -116,7 +131,7 @@ func resourceAMILaunchPermissionDelete(ctx context.Context, d *schema.ResourceDa
 		Attribute: aws.String(ec2.ImageAttributeNameLaunchPermission),
 		ImageId:   aws.String(imageID),
 		LaunchPermission: &ec2.LaunchPermissionModifications{
-			Remove: expandLaunchPermissions(accountID),
+			Remove: expandLaunchPermissions(accountID, group),
 		},
 	}
 
@@ -134,31 +149,51 @@ func resourceAMILaunchPermissionDelete(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func expandLaunchPermissions(accountID string) []*ec2.LaunchPermission {
+func expandLaunchPermissions(accountID, group string) []*ec2.LaunchPermission {
 	apiObject := &ec2.LaunchPermission{}
 
 	if accountID != "" {
 		apiObject.UserId = aws.String(accountID)
 	}
 
+	if group != "" {
+		apiObject.Group = aws.String(group)
+	}
+
 	return []*ec2.LaunchPermission{apiObject}
 }
 
-const amiLaunchPermissionIDSeparator = "-"
+const (
+	amiLaunchPermissionIDSeparator      = "-"
+	amiLaunchPermissionIDGroupIndicator = "group"
+)
 
-func AMILaunchPermissionCreateResourceID(imageID, accountID string) string {
-	parts := []string{imageID, accountID}
+func AMILaunchPermissionCreateResourceID(imageID, accountID, group string) string {
+	parts := []string{imageID}
+
+	if accountID != "" {
+		parts = append(parts, accountID)
+	} else if group != "" {
+		parts = append(parts, amiLaunchPermissionIDGroupIndicator, group)
+	}
+
 	id := strings.Join(parts, amiLaunchPermissionIDSeparator)
 
 	return id
 }
 
-func AMILaunchPermissionParseResourceID(id string) (string, string, error) {
+func AMILaunchPermissionParseResourceID(id string) (string, string, string, error) {
 	parts := strings.Split(id, amiLaunchPermissionIDSeparator)
 
-	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
-		return strings.Join([]string{parts[0], parts[1]}, amiLaunchPermissionIDSeparator), parts[2], nil
+	switch {
+	case len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "":
+		return strings.Join([]string{parts[0], parts[1]}, amiLaunchPermissionIDSeparator), parts[2], "", nil
+	case len(parts) > 3 && parts[0] != "" && parts[1] != "" && parts[3] != "":
+		switch parts[2] {
+		case amiLaunchPermissionIDGroupIndicator:
+			return strings.Join([]string{parts[0], parts[1]}, amiLaunchPermissionIDSeparator), "", strings.Join(parts[3:], amiLaunchPermissionIDSeparator), nil
+		}
 	}
 
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected IMAGE-ID%[2]sACCOUNT-ID", id, amiLaunchPermissionIDSeparator)
+	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected IMAGE-ID%[2]sACCOUNT-ID or IMAGE-ID%[2]sgroup%[2]sGROUP-NAME", id, amiLaunchPermissionIDSeparator)
 }
