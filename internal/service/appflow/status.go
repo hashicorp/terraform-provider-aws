@@ -3,14 +3,15 @@ package appflow
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appflow"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FlowStatus(ctx context.Context, conn *appflow.AppFlow, id string) resource.StateRefreshFunc {
+func FlowStatus(ctx context.Context, conn *appflow.Appflow, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findFlowByID(ctx, conn, id)
+		out, err := FindFlowByArn(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -20,6 +21,6 @@ func FlowStatus(ctx context.Context, conn *appflow.AppFlow, id string) resource.
 			return nil, "", err
 		}
 
-		return out, out.Status, nil
+		return out, aws.StringValue(out.FlowStatus), nil
 	}
 }

@@ -935,7 +935,7 @@ func Provider() *schema.Provider {
 			"aws_appautoscaling_scheduled_action": appautoscaling.ResourceScheduledAction(),
 			"aws_appautoscaling_target":           appautoscaling.ResourceTarget(),
 
-			"aws_appflow_flow": appflow.ResourceAppFlow(),
+			"aws_appflow_flow": appflow.ResourceFlow(),
 
 			"aws_appmesh_gateway_route":   appmesh.ResourceGatewayRoute(),
 			"aws_appmesh_mesh":            appmesh.ResourceMesh(),

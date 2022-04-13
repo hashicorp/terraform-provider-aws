@@ -12,7 +12,7 @@ import (
 // ListTags lists appflow service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *appflow.AppFlow, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn *appflow.Appflow, identifier string) (tftags.KeyValueTags, error) {
 	input := &appflow.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -41,7 +41,7 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates appflow service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *appflow.AppFlow, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn *appflow.Appflow, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 

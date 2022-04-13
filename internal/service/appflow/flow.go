@@ -2,7 +2,6 @@ package appflow
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"regexp"
 	"time"
@@ -10,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appflow"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -69,532 +68,304 @@ func ResourceFlow() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									Type:     schema.TypeList,
-									Required: true,
-									MaxItems: 1,
-									Elem: &schema.Resource{
-										Schema: map[string]*schema.Schema{
-											"custom_connector": {
-												Type:     schema.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &schema.Resource{
-													Schema: map[string]*schema.Schema{
-														"custom_properties": {
-															Type:             schema.TypeMap,
-															Optional:         true,
-															MaxItems:         50,
-															ValidateDiagFunc: validation.All(validation.MapKeyLenBetween(1, 128), validation.MapKeyMatch(regexp.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"), validation.MapValueLenBetween(0, 2048), validation.MapValueMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters")),
-														},
-														"entity_name": {
-															Type:         schema.TypeString,
-															Required:     true,
-															ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 1024)),
-														},
-														"error_handling_config": {
-															Type:     schema.TypeList,
-															Optional: true,
-															MaxItems: 1,
-															Elem: &schema.Resource{
-																Schema: map[string]*schema.Schema{
-																	"bucket_name": {
-																		Type:         schema.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
-																	},
-																	"bucket_prefix": {
-																		Type:         schema.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.StringLenBetween(0, 512),
-																	},
-																	"fail_on_first_destination_error": {
-																		Type:     schema.TypeBoolean,
-																		Optional: true,
-																	},
-																},
-															},
-														},
-														"id_field_names": {
-															Type:     schema.TypeList,
-															Optional: true,
-															Elem: &schema.Schema{
+									"custom_connector": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"custom_properties": {
+													Type:     schema.TypeMap,
+													Optional: true,
+													ValidateDiagFunc: allDiagFunc(
+														validation.MapKeyLenBetween(1, 128),
+														validation.MapKeyMatch(regexp.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
+														validation.MapValueLenBetween(0, 2048),
+														validation.MapValueMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters")),
+												},
+												"entity_name": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 1024)),
+												},
+												"error_handling_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"bucket_name": {
 																Type:         schema.TypeString,
-																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
+																Optional:     true,
+																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+															},
+															"bucket_prefix": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(0, 512),
+															},
+															"fail_on_first_destination_error": {
+																Type:     schema.TypeBool,
+																Optional: true,
 															},
 														},
-														"write_operation_type": {
-															Type:         schema.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringInSlice(appflow.WriteOperationType_Values(), false),
-														},
 													},
 												},
-											},
-											"customer_profiles": {
-												Type:     schema.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &schema.Resource{
-													Schema: map[string]*schema.Schema{
-														"domain_name": {
-															Type:         schema.TypeString,
-															Required:     true,
-															ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 64)),
-														},
-														"object_type_name": {
-															Type:         schema.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 255)),
-														},
+												"id_field_names": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
 													},
 												},
+												"write_operation_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(appflow.WriteOperationType_Values(), false),
+												},
 											},
-											"event_bridge": {
-												Type:     schema.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &schema.Resource{
-													Schema: map[string]*schema.Schema{
-														"error_handling_config": {
-															Type:     schema.TypeList,
-															Optional: true,
-															MaxItems: 1,
-															Elem: &schema.Resource{
-																Schema: map[string]*schema.Schema{
-																	"bucket_name": {
-																		Type:         schema.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
-																	},
-																	"bucket_prefix": {
-																		Type:         schema.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.StringLenBetween(0, 512),
-																	},
-																	"fail_on_first_destination_error": {
-																		Type:     schema.TypeBoolean,
-																		Optional: true,
-																	},
-																},
+										},
+									},
+									"customer_profiles": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"domain_name": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 64)),
+												},
+												"object_type_name": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 255)),
+												},
+											},
+										},
+									},
+									"event_bridge": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"error_handling_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"bucket_name": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+															},
+															"bucket_prefix": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(0, 512),
+															},
+															"fail_on_first_destination_error": {
+																Type:     schema.TypeBool,
+																Optional: true,
 															},
 														},
-														"object": {
-															Type:         schema.TypeString,
-															Required:     true,
-															ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
-														},
 													},
 												},
+												"object": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
 											},
-											"honeycode": {
-												Type:     schema.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &schema.Resource{
-													Schema: map[string]*schema.Schema{
-														"error_handling_config": {
-															Type:     schema.TypeList,
-															Optional: true,
-															MaxItems: 1,
-															Elem: &schema.Resource{
-																Schema: map[string]*schema.Schema{
-																	"bucket_name": {
-																		Type:         schema.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
-																	},
-																	"bucket_prefix": {
-																		Type:         schema.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.StringLenBetween(0, 512),
-																	},
-																	"fail_on_first_destination_error": {
-																		Type:     schema.TypeBoolean,
-																		Optional: true,
-																	},
-																},
+										},
+									},
+									"honeycode": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"error_handling_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"bucket_name": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+															},
+															"bucket_prefix": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(0, 512),
+															},
+															"fail_on_first_destination_error": {
+																Type:     schema.TypeBool,
+																Optional: true,
 															},
 														},
-														"object": {
-															Type:         schema.TypeString,
-															Required:     true,
-															ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
-														},
 													},
 												},
+												"object": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
 											},
-											"lookout_metrics": {
-												Type:     schema.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem:     &schema.Resource,
-											},
-											"marketo": {
-												Type:     schema.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &schema.Resource{
-													Schema: map[string]*schema.Schema{
-														"error_handling_config": {
-															Type:     schema.TypeList,
-															Optional: true,
-															MaxItems: 1,
-															Elem: &schema.Resource{
-																Schema: map[string]*schema.Schema{
-																	"bucket_name": {
-																		Type:         schema.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
-																	},
-																	"bucket_prefix": {
-																		Type:         schema.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.StringLenBetween(0, 512),
-																	},
-																	"fail_on_first_destination_error": {
-																		Type:     schema.TypeBoolean,
-																		Optional: true,
-																	},
-																},
+										},
+									},
+									"lookout_metrics": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem:     &schema.Resource{},
+									},
+									"marketo": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"error_handling_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"bucket_name": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+															},
+															"bucket_prefix": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(0, 512),
+															},
+															"fail_on_first_destination_error": {
+																Type:     schema.TypeBool,
+																Optional: true,
 															},
 														},
-														"object": {
-															Type:         schema.TypeString,
-															Required:     true,
-															ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
-														},
 													},
 												},
+												"object": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
 											},
-											"redshift": {
-												Type:     schema.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &schema.Resource{
-													Schema: map[string]*schema.Schema{
-														"bucket_prefix": {
-															Type:         schema.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringLenBetween(0, 512),
-														},
-														"error_handling_config": {
-															Type:     schema.TypeList,
-															Optional: true,
-															MaxItems: 1,
-															Elem: &schema.Resource{
-																Schema: map[string]*schema.Schema{
-																	"bucket_name": {
-																		Type:         schema.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
-																	},
-																	"bucket_prefix": {
-																		Type:         schema.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.StringLenBetween(0, 512),
-																	},
-																	"fail_on_first_destination_error": {
-																		Type:     schema.TypeBoolean,
-																		Optional: true,
-																	},
-																},
+										},
+									},
+									"redshift": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"bucket_prefix": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringLenBetween(0, 512),
+												},
+												"error_handling_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"bucket_name": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+															},
+															"bucket_prefix": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(0, 512),
+															},
+															"fail_on_first_destination_error": {
+																Type:     schema.TypeBool,
+																Optional: true,
 															},
 														},
-														"intermediate_bucket_name": {
-															Type:         schema.TypeString,
-															Required:     true,
-															ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
-														},
-														"object": {
-															Type:         schema.TypeString,
-															Required:     true,
-															ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
-														},
 													},
 												},
+												"intermediate_bucket_name": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+												},
+												"object": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
 											},
-											"s3": {
-												Type:     schema.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &schema.Resource{
-													Schema: map[string]*schema.Schema{
-														"bucket_name": {
-															Type:         schema.TypeString,
-															Required:     true,
-															ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
-														},
-														"bucket_prefix": {
-															Type:         schema.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringLenBetween(0, 512),
-														},
-														"s3_output_format_config": {
-															Type:     schema.TypeList,
-															Optional: true,
-															MaxItems: 1,
-															Elem: &schema.Resource{
-																Schema: map[string]*schema.Schema{
-																	"aggregation_config": {
-																		Type:     schema.TypeList,
-																		Optional: true,
-																		MaxItems: 1,
-																		Elem: &schema.Resource{
-																			"aggregation_type": {
-																				Type:         schema.TypeString,
-																				Optional:     true,
-																				ValidateFunc: validation.StringInSlice(appflow.AggregationType_Values(), false),
-																			},
-																		},
-																	},
-																	"file_type": {
-																		Type:         schema.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.StringInSlice(appflow.FileType_Values(), false),
-																	},
-																	"prefix_config": {
-																		Type:     schema.TypeList,
-																		Optional: true,
-																		MaxItems: 1,
-																		Elem: &schema.Resource{
-																			"prefix_format": {
-																				Type:         schema.TypeString,
-																				Optional:     true,
-																				ValidateFunc: validation.StringInSlice(appflow.PrefixFormat_Values(), false),
-																			},
-																			"prefix_type": {
-																				Type:         schema.TypeString,
-																				Optional:     true,
-																				ValidateFunc: validation.StringInSlice(appflow.PrefixType_Values(), false),
-																			},
+										},
+									},
+									"s3": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"bucket_name": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+												},
+												"bucket_prefix": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringLenBetween(0, 512),
+												},
+												"s3_output_format_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"aggregation_config": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"aggregation_type": {
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			ValidateFunc: validation.StringInSlice(appflow.AggregationType_Values(), false),
 																		},
 																	},
 																},
 															},
-														},
-													},
-												},
-											},
-											"salesforce": {
-												Type:     schema.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &schema.Resource{
-													Schema: map[string]*schema.Schema{
-														"error_handling_config": {
-															Type:     schema.TypeList,
-															Optional: true,
-															MaxItems: 1,
-															Elem: &schema.Resource{
-																Schema: map[string]*schema.Schema{
-																	"bucket_name": {
-																		Type:         schema.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
-																	},
-																	"bucket_prefix": {
-																		Type:         schema.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.StringLenBetween(0, 512),
-																	},
-																	"fail_on_first_destination_error": {
-																		Type:     schema.TypeBoolean,
-																		Optional: true,
-																	},
-																},
-															},
-														},
-														"id_field_names": {
-															Type:     schema.TypeList,
-															Optional: true,
-															Elem: &schema.Schema{
+															"file_type": {
 																Type:         schema.TypeString,
-																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
+																Optional:     true,
+																ValidateFunc: validation.StringInSlice(appflow.FileType_Values(), false),
 															},
-														},
-														"object": {
-															Type:         schema.TypeString,
-															Required:     true,
-															ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
-														},
-														"write_operation_type": {
-															Type:         schema.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringInSlice(appflow.WriteOperationType_Values(), false),
-														},
-													},
-												},
-											},
-											"sapo_data": {
-												Type:     schema.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &schema.Resource{
-													Schema: map[string]*schema.Schema{
-														"error_handling_config": {
-															Type:     schema.TypeList,
-															Optional: true,
-															MaxItems: 1,
-															Elem: &schema.Resource{
-																Schema: map[string]*schema.Schema{
-																	"bucket_name": {
-																		Type:         schema.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
-																	},
-																	"bucket_prefix": {
-																		Type:         schema.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.StringLenBetween(0, 512),
-																	},
-																	"fail_on_first_destination_error": {
-																		Type:     schema.TypeBoolean,
-																		Optional: true,
-																	},
-																},
-															},
-														},
-														"id_field_names": {
-															Type:     schema.TypeList,
-															Optional: true,
-															Elem: &schema.Schema{
-																Type:         schema.TypeString,
-																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
-															},
-														},
-														"object_path": {
-															Type:         schema.TypeString,
-															Required:     true,
-															ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
-														},
-														"success_response_handling_config": {
-															Type:     schema.TypeList,
-															Optional: true,
-															MaxItems: 1,
-															Elem: &schema.Resource{
-																Schema: map[string]*schema.Schema{
-																	"bucket_name": {
-																		Type:         schema.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
-																	},
-																	"bucket_prefix": {
-																		Type:         schema.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.StringLenBetween(0, 512),
-																	},
-																},
-															},
-														},
-														"write_operation_type": {
-															Type:         schema.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringInSlice(appflow.WriteOperationType_Values(), false),
-														},
-													},
-												},
-											},
-											"snowflake": {
-												Type:     schema.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &schema.Resource{
-													Schema: map[string]*schema.Schema{
-														"bucket_prefix": {
-															Type:         schema.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringLenBetween(0, 512),
-														},
-														"error_handling_config": {
-															Type:     schema.TypeList,
-															Optional: true,
-															MaxItems: 1,
-															Elem: &schema.Resource{
-																Schema: map[string]*schema.Schema{
-																	"bucket_name": {
-																		Type:         schema.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
-																	},
-																	"bucket_prefix": {
-																		Type:         schema.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.StringLenBetween(0, 512),
-																	},
-																	"fail_on_first_destination_error": {
-																		Type:     schema.TypeBoolean,
-																		Optional: true,
-																	},
-																},
-															},
-														},
-														"intermediate_bucket_name": {
-															Type:         schema.TypeString,
-															Required:     true,
-															ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
-														},
-														"object": {
-															Type:         schema.TypeString,
-															Required:     true,
-															ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
-														},
-													},
-												},
-											},
-											"upsolver": {
-												Type:     schema.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &schema.Resource{
-													Schema: map[string]*schema.Schema{
-														"bucket_name": {
-															Type:         schema.TypeString,
-															Required:     true,
-															ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`^(upsolver-appflow)\S*`), "must start with 'upsolver-appflow' and can not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
-														},
-														"bucket_prefix": {
-															Type:         schema.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringLenBetween(0, 512),
-														},
-														"s3_output_format_config": {
-															Type:     schema.TypeList,
-															Required: true,
-															MaxItems: 1,
-															Elem: &schema.Resource{
-																Schema: map[string]*schema.Schema{
-																	"aggregation_config": {
-																		Type:     schema.TypeList,
-																		Optional: true,
-																		MaxItems: 1,
-																		Elem: &schema.Resource{
-																			"aggregation_type": {
-																				Type:         schema.TypeString,
-																				Optional:     true,
-																				ValidateFunc: validation.StringInSlice(appflow.AggregationType_Values(), false),
-																			},
+															"prefix_config": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"prefix_format": {
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			ValidateFunc: validation.StringInSlice(appflow.PrefixFormat_Values(), false),
 																		},
-																	},
-																	"file_type": {
-																		Type:         schema.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.StringInSlice(appflow.FileType_Values(), false),
-																	},
-																	"prefix_config": {
-																		Type:     schema.TypeList,
-																		Required: true,
-																		MaxItems: 1,
-																		Elem: &schema.Resource{
-																			"prefix_format": {
-																				Type:         schema.TypeString,
-																				Optional:     true,
-																				ValidateFunc: validation.StringInSlice(appflow.PrefixFormat_Values(), false),
-																			},
-																			"prefix_type": {
-																				Type:         schema.TypeString,
-																				Required:     true,
-																				ValidateFunc: validation.StringInSlice(appflow.PrefixType_Values(), false),
-																			},
+																		"prefix_type": {
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			ValidateFunc: validation.StringInSlice(appflow.PrefixType_Values(), false),
 																		},
 																	},
 																},
@@ -603,54 +374,286 @@ func ResourceFlow() *schema.Resource {
 													},
 												},
 											},
-											"zendesk": {
-												Type:     schema.TypeList,
-												Optional: true,
-												MaxItems: 1,
-												Elem: &schema.Resource{
-													Schema: map[string]*schema.Schema{
-														"error_handling_config": {
-															Type:     schema.TypeList,
-															Optional: true,
-															MaxItems: 1,
-															Elem: &schema.Resource{
-																Schema: map[string]*schema.Schema{
-																	"bucket_name": {
-																		Type:         schema.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+										},
+									},
+									"salesforce": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"error_handling_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"bucket_name": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+															},
+															"bucket_prefix": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(0, 512),
+															},
+															"fail_on_first_destination_error": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+														},
+													},
+												},
+												"id_field_names": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
+													},
+												},
+												"object": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
+												"write_operation_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(appflow.WriteOperationType_Values(), false),
+												},
+											},
+										},
+									},
+									"sapo_data": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"error_handling_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"bucket_name": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+															},
+															"bucket_prefix": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(0, 512),
+															},
+															"fail_on_first_destination_error": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+														},
+													},
+												},
+												"id_field_names": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
+													},
+												},
+												"object_path": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
+												"success_response_handling_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"bucket_name": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+															},
+															"bucket_prefix": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(0, 512),
+															},
+														},
+													},
+												},
+												"write_operation_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(appflow.WriteOperationType_Values(), false),
+												},
+											},
+										},
+									},
+									"snowflake": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"bucket_prefix": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringLenBetween(0, 512),
+												},
+												"error_handling_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"bucket_name": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+															},
+															"bucket_prefix": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(0, 512),
+															},
+															"fail_on_first_destination_error": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+														},
+													},
+												},
+												"intermediate_bucket_name": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+												},
+												"object": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
+											},
+										},
+									},
+									"upsolver": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"bucket_name": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`^(upsolver-appflow)\S*`), "must start with 'upsolver-appflow' and can not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+												},
+												"bucket_prefix": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringLenBetween(0, 512),
+												},
+												"s3_output_format_config": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"aggregation_config": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"aggregation_type": {
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			ValidateFunc: validation.StringInSlice(appflow.AggregationType_Values(), false),
+																		},
 																	},
-																	"bucket_prefix": {
-																		Type:         schema.TypeString,
-																		Optional:     true,
-																		ValidateFunc: validation.StringLenBetween(0, 512),
-																	},
-																	"fail_on_first_destination_error": {
-																		Type:     schema.TypeBoolean,
-																		Optional: true,
+																},
+															},
+															"file_type": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringInSlice(appflow.FileType_Values(), false),
+															},
+															"prefix_config": {
+																Type:     schema.TypeList,
+																Required: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"prefix_format": {
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			ValidateFunc: validation.StringInSlice(appflow.PrefixFormat_Values(), false),
+																		},
+																		"prefix_type": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringInSlice(appflow.PrefixType_Values(), false),
+																		},
 																	},
 																},
 															},
 														},
-														"id_field_names": {
-															Type:     schema.TypeList,
-															Optional: true,
-															Elem: &schema.Schema{
+													},
+												},
+											},
+										},
+									},
+									"zendesk": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"error_handling_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"bucket_name": {
 																Type:         schema.TypeString,
-																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
+																Optional:     true,
+																ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+															},
+															"bucket_prefix": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(0, 512),
+															},
+															"fail_on_first_destination_error": {
+																Type:     schema.TypeBool,
+																Optional: true,
 															},
 														},
-														"object": {
-															Type:         schema.TypeString,
-															Required:     true,
-															ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
-														},
-														"write_operation_type": {
-															Type:         schema.TypeString,
-															Optional:     true,
-															ValidateFunc: validation.StringInSlice(appflow.WriteOperationType_Values(), false),
-														},
 													},
+												},
+												"id_field_names": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
+													},
+												},
+												"object": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+												},
+												"write_operation_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(appflow.WriteOperationType_Values(), false),
 												},
 											},
 										},
@@ -728,10 +731,13 @@ func ResourceFlow() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"custom_properties": {
-													Type:             schema.TypeMap,
-													Optional:         true,
-													MaxItems:         50,
-													ValidateDiagFunc: validation.All(validation.MapKeyLenBetween(1, 128), validation.MapKeyMatch(regexp.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"), validation.MapValueLenBetween(0, 2048), validation.MapValueMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters")),
+													Type:     schema.TypeMap,
+													Optional: true,
+													ValidateDiagFunc: allDiagFunc(
+														validation.MapKeyLenBetween(1, 128),
+														validation.MapKeyMatch(regexp.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
+														validation.MapValueLenBetween(0, 2048),
+														validation.MapValueMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters")),
 												},
 												"entity_name": {
 													Type:         schema.TypeString,
@@ -1045,7 +1051,7 @@ func ResourceFlow() *schema.Resource {
 									"sapo_data": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringInSlice(appflow.SAPODataOperator_Values(), false),
+										ValidateFunc: validation.StringInSlice(appflow.SAPODataConnectorOperator_Values(), false),
 									},
 									"service_now": {
 										Type:         schema.TypeString,
@@ -1091,9 +1097,11 @@ func ResourceFlow() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(0, 2048),
 						},
 						"task_properties": {
-							Type:             schema.TypeMap,
-							Optional:         true,
-							ValidateDiagFunc: validation.All(validation.MapValueLenBetween(0, 2048), validation.MapValueMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters")),
+							Type:     schema.TypeMap,
+							Optional: true,
+							ValidateDiagFunc: allDiagFunc(
+								validation.MapValueLenBetween(0, 2048),
+								validation.MapValueMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters")),
 						},
 						"task_type": {
 							Type:         schema.TypeString,
@@ -1142,7 +1150,7 @@ func ResourceFlow() *schema.Resource {
 													ValidateFunc: validation.StringLenBetween(1, 256),
 												},
 												"schedule_offset": {
-													Type:         schema.TypeInteger,
+													Type:         schema.TypeInt,
 													Optional:     true,
 													ValidateFunc: validation.IntBetween(0, 36000),
 												},
@@ -1162,11 +1170,11 @@ func ResourceFlow() *schema.Resource {
 								},
 							},
 						},
-					},
-					"trigger_type": {
-						Type:         schema.TypeString,
-						Required:     true,
-						ValidateFunc: validation.StringInSlice(appflow.TriggerType_Values()),
+						"trigger_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(appflow.TriggerType_Values(), false),
+						},
 					},
 				},
 			},
@@ -1178,15 +1186,26 @@ func ResourceFlow() *schema.Resource {
 	}
 }
 
+// https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
+func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
+	return func(i interface{}, k cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		for _, validator := range validators {
+			diags = append(diags, validator(i, k)...)
+		}
+		return diags
+	}
+}
+
 func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppFlowConn
 
 	in := &appflow.CreateFlowInput{
 		FlowName:                  aws.String(d.Get("name").(string)),
-		DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config")),
-		SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config")),
-		Tasks:                     expandTasks(d.Get("task")),
-		TriggerConfig:             expandTriggerConfig(d.Get("trigger_config")),
+		DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").(*schema.Set).List()),
+		SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config").([]interface{})[0].(map[string]interface{})),
+		Tasks:                     expandTasks(d.Get("task").(*schema.Set).List()),
+		TriggerConfig:             expandTriggerConfig(d.Get("trigger_config").([]interface{})[0].(map[string]interface{})),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -1209,11 +1228,11 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("creating Appflow Flow (%s): %s", d.Get("name").(string), err)
 	}
 
-	if out == nil || out.Flow == nil {
+	if out == nil || out.FlowArn == nil {
 		return diag.Errorf("creating Appflow Flow (%s): empty output", d.Get("name").(string))
 	}
 
-	d.SetId(aws.StringValue(out.Flow.FlowName))
+	d.SetId(aws.StringValue(out.FlowArn))
 
 	return resourceFlowRead(ctx, d, meta)
 }
@@ -1221,7 +1240,7 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppFlowConn
 
-	out, err := conn.DescribeFlowWithContext(ctx, conn, d.Id())
+	out, err := FindFlowByArn(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppFlow Flow (%s) not found, removing from state", d.Id())
@@ -1230,39 +1249,49 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
+		return diag.Errorf("finding AppFlow Flow (%s): %s", d.Id(), err)
+	}
+
+	in := &appflow.DescribeFlowInput{
+		FlowName: out.FlowName,
+	}
+
+	out2, err := conn.DescribeFlowWithContext(ctx, in)
+
+	if err != nil {
 		return diag.Errorf("reading AppFlow Flow (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", out.FlowArn)
-	d.Set("description", out.Description)
+	d.Set("arn", out2.FlowArn)
+	d.Set("description", out2.Description)
 
-	if err := d.Set("destination_flow_config", flattenDestinationFlowConfigs(out.DestinationFlowConfigList)); err != nil {
-		return fmt.Errorf("error setting destination_flow_config: %w", err)
+	if err := d.Set("destination_flow_config", flattenDestinationFlowConfigs(out2.DestinationFlowConfigList)); err != nil {
+		return diag.Errorf("error setting destination_flow_config: %s", err)
 	}
 
-	d.Set("kms_arn", out.KmsArn)
+	d.Set("kms_arn", out2.KmsArn)
 
-	if out.SourceFlowConfig != nil {
-		if err := d.Set("source_flow_config", []interface{}{flattenSourceFlowConfig(out.SourceFlowConfig)}); err != nil {
-			return fmt.Errorf("error setting source_flow_config: %w", err)
+	if out2.SourceFlowConfig != nil {
+		if err := d.Set("source_flow_config", []interface{}{flattenSourceFlowConfig(out2.SourceFlowConfig)}); err != nil {
+			return diag.Errorf("error setting source_flow_config: %s", err)
 		}
 	} else {
 		d.Set("source_flow_config", nil)
 	}
 
-	if err := d.Set("task", flattenTasks(out.Tasks)); err != nil {
-		return fmt.Errorf("error setting task: %w", err)
+	if err := d.Set("task", flattenTasks(out2.Tasks)); err != nil {
+		return diag.Errorf("error setting task: %s", err)
 	}
 
-	if out.TriggerConfig != nil {
-		if err := d.Set("trigger_config", []interface{}{flattenTriggerConfig(out.TriggerConfig)}); err != nil {
-			return fmt.Errorf("error setting trigger_config: %w", err)
+	if out2.TriggerConfig != nil {
+		if err := d.Set("trigger_config", []interface{}{flattenTriggerConfig(out2.TriggerConfig)}); err != nil {
+			return diag.Errorf("error setting trigger_config: %s", err)
 		}
 	} else {
 		d.Set("trigger_config", nil)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return diag.Errorf("listing tags for AppFlow Flow (%s): %s", d.Id(), err)
@@ -1291,14 +1320,14 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	in := &appflow.UpdateFlowInput{
 		FlowName:                  aws.String(d.Get("name").(string)),
-		DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config")),
-		SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config")),
-		Tasks:                     expandTasks(d.Get("task")),
-		TriggerConfig:             expandTriggerConfig(d.Get("trigger_config")),
+		DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").([]interface{})),
+		SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config").(map[string]interface{})),
+		Tasks:                     expandTasks(d.Get("task").([]interface{})),
+		TriggerConfig:             expandTriggerConfig(d.Get("trigger_config").(map[string]interface{})),
 	}
 
 	if d.HasChange("description") {
-		in.Description = d.Get("description").(string)
+		in.Description = aws.String(d.Get("description").(string))
 		update = true
 	}
 
@@ -1307,7 +1336,7 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	log.Printf("[DEBUG] Updating AppFlow Flow (%s): %#v", d.Id(), in)
-	out, err := conn.UpdateFlow(ctx, in)
+	_, err := conn.UpdateFlow(in)
 
 	if err != nil {
 		return diag.Errorf("updating AppFlow Flow (%s): %s", d.Id(), err)
@@ -1319,10 +1348,12 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppFlowConn
 
+	out, err := FindFlowByArn(ctx, conn, d.Id())
+
 	log.Printf("[INFO] Deleting AppFlow Flow %s", d.Id())
 
-	_, err := conn.DeleteFlowWithContext(ctx, &appflow.DeleteFlowInput{
-		Id: aws.String(d.Id()),
+	_, err = conn.DeleteFlowWithContext(ctx, &appflow.DeleteFlowInput{
+		FlowName: out.FlowName,
 	})
 
 	if tfawserr.ErrCodeEquals(err, appflow.ErrCodeResourceNotFoundException) {
@@ -1334,41 +1365,12 @@ func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	// TIP: 4. Use a waiter to wait for delete to complete
-	if _, err := waitFlowDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := FlowDeleted(ctx, conn, d.Id()); err != nil {
 		return diag.Errorf("waiting for AppFlow Flow (%s) to be deleted: %s", d.Id(), err)
 	}
 
 	// TIP: 5. Return nil
 	return nil
-}
-
-// TIP: The find function is not strictly necessary. You could do the API
-// request from the status function. However, we have found that find often
-// comes in handy in other places besides the status function. As a result, it
-// is good practice to define it separately.
-func findFlowByID(ctx context.Context, conn *appflow.AppFlow, id string) (*appflow.Flow, error) {
-	in := &appflow.GetFlowInput{
-		Id: aws.String(id),
-	}
-
-	out, err := conn.GetFlowWithContext(ctx, in)
-
-	if tfawserr.ErrCodeEquals(err, appflow.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil || out.Flow == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out.Flow, nil
 }
 
 // TIP: Flatteners and expanders ("flex" functions) help handle complex data
@@ -1493,7 +1495,7 @@ func expandDestinationFlowConfig(tfMap map[string]interface{}) *appflow.Destinat
 	}
 
 	if v, ok := tfMap["connector_type"].(string); ok && v != "" {
-		a.ConnectorProfileName = aws.String(v)
+		a.ConnectorType = aws.String(v)
 	}
 
 	if v, ok := tfMap["destination_connector_properties"].([]interface{}); ok && len(v) > 0 {
@@ -1526,9 +1528,9 @@ func expandDestinationConnectorProperties(tfMap map[string]interface{}) *appflow
 		a.Honeycode = expandHoneycodeDestinationProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["lookout_metrics"].(map[string]interface{}); ok && len(v) > 0 {
-		a.LookoutMetrics = v[0].(appflow.LookoutMetricsDestinationProperties)
-	}
+	//if v, ok := tfMap["lookout_metrics"].(map[string]interface{}); ok && len(v) > 0 {
+	//	a.LookoutMetrics = v
+	//}
 
 	if v, ok := tfMap["marketo"].([]interface{}); ok && len(v) > 0 {
 		a.Marketo = expandMarketoDestinationProperties(v[0].(map[string]interface{}))
@@ -1723,7 +1725,7 @@ func expandS3OutputFormatConfig(tfMap map[string]interface{}) *appflow.S3OutputF
 	a := &appflow.S3OutputFormatConfig{}
 
 	if v, ok := tfMap["aggregation_config"].([]interface{}); ok && len(v) > 0 {
-		a.S3OutputFormatConfig = expandAggregationConfig(v[0].(map[string]interface{}))
+		a.AggregationConfig = expandAggregationConfig(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["file_type"].(string); ok && v != "" {
@@ -1864,8 +1866,10 @@ func expandUpsolverS3OutputFormatConfig(tfMap map[string]interface{}) *appflow.U
 		return nil
 	}
 
+	a := &appflow.UpsolverS3OutputFormatConfig{}
+
 	if v, ok := tfMap["aggregation_config"].([]interface{}); ok && len(v) > 0 {
-		a.S3OutputFormatConfig = expandAggregationConfig(v[0].(map[string]interface{}))
+		a.AggregationConfig = expandAggregationConfig(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["file_type"].(string); ok && v != "" {
@@ -1875,8 +1879,6 @@ func expandUpsolverS3OutputFormatConfig(tfMap map[string]interface{}) *appflow.U
 	if v, ok := tfMap["prefix_config"].([]interface{}); ok && len(v) > 0 {
 		a.PrefixConfig = expandPrefixConfig(v[0].(map[string]interface{}))
 	}
-
-	a := &appflow.UpsolverS3OutputFormatConfig{}
 
 	return a
 }
@@ -1923,14 +1925,14 @@ func expandSourceFlowConfig(tfMap map[string]interface{}) *appflow.SourceFlowCon
 	}
 
 	if v, ok := tfMap["connector_type"].(string); ok && v != "" {
-		a.ConnectorProfileName = aws.String(v)
+		a.ConnectorType = aws.String(v)
 	}
 
 	if v, ok := tfMap["incremental_pull_config"].([]interface{}); ok && len(v) > 0 {
 		a.IncrementalPullConfig = expandIncrementalPullConfig(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["source_connector_properties"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["source_connector_properties"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.SourceConnectorProperties = expandSourceConnectorProperties(v[0].(map[string]interface{}))
 	}
 
@@ -2046,10 +2048,6 @@ func expandCustomConnectorSourceProperties(tfMap map[string]interface{}) *appflo
 
 	a := &appflow.CustomConnectorSourceProperties{}
 
-	if v, ok := tfMap["object"].(string); ok && v != "" {
-		a.Object = aws.String(v)
-	}
-
 	if v, ok := tfMap["custom_properties"].(map[string]interface{}); ok && len(v) > 0 {
 		a.CustomProperties = flex.ExpandStringMap(v)
 	}
@@ -2158,10 +2156,10 @@ func expandS3InputFormatConfig(tfMap map[string]interface{}) *appflow.S3InputFor
 		return nil
 	}
 
-	a := &appflow.S3InputFileType{}
+	a := &appflow.S3InputFormatConfig{}
 
 	if v, ok := tfMap["s3_input_file_type"].(string); ok && v != "" {
-		a.FileType = aws.String(v)
+		a.S3InputFileType = aws.String(v)
 	}
 
 	return a
@@ -2175,11 +2173,11 @@ func expandSalesforceSourceProperties(tfMap map[string]interface{}) *appflow.Sal
 	a := &appflow.SalesforceSourceProperties{}
 
 	if v, ok := tfMap["enable_dynamic_field_update"].(bool); ok {
-		apiObject.EnableDynamicFieldUpdate = aws.Bool(v)
+		a.EnableDynamicFieldUpdate = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["include_deleted_records"].(bool); ok {
-		apiObject.IncludeDeletedRecords = aws.Bool(v)
+		a.IncludeDeletedRecords = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["object"].(string); ok && v != "" {
@@ -2196,8 +2194,8 @@ func expandSAPODataSourceProperties(tfMap map[string]interface{}) *appflow.SAPOD
 
 	a := &appflow.SAPODataSourceProperties{}
 
-	if v, ok := tfMap["object"].(string); ok && v != "" {
-		a.Object = aws.String(v)
+	if v, ok := tfMap["object_path"].(string); ok && v != "" {
+		a.ObjectPath = aws.String(v)
 	}
 
 	return a
@@ -2375,7 +2373,7 @@ func expandConnectorOperator(tfMap map[string]interface{}) *appflow.ConnectorOpe
 	}
 
 	if v, ok := tfMap["datadog"].(string); ok && v != "" {
-		a.DataDog = aws.String(v)
+		a.Datadog = aws.String(v)
 	}
 
 	if v, ok := tfMap["dynatrace"].(string); ok && v != "" {
@@ -2492,8 +2490,8 @@ func expandScheduledTriggerProperties(tfMap map[string]interface{}) *appflow.Sch
 		a.ScheduleExpression = aws.String(v)
 	}
 
-	if v, ok := tfMap["schedule_offset"].(string); ok && v != "" {
-		a.ScheduleOffset = aws.String(v)
+	if v, ok := tfMap["schedule_offset"].(int); ok && v != 0 {
+		a.ScheduleOffset = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap["schedule_start_time"].(string); ok && v != "" {
@@ -2557,7 +2555,7 @@ func flattenAggregationConfig(aggregationConfig *appflow.AggregationConfig) map[
 	m := map[string]interface{}{}
 
 	if v := aggregationConfig.AggregationType; v != nil {
-		m["aggregation_type"] = []interface{}{flattenAggregationConfig(v)}
+		m["aggregation_type"] = aws.StringValue(v)
 	}
 
 	return m
@@ -2575,7 +2573,7 @@ func flattenDestinationFlowConfigs(destinationFlowConfigs []*appflow.Destination
 			continue
 		}
 
-		l = append(l, flattenDestinationFlowConfig(DestinationFlowConfig))
+		l = append(l, flattenDestinationFlowConfig(destinationFlowConfig))
 	}
 
 	return l
@@ -2630,9 +2628,9 @@ func flattenDestinationConnectorProperties(destinationConnectorProperties *appfl
 		m["honeycode"] = []interface{}{flattenHoneycodeDestinationProperties(v)}
 	}
 
-	if v := destinationConnectorProperties.LookoutMetrics; v != nil {
-		m["lookout_metrics"] = v[0].(appflow.LookoutMetricsDestinationProperties)
-	}
+	//if v := destinationConnectorProperties.LookoutMetrics; v != nil {
+	//	m["lookout_metrics"] = v[0].(appflow.LookoutMetricsDestinationProperties)
+	//}
 
 	if v := destinationConnectorProperties.Marketo; v != nil {
 		m["marketo"] = []interface{}{flattenMarketoDestinationProperties(v)}
@@ -2663,7 +2661,7 @@ func flattenDestinationConnectorProperties(destinationConnectorProperties *appfl
 	}
 
 	if v := destinationConnectorProperties.Zendesk; v != nil {
-		m["custom_connector"] = []interface{}{flattenCustomConnectorDestinationProperties(v)}
+		m["zendesk"] = []interface{}{flattenZendeskDestinationProperties(v)}
 	}
 
 	return m
@@ -2905,11 +2903,11 @@ func flattenSuccessResponseHandlingConfig(successResponseHandlingConfig *appflow
 	m := map[string]interface{}{}
 
 	if v := successResponseHandlingConfig.BucketName; v != nil {
-		m["bucket_name"] = aws.StringValueSlice(v)
+		m["bucket_name"] = aws.StringValue(v)
 	}
 
 	if v := successResponseHandlingConfig.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.StringValueSlice(v)
+		m["bucket_prefix"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3075,7 +3073,7 @@ func flattenSourceConnectorProperties(sourceConnectorProperties *appflow.SourceC
 	}
 
 	if v := sourceConnectorProperties.Dynatrace; v != nil {
-		m["dynatrace"] = []interface{}{flattenEventBridgeSourceProperties(v)}
+		m["dynatrace"] = []interface{}{flattenDynatraceSourceProperties(v)}
 	}
 
 	if v := sourceConnectorProperties.GoogleAnalytics; v != nil {
@@ -3103,11 +3101,11 @@ func flattenSourceConnectorProperties(sourceConnectorProperties *appflow.SourceC
 	}
 
 	if v := sourceConnectorProperties.ServiceNow; v != nil {
-		m["service_now"] = []interface{}{flattenServiceNowProperties(v)}
+		m["service_now"] = []interface{}{flattenServiceNowSourceProperties(v)}
 	}
 
 	if v := sourceConnectorProperties.Singular; v != nil {
-		m["singular"] = []interface{}{flattenUpsolverSourceProperties(v)}
+		m["singular"] = []interface{}{flattenSingularSourceProperties(v)}
 	}
 
 	if v := sourceConnectorProperties.Slack; v != nil {
@@ -3115,7 +3113,7 @@ func flattenSourceConnectorProperties(sourceConnectorProperties *appflow.SourceC
 	}
 
 	if v := sourceConnectorProperties.Trendmicro; v != nil {
-		m["trendmicro"] = []interface{}{flattenTrendmicoSourceProperties(v)}
+		m["trendmicro"] = []interface{}{flattenTrendmicroSourceProperties(v)}
 	}
 
 	if v := sourceConnectorProperties.Veeva; v != nil {
@@ -3290,20 +3288,20 @@ func flattenSalesforceSourceProperties(salesforceSourceProperties *appflow.Sales
 }
 
 func flattenSAPODataSourceProperties(sapoDataSourceProperties *appflow.SAPODataSourceProperties) map[string]interface{} {
-	if sapoSourceProperties == nil {
+	if sapoDataSourceProperties == nil {
 		return nil
 	}
 
 	m := map[string]interface{}{}
 
-	if v := sapoSourceProperties.Object; v != nil {
-		m["object"] = aws.StringValue(v)
+	if v := sapoDataSourceProperties.ObjectPath; v != nil {
+		m["object_path"] = aws.StringValue(v)
 	}
 
 	return m
 }
 
-func flattenServiceNowSourceProperties(serviceNowDataSourceProperties *appflow.ServiceNowSourceProperties) map[string]interface{} {
+func flattenServiceNowSourceProperties(serviceNowSourceProperties *appflow.ServiceNowSourceProperties) map[string]interface{} {
 	if serviceNowSourceProperties == nil {
 		return nil
 	}
@@ -3317,7 +3315,7 @@ func flattenServiceNowSourceProperties(serviceNowDataSourceProperties *appflow.S
 	return m
 }
 
-func flattenSingularSourceProperties(singularDataSourceProperties *appflow.SingularSourceProperties) map[string]interface{} {
+func flattenSingularSourceProperties(singularSourceProperties *appflow.SingularSourceProperties) map[string]interface{} {
 	if singularSourceProperties == nil {
 		return nil
 	}
@@ -3331,7 +3329,7 @@ func flattenSingularSourceProperties(singularDataSourceProperties *appflow.Singu
 	return m
 }
 
-func flattenSlackSourceProperties(slackDataSourceProperties *appflow.SlackSourceProperties) map[string]interface{} {
+func flattenSlackSourceProperties(slackSourceProperties *appflow.SlackSourceProperties) map[string]interface{} {
 	if slackSourceProperties == nil {
 		return nil
 	}
@@ -3345,7 +3343,7 @@ func flattenSlackSourceProperties(slackDataSourceProperties *appflow.SlackSource
 	return m
 }
 
-func flattenTrendmicroSourceProperties(trendmicroDataSourceProperties *appflow.TrendmicroSourceProperties) map[string]interface{} {
+func flattenTrendmicroSourceProperties(trendmicroSourceProperties *appflow.TrendmicroSourceProperties) map[string]interface{} {
 	if trendmicroSourceProperties == nil {
 		return nil
 	}
@@ -3389,7 +3387,7 @@ func flattenVeevaSourceProperties(veevaSourceProperties *appflow.VeevaSourceProp
 	return m
 }
 
-func flattenZendeskSourceProperties(zendeskDataSourceProperties *appflow.ZendeskSourceProperties) map[string]interface{} {
+func flattenZendeskSourceProperties(zendeskSourceProperties *appflow.ZendeskSourceProperties) map[string]interface{} {
 	if zendeskSourceProperties == nil {
 		return nil
 	}
@@ -3410,7 +3408,7 @@ func flattenTasks(tasks []*appflow.Task) []interface{} {
 
 	var l []interface{}
 
-	for _, task := range destinationFlowConfigs {
+	for _, task := range tasks {
 		if task == nil {
 			continue
 		}
@@ -3437,7 +3435,7 @@ func flattenTask(task *appflow.Task) map[string]interface{} {
 	}
 
 	if v := task.SourceFields; v != nil {
-		m["source_fields"] = aws.StringValue(v)
+		m["source_fields"] = aws.StringValueSlice(v)
 	}
 
 	if v := task.TaskProperties; v != nil {
@@ -3581,7 +3579,7 @@ func flattenScheduled(scheduledTriggerProperties *appflow.ScheduledTriggerProper
 	}
 
 	if v := scheduledTriggerProperties.ScheduleOffset; v != nil {
-		m["schedule_offset"] = aws.StringValue(v)
+		m["schedule_offset"] = aws.Int64Value(v)
 	}
 
 	if v := scheduledTriggerProperties.ScheduleStartTime; v != nil {
