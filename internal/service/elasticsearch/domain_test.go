@@ -1017,7 +1017,7 @@ func TestAccElasticsearchDomain_EncryptAtRestDefault_key(t *testing.T) {
 		CheckDestroy: testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigWithEncryptAtRestDefaultKey(rName),
+				Config: testAccDomainConfigWithEncryptAtRestDefaultKey(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					testAccCheckDomainEncrypted(true, &domain),
@@ -1092,6 +1092,36 @@ func TestAccElasticsearchDomain_nodeToNodeEncryption(t *testing.T) {
 				ImportState:       true,
 				ImportStateId:     rName[:28],
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccElasticsearchDomain_Encryption_atRestEnable(t *testing.T) {
+	var domain1, domain2 elasticsearch.ElasticsearchDomainStatus
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticsearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfigWithEncryptAtRestDefaultKey(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckDomainEncrypted(false, &domain1),
+				),
+			},
+			{
+				Config: testAccDomainConfigWithEncryptAtRestDefaultKey(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain2),
+					testAccCheckDomainEncrypted(true, &domain2),
+					testAccCheckDomainNotRecreated(&domain1, &domain2),
+				),
 			},
 		},
 	})
@@ -2126,12 +2156,12 @@ data "aws_iam_policy_document" "test" {
 `, rName)
 }
 
-func testAccDomainConfigWithEncryptAtRestDefaultKey(rName string) string {
+func testAccDomainConfigWithEncryptAtRestDefaultKey(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
 
-  elasticsearch_version = "6.0"
+  elasticsearch_version = "6.7"
 
   # Encrypt at rest requires m4/c4/r4/i2 instances. See http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-supported-instance-types.html
   cluster_config {
@@ -2144,10 +2174,10 @@ resource "aws_elasticsearch_domain" "test" {
   }
 
   encrypt_at_rest {
-    enabled = true
+    enabled = %[2]t
   }
 }
-`, rName)
+`, rName, enabled)
 }
 
 func testAccDomainConfigWithEncryptAtRestWithKey(rName string) string {
