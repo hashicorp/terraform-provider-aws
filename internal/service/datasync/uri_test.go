@@ -138,6 +138,21 @@ func TestSubdirectoryFromLocationURI(t *testing.T) {
 			InputURI:             "fsxw://us-west-2.fs-abcdef012345678901/my-folder-1/my-folder-2", //lintignore:AWSAT003
 			ExpectedSubdirectory: "/my-folder-1/my-folder-2",
 		},
+		{
+			TestName:             "FSx Zfs URI top level",
+			InputURI:             "fsxz://us-west-2.fs-abcdef012345678901/", //lintignore:AWSAT003
+			ExpectedSubdirectory: "/",
+		},
+		{
+			TestName:             "FSx Zfs URI one level",
+			InputURI:             "fsxz://us-west-2.fs-abcdef012345678901/my-folder-1/", //lintignore:AWSAT003
+			ExpectedSubdirectory: "/my-folder-1/",
+		},
+		{
+			TestName:             "FSx Zfs URI two levels",
+			InputURI:             "fsxz://us-west-2.fs-abcdef012345678901/my-folder-1/my-folder-2", //lintignore:AWSAT003
+			ExpectedSubdirectory: "/my-folder-1/my-folder-2",
+		},
 	}
 
 	for _, testCase := range testCases {
