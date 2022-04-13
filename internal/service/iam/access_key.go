@@ -87,6 +87,12 @@ func ResourceAccessKey() *schema.Resource {
 				Default:      iam.StatusTypeActive,
 				ValidateFunc: validation.StringInSlice(iam.StatusType_Values(), false),
 			},
+			"triggers": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"user": {
 				Type:     schema.TypeString,
 				Required: true,

@@ -69,6 +69,7 @@ The following arguments are supported:
 
 * `pgp_key` - (Optional) Either a base-64 encoded PGP public key, or a keybase username in the form `keybase:some_person_that_exists`, for use in the `encrypted_secret` output attribute.
 * `status` - (Optional) Access key status to apply. Defaults to `Active`. Valid values are `Active` and `Inactive`.
+* `triggers` - (Optional) Arbitrary map of values that, when changed, will trigger recreation of this resource. To force a redeployment without changing these keys/values, use the [`terraform taint` command](/docs/commands/taint.html).
 * `user` - (Required) IAM user to associate with this access key.
 
 ## Attributes Reference
