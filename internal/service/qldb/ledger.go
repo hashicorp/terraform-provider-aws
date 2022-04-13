@@ -2,7 +2,6 @@ package qldb
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"regexp"
 	"time"
@@ -22,9 +21,9 @@ import (
 
 func ResourceLedger() *schema.Resource {
 	return &schema.Resource{
-		Create:               resourceLedgerCreate,
-		Read:                 resourceLedgerRead,
-		Update:               resourceLedgerUpdate,
+		CreateWithoutTimeout: resourceLedgerCreate,
+		ReadWithoutTimeout:   resourceLedgerRead,
+		UpdateWithoutTimeout: resourceLedgerUpdate,
 		DeleteWithoutTimeout: resourceLedgerDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -64,7 +63,7 @@ func ResourceLedger() *schema.Resource {
 	}
 }
 
-func resourceLedgerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QLDBConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -77,25 +76,24 @@ func resourceLedgerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("name", name); err != nil {
-		return fmt.Errorf("error setting name: %s", err)
+		return diag.Errorf("error setting name: %s", err)
 	}
 
-	// Create the QLDB Ledger
-	createOpts := &qldb.CreateLedgerInput{
+	input := &qldb.CreateLedgerInput{
+		DeletionProtection: aws.Bool(d.Get("deletion_protection").(bool)),
 		Name:               aws.String(d.Get("name").(string)),
 		PermissionsMode:    aws.String(d.Get("permissions_mode").(string)),
-		DeletionProtection: aws.Bool(d.Get("deletion_protection").(bool)),
 		Tags:               Tags(tags.IgnoreAWS()),
 	}
 
-	log.Printf("[DEBUG] QLDB Ledger create config: %#v", *createOpts)
-	qldbResp, err := conn.CreateLedger(createOpts)
+	log.Printf("[DEBUG] QLDB Ledger create config: %#v", *input)
+	output, err := conn.CreateLedger(input)
 	if err != nil {
-		return fmt.Errorf("Error creating QLDB Ledger: %s", err)
+		return diag.Errorf("Error creating QLDB Ledger: %s", err)
 	}
 
 	// Set QLDB ledger name
-	d.SetId(aws.StringValue(qldbResp.Name))
+	d.SetId(aws.StringValue(output.Name))
 
 	log.Printf("[INFO] QLDB Ledger name: %s", d.Id())
 
@@ -109,14 +107,14 @@ func resourceLedgerCreate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("Error waiting for QLDB Ledger status to be \"%s\": %s", qldb.LedgerStateActive, err)
+		return diag.Errorf("Error waiting for QLDB Ledger status to be \"%s\": %s", qldb.LedgerStateActive, err)
 	}
 
 	// Update our attributes and return
-	return resourceLedgerRead(d, meta)
+	return resourceLedgerRead(ctx, d, meta)
 }
 
-func resourceLedgerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QLDBConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -135,49 +133,49 @@ func resourceLedgerRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing QLDB Ledger (%s): %s", d.Id(), err)
+		return diag.Errorf("error describing QLDB Ledger (%s): %s", d.Id(), err)
 	}
 
 	// QLDB stuff
 	if err := d.Set("name", qldbLedger.Name); err != nil {
-		return fmt.Errorf("error setting name: %s", err)
+		return diag.Errorf("error setting name: %s", err)
 	}
 
 	if err := d.Set("permissions_mode", qldbLedger.PermissionsMode); err != nil {
-		return fmt.Errorf("error setting permissions mode: %s", err)
+		return diag.Errorf("error setting permissions mode: %s", err)
 	}
 
 	if err := d.Set("deletion_protection", qldbLedger.DeletionProtection); err != nil {
-		return fmt.Errorf("error setting deletion protection: %s", err)
+		return diag.Errorf("error setting deletion protection: %s", err)
 	}
 
 	// ARN
 	if err := d.Set("arn", qldbLedger.Arn); err != nil {
-		return fmt.Errorf("error setting ARN: %s", err)
+		return diag.Errorf("error setting ARN: %s", err)
 	}
 
 	// Tags
 	log.Printf("[INFO] Fetching tags for %s", d.Id())
 	tags, err := ListTags(conn, d.Get("arn").(string))
 	if err != nil {
-		return fmt.Errorf("Error listing tags for QLDB Ledger: %s", err)
+		return diag.Errorf("Error listing tags for QLDB Ledger: %s", err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func resourceLedgerUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceLedgerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QLDBConn
 
 	if d.HasChange("permissions_mode") {
@@ -186,7 +184,7 @@ func resourceLedgerUpdate(d *schema.ResourceData, meta interface{}) error {
 			PermissionsMode: aws.String(d.Get("permissions_mode").(string)),
 		}
 		if _, err := conn.UpdateLedgerPermissionsMode(updateOpts); err != nil {
-			return fmt.Errorf("error updating permissions mode: %s", err)
+			return diag.Errorf("error updating permissions mode: %s", err)
 		}
 	}
 
@@ -201,18 +199,18 @@ func resourceLedgerUpdate(d *schema.ResourceData, meta interface{}) error {
 			d.Id(), modifyOpts)
 		if _, err := conn.UpdateLedger(modifyOpts); err != nil {
 
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return diag.Errorf("error updating tags: %s", err)
 		}
 	}
 
-	return resourceLedgerRead(d, meta)
+	return resourceLedgerRead(ctx, d, meta)
 }
 
 func resourceLedgerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
