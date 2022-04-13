@@ -31,6 +31,8 @@ func TestAccEC2AMILaunchPermission_basic(t *testing.T) {
 					testAccCheckAMILaunchPermissionExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "group", ""),
+					resource.TestCheckResourceAttr(resourceName, "organization_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "organizational_unit_arn", ""),
 				),
 			},
 			{
@@ -103,6 +105,8 @@ func TestAccEC2AMILaunchPermission_group(t *testing.T) {
 					testAccCheckAMILaunchPermissionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "group", "all"),
+					resource.TestCheckResourceAttr(resourceName, "organization_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "organizational_unit_arn", ""),
 				),
 			},
 			{
@@ -126,7 +130,7 @@ func testAccCheckAMILaunchPermissionExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No AMI Launch Permission ID is set")
 		}
 
-		imageID, accountID, group, err := tfec2.AMILaunchPermissionParseResourceID(rs.Primary.ID)
+		imageID, accountID, group, organizationARN, organizationalUnitARN, err := tfec2.AMILaunchPermissionParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -134,7 +138,7 @@ func testAccCheckAMILaunchPermissionExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		_, err = tfec2.FindImageLaunchPermission(context.TODO(), conn, imageID, accountID, group)
+		_, err = tfec2.FindImageLaunchPermission(context.TODO(), conn, imageID, accountID, group, organizationARN, organizationalUnitARN)
 
 		if err != nil {
 			return err
@@ -152,13 +156,13 @@ func testAccCheckAMILaunchPermissionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		imageID, accountID, group, err := tfec2.AMILaunchPermissionParseResourceID(rs.Primary.ID)
+		imageID, accountID, group, organizationARN, organizationalUnitARN, err := tfec2.AMILaunchPermissionParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		_, err = tfec2.FindImageLaunchPermission(context.TODO(), conn, imageID, accountID, group)
+		_, err = tfec2.FindImageLaunchPermission(context.TODO(), conn, imageID, accountID, group, organizationARN, organizationalUnitARN)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -219,10 +223,16 @@ func testAccAMILaunchPermissionImportStateIdFunc(resourceName string) resource.I
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		if group := rs.Primary.Attributes["group"]; group != "" {
-			return fmt.Sprintf("group/%s/%s", group, rs.Primary.Attributes["image_id"]), nil
-		}
+		imageID := rs.Primary.Attributes["image_id"]
 
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["account_id"], rs.Primary.Attributes["image_id"]), nil
+		if v := rs.Primary.Attributes["group"]; v != "" {
+			return fmt.Sprintf("%s/%s", v, imageID), nil
+		} else if v := rs.Primary.Attributes["organization_arn"]; v != "" {
+			return fmt.Sprintf("%s/%s", v, imageID), nil
+		} else if v := rs.Primary.Attributes["organizational_unit_arn"]; v != "" {
+			return fmt.Sprintf("%s/%s", v, imageID), nil
+		} else {
+			return fmt.Sprintf("%s/%s", rs.Primary.Attributes["account_id"], imageID), nil
+		}
 	}
 }

@@ -30,6 +30,17 @@ resource "aws_ami_launch_permission" "example" {
 }
 ```
 
+### Organization Access
+
+```terraform
+data "aws_organizations_organization" "current" {}
+
+resource "aws_ami_launch_permission" "example" {
+  image_id         = "ami-12345678"
+  organization_arn = data.aws_organizations_organization.current.arn
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -37,6 +48,8 @@ The following arguments are supported:
 * `account_id` - (Optional) The AWS account ID for the launch permission.
 * `group` - (Optional) The name of the group for the launch permission. Valid values: `"all"`.
 * `image_id` - (Required) The ID of the AMI.
+* `organization_arn` - (Optional) The ARN of an organization for the launch permission.
+* `organizational_unit_arn` - (Optional) The ARN of an organizational unit for the launch permission.
 
 ## Attributes Reference
 
@@ -46,14 +59,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AMI Launch Permissions can be imported using `ACCOUNT-ID/IMAGE-ID`, e.g.,
+AMI Launch Permissions can be imported using `[ACCOUNT-ID|GROUP-NAME|ORGANIZATION-ARN|ORGANIZATIONAL-UNIT-ARN]/IMAGE-ID`, e.g.,
 
 ```sh
 $ terraform import aws_ami_launch_permission.example 123456789012/ami-12345678
-```
-
-or `group/GROUP-NAME/IMAGE-ID`, e.g.,
-
-```sh
-$ terraform import aws_ami_launch_permission.example group/all/ami-12345678
 ```

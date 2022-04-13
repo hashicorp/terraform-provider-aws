@@ -631,7 +631,7 @@ func FindImageLaunchPermissionsByID(ctx context.Context, conn *ec2.EC2, id strin
 	return output.LaunchPermissions, nil
 }
 
-func FindImageLaunchPermission(ctx context.Context, conn *ec2.EC2, imageID, accountID, group string) (*ec2.LaunchPermission, error) {
+func FindImageLaunchPermission(ctx context.Context, conn *ec2.EC2, imageID, accountID, group, organizationARN, organizationalUnitARN string) (*ec2.LaunchPermission, error) {
 	output, err := FindImageLaunchPermissionsByID(ctx, conn, imageID)
 
 	if err != nil {
@@ -640,7 +640,9 @@ func FindImageLaunchPermission(ctx context.Context, conn *ec2.EC2, imageID, acco
 
 	for _, v := range output {
 		if (accountID != "" && aws.StringValue(v.UserId) == accountID) ||
-			(group != "" && aws.StringValue(v.Group) == group) {
+			(group != "" && aws.StringValue(v.Group) == group) ||
+			(organizationARN != "" && aws.StringValue(v.OrganizationArn) == organizationARN) ||
+			(organizationalUnitARN != "" && aws.StringValue(v.OrganizationalUnitArn) == organizationalUnitARN) {
 			return v, nil
 		}
 	}
