@@ -590,6 +590,63 @@ func FindHost(conn *ec2.EC2, input *ec2.DescribeHostsInput) (*ec2.Host, error) {
 	return host, nil
 }
 
+func FindImageAttribute(conn *ec2.EC2, input *ec2.DescribeImageAttributeInput) (*ec2.DescribeImageAttributeOutput, error) {
+	output, err := conn.DescribeImageAttribute(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAMIIDNotFound, ErrCodeInvalidAMIIDUnavailable) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindImageLaunchPermissionsByID(conn *ec2.EC2, id string) ([]*ec2.LaunchPermission, error) {
+	input := &ec2.DescribeImageAttributeInput{
+		Attribute: aws.String(ec2.ImageAttributeNameLaunchPermission),
+		ImageId:   aws.String(id),
+	}
+
+	output, err := FindImageAttribute(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output.LaunchPermissions) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.LaunchPermissions, nil
+}
+
+func FindImageLaunchPermission(conn *ec2.EC2, imageID, accountID string) (*ec2.LaunchPermission, error) {
+	output, err := FindImageLaunchPermissionsByID(conn, imageID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output {
+		if accountID != "" && aws.StringValue(v.UserId) == accountID {
+			return v, nil
+		}
+
+	}
+
+	return nil, &resource.NotFoundError{}
+}
+
 func FindInstances(conn *ec2.EC2, input *ec2.DescribeInstancesInput) ([]*ec2.Instance, error) {
 	var output []*ec2.Instance
 

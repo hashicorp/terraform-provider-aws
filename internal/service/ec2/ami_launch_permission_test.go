@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEC2AMILaunchPermission_basic(t *testing.T) {
@@ -136,45 +137,60 @@ func testCheckResourceGetAttr(name, key string, value *string) resource.TestChec
 	}
 }
 
-func testAccCheckAMILaunchPermissionExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckAMILaunchPermissionExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No resource ID is set")
+			return fmt.Errorf("No AMI Launch Permission ID is set")
+		}
+
+		imageID, accountID, err := tfec2.AMILaunchPermissionParseResourceID(rs.Primary.ID)
+
+		if err != nil {
+			return err
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		accountID := rs.Primary.Attributes["account_id"]
-		imageID := rs.Primary.Attributes["image_id"]
 
-		if has, err := tfec2.HasLaunchPermission(conn, imageID, accountID); err != nil {
+		_, err = tfec2.FindImageLaunchPermission(conn, imageID, accountID)
+
+		if err != nil {
 			return err
-		} else if !has {
-			return fmt.Errorf("launch permission does not exist for '%s' on '%s'", accountID, imageID)
 		}
+
 		return nil
 	}
 }
 
 func testAccCheckAMILaunchPermissionDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ami_launch_permission" {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		accountID := rs.Primary.Attributes["account_id"]
-		imageID := rs.Primary.Attributes["image_id"]
+		imageID, accountID, err := tfec2.AMILaunchPermissionParseResourceID(rs.Primary.ID)
 
-		if has, err := tfec2.HasLaunchPermission(conn, imageID, accountID); err != nil {
+		if err != nil {
 			return err
-		} else if has {
-			return fmt.Errorf("launch permission still exists for '%s' on '%s'", accountID, imageID)
 		}
+
+		_, err = tfec2.FindImageLaunchPermission(conn, imageID, accountID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("AMI Launch Permission %s still exists", rs.Primary.ID)
 	}
 
 	return nil

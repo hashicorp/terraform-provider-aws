@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceAMILaunchPermission() *schema.Resource {
@@ -78,19 +78,26 @@ func resourceAMILaunchPermissionCreate(d *schema.ResourceData, meta interface{})
 func resourceAMILaunchPermissionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	exists, err := HasLaunchPermission(conn, d.Get("image_id").(string), d.Get("account_id").(string))
-	if err != nil {
-		return fmt.Errorf("error reading AMI launch permission (%s): %w", d.Id(), err)
-	}
-	if !exists {
-		if d.IsNewResource() {
-			return fmt.Errorf("error reading EC2 AMI Launch Permission (%s): not found", d.Id())
-		}
+	imageID, accountID, err := AMILaunchPermissionParseResourceID(d.Id())
 
-		log.Printf("[WARN] AMI launch permission (%s) not found, removing from state", d.Id())
+	if err != nil {
+		return err
+	}
+
+	_, err = FindImageLaunchPermission(conn, imageID, accountID)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] AMI Launch Permission %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
+	if err != nil {
+		return fmt.Errorf("reading AMI Launch Permission (%s): %w", d.Id(), err)
+	}
+
+	d.Set("account_id", accountID)
+	d.Set("image_id", imageID)
 
 	return nil
 }
@@ -124,29 +131,6 @@ func resourceAMILaunchPermissionDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	return nil
-}
-
-func HasLaunchPermission(conn *ec2.EC2, image_id string, account_id string) (bool, error) {
-	attrs, err := conn.DescribeImageAttribute(&ec2.DescribeImageAttributeInput{
-		ImageId:   aws.String(image_id),
-		Attribute: aws.String(ec2.ImageAttributeNameLaunchPermission),
-	})
-	if err != nil {
-		// When an AMI disappears out from under a launch permission resource, we will
-		// see either InvalidAMIID.NotFound or InvalidAMIID.Unavailable.
-		if ec2err, ok := err.(awserr.Error); ok && strings.HasPrefix(ec2err.Code(), "InvalidAMIID") {
-			log.Printf("[DEBUG] %s no longer exists, so we'll drop launch permission for %s from the state", image_id, account_id)
-			return false, nil
-		}
-		return false, err
-	}
-
-	for _, lp := range attrs.LaunchPermissions {
-		if aws.StringValue(lp.UserId) == account_id {
-			return true, nil
-		}
-	}
-	return false, nil
 }
 
 func expandLaunchPermissions(accountID string) []*ec2.LaunchPermission {
