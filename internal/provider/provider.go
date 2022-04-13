@@ -1365,6 +1365,7 @@ func Provider() *schema.Provider {
 			"aws_elasticache_subnet_group":             elasticache.ResourceSubnetGroup(),
 			"aws_elasticache_user":                     elasticache.ResourceUser(),
 			"aws_elasticache_user_group":               elasticache.ResourceUserGroup(),
+			"aws_elasticache_user_group_association":   elasticache.ResourceUserGroupAssociation(),
 
 			"aws_elastic_beanstalk_application":            elasticbeanstalk.ResourceApplication(),
 			"aws_elastic_beanstalk_application_version":    elasticbeanstalk.ResourceApplicationVersion(),
