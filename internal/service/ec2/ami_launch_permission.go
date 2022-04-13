@@ -20,34 +20,19 @@ func ResourceAMILaunchPermission() *schema.Resource {
 		Delete: resourceAMILaunchPermissionDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				if strings.HasPrefix(d.Id(), "arn") {
-					idParts := strings.Split(d.Id(), ",")
-					if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
-						return nil, fmt.Errorf("Unexpected format of ID (%q), expected ARN,ARN_TYPE,IMAGE-ID", d.Id())
-					}
-
+				idParts := strings.Split(d.Id(), "/")
+				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected ACCOUNT-ID/IMAGE-ID, or 'ARN'/IMAGE-ID", d.Id())
+				}
+				imageId := idParts[1]
+				d.Set("image_id", imageId)
+				if strings.HasPrefix(idParts[0], "arn") {
 					arn := idParts[0]
-					arn_type := idParts[1]
-					imageId := idParts[2]
 					d.Set("arn", arn)
-					d.Set("arn_type", arn_type)
-					d.Set("image_id", imageId)
 					d.SetId(fmt.Sprintf("%s-%s", imageId, arn))
 				} else {
-					sep := ","
-					if !strings.Contains(d.Id(), sep) {
-						sep = "/"
-					}
-
-					idParts := strings.Split(d.Id(), sep)
-					if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-						return nil, fmt.Errorf("Unexpected format of ID (%q), expected ACCOUNT-ID,IMAGE-ID", d.Id())
-					}
-
 					accountId := idParts[0]
-					imageId := idParts[1]
 					d.Set("account_id", accountId)
-					d.Set("image_id", imageId)
 					d.SetId(fmt.Sprintf("%s-%s", imageId, accountId))
 				}
 				return []*schema.ResourceData{d}, nil
