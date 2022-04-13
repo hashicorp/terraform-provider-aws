@@ -73,6 +73,7 @@ ELB Classic
 Elemental MediaConvert
 Elemental MediaPackage
 Elemental MediaStore
+Elemental MediaTailor
 EMR
 EMR Containers
 EventBridge
