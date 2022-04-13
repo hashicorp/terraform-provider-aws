@@ -119,46 +119,27 @@ func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	// Refresh the QLDB state
-	input := &qldb.DescribeLedgerInput{
-		Name: aws.String(d.Id()),
-	}
+	ledger, err := FindLedgerByName(ctx, conn, d.Id())
 
-	qldbLedger, err := conn.DescribeLedger(input)
-
-	if tfawserr.ErrCodeEquals(err, qldb.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] QLDB Ledger (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] QLDB Ledger %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("error describing QLDB Ledger (%s): %s", d.Id(), err)
+		return diag.Errorf("reading QLDB Ledger (%s): %s", d.Id(), err)
 	}
 
-	// QLDB stuff
-	if err := d.Set("name", qldbLedger.Name); err != nil {
-		return diag.Errorf("error setting name: %s", err)
-	}
+	d.Set("arn", ledger.Arn)
+	d.Set("deletion_protection", ledger.DeletionProtection)
+	d.Set("name", ledger.Name)
+	d.Set("permissions_mode", ledger.PermissionsMode)
 
-	if err := d.Set("permissions_mode", qldbLedger.PermissionsMode); err != nil {
-		return diag.Errorf("error setting permissions mode: %s", err)
-	}
-
-	if err := d.Set("deletion_protection", qldbLedger.DeletionProtection); err != nil {
-		return diag.Errorf("error setting deletion protection: %s", err)
-	}
-
-	// ARN
-	if err := d.Set("arn", qldbLedger.Arn); err != nil {
-		return diag.Errorf("error setting ARN: %s", err)
-	}
-
-	// Tags
-	log.Printf("[INFO] Fetching tags for %s", d.Id())
 	tags, err := ListTags(conn, d.Get("arn").(string))
+
 	if err != nil {
-		return diag.Errorf("Error listing tags for QLDB Ledger: %s", err)
+		return diag.Errorf("listing tags for QLDB Ledger (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
