@@ -68,6 +68,10 @@ func ResourceAddon() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"preserve": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"resolve_conflicts": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -77,10 +81,6 @@ func ResourceAddon() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
-			},
-			"preserve": {
-				Type:     schema.TypeBool,
-				Optional: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
