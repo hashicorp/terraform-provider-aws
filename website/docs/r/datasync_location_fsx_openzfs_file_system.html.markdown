@@ -32,20 +32,20 @@ resource "aws_datasync_location_fsx_openzfs_file_system" "example" {
 The following arguments are supported:
 
 * `fsx_filesystem_arn` - (Required) The Amazon Resource Name (ARN) for the FSx for OpenZfs file system.
-* `protocol` - (Required) The type of protocol that DataSync uses to access your file system. See [Protocol](#protocol) Below.
+* `protocol` - (Required) The type of protocol that DataSync uses to access your file system. See below.
 * `security_group_arns` - (Optional) The Amazon Resource Names (ARNs) of the security groups that are to use to configure the FSx for openzfs file system.
 * `subdirectory` - (Optional) Subdirectory to perform actions as source or destination. Must start with `/fsx`.
 * `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Protocol
+### protocol
 
-* `nfs` - (Required) Represents the Network File System (NFS) protocol that DataSync uses to access your FSx for OpenZFS file system. See [nfs](#nfs).
+* `nfs` - (Required) Represents the Network File System (NFS) protocol that DataSync uses to access your FSx for OpenZFS file system. See below.
 
-#### NFS
+### nfs
 
-* `mount_options` - (Required) Represents the mount options that are available for DataSync to access an NFS location. See [Mount Options](#mount-options).
+* `mount_options` - (Required) Represents the mount options that are available for DataSync to access an NFS location. See below.
 
-##### Mount Options
+### mount_options
 
 * `version` - (Optional) The specific NFS version that you want DataSync to use for mounting your NFS share. Valid values: `AUTOMATIC`, `NFS3`, `NFS4_0` and `NFS4_1`. Default: `AUTOMATIC`
 
@@ -64,5 +64,5 @@ In addition to all arguments above, the following attributes are exported:
 `aws_datasync_location_fsx_openzfs_file_system` can be imported by using the `DataSync-ARN#FSx-openzfs-ARN`, e.g.,
 
 ```
-$ terraform import aws_datasync_location_fsx_openzfs_file_system.example arn:aws:datasync:us-west-2:123456789012:location/loc-12345678901234567#arn:aws:fsx:us-west-2:476956259333:file-system/fs-08e04cd442c1bb94a
+$ terraform import aws_datasync_location_fsx_openzfs_file_system.example arn:aws:datasync:us-west-2:123456789012:location/loc-12345678901234567#arn:aws:fsx:us-west-2:123456789012:file-system/fs-08e04cd442c1bb94a
 ```
