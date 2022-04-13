@@ -18,23 +18,41 @@ on:
       - tools/go.mod
 
 jobs:
-  markdown-link-check:
+  markdown-link-check-a-h-markdown:
     runs-on: ubuntu-latest
-    env:
-      UV_THREADPOOL_SIZE: 128
     steps:
       - uses: actions/checkout@v3
-      - uses: YakDriver/md-check-links@v2.0.3
-        name: markdown-link-check website/docs/**/*.markdown
+      - uses: YakDriver/md-check-links@v2.0.5
+        name: markdown-link-check website/docs/**/[a-h].markdown
         with:
           use-quiet-mode: "yes"
           use-verbose-mode: "yes"
           config-file: ".markdownlinkcheck.json"
           folder-path: "website/docs"
+          file-prefix: "[a-h]"
           file-extension: ".markdown"
           base-branch: "main"
-          check-modified-files-only: "yes"
-      - uses: YakDriver/md-check-links@v2.0.3
+          check-modified-files-only: "no"
+  markdown-link-check-i-z-markdown:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: YakDriver/md-check-links@v2.0.5
+        name: markdown-link-check website/docs/**/[i-z].markdown
+        with:
+          use-quiet-mode: "yes"
+          use-verbose-mode: "yes"
+          config-file: ".markdownlinkcheck.json"
+          folder-path: "website/docs"
+          file-prefix: "[i-z]"
+          file-extension: ".markdown"
+          base-branch: "main"
+          check-modified-files-only: "no"
+  markdown-link-check-md:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: YakDriver/md-check-links@v2.0.5
         name: markdown-link-check website/docs/**/*.md
         with:
           use-quiet-mode: "yes"
