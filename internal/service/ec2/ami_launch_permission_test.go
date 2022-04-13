@@ -40,32 +40,6 @@ func TestAccEC2AMILaunchPermission_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2AMILaunchPermission_org(t *testing.T) {
-	resourceName := "aws_ami_launch_permission.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAMILaunchPermissionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testOrgAMILaunchPermissionConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMILaunchPermissionExists(resourceName),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccAMILaunchPermissionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccEC2AMILaunchPermission_Disappears_launchPermission(t *testing.T) {
 	resourceName := "aws_ami_launch_permission.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -324,42 +298,6 @@ resource "aws_ami_launch_permission" "test" {
 `, rName, rName)
 }
 
-func testOrgAMILaunchPermissionConfig(rName string) string {
-	return fmt.Sprintf(`
-data "aws_ami" "amzn-ami-minimal-hvm" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
-data "aws_organizations_organization" "current" {}
-
-data "aws_region" "current" {}
-
-resource "aws_ami_copy" "test" {
-  description       = %q
-  name              = %q
-  source_ami_id     = data.aws_ami.amzn-ami-minimal-hvm.id
-  source_ami_region = data.aws_region.current.name
-}
-
-resource "aws_ami_launch_permission" "test" {
-  arn = data.aws_organizations_organization.current.arn
-  arn_type = "OrganizationArn"
-  image_id   = aws_ami_copy.test.id
-}
-`, rName, rName)
-}
-
 func testAccAMILaunchPermissionImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -367,15 +305,6 @@ func testAccAMILaunchPermissionImportStateIdFunc(resourceName string) resource.I
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		accountID := rs.Primary.Attributes["account_id"]
-		imageId := rs.Primary.Attributes["image_id"]
-
-		if len(accountID) > 0 {
-			return fmt.Sprintf("%s,%s", accountID, imageId), nil
-		} else {
-			arn := rs.Primary.Attributes["arn"]
-			arn_type := rs.Primary.Attributes["arn_type"]
-			return fmt.Sprintf("%s,%s,%s", arn, arn_type, imageId), nil
-		}
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["account_id"], rs.Primary.Attributes["image_id"]), nil
 	}
 }
