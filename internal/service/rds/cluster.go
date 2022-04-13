@@ -232,6 +232,12 @@ func ResourceCluster() *schema.Resource {
 								"RollbackCapacityChange",
 							}, false),
 						},
+						"seconds_before_timeout": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      300,
+							ValidateFunc: validation.IntBetween(60, 600),
+						},
 					},
 				},
 			},

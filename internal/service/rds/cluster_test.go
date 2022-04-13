@@ -1437,6 +1437,7 @@ func TestAccRDSCluster_scaling(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", "false"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "128"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", "4"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_before_timeout", "301"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_until_auto_pause", "301"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.timeout_action", "RollbackCapacityChange"),
 				),
@@ -1449,6 +1450,7 @@ func TestAccRDSCluster_scaling(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", "true"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "256"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", "8"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_before_timeout", "600"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_until_auto_pause", "86400"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.timeout_action", "ForceApplyCapacityChange"),
 				),
@@ -1478,6 +1480,7 @@ func TestAccRDSCluster_Scaling_defaultMinCapacity(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", "false"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "128"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_before_timeout", "301"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_until_auto_pause", "301"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.timeout_action", "RollbackCapacityChange"),
 				),
@@ -3790,6 +3793,7 @@ resource "aws_rds_cluster" "test" {
     auto_pause               = %t
     max_capacity             = %d
     min_capacity             = %d
+    seconds_before_timeout   = %d
     seconds_until_auto_pause = %d
     timeout_action           = "%s"
   }
@@ -3809,6 +3813,7 @@ resource "aws_rds_cluster" "test" {
   scaling_configuration {
     auto_pause               = %t
     max_capacity             = %d
+    seconds_before_timeout   = %d
     seconds_until_auto_pause = %d
     timeout_action           = "%s"
   }
@@ -4190,6 +4195,7 @@ resource "aws_rds_cluster" "test" {
     auto_pause               = false
     max_capacity             = 128
     min_capacity             = 4
+    seconds_before_timeout   = 301
     seconds_until_auto_pause = 301
     timeout_action           = "RollbackCapacityChange"
   }
