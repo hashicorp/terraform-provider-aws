@@ -6,15 +6,18 @@ FEATURES:
 * **New Data Source:** `aws_nat_gateways` ([#24190](https://github.com/hashicorp/terraform-provider-aws/issues/24190))
 * **New Resource:** `aws_datasync_location_fsx_openzfs_file_system` ([#24200](https://github.com/hashicorp/terraform-provider-aws/issues/24200))
 * **New Resource:** `aws_elasticache_user_group_association` ([#24204](https://github.com/hashicorp/terraform-provider-aws/issues/24204))
+* **New Resource:** `aws_qldb_stream` ([#19297](https://github.com/hashicorp/terraform-provider-aws/issues/19297))
 
 ENHANCEMENTS:
 
+* data-source/aws_qldb_ledger: Add `kms_key` and `tags` attributes ([#19297](https://github.com/hashicorp/terraform-provider-aws/issues/19297))
 * resource/aws_athena_database: Add `properties` argument. ([#24172](https://github.com/hashicorp/terraform-provider-aws/issues/24172))
 * resource/aws_athena_database: Add import support. ([#24172](https://github.com/hashicorp/terraform-provider-aws/issues/24172))
 * resource/aws_config_config_rule: Add `source.custom_policy_details` argument. ([#24057](https://github.com/hashicorp/terraform-provider-aws/issues/24057))
 * resource/aws_config_config_rule: Add plan time validation for `source.source_detail.event_source` and `source.source_detail.message_type`. ([#24057](https://github.com/hashicorp/terraform-provider-aws/issues/24057))
 * resource/aws_config_config_rule: Make `source.source_identifier` optional. ([#24057](https://github.com/hashicorp/terraform-provider-aws/issues/24057))
 * resource/aws_grafana_workspace: Add plan time validations for `authentication_providers`, `authentication_providers`, `authentication_providers`. ([#24170](https://github.com/hashicorp/terraform-provider-aws/issues/24170))
+* resource/aws_qldb_ledger: Add `kms_key` argument ([#19297](https://github.com/hashicorp/terraform-provider-aws/issues/19297))
 * resource/aws_vpc_ipam_scope: Add pagination when describing IPAM Scopes ([#24188](https://github.com/hashicorp/terraform-provider-aws/issues/24188))
 
 BUG FIXES:
