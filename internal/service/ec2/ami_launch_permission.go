@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -22,19 +21,13 @@ func ResourceAMILaunchPermission() *schema.Resource {
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-					return nil, fmt.Errorf("Unexpected format of ID (%q), expected ACCOUNT-ID/IMAGE-ID, or 'ARN'/IMAGE-ID", d.Id())
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected ACCOUNT-ID/IMAGE-ID", d.Id())
 				}
+				accountId := idParts[0]
 				imageId := idParts[1]
+				d.Set("account_id", accountId)
 				d.Set("image_id", imageId)
-				if strings.HasPrefix(idParts[0], "arn") {
-					arn := idParts[0]
-					d.Set("arn", arn)
-					d.SetId(fmt.Sprintf("%s-%s", imageId, arn))
-				} else {
-					accountId := idParts[0]
-					d.Set("account_id", accountId)
-					d.SetId(fmt.Sprintf("%s-%s", imageId, accountId))
-				}
+				d.SetId(fmt.Sprintf("%s-%s", imageId, accountId))
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -46,26 +39,9 @@ func ResourceAMILaunchPermission() *schema.Resource {
 				ForceNew: true,
 			},
 			"account_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"account_id", "arn"},
-			},
-			"arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"account_id", "arn"},
-			},
-			"arn_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				RequiredWith: []string{"arn"},
-				ValidateFunc: validation.StringInSlice([]string{
-					"OrganizationArn",
-					"OrganizationalUnitArn",
-				}, false),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -75,21 +51,21 @@ func resourceAMILaunchPermissionCreate(d *schema.ResourceData, meta interface{})
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	image_id := d.Get("image_id").(string)
-
-	launch_permission := BuildLaunchPermission(d)
+	account_id := d.Get("account_id").(string)
 
 	_, err := conn.ModifyImageAttribute(&ec2.ModifyImageAttributeInput{
 		ImageId:   aws.String(image_id),
 		Attribute: aws.String(ec2.ImageAttributeNameLaunchPermission),
 		LaunchPermission: &ec2.LaunchPermissionModifications{
-			Add: launch_permission,
+			Add: []*ec2.LaunchPermission{
+				{UserId: aws.String(account_id)},
+			},
 		},
 	})
 	if err != nil {
 		return fmt.Errorf("error creating AMI launch permission: %w", err)
 	}
 
-	account_id := d.Get("account_id").(string)
 	d.SetId(fmt.Sprintf("%s-%s", image_id, account_id))
 	return nil
 }
@@ -97,21 +73,7 @@ func resourceAMILaunchPermissionCreate(d *schema.ResourceData, meta interface{})
 func resourceAMILaunchPermissionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	account_id := d.Get("account_id").(string)
-	arn := d.Get("arn").(string)
-	arn_type := d.Get("arn_type").(string)
-
-	var read_value, read_type string
-
-	if len(account_id) > 0 {
-		read_value = account_id
-		read_type = "UserId"
-	} else {
-		read_value = arn
-		read_type = arn_type
-	}
-
-	exists, err := HasLaunchPermission(conn, d.Get("image_id").(string), read_value, read_type)
+	exists, err := HasLaunchPermission(conn, d.Get("image_id").(string), d.Get("account_id").(string))
 	if err != nil {
 		return fmt.Errorf("error reading AMI launch permission (%s): %w", d.Id(), err)
 	}
@@ -132,14 +94,15 @@ func resourceAMILaunchPermissionDelete(d *schema.ResourceData, meta interface{})
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	image_id := d.Get("image_id").(string)
-
-	launch_permission := BuildLaunchPermission(d)
+	account_id := d.Get("account_id").(string)
 
 	_, err := conn.ModifyImageAttribute(&ec2.ModifyImageAttributeInput{
 		ImageId:   aws.String(image_id),
 		Attribute: aws.String(ec2.ImageAttributeNameLaunchPermission),
 		LaunchPermission: &ec2.LaunchPermissionModifications{
-			Remove: launch_permission,
+			Remove: []*ec2.LaunchPermission{
+				{UserId: aws.String(account_id)},
+			},
 		},
 	})
 	if err != nil {
@@ -149,7 +112,7 @@ func resourceAMILaunchPermissionDelete(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func HasLaunchPermission(conn *ec2.EC2, image_id string, read_value string, read_type string) (bool, error) {
+func HasLaunchPermission(conn *ec2.EC2, image_id string, account_id string) (bool, error) {
 	attrs, err := conn.DescribeImageAttribute(&ec2.DescribeImageAttributeInput{
 		ImageId:   aws.String(image_id),
 		Attribute: aws.String(ec2.ImageAttributeNameLaunchPermission),
@@ -158,54 +121,16 @@ func HasLaunchPermission(conn *ec2.EC2, image_id string, read_value string, read
 		// When an AMI disappears out from under a launch permission resource, we will
 		// see either InvalidAMIID.NotFound or InvalidAMIID.Unavailable.
 		if ec2err, ok := err.(awserr.Error); ok && strings.HasPrefix(ec2err.Code(), "InvalidAMIID") {
-			log.Printf("[DEBUG] %s no longer exists, so we'll drop launch permission for %s from the state", image_id, read_value)
+			log.Printf("[DEBUG] %s no longer exists, so we'll drop launch permission for %s from the state", image_id, account_id)
 			return false, nil
 		}
 		return false, err
 	}
 
 	for _, lp := range attrs.LaunchPermissions {
-		switch read_type {
-		case "UserId":
-			if aws.StringValue(lp.UserId) == read_value {
-				return true, nil
-			}
-		case "OrganizationArn":
-			if aws.StringValue(lp.OrganizationArn) == read_value {
-				return true, nil
-			}
-		case "OrganizationalUnitArn":
-			if aws.StringValue(lp.OrganizationalUnitArn) == read_value {
-				return true, nil
-			}
+		if aws.StringValue(lp.UserId) == account_id {
+			return true, nil
 		}
 	}
 	return false, nil
-}
-
-func BuildLaunchPermission(d *schema.ResourceData) []*ec2.LaunchPermission {
-	account_id := d.Get("account_id").(string)
-	arn := d.Get("arn").(string)
-	arn_type := d.Get("arn_type").(string)
-
-	var launch_permission []*ec2.LaunchPermission
-
-	if len(account_id) > 0 {
-		log.Printf("[DEBUG] Building LaunchPermission of type UserId: %s", account_id)
-		launch_permission = []*ec2.LaunchPermission{
-			{UserId: aws.String(account_id)},
-		}
-	} else if arn_type == "OrganizationArn" {
-		log.Printf("[DEBUG] Building LaunchPermission of type OrganizationArn: %s", arn)
-		launch_permission = []*ec2.LaunchPermission{
-			{OrganizationArn: aws.String(arn)},
-		}
-	} else if arn_type == "OrganizationalUnitArn" {
-		log.Printf("[DEBUG] Building LaunchPermission of type OrganizationalUnitArn: %s", arn)
-		launch_permission = []*ec2.LaunchPermission{
-			{OrganizationalUnitArn: aws.String(arn)},
-		}
-	}
-
-	return launch_permission
 }

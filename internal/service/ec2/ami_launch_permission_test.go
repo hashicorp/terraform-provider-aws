@@ -151,7 +151,7 @@ func testAccCheckAMILaunchPermissionExists(resourceName string) resource.TestChe
 		accountID := rs.Primary.Attributes["account_id"]
 		imageID := rs.Primary.Attributes["image_id"]
 
-		if has, err := tfec2.HasLaunchPermission(conn, imageID, accountID, "UserId"); err != nil {
+		if has, err := tfec2.HasLaunchPermission(conn, imageID, accountID); err != nil {
 			return err
 		} else if !has {
 			return fmt.Errorf("launch permission does not exist for '%s' on '%s'", accountID, imageID)
@@ -170,7 +170,7 @@ func testAccCheckAMILaunchPermissionDestroy(s *terraform.State) error {
 		accountID := rs.Primary.Attributes["account_id"]
 		imageID := rs.Primary.Attributes["image_id"]
 
-		if has, err := tfec2.HasLaunchPermission(conn, imageID, accountID, "UserId"); err != nil {
+		if has, err := tfec2.HasLaunchPermission(conn, imageID, accountID); err != nil {
 			return err
 		} else if has {
 			return fmt.Errorf("launch permission still exists for '%s' on '%s'", accountID, imageID)
