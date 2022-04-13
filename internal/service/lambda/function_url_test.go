@@ -17,9 +17,7 @@ import (
 )
 
 func testAccFunctionURLPreCheck(t *testing.T) {
-	if got, want := acctest.Partition(), endpoints.AwsPartitionID; got != want {
-		t.Skipf("Lambda Function URLs are not supported in %s partition", got)
-	}
+	acctest.PreCheckPartition(endpoints.AwsPartitionID, t)
 }
 
 func TestAccLambdaFunctionURL_basic(t *testing.T) {
