@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -97,20 +98,29 @@ func resourceAMILaunchPermissionRead(d *schema.ResourceData, meta interface{}) e
 func resourceAMILaunchPermissionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	image_id := d.Get("image_id").(string)
-	account_id := d.Get("account_id").(string)
+	imageID, accountID, err := AMILaunchPermissionParseResourceID(d.Id())
 
-	_, err := conn.ModifyImageAttribute(&ec2.ModifyImageAttributeInput{
-		ImageId:   aws.String(image_id),
-		Attribute: aws.String(ec2.ImageAttributeNameLaunchPermission),
-		LaunchPermission: &ec2.LaunchPermissionModifications{
-			Remove: []*ec2.LaunchPermission{
-				{UserId: aws.String(account_id)},
-			},
-		},
-	})
 	if err != nil {
-		return fmt.Errorf("error deleting AMI launch permission (%s): %w", d.Id(), err)
+		return err
+	}
+
+	input := &ec2.ModifyImageAttributeInput{
+		Attribute: aws.String(ec2.ImageAttributeNameLaunchPermission),
+		ImageId:   aws.String(imageID),
+		LaunchPermission: &ec2.LaunchPermissionModifications{
+			Remove: expandLaunchPermissions(accountID),
+		},
+	}
+
+	log.Printf("[INFO] Deleting AMI Launch Permission: %s", d.Id())
+	_, err = conn.ModifyImageAttribute(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAMIIDNotFound, ErrCodeInvalidAMIIDUnavailable) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("deleting AMI Launch Permission (%s): %w", d.Id(), err)
 	}
 
 	return nil
