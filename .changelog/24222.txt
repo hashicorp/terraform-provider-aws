@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_elasticsearch_domain: For Elasticsearch versions 6.7+, allow in-place update of `node_to_node_encryption.0.enabled`, `encrypt_at_rest.0.enabled`, and `encrypt_at_rest.0.kms_key_id`
+```
