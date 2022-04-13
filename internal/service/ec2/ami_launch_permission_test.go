@@ -40,7 +40,7 @@ func TestAccEC2AMILaunchPermission_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2AMILaunchPermission_organization(t *testing.T) {
+func TestAccEC2AMILaunchPermission_org(t *testing.T) {
 	resourceName := "aws_ami_launch_permission.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
