@@ -1213,7 +1213,7 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("creating Appflow Flow (%s): empty output", d.Get("name").(string))
 	}
 
-	d.SetId(aws.ToString(out.Flow.FlowName))
+	d.SetId(aws.StringValue(out.Flow.FlowName))
 
 	return resourceFlowRead(ctx, d, meta)
 }
@@ -1354,7 +1354,7 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("updating AppFlow Flow (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitFlowUpdated(ctx, conn, aws.ToString(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := waitFlowUpdated(ctx, conn, aws.StringValue(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return diag.Errorf("waiting for AppFlow Flow (%s) update: %s", d.Id(), err)
 	}
 
@@ -2687,11 +2687,11 @@ func flattenErrorHandlingConfig(errorHandlingConfig *appflow.ErrorHandlingConfig
 	m := map[string]interface{}{}
 
 	if v := errorHandlingConfig.BucketName; v != nil {
-		m["bucket_name"] = aws.ToString(v)
+		m["bucket_name"] = aws.StringValue(v)
 	}
 
 	if v := errorHandlingConfig.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.ToString(v)
+		m["bucket_prefix"] = aws.StringValue(v)
 	}
 
 	if v := errorHandlingConfig.FailOnFirstDestinationError; v != nil {
@@ -2709,11 +2709,11 @@ func flattenPrefixConfig(prefixConfig *appflow.PrefixConfig) map[string]interfac
 	m := map[string]interface{}{}
 
 	if v := prefixConfig.PrefixFormat; v != nil {
-		m["prefix_format"] = aws.ToString(v)
+		m["prefix_format"] = aws.StringValue(v)
 	}
 
 	if v := prefixConfig.PrefixType; v != nil {
-		m["prefix_type"] = aws.ToString(v)
+		m["prefix_type"] = aws.StringValue(v)
 	}
 
 	return m
@@ -2759,15 +2759,15 @@ func flattenDestinationFlowConfig(destinationFlowConfig *appflow.DestinationFlow
 	m := map[string]interface{}{}
 
 	if v := destinationFlowConfig.ApiVersion; v != nil {
-		m["api_version"] = aws.ToString(v)
+		m["api_version"] = aws.StringValue(v)
 	}
 
 	if v := destinationFlowConfig.ConnectorProfileName; v != nil {
-		m["connector_profile_name"] = aws.ToString(v)
+		m["connector_profile_name"] = aws.StringValue(v)
 	}
 
 	if v := destinationFlowConfig.ConnectorType; v != nil {
-		m["connector_type"] = aws.ToString(v)
+		m["connector_type"] = aws.StringValue(v)
 	}
 
 	if v := destinationFlowConfig.DestinationConnectorProperties; v != nil {
@@ -2851,7 +2851,7 @@ func flattenCustomConnectorDestinationProperties(customConnectorDestinationPrope
 	}
 
 	if v := customConnectorDestinationProperties.EntityName; v != nil {
-		m["entity_name"] = aws.ToString(v)
+		m["entity_name"] = aws.StringValue(v)
 	}
 
 	if v := customConnectorDestinationProperties.ErrorHandlingConfig; v != nil {
@@ -2863,7 +2863,7 @@ func flattenCustomConnectorDestinationProperties(customConnectorDestinationPrope
 	}
 
 	if v := customConnectorDestinationProperties.WriteOperationType; v != nil {
-		m["write_operation_type"] = aws.ToString(v)
+		m["write_operation_type"] = aws.StringValue(v)
 	}
 
 	return m
@@ -2877,11 +2877,11 @@ func flattenCustomerProfilesDestinationProperties(customerProfilesDestinationPro
 	m := map[string]interface{}{}
 
 	if v := customerProfilesDestinationProperties.DomainName; v != nil {
-		m["domain_name"] = aws.ToString(v)
+		m["domain_name"] = aws.StringValue(v)
 	}
 
 	if v := customerProfilesDestinationProperties.ObjectTypeName; v != nil {
-		m["object_type_name"] = aws.ToString(v)
+		m["object_type_name"] = aws.StringValue(v)
 	}
 
 	return m
@@ -2899,7 +2899,7 @@ func flattenEventBridgeDestinationProperties(eventBridgeDestinationProperties *a
 	}
 
 	if v := eventBridgeDestinationProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m["object"] = aws.StringValue(v)
 	}
 
 	return m
@@ -2917,7 +2917,7 @@ func flattenHoneycodeDestinationProperties(honeycodeDestinationProperties *appfl
 	}
 
 	if v := honeycodeDestinationProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m["object"] = aws.StringValue(v)
 	}
 
 	return m
@@ -2935,7 +2935,7 @@ func flattenMarketoDestinationProperties(marketoDestinationProperties *appflow.M
 	}
 
 	if v := marketoDestinationProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m["object"] = aws.StringValue(v)
 	}
 
 	return m
@@ -2949,7 +2949,7 @@ func flattenRedshiftDestinationProperties(redshiftDestinationProperties *appflow
 	m := map[string]interface{}{}
 
 	if v := redshiftDestinationProperties.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.ToString(v)
+		m["bucket_prefix"] = aws.StringValue(v)
 	}
 
 	if v := redshiftDestinationProperties.ErrorHandlingConfig; v != nil {
@@ -2957,11 +2957,11 @@ func flattenRedshiftDestinationProperties(redshiftDestinationProperties *appflow
 	}
 
 	if v := redshiftDestinationProperties.IntermediateBucketName; v != nil {
-		m["intermediate_bucket_name"] = aws.ToString(v)
+		m["intermediate_bucket_name"] = aws.StringValue(v)
 	}
 
 	if v := redshiftDestinationProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m["object"] = aws.StringValue(v)
 	}
 
 	return m
@@ -2975,11 +2975,11 @@ func flattenS3DestinationProperties(s3DestinationProperties *appflow.S3Destinati
 	m := map[string]interface{}{}
 
 	if v := s3DestinationProperties.BucketName; v != nil {
-		m["bucket_name"] = aws.ToString(v)
+		m["bucket_name"] = aws.StringValue(v)
 	}
 
 	if v := s3DestinationProperties.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.ToString(v)
+		m["bucket_prefix"] = aws.StringValue(v)
 	}
 
 	if v := s3DestinationProperties.S3OutputFormatConfig; v != nil {
@@ -3001,7 +3001,7 @@ func flattenS3OutputFormatConfig(s3OutputFormatConfig *appflow.S3OutputFormatCon
 	}
 
 	if v := s3OutputFormatConfig.FileType; v != nil {
-		m["file_type"] = aws.ToString(v)
+		m["file_type"] = aws.StringValue(v)
 	}
 
 	if v := s3OutputFormatConfig.PrefixConfig; v != nil {
@@ -3027,11 +3027,11 @@ func flattenSalesforceDestinationProperties(salesforceDestinationProperties *app
 	}
 
 	if v := salesforceDestinationProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m["object"] = aws.StringValue(v)
 	}
 
 	if v := salesforceDestinationProperties.WriteOperationType; v != nil {
-		m["write_operation_type"] = aws.ToString(v)
+		m["write_operation_type"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3053,7 +3053,7 @@ func flattenSAPODataDestinationProperties(SAPODataDestinationProperties *appflow
 	}
 
 	if v := SAPODataDestinationProperties.ObjectPath; v != nil {
-		m["object_path"] = aws.ToString(v)
+		m["object_path"] = aws.StringValue(v)
 	}
 
 	if v := SAPODataDestinationProperties.SuccessResponseHandlingConfig; v != nil {
@@ -3061,7 +3061,7 @@ func flattenSAPODataDestinationProperties(SAPODataDestinationProperties *appflow
 	}
 
 	if v := SAPODataDestinationProperties.WriteOperationType; v != nil {
-		m["write_operation_type"] = aws.ToString(v)
+		m["write_operation_type"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3093,7 +3093,7 @@ func flattenSnowflakeDestinationProperties(snowflakeDestinationProperties *appfl
 	m := map[string]interface{}{}
 
 	if v := snowflakeDestinationProperties.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.ToString(v)
+		m["bucket_prefix"] = aws.StringValue(v)
 	}
 
 	if v := snowflakeDestinationProperties.ErrorHandlingConfig; v != nil {
@@ -3101,11 +3101,11 @@ func flattenSnowflakeDestinationProperties(snowflakeDestinationProperties *appfl
 	}
 
 	if v := snowflakeDestinationProperties.IntermediateBucketName; v != nil {
-		m["intermediate_bucket_name"] = aws.ToString(v)
+		m["intermediate_bucket_name"] = aws.StringValue(v)
 	}
 
 	if v := snowflakeDestinationProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m["object"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3119,11 +3119,11 @@ func flattenUpsolverDestinationProperties(upsolverDestinationProperties *appflow
 	m := map[string]interface{}{}
 
 	if v := upsolverDestinationProperties.BucketName; v != nil {
-		m["bucket_name"] = aws.ToString(v)
+		m["bucket_name"] = aws.StringValue(v)
 	}
 
 	if v := upsolverDestinationProperties.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.ToString(v)
+		m["bucket_prefix"] = aws.StringValue(v)
 	}
 
 	if v := upsolverDestinationProperties.S3OutputFormatConfig; v != nil {
@@ -3145,7 +3145,7 @@ func flattenUpsolverS3OutputFormatConfig(upsolverS3OutputFormatConfig *appflow.U
 	}
 
 	if v := upsolverS3OutputFormatConfig.FileType; v != nil {
-		m["file_type"] = aws.ToString(v)
+		m["file_type"] = aws.StringValue(v)
 	}
 
 	if v := upsolverS3OutputFormatConfig.PrefixConfig; v != nil {
@@ -3171,11 +3171,11 @@ func flattenZendeskDestinationProperties(zendeskDestinationProperties *appflow.Z
 	}
 
 	if v := zendeskDestinationProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m["object"] = aws.StringValue(v)
 	}
 
 	if v := zendeskDestinationProperties.WriteOperationType; v != nil {
-		m["write_operation_type"] = aws.ToString(v)
+		m["write_operation_type"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3189,15 +3189,15 @@ func flattenSourceFlowConfig(sourceFlowConfig *appflow.SourceFlowConfig) map[str
 	m := map[string]interface{}{}
 
 	if v := sourceFlowConfig.ApiVersion; v != nil {
-		m["api_version"] = aws.ToString(v)
+		m["api_version"] = aws.StringValue(v)
 	}
 
 	if v := sourceFlowConfig.ConnectorProfileName; v != nil {
-		m["connector_profile_name"] = aws.ToString(v)
+		m["connector_profile_name"] = aws.StringValue(v)
 	}
 
 	if v := sourceFlowConfig.ConnectorType; v != nil {
-		m["connector_type"] = aws.ToString(v)
+		m["connector_type"] = aws.StringValue(v)
 	}
 
 	if v := sourceFlowConfig.IncrementalPullConfig; v != nil {
@@ -3219,7 +3219,7 @@ func flattenIncrementalPullConfig(incrementalPullConfig *appflow.IncrementalPull
 	m := map[string]interface{}{}
 
 	if v := incrementalPullConfig.DatetimeTypeFieldName; v != nil {
-		m["datetime_type_field_name"] = aws.ToString(v)
+		m["datetime_type_field_name"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3307,7 +3307,7 @@ func flattenAmplitudeSourceProperties(amplitudeSourceProperties *appflow.Amplitu
 	m := map[string]interface{}{}
 
 	if v := amplitudeSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m["object"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3325,7 +3325,7 @@ func flattenCustomConnectorSourceProperties(customConnectorSourceProperties *app
 	}
 
 	if v := customConnectorSourceProperties.EntityName; v != nil {
-		m["entity_name"] = aws.ToString(v)
+		m["entity_name"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3339,7 +3339,7 @@ func flattenDatadogSourceProperties(datadogSourceProperties *appflow.DatadogSour
 	m := map[string]interface{}{}
 
 	if v := datadogSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m["object"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3353,7 +3353,7 @@ func flattenDynatraceSourceProperties(dynatraceSourceProperties *appflow.Dynatra
 	m := map[string]interface{}{}
 
 	if v := dynatraceSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m["object"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3367,7 +3367,7 @@ func flattenGoogleAnalyticsSourceProperties(googleAnalyticsSourceProperties *app
 	m := map[string]interface{}{}
 
 	if v := googleAnalyticsSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m["object"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3381,7 +3381,7 @@ func flattenInforNexusSourceProperties(inforNexusSourceProperties *appflow.Infor
 	m := map[string]interface{}{}
 
 	if v := inforNexusSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m["object"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3395,7 +3395,7 @@ func flattenMarketoSourceProperties(marketoSourceProperties *appflow.MarketoSour
 	m := map[string]interface{}{}
 
 	if v := marketoSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m["object"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3409,11 +3409,11 @@ func flattenS3SourceProperties(s3SourceProperties *appflow.S3SourceProperties) m
 	m := map[string]interface{}{}
 
 	if v := s3SourceProperties.BucketName; v != nil {
-		m["bucket_name"] = aws.ToString(v)
+		m["bucket_name"] = aws.StringValue(v)
 	}
 
 	if v := s3SourceProperties.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.ToString(v)
+		m["bucket_prefix"] = aws.StringValue(v)
 	}
 
 	if v := s3SourceProperties.S3InputFormatConfig; v != nil {
@@ -3431,7 +3431,7 @@ func flattenS3InputFormatConfig(s3InputFormatConfig *appflow.S3InputFormatConfig
 	m := map[string]interface{}{}
 
 	if v := s3InputFormatConfig.S3InputFileType; v != nil {
-		m["s3_input_file_type"] = aws.ToString(v)
+		m["s3_input_file_type"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3453,7 +3453,7 @@ func flattenSalesforceSourceProperties(salesforceSourceProperties *appflow.Sales
 	}
 
 	if v := salesforceSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m["object"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3467,7 +3467,7 @@ func flattenSAPODataSourceProperties(sapoDataSourceProperties *appflow.SAPODataS
 	m := map[string]interface{}{}
 
 	if v := sapoSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m["object"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3481,7 +3481,7 @@ func flattenServiceNowSourceProperties(serviceNowDataSourceProperties *appflow.S
 	m := map[string]interface{}{}
 
 	if v := serviceNowSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m["object"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3495,7 +3495,7 @@ func flattenSingularSourceProperties(singularDataSourceProperties *appflow.Singu
 	m := map[string]interface{}{}
 
 	if v := singularSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m["object"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3509,7 +3509,7 @@ func flattenSlackSourceProperties(slackDataSourceProperties *appflow.SlackSource
 	m := map[string]interface{}{}
 
 	if v := slackSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m["object"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3523,7 +3523,7 @@ func flattenTrendmicroSourceProperties(trendmicroDataSourceProperties *appflow.T
 	m := map[string]interface{}{}
 
 	if v := trendmicroSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m["object"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3537,7 +3537,7 @@ func flattenVeevaSourceProperties(veevaSourceProperties *appflow.VeevaSourceProp
 	m := map[string]interface{}{}
 
 	if v := veevaSourceProperties.DocumentType; v != nil {
-		m["document_type"] = aws.ToString(v)
+		m["document_type"] = aws.StringValue(v)
 	}
 
 	if v := veevaSourceProperties.IncludeAllVersions; v != nil {
@@ -3553,7 +3553,7 @@ func flattenVeevaSourceProperties(veevaSourceProperties *appflow.VeevaSourceProp
 	}
 
 	if v := veevaSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m["object"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3567,7 +3567,7 @@ func flattenZendeskSourceProperties(zendeskDataSourceProperties *appflow.Zendesk
 	m := map[string]interface{}{}
 
 	if v := zendeskSourceProperties.Object; v != nil {
-		m["object"] = aws.ToString(v)
+		m["object"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3603,11 +3603,11 @@ func flattenTask(task *appflow.Task) map[string]interface{} {
 	}
 
 	if v := task.DestinationField; v != nil {
-		m["destination_field"] = aws.ToString(v)
+		m["destination_field"] = aws.StringValue(v)
 	}
 
 	if v := task.SourceFields; v != nil {
-		m["source_fields"] = aws.ToString(v)
+		m["source_fields"] = aws.StringValue(v)
 	}
 
 	if v := task.TaskProperties; v != nil {
@@ -3615,7 +3615,7 @@ func flattenTask(task *appflow.Task) map[string]interface{} {
 	}
 
 	if v := task.TaskType; v != nil {
-		m["task_type"] = aws.ToString(v)
+		m["task_type"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3629,67 +3629,67 @@ func flattenConnectorOperator(connectorOperator *appflow.ConnectorOperator) map[
 	m := map[string]interface{}{}
 
 	if v := connectorOperator.Amplitude; v != nil {
-		m["amplitude"] = aws.ToString(v)
+		m["amplitude"] = aws.StringValue(v)
 	}
 
 	if v := connectorOperator.CustomConnector; v != nil {
-		m["custom_connector"] = aws.ToString(v)
+		m["custom_connector"] = aws.StringValue(v)
 	}
 
 	if v := connectorOperator.Datadog; v != nil {
-		m["datadog"] = aws.ToString(v)
+		m["datadog"] = aws.StringValue(v)
 	}
 
 	if v := connectorOperator.Dynatrace; v != nil {
-		m["dynatrace"] = aws.ToString(v)
+		m["dynatrace"] = aws.StringValue(v)
 	}
 
 	if v := connectorOperator.GoogleAnalytics; v != nil {
-		m["google_analytics"] = aws.ToString(v)
+		m["google_analytics"] = aws.StringValue(v)
 	}
 
 	if v := connectorOperator.InforNexus; v != nil {
-		m["infor_nexus"] = aws.ToString(v)
+		m["infor_nexus"] = aws.StringValue(v)
 	}
 
 	if v := connectorOperator.Marketo; v != nil {
-		m["marketo"] = aws.ToString(v)
+		m["marketo"] = aws.StringValue(v)
 	}
 
 	if v := connectorOperator.S3; v != nil {
-		m["s3"] = aws.ToString(v)
+		m["s3"] = aws.StringValue(v)
 	}
 
 	if v := connectorOperator.Salesforce; v != nil {
-		m["salesforce"] = aws.ToString(v)
+		m["salesforce"] = aws.StringValue(v)
 	}
 
 	if v := connectorOperator.SAPOData; v != nil {
-		m["sapo_data"] = aws.ToString(v)
+		m["sapo_data"] = aws.StringValue(v)
 	}
 
 	if v := connectorOperator.ServiceNow; v != nil {
-		m["service_now"] = aws.ToString(v)
+		m["service_now"] = aws.StringValue(v)
 	}
 
 	if v := connectorOperator.Singular; v != nil {
-		m["singular"] = aws.ToString(v)
+		m["singular"] = aws.StringValue(v)
 	}
 
 	if v := connectorOperator.Slack; v != nil {
-		m["slack"] = aws.ToString(v)
+		m["slack"] = aws.StringValue(v)
 	}
 
 	if v := connectorOperator.Trendmicro; v != nil {
-		m["trendmicro"] = aws.ToString(v)
+		m["trendmicro"] = aws.StringValue(v)
 	}
 
 	if v := connectorOperator.Veeva; v != nil {
-		m["veeva"] = aws.ToString(v)
+		m["veeva"] = aws.StringValue(v)
 	}
 
 	if v := connectorOperator.Zendesk; v != nil {
-		m["zendesk"] = aws.ToString(v)
+		m["zendesk"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3707,7 +3707,7 @@ func flattenTriggerConfig(triggerConfig *appflow.TriggerConfig) map[string]inter
 	}
 
 	if v := triggerConfig.TriggerType; v != nil {
-		m["trigger_type"] = aws.ToString(v)
+		m["trigger_type"] = aws.StringValue(v)
 	}
 
 	return m
@@ -3735,7 +3735,7 @@ func flattenScheduled(scheduledTriggerProperties *appflow.ScheduledTriggerProper
 	m := map[string]interface{}{}
 
 	if v := scheduledTriggerProperties.DataPullMode; v != nil {
-		m["data_pull_mode"] = aws.ToString(v)
+		m["data_pull_mode"] = aws.StringValue(v)
 	}
 
 	if v := scheduledTriggerProperties.FirstExecutionFrom; v != nil {
@@ -3747,11 +3747,11 @@ func flattenScheduled(scheduledTriggerProperties *appflow.ScheduledTriggerProper
 	}
 
 	if v := scheduledTriggerProperties.ScheduleExpression; v != nil {
-		m["schedule_expression"] = aws.ToString(v)
+		m["schedule_expression"] = aws.StringValue(v)
 	}
 
 	if v := scheduledTriggerProperties.ScheduleOffset; v != nil {
-		m["schedule_offset"] = aws.ToString(v)
+		m["schedule_offset"] = aws.StringValue(v)
 	}
 
 	if v := scheduledTriggerProperties.ScheduleStartTime; v != nil {
@@ -3759,7 +3759,7 @@ func flattenScheduled(scheduledTriggerProperties *appflow.ScheduledTriggerProper
 	}
 
 	if v := scheduledTriggerProperties.Timezone; v != nil {
-		m["timezone"] = aws.ToString(v)
+		m["timezone"] = aws.StringValue(v)
 	}
 
 	return m
