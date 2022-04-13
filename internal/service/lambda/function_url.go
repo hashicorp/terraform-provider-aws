@@ -149,6 +149,10 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 			StatementId:         aws.String("FunctionURLAllowPublicAccess"),
 		}
 
+		if qualifier != "" {
+			input.Qualifier = aws.String(qualifier)
+		}
+
 		log.Printf("[DEBUG] Adding Lambda Permission: %s", input)
 		_, err := conn.AddPermissionWithContext(ctx, input)
 

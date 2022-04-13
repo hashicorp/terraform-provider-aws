@@ -184,7 +184,7 @@ func TestAccLambdaFunctionURL_TwoURLs(t *testing.T) {
 					resource.TestCheckResourceAttrSet(LatestURLName, "url_id"),
 
 					testAccCheckFunctionURLExists(LiveURLName, &conf),
-					resource.TestCheckResourceAttr(LiveURLName, "authorization_type", lambda.FunctionUrlAuthTypeAwsIam),
+					resource.TestCheckResourceAttr(LiveURLName, "authorization_type", lambda.FunctionUrlAuthTypeNone),
 					resource.TestCheckResourceAttr(LiveURLName, "cors.#", "0"),
 					resource.TestCheckResourceAttrSet(LiveURLName, "function_arn"),
 					resource.TestCheckResourceAttr(LiveURLName, "function_name", funcName),
@@ -470,13 +470,13 @@ resource "aws_lambda_alias" "live" {
   name             = %[2]q
   description      = "a sample description"
   function_name    = aws_lambda_function.test.function_name
-  function_version = "1"
+  function_version = aws_lambda_function.test.version
 }
 
 resource "aws_lambda_function_url" "live" {
   function_name      = aws_lambda_function.test.function_name
   qualifier          = aws_lambda_alias.live.name
-  authorization_type = "AWS_IAM"
+  authorization_type = "NONE"
 
 }
 `, funcName, aliasName))
