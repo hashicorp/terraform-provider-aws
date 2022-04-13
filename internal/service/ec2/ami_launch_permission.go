@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -20,16 +21,15 @@ func ResourceAMILaunchPermission() *schema.Resource {
 		Delete: resourceAMILaunchPermissionDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				idParts := strings.Split(d.Id(), "/")
-				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-					return nil, fmt.Errorf("Unexpected format of ID (%q), expected ACCOUNT-ID/IMAGE-ID", d.Id())
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				const importIDSeparator = "/"
+				parts := strings.Split(d.Id(), importIDSeparator)
+				if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+					return nil, fmt.Errorf("unexpected format for ID (%[1]s), expected ACCOUNT-ID%[2]sIMAGE-ID", d.Id(), importIDSeparator)
 				}
-				accountId := idParts[0]
-				imageId := idParts[1]
-				d.Set("account_id", accountId)
-				d.Set("image_id", imageId)
-				d.SetId(fmt.Sprintf("%s-%s", imageId, accountId))
+
+				d.SetId(AMILaunchPermissionCreateResourceID(parts[1], parts[0]))
+
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -155,8 +155,8 @@ func AMILaunchPermissionCreateResourceID(imageID, accountID string) string {
 func AMILaunchPermissionParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, amiLaunchPermissionIDSeparator)
 
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
+	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
+		return strings.Join([]string{parts[0], parts[1]}, amiLaunchPermissionIDSeparator), parts[2], nil
 	}
 
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected IMAGE-ID%[2]sACCOUNT-ID", id, amiLaunchPermissionIDSeparator)
