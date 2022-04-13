@@ -212,7 +212,7 @@ func expandLaunchPermissions(accountID, group, organizationARN, organizationalUn
 	}
 
 	if organizationalUnitARN != "" {
-		apiObject.OrganizationArn = aws.String(organizationalUnitARN)
+		apiObject.OrganizationalUnitArn = aws.String(organizationalUnitARN)
 	}
 
 	return []*ec2.LaunchPermission{apiObject}
