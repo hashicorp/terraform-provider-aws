@@ -1219,16 +1219,6 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// TIP: Generally, the Read function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Get the resource from AWS
-	// 3. Set ID to empty where resource is not new and not found
-	// 4. Set the arguments and attributes
-	// 5. Set the tags
-	// 6. Return nil
-
 	conn := meta.(*conns.AWSClient).AppFlowConn
 
 	out, err := conn.DescribeFlowWithContext(ctx, conn, d.Id())
@@ -1272,12 +1262,6 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		d.Set("trigger_config", nil)
 	}
 
-	// TIP: 5. Set the tags
-	//
-	// TIP: Not all resources support tags and tags don't always make sense. If
-	// your resource doesn't need tags, you can remove the tags lines here and
-	// below. Many resources do include tags so this a reminder to include them
-	// where possible.
 	tags, err := ListTags(ctx, conn, d.Id())
 
 	if err != nil {
@@ -1297,53 +1281,28 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.Errorf("setting tags_all: %s", err)
 	}
 
-	// TIP: 6. Return nil
 	return nil
 }
 
 func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// TIP: Not all resources have Update functions. There are a few reasons:
-	// a. The AWS API does not support changing a resource
-	// b. All arguments have ForceNew: true, set
-	// c. The AWS API uses a create call to modify an existing resource
-	//
-	// In the cases of a. and b., the main resource function will not have a
-	// UpdateWithoutTimeout defined. In the case of c., Update and Create are
-	// the same.
-	//
-	// The rest of the time, there should be an Update function and it should
-	// do the following things. Make sure there is a good reason if you don't
-	// do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Populate a modify input structure and check for changes
-	// 3. Call the AWS modify/update function
-	// 4. Use a waiter to wait for update to complete
-	// 5. Call the Read function in the Update return
-
-	// TIP: 1. Get a client connection to the relevant service
 	conn := meta.(*conns.AWSClient).AppFlowConn
 
-	// TIP: 2. Populate a modify input structure and check for changes
-	//
-	// When creating the input structure, only include mandatory fields. Other
-	// fields are set as needed. You can use a flag, such as update below, to
-	// determine if a certain portion of arguments have been changed and
-	// whether to call the AWS update function.
 	update := false
 
 	in := &appflow.UpdateFlowInput{
-		Id: aws.String(d.Id()),
+		FlowName:                  aws.String(d.Get("name").(string)),
+		DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config")),
+		SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config")),
+		Tasks:                     expandTasks(d.Get("task")),
+		TriggerConfig:             expandTriggerConfig(d.Get("trigger_config")),
 	}
 
-	if d.HasChanges("an_argument") {
-		in.AnArgument = d.Get("an_argument").(string)
+	if d.HasChange("description") {
+		in.Description = d.Get("description").(string)
 		update = true
 	}
 
 	if !update {
-		// If update doesn't do anything at all, which is rare, you can return
-		// nil. Otherwise, return a read call, as below.
 		return nil
 	}
 
@@ -1354,42 +1313,18 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("updating AppFlow Flow (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitFlowUpdated(ctx, conn, aws.StringValue(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return diag.Errorf("waiting for AppFlow Flow (%s) update: %s", d.Id(), err)
-	}
-
 	return resourceFlowRead(ctx, d, meta)
 }
 
 func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// TIP: Most resources have Delete functions. There are rare situations
-	// where you might not need a delete:
-	// a. The AWS API does not provide a way to delete the resource
-	// b. The point of your resource is to perform an action (e.g., reboot a
-	//    server) and deleting serves no purpose.
-	//
-	// The Delete function and should do the following things. Make sure there
-	// is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Populate a delete input structure
-	// 3. Call the AWS delete function
-	// 4. Use a waiter to wait for delete to complete
-	// 5. Return nil
-
-	// TIP: 1. Get a client connection to the relevant service
 	conn := meta.(*conns.AWSClient).AppFlowConn
 
-	// TIP: 2. Populate a delete input structure
 	log.Printf("[INFO] Deleting AppFlow Flow %s", d.Id())
 
-	// TIP: 3. Call the AWS delete function
 	_, err := conn.DeleteFlowWithContext(ctx, &appflow.DeleteFlowInput{
 		Id: aws.String(d.Id()),
 	})
 
-	// On rare occassions, the API returns a not found error after deleting a
-	// resource. If that happens, we don't want it to show up as an error.
 	if tfawserr.ErrCodeEquals(err, appflow.ErrCodeResourceNotFoundException) {
 		return nil
 	}
@@ -1405,111 +1340,6 @@ func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interf
 
 	// TIP: 5. Return nil
 	return nil
-}
-
-// TIP: Create constants for states and statuses if the service does not
-// already have suitable constants. We prefer that you use the constants
-// provided in the service if available (e.g., amp.WorkspaceStatusCodeActive).
-const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
-)
-
-// TIP: Some resources of some services have waiters provided by the AWS API.
-// Unless they do not work properly, use them rather than defining new ones
-// here.
-//
-// Sometimes we define the wait, status, and find functions in separate
-// files, wait.go, status.go, and find.go. Follow the pattern set out in the
-// service and define these where it makes the most sense.
-//
-// If these functions are used in the _test.go file, they will need to be
-// exported (i.e., capitalized).
-//
-// You will need to adjust the parameters and names to fit the service.
-func waitFlowCreated(ctx context.Context, conn *appflow.AppFlow, id string, timeout time.Duration) (*appflow.Flow, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusFlow(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if out, ok := outputRaw.(*appflow.Flow); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-// TIP: It is easier to determine whether a resource is updated for some
-// resources than others. The best case is a status flag that tells you when
-// the update has been fully realized. Other times, you can check to see if a
-// key resource argument is updated to a new value or not.
-func waitFlowUpdated(ctx context.Context, conn *appflow.AppFlow, id string, timeout time.Duration) (*appflow.Flow, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
-		Refresh:                   statusFlow(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if out, ok := outputRaw.(*appflow.Flow); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-// TIP: A deleted waiter is almost like a backwards created waiter. There may
-// be additional pending states, however.
-func waitFlowDeleted(ctx context.Context, conn *appflow.AppFlow, id string, timeout time.Duration) (*appflow.Flow, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{statusDeleting, statusNormal},
-		Target:  []string{},
-		Refresh: statusFlow(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if out, ok := outputRaw.(*appflow.Flow); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-// TIP: The status function can return an actual status when that field is
-// available from the API (e.g., out.Status). Otherwise, you can use custom
-// statuses to communicate the states of the resource.
-//
-// Design status so that it can be reused by a create, update, and delete
-// waiter, if possible.
-func statusFlow(ctx context.Context, conn *appflow.AppFlow, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := findFlowByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, out.Status, nil
-	}
 }
 
 // TIP: The find function is not strictly necessary. You could do the API
