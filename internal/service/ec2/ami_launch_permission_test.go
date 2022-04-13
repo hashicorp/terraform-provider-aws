@@ -175,24 +175,12 @@ func testAccCheckAMILaunchPermissionExists(resourceName string) resource.TestChe
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		accountID := rs.Primary.Attributes["account_id"]
-		arn := rs.Primary.Attributes["arn"]
-		arn_type := rs.Primary.Attributes["arn_type"]
-
-		var read_value, read_type string
-		if len(accountID) > 0 {
-			read_value = accountID
-			read_type = "UserId"
-		} else {
-			read_value = arn
-			read_type = arn_type
-		}
-
 		imageID := rs.Primary.Attributes["image_id"]
 
-		if has, err := tfec2.HasLaunchPermission(conn, imageID, read_value, read_type); err != nil {
+		if has, err := tfec2.HasLaunchPermission(conn, imageID, accountID, "UserId"); err != nil {
 			return err
 		} else if !has {
-			return fmt.Errorf("launch permission does not exist for '%s' on '%s'", read_value, imageID)
+			return fmt.Errorf("launch permission does not exist for '%s' on '%s'", accountID, imageID)
 		}
 		return nil
 	}
@@ -206,24 +194,12 @@ func testAccCheckAMILaunchPermissionDestroy(s *terraform.State) error {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		accountID := rs.Primary.Attributes["account_id"]
-		arn := rs.Primary.Attributes["arn"]
-		arn_type := rs.Primary.Attributes["arn_type"]
-
-		var read_value, read_type string
-		if len(accountID) > 0 {
-			read_value = accountID
-			read_type = "UserId"
-		} else {
-			read_value = arn
-			read_type = arn_type
-		}
-
 		imageID := rs.Primary.Attributes["image_id"]
 
-		if has, err := tfec2.HasLaunchPermission(conn, imageID, read_value, read_type); err != nil {
+		if has, err := tfec2.HasLaunchPermission(conn, imageID, accountID, "UserId"); err != nil {
 			return err
 		} else if has {
-			return fmt.Errorf("launch permission still exists for '%s' on '%s'", read_value, imageID)
+			return fmt.Errorf("launch permission still exists for '%s' on '%s'", accountID, imageID)
 		}
 	}
 
