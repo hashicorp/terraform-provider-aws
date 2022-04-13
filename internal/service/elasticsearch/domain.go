@@ -65,6 +65,33 @@ func ResourceDomain() *schema.Resource {
 				}
 				return true
 			}),
+			customdiff.ForceNewIf("encrypt_at_rest.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				newVersion := d.Get("elasticsearch_version").(string)
+
+				if newVersion < "6.7" {
+					return true
+				}
+
+				return false
+			}),
+			customdiff.ForceNewIf("encrypt_at_rest.0.kms_key_id", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				newVersion := d.Get("elasticsearch_version").(string)
+
+				if newVersion < "6.7" {
+					return true
+				}
+
+				return false
+			}),
+			customdiff.ForceNewIf("node_to_node_encryption.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				newVersion := d.Get("elasticsearch_version").(string)
+
+				if newVersion < "6.7" {
+					return true
+				}
+
+				return false
+			}),
 			verify.SetTagsDiff,
 		),
 
@@ -398,13 +425,11 @@ func ResourceDomain() *schema.Resource {
 						"enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
-							ForceNew: true,
 						},
 						"kms_key_id": {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
-							ForceNew:         true,
 							DiffSuppressFunc: suppressEquivalentKmsKeyIds,
 						},
 					},
@@ -451,7 +476,6 @@ func ResourceDomain() *schema.Resource {
 						"enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
-							ForceNew: true,
 						},
 					},
 				},
@@ -889,6 +913,29 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 						}
 					}
 				}
+			}
+		}
+
+		if d.HasChange("encrypt_at_rest") {
+			input.EncryptionAtRestOptions = nil
+			if v, ok := d.GetOk("encrypt_at_rest"); ok {
+				options := v.([]interface{})
+				if options[0] == nil {
+					return fmt.Errorf("At least one field is expected inside encrypt_at_rest")
+				}
+
+				s := options[0].(map[string]interface{})
+				input.EncryptionAtRestOptions = expandEncryptAtRestOptions(s)
+			}
+		}
+
+		if d.HasChange("node_to_node_encryption") {
+			input.NodeToNodeEncryptionOptions = nil
+			if v, ok := d.GetOk("node_to_node_encryption"); ok {
+				options := v.([]interface{})
+
+				s := options[0].(map[string]interface{})
+				input.NodeToNodeEncryptionOptions = expandNodeToNodeEncryptionOptions(s)
 			}
 		}
 
