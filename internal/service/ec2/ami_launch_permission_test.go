@@ -103,7 +103,7 @@ func TestAccEC2AMILaunchPermission_Disappears_ami(t *testing.T) {
 				Config: testAccAMILaunchPermissionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMILaunchPermissionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceAMILaunchPermission(), "aws_ami_copy.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceAMICopy(), "aws_ami_copy.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
