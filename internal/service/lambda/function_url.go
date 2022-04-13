@@ -153,7 +153,11 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 		_, err := conn.AddPermissionWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("error adding Lambda Function URL (%s) permission %s", d.Id(), err)
+			if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceConflictException, "The statement id (FunctionURLAllowPublicAccess) provided already exists") {
+				log.Printf("[DEBUG] function permission statement 'FunctionURLAllowPublicAccess' already exists.")
+			} else {
+				return diag.Errorf("error adding Lambda Function URL (%s) permission %s", d.Id(), err)
+			}
 		}
 	}
 
