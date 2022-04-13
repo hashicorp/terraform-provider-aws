@@ -24,13 +24,14 @@ jobs:
       UV_THREADPOOL_SIZE: 128
     steps:
       - uses: actions/checkout@v3
-      - uses: YakDriver/md-check-links@v2.0.3
+      - uses: YakDriver/md-check-links@v2.0.4
         name: markdown-link-check website/docs/**/*.markdown
         with:
           use-quiet-mode: "yes"
           use-verbose-mode: "yes"
           config-file: ".markdownlinkcheck.json"
           folder-path: "website/docs"
+          file-prefix: "a"
           file-extension: ".markdown"
           base-branch: "main"
           check-modified-files-only: "no"
