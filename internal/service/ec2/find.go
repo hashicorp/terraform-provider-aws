@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -588,6 +589,65 @@ func FindHost(conn *ec2.EC2, input *ec2.DescribeHostsInput) (*ec2.Host, error) {
 	}
 
 	return host, nil
+}
+
+func FindImageAttribute(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeImageAttributeInput) (*ec2.DescribeImageAttributeOutput, error) {
+	output, err := conn.DescribeImageAttributeWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAMIIDNotFound, ErrCodeInvalidAMIIDUnavailable) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindImageLaunchPermissionsByID(ctx context.Context, conn *ec2.EC2, id string) ([]*ec2.LaunchPermission, error) {
+	input := &ec2.DescribeImageAttributeInput{
+		Attribute: aws.String(ec2.ImageAttributeNameLaunchPermission),
+		ImageId:   aws.String(id),
+	}
+
+	output, err := FindImageAttribute(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output.LaunchPermissions) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.LaunchPermissions, nil
+}
+
+func FindImageLaunchPermission(ctx context.Context, conn *ec2.EC2, imageID, accountID, group, organizationARN, organizationalUnitARN string) (*ec2.LaunchPermission, error) {
+	output, err := FindImageLaunchPermissionsByID(ctx, conn, imageID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output {
+		if (accountID != "" && aws.StringValue(v.UserId) == accountID) ||
+			(group != "" && aws.StringValue(v.Group) == group) ||
+			(organizationARN != "" && aws.StringValue(v.OrganizationArn) == organizationARN) ||
+			(organizationalUnitARN != "" && aws.StringValue(v.OrganizationalUnitArn) == organizationalUnitARN) {
+			return v, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
 }
 
 func FindInstances(conn *ec2.EC2, input *ec2.DescribeInstancesInput) ([]*ec2.Instance, error) {
