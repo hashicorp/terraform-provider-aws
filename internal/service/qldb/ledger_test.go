@@ -33,6 +33,7 @@ func TestAccQLDBLedger_basic(t *testing.T) {
 					testAccCheckLedgerExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "qldb", regexp.MustCompile(`ledger/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "kms_key", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "permissions_mode", "ALLOW_ALL"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -134,6 +135,41 @@ func TestAccQLDBLedger_update(t *testing.T) {
 					testAccCheckLedgerExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "permissions_mode", "ALLOW_ALL"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccQLDBLedger_kmsKey(t *testing.T) {
+	var v qldb.DescribeLedgerOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_qldb_ledger.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, qldb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckLedgerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLedgerKMSKeyConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLedgerExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key", kmsKeyResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLedgerKMSKeyUpdatedConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLedgerExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "kms_key", "AWS_OWNED_KMS_KEY"),
 				),
 			},
 		},
@@ -261,6 +297,38 @@ resource "aws_qldb_ledger" "test" {
   deletion_protection = false
 }
 `
+}
+
+func testAccLedgerKMSKeyConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_qldb_ledger" "test" {
+  name                = %[1]q
+  permissions_mode    = "ALLOW_ALL"
+  deletion_protection = false
+  kms_key             = aws_kms_key.test.arn
+}
+`, rName)
+}
+
+func testAccLedgerKMSKeyUpdatedConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_qldb_ledger" "test" {
+  name                = %[1]q
+  permissions_mode    = "ALLOW_ALL"
+  deletion_protection = false
+  kms_key             = "AWS_OWNED_KMS_KEY"
+}
+`, rName)
 }
 
 func testAccLedgerConfigTags1(rName, tagKey1, tagValue1 string) string {
