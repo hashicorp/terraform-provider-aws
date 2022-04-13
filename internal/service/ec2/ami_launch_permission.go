@@ -17,6 +17,7 @@ func ResourceAMILaunchPermission() *schema.Resource {
 		Create: resourceAMILaunchPermissionCreate,
 		Read:   resourceAMILaunchPermissionRead,
 		Delete: resourceAMILaunchPermissionDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -33,12 +34,12 @@ func ResourceAMILaunchPermission() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"image_id": {
+			"account_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"account_id": {
+			"image_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
