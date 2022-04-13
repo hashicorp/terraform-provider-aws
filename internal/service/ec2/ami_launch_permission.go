@@ -51,23 +51,26 @@ func ResourceAMILaunchPermission() *schema.Resource {
 func resourceAMILaunchPermissionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	image_id := d.Get("image_id").(string)
-	account_id := d.Get("account_id").(string)
-
-	_, err := conn.ModifyImageAttribute(&ec2.ModifyImageAttributeInput{
-		ImageId:   aws.String(image_id),
+	imageID := d.Get("image_id").(string)
+	accountID := d.Get("account_id").(string)
+	id := AMILaunchPermissionCreateResourceID(imageID, accountID)
+	input := &ec2.ModifyImageAttributeInput{
 		Attribute: aws.String(ec2.ImageAttributeNameLaunchPermission),
+		ImageId:   aws.String(imageID),
 		LaunchPermission: &ec2.LaunchPermissionModifications{
-			Add: []*ec2.LaunchPermission{
-				{UserId: aws.String(account_id)},
-			},
+			Add: expandLaunchPermissions(accountID),
 		},
-	})
-	if err != nil {
-		return fmt.Errorf("error creating AMI launch permission: %w", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s-%s", image_id, account_id))
+	log.Printf("[DEBUG] Creating AMI Launch Permission: %s", input)
+	_, err := conn.ModifyImageAttribute(input)
+
+	if err != nil {
+		return fmt.Errorf("creating AMI Launch Permission (%s): %w", id, err)
+	}
+
+	d.SetId(id)
+
 	return nil
 }
 
@@ -134,4 +137,33 @@ func HasLaunchPermission(conn *ec2.EC2, image_id string, account_id string) (boo
 		}
 	}
 	return false, nil
+}
+
+func expandLaunchPermissions(accountID string) []*ec2.LaunchPermission {
+	apiObject := &ec2.LaunchPermission{}
+
+	if accountID != "" {
+		apiObject.UserId = aws.String(accountID)
+	}
+
+	return []*ec2.LaunchPermission{apiObject}
+}
+
+const amiLaunchPermissionIDSeparator = "-"
+
+func AMILaunchPermissionCreateResourceID(imageID, accountID string) string {
+	parts := []string{imageID, accountID}
+	id := strings.Join(parts, amiLaunchPermissionIDSeparator)
+
+	return id
+}
+
+func AMILaunchPermissionParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, amiLaunchPermissionIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected IMAGE-ID%[2]sACCOUNT-ID", id, amiLaunchPermissionIDSeparator)
 }
