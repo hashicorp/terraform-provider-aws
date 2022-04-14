@@ -45,7 +45,7 @@ You will need at minimum:
 
 Add a file covering the use of the new resource in `website/docs/r/<service>_<name>.md`. You may want to also add examples of the resource in use particularly if its use is complex, or relies on resources in another service. This documentation will appear on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) when the resource is made available in a provider release. It is fine to link out to AWS Documentation where appropriate, particularly for values which are likely to change.
 
-#### Ensure format and lint checks are passing
+#### Ensure format and lint checks are passing locally
 
 Run `go fmt` to format your code, and install and run all linters to detect and resolve any structural issues with the implementation or documentation.
 
@@ -60,7 +60,7 @@ make docs-lint # run documentation linters
 
 Create a pull request against the default branch of the provider detailing the resource you are adding and linking it to the related issue (create one if one does not exist). If possible make sure that the "Allow edits from maintainers" box is checked, this will greatly improve the speed at which we can get the Pull Request merged. Ensure that all linters are passing in the GitHub PR Check section.
 
-8. Wait for prioritization.
+#### Wait for prioritization.
 
 In general, pull requests are triaged within a few days of creation and are prioritized based on community reactions. Please view our Prioritization guide TODO for full details of the process.
 
