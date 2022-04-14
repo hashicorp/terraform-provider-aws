@@ -114,6 +114,51 @@ func TestAccWorkflow_description(t *testing.T) {
 	})
 }
 
+func TestAccWorkflow_tags(t *testing.T) {
+	var conf transfer.DescribedWorkflow
+	resourceName := "aws_transfer_workflow.test"
+	rName := sdkacctest.RandString(25)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckWorkflowDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkflowConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkflowExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccWorkflowConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkflowExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccWorkflowConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkflowExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccWorkflow_disappears(t *testing.T) {
 	var conf transfer.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
@@ -236,4 +281,41 @@ resource "aws_transfer_workflow" "test" {
   }
 }
 `, rName)
+}
+
+func testAccWorkflowConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_transfer_workflow" "test" {
+  steps {
+    delete_step_details {
+      name                 = %[1]q
+      source_file_location = "$${original.file}"
+	}
+    type = "DELETE"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }  
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccWorkflowConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_transfer_workflow" "test" {
+  steps {
+    delete_step_details {
+      name                 = %[1]q
+      source_file_location = "$${original.file}"
+	}
+    type = "DELETE"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }  
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
