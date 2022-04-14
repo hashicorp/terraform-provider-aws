@@ -1222,6 +1222,10 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	})
 
 	client.ECSConn.Handlers.Retry.PushBack(func(r *request.Request) {
+		// By design the "WaitUntilServicesStable" method will poll every 15 seconds until a successful state
+		// has been reached. This will exit with a return code of 255 (ResourceNotReady) after 40 failed checks.
+		// Thus, here we retry the operation a set number of times as
+		// described in https://github.com/hashicorp/terraform-provider-aws/pull/23747.
 		if r.Operation.Name == "WaitUntilServicesStable" {
 			if tfawserr.ErrCodeEquals(r.Error, "ResourceNotReady") {
 				// We only want to retry briefly as the default max retry count would
