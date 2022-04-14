@@ -29,6 +29,7 @@ BUG FIXES:
 * resource/aws_cloudformation_stack_set: Prevent `InvalidParameter` errors when updating `operation_preferences` ([#24202](https://github.com/hashicorp/terraform-provider-aws/issues/24202))
 * resource/aws_cloudwatch_event_connection: Add validation to `auth_parameters.api_key.key`, `auth_parameters.api_key.value`, `auth_parameters.basic.username`, `auth_parameters.basic.password`, `auth_parameters.oauth.authorization_endpoint`, `auth_parameters.oauth.client_parameters.client_id` and `auth_parameters.oauth.client_parameters.client_secret` arguments ([#24154](https://github.com/hashicorp/terraform-provider-aws/issues/24154))
 * resource/aws_cloudwatch_log_subscription_filter: Retry resource create and update when a conflicting operation error is returned ([#24148](https://github.com/hashicorp/terraform-provider-aws/issues/24148))
+* resource/aws_emr_cluster: Ignore `UnknownOperationException` errors when reading a cluster's auto-termination policy ([#24237](https://github.com/hashicorp/terraform-provider-aws/issues/24237))
 * resource/aws_lambda_function_url: Ignore `ResourceConflictException` errors caused by existing `FunctionURLAllowPublicAccess` permission statements ([#24220](https://github.com/hashicorp/terraform-provider-aws/issues/24220))
 * resource/aws_vpc_ipam_scope: Prevent panic when describing IPAM Scopes by ID ([#24188](https://github.com/hashicorp/terraform-provider-aws/issues/24188))
 
