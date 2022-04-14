@@ -31,9 +31,11 @@ Full, comprehensive documentation is available on the Terraform website:
 
 https://terraform.io/docs/providers/aws/index.html
 
+
+
 ## Roadmap
 
-Our roadmap for expanding support in Terraform for AWS resources can be found in our [Roadmap](ROADMAP.md) which is published quarterly.
+Our roadmap for expanding support in Terraform for AWS resources can be found in our [Roadmap](ROADMAP.md) which is published quarterly. Past roadmaps can be found in the `/roadmaps` folder.
 
 ## Frequently Asked Questions
 
