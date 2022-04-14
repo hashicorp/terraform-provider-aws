@@ -674,6 +674,15 @@ func PreCheckPartition(partition string, t *testing.T) {
 	}
 }
 
+// PreCheckPartitionNot checks that the test partition is not one of the specified partitions.
+func PreCheckPartitionNot(t *testing.T, partitions ...string) {
+	for _, partition := range partitions {
+		if curr := Partition(); curr == partition {
+			t.Skipf("skipping tests; current partition (%s) not supported", curr)
+		}
+	}
+}
+
 func PreCheckOrganizationsAccount(t *testing.T) {
 	_, err := tforganizations.FindOrganization(Provider.Meta().(*conns.AWSClient).OrganizationsConn)
 
