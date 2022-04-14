@@ -110,6 +110,6 @@ jobs:
       - name: Save Release Tag
         run: echo ${{ github.ref_name }} > release_tag.data
       - uses: actions/upload-artifact@v2
-          with:
-            name: release_tag
-            path: release_tag.data
+        with:
+          name: release_tag
+          path: release_tag.data
