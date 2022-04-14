@@ -1,0 +1,78 @@
+<style type="text/css">
+  .tg  {border-collapse:collapse;border-spacing:0; }
+  .tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;vertical-align: top;
+    overflow:hidden;padding:10px 5px;word-break:normal;}
+  .tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+    font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+  .tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
+  </style>
+  
+
+<h1>Terraform AWS Provider - Contributor Guide</h1>
+
+<p>The AWS Provider is the work of thousands of contributors, and is maintained by a small team within HashiCorp. There are many way to contribute, and we have extensive documentation on them. Below are the main ways most users engage with the provider repository and the high level steps required to ensure the contribution goes smoothly.</p>
+
+<h2>What would you like do do?</h2>
+
+<table class="tg">
+<thead>
+  <tr>
+    <th>Contribution Type</th>
+    <th>Description</th>
+    <th>Steps</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>Add a new AWS Service to the Provider</td>
+    <td>Alow Terraform (via the AWS Provider) to manage an entirely new AWS service by introducing the resources and datasources required to manage configuration of the service.</td>
+    <td>
+      <ul>
+        <li><a href="add-a-new-service#add-a-service-client">Add Service Client</a></li>
+        <li><a href="add-a-new-service#perform-service-design">Perform Service Design</a></li>
+        <li><a href="add-a-new-resource">Add a new resource</a></li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td>Add a new resource to the Provider</td>
+    <td>Allow the management of a logical resource within AWS by adding a new resource to the Terraform AWS Provider..</td>
+    <td>
+      <ul>
+        <li><a href="add-a-new-resource#name-the-resource">Name the resource</a></li>
+        <li><a href="add-a-new-resource#fork-the-provider">Fork the Provider</a></li>
+        <li><a href="add-a-new-resource#fill-out-the-resource-schema">Fill out the Resource Schema</a></li>
+        <li><a href="add-a-new-resource#implement-crud-handlers">Implement CRUD Handlers</a></li>
+        <li><a href="add-a-new-resource#write-passing-acceptance-tests">Write passing Acceptance Tests CRUD Handlers</a></li>
+        <li><a href="add-a-new-resource#create-documentation-for-the-resource">Create Documentation for the Resource</a></li>
+        <li><a href="add-a-new-resource#ensure-format-and-link-checks-are-passing">Ensure format and lint checks are passing</a></li>
+        <li><a href="add-a-new-resource#raise-a-pull-request">Raise a Pull Request against hashicorp/terraform-provider-aws</a></li>
+        <li><a href="add-a-new-resource#implement-crud-handlers">Wait for Prioritization</a></li>
+      </ul>
+    </td>
+  </tr>
+</tbody>
+</table>
+
+
+## Getting Started
+
+- [Set Up Your Development Environment](development-environment.md)
+- [FAQ](faq.md)
+- [Core Services](core-services.md)
+- [Provider Design](provider-design.md)
+- [Naming Conventions](naming.md)
+
+## Process
+
+- [Contribution Types and Checklists](contribution-checklists.md)
+- [Issue Reporting and Lifecycle](issue-reporting-and-lifecycle.md)
+- [Maintainers and Maintaining the Repository](maintaining.md)
+- [Pull Request Submission and Lifecycle](pullrequest-submission-and-lifecycle.md)
+
+## Reference
+
+- [Acceptance Tests, Running and Writing](running-and-writing-acceptance-tests.md)
+- [Data Handling and Conversion](data-handling-and-conversion.md)
+- [Error Handling](error-handling.md)
+- [Retries and Waiters](retries-and-waiters.md)

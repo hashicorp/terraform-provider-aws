@@ -618,52 +618,7 @@ More complex filters can be expressed using one or more `filter` sub-blocks, whi
   An Internet Gateway will be selected if any one of the given values matches.
 ```
 
-## New Resource
 
-_Before submitting this type of contribution, it is highly recommended to read and understand the other pages of the [Contributing Guide](./README.md)._
-
-Implementing a new resource is a good way to learn more about how Terraform
-interacts with upstream APIs. There are plenty of examples to draw from in the
-existing resources, but you still get to implement something completely new.
-
-In addition to the below checklist, please see the [Common Review
-Items](pullrequest-submission-and-lifecycle.md#common-review-items) sections for more specific coding and testing
-guidelines.
-
-- [ ] __Minimal LOC__: It's difficult for both the reviewer and author to go
-   through long feedback cycles on a big PR with many resources. We ask you to
-   only submit **1 resource at a time**.
-- [ ] __Acceptance tests__: New resources should include acceptance tests
-   covering their behavior. See [Writing Acceptance
-   Tests](#writing-acceptance-tests) below for a detailed guide on how to
-   approach these.
-- [ ] __Resource Naming__: Resources should be named `aws_<service>_<name>`,
-   using underscores (`_`) as the separator. Resources are namespaced with the
-   service name to allow easier searching of related resources, to align
-   the resource naming with the service for [Customizing Endpoints](https://www.terraform.io/docs/providers/aws/guides/custom-service-endpoints.html#available-endpoint-customizations),
-   and to prevent future conflicts with new AWS services/resources.
-   For reference:
-
-    - `service` is the AWS short service name that matches the key in
-     the `serviceData` map in the `conns` package (created via the [New Service](#new-service)
-     section)
-    - `name` represents the conceptual infrastructure represented by the
-     create, read, update, and delete methods of the service API. It should
-     be a singular noun. For example, in an API that has methods such as
-     `CreateThing`, `DeleteThing`, `DescribeThing`, and `ModifyThing` the name
-     of the resource would end in `_thing`.
-
-- [ ] __Arguments_and_Attributes__: The HCL for arguments and attributes should mimic the types and structs presented by the AWS API. API arguments should be converted from `CamelCase` to `camel_case`. The resource logic for handling these should follow the recommended implementations in the [Data Handling and Conversion](data-handling-and-conversion.md) documentation.
-- [ ] __Documentation__: Each data source and resource gets a page in the Terraform
-   documentation, which lives at `website/docs/d/<service>_<name>.html.markdown` and
-   `website/docs/r/<service>_<name>.html.markdown` respectively.
-- [ ] __Well-formed Code__: Do your best to follow existing conventions you
-   see in the codebase, and ensure your code is formatted with `go fmt`.
-   The PR reviewers can help out on this front, and may provide comments with
-   suggestions on how to improve the code.
-- [ ] __Dependency updates__: Create a separate PR if you are updating dependencies.
-   This is to avoid conflicts as version updates tend to be fast-
-   moving targets. We will plan to merge the PR with this change first.
 
 ### New Tag Resource
 
@@ -842,85 +797,7 @@ $ terraform import aws_{service}_tag.example arn:aws:{service}:us-east-1:1234567
 ```
 ``````
 
-## New Service
 
-Implementing a new AWS service gives Terraform the ability to manage resources in
-a whole new API. It's a larger undertaking, but brings major new functionality
-into Terraform.
-
-- [ ] __Service Client__: Before new resources are submitted, we request
-  a separate pull request containing just the new AWS Go SDK service client.
-  Doing so will pull the AWS Go SDK service code into the project at the
-  current version. Since the AWS Go SDK is updated frequently, these pull
-  requests can easily have merge conflicts or be out of date. The maintainers
-  prioritize reviewing and merging these quickly to prevent those situations.
-
-  To add the AWS Go SDK service client:
-
-    - In `internal/conns/conns.go`: Add a string constant for the service. Follow these rules to name the constant.
-        - The constant name should be the same as the service name used in the AWS Go SDK except:
-            1. Drop "service" or "api" if the service name ends with either or both, and
-            2. Shorten the service name if it is excessively long. Avoid names longer than 17 characters if possible. When shortening a service name, look to the endpoints ID, common usage in documentation and marketing, and discuss the change with the community and maintainers to get buy in. The goals for this alternate name are to be instantly recognizable, not verbose, and more easily managed.
-        - The constant name should be capitalized following Go mixed-case rules. In other words:
-            1. Do not use underscores,
-            2. The first letter of each word is capitalized, and
-            3. Abbreviations and initialisms are all caps.
-        - Proper examples include `CognitoIdentity`, `DevOpsGuru`, `DynamoDB`, `ECS`, `Prometheus` ("Service" is dropped from end), and `ServerlessRepo` (shortened from "Serverless Application Repository").
-        - The constant value is the same as the name but all lowercase (_e.g._, `DynamoDB = "dynamodb"`).
-    - In `internal/conns/conns.go`: Add a new entry to the `serviceData` map:
-        1. The entry key is the string constant created above
-        2. The `AWSClientName` is the exact name of the return type of the `New()` method of the service. For example, see the `New()` method in the [Application Auto Scaling documentation](https://docs.aws.amazon.com/sdk-for-go/api/service/applicationautoscaling/#New).
-        3. For `AWSServiceName`, `AWSEndpointsID`, and `AWSServiceID`, directly reference the AWS Go SDK service package for the values. For example, `accessanalyzer.ServiceName`, `accessanalyzer.EndpointsID`, and `accessanalyzer.ServiceID` respectively.
-        4. `ProviderNameUpper` is the exact same as the constant _name_ (_not_ value) as described above.
-        5. In most cases, the `HCLKeys` slice will have one element, an all-lowercase string that matches the AWS SDK Go service name and provider constant value, described above. However, when these diverge, it may be helpful to add additional elements. Practitioners can use any of these names in the provider configuration when customizing service endpoints.
-    - In `internal/conns/conns.go`: Add a new import for the AWS Go SDK code. E.g.
-    `github.com/aws/aws-sdk-go/service/quicksight`
-    - In `internal/conns/conns.go`: Add a new `{ServiceName}Conn` field to the `AWSClient`
-    struct for the service client. The service name should match the constant name, capitalized the same, as described above.
-    _E.g._, `DynamoDBConn *dynamodb.DynamoDB`.
-    - In `internal/conns/conns.go`: Create the new service client in the `{ServiceName}Conn`
-    field in the `AWSClient` instantiation within `Client()`, using the constant created above as a key to a value in the `Endpoints` map. _E.g._,
-    `DynamoDBConn: dynamodb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[DynamoDB])})),`.
-    - In `website/allowed-subcategories.txt`: Add a name acceptable for the documentation navigation.
-    - In `website/docs/guides/custom-service-endpoints.html.md`: Add the service
-    name in the list of customizable endpoints.
-    - In `infrastructure/repository/labels-service.tf`: Add the new service to create a repository label.
-    - In `.github/labeler-issue-triage.yml`: Add the new service to automated issue labeling. E.g., with the `quicksight` service
-
-  ```yaml
-  # ... other services ...
-  service/quicksight:
-    - '((\*|-) ?`?|(data|resource) "?)aws_quicksight_'
-  # ... other services ...
-  ```
-
-    - In `.github/labeler-pr-triage.yml`: Add the new service to automated pull request labeling. E.g., with the `quicksight` service
-
-  ```yaml
-  # ... other services ...
-  service/quicksight:
-    - 'internal/service/quicksight/**/*'
-    - '**/*_quicksight_*'
-    - '**/quicksight_*'
-  # ... other services ...
-  ```
-
-    - Run the following then submit the pull request:
-
-  ```sh
-  make test
-  go mod tidy
-  ```
-
-- [ ] __Initial Resource__: Some services can be big and it can be
-  difficult for both reviewer & author to go through long feedback cycles
-  on a big PR with many resources. Often feedback items in one resource
-  will also need to be applied in other resources. We prefer you to submit
-  the necessary minimum in a single PR, ideally **just the first resource**
-  of the service.
-
-The initial resource and changes afterwards should follow the other sections
-of this guide as appropriate.
 
 ## New Region
 

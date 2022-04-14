@@ -1,12 +1,30 @@
 # Contributing to the Terraform AWS Provider
 
-**First,** if you're unsure or afraid of _anything_, ask for help! You can open a draft pull request (PR) or an issue with what you know. We'll do our best to guide you in the right direction, and let you know if there are guidelines to follow. We want people to be able to participate without fear of doing the wrong thing.
+The AWS Provider is the work of thousands of contributors, and is maintained by a small team within HashiCorp. There are many way to contribute, and we have extensive documentation on them. Below are the main ways most users engage with the provider repository and the high level steps required to ensure the contribution goes smoothly.
 
-**Second,** not all of this documentation is up-to-date. If you see something that's not quite right, please submit a PR. Documentation-only PRs are often merged more quickly than code.
+## What would you like do do?
 
-**Third,** we don't always respond as quickly as we'd like. There's a lot going on. We prioritize certain aspects of the codebase but those priorities do shift over time. If we haven't gotten to something you find important, it's likely it's on our radar. We're working through other priorities to get to it.
+<table>
+<thead>
+  <tr>
+    <th>Contribution Type</th>
+    <th>Checklist</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>Add a new AWS Service to the Provider</td>
+    <td>
+      <ul>
+        <li><a href="add-a-new-resource.md">Add Service Client</a></li>
+        <li>[Perform Service Design](add-a-new-service.md#perform-service-design)</li>
+        <li>[Add your first Resource](add-a-new-resource.md)</li>
+      </ul>
+    </td>
+  </tr>
+</tbody>
+</table>
 
-To improve the review and merge process, please do your best to follow the documentation. Below are our expectations for contributors. Following these guidelines gives us the best opportunity to work with you, by making sure we have the things we need in order to make it happen. Doing your best to follow it will speed up our ability to merge PRs and respond to issues.
 
 ## Getting Started
 
