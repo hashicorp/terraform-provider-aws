@@ -17,7 +17,7 @@ import (
 )
 
 func testAccFunctionURLPreCheck(t *testing.T) {
-	acctest.PreCheckPartition(endpoints.AwsPartitionID, t)
+	acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 }
 
 func TestAccLambdaFunctionURL_basic(t *testing.T) {
