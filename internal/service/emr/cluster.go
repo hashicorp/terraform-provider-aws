@@ -1152,6 +1152,10 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		if !tfawserr.ErrMessageContains(err, "ValidationException", "Auto-termination is not available for this account when using this release of EMR") {
 			return fmt.Errorf("error getting auto termination policy: %w", err)
 		}
+
+		if tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
+			return nil
+		}
 	}
 
 	if err := d.Set("auto_termination_policy", flattenAutoTerminationPolicy(atpOut.AutoTerminationPolicy)); err != nil {
