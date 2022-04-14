@@ -238,7 +238,7 @@ resource "aws_transfer_workflow" "test" {
     delete_step_details {
       name                 = %[1]q
       source_file_location = "$${original.file}"
-	}
+    }
     type = "DELETE"
   }
 }
@@ -254,7 +254,7 @@ resource "aws_transfer_workflow" "test" {
     delete_step_details {
       name                 = %[1]q
       source_file_location = "$${original.file}"
-	}
+    }
     type = "DELETE"
   }
 }
@@ -268,7 +268,7 @@ resource "aws_transfer_workflow" "test" {
     delete_step_details {
       name                 = %[1]q
       source_file_location = "$${original.file}"
-	}
+    }
     type = "DELETE"
   }
 
@@ -290,7 +290,7 @@ resource "aws_transfer_workflow" "test" {
     delete_step_details {
       name                 = %[1]q
       source_file_location = "$${original.file}"
-	}
+    }
     type = "DELETE"
   }
 
@@ -308,7 +308,7 @@ resource "aws_transfer_workflow" "test" {
     delete_step_details {
       name                 = %[1]q
       source_file_location = "$${original.file}"
-	}
+    }
     type = "DELETE"
   }
 
