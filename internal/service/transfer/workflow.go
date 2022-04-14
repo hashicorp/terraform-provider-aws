@@ -490,6 +490,7 @@ func resourceWorkflowRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("arn", output.Arn)
+	d.Set("description", output.Description)
 
 	if err := d.Set("on_exception_steps", flattenWorkflows(output.OnExceptionSteps)); err != nil {
 		return fmt.Errorf("error setting on_exception_steps: %w", err)
