@@ -1221,6 +1221,22 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		}
 	})
 
+	client.ECSConn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if r.Operation.Name == "WaitUntilServicesStable" {
+			if tfawserr.ErrCodeEquals(r.Error, "ResourceNotReady") {
+				// We only want to retry briefly as the default max retry count would
+				// excessively retry when the error could be legitimate.
+				// We currently depend on the DefaultRetryer exponential backoff here.
+				// ~10 retries gives a fair backoff of a few seconds.
+				if r.RetryCount < 9 {
+					r.Retryable = aws.Bool(true)
+				} else {
+					r.Retryable = aws.Bool(false)
+				}
+			}
+		}
+	})
+
 	client.FMSConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// Acceptance testing creates and deletes resources in quick succession.
 		// The FMS onboarding process into Organizations is opaque to consumers.
