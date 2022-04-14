@@ -13,7 +13,13 @@ If this is the first resource for a new service, please ensure the Service Clien
 
 ### Steps to Add a Resource
 
+#### Fork the provider and create a feature branch
+
+For a new resources use a branch named `f-{resource name}` for example: `f-ec2-vpc`. See [Raising a Pull Request](raising-a-pull-request.md) for more details.
+
 #### Name the resource: 
+
+Either by creating the file manually, or using `skaff` to generate a template.
 
 All resources should be named with the following pattern: `aws_<service>_<name>`
 
@@ -58,7 +64,7 @@ make docs-lint # run documentation linters
 
 #### Raise a Pull Request
 
-Create a pull request against the default branch of the provider detailing the resource you are adding and linking it to the related issue (create one if one does not exist). If possible make sure that the "Allow edits from maintainers" box is checked, this will greatly improve the speed at which we can get the Pull Request merged. Ensure that all linters are passing in the GitHub PR Check section.
+See [Raising a Pull Request](raising-a-pull-request.md).
 
 #### Wait for prioritization.
 

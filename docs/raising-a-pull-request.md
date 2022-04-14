@@ -17,7 +17,7 @@
 
 1. Create a changelog entry following the process outlined [here](#changelog-process)
 
-1. [Create a pull request](https://help.github.com/en/articles/creating-a-pull-request-from-a-fork).
+1. [Create a pull request](https://help.github.com/en/articles/creating-a-pull-request-from-a-fork). Please ensure (if possible)   the 'Allow edits from maintainers' checkbox is checked. This will allow the maintainers to make changes and merge the PR without requiring action from the contributor. 
    You are welcome to submit your pull request for commentary or review before
    it is fully completed by creating a [draft pull request](https://help.github.com/en/articles/about-pull-requests#draft-pull-requests)
    or adding `[WIP]` to the beginning of the pull request title.
