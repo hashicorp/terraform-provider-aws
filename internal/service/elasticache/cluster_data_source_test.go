@@ -11,6 +11,10 @@ import (
 )
 
 func TestAccElastiCacheClusterDataSource_Data_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
 	dataSourceName := "data.aws_elasticache_cluster.test"

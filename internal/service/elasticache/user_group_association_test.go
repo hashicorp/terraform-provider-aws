@@ -17,6 +17,10 @@ import (
 )
 
 func TestAccElastiCacheUserGroupAssociation_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_user_group_association.test"
 
@@ -44,6 +48,10 @@ func TestAccElastiCacheUserGroupAssociation_basic(t *testing.T) {
 }
 
 func TestAccElastiCacheUserGroupAssociation_update(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_user_group_association.test"
 

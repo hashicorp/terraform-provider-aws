@@ -384,6 +384,10 @@ func TestAccElastiCacheCluster_NumCacheNodes_increaseWithPreferredAvailabilityZo
 }
 
 func TestAccElastiCacheCluster_vpc(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var csg elasticache.CacheSubnetGroup
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -777,6 +781,10 @@ func TestAccElastiCacheCluster_Memcached_finalSnapshot(t *testing.T) {
 }
 
 func TestAccElastiCacheCluster_Redis_finalSnapshot(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var cluster elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -799,6 +807,10 @@ func TestAccElastiCacheCluster_Redis_finalSnapshot(t *testing.T) {
 }
 
 func TestAccElastiCacheCluster_Redis_autoMinorVersionUpgrade(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var cluster elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -836,6 +848,10 @@ func TestAccElastiCacheCluster_Redis_autoMinorVersionUpgrade(t *testing.T) {
 }
 
 func TestAccElastiCacheCluster_Engine_Redis_LogDeliveryConfigurations(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_cluster.test"
