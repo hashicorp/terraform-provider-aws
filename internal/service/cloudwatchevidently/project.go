@@ -22,6 +22,7 @@ func ResourceProject() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceProjectCreate,
 		ReadContext:   resourceProjectRead,
+		UpdateContext: resourceProjectUpdate,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -237,6 +238,66 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return nil
+}
+
+func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).CloudWatchEvidentlyConn
+
+	arn := d.Id()
+
+	// Project has 2 update APIs
+	// UpdateProjectWithContext: Updates the description of an existing project.
+	// UpdateProjectDataDeliveryWithContext: Updates the data storage options for this project.
+
+	if d.HasChanges("description") {
+		_, err := conn.UpdateProjectWithContext(ctx, &cloudwatchevidently.UpdateProjectInput{
+			Description: aws.String(d.Get("description").(string)),
+			Project:     aws.String(arn),
+		})
+
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating Project Description (%s): %w", d.Id(), err))
+		}
+	}
+
+	// A bug in the service API for UpdateProjectDataDelivery has been reported
+	// if d.HasChange("data_delivery") {
+	// 	input := &cloudwatchevidently.UpdateProjectDataDeliveryInput{
+	// 		Project: aws.String(arn),
+	// 	}
+
+	// 	dataDelivery := d.Get("data_delivery").([]interface{})
+
+	// 	tfMap, ok := dataDelivery[0].(map[string]interface{})
+
+	// 	if !ok {
+	// 		return diag.FromErr(fmt.Errorf("[ERROR] Error updating Project (%s)", d.Id()))
+	// 	}
+
+	// 	// You can't specify both cloudWatchLogs and s3Destination in the same operation.
+	// 	if v, ok := tfMap["cloudwatch_logs"]; ok && len(v.([]interface{})) > 0 {
+	// 		input.CloudWatchLogs = expandCloudWatchLogs(v.([]interface{}))
+	// 	}
+
+	// 	if v, ok := tfMap["s3_destination"]; ok && len(v.([]interface{})) > 0 {
+	// 		input.S3Destination = expandS3Destination(v.([]interface{}))
+	// 	}
+
+	// 	_, err := conn.UpdateProjectDataDeliveryWithContext(ctx, input)
+	// 	if err != nil {
+	// 		return diag.FromErr(fmt.Errorf("[ERROR] Error updating Project (%s): %w", d.Id(), err))
+	// 	}
+	// }
+
+	// updates to tags
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
+		}
+	}
+
+	return resourceProjectRead(ctx, d, meta)
 }
 
 func expandDataDelivery(dataDelivery []interface{}) *cloudwatchevidently.ProjectDataDeliveryConfig {
