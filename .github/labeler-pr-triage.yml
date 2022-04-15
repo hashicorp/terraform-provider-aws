@@ -650,6 +650,8 @@ service/workspaces:
 service/xray:
   - 'internal/service/xray/**/*'
   - 'website/**/xray_*'
+skaff:
+  - 'skaff/*'
 sweeper:
   - 'internal/sweep/**/*'
   - 'internal/service/**/sweep.go'
