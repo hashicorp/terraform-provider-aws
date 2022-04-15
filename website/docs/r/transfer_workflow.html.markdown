@@ -88,6 +88,8 @@ The following arguments are supported:
 
 ## Attributes Reference
 
+In addition to all arguments above, the following attributes are exported:
+
 * `arn` - The Workflow ARN.
 * `id` - The Workflow id.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
