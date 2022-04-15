@@ -197,7 +197,7 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 			continue
 		}
 
-		t.Fatal("Unsupported test mode")
+		t.Fatalf("Step %d/%d, unsupported test mode", i+1, len(c.Steps))
 	}
 }
 
