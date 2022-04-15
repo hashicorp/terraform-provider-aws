@@ -74,6 +74,93 @@ func TestAccProject_basic(t *testing.T) {
 	})
 }
 
+func TestAccProject_updateTags(t *testing.T) {
+	var project cloudwatchevidently.GetProjectOutput
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	description := "example description"
+	resourceName := "aws_cloudwatchevidently_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_basic(rName, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttrSet(resourceName, "active_experiment_count"),
+					resource.TestCheckResourceAttrSet(resourceName, "active_launch_count"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttrSet(resourceName, "experiment_count"),
+					resource.TestCheckResourceAttrSet(resourceName, "feature_count"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
+					resource.TestCheckResourceAttrSet(resourceName, "launch_count"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Test Project"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProjectConfig_tags(rName, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttrSet(resourceName, "active_experiment_count"),
+					resource.TestCheckResourceAttrSet(resourceName, "active_launch_count"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttrSet(resourceName, "experiment_count"),
+					resource.TestCheckResourceAttrSet(resourceName, "feature_count"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
+					resource.TestCheckResourceAttrSet(resourceName, "launch_count"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Test Project"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProjectConfig_tagsUpdated(rName, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttrSet(resourceName, "active_experiment_count"),
+					resource.TestCheckResourceAttrSet(resourceName, "active_launch_count"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttrSet(resourceName, "experiment_count"),
+					resource.TestCheckResourceAttrSet(resourceName, "feature_count"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
+					resource.TestCheckResourceAttrSet(resourceName, "launch_count"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Test Project"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccProject_disappears(t *testing.T) {
 	var project cloudwatchevidently.GetProjectOutput
 
@@ -154,6 +241,35 @@ resource "aws_cloudwatchevidently_project" "test" {
 
   tags = {
     "Key1" = "Test Project"
+  }
+}
+`, rName, description)
+}
+
+func testAccProjectConfig_tags(rName, description string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatchevidently_project" "test" {
+  name        = %[1]q
+  description = %[2]q
+
+  tags = {
+    "Key1" = "Test Project"
+    "Key2" = "Value2a"
+  }
+}
+`, rName, description)
+}
+
+func testAccProjectConfig_tagsUpdated(rName, description string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatchevidently_project" "test" {
+  name        = %[1]q
+  description = %[2]q
+
+  tags = {
+    "Key1" = "Test Project"
+    "Key2" = "Value2b"
+    "Key3" = "Value3"
   }
 }
 `, rName, description)
