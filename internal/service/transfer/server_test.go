@@ -63,6 +63,7 @@ func testAccServer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-2018-11"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "url", ""),
+					resource.TestCheckResourceAttr(resourceName, "workflow_details.#", "0"),
 				),
 			},
 			{
@@ -971,6 +972,37 @@ func testAccTransferServer_AuthenticationLoginBanners(t *testing.T) {
 	})
 }
 
+func testAccServer_workflowDetails(t *testing.T) {
+	var conf transfer.DescribedServer
+	resourceName := "aws_transfer_server.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerWorkflowConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "workflow_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workflow_details.0.on_upload.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_upload.0.execution_role", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_upload.0.workflow_id", "aws_transfer_workflow.test", "id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
 func testAccCheckServerExists(n string, v *transfer.DescribedServer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1638,4 +1670,46 @@ resource "aws_transfer_server" "test" {
   force_destroy = %[2]t
 }
 `, rName, forceDestroy))
+}
+
+func testAccServerWorkflowConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "transfer.amazonaws.com"
+      }
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_transfer_workflow" "test" {
+  steps {
+    delete_step_details {
+      name                 = "test"
+      source_file_location = "$${original.file}"
+    }
+    type = "DELETE"
+  }
+}
+
+resource "aws_transfer_server" "test" {
+  workflow_details {
+    on_upload {
+      execution_role = aws_iam_role.test.arn
+      workflow_id    = aws_transfer_workflow.test.id
+	}
+  }
+}
+`, rName)
 }

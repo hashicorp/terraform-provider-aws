@@ -36,6 +36,7 @@ func TestAccTransfer_serial(t *testing.T) {
 			"VPCAddressAllocationIDsSecurityGroupIDs":                testAccServer_vpcAddressAllocationIds_securityGroupIDs,
 			"VPCEndpointID":                                          testAccServer_vpcEndpointID,
 			"VPCSecurityGroupIDs":                                    testAccServer_vpcSecurityGroupIDs,
+			"Workflow":                                               testAccServer_workflowDetails,
 		},
 		"SSHKey": {
 			"basic": testAccSSHKey_basic,
