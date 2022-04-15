@@ -7,44 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appintegrationsservice"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
-
-// GetTag fetches an individual appintegrations service tag for a resource.
-// Returns whether the key value and any errors. A NotFoundError is used to signal that no value was found.
-// This function will optimise the handling over ListTags, if possible.
-// The identifier is typically the Amazon Resource Name (ARN), although
-// it may also be a different identifier depending on the service.
-func GetTag(conn *appintegrationsservice.AppIntegrationsService, identifier string, key string) (*string, error) {
-	listTags, err := ListTags(conn, identifier)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if !listTags.KeyExists(key) {
-		return nil, tfresource.NewEmptyResultError(nil)
-	}
-
-	return listTags.KeyValue(key), nil
-}
-
-// ListTags lists appintegrations service tags.
-// The identifier is typically the Amazon Resource Name (ARN), although
-// it may also be a different identifier depending on the service.
-func ListTags(conn *appintegrationsservice.AppIntegrationsService, identifier string) (tftags.KeyValueTags, error) {
-	input := &appintegrationsservice.ListTagsForResourceInput{
-		ResourceArn: aws.String(identifier),
-	}
-
-	output, err := conn.ListTagsForResource(input)
-
-	if err != nil {
-		return tftags.New(nil), err
-	}
-
-	return KeyValueTags(output.Tags), nil
-}
 
 // map[string]*string handling
 
