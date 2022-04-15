@@ -1,16 +1,26 @@
 package cloudwatchevidently
 
 import (
+	"context"
+	"fmt"
+	"log"
 	"regexp"
+	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceProject() *schema.Resource {
 	return &schema.Resource{
+		ReadContext: resourceProjectRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -130,4 +140,111 @@ func ResourceProject() *schema.Resource {
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
+}
+
+func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).CloudWatchEvidentlyConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	arn := d.Id()
+
+	resp, err := conn.GetProjectWithContext(ctx, &cloudwatchevidently.GetProjectInput{
+		Project: aws.String(arn),
+	})
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudwatchevidently.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] CloudWatch Evidently Project (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error getting CloudWatch Evidently Project (%s): %w", d.Id(), err))
+	}
+
+	if resp == nil || resp.Project == nil {
+		return diag.FromErr(fmt.Errorf("error getting CloudWatch Evidently Project (%s): empty response", d.Id()))
+	}
+
+	project := resp.Project
+
+	if err := d.Set("data_delivery", flattenDataDelivery(project.DataDelivery)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.Set("active_experiment_count", project.ActiveExperimentCount)
+	d.Set("active_launch_count", project.ActiveLaunchCount)
+	d.Set("arn", project.Arn)
+	d.Set("created_time", aws.TimeValue(project.CreatedTime).Format(time.RFC3339))
+	d.Set("description", project.Description)
+	d.Set("experiment_count", project.ExperimentCount)
+	d.Set("feature_count", project.FeatureCount)
+	d.Set("last_updated_time", aws.TimeValue(project.LastUpdatedTime).Format(time.RFC3339))
+	d.Set("launch_count", project.LaunchCount)
+	d.Set("name", project.Name)
+	d.Set("status", project.Status)
+
+	tags := KeyValueTags(resp.Project.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
+	}
+
+	return nil
+}
+
+func flattenDataDelivery(dataDelivery *cloudwatchevidently.ProjectDataDelivery) []interface{} {
+	if dataDelivery == nil {
+		return []interface{}{}
+	}
+
+	values := map[string]interface{}{}
+
+	if dataDelivery.CloudWatchLogs != nil {
+		values["cloudwatch_logs"] = flattenCloudWatchLogs(dataDelivery.CloudWatchLogs)
+	}
+
+	if dataDelivery.S3Destination != nil {
+		values["s3_destination"] = flattenS3Destination(dataDelivery.S3Destination)
+	}
+
+	return []interface{}{values}
+}
+
+func flattenCloudWatchLogs(cloudWatchLogs *cloudwatchevidently.CloudWatchLogsDestination) []interface{} {
+	if cloudWatchLogs == nil || cloudWatchLogs.LogGroup == nil {
+		return []interface{}{}
+	}
+
+	values := map[string]interface{}{}
+
+	if cloudWatchLogs.LogGroup != nil {
+		values["log_group"] = aws.StringValue(cloudWatchLogs.LogGroup)
+	}
+
+	return []interface{}{values}
+}
+
+func flattenS3Destination(s3Destination *cloudwatchevidently.S3Destination) []interface{} {
+	if s3Destination == nil || s3Destination.Bucket == nil {
+		return []interface{}{}
+	}
+
+	values := map[string]interface{}{}
+
+	if s3Destination.Bucket != nil {
+		values["bucket"] = aws.StringValue(s3Destination.Bucket)
+	}
+
+	if s3Destination.Prefix != nil {
+		values["prefix"] = aws.StringValue(s3Destination.Prefix)
+	}
+
+	return []interface{}{values}
 }
