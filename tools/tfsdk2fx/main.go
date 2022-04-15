@@ -176,6 +176,33 @@ func (e emitter) emitSchema(schema map[string]*schema.Schema) error {
 	return nil
 }
 
+// emitSchemaForResource generates the Plugin Framework code for a Plugin SDK Resource and emits the generated code to the emitter's Writer.
+func (e emitter) emitSchemaForResource(resource *schema.Resource) error {
+	e.printf("tfsdk.Schema{\n")
+
+	err := e.emitAttributesAndBlocks(nil, resource.Schema)
+
+	if err != nil {
+		return err
+	}
+
+	if version := resource.SchemaVersion; version > 0 {
+		e.printf("Version:%q,\n", version)
+	}
+
+	if description := resource.Description; description != "" {
+		e.printf("Description:%q,\n", description)
+	}
+
+	if deprecationMessage := resource.DeprecationMessage; deprecationMessage != "" {
+		e.printf("DeprecationMessage:%q,\n", deprecationMessage)
+	}
+
+	e.printf("}")
+
+	return nil
+}
+
 // emitAttributesAndBlocks generates the Plugin Framework code for a set of Plugin SDK Attribute and Block properties
 // and emits the generated code to the emitter's Writer.
 // Property names are sorted prior to code generation to reduce diffs.
