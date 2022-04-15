@@ -345,9 +345,9 @@ func expandCloudFormationOperationPreferences(tfMap map[string]interface{}) *clo
 		apiObject.FailureToleranceCount = nil
 	}
 
-	if mcc, mcp := aws.Int64Value(apiObject.MaxConcurrentCount), aws.Int64Value(apiObject.MaxConcurrentPercentage); mcc > 0 && mcp == 0 {
+	if mcc, mcp := aws.Int64Value(apiObject.MaxConcurrentCount), aws.Int64Value(apiObject.MaxConcurrentPercentage); mcp == 0 {
 		apiObject.MaxConcurrentPercentage = nil
-	} else if mcp > 0 && mcc == 0 {
+	} else if mcc == 0 {
 		apiObject.MaxConcurrentCount = nil
 	}
 
