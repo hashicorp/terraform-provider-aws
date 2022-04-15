@@ -366,7 +366,9 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 func testAccProjectConfig_dataDeliveryCloudWatchLogs(rName, rName2, rName3, description string) string {
-	return acctest.ConfigCompose(testAccProjectBaseConfig(rName, rName2), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccProjectBaseConfig(rName, rName2),
+		fmt.Sprintf(`
 resource "aws_cloudwatchevidently_project" "test" {
   name        = %[1]q
   description = %[2]q
@@ -385,7 +387,9 @@ resource "aws_cloudwatchevidently_project" "test" {
 }
 
 // func testAccProjectConfig_dataDeliveryS3Bucket(rName, rName2, rName3, description string) string {
-// 	return acctest.ConfigCompose(testAccProjectBaseConfig(rName, rName2), fmt.Sprintf(`
+// 	return acctest.ConfigCompose(
+// 		testAccProjectBaseConfig(rName, rName2),
+// 		fmt.Sprintf(`
 // resource "aws_cloudwatchevidently_project" "test" {
 //   name        = %[1]q
 //   description = %[2]q
