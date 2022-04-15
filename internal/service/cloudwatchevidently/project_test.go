@@ -161,6 +161,76 @@ func TestAccProject_updateTags(t *testing.T) {
 	})
 }
 
+func TestAccProject_updateDataDelivery(t *testing.T) {
+	var project cloudwatchevidently.GetProjectOutput
+
+	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	description := "example description"
+	resourceName := "aws_cloudwatchevidently_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_dataDeliveryCloudWatchLogs(rName, rName2, rName3, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttrSet(resourceName, "active_experiment_count"),
+					resource.TestCheckResourceAttrSet(resourceName, "active_launch_count"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "data_delivery.0.cloudwatch_logs.0.log_group", "aws_cloudwatch_log_group.test", "name"),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttrSet(resourceName, "experiment_count"),
+					resource.TestCheckResourceAttrSet(resourceName, "feature_count"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
+					resource.TestCheckResourceAttrSet(resourceName, "launch_count"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName3),
+					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Test Project"),
+				),
+			},
+			// A bug in the service API for UpdateProjectDataDelivery has been reported
+			// {
+			// 	ResourceName:      resourceName,
+			// 	ImportState:       true,
+			// 	ImportStateVerify: true,
+			// },
+			// {
+			// 	Config: testAccProjectConfig_dataDeliveryS3Bucket(rName, rName2, rName3, description),
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		testAccCheckProjectExists(resourceName, &project),
+			// 		resource.TestCheckResourceAttrSet(resourceName, "active_experiment_count"),
+			// 		resource.TestCheckResourceAttrSet(resourceName, "active_launch_count"),
+			// 		resource.TestCheckResourceAttrSet(resourceName, "arn"),
+			// 		resource.TestCheckResourceAttrSet(resourceName, "created_time"),
+			// 		resource.TestCheckResourceAttr(resourceName, "data_delivery.#", "1"),
+			// 		resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.#", "1"),
+			// 		resource.TestCheckResourceAttrPair(resourceName, "data_delivery.0.s3_destination.0.bucket", "aws_s3_bucket.test", "id"),
+			// 		resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.0.prefix", "test"),
+			// 		resource.TestCheckResourceAttr(resourceName, "description", description),
+			// 		resource.TestCheckResourceAttrSet(resourceName, "experiment_count"),
+			// 		resource.TestCheckResourceAttrSet(resourceName, "feature_count"),
+			// 		resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
+			// 		resource.TestCheckResourceAttrSet(resourceName, "launch_count"),
+			// 		resource.TestCheckResourceAttr(resourceName, "name", rName3),
+			// 		resource.TestCheckResourceAttrSet(resourceName, "status"),
+			// 		resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+			// 		resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Test Project"),
+			// 	),
+			// },
+		},
+	})
+}
+
 func TestAccProject_disappears(t *testing.T) {
 	var project cloudwatchevidently.GetProjectOutput
 
@@ -274,3 +344,62 @@ resource "aws_cloudwatchevidently_project" "test" {
 }
 `, rName, description)
 }
+
+func testAccProjectBaseConfig(rName, rName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket                  = aws_s3_bucket.test.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[2]q
+}
+`, rName, rName2)
+}
+
+func testAccProjectConfig_dataDeliveryCloudWatchLogs(rName, rName2, rName3, description string) string {
+	return acctest.ConfigCompose(testAccProjectBaseConfig(rName, rName2), fmt.Sprintf(`
+resource "aws_cloudwatchevidently_project" "test" {
+  name        = %[1]q
+  description = %[2]q
+
+  data_delivery {
+    cloudwatch_logs {
+      log_group = aws_cloudwatch_log_group.test.name
+    }
+  }
+
+  tags = {
+    "Key1" = "Test Project"
+  }
+}
+`, rName3, description))
+}
+
+// func testAccProjectConfig_dataDeliveryS3Bucket(rName, rName2, rName3, description string) string {
+// 	return acctest.ConfigCompose(testAccProjectBaseConfig(rName, rName2), fmt.Sprintf(`
+// resource "aws_cloudwatchevidently_project" "test" {
+//   name        = %[1]q
+//   description = %[2]q
+
+//   data_delivery {
+//     s3_destination {
+//       bucket = aws_s3_bucket.test.id
+//       prefix = "test"
+//     }
+//   }
+
+//   tags = {
+//     "Key1" = "Test Project"
+//   }
+// }
+// `, rName3, description))
+// }
