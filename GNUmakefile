@@ -94,6 +94,7 @@ docscheck:
 lint: golangci-lint providerlint importlint
 
 gh-workflows-lint:
+	@echo "==> Checking github workflows with actionlint..."
 	@actionlint
 
 golangci-lint:
