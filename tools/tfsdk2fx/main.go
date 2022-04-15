@@ -44,14 +44,14 @@ func main() {
 		Writer:      os.Stdout,
 		ErrorWriter: os.Stderr,
 	}
-	migrator := &schemaMigrator{
+	migrator := &migrator{
 		Ui: ui,
 	}
 
 	p := provider.Provider()
 
 	if *tfResourceType == "provider" {
-		migrator.SDKSchema = p.Schema
+		migrator.ProviderSchema = p.Schema
 	}
 
 	if err := migrator.migrate(outputFilename); err != nil {
@@ -60,13 +60,13 @@ func main() {
 	}
 }
 
-type schemaMigrator struct {
-	SDKSchema map[string]*schema.Schema
-	Ui        cli.Ui
+type migrator struct {
+	ProviderSchema map[string]*schema.Schema
+	Ui             cli.Ui
 }
 
 // migrate generates an identical schema into the specified output file.
-func (m *schemaMigrator) migrate(outputFilename string) error {
+func (m *migrator) migrate(outputFilename string) error {
 	m.infof("generating schema into %[1]q", outputFilename)
 
 	// Create target directory.
@@ -92,7 +92,7 @@ func (m *schemaMigrator) migrate(outputFilename string) error {
 	return nil
 }
 
-func (m *schemaMigrator) applyTemplate(filename, templateBody string, templateData *templateData) error {
+func (m *migrator) applyTemplate(filename, templateBody string, templateData *templateData) error {
 	tmpl, err := template.New("schema").Parse(templateBody)
 
 	if err != nil {
@@ -130,14 +130,18 @@ func (m *schemaMigrator) applyTemplate(filename, templateBody string, templateDa
 	return nil
 }
 
-func (m *schemaMigrator) generateTemplateData() (*templateData, error) {
+func (m *migrator) generateTemplateData() (*templateData, error) {
 	sb := strings.Builder{}
 	emitter := &emitter{
 		Ui:     m.Ui,
 		Writer: &sb,
 	}
 
-	err := emitter.emitSchema(m.SDKSchema)
+	var err error
+
+	if len(m.ProviderSchema) > 0 {
+		err = emitter.emitSchemaForProvider(m.ProviderSchema)
+	}
 
 	if err != nil {
 		return nil, fmt.Errorf("emitting schema code: %w", err)
@@ -151,7 +155,7 @@ func (m *schemaMigrator) generateTemplateData() (*templateData, error) {
 	return templateData, nil
 }
 
-func (m *schemaMigrator) infof(format string, a ...interface{}) {
+func (m *migrator) infof(format string, a ...interface{}) {
 	m.Ui.Info(fmt.Sprintf(format, a...))
 }
 
@@ -160,9 +164,8 @@ type emitter struct {
 	Writer io.Writer
 }
 
-// emitSchema generates the Plugin Framework code for a Plugin SDK root schema and emits the generated code to the emitter's Writer.
-// The root schema is the map of root property names to Attributes.
-func (e emitter) emitSchema(schema map[string]*schema.Schema) error {
+// emitSchemaForProvider generates the Plugin Framework code for a Plugin SDK Provider schema and emits the generated code to the emitter's Writer.
+func (e emitter) emitSchemaForProvider(schema map[string]*schema.Schema) error {
 	e.printf("tfsdk.Schema{\n")
 
 	err := e.emitAttributesAndBlocks(nil, schema)
