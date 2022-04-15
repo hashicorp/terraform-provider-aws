@@ -609,6 +609,10 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.SecurityPolicyName = aws.String(d.Get("security_policy_name").(string))
 		}
 
+		if d.HasChange("workflow_details") {
+			input.WorkflowDetails = expandWorkflowDetails(d.Get("workflow_details").([]interface{}))
+		}
+
 		if offlineUpdate {
 			if err := stopTransferServer(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return err

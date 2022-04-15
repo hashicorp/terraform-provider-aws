@@ -999,6 +999,16 @@ func testAccServer_workflowDetails(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
+			{
+				Config: testAccServerWorkflowConfigUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "workflow_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workflow_details.0.on_upload.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_upload.0.execution_role", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_upload.0.workflow_id", "aws_transfer_workflow.test2", "id"),
+				),
+			},
 		},
 	})
 }
@@ -1708,6 +1718,59 @@ resource "aws_transfer_server" "test" {
     on_upload {
       execution_role = aws_iam_role.test.arn
       workflow_id    = aws_transfer_workflow.test.id
+    }
+  }
+}
+`, rName)
+}
+
+func testAccServerWorkflowConfigUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "transfer.amazonaws.com"
+      }
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_transfer_workflow" "test" {
+  steps {
+    delete_step_details {
+      name                 = "test"
+      source_file_location = "$${original.file}"
+    }
+    type = "DELETE"
+  }
+}
+
+resource "aws_transfer_workflow" "test2" {
+	steps {
+	  delete_step_details {
+		name                 = "test"
+		source_file_location = "$${original.file}"
+	  }
+	  type = "DELETE"
+	}
+  }
+
+  
+resource "aws_transfer_server" "test" {
+  workflow_details {
+    on_upload {
+      execution_role = aws_iam_role.test.arn
+      workflow_id    = aws_transfer_workflow.test2.id
     }
   }
 }
