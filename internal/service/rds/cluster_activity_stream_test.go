@@ -29,7 +29,7 @@ func TestAccRDSClusterActivityStream_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartition(endpoints.AwsPartitionID, t)
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,
@@ -66,7 +66,7 @@ func TestAccRDSClusterActivityStream_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartition(endpoints.AwsPartitionID, t)
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    acctest.Providers,

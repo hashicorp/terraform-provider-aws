@@ -65,6 +65,24 @@ func TestAccEC2SnapshotCreateVolumePermission_disappears(t *testing.T) {
 	})
 }
 
+func testCheckResourceGetAttr(name, key string, value *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		ms := s.RootModule()
+		rs, ok := ms.Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+
+		is := rs.Primary
+		if is == nil {
+			return fmt.Errorf("No primary instance: %s", name)
+		}
+
+		*value = is.Attributes[key]
+		return nil
+	}
+}
+
 func testAccSnapshotCreateVolumePermissionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 

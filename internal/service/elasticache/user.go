@@ -125,7 +125,6 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return resourceUserRead(d, meta)
-
 }
 
 func resourceUserRead(d *schema.ResourceData, meta interface{}) error {

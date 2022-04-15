@@ -1221,6 +1221,26 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		}
 	})
 
+	client.ECSConn.Handlers.Retry.PushBack(func(r *request.Request) {
+		// By design the "WaitUntilServicesStable" method will poll every 15 seconds until a successful state
+		// has been reached. This will exit with a return code of 255 (ResourceNotReady) after 40 failed checks.
+		// Thus, here we retry the operation a set number of times as
+		// described in https://github.com/hashicorp/terraform-provider-aws/pull/23747.
+		if r.Operation.Name == "WaitUntilServicesStable" {
+			if tfawserr.ErrCodeEquals(r.Error, "ResourceNotReady") {
+				// We only want to retry briefly as the default max retry count would
+				// excessively retry when the error could be legitimate.
+				// We currently depend on the DefaultRetryer exponential backoff here.
+				// ~10 retries gives a fair backoff of a few seconds.
+				if r.RetryCount < 9 {
+					r.Retryable = aws.Bool(true)
+				} else {
+					r.Retryable = aws.Bool(false)
+				}
+			}
+		}
+	})
+
 	client.FMSConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// Acceptance testing creates and deletes resources in quick succession.
 		// The FMS onboarding process into Organizations is opaque to consumers.

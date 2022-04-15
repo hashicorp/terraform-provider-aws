@@ -16,6 +16,8 @@ const (
 	ErrCodeDependencyViolation                            = "DependencyViolation"
 	ErrCodeGatewayNotAttached                             = "Gateway.NotAttached"
 	ErrCodeIncorrectState                                 = "IncorrectState"
+	ErrCodeInvalidAMIIDNotFound                           = "InvalidAMIID.NotFound"
+	ErrCodeInvalidAMIIDUnavailable                        = "InvalidAMIID.Unavailable"
 	ErrCodeInvalidAddressNotFound                         = "InvalidAddress.NotFound"
 	ErrCodeInvalidAllocationIDNotFound                    = "InvalidAllocationID.NotFound"
 	ErrCodeInvalidAssociationIDNotFound                   = "InvalidAssociationID.NotFound"

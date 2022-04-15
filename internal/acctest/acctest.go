@@ -653,24 +653,33 @@ func PreCheckMultipleRegion(t *testing.T, regions int) {
 
 // PreCheckRegion checks that the test region is the specified region.
 func PreCheckRegion(t *testing.T, region string) {
-	if Region() != region {
-		t.Skipf("skipping tests; %s (%s) does not equal %s", conns.EnvVarDefaultRegion, Region(), region)
+	if curr := Region(); curr != region {
+		t.Skipf("skipping tests; %s (%s) does not equal %s", conns.EnvVarDefaultRegion, curr, region)
 	}
 }
 
 // PreCheckRegionNot checks that the test region is not one of the specified regions.
 func PreCheckRegionNot(t *testing.T, regions ...string) {
 	for _, region := range regions {
-		if Region() == region {
-			t.Skipf("skipping tests; %s (%s) not supported", conns.EnvVarDefaultRegion, region)
+		if curr := Region(); curr == region {
+			t.Skipf("skipping tests; %s (%s) not supported", conns.EnvVarDefaultRegion, curr)
 		}
 	}
 }
 
 // PreCheckPartition checks that the test partition is the specified partition.
-func PreCheckPartition(partition string, t *testing.T) {
-	if Partition() != partition {
-		t.Skipf("skipping tests; current partition (%s) does not equal %s", Partition(), partition)
+func PreCheckPartition(t *testing.T, partition string) {
+	if curr := Partition(); curr != partition {
+		t.Skipf("skipping tests; current partition (%s) does not equal %s", curr, partition)
+	}
+}
+
+// PreCheckPartitionNot checks that the test partition is not one of the specified partitions.
+func PreCheckPartitionNot(t *testing.T, partitions ...string) {
+	for _, partition := range partitions {
+		if curr := Partition(); curr == partition {
+			t.Skipf("skipping tests; current partition (%s) not supported", curr)
+		}
 	}
 }
 

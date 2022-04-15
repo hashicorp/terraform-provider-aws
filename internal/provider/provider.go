@@ -1144,6 +1144,7 @@ func Provider() *schema.Provider {
 			"aws_datasync_agent":                            datasync.ResourceAgent(),
 			"aws_datasync_location_efs":                     datasync.ResourceLocationEFS(),
 			"aws_datasync_location_fsx_lustre_file_system":  datasync.ResourceLocationFSxLustreFileSystem(),
+			"aws_datasync_location_fsx_openzfs_file_system": datasync.ResourceLocationFSxOpenZfsFileSystem(),
 			"aws_datasync_location_fsx_windows_file_system": datasync.ResourceLocationFSxWindowsFileSystem(),
 			"aws_datasync_location_hdfs":                    datasync.ResourceLocationHdfs(),
 			"aws_datasync_location_nfs":                     datasync.ResourceLocationNFS(),
@@ -1365,6 +1366,7 @@ func Provider() *schema.Provider {
 			"aws_elasticache_subnet_group":             elasticache.ResourceSubnetGroup(),
 			"aws_elasticache_user":                     elasticache.ResourceUser(),
 			"aws_elasticache_user_group":               elasticache.ResourceUserGroup(),
+			"aws_elasticache_user_group_association":   elasticache.ResourceUserGroupAssociation(),
 
 			"aws_elastic_beanstalk_application":            elasticbeanstalk.ResourceApplication(),
 			"aws_elastic_beanstalk_application_version":    elasticbeanstalk.ResourceApplicationVersion(),
@@ -1682,6 +1684,7 @@ func Provider() *schema.Provider {
 			"aws_pinpoint_sms_channel":               pinpoint.ResourceSMSChannel(),
 
 			"aws_qldb_ledger": qldb.ResourceLedger(),
+			"aws_qldb_stream": qldb.ResourceStream(),
 
 			"aws_quicksight_data_source":      quicksight.ResourceDataSource(),
 			"aws_quicksight_group":            quicksight.ResourceGroup(),
