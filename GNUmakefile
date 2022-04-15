@@ -137,6 +137,7 @@ tools:
 	cd tools && go install github.com/terraform-linters/tflint
 	cd tools && go install github.com/pavius/impi/cmd/impi
 	cd tools && go install github.com/hashicorp/go-changelog/cmd/changelog-build
+	cd tools && go install github.com/rhysd/actionlint/cmd/actionlint@latest
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -145,6 +146,9 @@ test-compile:
 		exit 1; \
 	fi
 	go test -c $(TEST) $(TESTARGS)
+
+gh-workflows-lint:
+	@actionlint
 
 website-link-check:
 	@scripts/markdown-link-check.sh
