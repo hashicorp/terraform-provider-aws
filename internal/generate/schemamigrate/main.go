@@ -11,6 +11,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"sort"
 	"strings"
 	"text/template"
 
@@ -164,6 +165,8 @@ type emitter struct {
 	Writer io.Writer
 }
 
+// emitRootSchema generates the Plugin Framework code for a Plugin SDK root schema and emits the generated code to the emitter's Writer.
+// The root schema is the map of root property names to Attributes.
 func (e emitter) emitRootSchema(schema map[string]*schema.Schema) error {
 	err := e.emitSchema(schema)
 
@@ -174,12 +177,21 @@ func (e emitter) emitRootSchema(schema map[string]*schema.Schema) error {
 	return nil
 }
 
+// emitSchema generates the Plugin Framework code for a Plugin SDK schema and emits the generated code to the emitter's Writer.
+// A schema is a map of property names to Attributes.
+// Property names are sorted prior to code generation to reduce diffs.
 func (e emitter) emitSchema(schema map[string]*schema.Schema) error {
+	names := make([]string, 0)
+	for name := range schema {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
 	e.printf("map[string]tfsdk.Attribute{\n")
-	for name, attribute := range schema {
+	for _, name := range names {
 		e.printf("%q:", name)
 
-		err := e.emitAttribute(attribute)
+		err := e.emitAttribute(schema[name])
 
 		if err != nil {
 			return err
@@ -192,6 +204,7 @@ func (e emitter) emitSchema(schema map[string]*schema.Schema) error {
 	return nil
 }
 
+// emitAttribute generates the Plugin Framework code for a Plugin SDK property's Attributes and emits the generated code to the emitter's Writer.
 func (e emitter) emitAttribute(attribute *schema.Schema) error {
 	e.printf("{\n")
 	e.printf("}")
