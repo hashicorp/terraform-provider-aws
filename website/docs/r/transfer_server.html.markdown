@@ -107,14 +107,24 @@ The following arguments are supported:
 * `pre_authentication_login_banner`- (Optional) Specify a string to display when users connect to a server. This string is displayed before the user authenticates.
 * `security_policy_name` - (Optional) Specifies the name of the security policy that is attached to the server. Possible values are `TransferSecurityPolicy-2018-11`, `TransferSecurityPolicy-2020-06`, and  `TransferSecurityPolicy-FIPS-2020-06`. Default value is: `TransferSecurityPolicy-2018-11`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `workflow_details` - (Optional) Specifies the workflow details. See Workflow Details below.
 
-**endpoint_details** requires the following:
+### Endpoint Details
 
 * `address_allocation_ids` - (Optional) A list of address allocation IDs that are required to attach an Elastic IP address to your SFTP server's endpoint. This property can only be used when `endpoint_type` is set to `VPC`.
 * `security_group_ids` - (Optional) A list of security groups IDs that are available to attach to your server's endpoint. If no security groups are specified, the VPC's default security groups are automatically assigned to your endpoint. This property can only be used when `endpoint_type` is set to `VPC`.
 * `subnet_ids` - (Optional) A list of subnet IDs that are required to host your SFTP server endpoint in your VPC. This property can only be used when `endpoint_type` is set to `VPC`.
 * `vpc_endpoint_id` - (Optional) The ID of the VPC endpoint. This property can only be used when `endpoint_type` is set to `VPC_ENDPOINT`
 * `vpc_id` - (Optional) The VPC ID of the virtual private cloud in which the SFTP server's endpoint will be hosted. This property can only be used when `endpoint_type` is set to `VPC`.
+
+### Workflow Details
+
+* `on_upload` - (Optional) A trigger that starts a workflow: the workflow begins to execute after a file is uploaded. See Workflow Detail below.
+
+#### Workflow Detail
+
+* `execution_role` - (Required) Includes the necessary permissions for S3, EFS, and Lambda operations that Transfer can assume, so that all workflow steps can operate on the required resources.
+* `workflow_id` - (Required)  A unique identifier for the workflow.
 
 ## Attributes Reference
 In addition to all arguments above, the following attributes are exported:

@@ -1943,10 +1943,11 @@ func Provider() *schema.Provider {
 			"aws_timestreamwrite_database": timestreamwrite.ResourceDatabase(),
 			"aws_timestreamwrite_table":    timestreamwrite.ResourceTable(),
 
-			"aws_transfer_access":  transfer.ResourceAccess(),
-			"aws_transfer_server":  transfer.ResourceServer(),
-			"aws_transfer_ssh_key": transfer.ResourceSSHKey(),
-			"aws_transfer_user":    transfer.ResourceUser(),
+			"aws_transfer_access":   transfer.ResourceAccess(),
+			"aws_transfer_server":   transfer.ResourceServer(),
+			"aws_transfer_ssh_key":  transfer.ResourceSSHKey(),
+			"aws_transfer_user":     transfer.ResourceUser(),
+			"aws_transfer_workflow": transfer.ResourceWorkflow(),
 
 			"aws_waf_byte_match_set":          waf.ResourceByteMatchSet(),
 			"aws_waf_geo_match_set":           waf.ResourceGeoMatchSet(),
