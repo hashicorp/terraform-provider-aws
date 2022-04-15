@@ -8,27 +8,37 @@ import (
 	testing "github.com/mitchellh/go-testing-interface"
 )
 
-// InitContext creates SDK logger contexts.
+// InitContext creates SDK logger contexts when the provider is running in
+// "production" (not under acceptance testing). The incoming context will
+// already have the root SDK logger and root provider logger setup from
+// terraform-plugin-go tf5server RPC handlers.
 func InitContext(ctx context.Context) context.Context {
-	ctx = tfsdklog.NewRootSDKLogger(ctx)
-	ctx = tfsdklog.NewSubsystem(ctx, SubsystemHelperResource, tfsdklog.WithLevelFromEnv(EnvTfLogSdkHelperResource))
-	ctx = tfsdklog.NewSubsystem(ctx, SubsystemHelperSchema, tfsdklog.WithLevelFromEnv(EnvTfLogSdkHelperSchema))
+	ctx = tfsdklog.NewSubsystem(ctx, SubsystemHelperSchema,
+		// All calls are through the HelperSchema* helper functions
+		tfsdklog.WithAdditionalLocationOffset(1),
+		tfsdklog.WithLevelFromEnv(EnvTfLogSdkHelperSchema),
+	)
 
 	return ctx
 }
 
 // InitTestContext registers the terraform-plugin-log/tfsdklog test sink,
 // configures the standard library log package, and creates SDK logger
-// contexts.
+// contexts. The incoming context is expected to be devoid of logging setup.
 //
-// It may be possible to eliminate the helper/logging handling if all
-// log package calls are replaced with tfsdklog and any go-plugin or
-// terraform-exec logger configurations are updated to the tfsdklog logger.
+// The standard library log package handling is important as provider code
+// under test may be using that package or another logging library outside of
+// terraform-plugin-log.
 func InitTestContext(ctx context.Context, t testing.T) context.Context {
 	helperlogging.SetOutput(t)
 
 	ctx = tfsdklog.RegisterTestSink(ctx, t)
-	ctx = InitContext(ctx)
+	ctx = tfsdklog.NewRootSDKLogger(ctx, tfsdklog.WithLevelFromEnv(EnvTfLogSdk))
+	ctx = tfsdklog.NewSubsystem(ctx, SubsystemHelperResource,
+		// All calls are through the HelperResource* helper functions
+		tfsdklog.WithAdditionalLocationOffset(1),
+		tfsdklog.WithLevelFromEnv(EnvTfLogSdkHelperResource),
+	)
 	ctx = TestNameContext(ctx, t.Name())
 
 	return ctx
@@ -37,7 +47,6 @@ func InitTestContext(ctx context.Context, t testing.T) context.Context {
 // TestNameContext adds the current test name to loggers.
 func TestNameContext(ctx context.Context, testName string) context.Context {
 	ctx = tfsdklog.SubsystemWith(ctx, SubsystemHelperResource, KeyTestName, testName)
-	ctx = tfsdklog.SubsystemWith(ctx, SubsystemHelperSchema, KeyTestName, testName)
 
 	return ctx
 }
@@ -45,7 +54,6 @@ func TestNameContext(ctx context.Context, testName string) context.Context {
 // TestStepNumberContext adds the current test step number to loggers.
 func TestStepNumberContext(ctx context.Context, stepNumber int) context.Context {
 	ctx = tfsdklog.SubsystemWith(ctx, SubsystemHelperResource, KeyTestStepNumber, stepNumber)
-	ctx = tfsdklog.SubsystemWith(ctx, SubsystemHelperSchema, KeyTestStepNumber, stepNumber)
 
 	return ctx
 }
@@ -53,7 +61,6 @@ func TestStepNumberContext(ctx context.Context, stepNumber int) context.Context 
 // TestTerraformPathContext adds the current test Terraform CLI path to loggers.
 func TestTerraformPathContext(ctx context.Context, terraformPath string) context.Context {
 	ctx = tfsdklog.SubsystemWith(ctx, SubsystemHelperResource, KeyTestTerraformPath, terraformPath)
-	ctx = tfsdklog.SubsystemWith(ctx, SubsystemHelperSchema, KeyTestTerraformPath, terraformPath)
 
 	return ctx
 }
@@ -61,7 +68,6 @@ func TestTerraformPathContext(ctx context.Context, terraformPath string) context
 // TestWorkingDirectoryContext adds the current test working directory to loggers.
 func TestWorkingDirectoryContext(ctx context.Context, workingDirectory string) context.Context {
 	ctx = tfsdklog.SubsystemWith(ctx, SubsystemHelperResource, KeyTestWorkingDirectory, workingDirectory)
-	ctx = tfsdklog.SubsystemWith(ctx, SubsystemHelperSchema, KeyTestWorkingDirectory, workingDirectory)
 
 	return ctx
 }
