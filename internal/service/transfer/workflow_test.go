@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccWorkflow_basic(t *testing.T) {
+func TestAccTransferWorkflow_basic(t *testing.T) {
 	var conf transfer.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
 	rName := sdkacctest.RandString(25)
@@ -49,7 +49,7 @@ func TestAccWorkflow_basic(t *testing.T) {
 	})
 }
 
-func TestAccWorkflow_onExecution(t *testing.T) {
+func TestAccTransferWorkflow_onExecution(t *testing.T) {
 	var conf transfer.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
 	rName := sdkacctest.RandString(25)
@@ -87,7 +87,7 @@ func TestAccWorkflow_onExecution(t *testing.T) {
 	})
 }
 
-func TestAccWorkflow_description(t *testing.T) {
+func TestAccTransferWorkflow_description(t *testing.T) {
 	var conf transfer.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
 	rName := sdkacctest.RandString(25)
@@ -114,7 +114,7 @@ func TestAccWorkflow_description(t *testing.T) {
 	})
 }
 
-func TestAccWorkflow_tags(t *testing.T) {
+func TestAccTransferWorkflow_tags(t *testing.T) {
 	var conf transfer.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
 	rName := sdkacctest.RandString(25)
@@ -159,7 +159,7 @@ func TestAccWorkflow_tags(t *testing.T) {
 	})
 }
 
-func TestAccWorkflow_disappears(t *testing.T) {
+func TestAccTransferWorkflow_disappears(t *testing.T) {
 	var conf transfer.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
 	rName := sdkacctest.RandString(25)
