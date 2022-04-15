@@ -205,8 +205,11 @@ func (e emitter) emitSchema(schema map[string]*schema.Schema) error {
 }
 
 // emitAttribute generates the Plugin Framework code for a Plugin SDK property's Attributes and emits the generated code to the emitter's Writer.
-func (e emitter) emitAttribute(attribute *schema.Schema) error {
+func (e emitter) emitAttribute(property *schema.Schema) error {
 	e.printf("{\n")
+	if description := property.Description; description != "" {
+		e.printf("Description:%q,\n", description)
+	}
 	e.printf("}")
 
 	return nil
