@@ -329,6 +329,30 @@ func TestAccCloudFormationStackSet_operationPreferences(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
 				),
 			},
+			{
+				Config: testAccStackSetOperationPreferencesConfig(rName, 0, 3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackSetExists(resourceName, &stackSet),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
+				),
+			},
+			{
+				Config: testAccStackSetOperationPreferencesUpdatedConfig(rName, 0, 95),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackSetExists(resourceName, &stackSet),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "95"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
+				),
+			},
 		},
 	})
 }
