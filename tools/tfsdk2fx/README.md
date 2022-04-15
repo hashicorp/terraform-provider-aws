@@ -7,4 +7,4 @@ This tool
 * Introspects a Plugin SDK v2 resource schema
 * Generates Go code for the identical schema targeting the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework)
 
-Run `go run internal/generate/schemamigrate/main.go --help` to see all options.
+Run `tfsdk2fx --help` to see all options.

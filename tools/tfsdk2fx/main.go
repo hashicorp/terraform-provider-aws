@@ -23,9 +23,7 @@ var (
 
 func usage() {
 	fmt.Fprintf(os.Stderr, "Usage:\n")
-	fmt.Fprintf(os.Stderr, "\tmain.go [flags] -resource <TF-resource-type> <generated-schema-file>\n\n")
-	fmt.Fprintf(os.Stderr, "Flags:\n")
-	flag.PrintDefaults()
+	fmt.Fprintf(os.Stderr, "\ttfsdk2fx -resource <TF-resource-type> <generated-schema-file>\n\n")
 }
 
 func main() {
