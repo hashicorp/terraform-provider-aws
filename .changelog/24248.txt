@@ -3,5 +3,5 @@ aws_transfer_workflow
 ```
 
 ```release-note:enhancement
-resource/aws_transfer_workflow: Add `workflow_details` argument.
+resource/aws_transfer_server: Add `workflow_details` argument
 ```
