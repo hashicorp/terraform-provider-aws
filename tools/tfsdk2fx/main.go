@@ -186,7 +186,7 @@ func (e emitter) emitSchema(path []string, schema map[string]*schema.Schema) err
 	for _, name := range names {
 		property := schema[name]
 
-		if !e.isAttribute(property) {
+		if !isAttribute(property) {
 			continue
 		}
 
@@ -206,7 +206,7 @@ func (e emitter) emitSchema(path []string, schema map[string]*schema.Schema) err
 	for _, name := range names {
 		property := schema[name]
 
-		if e.isAttribute(property) {
+		if isAttribute(property) {
 			continue
 		}
 
@@ -431,8 +431,23 @@ func (e emitter) emitBlock(path []string, property *schema.Schema) error {
 	return nil
 }
 
+// printf emits a formatted string to the underlying writer.
+func (e emitter) printf(format string, a ...interface{}) (int, error) {
+	return fprintf(e.Writer, format, a...)
+}
+
+// warnf emits a formatted warning message to the UI.
+func (e emitter) warnf(format string, a ...interface{}) {
+	e.Ui.Warn(fmt.Sprintf(format, a...))
+}
+
+// fprintf writes a formatted string to a Writer.
+func fprintf(w io.Writer, format string, a ...interface{}) (int, error) {
+	return io.WriteString(w, fmt.Sprintf(format, a...))
+}
+
 // isAttribute returns whether or not the specified property should be emitted as an Attribute.
-func (e emitter) isAttribute(property *schema.Schema) bool {
+func isAttribute(property *schema.Schema) bool {
 	if property.Elem == nil {
 		return true
 	}
@@ -460,21 +475,6 @@ func (e emitter) isAttribute(property *schema.Schema) bool {
 	}
 
 	return false
-}
-
-// printf emits a formatted string to the underlying writer.
-func (e emitter) printf(format string, a ...interface{}) (int, error) {
-	return fprintf(e.Writer, format, a...)
-}
-
-// warnf emits a formatted warning message to the UI.
-func (e emitter) warnf(format string, a ...interface{}) {
-	e.Ui.Warn(fmt.Sprintf(format, a...))
-}
-
-// fprintf writes a formatted string to a Writer.
-func fprintf(w io.Writer, format string, a ...interface{}) (int, error) {
-	return io.WriteString(w, fmt.Sprintf(format, a...))
 }
 
 func unsupportedTypeError(path []string, typ string) error {
