@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcloudwatchevidently "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevidently"
 )
 
 func TestAccProject_basic(t *testing.T) {
@@ -68,6 +69,31 @@ func TestAccProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Test Project"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccProject_disappears(t *testing.T) {
+	var project cloudwatchevidently.GetProjectOutput
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	description := "disappears"
+	resourceName := "aws_cloudwatchevidently_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_basic(rName, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchevidently.ResourceProject(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
