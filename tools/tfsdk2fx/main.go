@@ -216,6 +216,8 @@ func (e emitter) emitSchemaForResource(resource *schema.Resource) error {
 
 	e.printf("}")
 
+	// TODO Add implicit "id" Attribute.
+
 	return nil
 }
 
