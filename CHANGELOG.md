@@ -1,4 +1,6 @@
-## 4.10.0 (Unreleased)
+## 4.11.0 (Unreleased)
+
+## 4.10.0 (April 14, 2022)
 
 FEATURES:
 
