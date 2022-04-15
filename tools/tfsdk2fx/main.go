@@ -440,6 +440,12 @@ func (e emitter) emitBlock(path []string, property *schema.Schema) error {
 	case schema.TypeList:
 		switch v := property.Elem.(type) {
 		case *schema.Resource:
+			err := e.emitAttributesAndBlocks(path, v.Schema)
+
+			if err != nil {
+				return err
+			}
+
 			e.printf("NestingMode:tfsdk.BlockNestingModeList,\n")
 
 		default:
