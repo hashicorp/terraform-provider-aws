@@ -651,7 +651,7 @@ service/xray:
   - 'internal/service/xray/**/*'
   - 'website/**/xray_*'
 skaff:
-  - 'skaff/*'
+  - 'skaff/**/*'
 sweeper:
   - 'internal/sweep/**/*'
   - 'internal/service/**/sweep.go'
