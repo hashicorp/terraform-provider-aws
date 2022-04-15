@@ -20,7 +20,8 @@ import (
 
 func ResourceProject() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: resourceProjectRead,
+		CreateContext: resourceProjectCreate,
+		ReadContext:   resourceProjectRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -142,6 +143,45 @@ func ResourceProject() *schema.Resource {
 	}
 }
 
+func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).CloudWatchEvidentlyConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	name := d.Get("name").(string)
+
+	input := &cloudwatchevidently.CreateProjectInput{
+		Name: aws.String(name),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("data_delivery"); ok && len(v.([]interface{})) > 0 {
+		input.DataDelivery = expandDataDelivery(v.([]interface{}))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	log.Printf("[DEBUG] Creating CloudWatch Evidently Project %s", input)
+	output, err := conn.CreateProjectWithContext(ctx, input)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error creating CloudWatch Evidently Project (%s): %w", name, err))
+	}
+
+	if output == nil {
+		return diag.FromErr(fmt.Errorf("error creating CloudWatch Evidently Project (%s): empty output", name))
+	}
+
+	d.SetId(aws.StringValue(output.Project.Arn))
+
+	return resourceProjectRead(ctx, d, meta)
+}
+
 func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudWatchEvidentlyConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -197,6 +237,71 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return nil
+}
+
+func expandDataDelivery(dataDelivery []interface{}) *cloudwatchevidently.ProjectDataDeliveryConfig {
+	if len(dataDelivery) == 0 || dataDelivery[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := dataDelivery[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &cloudwatchevidently.ProjectDataDeliveryConfig{}
+
+	if v, ok := tfMap["cloudwatch_logs"]; ok && len(v.([]interface{})) > 0 {
+		result.CloudWatchLogs = expandCloudWatchLogs(v.([]interface{}))
+	}
+
+	if v, ok := tfMap["s3_destination"]; ok && len(v.([]interface{})) > 0 {
+		result.S3Destination = expandS3Destination(v.([]interface{}))
+	}
+
+	return result
+}
+
+func expandCloudWatchLogs(cloudWatchLogs []interface{}) *cloudwatchevidently.CloudWatchLogsDestinationConfig {
+	if len(cloudWatchLogs) == 0 || cloudWatchLogs[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := cloudWatchLogs[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &cloudwatchevidently.CloudWatchLogsDestinationConfig{}
+
+	if v, ok := tfMap["log_group"].(string); ok && v != "" {
+		result.LogGroup = aws.String(v)
+	}
+
+	return result
+}
+
+func expandS3Destination(s3Destination []interface{}) *cloudwatchevidently.S3DestinationConfig {
+	if len(s3Destination) == 0 || s3Destination[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := s3Destination[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &cloudwatchevidently.S3DestinationConfig{}
+
+	if v, ok := tfMap["bucket"].(string); ok && v != "" {
+		result.Bucket = aws.String(v)
+	}
+
+	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+		result.Prefix = aws.String(v)
+	}
+
+	return result
 }
 
 func flattenDataDelivery(dataDelivery *cloudwatchevidently.ProjectDataDelivery) []interface{} {
