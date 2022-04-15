@@ -42,6 +42,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudsearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevidently"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
@@ -1066,6 +1067,8 @@ func Provider() *schema.Provider {
 			"aws_cloudwatch_log_stream":              cloudwatchlogs.ResourceStream(),
 			"aws_cloudwatch_log_subscription_filter": cloudwatchlogs.ResourceSubscriptionFilter(),
 			"aws_cloudwatch_query_definition":        cloudwatchlogs.ResourceQueryDefinition(),
+
+			"aws_cloudwatchevidently_project": cloudwatchevidently.ResourceProject(),
 
 			"aws_codeartifact_domain":                        codeartifact.ResourceDomain(),
 			"aws_codeartifact_domain_permissions_policy":     codeartifact.ResourceDomainPermissionsPolicy(),
