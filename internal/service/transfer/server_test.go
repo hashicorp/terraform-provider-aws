@@ -1755,7 +1755,7 @@ resource "aws_transfer_workflow" "test" {
   }
 }
 
-resource "aws_transfer_workflow" "test" {
+resource "aws_transfer_workflow" "test2" {
   steps {
     delete_step_details {
       name                 = "test"
