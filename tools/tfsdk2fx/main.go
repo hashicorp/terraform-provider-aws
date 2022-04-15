@@ -163,7 +163,7 @@ type emitter struct {
 // emitRootSchema generates the Plugin Framework code for a Plugin SDK root schema and emits the generated code to the emitter's Writer.
 // The root schema is the map of root property names to Attributes.
 func (e emitter) emitRootSchema(schema map[string]*schema.Schema) error {
-	err := e.emitSchema(nil, schema)
+	err := e.emitAttributesAndBlocks(nil, schema)
 
 	if err != nil {
 		return err
@@ -172,10 +172,10 @@ func (e emitter) emitRootSchema(schema map[string]*schema.Schema) error {
 	return nil
 }
 
-// emitSchema generates the Plugin Framework code for a Plugin SDK schema and emits the generated code to the emitter's Writer.
-// A schema is a map of property names to Attributes.
+// emitAttributesAndBlocks generates the Plugin Framework code for a set of Plugin SDK Attribute and Block properties
+// and emits the generated code to the emitter's Writer.
 // Property names are sorted prior to code generation to reduce diffs.
-func (e emitter) emitSchema(path []string, schema map[string]*schema.Schema) error {
+func (e emitter) emitAttributesAndBlocks(path []string, schema map[string]*schema.Schema) error {
 	names := make([]string, 0)
 	for name := range schema {
 		names = append(names, name)
@@ -225,7 +225,8 @@ func (e emitter) emitSchema(path []string, schema map[string]*schema.Schema) err
 	return nil
 }
 
-// emitAttribute generates the Plugin Framework code for a Plugin SDK property's Attribute and emits the generated code to the emitter's Writer.
+// emitAttribute generates the Plugin Framework code for a Plugin SDK Attribute property
+// and emits the generated code to the emitter's Writer.
 func (e emitter) emitAttribute(path []string, property *schema.Schema) error {
 	e.printf("{\n")
 
@@ -380,7 +381,8 @@ func (e emitter) emitAttribute(path []string, property *schema.Schema) error {
 	return nil
 }
 
-// emitBlock generates the Plugin Framework code for a Plugin SDK property's Block and emits the generated code to the emitter's Writer.
+// emitBlock generates the Plugin Framework code for a Plugin SDK Block property
+// and emits the generated code to the emitter's Writer.
 func (e emitter) emitBlock(path []string, property *schema.Schema) error {
 	e.printf("{\n")
 
