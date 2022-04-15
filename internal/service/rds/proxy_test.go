@@ -412,6 +412,32 @@ func TestAccRDSProxy_authSecretARN(t *testing.T) {
 	})
 }
 
+func TestAccRDSProxy_authUsername(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbProxy rds.DBProxy
+	resourceName := "aws_db_proxy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckProxyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProxyNameConfig(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProxyExists(resourceName, &dbProxy),
+					resource.TestCheckResourceAttr(resourceName, "auth.0.username", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSProxy_tags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
