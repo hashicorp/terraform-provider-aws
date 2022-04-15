@@ -388,3 +388,5 @@ service/workspaces:
   - '((\*|-) ?`?|(data|resource) "?)aws_workspaces_'
 service/xray:
   - '((\*|-) ?`?|(data|resource) "?)aws_xray_'
+skaff:
+  - '\bskaff\b'

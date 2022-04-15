@@ -139,7 +139,7 @@ variable "workflow_labels" {
       description = "Managed by automation to categorize the size of a PR."
     },
     "skaff" = {
-      color       = "828a90", # color:stale grey
+      color       = "63d0ff", # color:packer
       description = "Issues and pull requested related to the skaff tool"
     }
     "stale" = {
