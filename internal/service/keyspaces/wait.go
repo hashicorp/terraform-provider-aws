@@ -13,6 +13,8 @@ import (
 const (
 	keyspaceExistsTimeout     = 1 * time.Minute
 	keyspaceDisappearsTimeout = 1 * time.Minute
+	tableExistsTimeout        = 5 * time.Minute
+	tableDisappearsTimeout    = 20 * time.Minute
 )
 
 func waitKeyspaceExists(ctx context.Context, conn *keyspaces.Keyspaces, name string) error {
