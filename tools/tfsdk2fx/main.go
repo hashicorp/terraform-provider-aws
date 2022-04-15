@@ -184,21 +184,41 @@ func (e emitter) emitSchema(path []string, schema map[string]*schema.Schema) err
 
 	e.printf("Attributes: map[string]tfsdk.Attribute{\n")
 	for _, name := range names {
-		err := e.emitAttribute(name, append(path, name), schema[name])
+		property := schema[name]
+
+		if !e.isAttribute(property) {
+			continue
+		}
+
+		e.printf("%q:", name)
+
+		err := e.emitAttribute(append(path, name), property)
 
 		if err != nil {
 			return err
 		}
+
+		e.printf(",\n")
 	}
 	e.printf("},\n")
 
 	e.printf("Blocks: map[string]tfsdk.Block{\n")
 	for _, name := range names {
-		err := e.emitBlock(name, append(path, name), schema[name])
+		property := schema[name]
+
+		if e.isAttribute(property) {
+			continue
+		}
+
+		e.printf("%q:", name)
+
+		err := e.emitBlock(append(path, name), property)
 
 		if err != nil {
 			return err
 		}
+
+		e.printf(",\n")
 	}
 	e.printf("},\n")
 
@@ -206,16 +226,8 @@ func (e emitter) emitSchema(path []string, schema map[string]*schema.Schema) err
 }
 
 // emitAttribute generates the Plugin Framework code for a Plugin SDK property's Attribute and emits the generated code to the emitter's Writer.
-func (e emitter) emitAttribute(name string, path []string, property *schema.Schema) error {
-	if !e.isAttribute(property) {
-		return nil
-	}
-
-	e.printf("%q:{\n", name)
-
-	if description := property.Description; description != "" {
-		e.printf("Description:%q,\n", description)
-	}
+func (e emitter) emitAttribute(path []string, property *schema.Schema) error {
+	e.printf("{\n")
 
 	switch v := property.Type; v {
 	//
@@ -238,10 +250,6 @@ func (e emitter) emitAttribute(name string, path []string, property *schema.Sche
 	//
 	case schema.TypeList:
 		switch v := property.Elem.(type) {
-		case *schema.Resource:
-			//
-			// Emitted as a Block.
-			//
 		case *schema.Schema:
 			//
 			// List of primitives.
@@ -304,10 +312,6 @@ func (e emitter) emitAttribute(name string, path []string, property *schema.Sche
 
 	case schema.TypeSet:
 		switch v := property.Elem.(type) {
-		case *schema.Resource:
-			//
-			// Emitted as a Block.
-			//
 		case *schema.Schema:
 			//
 			// Set of primitives.
@@ -341,138 +345,62 @@ func (e emitter) emitAttribute(name string, path []string, property *schema.Sche
 		return unsupportedTypeError(path, v.String())
 	}
 
-	e.printf("},\n")
+	if property.Required {
+		e.printf("Required:true,\n")
+	}
+
+	if property.Optional {
+		e.printf("Optional:true,\n")
+	}
+
+	if property.Computed {
+		e.printf("Computed:true,\n")
+	}
+
+	if property.Sensitive {
+		e.printf("Sensitive:true,\n")
+	}
+
+	if description := property.Description; description != "" {
+		e.printf("Description:%q,\n", description)
+	}
+
+	if deprecationMessage := property.Deprecated; deprecationMessage != "" {
+		e.printf("DeprecationMessage:%q,\n", deprecationMessage)
+	}
+
+	// Features that we can't (yet) migrate:
+
+	if property.ForceNew {
+		e.printf("// TODO ForceNew:true,\n")
+	}
+
+	e.printf("}")
 
 	return nil
 }
 
 // emitBlock generates the Plugin Framework code for a Plugin SDK property's Block and emits the generated code to the emitter's Writer.
-func (e emitter) emitBlock(name string, path []string, property *schema.Schema) error {
-	if e.isAttribute(property) {
-		return nil
-	}
-
-	e.printf("%q:{\n", name)
-
-	if description := property.Description; description != "" {
-		e.printf("Description:%q,\n", description)
-	}
+func (e emitter) emitBlock(path []string, property *schema.Schema) error {
+	e.printf("{\n")
 
 	switch v := property.Type; v {
-	//
-	// Primitive types.
-	//
-	case schema.TypeBool:
-		e.printf("Type:types.BoolType,\n")
-
-	case schema.TypeFloat:
-		e.printf("Type:types.Float64Type,\n")
-
-	case schema.TypeInt:
-		e.printf("Type:types.Int64Type,\n")
-
-	case schema.TypeString:
-		e.printf("Type:types.StringType,\n")
-
 	//
 	// Complex types.
 	//
 	case schema.TypeList:
 		switch v := property.Elem.(type) {
 		case *schema.Resource:
-			//
-			// Emitted as a Block.
-			//
-		case *schema.Schema:
-			//
-			// List of primitives.
-			//
-			var elementType string
-
-			switch v := v.Type; v {
-			case schema.TypeBool:
-				elementType = "types.BoolType"
-
-			case schema.TypeFloat:
-				elementType = "types.Float64Type"
-
-			case schema.TypeInt:
-				elementType = "types.Int64Type"
-
-			case schema.TypeString:
-				elementType = "types.StringType"
-
-			default:
-				return unsupportedTypeError(path, fmt.Sprintf("list of %s", v.String()))
-			}
-
-			e.printf("Type:types.ListType{ElemType:%s},\n", elementType)
+			e.printf("NestingMode:tfsdk.BlockNestingModeList,\n")
 
 		default:
 			return unsupportedTypeError(path, fmt.Sprintf("list of %T", v))
 		}
 
-	case schema.TypeMap:
-		switch v := property.Elem.(type) {
-		case *schema.Schema:
-			//
-			// Map of primitives.
-			//
-			var elementType string
-
-			switch v := v.Type; v {
-			case schema.TypeBool:
-				elementType = "types.BoolType"
-
-			case schema.TypeFloat:
-				elementType = "types.Float64Type"
-
-			case schema.TypeInt:
-				elementType = "types.Int64Type"
-
-			case schema.TypeString:
-				elementType = "types.StringType"
-
-			default:
-				return unsupportedTypeError(path, fmt.Sprintf("map of %s", v.String()))
-			}
-
-			e.printf("Type:types.MapType{ElemType:%s},\n", elementType)
-
-		default:
-			return unsupportedTypeError(path, fmt.Sprintf("map of %T", v))
-		}
-
 	case schema.TypeSet:
 		switch v := property.Elem.(type) {
 		case *schema.Resource:
-			//
-			// Emitted as a Block.
-			//
-		case *schema.Schema:
-			//
-			// Set of primitives.
-			//
-			var elementType string
-
-			switch v := v.Type; v {
-			case schema.TypeBool:
-				elementType = "types.BoolType"
-
-			case schema.TypeFloat:
-				elementType = "types.Float64Type"
-
-			case schema.TypeInt:
-				elementType = "types.Int64Type"
-
-			case schema.TypeString:
-				elementType = "types.StringType"
-
-			default:
-				return unsupportedTypeError(path, fmt.Sprintf("set of %s", v.String()))
-			}
-
-			e.printf("Type:types.SetType{ElemType:%s},\n", elementType)
+			e.printf("NestingMode:tfsdk.BlockNestingModeSet,\n")
 
 		default:
 			return unsupportedTypeError(path, fmt.Sprintf("set of %T", v))
@@ -482,7 +410,23 @@ func (e emitter) emitBlock(name string, path []string, property *schema.Schema) 
 		return unsupportedTypeError(path, v.String())
 	}
 
-	e.printf("},\n")
+	if maxItems := property.MaxItems; maxItems > 1 {
+		e.printf("MaxItems:%d,\n", maxItems)
+	}
+
+	if minItems := property.MinItems; minItems > 1 {
+		e.printf("MinItems:%d,\n", minItems)
+	}
+
+	if description := property.Description; description != "" {
+		e.printf("Description:%q,\n", description)
+	}
+
+	if deprecationMessage := property.Deprecated; deprecationMessage != "" {
+		e.printf("DeprecationMessage:%q,\n", deprecationMessage)
+	}
+
+	e.printf("}")
 
 	return nil
 }
