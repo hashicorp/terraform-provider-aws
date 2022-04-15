@@ -23,6 +23,7 @@ func ResourceProject() *schema.Resource {
 		CreateContext: resourceProjectCreate,
 		ReadContext:   resourceProjectRead,
 		UpdateContext: resourceProjectUpdate,
+		DeleteContext: resourceProjectDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -298,6 +299,22 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return resourceProjectRead(ctx, d, meta)
+}
+
+func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).CloudWatchEvidentlyConn
+
+	arn := d.Id()
+
+	_, err := conn.DeleteProjectWithContext(ctx, &cloudwatchevidently.DeleteProjectInput{
+		Project: aws.String(arn),
+	})
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error deleting Project (%s): %w", arn, err))
+	}
+
+	return nil
 }
 
 func expandDataDelivery(dataDelivery []interface{}) *cloudwatchevidently.ProjectDataDeliveryConfig {
