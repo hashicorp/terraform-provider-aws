@@ -1764,7 +1764,7 @@ resource "aws_transfer_workflow" "test" {
     type = "DELETE"
   }
 }
-  
+
 resource "aws_transfer_server" "test" {
   workflow_details {
     on_upload {
