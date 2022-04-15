@@ -168,7 +168,7 @@ type emitter struct {
 // emitRootSchema generates the Plugin Framework code for a Plugin SDK root schema and emits the generated code to the emitter's Writer.
 // The root schema is the map of root property names to Attributes.
 func (e emitter) emitRootSchema(schema map[string]*schema.Schema) error {
-	err := e.emitSchema(schema)
+	err := e.emitSchema(nil, schema)
 
 	if err != nil {
 		return err
@@ -180,7 +180,7 @@ func (e emitter) emitRootSchema(schema map[string]*schema.Schema) error {
 // emitSchema generates the Plugin Framework code for a Plugin SDK schema and emits the generated code to the emitter's Writer.
 // A schema is a map of property names to Attributes.
 // Property names are sorted prior to code generation to reduce diffs.
-func (e emitter) emitSchema(schema map[string]*schema.Schema) error {
+func (e emitter) emitSchema(path []string, schema map[string]*schema.Schema) error {
 	names := make([]string, 0)
 	for name := range schema {
 		names = append(names, name)
@@ -191,7 +191,7 @@ func (e emitter) emitSchema(schema map[string]*schema.Schema) error {
 	for _, name := range names {
 		e.printf("%q:", name)
 
-		err := e.emitAttribute(schema[name])
+		err := e.emitAttribute(append(path, name), schema[name])
 
 		if err != nil {
 			return err
@@ -205,11 +205,137 @@ func (e emitter) emitSchema(schema map[string]*schema.Schema) error {
 }
 
 // emitAttribute generates the Plugin Framework code for a Plugin SDK property's Attributes and emits the generated code to the emitter's Writer.
-func (e emitter) emitAttribute(property *schema.Schema) error {
+func (e emitter) emitAttribute(path []string, property *schema.Schema) error {
 	e.printf("{\n")
+
 	if description := property.Description; description != "" {
 		e.printf("Description:%q,\n", description)
 	}
+
+	switch v := property.Type; v {
+	//
+	// Primitive types.
+	//
+	case schema.TypeBool:
+		e.printf("Type:types.BoolType,\n")
+
+	case schema.TypeFloat:
+		e.printf("Type:types.Float64Type,\n")
+
+	case schema.TypeInt:
+		e.printf("Type:types.Int64Type,\n")
+
+	case schema.TypeString:
+		e.printf("Type:types.StringType,\n")
+
+	//
+	// Complex types.
+	//
+	case schema.TypeList:
+		switch v := property.Elem.(type) {
+		case *schema.Resource:
+			//
+			// Emitted as a Block.
+			//
+		case *schema.Schema:
+			//
+			// List of primitives.
+			//
+			var elementType string
+
+			switch v := v.Type; v {
+			case schema.TypeBool:
+				elementType = "types.BoolType"
+
+			case schema.TypeFloat:
+				elementType = "types.Float64Type"
+
+			case schema.TypeInt:
+				elementType = "types.Int64Type"
+
+			case schema.TypeString:
+				elementType = "types.StringType"
+
+			default:
+				return unsupportedTypeError(path, fmt.Sprintf("list of %s", v.String()))
+			}
+
+			e.printf("Type:types.ListType{ElemType:%s},\n", elementType)
+
+		default:
+			return unsupportedTypeError(path, fmt.Sprintf("list of %T", v))
+		}
+
+	case schema.TypeMap:
+		switch v := property.Elem.(type) {
+		case *schema.Schema:
+			//
+			// Map of primitives.
+			//
+			var elementType string
+
+			switch v := v.Type; v {
+			case schema.TypeBool:
+				elementType = "types.BoolType"
+
+			case schema.TypeFloat:
+				elementType = "types.Float64Type"
+
+			case schema.TypeInt:
+				elementType = "types.Int64Type"
+
+			case schema.TypeString:
+				elementType = "types.StringType"
+
+			default:
+				return unsupportedTypeError(path, fmt.Sprintf("map of %s", v.String()))
+			}
+
+			e.printf("Type:types.MapType{ElemType:%s},\n", elementType)
+
+		default:
+			return unsupportedTypeError(path, fmt.Sprintf("map of %T", v))
+		}
+
+	case schema.TypeSet:
+		switch v := property.Elem.(type) {
+		case *schema.Resource:
+			//
+			// Emitted as a Block.
+			//
+		case *schema.Schema:
+			//
+			// Set of primitives.
+			//
+			var elementType string
+
+			switch v := v.Type; v {
+			case schema.TypeBool:
+				elementType = "types.BoolType"
+
+			case schema.TypeFloat:
+				elementType = "types.Float64Type"
+
+			case schema.TypeInt:
+				elementType = "types.Int64Type"
+
+			case schema.TypeString:
+				elementType = "types.StringType"
+
+			default:
+				return unsupportedTypeError(path, fmt.Sprintf("set of %s", v.String()))
+			}
+
+			e.printf("Type:types.SetType{ElemType:%s},\n", elementType)
+
+		default:
+			return unsupportedTypeError(path, fmt.Sprintf("set of %T", v))
+		}
+
+	default:
+		return unsupportedTypeError(path, v.String())
+	}
+
 	e.printf("}")
 
 	return nil
@@ -228,6 +354,10 @@ func (e emitter) warnf(format string, a ...interface{}) {
 // fprintf writes a formatted string to a Writer.
 func fprintf(w io.Writer, format string, a ...interface{}) (int, error) {
 	return io.WriteString(w, fmt.Sprintf(format, a...))
+}
+
+func unsupportedTypeError(path []string, typ string) error {
+	return fmt.Errorf("%s is of unsupported type: %s", strings.Join(path, "/"), typ)
 }
 
 type templateData struct {
