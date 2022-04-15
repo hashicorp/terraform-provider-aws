@@ -1,5 +1,17 @@
 ## 4.11.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_transfer_workflow` ([#24248](https://github.com/hashicorp/terraform-provider-aws/issues/24248))
+
+ENHANCEMENTS:
+
+* resource/aws_transfer_server: Add `workflow_details` argument ([#24248](https://github.com/hashicorp/terraform-provider-aws/issues/24248))
+
+BUG FIXES:
+
+* resource/aws_cloudformation_stack_set: Prevent `Validation` errors when `operation_preferences.failure_tolerance_count` is zero ([#24250](https://github.com/hashicorp/terraform-provider-aws/issues/24250))
+
 ## 4.10.0 (April 14, 2022)
 
 FEATURES:
