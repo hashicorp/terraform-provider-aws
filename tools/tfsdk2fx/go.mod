@@ -1,4 +1,4 @@
-module github.com/hashicorp/terraform-provider-aws/tools/schemamigrate
+module github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fx
 
 go 1.17
 

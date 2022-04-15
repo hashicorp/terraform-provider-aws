@@ -138,8 +138,8 @@ tools:
 	cd tools && go install github.com/pavius/impi/cmd/impi
 	cd tools && go install github.com/hashicorp/go-changelog/cmd/changelog-build
 
-schemamigrate:
-	cd tools/schemamigrate && go install github.com/hashicorp/terraform-provider-aws/tools/schemamigrate
+tfsdk2fx:
+	cd tools/tfsdk2fx && go install github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fx
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -178,4 +178,4 @@ semgrep:
 	@echo "==> Running Semgrep static analysis..."
 	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep --config .semgrep.yml
 
-.PHONY: providerlint build gen generate-changelog golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep schemamigrate
+.PHONY: providerlint build gen generate-changelog golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep tfsdk2fx
