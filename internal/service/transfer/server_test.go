@@ -1708,7 +1708,7 @@ resource "aws_transfer_server" "test" {
     on_upload {
       execution_role = aws_iam_role.test.arn
       workflow_id    = aws_transfer_workflow.test.id
-	}
+    }
   }
 }
 `, rName)
