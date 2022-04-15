@@ -3,6 +3,10 @@ module github.com/hashicorp/terraform-provider-aws/tools/schemamigrate
 go 1.17
 
 require (
+	github.com/hashicorp/terraform-provider-aws v1.60.1-0.20220322001452-8f7a597d0c24
+)
+
+require (
 	github.com/Masterminds/goutils v1.1.0 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible // indirect
@@ -24,3 +28,5 @@ require (
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e // indirect
 	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
 )
+
+replace github.com/hashicorp/terraform-provider-aws => ../..
