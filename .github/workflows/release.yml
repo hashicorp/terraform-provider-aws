@@ -56,11 +56,12 @@ jobs:
       tag: ${{ steps.highest-version-tag.outputs.tag }}
     steps:
       - uses: actions/checkout@v2
-        id: highest-version-tag
         with:
           # Allow tag to be fetched when ref is a commit
           fetch-depth: 0
-      - run: |
+      - name: Output highest version tag
+        id: highest-version-tag
+        run: |
           HIGHEST=$(git tag | sort -V | tail -1)
           echo ::set-output name=tag::$HIGHEST
   changelog-newversion:
