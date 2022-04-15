@@ -229,12 +229,17 @@ func (e emitter) emitAttributesAndBlocks(path []string, schema map[string]*schem
 	}
 	sort.Strings(names)
 
-	e.printf("Attributes: map[string]tfsdk.Attribute{\n")
+	emittedFieldName := false
 	for _, name := range names {
 		property := schema[name]
 
 		if !isAttribute(property) {
 			continue
+		}
+
+		if !emittedFieldName {
+			e.printf("Attributes: map[string]tfsdk.Attribute{\n")
+			emittedFieldName = true
 		}
 
 		e.printf("%q:", name)
@@ -247,14 +252,21 @@ func (e emitter) emitAttributesAndBlocks(path []string, schema map[string]*schem
 
 		e.printf(",\n")
 	}
-	e.printf("},\n")
+	if emittedFieldName {
+		e.printf("},\n")
+	}
 
-	e.printf("Blocks: map[string]tfsdk.Block{\n")
+	emittedFieldName = false
 	for _, name := range names {
 		property := schema[name]
 
 		if isAttribute(property) {
 			continue
+		}
+
+		if !emittedFieldName {
+			e.printf("Blocks: map[string]tfsdk.Block{\n")
+			emittedFieldName = true
 		}
 
 		e.printf("%q:", name)
@@ -267,7 +279,9 @@ func (e emitter) emitAttributesAndBlocks(path []string, schema map[string]*schem
 
 		e.printf(",\n")
 	}
-	e.printf("},\n")
+	if emittedFieldName {
+		e.printf("},\n")
+	}
 
 	return nil
 }
