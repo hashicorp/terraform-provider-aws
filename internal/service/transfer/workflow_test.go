@@ -276,7 +276,7 @@ resource "aws_transfer_workflow" "test" {
     delete_step_details {
       name                 = %[1]q
       source_file_location = "$${original.file}"
-  	}
+    }
     type = "DELETE"
   }
 }
@@ -296,7 +296,7 @@ resource "aws_transfer_workflow" "test" {
 
   tags = {
     %[2]q = %[3]q
-  }  
+  }
 }
 `, rName, tagKey1, tagValue1)
 }
@@ -315,7 +315,7 @@ resource "aws_transfer_workflow" "test" {
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
-  }  
+  }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
