@@ -31,6 +31,10 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 }
 
 func TestAccElastiCacheCluster_Engine_memcached(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -65,6 +69,10 @@ func TestAccElastiCacheCluster_Engine_memcached(t *testing.T) {
 }
 
 func TestAccElastiCacheCluster_Engine_redis(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -99,6 +107,10 @@ func TestAccElastiCacheCluster_Engine_redis(t *testing.T) {
 }
 
 func TestAccElastiCacheCluster_Engine_redis_v5(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -151,6 +163,10 @@ func TestAccElastiCacheCluster_Engine_None(t *testing.T) {
 }
 
 func TestAccElastiCacheCluster_PortRedis_default(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var ec elasticache.CacheCluster
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -171,6 +187,10 @@ func TestAccElastiCacheCluster_PortRedis_default(t *testing.T) {
 }
 
 func TestAccElastiCacheCluster_ParameterGroupName_default(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -204,6 +224,10 @@ func TestAccElastiCacheCluster_ParameterGroupName_default(t *testing.T) {
 }
 
 func TestAccElastiCacheCluster_port(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var ec elasticache.CacheCluster
 	port := 11212
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -265,6 +289,10 @@ func TestAccElastiCacheCluster_SecurityGroup_ec2Classic(t *testing.T) {
 }
 
 func TestAccElastiCacheCluster_snapshotsWithUpdates(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -295,6 +323,10 @@ func TestAccElastiCacheCluster_snapshotsWithUpdates(t *testing.T) {
 }
 
 func TestAccElastiCacheCluster_NumCacheNodes_decrease(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -324,6 +356,10 @@ func TestAccElastiCacheCluster_NumCacheNodes_decrease(t *testing.T) {
 }
 
 func TestAccElastiCacheCluster_NumCacheNodes_increase(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -353,6 +389,10 @@ func TestAccElastiCacheCluster_NumCacheNodes_increase(t *testing.T) {
 }
 
 func TestAccElastiCacheCluster_NumCacheNodes_increaseWithPreferredAvailabilityZones(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -411,6 +451,10 @@ func TestAccElastiCacheCluster_vpc(t *testing.T) {
 }
 
 func TestAccElastiCacheCluster_multiAZInVPC(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var csg elasticache.CacheSubnetGroup
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -434,6 +478,10 @@ func TestAccElastiCacheCluster_multiAZInVPC(t *testing.T) {
 }
 
 func TestAccElastiCacheCluster_AZMode_memcached(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var cluster elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -468,6 +516,10 @@ func TestAccElastiCacheCluster_AZMode_memcached(t *testing.T) {
 }
 
 func TestAccElastiCacheCluster_AZMode_redis(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var cluster elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -498,6 +550,10 @@ func TestAccElastiCacheCluster_AZMode_redis(t *testing.T) {
 }
 
 func TestAccElastiCacheCluster_EngineVersion_memcached(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var pre, mid, post elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -539,6 +595,10 @@ func TestAccElastiCacheCluster_EngineVersion_memcached(t *testing.T) {
 }
 
 func TestAccElastiCacheCluster_EngineVersion_redis(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var v1, v2, v3, v4, v5 elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -598,6 +658,10 @@ func TestAccElastiCacheCluster_EngineVersion_redis(t *testing.T) {
 }
 
 func TestAccElastiCacheCluster_NodeTypeResize_memcached(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var pre, post elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -628,6 +692,10 @@ func TestAccElastiCacheCluster_NodeTypeResize_memcached(t *testing.T) {
 }
 
 func TestAccElastiCacheCluster_NodeTypeResize_redis(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var pre, post elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -675,6 +743,10 @@ func TestAccElastiCacheCluster_NumCacheNodes_redis(t *testing.T) {
 }
 
 func TestAccElastiCacheCluster_ReplicationGroupID_availabilityZone(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var cluster elasticache.CacheCluster
 	var replicationGroup elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -700,6 +772,10 @@ func TestAccElastiCacheCluster_ReplicationGroupID_availabilityZone(t *testing.T)
 }
 
 func TestAccElastiCacheCluster_ReplicationGroupID_singleReplica(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var cluster elasticache.CacheCluster
 	var replicationGroup elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -728,6 +804,10 @@ func TestAccElastiCacheCluster_ReplicationGroupID_singleReplica(t *testing.T) {
 }
 
 func TestAccElastiCacheCluster_ReplicationGroupID_multipleReplica(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var cluster1, cluster2 elasticache.CacheCluster
 	var replicationGroup elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -975,6 +1055,10 @@ func TestAccElastiCacheCluster_Engine_Redis_LogDeliveryConfigurations(t *testing
 }
 
 func TestAccElastiCacheCluster_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var cluster elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -1028,6 +1112,10 @@ func TestAccElastiCacheCluster_tags(t *testing.T) {
 }
 
 func TestAccElastiCacheCluster_tagWithOtherModification(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var cluster elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
