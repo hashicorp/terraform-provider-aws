@@ -655,11 +655,11 @@ func testAccInfrastructureConfigurationInstanceMetadataOptionsConfig(rName strin
 		fmt.Sprintf(`
 resource "aws_imagebuilder_infrastructure_configuration" "test" {
   instance_profile_name = aws_iam_instance_profile.test.name
-  name = %[1]q
+  name                  = %[1]q
 
   instance_metadata_options {
-	http_put_response_hop_limit = 64
-	http_tokens = "required"
+    http_put_response_hop_limit = 64
+    http_tokens                 = "required"
   }
 }
 `, rName))
