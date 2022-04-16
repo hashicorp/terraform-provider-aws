@@ -2342,6 +2342,38 @@ func TestAccEC2Instance_primaryNetworkInterface(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_primaryNetworkCardIndex(t *testing.T) {
+	var instance ec2.Instance
+	var eni ec2.NetworkInterface
+	resourceName := "aws_instance.test"
+	eniResourceName := "aws_network_interface.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigPrimaryNetworkCardIndex(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance),
+					testAccCheckENIExists(eniResourceName, &eni),
+					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interface.0.network_card_index", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"network_interface", "user_data_replace_on_change"},
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_primaryNetworkInterfaceSourceDestCheck(t *testing.T) {
 	var instance ec2.Instance
 	var eni ec2.NetworkInterface
@@ -6074,6 +6106,33 @@ resource "aws_instance" "test" {
   network_interface {
     network_interface_id = aws_network_interface.test.id
     device_index         = 0
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfigPrimaryNetworkCardIndex(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false),
+		fmt.Sprintf(`
+resource "aws_network_interface" "test" {
+  subnet_id   = aws_subnet.test.id
+  private_ips = ["10.1.1.42"]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+
+  network_interface {
+    network_interface_id = aws_network_interface.test.id
+    device_index         = 0
+    network_card_index   = 0
   }
 }
 `, rName))

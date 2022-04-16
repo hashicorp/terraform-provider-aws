@@ -403,6 +403,11 @@ func ResourceInstance() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
+						"network_card_index": {
+							Type:     schema.TypeInt,
+							Default:  0,
+							Optional: true,
+						},
 						"network_interface_id": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -1027,6 +1032,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 			for _, index := range configuredDeviceIndexes {
 				if index == int(aws.Int64Value(iNi.Attachment.DeviceIndex)) {
 					ni["device_index"] = aws.Int64Value(iNi.Attachment.DeviceIndex)
+					ni["network_card_index"] = aws.Int64Value(iNi.Attachment.NetworkCardIndex)
 					ni["network_interface_id"] = aws.StringValue(iNi.NetworkInterfaceId)
 					ni["delete_on_termination"] = aws.BoolValue(iNi.Attachment.DeleteOnTermination)
 				}
@@ -2309,6 +2315,7 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterf
 			ini := v.(map[string]interface{})
 			ni := &ec2.InstanceNetworkInterfaceSpecification{
 				DeviceIndex:         aws.Int64(int64(ini["device_index"].(int))),
+				NetworkCardIndex:    aws.Int64(int64(ini["network_card_index"].(int))),
 				NetworkInterfaceId:  aws.String(ini["network_interface_id"].(string)),
 				DeleteOnTermination: aws.Bool(ini["delete_on_termination"].(bool)),
 			}

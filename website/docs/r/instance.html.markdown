@@ -253,6 +253,7 @@ Each `network_interface` block supports the following:
 
 * `delete_on_termination` - (Optional) Whether or not to delete the network interface on instance termination. Defaults to `false`. Currently, the only valid value is `false`, as this is only supported when creating new network interfaces when launching an instance.
 * `device_index` - (Required) Integer index of the network interface attachment. Limited by instance type.
+* `network_card_index` - (Optional) Integer index of the network card. Limited by instance type.
 * `network_interface_id` - (Required) ID of the network interface to attach.
 
 ### Launch Template Specification
