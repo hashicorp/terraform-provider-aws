@@ -205,6 +205,39 @@ func TestAccOpenSearchDomain_Cluster_zoneAwareness(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchDomain_Cluster_coldStorage(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain opensearchservice.DomainStatus
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_clusterColdStorageOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.cold_storage_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.cold_storage_options.0.enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName[:28],
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 	var domain opensearchservice.DomainStatus
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1735,6 +1768,30 @@ resource "aws_opensearch_domain" "test" {
   }
 }
 `, rName, availabilityZoneCount)
+}
+
+func testAccDomainConfig_clusterColdStorageOptions(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name    = substr(%[1]q, 0, 28)
+  engine_version = "Elasticsearch_1.5"
+
+  cluster_config {
+    instance_type          = "t2.small.search"
+    instance_count         = 6
+    zone_awareness_enabled = true
+
+    cold_storage_options {
+      enabled = true
+    }
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, rName)
 }
 
 func testAccDomainConfig_clusterZoneAwarenessEnabled(rName string, zoneAwarenessEnabled bool) string {
