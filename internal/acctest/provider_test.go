@@ -852,6 +852,10 @@ func testAccCheckEndpoints(providers *[]*schema.Provider) resource.TestCheckFunc
 					return fmt.Errorf("unable to match conns.AWSClient struct field name for endpoint name: %s", serviceKey)
 				}
 
+				if !reflect.Indirect(providerClientField).FieldByName("Config").IsValid() {
+					continue // currently unknown how to do this check for v2 clients
+				}
+
 				actualEndpoint := reflect.Indirect(reflect.Indirect(providerClientField).FieldByName("Config").FieldByName("Endpoint")).String()
 				expectedEndpoint := fmt.Sprintf("http://%s", serviceKey)
 

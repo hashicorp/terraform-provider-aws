@@ -16,13 +16,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-const testAccGameliftGameSessionQueuePrefix = "tfAccQueue-"
+const testAccGameSessionQueuePrefix = "tfAccQueue-"
 
 func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 	var conf gamelift.GameSessionQueue
 
 	resourceName := "aws_gamelift_game_session_queue.test"
-	queueName := testAccGameliftGameSessionQueuePrefix + sdkacctest.RandString(8)
+	queueName := testAccGameSessionQueuePrefix + sdkacctest.RandString(8)
 	playerLatencyPolicies := []gamelift.PlayerLatencyPolicy{
 		{
 			MaximumIndividualPlayerLatencyMilliseconds: aws.Int64(100),
@@ -110,7 +110,7 @@ func TestAccGameLiftGameSessionQueue_tags(t *testing.T) {
 	var conf gamelift.GameSessionQueue
 
 	resourceName := "aws_gamelift_game_session_queue.test"
-	queueName := testAccGameliftGameSessionQueuePrefix + sdkacctest.RandString(8)
+	queueName := testAccGameSessionQueuePrefix + sdkacctest.RandString(8)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -160,7 +160,7 @@ func TestAccGameLiftGameSessionQueue_disappears(t *testing.T) {
 	var conf gamelift.GameSessionQueue
 
 	resourceName := "aws_gamelift_game_session_queue.test"
-	queueName := testAccGameliftGameSessionQueuePrefix + sdkacctest.RandString(8)
+	queueName := testAccGameSessionQueuePrefix + sdkacctest.RandString(8)
 	playerLatencyPolicies := []gamelift.PlayerLatencyPolicy{
 		{
 			MaximumIndividualPlayerLatencyMilliseconds: aws.Int64(100),
@@ -204,7 +204,7 @@ func testAccCheckGameSessionQueueExists(n string, res *gamelift.GameSessionQueue
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no Gamelift Session Queue Name is set")
+			return fmt.Errorf("no GameLift Session Queue Name is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
@@ -223,7 +223,7 @@ func testAccCheckGameSessionQueueExists(n string, res *gamelift.GameSessionQueue
 			return fmt.Errorf("gmelift Session Queue %q not found", name)
 		}
 		if len(attributes) != 1 {
-			return fmt.Errorf("expected exactly 1 Gamelift Session Queue, found %d under %q",
+			return fmt.Errorf("expected exactly 1 GameLift Session Queue, found %d under %q",
 				len(attributes), name)
 		}
 		queue := attributes[0]

@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPN (Client)"
 layout: "aws"
 page_title: "AWS: aws_vpn_connection"
 description: |-
@@ -127,6 +127,8 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the VPN Connection.
 * `id` - The amazon-assigned ID of the VPN connection.
+* `core_network_arn` - The ARN of the core network.
+* `core_network_attachment_arn` - The ARN of the core network attachment.
 * `customer_gateway_configuration` - The configuration information for the VPN connection's customer gateway (in the native XML format).
 * `customer_gateway_id` - The ID of the customer gateway to which the connection is attached.
 * `routes` - The static routes associated with the VPN connection. Detailed below.

@@ -68,6 +68,10 @@ func ResourceAddon() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"preserve": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"resolve_conflicts": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -279,11 +283,17 @@ func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(err)
 	}
 
-	log.Printf("[DEBUG] Deleting EKS Add-On: %s", d.Id())
-	_, err = conn.DeleteAddonWithContext(ctx, &eks.DeleteAddonInput{
+	input := &eks.DeleteAddonInput{
 		AddonName:   aws.String(addonName),
 		ClusterName: aws.String(clusterName),
-	})
+	}
+
+	if v, ok := d.GetOk("preserve"); ok {
+		input.Preserve = aws.Bool(v.(bool))
+	}
+
+	log.Printf("[DEBUG] Deleting EKS Add-On: %s", d.Id())
+	_, err = conn.DeleteAddonWithContext(ctx, input)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error deleting EKS Add-On (%s): %w", d.Id(), err))

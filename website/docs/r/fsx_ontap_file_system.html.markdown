@@ -1,5 +1,5 @@
 ---
-subcategory: "File System (FSx)"
+subcategory: "FSx"
 layout: "aws"
 page_title: "AWS: aws_fsx_ontap_file_system"
 description: |-

@@ -48,12 +48,18 @@ func ResourceWorkspace() *schema.Resource {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(managedgrafana.AuthenticationProviderTypes_Values(), false),
+				},
 			},
 			"data_sources": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(managedgrafana.DataSourceType_Values(), false),
+				},
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -75,7 +81,10 @@ func ResourceWorkspace() *schema.Resource {
 			"notification_destinations": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(managedgrafana.NotificationDestinationType_Values(), false),
+				},
 			},
 			"organization_role_name": {
 				Type:     schema.TypeString,

@@ -2,9 +2,11 @@ package plugintest
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/hashicorp/terraform-exec/tfexec"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/logging"
@@ -102,7 +104,7 @@ func (h *Helper) Close() error {
 // If the working directory object is not itself closed by the time the test
 // program exits, the Close method on the helper itself will attempt to
 // delete it.
-func (h *Helper) NewWorkingDir(ctx context.Context) (*WorkingDir, error) {
+func (h *Helper) NewWorkingDir(ctx context.Context, t TestControl) (*WorkingDir, error) {
 	dir, err := ioutil.TempDir(h.baseDir, "work")
 	if err != nil {
 		return nil, err
@@ -124,12 +126,46 @@ func (h *Helper) NewWorkingDir(ctx context.Context) (*WorkingDir, error) {
 		return nil, fmt.Errorf("unable to create terraform-exec instance: %w", err)
 	}
 
-	err = tf.SetEnv(map[string]string{
-		EnvCheckpointDisable: "1",
-	})
+	err = tf.SetDisablePluginTLS(true)
 
 	if err != nil {
-		return nil, fmt.Errorf("unable to set terraform-exec environment variables: %w", err)
+		return nil, fmt.Errorf("unable to disable terraform-exec plugin TLS: %w", err)
+	}
+
+	err = tf.SetSkipProviderVerify(true) // Only required for Terraform CLI 0.12.x
+
+	var mismatch *tfexec.ErrVersionMismatch
+	if err != nil && !errors.As(err, &mismatch) {
+		return nil, fmt.Errorf("unable to disable terraform-exec provider verification: %w", err)
+	}
+
+	var logPath, logPathEnvVar string
+
+	if tfAccLogPath := os.Getenv(EnvTfAccLogPath); tfAccLogPath != "" {
+		logPath = tfAccLogPath
+		logPathEnvVar = EnvTfAccLogPath
+	}
+
+	// Similar to helper/logging.LogOutput() and
+	// terraform-plugin-log/tfsdklog.RegisterTestSink(), the TF_LOG_PATH_MASK
+	// environment variable should take precedence over TF_ACC_LOG_PATH.
+	if tfLogPathMask := os.Getenv(EnvTfLogPathMask); tfLogPathMask != "" {
+		// Escape special characters which may appear if we have subtests
+		testName := strings.Replace(t.Name(), "/", "__", -1)
+		logPath = fmt.Sprintf(tfLogPathMask, testName)
+		logPathEnvVar = EnvTfLogPathMask
+	}
+
+	if logPath != "" {
+		logging.HelperResourceTrace(
+			ctx,
+			fmt.Sprintf("Setting terraform-exec log path via %s environment variable", logPathEnvVar),
+			map[string]interface{}{logging.KeyTestTerraformLogPath: logPath},
+		)
+
+		if err := tf.SetLogPath(logPath); err != nil {
+			return nil, fmt.Errorf("unable to set terraform-exec log path (%s): %w", logPath, err)
+		}
 	}
 
 	return &WorkingDir{
@@ -146,7 +182,7 @@ func (h *Helper) NewWorkingDir(ctx context.Context) (*WorkingDir, error) {
 func (h *Helper) RequireNewWorkingDir(ctx context.Context, t TestControl) *WorkingDir {
 	t.Helper()
 
-	wd, err := h.NewWorkingDir(ctx)
+	wd, err := h.NewWorkingDir(ctx, t)
 	if err != nil {
 		t := testingT{t}
 		t.Fatalf("failed to create new working directory: %s", err)

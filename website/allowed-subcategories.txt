@@ -1,36 +1,37 @@
 
-ACM PCA
-ACM
-API Gateway (REST APIs)
-API Gateway v2 (WebSocket and HTTP APIs)
-Access Analyzer
-Account
-Amplify Console
+Account Management
+ACM (Certificate Manager)
+ACM PCA (Certificate Manager Private Certificate Authority)
+AMP (Managed Prometheus)
+Amplify
+API Gateway
+API Gateway V2
+App Mesh
+App Runner
 AppConfig
 AppIntegrations
-AppMesh
-App Runner
+Application Auto Scaling
+AppStream 2.0
 AppSync
-AppStream
-Application Autoscaling
 Athena
 Audit Manager
-Autoscaling
-Autoscaling Plans
-Amazon Managed Service for Prometheus (AMP)
+Auto Scaling
+Auto Scaling Plans
 Backup
 Batch
-Budgets
 Chime
-Cloud9
 Cloud Control API
+Cloud Map
+Cloud9
 CloudFormation
 CloudFront
-CloudHSM v2
+CloudHSM
 CloudSearch
 CloudTrail
 CloudWatch
+CloudWatch Evidently
 CloudWatch RUM
+CloudWatch Synthetics
 CodeArtifact
 CodeBuild
 CodeCommit
@@ -38,74 +39,76 @@ CodeDeploy
 CodePipeline
 CodeStar Connections
 CodeStar Notifications
-Cognito
+Cognito Identity
+Cognito IDP (Identity Provider)
 Config
 Connect
 Cost and Usage Report
 Data Exchange
-Data Lifecycle Manager (DLM)
-DataPipeline
+Data Pipeline
 DataSync
-Database Migration Service (DMS)
 Detective
 Device Farm
 Direct Connect
-Directory Service
-DocumentDB
-DynamoDB Accelerator (DAX)
+DLM (Data Lifecycle Manager)
+DMS (Database Migration)
+DocDB (DocumentDB)
+DS (Directory Service)
 DynamoDB
-EC2
-ECR
+DynamoDB Accelerator (DAX)
+EBS (EC2)
+EC2 (Elastic Compute Cloud)
+EC2 Image Builder
+ECR (Elastic Container Registry)
 ECR Public
-ECS
-EFS
-EKS
-ElastiCache
+ECS (Elastic Container)
+EFS (Elastic File System)
+EKS (Elastic Kubernetes)
 Elastic Beanstalk
-Elastic Load Balancing (ELB Classic)
-Elastic Load Balancing v2 (ALB/NLB)
-Elastic Map Reduce (EMR)
-Elastic Map Reduce Containers
 Elastic Transcoder
+ElastiCache
 Elasticsearch
-EventBridge (CloudWatch Events)
+ELB (Elastic Load Balancing)
+ELB Classic
+Elemental MediaConvert
+Elemental MediaPackage
+Elemental MediaStore
+Elemental MediaTailor
+EMR
+EMR Containers
+EventBridge
 EventBridge Schemas
-File System (FSx)
-Firewall Manager (FMS)
-Gamelift
-Glacier
+FMS (Firewall Manager)
+FSx
+GameLift
 Global Accelerator
 Glue
-Grafana
 GuardDuty
-IAM
-Identity Store
-Image Builder
+IAM (Identity & Access Management)
+IAM Access Analyzer
 Inspector
-IoT
-Keyspaces
+IoT Core
+Keyspaces (for Apache Cassandra)
 Kinesis
-Kinesis Data Analytics (SQL Applications)
-Kinesis Data Analytics v2 (SQL and Flink Applications)
+Kinesis Analytics
+Kinesis Analytics V2
 Kinesis Firehose
 Kinesis Video
-KMS
+KMS (Key Management)
 Lake Formation
 Lambda
-Lex
+Lex Model Building
 License Manager
 Lightsail
-Location Service
-MQ
+Location
 Macie
 Macie Classic
-Managed Streaming for Kafka (MSK)
-Kafka Connect (MSK Connect)
-MediaConvert
-MediaPackage
-MediaStore
-MemoryDB
-Managed Workflows for Apache Airflow (MWAA)
+Managed Grafana
+Managed Streaming for Kafka
+Managed Streaming for Kafka Connect
+MemoryDB for Redis
+MQ
+MWAA (Managed Workflows for Apache Airflow)
 Neptune
 Network Firewall
 Network Manager
@@ -113,49 +116,56 @@ OpenSearch
 OpsWorks
 Organizations
 Outposts
+Outposts (EC2)
 Pinpoint
-Pricing
-Quantum Ledger Database (QLDB)
+Pricing Calculator
+QLDB (Quantum Ledger Database)
 QuickSight
-RAM
-RDS
+RAM (Resource Access Manager)
+RDS (Relational Database)
 Redshift
 Resource Groups
-Resource Groups Tagging API
-Route53 Domains
-Route53 Recovery Control Config
-Route53 Recovery Readiness
-Route53 Resolver
-Route53
-S3
+Resource Groups Tagging
+Route 53
+Route 53 Domains
+Route 53 Recovery Control Config
+Route 53 Recovery Readiness
+Route 53 Resolver
+S3 (Simple Storage)
 S3 Control
-S3 Outposts
-SES
-SNS
-SQS
-SSM
-SSO Admin
-SWF
+S3 Glacier
+S3 on Outposts
 Sagemaker
+SDB (SimpleDB)
 Secrets Manager
 Security Hub
 Serverless Application Repository
 Service Catalog
-Service Discovery
 Service Quotas
+SES (Simple Email)
+SFN (Step Functions)
 Shield
-SimpleDB
 Signer
-Step Function (SFN)
+SNS (Simple Notification)
+SQS (Simple Queue)
+SSM (Systems Manager)
+SSO Admin
+SSO Identity Store
 Storage Gateway
-Synthetics
+SWF (Simple Workflow)
 Timestream Write
-Transfer
-VPC
-WAF Regional
+Transfer Family
+Transit Gateway
+VPC (Virtual Private Cloud)
+VPC IPAM (IP Address Manager)
+VPN (Client)
+VPN (Site-to-Site)
 WAF
-WAFv2
+WAF Classic
+WAF Classic Regional
+Wavelength
+Web Services Budgets
 WorkLink
 WorkMail
 WorkSpaces
-XRay
+X-Ray

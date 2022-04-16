@@ -88,6 +88,10 @@ func ResourceDefaultRouteTable() *schema.Resource {
 						// These target attributes are a subset of the aws_route_table resource's target attributes
 						// as there are some targets that are not allowed in the default route table for a VPC.
 						//
+						"core_network_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"egress_only_gateway_id": {
 							Type:     schema.TypeString,
 							Optional: true,

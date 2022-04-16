@@ -1,6 +1,8 @@
 package rds
 
 import (
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -112,6 +114,43 @@ func FindDBClusterByID(conn *rds.RDS, id string) (*rds.DBCluster, error) {
 	if aws.StringValue(dbCluster.DBClusterIdentifier) != id {
 		return nil, &resource.NotFoundError{
 			LastRequest: input,
+		}
+	}
+
+	return dbCluster, nil
+}
+
+func FindDBClusterWithActivityStream(conn *rds.RDS, dbClusterArn string) (*rds.DBCluster, error) {
+	log.Printf("[DEBUG] Calling conn.DescribeDBCClusters(input) with DBClusterIdentifier set to %s", dbClusterArn)
+	input := &rds.DescribeDBClustersInput{
+		DBClusterIdentifier: aws.String(dbClusterArn),
+	}
+
+	output, err := conn.DescribeDBClusters(input)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil || len(output.DBClusters) == 0 || output.DBClusters[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	dbCluster := output.DBClusters[0]
+
+	// Eventual consistency check.
+	if aws.StringValue(dbCluster.DBClusterArn) != dbClusterArn {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	if status := aws.StringValue(dbCluster.ActivityStreamStatus); status == rds.ActivityStreamStatusStopped {
+		return nil, &resource.NotFoundError{
+			Message: status,
 		}
 	}
 

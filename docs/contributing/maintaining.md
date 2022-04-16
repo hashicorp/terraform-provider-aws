@@ -11,7 +11,7 @@
             - [Terraform Plugin SDK Updates](#terraform-plugin-sdk-updates)
             - [tfproviderdocs Updates](#tfproviderdocs-updates)
             - [tfproviderlint Updates](#tfproviderlint-updates)
-            - [yaml.v2 Updates](#yaml-v2-updates)
+            - [yaml.v2 Updates](#yamlv2-updates)
     - [Pull Request Merge Process](#pull-request-merge-process)
 - [Breaking Changes](#breaking-changes)
 - [Branch Dictionary](#branch-dictionary)
@@ -304,7 +304,7 @@ Run the acceptance testing pattern, `TestAccCloudFormationStack(_dataSource)?_ya
 - Add any linked issues that will be closed by the pull request to the same upcoming release milestone
 - Merge the pull request
 - Delete the branch (if the branch is on this repository)
-- Determine if the pull request should have a CHANGELOG entry by reviewing the [Pull Request Types to CHANGELOG section](#pull-request-types-to-changelog), and follow the CHANGELOG specification [here](./pullrequest-submission-and-lifecycle.md#changelog-process)
+- Determine if the pull request should have a CHANGELOG entry by reviewing the [Pull Request Types to CHANGELOG section](./pullrequest-submission-and-lifecycle.md#pull-request-types-to-changelog), and follow the CHANGELOG specification [here](./pullrequest-submission-and-lifecycle.md#changelog-process)
 - Leave a comment on any issues closed by the pull request noting that it has been merged and when to expect the release containing it, e.g.
 
 ```markdown

@@ -107,3 +107,28 @@ func FindFsxLustreLocationByARN(conn *datasync.DataSync, arn string) (*datasync.
 
 	return output, nil
 }
+
+func FindFsxOpenZfsLocationByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeLocationFsxOpenZfsOutput, error) {
+	input := &datasync.DescribeLocationFsxOpenZfsInput{
+		LocationArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeLocationFsxOpenZfs(input)
+
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}

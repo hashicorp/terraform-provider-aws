@@ -247,7 +247,7 @@ func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_multiplePr
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartition(endpoints.AwsPartitionID, t) },
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
@@ -265,7 +265,7 @@ func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_multiplePr
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartition(endpoints.AwsUsGovPartitionID, t) },
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartition(t, endpoints.AwsUsGovPartitionID) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{

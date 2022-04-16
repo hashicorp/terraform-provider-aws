@@ -550,14 +550,15 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] ECS service created: %s", aws.StringValue(output.Service.ServiceArn))
 	d.SetId(aws.StringValue(output.Service.ServiceArn))
 
-	if d.Get("wait_for_steady_state").(bool) {
-		cluster := ""
-		if v, ok := d.GetOk("cluster"); ok {
-			cluster = v.(string)
-		}
+	cluster := d.Get("cluster").(string)
 
+	if d.Get("wait_for_steady_state").(bool) {
 		if err := waitServiceStable(conn, d.Id(), cluster); err != nil {
-			return fmt.Errorf("error waiting for ECS service (%s) to become ready: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for ECS service (%s) to reach steady state after creation: %w", d.Id(), err)
+		}
+	} else {
+		if _, err := waitServiceDescribeReady(conn, d.Id(), cluster); err != nil {
+			return fmt.Errorf("error waiting for ECS service (%s) to become active after creation: %w", d.Id(), err)
 		}
 	}
 
@@ -608,6 +609,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
+		log.Printf("[DEBUG] Waiting for ECS Service (%s) to become active", d.Id())
 		output, err = waitServiceDescribeReady(conn, d.Id(), d.Get("cluster").(string))
 	}
 
@@ -618,7 +620,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading ECS service: %w", err)
+		return fmt.Errorf("error reading ECS service (%s): %w", d.Id(), err)
 	}
 
 	if len(output.Services) < 1 {
@@ -633,7 +635,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	service := output.Services[0]
 
 	// Status==INACTIVE means deleted service
-	if aws.StringValue(service.Status) == "INACTIVE" {
+	if aws.StringValue(service.Status) == serviceStatusInactive {
 		log.Printf("[WARN] Removing ECS service %q because it's INACTIVE", aws.StringValue(service.ServiceArn))
 		d.SetId("")
 		return nil
@@ -1110,14 +1112,14 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating ECS Service (%s): %w", d.Id(), err)
 		}
 
+		cluster := d.Get("cluster").(string)
 		if d.Get("wait_for_steady_state").(bool) {
-			cluster := ""
-			if v, ok := d.GetOk("cluster"); ok {
-				cluster = v.(string)
-			}
-
 			if err := waitServiceStable(conn, d.Id(), cluster); err != nil {
-				return fmt.Errorf("error waiting for ECS service (%s) to become ready: %w", d.Id(), err)
+				return fmt.Errorf("error waiting for ECS service (%s) to reach steady state after update: %w", d.Id(), err)
+			}
+		} else {
+			if _, err := waitServiceDescribeReady(conn, d.Id(), cluster); err != nil {
+				return fmt.Errorf("error waiting for ECS service (%s) to become active after update: %w", d.Id(), err)
 			}
 		}
 	}

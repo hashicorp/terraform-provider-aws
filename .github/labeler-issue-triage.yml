@@ -100,6 +100,8 @@ service/cloudtrail:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudtrail'
 service/cloudwatch:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_(?!(event_|log_|query_))'
+service/cloudwatchevidently:
+  - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatchevidently_'
 service/cloudwatchlogs:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloudwatch_(log_|query_)'
 service/cloudwatchrum:
@@ -386,3 +388,5 @@ service/workspaces:
   - '((\*|-) ?`?|(data|resource) "?)aws_workspaces_'
 service/xray:
   - '((\*|-) ?`?|(data|resource) "?)aws_xray_'
+skaff:
+  - '\bskaff\b'

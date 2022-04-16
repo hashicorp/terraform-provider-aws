@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func statusDynamoDBKinesisStreamingDestination(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) resource.StateRefreshFunc {
@@ -182,5 +183,25 @@ func statusDynamoDBTableSES(conn *dynamodb.DynamoDB, tableName string) resource.
 		}
 
 		return table, aws.StringValue(table.SSEDescription.Status), nil
+	}
+}
+
+func statusContributorInsights(ctx context.Context, conn *dynamodb.DynamoDB, tableName, indexName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		insight, err := FindContributorInsights(ctx, conn, tableName, indexName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if insight == nil {
+			return nil, "", nil
+		}
+
+		return insight, aws.StringValue(insight.ContributorInsightsStatus), nil
 	}
 }

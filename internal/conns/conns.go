@@ -52,6 +52,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudsearchdomain"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
+	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
@@ -369,6 +370,7 @@ type AWSClient struct {
 	CloudSearchDomainConn             *cloudsearchdomain.CloudSearchDomain
 	CloudTrailConn                    *cloudtrail.CloudTrail
 	CloudWatchConn                    *cloudwatch.CloudWatch
+	CloudWatchEvidentlyConn           *cloudwatchevidently.CloudWatchEvidently
 	CloudWatchLogsConn                *cloudwatchlogs.CloudWatchLogs
 	CloudWatchRUMConn                 *cloudwatchrum.CloudWatchRUM
 	CodeArtifactConn                  *codeartifact.CodeArtifact
@@ -771,6 +773,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		CloudSearchDomainConn:             cloudsearchdomain.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CloudSearchDomain])})),
 		CloudTrailConn:                    cloudtrail.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CloudTrail])})),
 		CloudWatchConn:                    cloudwatch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CloudWatch])})),
+		CloudWatchEvidentlyConn:           cloudwatchevidently.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CloudWatchEvidently])})),
 		CloudWatchLogsConn:                cloudwatchlogs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CloudWatchLogs])})),
 		CloudWatchRUMConn:                 cloudwatchrum.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CloudWatchRUM])})),
 		CodeArtifactConn:                  codeartifact.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CodeArtifact])})),
@@ -1214,6 +1217,26 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		case "CreateVpnGateway":
 			if tfawserr.ErrMessageContains(err, "VpnGatewayLimitExceeded", "maximum number of mutating objects has been reached") {
 				r.Retryable = aws.Bool(true)
+			}
+		}
+	})
+
+	client.ECSConn.Handlers.Retry.PushBack(func(r *request.Request) {
+		// By design the "WaitUntilServicesStable" method will poll every 15 seconds until a successful state
+		// has been reached. This will exit with a return code of 255 (ResourceNotReady) after 40 failed checks.
+		// Thus, here we retry the operation a set number of times as
+		// described in https://github.com/hashicorp/terraform-provider-aws/pull/23747.
+		if r.Operation.Name == "WaitUntilServicesStable" {
+			if tfawserr.ErrCodeEquals(r.Error, "ResourceNotReady") {
+				// We only want to retry briefly as the default max retry count would
+				// excessively retry when the error could be legitimate.
+				// We currently depend on the DefaultRetryer exponential backoff here.
+				// ~10 retries gives a fair backoff of a few seconds.
+				if r.RetryCount < 9 {
+					r.Retryable = aws.Bool(true)
+				} else {
+					r.Retryable = aws.Bool(false)
+				}
 			}
 		}
 	})

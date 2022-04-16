@@ -67,6 +67,7 @@ func TestServicesForDirectories(t *testing.T) {
 		"braket",
 		"clouddirectory",
 		"cloudsearchdomain",
+		"cloudwatchevidently",
 		"cloudwatchrum",
 		"codeguruprofiler",
 		"codegurureviewer",

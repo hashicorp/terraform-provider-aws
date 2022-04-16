@@ -106,12 +106,12 @@ The following arguments are supported:
 
 The `operation_preferences` configuration block supports the following arguments:
 
-*`failure_tolerance_count` - (Optional) The number of accounts, per Region, for which this operation can fail before AWS CloudFormation stops the operation in that Region.
-*`failure_tolerance_percentage` - (Optional) The percentage of accounts, per Region, for which this stack operation can fail before AWS CloudFormation stops the operation in that Region.
-*`max_concurrent_count` - (Optional) The maximum number of accounts in which to perform this operation at one time.
-*`max_concurrent_percentage` - (Optional) The maximum percentage of accounts in which to perform this operation at one time.
-*`region_concurrency_type` - (Optional) The concurrency type of deploying StackSets operations in Regions, could be in parallel or one Region at a time.
-*`region_order` - (Optional) The order of the Regions in where you want to perform the stack operation.
+* `failure_tolerance_count` - (Optional) The number of accounts, per Region, for which this operation can fail before AWS CloudFormation stops the operation in that Region.
+* `failure_tolerance_percentage` - (Optional) The percentage of accounts, per Region, for which this stack operation can fail before AWS CloudFormation stops the operation in that Region.
+* `max_concurrent_count` - (Optional) The maximum number of accounts in which to perform this operation at one time.
+* `max_concurrent_percentage` - (Optional) The maximum percentage of accounts in which to perform this operation at one time.
+* `region_concurrency_type` - (Optional) The concurrency type of deploying StackSets operations in Regions, could be in parallel or one Region at a time.
+* `region_order` - (Optional) The order of the Regions in where you want to perform the stack operation.
 
 ## Attributes Reference
 

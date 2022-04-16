@@ -37,6 +37,12 @@ type primitive struct {
 	_ []struct{}
 }
 
+// ApplyTerraform5AttributePathStep always returns an ErrInvalidStep error
+// as it is invalid to step into a primitive.
+func (p primitive) ApplyTerraform5AttributePathStep(step AttributePathStep) (interface{}, error) {
+	return nil, ErrInvalidStep
+}
+
 func (p primitive) Equal(o Type) bool {
 	v, ok := o.(primitive)
 	if !ok {
