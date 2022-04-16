@@ -196,6 +196,20 @@ func ResourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"cold_storage_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
+								},
+							},
+						},
 						"dedicated_master_count": {
 							Type:             schema.TypeInt,
 							Optional:         true,
@@ -1074,6 +1088,10 @@ func expandClusterConfig(m map[string]interface{}) *opensearchservice.ClusterCon
 		}
 	}
 
+	if v, ok := m["cold_storage_options"]; ok {
+		config.ColdStorageOptions = expandColdStorageOptions(v.([]interface{}))
+	}
+
 	if v, ok := m["warm_enabled"]; ok {
 		isEnabled := v.(bool)
 		config.WarmEnabled = aws.Bool(isEnabled)
@@ -1108,12 +1126,31 @@ func expandZoneAwarenessConfig(l []interface{}) *opensearchservice.ZoneAwareness
 	return zoneAwarenessConfig
 }
 
+func expandColdStorageOptions(l []interface{}) *opensearchservice.ColdStorageOptions {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	ColdStorageOptions := &opensearchservice.ColdStorageOptions{}
+
+	if v, ok := m["enabled"]; ok {
+		ColdStorageOptions.Enabled = aws.Bool(v.(bool))
+	}
+
+	return ColdStorageOptions
+}
+
 func flattenClusterConfig(c *opensearchservice.ClusterConfig) []map[string]interface{} {
 	m := map[string]interface{}{
 		"zone_awareness_config":  flattenZoneAwarenessConfig(c.ZoneAwarenessConfig),
 		"zone_awareness_enabled": aws.BoolValue(c.ZoneAwarenessEnabled),
 	}
 
+	if c.ColdStorageOptions != nil {
+		m["cold_storage_options"] = flattenColdStorageOptions(c.ColdStorageOptions)
+	}
 	if c.DedicatedMasterCount != nil {
 		m["dedicated_master_count"] = aws.Int64Value(c.DedicatedMasterCount)
 	}
@@ -1149,6 +1186,18 @@ func flattenZoneAwarenessConfig(zoneAwarenessConfig *opensearchservice.ZoneAware
 
 	m := map[string]interface{}{
 		"availability_zone_count": aws.Int64Value(zoneAwarenessConfig.AvailabilityZoneCount),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenColdStorageOptions(ColdStorageOptions *opensearchservice.ColdStorageOptions) []interface{} {
+	if ColdStorageOptions == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"enabled": aws.BoolValue(ColdStorageOptions.Enabled),
 	}
 
 	return []interface{}{m}
