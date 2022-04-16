@@ -4,10 +4,6 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func validMetricName(v interface{}, k string) (ws []string, errors []error) {
