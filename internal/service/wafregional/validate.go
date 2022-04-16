@@ -20,18 +20,6 @@ func validMetricName(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validPredicatesType() schema.SchemaValidateFunc {
-	return validation.StringInSlice([]string{
-		waf.PredicateTypeByteMatch,
-		waf.PredicateTypeGeoMatch,
-		waf.PredicateTypeIpmatch,
-		waf.PredicateTypeRegexMatch,
-		waf.PredicateTypeSizeConstraint,
-		waf.PredicateTypeSqlInjectionMatch,
-		waf.PredicateTypeXssMatch,
-	}, false)
-}
-
 func sliceContainsMap(l []interface{}, m map[string]interface{}) (int, bool) {
 	for i, t := range l {
 		if reflect.DeepEqual(m, t.(map[string]interface{})) {

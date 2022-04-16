@@ -46,15 +46,7 @@ func ResourceByteMatchSet() *schema.Resource {
 									"type": {
 										Type:     schema.TypeString,
 										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											waf.MatchFieldTypeUri,
-											waf.MatchFieldTypeQueryString,
-											waf.MatchFieldTypeHeader,
-											waf.MatchFieldTypeMethod,
-											waf.MatchFieldTypeBody,
-											waf.MatchFieldTypeSingleQueryArg,
-											waf.MatchFieldTypeAllQueryArgs,
-										}, false),
+										ValidateFunc: validation.StringInSlice(waf.MatchFieldType_Values(), false),
 									},
 								},
 							},

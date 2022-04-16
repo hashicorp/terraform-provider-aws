@@ -79,15 +79,7 @@ func ResourceWorkspace() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  workspaces.ComputeValue,
-							ValidateFunc: validation.StringInSlice([]string{
-								workspaces.ComputeValue,
-								workspaces.ComputeStandard,
-								workspaces.ComputePerformance,
-								workspaces.ComputePower,
-								workspaces.ComputePowerpro,
-								workspaces.ComputeGraphics,
-								workspaces.ComputeGraphicspro,
-							}, false),
+							ValidateFunc: validation.StringInSlice(workspaces.Compute_Values(), false),
 						},
 						"root_volume_size_gib": {
 							Type:     schema.TypeInt,
