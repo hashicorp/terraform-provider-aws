@@ -669,7 +669,7 @@ func testAccOntapFileSystemSingleAzConfig(rName string) string {
 	return acctest.ConfigCompose(testAccOntapFileSystemBaseConfig(rName), `
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 1024
-  subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
+  subnet_ids          = [aws_subnet.test1.id]
   deployment_type     = "SINGLE_AZ_1"
   throughput_capacity = 128
   preferred_subnet_id = aws_subnet.test1.id
