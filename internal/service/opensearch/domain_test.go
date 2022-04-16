@@ -1783,7 +1783,7 @@ func testAccDomainConfig_clusterWithColdStorageOptions(rName string, warmEnabled
 	if warmEnabled {
 		warmConfig = `
 	warm_count = "2"
-	warm_type = "ultrawarm1.medium.elasticsearch"
+	warm_type = "ultrawarm1.medium.search"
 `
 	}
 
