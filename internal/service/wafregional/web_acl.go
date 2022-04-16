@@ -82,8 +82,8 @@ func ResourceWebACL() *schema.Resource {
 													Optional: true,
 												},
 												"type": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:         schema.TypeString,
+													Required:     true,
 													ValidateFunc: validation.StringInSlice(wafregional.MatchFieldType_Values(), false),
 												},
 											},

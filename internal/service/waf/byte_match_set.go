@@ -44,8 +44,8 @@ func ResourceByteMatchSet() *schema.Resource {
 										Optional: true,
 									},
 									"type": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
 										ValidateFunc: validation.StringInSlice(waf.MatchFieldType_Values(), false),
 									},
 								},

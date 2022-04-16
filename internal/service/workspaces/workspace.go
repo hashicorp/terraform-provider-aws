@@ -76,9 +76,9 @@ func ResourceWorkspace() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"compute_type_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  workspaces.ComputeValue,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      workspaces.ComputeValue,
 							ValidateFunc: validation.StringInSlice(workspaces.Compute_Values(), false),
 						},
 						"root_volume_size_gib": {
