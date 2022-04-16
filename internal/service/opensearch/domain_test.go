@@ -221,18 +221,26 @@ func TestAccOpenSearchDomain_Cluster_coldStorage(t *testing.T) {
 		CheckDestroy: testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_clusterColdStorageOptions(rName),
+				Config: testAccDomainConfig_clusterWithColdStorageOptions(rName, true, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.cold_storage_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.cold_storage_options.0.enabled", "true"),
-				),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
+						"enabled": "false",
+					})),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateId:     rName[:28],
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_clusterWithColdStorageOptions(rName, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
+						"enabled": "true",
+					})),
 			},
 		},
 	})
@@ -1770,19 +1778,43 @@ resource "aws_opensearch_domain" "test" {
 `, rName, availabilityZoneCount)
 }
 
-func testAccDomainConfig_clusterColdStorageOptions(rName string) string {
+func testAccDomainConfig_clusterWithColdStorageOptions(rName string, warmEnabled bool, csEnabled bool) string {
+	warmConfig := ""
+	if warmEnabled {
+		warmConfig = `
+	warm_count = "2"
+	warm_type = "ultrawarm1.medium.elasticsearch"
+`
+	}
+
+	coldConfig := ""
+	if csEnabled {
+		coldConfig = `
+	cold_storage_options {
+	  enabled = true
+	}
+`
+	}
+
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
   domain_name    = substr(%[1]q, 0, 28)
-  engine_version = "Elasticsearch_1.5"
+  engine_version = "Elasticsearch_7.9"
 
   cluster_config {
-    instance_type          = "t2.small.search"
-    instance_count         = 6
-    zone_awareness_enabled = true
+    zone_awareness_enabled   = true
+    instance_type            = "c5.large.search"
+    instance_count           = "3"
+    dedicated_master_enabled = true
+    dedicated_master_count   = "3"
+    dedicated_master_type    = "c5.large.search"
+    warm_enabled             = %[2]t
 
-    cold_storage_options {
-      enabled = true
+    %[3]s
+    %[4]s
+
+    zone_awareness_config {
+      availability_zone_count = 3
     }
   }
 
@@ -1791,7 +1823,7 @@ resource "aws_opensearch_domain" "test" {
     volume_size = 10
   }
 }
-`, rName)
+`, rName, warmEnabled, warmConfig, coldConfig)
 }
 
 func testAccDomainConfig_clusterZoneAwarenessEnabled(rName string, zoneAwarenessEnabled bool) string {

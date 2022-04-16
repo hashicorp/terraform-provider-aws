@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
+	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -199,13 +200,14 @@ func ResourceDomain() *schema.Resource {
 						"cold_storage_options": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"enabled": {
 										Type:     schema.TypeBool,
 										Optional: true,
-										Default:  false,
+										Computed: true,
 									},
 								},
 							},
@@ -908,6 +910,15 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 				if len(config) == 1 {
 					m := config[0].(map[string]interface{})
 					input.ClusterConfig = expandClusterConfig(m)
+
+					// Work around "ValidationException: Your domain's Elasticsearch version does not support cold storage options. Upgrade to Elasticsearch 7.9 or later.".
+					if want, err := gversion.NewVersion("Elasticsearch_7.9"); err == nil {
+						if got, err := gversion.NewVersion(d.Get("engine_version").(string)); err == nil {
+							if got.LessThan(want) {
+								input.ClusterConfig.ColdStorageOptions = nil
+							}
+						}
+					}
 				}
 			}
 
@@ -1191,13 +1202,13 @@ func flattenZoneAwarenessConfig(zoneAwarenessConfig *opensearchservice.ZoneAware
 	return []interface{}{m}
 }
 
-func flattenColdStorageOptions(ColdStorageOptions *opensearchservice.ColdStorageOptions) []interface{} {
-	if ColdStorageOptions == nil {
+func flattenColdStorageOptions(coldStorageOptions *opensearchservice.ColdStorageOptions) []interface{} {
+	if coldStorageOptions == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"enabled": aws.BoolValue(ColdStorageOptions.Enabled),
+		"enabled": aws.BoolValue(coldStorageOptions.Enabled),
 	}
 
 	return []interface{}{m}
