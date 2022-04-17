@@ -15,26 +15,10 @@ func DataSourcePatchBaseline() *schema.Resource {
 	return &schema.Resource{
 		Read: dataPatchBaselineRead,
 		Schema: map[string]*schema.Schema{
-			"owner": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
 			"default_baseline": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"operating_system": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(ssm.OperatingSystem_Values(), false),
-			},
-			// Computed values
 			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -42,6 +26,21 @@ func DataSourcePatchBaseline() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"name_prefix": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 255),
+			},
+			"operating_system": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(ssm.OperatingSystem_Values(), false),
+			},
+			"owner": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 		},
 	}
