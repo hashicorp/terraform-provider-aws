@@ -16,7 +16,7 @@ Gives an external source (like an EventBridge Rule, SNS, or S3) permission to ac
 resource "aws_lambda_permission" "allow_cloudwatch" {
   statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.test_lambda.function_name
+  function_name = aws_lambda_function.test_lambda.arn
   principal     = "events.amazonaws.com"
   source_arn    = "arn:aws:events:eu-west-1:111122223333:rule/RunDaily"
   qualifier     = aws_lambda_alias.test_alias.name
@@ -64,7 +64,7 @@ resource "aws_iam_role" "iam_for_lambda" {
 resource "aws_lambda_permission" "with_sns" {
   statement_id  = "AllowExecutionFromSNS"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.func.function_name
+  function_name = aws_lambda_function.func.arn
   principal     = "sns.amazonaws.com"
   source_arn    = aws_sns_topic.default.arn
 }
@@ -133,7 +133,7 @@ resource "aws_lambda_permission" "lambda_permission" {
 ```terraform
 resource "aws_lambda_permission" "logging" {
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.logging.function_name
+  function_name = aws_lambda_function.logging.arn
   principal     = "logs.eu-west-1.amazonaws.com"
   source_arn    = "${aws_cloudwatch_log_group.default.arn}:*"
 }
