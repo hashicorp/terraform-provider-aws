@@ -1035,7 +1035,7 @@ func TestAccEC2Instance_placementPartitionNumber(t *testing.T) {
 func TestAccEC2Instance_IPv6_supportAddressCount(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1061,7 +1061,7 @@ func TestAccEC2Instance_IPv6_supportAddressCount(t *testing.T) {
 }
 
 func TestAccEC2Instance_ipv6AddressCountAndSingleAddressCausesError(t *testing.T) {
-	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1071,7 +1071,7 @@ func TestAccEC2Instance_ipv6AddressCountAndSingleAddressCausesError(t *testing.T
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccInstanceConfigIpv6ErrorConfig(rName),
-				ExpectError: regexp.MustCompile("Only 1 of `ipv6_address_count` or `ipv6_addresses` can be specified"),
+				ExpectError: regexp.MustCompile("Conflicting configuration arguments"),
 			},
 		},
 	})
@@ -1080,7 +1080,7 @@ func TestAccEC2Instance_ipv6AddressCountAndSingleAddressCausesError(t *testing.T
 func TestAccEC2Instance_IPv6_supportAddressCountWithIPv4(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },

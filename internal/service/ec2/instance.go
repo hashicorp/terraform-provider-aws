@@ -323,10 +323,11 @@ func ResourceInstance() *schema.Resource {
 				AtLeastOneOf: []string{"instance_type", "launch_template"},
 			},
 			"ipv6_address_count": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ForceNew:      true,
+				Computed:      true,
+				ConflictsWith: []string{"ipv6_addresses"},
 			},
 			"ipv6_addresses": {
 				Type:     schema.TypeList,
@@ -337,6 +338,7 @@ func ResourceInstance() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validation.IsIPv6Address,
 				},
+				ConflictsWith: []string{"ipv6_address_count"},
 			},
 			"key_name": {
 				Type:     schema.TypeString,
@@ -743,13 +745,15 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	tagSpecifications := ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeInstance)
 	tagSpecifications = append(tagSpecifications, ec2TagSpecificationsFromMap(d.Get("volume_tags").(map[string]interface{}), ec2.ResourceTypeVolume)...)
 
-	// Build the creation struct
-	runOpts := &ec2.RunInstancesInput{
+	input := &ec2.RunInstancesInput{
 		BlockDeviceMappings:               instanceOpts.BlockDeviceMappings,
 		CapacityReservationSpecification:  instanceOpts.CapacityReservationSpecification,
+		CpuOptions:                        instanceOpts.CpuOptions,
+		CreditSpecification:               instanceOpts.CreditSpecification,
 		DisableApiTermination:             instanceOpts.DisableAPITermination,
 		EbsOptimized:                      instanceOpts.EBSOptimized,
-		Monitoring:                        instanceOpts.Monitoring,
+		EnclaveOptions:                    instanceOpts.EnclaveOptions,
+		HibernationOptions:                instanceOpts.HibernationOptions,
 		IamInstanceProfile:                instanceOpts.IAMInstanceProfile,
 		ImageId:                           instanceOpts.ImageID,
 		InstanceInitiatedShutdownBehavior: instanceOpts.InstanceInitiatedShutdownBehavior,
@@ -759,97 +763,53 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		KeyName:                           instanceOpts.KeyName,
 		LaunchTemplate:                    instanceOpts.LaunchTemplate,
 		MaxCount:                          aws.Int64(1),
+		MetadataOptions:                   instanceOpts.MetadataOptions,
 		MinCount:                          aws.Int64(1),
+		Monitoring:                        instanceOpts.Monitoring,
 		NetworkInterfaces:                 instanceOpts.NetworkInterfaces,
 		Placement:                         instanceOpts.Placement,
 		PrivateIpAddress:                  instanceOpts.PrivateIPAddress,
 		SecurityGroupIds:                  instanceOpts.SecurityGroupIDs,
 		SecurityGroups:                    instanceOpts.SecurityGroups,
 		SubnetId:                          instanceOpts.SubnetID,
-		UserData:                          instanceOpts.UserData64,
-		CreditSpecification:               instanceOpts.CreditSpecification,
-		CpuOptions:                        instanceOpts.CpuOptions,
-		HibernationOptions:                instanceOpts.HibernationOptions,
-		MetadataOptions:                   instanceOpts.MetadataOptions,
-		EnclaveOptions:                    instanceOpts.EnclaveOptions,
 		TagSpecifications:                 tagSpecifications,
+		UserData:                          instanceOpts.UserData64,
 	}
 
-	_, ipv6CountOk := d.GetOk("ipv6_address_count")
-	_, ipv6AddressOk := d.GetOk("ipv6_addresses")
+	log.Printf("[DEBUG] Creating EC2 Instance: %s", input)
+	outputRaw, err := tfresource.RetryWhen(tfiam.PropagationTimeout,
+		func() (interface{}, error) {
+			return conn.RunInstances(input)
+		},
+		func(err error) (bool, error) {
+			// IAM instance profiles can take ~10 seconds to propagate in AWS:
+			// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
+			if tfawserr.ErrMessageContains(err, ErrCodeInvalidParameterValue, "Invalid IAM Instance Profile") {
+				return true, err
+			}
 
-	if ipv6AddressOk && ipv6CountOk {
-		return fmt.Errorf("Only 1 of `ipv6_address_count` or `ipv6_addresses` can be specified")
-	}
+			// IAM roles can also take time to propagate in AWS:
+			if tfawserr.ErrMessageContains(err, ErrCodeInvalidParameterValue, " has no associated IAM Roles") {
+				return true, err
+			}
 
-	// Create the instance
-	log.Printf("[DEBUG] Run configuration: %s", runOpts)
+			return false, err
+		},
+	)
 
-	var runResp *ec2.Reservation
-	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
-		var err error
-		runResp, err = conn.RunInstances(runOpts)
-		// IAM instance profiles can take ~10 seconds to propagate in AWS:
-		// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
-		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
-			log.Print("[DEBUG] Invalid IAM Instance Profile referenced, retrying...")
-			return resource.RetryableError(err)
-		}
-		// IAM roles can also take time to propagate in AWS:
-		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", " has no associated IAM Roles") {
-			log.Print("[DEBUG] IAM Instance Profile appears to have no IAM roles, retrying...")
-			return resource.RetryableError(err)
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		runResp, err = conn.RunInstances(runOpts)
-	}
-	// Warn if the AWS Error involves group ids, to help identify situation
-	// where a user uses group ids in security_groups for the Default VPC.
-	//   See https://github.com/hashicorp/terraform/issues/3798
-	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "groupId is invalid") {
-		return fmt.Errorf("Error launching instance, possible mismatch of Security Group IDs and Names. See AWS Instance docs here: %s.\n\n\tAWS Error: %w", "https://terraform.io/docs/providers/aws/r/instance.html", err)
-	}
 	if err != nil {
-		return fmt.Errorf("Error launching source instance: %s", err)
-	}
-	if runResp == nil || len(runResp.Instances) == 0 {
-		return errors.New("Error launching source instance: no instances returned in response")
+		return fmt.Errorf("creating EC2 Instance: %w", err)
 	}
 
-	instance := runResp.Instances[0]
-	log.Printf("[INFO] Instance ID: %s", aws.StringValue(instance.InstanceId))
+	instance := outputRaw.(*ec2.Reservation).Instances[0]
 
-	// Store the resulting ID so we can look this up later
 	d.SetId(aws.StringValue(instance.InstanceId))
 
-	// Wait for the instance to become running so we can get some attributes
-	// that aren't available until later.
-	log.Printf(
-		"[DEBUG] Waiting for instance (%s) to become running",
-		aws.StringValue(instance.InstanceId))
+	instance, err = WaitInstanceCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{ec2.InstanceStateNamePending},
-		Target:     []string{ec2.InstanceStateNameRunning},
-		Refresh:    InstanceStateRefreshFunc(conn, aws.StringValue(instance.InstanceId), []string{ec2.InstanceStateNameTerminated, ec2.InstanceStateNameShuttingDown}),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	instanceRaw, err := stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for instance (%s) to become ready: %s",
-			aws.StringValue(instance.InstanceId), err)
+		return fmt.Errorf("waiting for EC2 Instance (%s) create: %w", d.Id(), err)
 	}
-
-	instance = instanceRaw.(*ec2.Instance)
 
 	// Initialize the connection info
 	if instance.PublicIpAddress != nil {
