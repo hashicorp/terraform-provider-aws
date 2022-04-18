@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -14,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccRDSProxy_basic(t *testing.T) {
@@ -528,22 +528,17 @@ func testAccCheckProxyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to find the Group
-		resp, err := conn.DescribeDBProxies(
-			&rds.DescribeDBProxiesInput{
-				DBProxyName: aws.String(rs.Primary.ID),
-			})
+		_, err := tfrds.FindDBProxyByName(conn, rs.Primary.ID)
 
-		if err == nil {
-			if len(resp.DBProxies) != 0 &&
-				*resp.DBProxies[0].DBProxyName == rs.Primary.ID {
-				return fmt.Errorf("DB Proxy still exists")
-			}
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		if !tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
+		if err != nil {
 			return err
 		}
+
+		return fmt.Errorf("RDS DB Proxy %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -557,27 +552,20 @@ func testAccCheckProxyExists(n string, v *rds.DBProxy) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No DB Proxy ID is set")
+			return fmt.Errorf("No RDS DB Proxy ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
-		opts := rds.DescribeDBProxiesInput{
-			DBProxyName: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeDBProxies(&opts)
+		output, err := tfrds.FindDBProxyByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if len(resp.DBProxies) != 1 ||
-			*resp.DBProxies[0].DBProxyName != rs.Primary.ID {
-			return fmt.Errorf("DB Proxy not found")
-		}
+		*v = *output
 
-		*v = *resp.DBProxies[0]
+		return nil
 
 		return nil
 	}

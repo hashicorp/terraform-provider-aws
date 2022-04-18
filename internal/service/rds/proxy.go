@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -183,35 +184,16 @@ func resourceProxyRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	params := rds.DescribeDBProxiesInput{
-		DBProxyName: aws.String(d.Id()),
-	}
+	dbProxy, err := FindDBProxyByName(conn, d.Id())
 
-	resp, err := conn.DescribeDBProxies(&params)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
-			log.Printf("[WARN] DB Proxy (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error reading RDS DB Proxy (%s): %w", d.Id(), err)
-	}
-
-	var dbProxy *rds.DBProxy
-	for _, proxy := range resp.DBProxies {
-		if proxy == nil {
-			continue
-		}
-
-		if aws.StringValue(proxy.DBProxyName) == d.Id() {
-			dbProxy = proxy
-			break
-		}
-	}
-	if dbProxy == nil {
-		log.Printf("[WARN] DB Proxy (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] RDS DB Proxy %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading RDS DB Proxy (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", dbProxy.DBProxyArn)
