@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -223,55 +222,38 @@ func resourceProxyRead(d *schema.ResourceData, meta interface{}) error {
 func resourceProxyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
-	if d.HasChanges(
-		"auth",
-		"debug_logging",
-		"idle_client_timeout",
-		"name",
-		"require_tls",
-		"role_arn",
-		"vpc_security_group_ids") {
-
+	if d.HasChangesExcept("tags", "tags_all") {
 		oName, nName := d.GetChange("name")
-
-		params := rds.ModifyDBProxyInput{
+		input := &rds.ModifyDBProxyInput{
 			Auth:           expandDbProxyAuth(d.Get("auth").(*schema.Set).List()),
 			DBProxyName:    aws.String(oName.(string)),
-			NewDBProxyName: aws.String(nName.(string)),
 			DebugLogging:   aws.Bool(d.Get("debug_logging").(bool)),
+			NewDBProxyName: aws.String(nName.(string)),
 			RequireTLS:     aws.Bool(d.Get("require_tls").(bool)),
 			RoleArn:        aws.String(d.Get("role_arn").(string)),
 		}
 
 		if v, ok := d.GetOk("idle_client_timeout"); ok {
-			params.IdleClientTimeout = aws.Int64(int64(v.(int)))
+			input.IdleClientTimeout = aws.Int64(int64(v.(int)))
 		}
 
 		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
-			params.SecurityGroups = flex.ExpandStringSet(v)
+			input.SecurityGroups = flex.ExpandStringSet(v)
 		}
 
-		log.Printf("[DEBUG] Update DB Proxy: %#v", params)
-		_, err := conn.ModifyDBProxy(&params)
+		log.Printf("[DEBUG] Updating RDS DB Proxy: %s", input)
+		_, err := conn.ModifyDBProxy(input)
+
 		if err != nil {
-			return fmt.Errorf("Error updating DB Proxy: %s", err)
+			return fmt.Errorf("updating RDS DB Proxy (%s): %w", d.Id(), err)
 		}
 
 		// DB Proxy Name is used as an ID as the API doesn't provide a way to read/
 		// update/delete DB proxies using the ARN
 		d.SetId(nName.(string))
-		log.Printf("[INFO] Updated DB Proxy ID: %s", d.Id())
 
-		stateChangeConf := &resource.StateChangeConf{
-			Pending: []string{rds.DBProxyStatusModifying},
-			Target:  []string{rds.DBProxyStatusAvailable},
-			Refresh: resourceProxyRefreshFunc(conn, d.Id()),
-			Timeout: d.Timeout(schema.TimeoutUpdate),
-		}
-
-		_, err = stateChangeConf.WaitForState()
-		if err != nil {
-			return fmt.Errorf("Error waiting for DB Proxy update: %s", err)
+		if _, err := waitDBProxyUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("waiting for RDS DB Proxy (%s) update: %w", d.Id(), err)
 		}
 	}
 
@@ -279,7 +261,7 @@ func resourceProxyUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("Error updating RDS DB Proxy (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("updating RDS DB Proxy (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
 
@@ -307,24 +289,6 @@ func resourceProxyDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
-}
-
-func resourceProxyRefreshFunc(conn *rds.RDS, proxyName string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeDBProxies(&rds.DescribeDBProxiesInput{
-			DBProxyName: aws.String(proxyName),
-		})
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
-				return 42, "", nil
-			}
-			return 42, "", err
-		}
-
-		dbProxy := resp.DBProxies[0]
-		return dbProxy, *dbProxy.Status, nil
-	}
 }
 
 func expandDbProxyAuth(l []interface{}) []*rds.UserAuthConfig {
