@@ -912,7 +912,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 					input.ClusterConfig = expandClusterConfig(m)
 
 					// Work around "ValidationException: Your domain's Elasticsearch version does not support cold storage options. Upgrade to Elasticsearch 7.9 or later.".
-					if engineType, version, err := ParseEngineVersion(d.Get("engine_version").(string)); err != nil {
+					if engineType, version, err := ParseEngineVersion(d.Get("engine_version").(string)); err == nil {
 						switch engineType {
 						case opensearchservice.EngineTypeElasticsearch:
 							if want, err := gversion.NewVersion("7.9"); err == nil {
