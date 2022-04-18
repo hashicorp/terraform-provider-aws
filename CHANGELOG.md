@@ -18,6 +18,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_efs_file_system: Prevent panic when searching by tag returns 0 or multiple results ([#24298](https://github.com/hashicorp/terraform-provider-aws/issues/24298))
 * data-source/aws_elasticache_cluster: Gracefully handle additional tagging error type in non-standard AWS partitions (i.e., ISO) ([#24275](https://github.com/hashicorp/terraform-provider-aws/issues/24275))
 * resource/aws_cloudformation_stack_set: Prevent `Validation` errors when `operation_preferences.failure_tolerance_count` is zero ([#24250](https://github.com/hashicorp/terraform-provider-aws/issues/24250))
 * resource/aws_elastic_beanstalk_environment: Correctly set `cname_prefix` attribute ([#24278](https://github.com/hashicorp/terraform-provider-aws/issues/24278))
