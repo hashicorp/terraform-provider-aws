@@ -941,20 +941,24 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("instance_state", instance.State.Name)
 	}
 
-	if instance.Placement != nil {
-		d.Set("availability_zone", instance.Placement.AvailabilityZone)
-	}
-	if instance.Placement.GroupName != nil {
-		d.Set("placement_group", instance.Placement.GroupName)
-	}
-	if instance.Placement.PartitionNumber != nil {
-		d.Set("placement_partition_number", instance.Placement.PartitionNumber)
-	}
-	if instance.Placement.Tenancy != nil {
-		d.Set("tenancy", instance.Placement.Tenancy)
-	}
-	if instance.Placement.HostId != nil {
-		d.Set("host_id", instance.Placement.HostId)
+	if v := instance.Placement; v != nil {
+		d.Set("availability_zone", v.AvailabilityZone)
+
+		if v := v.GroupName; v != nil {
+			d.Set("placement_group", v)
+		}
+
+		if v := v.HostId; v != nil {
+			d.Set("host_id", v)
+		}
+
+		if v := v.PartitionNumber; v != nil {
+			d.Set("placement_partition_number", v)
+		}
+
+		if v := v.Tenancy; v != nil {
+			d.Set("tenancy", v)
+		}
 	}
 
 	if instance.CpuOptions != nil {
@@ -1150,14 +1154,20 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Instance attributes
 	{
-		attr, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
-			Attribute:  aws.String("disableApiTermination"),
-			InstanceId: aws.String(d.Id()),
-		})
-		if err != nil {
-			return err
+		if isSnowballEdgeInstance(d.Id()) {
+			log.Printf("[INFO] Determined deploying to Snowball Edge based off Instance ID %s. Skip setting the 'disable_api_termination' attribute.", d.Id())
+		} else {
+			output, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
+				Attribute:  aws.String(ec2.InstanceAttributeNameDisableApiTermination),
+				InstanceId: aws.String(d.Id()),
+			})
+
+			if err != nil {
+				return fmt.Errorf("reading EC2 Instance (%s) attribute: %w ", d.Id(), err)
+			}
+
+			d.Set("disable_api_termination", output.DisableApiTermination.Value)
 		}
-		d.Set("disable_api_termination", attr.DisableApiTermination.Value)
 	}
 	{
 		attr, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
@@ -3327,4 +3337,9 @@ func expandEc2LaunchTemplateSpecification(specs []interface{}) *ec2.LaunchTempla
 	}
 
 	return result
+}
+
+// isSnowballEdgeInstance returns whether or not the specified instance ID indicates an SBE instance.
+func isSnowballEdgeInstance(id string) bool {
+	return strings.Contains(id, "s.")
 }
