@@ -22,6 +22,59 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func TestParseEngineVersion(t *testing.T) {
+	testCases := []struct {
+		TestName           string
+		InputEngineVersion string
+		ExpectError        bool
+		ExpectedEngineType string
+		ExpectedSemver     string
+	}{
+		{
+			TestName:    "empty engine version",
+			ExpectError: true,
+		},
+		{
+			TestName:           "no separator",
+			InputEngineVersion: "OpenSearch2.0",
+			ExpectError:        true,
+		},
+		{
+			TestName:           "too many separators",
+			InputEngineVersion: "Open_Search_2.0",
+			ExpectError:        true,
+		},
+		{
+			TestName:           "valid",
+			InputEngineVersion: "Elasticsearch_7.2",
+			ExpectedEngineType: "Elasticsearch",
+			ExpectedSemver:     "7.2",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			engineType, semver, err := tfopensearch.ParseEngineVersion(testCase.InputEngineVersion)
+
+			if err == nil && testCase.ExpectError {
+				t.Fatal("expected error, got no error")
+			}
+
+			if err != nil && !testCase.ExpectError {
+				t.Fatalf("got unexpected error: %s", err)
+			}
+
+			if engineType != testCase.ExpectedEngineType {
+				t.Errorf("engine type got %s, expected %s", engineType, testCase.ExpectedEngineType)
+			}
+
+			if semver != testCase.ExpectedSemver {
+				t.Errorf("semver got %s, expected %s", semver, testCase.ExpectedSemver)
+			}
+		})
+	}
+}
+
 func TestAccOpenSearchDomain_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -200,6 +253,47 @@ func TestAccOpenSearchDomain_Cluster_zoneAwareness(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", "3"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "true"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchDomain_Cluster_coldStorage(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain opensearchservice.DomainStatus
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_clusterWithColdStorageOptions(rName, true, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
+						"enabled": "false",
+					})),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName[:28],
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_clusterWithColdStorageOptions(rName, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
+						"enabled": "true",
+					})),
 			},
 		},
 	})
@@ -1735,6 +1829,54 @@ resource "aws_opensearch_domain" "test" {
   }
 }
 `, rName, availabilityZoneCount)
+}
+
+func testAccDomainConfig_clusterWithColdStorageOptions(rName string, warmEnabled bool, csEnabled bool) string {
+	warmConfig := ""
+	if warmEnabled {
+		warmConfig = `
+	warm_count = "2"
+	warm_type = "ultrawarm1.medium.search"
+`
+	}
+
+	coldConfig := ""
+	if csEnabled {
+		coldConfig = `
+	cold_storage_options {
+	  enabled = true
+	}
+`
+	}
+
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name    = substr(%[1]q, 0, 28)
+  engine_version = "Elasticsearch_7.9"
+
+  cluster_config {
+    zone_awareness_enabled   = true
+    instance_type            = "c5.large.search"
+    instance_count           = "3"
+    dedicated_master_enabled = true
+    dedicated_master_count   = "3"
+    dedicated_master_type    = "c5.large.search"
+    warm_enabled             = %[2]t
+
+    %[3]s
+    %[4]s
+
+    zone_awareness_config {
+      availability_zone_count = 3
+    }
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, rName, warmEnabled, warmConfig, coldConfig)
 }
 
 func testAccDomainConfig_clusterZoneAwarenessEnabled(rName string, zoneAwarenessEnabled bool) string {

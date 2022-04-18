@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
+	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -196,6 +197,21 @@ func ResourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"cold_storage_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
 						"dedicated_master_count": {
 							Type:             schema.TypeInt,
 							Optional:         true,
@@ -894,9 +910,28 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 				if len(config) == 1 {
 					m := config[0].(map[string]interface{})
 					input.ClusterConfig = expandClusterConfig(m)
+
+					// Work around "ValidationException: Your domain's Elasticsearch version does not support cold storage options. Upgrade to Elasticsearch 7.9 or later.".
+					if engineType, version, err := ParseEngineVersion(d.Get("engine_version").(string)); err == nil {
+						switch engineType {
+						case opensearchservice.EngineTypeElasticsearch:
+							if want, err := gversion.NewVersion("7.9"); err == nil {
+								if got, err := gversion.NewVersion(version); err == nil {
+									if got.LessThan(want) {
+										input.ClusterConfig.ColdStorageOptions = nil
+									}
+								}
+							}
+						case opensearchservice.EngineTypeOpenSearch:
+							// All OpenSearch versions support cold storage options.
+						default:
+							log.Printf("[WARN] unknown engine type: %s", engineType)
+						}
+					} else {
+						log.Printf("[WARN] %s", err)
+					}
 				}
 			}
-
 		}
 
 		if d.HasChange("snapshot_options") {
@@ -1074,6 +1109,10 @@ func expandClusterConfig(m map[string]interface{}) *opensearchservice.ClusterCon
 		}
 	}
 
+	if v, ok := m["cold_storage_options"]; ok {
+		config.ColdStorageOptions = expandColdStorageOptions(v.([]interface{}))
+	}
+
 	if v, ok := m["warm_enabled"]; ok {
 		isEnabled := v.(bool)
 		config.WarmEnabled = aws.Bool(isEnabled)
@@ -1108,12 +1147,31 @@ func expandZoneAwarenessConfig(l []interface{}) *opensearchservice.ZoneAwareness
 	return zoneAwarenessConfig
 }
 
+func expandColdStorageOptions(l []interface{}) *opensearchservice.ColdStorageOptions {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	ColdStorageOptions := &opensearchservice.ColdStorageOptions{}
+
+	if v, ok := m["enabled"]; ok {
+		ColdStorageOptions.Enabled = aws.Bool(v.(bool))
+	}
+
+	return ColdStorageOptions
+}
+
 func flattenClusterConfig(c *opensearchservice.ClusterConfig) []map[string]interface{} {
 	m := map[string]interface{}{
 		"zone_awareness_config":  flattenZoneAwarenessConfig(c.ZoneAwarenessConfig),
 		"zone_awareness_enabled": aws.BoolValue(c.ZoneAwarenessEnabled),
 	}
 
+	if c.ColdStorageOptions != nil {
+		m["cold_storage_options"] = flattenColdStorageOptions(c.ColdStorageOptions)
+	}
 	if c.DedicatedMasterCount != nil {
 		m["dedicated_master_count"] = aws.Int64Value(c.DedicatedMasterCount)
 	}
@@ -1154,6 +1212,18 @@ func flattenZoneAwarenessConfig(zoneAwarenessConfig *opensearchservice.ZoneAware
 	return []interface{}{m}
 }
 
+func flattenColdStorageOptions(coldStorageOptions *opensearchservice.ColdStorageOptions) []interface{} {
+	if coldStorageOptions == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"enabled": aws.BoolValue(coldStorageOptions.Enabled),
+	}
+
+	return []interface{}{m}
+}
+
 // advancedOptionsIgnoreDefault checks for defaults in the n map and, if
 // they don't exist in the o map, it deletes them. AWS returns default advanced
 // options that cause perpetual diffs.
@@ -1172,4 +1242,16 @@ func advancedOptionsIgnoreDefault(o map[string]interface{}, n map[string]interfa
 	}
 
 	return n
+}
+
+// ParseEngineVersion parses a domain's engine version string into engine type and semver string.
+// engine_version is a string of format Elasticsearch_X.Y or OpenSearch_X.Y.
+func ParseEngineVersion(engineVersion string) (string, string, error) {
+	parts := strings.Split(engineVersion, "_")
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format for engine version (%s)", engineVersion)
+	}
+
+	return parts[0], parts[1], nil
 }
