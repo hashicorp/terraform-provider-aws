@@ -38,49 +38,6 @@ func ResourceProxy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validIdentifier,
-			},
-			"debug_logging": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"engine_family": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(rds.EngineFamily_Values(), false),
-			},
-			"idle_client_timeout": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"require_tls": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"role_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"vpc_security_group_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"vpc_subnet_ids": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
 			"auth": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -112,12 +69,55 @@ func ResourceProxy() *schema.Resource {
 					},
 				},
 			},
+			"debug_logging": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"engine_family": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(rds.EngineFamily_Values(), false),
+			},
+			"idle_client_timeout": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validIdentifier,
+			},
+			"require_tls": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"role_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"vpc_security_group_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+			"vpc_subnet_ids": {
+				Type:     schema.TypeSet,
+				Required: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
