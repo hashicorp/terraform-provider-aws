@@ -566,8 +566,6 @@ func testAccCheckProxyExists(n string, v *rds.DBProxy) resource.TestCheckFunc {
 		*v = *output
 
 		return nil
-
-		return nil
 	}
 }
 
