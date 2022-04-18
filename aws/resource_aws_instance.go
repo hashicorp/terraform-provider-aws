@@ -982,11 +982,11 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	// Instance attributes
 	{
 		// Check instance ID to see if it is an SBE instance, SBE ID includes "s.",
-		// if so, log and skip retrieving the instance attribute.
+		// if so, explicitly set disable_api_termination to false and skip checking instance.
 		// Needed because disablerApiTermination attribute does not exist on SBE instance and
 		// will cause an error if passed to the DesribeInstanceAttribute() function.
 		if strings.Contains(*aws.String(d.Id()), "s.") {
-			log.Printf("[INFO] Determined deploying to Snowball Edge based off Instance ID %s. Skip setting the 'disable_api_termination' attribute.", d.Id())
+			d.Set("disable_api_termination", false)
 		} else {
 			attr, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
 				Attribute:  aws.String("disableApiTermination"),
