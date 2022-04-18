@@ -1502,7 +1502,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("disable_api_termination") && !d.IsNewResource() {
-		err := resourceInstanceDisableAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool))
+		err := instanceDisableAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool))
 
 		if err != nil {
 			return fmt.Errorf("error modifying instance (%s) attribute (%s): %w", d.Id(), ec2.InstanceAttributeNameDisableApiTermination, err)
@@ -1736,39 +1736,32 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	err := resourceInstanceDisableAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool))
-
-	if err != nil {
-		log.Printf("[WARN] attempting to terminate EC2 instance (%s) despite error modifying attribute (%s): %s", d.Id(), ec2.InstanceAttributeNameDisableApiTermination, err)
+	if err := instanceDisableAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool)); err != nil {
+		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API termination: %s", d.Id(), err)
 	}
 
-	err = terminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-
-	if err != nil {
-		return fmt.Errorf("error terminating EC2 Instance (%s): %s", d.Id(), err)
+	if err := terminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func resourceInstanceDisableAPITermination(conn *ec2.EC2, id string, disableAPITermination bool) error {
-	// false = enable api termination
-	// true = disable api termination (protected)
-
+func instanceDisableAPITermination(conn *ec2.EC2, id string, disableAPITermination bool) error {
 	_, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
-		InstanceId: aws.String(id),
 		DisableApiTermination: &ec2.AttributeBooleanValue{
 			Value: aws.Bool(disableAPITermination),
 		},
+		InstanceId: aws.String(id),
 	})
 
-	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "not supported for spot instances") {
-		log.Printf("[WARN] failed to modify instance (%s) attribute (%s): %s", id, ec2.InstanceAttributeNameDisableApiTermination, err)
+	if tfawserr.ErrMessageContains(err, ErrCodeUnsupportedOperation, "not supported for spot instances") {
+		log.Printf("[WARN] failed to modify EC2 Instance (%s) attribute: %s", id, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error modify instance (%s) attribute (%s) to value %t: %w", id, ec2.InstanceAttributeNameDisableApiTermination, disableAPITermination, err)
+		return fmt.Errorf("modifying EC2 Instance (%s) attribute: %w", id, err)
 	}
 
 	return nil
@@ -2832,18 +2825,24 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 }
 
 func terminateInstance(conn *ec2.EC2, id string, timeout time.Duration) error {
-	log.Printf("[INFO] Terminating instance: %s", id)
-	req := &ec2.TerminateInstancesInput{
-		InstanceIds: []*string{aws.String(id)},
-	}
-	if _, err := conn.TerminateInstances(req); err != nil {
-		if tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
-			return nil
-		}
-		return err
+	log.Printf("[INFO] Terminating EC2 Instance: %s", id)
+	_, err := conn.TerminateInstances(&ec2.TerminateInstancesInput{
+		InstanceIds: aws.StringSlice([]string{id}),
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidInstanceIDNotFound) {
+		return nil
 	}
 
-	return waitForInstanceDeletion(conn, id, timeout)
+	if err != nil {
+		return fmt.Errorf("terminating EC2 Instance (%s): %w", id, err)
+	}
+
+	if _, err := WaitInstanceDeleted(conn, id, timeout); err != nil {
+		return fmt.Errorf("waiting for EC2 Instance (%s) delete: %w", id, err)
+	}
+
+	return nil
 }
 
 func WaitForInstanceRunning(conn *ec2.EC2, id string, timeout time.Duration) error {
@@ -2884,28 +2883,6 @@ func WaitForInstanceStopping(conn *ec2.EC2, id string, timeout time.Duration) er
 	if err != nil {
 		return fmt.Errorf(
 			"error waiting for instance (%s) to stop: %s", id, err)
-	}
-
-	return nil
-}
-
-func waitForInstanceDeletion(conn *ec2.EC2, id string, timeout time.Duration) error {
-	log.Printf("[DEBUG] Waiting for instance (%s) to become terminated", id)
-
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameRunning,
-			ec2.InstanceStateNameShuttingDown, ec2.InstanceStateNameStopped, ec2.InstanceStateNameStopping},
-		Target:     []string{ec2.InstanceStateNameTerminated},
-		Refresh:    InstanceStateRefreshFunc(conn, id, []string{}),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for instance (%s) to terminate: %s", id, err)
 	}
 
 	return nil

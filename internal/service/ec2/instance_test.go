@@ -283,6 +283,7 @@ func TestAccEC2Instance_EBSBlockDevice_kmsKeyARN(t *testing.T) {
 	var instance ec2.Instance
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -291,7 +292,7 @@ func TestAccEC2Instance_EBSBlockDevice_kmsKeyARN(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigEbsBlockDeviceKmsKeyArn(),
+				Config: testAccInstanceConfigEbsBlockDeviceKmsKeyArn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
@@ -342,6 +343,7 @@ func TestAccEC2Instance_EBSBlockDevice_invalidThroughputForVolumeType(t *testing
 func TestAccEC2Instance_EBSBlockDevice_RootBlockDevice_removed(t *testing.T) {
 	var instance ec2.Instance
 	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -350,7 +352,7 @@ func TestAccEC2Instance_EBSBlockDevice_RootBlockDevice_removed(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigEBSAndRootBlockDevice,
+				Config: testAccInstanceConfigEBSAndRootBlockDevice(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &instance),
 					// Instance must be stopped before detaching a root block device
@@ -5329,8 +5331,8 @@ resource "aws_instance" "test" {
 `)
 }
 
-func testAccInstanceConfigEbsBlockDeviceKmsKeyArn() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
+func testAccInstanceConfigEbsBlockDeviceKmsKeyArn(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
@@ -5353,15 +5355,19 @@ resource "aws_instance" "test" {
     kms_key_id  = aws_kms_key.test.arn
     volume_size = 12
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`)
+`, rName))
 }
 
 func testAccInstanceConfigRootBlockDeviceKmsKeyArn(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false),
-		`
+		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
@@ -5376,8 +5382,12 @@ resource "aws_instance" "test" {
     encrypted             = true
     kms_key_id            = aws_kms_key.test.arn
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`)
+`, rName))
 }
 
 func testAccInstanceConfigBlockDeviceTagsAttachedVolumeWithTags(rName string) string {
@@ -5677,9 +5687,8 @@ resource "aws_instance" "test" {
 }
 `)
 
-var testAccInstanceConfigEBSAndRootBlockDevice = acctest.ConfigCompose(
-	acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-	`
+func testAccInstanceConfigEBSAndRootBlockDevice(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 
@@ -5695,8 +5704,13 @@ resource "aws_instance" "test" {
     device_name = "/dev/sdb"
     volume_size = 9
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`)
+`, rName))
+}
 
 func testAccInstanceConfigBlockDeviceTagsVolumeTags() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `

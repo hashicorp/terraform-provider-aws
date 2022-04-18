@@ -350,6 +350,35 @@ func WaitInstanceIAMInstanceProfileUpdated(conn *ec2.EC2, instanceID string, exp
 	return nil, err
 }
 
+func WaitInstanceDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			ec2.InstanceStateNamePending,
+			ec2.InstanceStateNameRunning,
+			ec2.InstanceStateNameShuttingDown,
+			ec2.InstanceStateNameStopping,
+			ec2.InstanceStateNameStopped,
+		},
+		Target:     []string{},
+		Refresh:    StatusInstanceState(conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Instance); ok {
+		if stateReason := output.StateReason; stateReason != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(stateReason.Code), aws.StringValue(stateReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 const ManagedPrefixListEntryCreateTimeout = 5 * time.Minute
 
 func WaitRouteDeleted(conn *ec2.EC2, routeFinder RouteFinder, routeTableID, destination string, timeout time.Duration) (*ec2.Route, error) {
