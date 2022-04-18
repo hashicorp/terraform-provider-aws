@@ -130,7 +130,7 @@ func resourceProxyCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	params := rds.CreateDBProxyInput{
+	input := rds.CreateDBProxyInput{
 		Auth:         expandDbProxyAuth(d.Get("auth").(*schema.Set).List()),
 		DBProxyName:  aws.String(d.Get("name").(string)),
 		EngineFamily: aws.String(d.Get("engine_family").(string)),
@@ -140,40 +140,32 @@ func resourceProxyCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("debug_logging"); ok {
-		params.DebugLogging = aws.Bool(v.(bool))
+		input.DebugLogging = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("idle_client_timeout"); ok {
-		params.IdleClientTimeout = aws.Int64(int64(v.(int)))
+		input.IdleClientTimeout = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("require_tls"); ok {
-		params.RequireTLS = aws.Bool(v.(bool))
+		input.RequireTLS = aws.Bool(v.(bool))
 	}
 
 	if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
-		params.VpcSecurityGroupIds = flex.ExpandStringSet(v)
+		input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
-	log.Printf("[DEBUG] Create DB Proxy: %#v", params)
-	resp, err := conn.CreateDBProxy(&params)
+	log.Printf("[DEBUG] Creating RDS DB Proxy: %s", input)
+	output, err := conn.CreateDBProxy(&input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating DB Proxy: %s", err)
+		return fmt.Errorf("creating RDS DB Proxy: %w", err)
 	}
 
-	d.SetId(aws.StringValue(resp.DBProxy.DBProxyName))
-	log.Printf("[INFO] DB Proxy ID: %s", d.Id())
+	d.SetId(aws.StringValue(output.DBProxy.DBProxyName))
 
-	stateChangeConf := &resource.StateChangeConf{
-		Pending: []string{rds.DBProxyStatusCreating},
-		Target:  []string{rds.DBProxyStatusAvailable},
-		Refresh: resourceProxyRefreshFunc(conn, d.Id()),
-		Timeout: d.Timeout(schema.TimeoutCreate),
-	}
-
-	_, err = stateChangeConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for DB Proxy creation: %s", err)
+	if _, err := waitDBProxyCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("waiting for RDS DB Proxy (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceProxyRead(d, meta)
@@ -193,7 +185,7 @@ func resourceProxyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading RDS DB Proxy (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading RDS DB Proxy (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", dbProxy.DBProxyArn)
@@ -211,18 +203,18 @@ func resourceProxyRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("Error listing tags for RDS DB Proxy (%s): %s", d.Get("arn").(string), err)
+		return fmt.Errorf("listing tags for RDS DB Proxy (%s): %w", d.Get("arn").(string), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
