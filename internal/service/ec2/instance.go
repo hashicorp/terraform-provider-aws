@@ -906,36 +906,19 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	instance, err := InstanceFindByID(conn, d.Id())
-	if err != nil {
-		// If the instance was not found, return nil so that we can show
-		// that the instance is gone.
-		if tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
-			log.Printf("[WARN] EC2 Instance (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
+	instance, err := FindInstanceByID(conn, d.Id())
 
-		// Some other error, report it
-		return fmt.Errorf("error retrieving instance (%s): %w", d.Id(), err)
-	}
-
-	// If nothing was found, then return no state
-	if instance == nil {
-		log.Printf("[WARN] EC2 Instance (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Instance %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	if instance.State != nil {
-		// If the instance is terminated, then it is gone
-		if aws.StringValue(instance.State.Name) == ec2.InstanceStateNameTerminated {
-			d.SetId("")
-			return nil
-		}
-
-		d.Set("instance_state", instance.State.Name)
+	if err != nil {
+		return fmt.Errorf("reading EC2 Instance (%s): %w", d.Id(), err)
 	}
+
+	d.Set("instance_state", instance.State.Name)
 
 	if v := instance.Placement; v != nil {
 		d.Set("availability_zone", v.AvailabilityZone)
@@ -957,13 +940,13 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if instance.CpuOptions != nil {
-		d.Set("cpu_core_count", instance.CpuOptions.CoreCount)
-		d.Set("cpu_threads_per_core", instance.CpuOptions.ThreadsPerCore)
+	if v := instance.CpuOptions; v != nil {
+		d.Set("cpu_core_count", v.CoreCount)
+		d.Set("cpu_threads_per_core", v.ThreadsPerCore)
 	}
 
-	if instance.HibernationOptions != nil {
-		d.Set("hibernation", instance.HibernationOptions.Configured)
+	if v := instance.HibernationOptions; v != nil {
+		d.Set("hibernation", v.Configured)
 	}
 
 	if err := d.Set("metadata_options", flattenEc2InstanceMetadataOptions(instance.MetadataOptions)); err != nil {

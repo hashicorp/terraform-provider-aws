@@ -692,7 +692,7 @@ func FindInstance(conn *ec2.EC2, input *ec2.DescribeInstancesInput) (*ec2.Instan
 		return nil, err
 	}
 
-	if len(output) == 0 || output[0] == nil {
+	if len(output) == 0 || output[0] == nil || output[0].State == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 

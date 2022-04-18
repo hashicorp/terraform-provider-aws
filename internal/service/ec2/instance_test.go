@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
@@ -96,10 +96,65 @@ func TestFetchRootDevice(t *testing.T) {
 	}
 }
 
+func TestAccEC2Instance_basic(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		// No subnet_id specified requires default VPC with default subnets or EC2-Classic.
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			testAccPreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets(t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigBasic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`instance/i-[a-z0-9]+`)),
+					resource.TestCheckResourceAttr(resourceName, "instance_initiated_shutdown_behavior", "stop"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Required for EC2-Classic.
+				ImportStateVerifyIgnore: []string{"source_dest_check", "user_data_replace_on_change"},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_disappears(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigBasic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceInstance(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_inDefaultVPCBySgName(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -126,7 +181,7 @@ func TestAccEC2Instance_inDefaultVPCBySgName(t *testing.T) {
 func TestAccEC2Instance_inDefaultVPCBySgID(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -176,39 +231,6 @@ func TestAccEC2Instance_inEC2Classic(t *testing.T) {
 					"source_dest_check",
 					"user_data_replace_on_change",
 				},
-			},
-		},
-	})
-}
-
-func TestAccEC2Instance_basic(t *testing.T) {
-	var v ec2.Instance
-	resourceName := "aws_instance.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		// No subnet_id specified requires default VPC with default subnets or EC2-Classic.
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckEC2ClassicOrHasDefaultVPCWithDefaultSubnets(t)
-		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfigBasic(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`instance/i-[a-z0-9]+`)),
-					resource.TestCheckResourceAttr(resourceName, "instance_initiated_shutdown_behavior", "stop"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				// Required for EC2-Classic.
-				ImportStateVerifyIgnore: []string{"source_dest_check", "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3673,28 +3695,6 @@ func TestAccEC2Instance_CreditSpecificationUnlimitedCPUCredits_t2Tot3Taint(t *te
 	})
 }
 
-func TestAccEC2Instance_disappears(t *testing.T) {
-	var v ec2.Instance
-	resourceName := "aws_instance.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfigBasic(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceInstance(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
 func TestAccEC2Instance_UserData(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -4339,34 +4339,31 @@ func testAccCheckInstanceDestroyWithProvider(s *terraform.State, provider *schem
 			continue
 		}
 
-		// Try to find the resource
-		instance, err := tfec2.InstanceFindByID(conn, rs.Primary.ID)
-		if err == nil {
-			if instance.State != nil && *instance.State.Name != "terminated" {
-				return fmt.Errorf("Found unterminated instance: %s", rs.Primary.ID)
-			}
-		}
+		_, err := tfec2.FindInstanceByID(conn, rs.Primary.ID)
 
-		// Verify the error is what we want
-		if tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
-		return err
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("EC2 Instance %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckInstanceExists(n string, i *ec2.Instance) resource.TestCheckFunc {
-	return testAccCheckInstanceExistsWithProvider(n, i, func() *schema.Provider { return acctest.Provider })
+func testAccCheckInstanceExists(n string, v *ec2.Instance) resource.TestCheckFunc {
+	return testAccCheckInstanceExistsWithProvider(n, v, func() *schema.Provider { return acctest.Provider })
 }
 
-func testAccCheckInstanceEc2ClassicExists(n string, i *ec2.Instance) resource.TestCheckFunc {
-	return testAccCheckInstanceExistsWithProvider(n, i, func() *schema.Provider { return acctest.ProviderEC2Classic })
+func testAccCheckInstanceEc2ClassicExists(n string, v *ec2.Instance) resource.TestCheckFunc {
+	return testAccCheckInstanceExistsWithProvider(n, v, func() *schema.Provider { return acctest.ProviderEC2Classic })
 }
 
-func testAccCheckInstanceExistsWithProvider(n string, i *ec2.Instance, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckInstanceExistsWithProvider(n string, v *ec2.Instance, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -4377,20 +4374,17 @@ func testAccCheckInstanceExistsWithProvider(n string, i *ec2.Instance, providerF
 			return fmt.Errorf("No ID is set")
 		}
 
-		provider := providerF()
+		conn := providerF().Meta().(*conns.AWSClient).EC2Conn
 
-		conn := provider.Meta().(*conns.AWSClient).EC2Conn
-		instance, err := tfec2.InstanceFindByID(conn, rs.Primary.ID)
+		output, err := tfec2.FindInstanceByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if instance != nil {
-			*i = *instance
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("Instance not found")
+		return nil
 	}
 }
 
@@ -4594,6 +4588,20 @@ func testAccAvailableAZsWavelengthZonesDefaultExcludeConfig() string {
 	return testAccAvailableAZsWavelengthZonesExcludeConfig("usw2-wl1-den-wlz1")
 }
 
+func testAccInstanceConfigBasic() string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-classic-platform.html#ec2-classic-instance-types
+		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro", "t1.micro", "m1.small"),
+		`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  # Explicitly no tags so as to test creation without tags.
+}
+`)
+}
+
 func testAccInstanceConfigInDefaultVpcBySgName(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
@@ -4614,6 +4622,10 @@ resource "aws_instance" "test" {
   instance_type     = "t2.micro"
   security_groups   = [aws_security_group.test.name]
   availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }
@@ -4638,6 +4650,10 @@ resource "aws_instance" "test" {
   instance_type          = "t2.micro"
   vpc_security_group_ids = [aws_security_group.test.id]
   availability_zone      = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }
@@ -4651,20 +4667,6 @@ func testAccInstanceConfigInEc2Classic() string {
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-}
-`)
-}
-
-func testAccInstanceConfigBasic() string {
-	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-classic-platform.html#ec2-classic-instance-types
-		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro", "t1.micro", "m1.small"),
-		`
-resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-  # Explicitly no tags so as to test creation without tags.
 }
 `)
 }
