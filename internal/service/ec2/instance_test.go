@@ -2316,7 +2316,7 @@ func TestAccEC2Instance_primaryNetworkInterface(t *testing.T) {
 	var eni ec2.NetworkInterface
 	resourceName := "aws_instance.test"
 	eniResourceName := "aws_network_interface.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -2330,6 +2330,10 @@ func TestAccEC2Instance_primaryNetworkInterface(t *testing.T) {
 					testAccCheckInstanceExists(resourceName, &instance),
 					testAccCheckENIExists(eniResourceName, &eni),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "network_interface.*", map[string]string{
+						"device_index":       "0",
+						"network_card_index": "0",
+					}),
 				),
 			},
 			{
@@ -2342,13 +2346,14 @@ func TestAccEC2Instance_primaryNetworkInterface(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_primaryNetworkCardIndex(t *testing.T) {
+func TestAccEC2Instance_networkCardIndex(t *testing.T) {
 	var instance ec2.Instance
-	var eni ec2.NetworkInterface
 	resourceName := "aws_instance.test"
-	eniResourceName := "aws_network_interface.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
+	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#network-cards.
+	// Only specialized (and expensive) instance types support multiple network cards (and hence network_card_index > 0).
+	// Don't attempt to test with such instance types.
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -2356,12 +2361,14 @@ func TestAccEC2Instance_primaryNetworkCardIndex(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigPrimaryNetworkCardIndex(rName),
+				Config: testAccInstanceConfigNetworkCardIndex(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &instance),
-					testAccCheckENIExists(eniResourceName, &eni),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface.0.network_card_index", "0"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "network_interface.*", map[string]string{
+						"device_index":       "0",
+						"network_card_index": "0",
+					}),
 				),
 			},
 			{
@@ -6107,11 +6114,15 @@ resource "aws_instance" "test" {
     network_interface_id = aws_network_interface.test.id
     device_index         = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }
 
-func testAccInstanceConfigPrimaryNetworkCardIndex(rName string) string {
+func testAccInstanceConfigNetworkCardIndex(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false),
@@ -6133,6 +6144,10 @@ resource "aws_instance" "test" {
     network_interface_id = aws_network_interface.test.id
     device_index         = 0
     network_card_index   = 0
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 `, rName))

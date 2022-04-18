@@ -406,6 +406,8 @@ func ResourceInstance() *schema.Resource {
 						"network_card_index": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							ForceNew: true,
+							Default:  0,
 						},
 						"network_interface_id": {
 							Type:     schema.TypeString,
