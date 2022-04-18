@@ -22,6 +22,59 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func TestParseEngineVersion(t *testing.T) {
+	testCases := []struct {
+		TestName           string
+		InputEngineVersion string
+		ExpectError        bool
+		ExpectedEngineType string
+		ExpectedSemver     string
+	}{
+		{
+			TestName:    "empty engine version",
+			ExpectError: true,
+		},
+		{
+			TestName:           "no separator",
+			InputEngineVersion: "OpenSearch2.0",
+			ExpectError:        true,
+		},
+		{
+			TestName:           "too many separators",
+			InputEngineVersion: "Open_Search_2.0",
+			ExpectError:        true,
+		},
+		{
+			TestName:           "valid",
+			InputEngineVersion: "Elasticsearch_7.2",
+			ExpectedEngineType: "Elasticsearch",
+			ExpectedSemver:     "7.2",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			engineType, semver, err := tfopensearch.ParseEngineVersion(testCase.InputEngineVersion)
+
+			if err == nil && testCase.ExpectError {
+				t.Fatal("expected error, got no error")
+			}
+
+			if err != nil && !testCase.ExpectError {
+				t.Fatalf("got unexpected error: %s", err)
+			}
+
+			if engineType != testCase.ExpectedEngineType {
+				t.Errorf("engine type got %s, expected %s", engineType, testCase.ExpectedEngineType)
+			}
+
+			if semver != testCase.ExpectedSemver {
+				t.Errorf("semver got %s, expected %s", semver, testCase.ExpectedSemver)
+			}
+		})
+	}
+}
+
 func TestAccOpenSearchDomain_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

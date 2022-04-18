@@ -912,16 +912,26 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 					input.ClusterConfig = expandClusterConfig(m)
 
 					// Work around "ValidationException: Your domain's Elasticsearch version does not support cold storage options. Upgrade to Elasticsearch 7.9 or later.".
-					if want, err := gversion.NewVersion("Elasticsearch_7.9"); err == nil {
-						if got, err := gversion.NewVersion(d.Get("engine_version").(string)); err == nil {
-							if got.LessThan(want) {
-								input.ClusterConfig.ColdStorageOptions = nil
+					if engineType, version, err := ParseEngineVersion(d.Get("engine_version").(string)); err != nil {
+						switch engineType {
+						case opensearchservice.EngineTypeElasticsearch:
+							if want, err := gversion.NewVersion("7.9"); err == nil {
+								if got, err := gversion.NewVersion(version); err == nil {
+									if got.LessThan(want) {
+										input.ClusterConfig.ColdStorageOptions = nil
+									}
+								}
 							}
+						case opensearchservice.EngineTypeOpenSearch:
+							// All OpenSearch versions support cold storage options.
+						default:
+							log.Printf("[WARN] unknown engine type: %s", engineType)
 						}
+					} else {
+						log.Printf("[WARN] %s", err)
 					}
 				}
 			}
-
 		}
 
 		if d.HasChange("snapshot_options") {
@@ -1232,4 +1242,16 @@ func advancedOptionsIgnoreDefault(o map[string]interface{}, n map[string]interfa
 	}
 
 	return n
+}
+
+// ParseEngineVersion parses a domain's engine version string into engine type and semver string.
+// engine_version is a string of format Elasticsearch_X.Y or OpenSearch_X.Y.
+func ParseEngineVersion(engineVersion string) (string, string, error) {
+	parts := strings.Split(engineVersion, "_")
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format for engine version (%s)", engineVersion)
+	}
+
+	return parts[0], parts[1], nil
 }
