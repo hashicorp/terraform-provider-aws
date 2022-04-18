@@ -1396,8 +1396,8 @@ func TestAccEC2Instance_BlockDeviceTags_ebsAndRoot(t *testing.T) {
 func TestAccEC2Instance_instanceProfileChange(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
-	rName2 := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	testCheckInstanceProfile := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -1416,7 +1416,7 @@ func TestAccEC2Instance_instanceProfileChange(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigWithoutInstanceProfile(rName),
+				Config: testAccInstanceConfigWithoutInstanceProfile(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 				),
@@ -1428,14 +1428,14 @@ func TestAccEC2Instance_instanceProfileChange(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
 			},
 			{
-				Config: testAccInstanceConfigWithInstanceProfile(rName),
+				Config: testAccInstanceConfigWithInstanceProfile(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					testCheckInstanceProfile(),
 				),
 			},
 			{
-				Config: testAccInstanceConfigWithInstanceProfile(rName),
+				Config: testAccInstanceConfigWithInstanceProfile(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStopInstance(&v), // GH-8262: Error on EC2 instance role change when stopped
 				),
@@ -4390,18 +4390,25 @@ func testAccCheckInstanceExistsWithProvider(n string, v *ec2.Instance, providerF
 	}
 }
 
-func testAccCheckStopInstance(instance *ec2.Instance) resource.TestCheckFunc {
+func testAccCheckStopInstance(v *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		params := &ec2.StopInstancesInput{
-			InstanceIds: []*string{instance.InstanceId},
-		}
-		if _, err := conn.StopInstances(params); err != nil {
+		_, err := conn.StopInstances(&ec2.StopInstancesInput{
+			InstanceIds: []*string{v.InstanceId},
+		})
+
+		if err != nil {
 			return err
 		}
 
-		return tfec2.WaitForInstanceStopping(conn, *instance.InstanceId, 10*time.Minute)
+		_, err = tfec2.WaitInstanceStopped(conn, aws.StringValue(v.InstanceId), 10*time.Minute)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
 	}
 }
 
@@ -4811,10 +4818,14 @@ resource "aws_instance" "test" {
   ami       = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   subnet_id = aws_subnet.test.id
 
-  instance_type = %[1]q
-  user_data     = %[2]q
+  instance_type = %[2]q
+  user_data     = %[3]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, instanceType, userData))
+`, rName, instanceType, userData))
 }
 
 func testAccInstanceConfigInstanceTypeAndUserDataBase64(rName, instanceType, userData string) string {
@@ -4826,11 +4837,14 @@ resource "aws_instance" "test" {
   ami       = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   subnet_id = aws_subnet.test.id
 
-  instance_type    = %[1]q
-  user_data_base64 = base64encode(%[2]q)
+  instance_type    = %[2]q
+  user_data_base64 = base64encode(%[3]q)
 
+  tags = {
+    Name = %[1]q
+  }
 }
-`, instanceType, userData))
+`, rName, instanceType, userData))
 }
 
 func testAccInstanceGP2IopsDevice() string {

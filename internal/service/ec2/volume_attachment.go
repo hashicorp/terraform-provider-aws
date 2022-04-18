@@ -209,12 +209,13 @@ func resourceVolumeAttachmentDelete(d *schema.ResourceData, meta interface{}) er
 		_, err := conn.StopInstances(&ec2.StopInstancesInput{
 			InstanceIds: []*string{aws.String(iID)},
 		})
+
 		if err != nil {
-			return fmt.Errorf("error stopping instance (%s): %s", iID, err)
+			return fmt.Errorf("stopping EC2 Instance (%s): %w", iID, err)
 		}
 
-		if err := WaitForInstanceStopping(conn, iID, InstanceStopTimeout); err != nil {
-			return err
+		if _, err := WaitInstanceStopped(conn, iID, InstanceStopTimeout); err != nil {
+			return fmt.Errorf("waiting for EC2 Instance (%s) stop: %w", iID, err)
 		}
 	}
 
