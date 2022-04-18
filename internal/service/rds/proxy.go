@@ -289,24 +289,21 @@ func resourceProxyUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceProxyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
-	params := rds.DeleteDBProxyInput{
+	log.Printf("[DEBUG] Creating RDS DB Proxy: %s", d.Id())
+	_, err := conn.DeleteDBProxy(&rds.DeleteDBProxyInput{
 		DBProxyName: aws.String(d.Id()),
-	}
-	_, err := conn.DeleteDBProxy(&params)
+	})
+
 	if err != nil {
-		return fmt.Errorf("Error deleting DB Proxy: %s", err)
+		return fmt.Errorf("deleting RDS DB Proxy (%s): %w", d.Id(), err)
 	}
 
-	stateChangeConf := &resource.StateChangeConf{
-		Pending: []string{rds.DBProxyStatusDeleting},
-		Target:  []string{""},
-		Refresh: resourceProxyRefreshFunc(conn, d.Id()),
-		Timeout: d.Timeout(schema.TimeoutDelete),
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
+		return nil
 	}
 
-	_, err = stateChangeConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for DB Proxy deletion: %s", err)
+	if _, err := waitDBProxyDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("waiting for RDS DB Proxy (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil

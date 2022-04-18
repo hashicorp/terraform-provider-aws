@@ -253,3 +253,20 @@ func waitDBProxyCreated(conn *rds.RDS, name string, timeout time.Duration) (*rds
 
 	return nil, err
 }
+
+func waitDBProxyDeleted(conn *rds.RDS, name string, timeout time.Duration) (*rds.DBProxy, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{rds.DBProxyStatusDeleting},
+		Target:  []string{},
+		Refresh: statusDBProxy(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*rds.DBProxy); ok {
+		return output, err
+	}
+
+	return nil, err
+}
