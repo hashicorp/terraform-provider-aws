@@ -178,86 +178,6 @@ func resourceProxyCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceProxyRead(d, meta)
 }
 
-func resourceProxyRefreshFunc(conn *rds.RDS, proxyName string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeDBProxies(&rds.DescribeDBProxiesInput{
-			DBProxyName: aws.String(proxyName),
-		})
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
-				return 42, "", nil
-			}
-			return 42, "", err
-		}
-
-		dbProxy := resp.DBProxies[0]
-		return dbProxy, *dbProxy.Status, nil
-	}
-}
-
-func expandDbProxyAuth(l []interface{}) []*rds.UserAuthConfig {
-	if len(l) == 0 {
-		return nil
-	}
-
-	userAuthConfigs := make([]*rds.UserAuthConfig, 0, len(l))
-
-	for _, mRaw := range l {
-		m, ok := mRaw.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		userAuthConfig := &rds.UserAuthConfig{}
-
-		if v, ok := m["auth_scheme"].(string); ok && v != "" {
-			userAuthConfig.AuthScheme = aws.String(v)
-		}
-
-		if v, ok := m["description"].(string); ok && v != "" {
-			userAuthConfig.Description = aws.String(v)
-		}
-
-		if v, ok := m["iam_auth"].(string); ok && v != "" {
-			userAuthConfig.IAMAuth = aws.String(v)
-		}
-
-		if v, ok := m["secret_arn"].(string); ok && v != "" {
-			userAuthConfig.SecretArn = aws.String(v)
-		}
-
-		if v, ok := m["username"].(string); ok && v != "" {
-			userAuthConfig.UserName = aws.String(v)
-		}
-
-		userAuthConfigs = append(userAuthConfigs, userAuthConfig)
-	}
-
-	return userAuthConfigs
-}
-
-func flattenDbProxyAuth(userAuthConfig *rds.UserAuthConfigInfo) map[string]interface{} {
-	m := make(map[string]interface{})
-
-	m["auth_scheme"] = aws.StringValue(userAuthConfig.AuthScheme)
-	m["description"] = aws.StringValue(userAuthConfig.Description)
-	m["iam_auth"] = aws.StringValue(userAuthConfig.IAMAuth)
-	m["secret_arn"] = aws.StringValue(userAuthConfig.SecretArn)
-	m["username"] = aws.StringValue(userAuthConfig.UserName)
-
-	return m
-}
-
-func flattenDbProxyAuths(userAuthConfigs []*rds.UserAuthConfigInfo) []interface{} {
-	s := []interface{}{}
-	for _, v := range userAuthConfigs {
-		s = append(s, flattenDbProxyAuth(v))
-	}
-	return s
-}
-
 func resourceProxyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -416,4 +336,84 @@ func resourceProxyDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func resourceProxyRefreshFunc(conn *rds.RDS, proxyName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := conn.DescribeDBProxies(&rds.DescribeDBProxiesInput{
+			DBProxyName: aws.String(proxyName),
+		})
+
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
+				return 42, "", nil
+			}
+			return 42, "", err
+		}
+
+		dbProxy := resp.DBProxies[0]
+		return dbProxy, *dbProxy.Status, nil
+	}
+}
+
+func expandDbProxyAuth(l []interface{}) []*rds.UserAuthConfig {
+	if len(l) == 0 {
+		return nil
+	}
+
+	userAuthConfigs := make([]*rds.UserAuthConfig, 0, len(l))
+
+	for _, mRaw := range l {
+		m, ok := mRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		userAuthConfig := &rds.UserAuthConfig{}
+
+		if v, ok := m["auth_scheme"].(string); ok && v != "" {
+			userAuthConfig.AuthScheme = aws.String(v)
+		}
+
+		if v, ok := m["description"].(string); ok && v != "" {
+			userAuthConfig.Description = aws.String(v)
+		}
+
+		if v, ok := m["iam_auth"].(string); ok && v != "" {
+			userAuthConfig.IAMAuth = aws.String(v)
+		}
+
+		if v, ok := m["secret_arn"].(string); ok && v != "" {
+			userAuthConfig.SecretArn = aws.String(v)
+		}
+
+		if v, ok := m["username"].(string); ok && v != "" {
+			userAuthConfig.UserName = aws.String(v)
+		}
+
+		userAuthConfigs = append(userAuthConfigs, userAuthConfig)
+	}
+
+	return userAuthConfigs
+}
+
+func flattenDbProxyAuth(userAuthConfig *rds.UserAuthConfigInfo) map[string]interface{} {
+	m := make(map[string]interface{})
+
+	m["auth_scheme"] = aws.StringValue(userAuthConfig.AuthScheme)
+	m["description"] = aws.StringValue(userAuthConfig.Description)
+	m["iam_auth"] = aws.StringValue(userAuthConfig.IAMAuth)
+	m["secret_arn"] = aws.StringValue(userAuthConfig.SecretArn)
+	m["username"] = aws.StringValue(userAuthConfig.UserName)
+
+	return m
+}
+
+func flattenDbProxyAuths(userAuthConfigs []*rds.UserAuthConfigInfo) []interface{} {
+	s := []interface{}{}
+	for _, v := range userAuthConfigs {
+		s = append(s, flattenDbProxyAuth(v))
+	}
+	return s
 }
