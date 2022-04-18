@@ -141,3 +141,19 @@ func statusDBInstanceHasAutomatedBackup(conn *rds.RDS, dbInstanceID, dbInstanceA
 		return output, strconv.FormatBool(false), nil
 	}
 }
+
+func statusDBProxy(conn *rds.RDS, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDBProxyByName(conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
