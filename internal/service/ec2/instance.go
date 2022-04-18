@@ -37,6 +37,7 @@ func ResourceInstance() *schema.Resource {
 		Read:   resourceInstanceRead,
 		Update: resourceInstanceUpdate,
 		Delete: resourceInstanceDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -371,7 +372,7 @@ func ResourceInstance() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
-							Default:      "$Default",
+							Default:      LaunchTemplateVersionDefault,
 						},
 					},
 				},
@@ -682,11 +683,11 @@ func ResourceInstance() *schema.Resource {
 					}
 
 					switch stateVersion {
-					case "$Default":
+					case LaunchTemplateVersionDefault:
 						if instanceVersion != defaultVersion {
 							diff.ForceNew("launch_template.0.version")
 						}
-					case "$Latest":
+					case LaunchTemplateVersionLatest:
 						if instanceVersion != latestVersion {
 							diff.ForceNew("launch_template.0.version")
 						}
@@ -2181,9 +2182,9 @@ func fetchLaunchTemplateAmi(specs []interface{}, conn *ec2.EC2) (string, error) 
 	}
 	if v, ok := spec["version"]; ok && v != "" {
 		switch v {
-		case "$Default":
+		case LaunchTemplateVersionDefault:
 			request.Filters = defaultFilter
-		case "$Latest":
+		case LaunchTemplateVersionLatest:
 			isLatest = true
 		default:
 			request.Versions = []*string{aws.String(v.(string))}
@@ -3246,15 +3247,15 @@ func getInstanceLaunchTemplate(conn *ec2.EC2, d *schema.ResourceData) ([]map[str
 
 	if stateVersion, ok := d.GetOk("launch_template.0.version"); ok {
 		switch stateVersion {
-		case "$Default":
+		case LaunchTemplateVersionDefault:
 			if liveVersion == defaultVersion {
-				attrs["version"] = "$Default"
+				attrs["version"] = LaunchTemplateVersionDefault
 			} else {
 				attrs["version"] = liveVersion
 			}
-		case "$Latest":
+		case LaunchTemplateVersionLatest:
 			if liveVersion == latestVersion {
-				attrs["version"] = "$Latest"
+				attrs["version"] = LaunchTemplateVersionLatest
 			} else {
 				attrs["version"] = liveVersion
 			}
