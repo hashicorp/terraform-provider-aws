@@ -1509,6 +1509,7 @@ func TestAccEC2SecurityGroup_multiIngress(t *testing.T) {
 func TestAccEC2SecurityGroup_ruleDescription(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1517,7 +1518,7 @@ func TestAccEC2SecurityGroup_ruleDescription(t *testing.T) {
 		CheckDestroy: testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityGroupRuleDescriptionConfig("Egress description", "Ingress description"),
+				Config: testAccSecurityGroupRuleDescriptionConfig(rName, "Egress description", "Ingress description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
@@ -1555,7 +1556,7 @@ func TestAccEC2SecurityGroup_ruleDescription(t *testing.T) {
 			},
 			// Change just the rule descriptions.
 			{
-				Config: testAccSecurityGroupRuleDescriptionConfig("New egress description", "New ingress description"),
+				Config: testAccSecurityGroupRuleDescriptionConfig(rName, "New egress description", "New ingress description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
@@ -1587,7 +1588,7 @@ func TestAccEC2SecurityGroup_ruleDescription(t *testing.T) {
 			},
 			// Remove just the rule descriptions.
 			{
-				Config: testAccSecurityGroupEmptyRuleDescriptionConfig,
+				Config: testAccSecurityGroupEmptyRuleDescriptionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
@@ -2857,19 +2858,19 @@ resource "aws_security_group" "test" {
 `, cidrBlocks.String())
 }
 
-const testAccSecurityGroupEmptyRuleDescriptionConfig = `
-resource "aws_vpc" "foo" {
+func testAccSecurityGroupEmptyRuleDescriptionConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-empty-rule-description"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
-  name        = "terraform_acceptance_test_desc_example"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.foo.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     protocol    = "6"
@@ -2888,10 +2889,11 @@ resource "aws_security_group" "test" {
   }
 
   tags = {
-    Name = "tf-acc-test"
+    Name = %[1]q
   }
 }
-`
+`, rName)
+}
 
 func testAccSecurityGroupIPv6Config(rName string) string {
 	return fmt.Sprintf(`
@@ -3108,27 +3110,26 @@ resource "aws_security_group" "test" {
 `, rName)
 }
 
-func testAccSecurityGroupRuleDescriptionConfig(egressDescription, ingressDescription string) string {
+func testAccSecurityGroupRuleDescriptionConfig(rName, egressDescription, ingressDescription string) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-description"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
-  name        = "terraform_acceptance_test_example"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.foo.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     protocol    = "6"
     from_port   = 80
     to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
-    description = "%s"
+    description = %[2]q
   }
 
   egress {
@@ -3136,14 +3137,14 @@ resource "aws_security_group" "test" {
     from_port   = 80
     to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
-    description = "%s"
+    description = %[3]q
   }
 
   tags = {
-    Name = "tf-acc-test"
+    Name = %[1]q
   }
 }
-`, ingressDescription, egressDescription)
+`, rName, ingressDescription, egressDescription)
 }
 
 func testAccSecurityGroupSelfConfig(rName string) string {
