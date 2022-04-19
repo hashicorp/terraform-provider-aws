@@ -1,23 +1,25 @@
-package aws
+package lakeformation
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/lakeformation"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"log"
 	"regexp"
 	"strings"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lakeformation"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func resourceAwsLakeFormationLFTag() *schema.Resource {
+func ResourceLFTag() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLakeFormationLFTagCreate,
-		Read:   resourceAwsLakeFormationLFTagRead,
-		Update: resourceAwsLakeFormationLFTagUpdate,
-		Delete: resourceAwsLakeFormationLFTagDelete,
+		Create: resourceLFTagCreate,
+		Read:   resourceLFTagRead,
+		Update: resourceLFTagUpdate,
+		Delete: resourceLFTagDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -50,8 +52,8 @@ func resourceAwsLakeFormationLFTag() *schema.Resource {
 	}
 }
 
-func resourceAwsLakeFormationLFTagCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lakeformationconn
+func resourceLFTagCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).LakeFormationConn
 
 	tagKey := d.Get("key").(string)
 	tagValues := d.Get("values").(*schema.Set)
@@ -60,13 +62,13 @@ func resourceAwsLakeFormationLFTagCreate(d *schema.ResourceData, meta interface{
 	if v, ok := d.GetOk("catalog_id"); ok {
 		catalogID = v.(string)
 	} else {
-		catalogID = meta.(*AWSClient).accountid
+		catalogID = meta.(*conns.AWSClient).AccountID
 	}
 
 	input := &lakeformation.CreateLFTagInput{
 		CatalogId: aws.String(catalogID),
 		TagKey:    aws.String(tagKey),
-		TagValues: expandStringSet(tagValues),
+		TagValues: flex.ExpandStringSet(tagValues),
 	}
 
 	_, err := conn.CreateLFTag(input)
@@ -76,13 +78,13 @@ func resourceAwsLakeFormationLFTagCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(fmt.Sprintf("%s:%s", catalogID, tagKey))
 
-	return resourceAwsLakeFormationLFTagRead(d, meta)
+	return resourceLFTagRead(d, meta)
 }
 
-func resourceAwsLakeFormationLFTagRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lakeformationconn
+func resourceLFTagRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).LakeFormationConn
 
-	catalogID, tagKey, err := readLFTagID(d.Id())
+	catalogID, tagKey, err := ReadLFTagID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -94,7 +96,7 @@ func resourceAwsLakeFormationLFTagRead(d *schema.ResourceData, meta interface{})
 
 	output, err := conn.GetLFTag(input)
 	if err != nil {
-		if isAWSErr(err, lakeformation.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Lake Formation LF-Tag (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -104,16 +106,16 @@ func resourceAwsLakeFormationLFTagRead(d *schema.ResourceData, meta interface{})
 	}
 
 	d.Set("key", output.TagKey)
-	d.Set("values", flattenStringList(output.TagValues))
+	d.Set("values", flex.FlattenStringSet(output.TagValues))
 	d.Set("catalog_id", output.CatalogId)
 
 	return nil
 }
 
-func resourceAwsLakeFormationLFTagUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lakeformationconn
+func resourceLFTagUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).LakeFormationConn
 
-	catalogID, tagKey, err := readLFTagID(d.Id())
+	catalogID, tagKey, err := ReadLFTagID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -121,8 +123,8 @@ func resourceAwsLakeFormationLFTagUpdate(d *schema.ResourceData, meta interface{
 	o, n := d.GetChange("values")
 	os := o.(*schema.Set)
 	ns := n.(*schema.Set)
-	toAdd := expandStringSet(ns.Difference(os))
-	toDelete := expandStringSet(os.Difference(ns))
+	toAdd := flex.ExpandStringSet(ns.Difference(os))
+	toDelete := flex.ExpandStringSet(os.Difference(ns))
 
 	input := &lakeformation.UpdateLFTagInput{
 		CatalogId: aws.String(catalogID),
@@ -142,13 +144,13 @@ func resourceAwsLakeFormationLFTagUpdate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("Error updating Lake Formation LF-Tag (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsLakeFormationLFTagRead(d, meta)
+	return resourceLFTagRead(d, meta)
 }
 
-func resourceAwsLakeFormationLFTagDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lakeformationconn
+func resourceLFTagDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).LakeFormationConn
 
-	catalogID, tagKey, err := readLFTagID(d.Id())
+	catalogID, tagKey, err := ReadLFTagID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -166,7 +168,7 @@ func resourceAwsLakeFormationLFTagDelete(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func readLFTagID(id string) (catalogID string, tagKey string, err error) {
+func ReadLFTagID(id string) (catalogID string, tagKey string, err error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 2 {
 		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected CATALOG-ID:TAG-KEY", id)

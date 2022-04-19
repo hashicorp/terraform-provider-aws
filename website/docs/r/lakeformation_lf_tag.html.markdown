@@ -3,7 +3,7 @@ subcategory: "Lake Formation"
 layout: "aws"
 page_title: "AWS: aws_lakeformation_lf_tag"
 description: |-
-    Creates a tag with the specified name and values.
+Creates a tag with the specified name and values.
 ---
 
 # Resource: aws_lakeformation_lf_tag
@@ -40,4 +40,3 @@ Lake Formation LF-Tags can be imported using the `catalog_id:key`. If you have n
 ```
 $ terraform import aws_lakeformation_lf_tag.example 123456789012:some_key
 ```
-
