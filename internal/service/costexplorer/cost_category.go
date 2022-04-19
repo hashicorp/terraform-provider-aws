@@ -415,7 +415,7 @@ func resourceCostExplorerCostCategoryCreate(ctx context.Context, d *schema.Resou
 	}
 
 	if err != nil {
-		return diag.Errorf("error creating CostExplorer Cost Category Definition (%s): %w", d.Id(), err)
+		return diag.Errorf("error creating CostExplorer Cost Category Definition (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(aws.StringValue(output.CostCategoryArn))
@@ -434,7 +434,7 @@ func resourceCostExplorerCostCategoryRead(ctx context.Context, d *schema.Resourc
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading CostExplorer Cost Category Definition (%s): %w", d.Id(), err)
+		return diag.Errorf("error reading CostExplorer Cost Category Definition (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", resp.CostCategory.CostCategoryArn)
@@ -443,11 +443,11 @@ func resourceCostExplorerCostCategoryRead(ctx context.Context, d *schema.Resourc
 	d.Set("effective_start", resp.CostCategory.EffectiveStart)
 	d.Set("name", resp.CostCategory.Name)
 	if err = d.Set("rule", flattenCostExplorerCostCategoryRules(resp.CostCategory.Rules)); err != nil {
-		return diag.Errorf("error setting `%s` for CostExplorer Cost Category Definition (%s): %w", "rule", d.Id(), err)
+		return diag.Errorf("error setting `%s` for CostExplorer Cost Category Definition (%s): %s", "rule", d.Id(), err)
 	}
 	d.Set("rule_version", resp.CostCategory.RuleVersion)
 	if err = d.Set("split_charge_rule", flattenCostExplorerCostCategorySplitChargeRules(resp.CostCategory.SplitChargeRules)); err != nil {
-		return diag.Errorf("error setting `%s` for CostExplorer Cost Category Definition (%s): %w", "split_charge_rule", d.Id(), err)
+		return diag.Errorf("error setting `%s` for CostExplorer Cost Category Definition (%s): %s", "split_charge_rule", d.Id(), err)
 	}
 
 	return nil
@@ -473,7 +473,7 @@ func resourceCostExplorerCostCategoryUpdate(ctx context.Context, d *schema.Resou
 	_, err := conn.UpdateCostCategoryDefinitionWithContext(ctx, input)
 
 	if err != nil {
-		diag.Errorf("error updating CostExplorer Cost Category Definition (%s): %w", d.Id(), err)
+		diag.Errorf("error updating CostExplorer Cost Category Definition (%s): %s", d.Id(), err)
 	}
 
 	return resourceCostExplorerCostCategoryRead(ctx, d, meta)
@@ -489,7 +489,7 @@ func resourceCostExplorerCostCategoryDelete(ctx context.Context, d *schema.Resou
 		if tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return diag.Errorf("error deleting CostExplorer Cost Category Definition (%s): %w", d.Id(), err)
+		return diag.Errorf("error deleting CostExplorer Cost Category Definition (%s): %s", d.Id(), err)
 	}
 
 	return nil

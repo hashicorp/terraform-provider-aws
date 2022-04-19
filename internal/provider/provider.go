@@ -495,6 +495,9 @@ func Provider() *schema.Provider {
 			"aws_connect_queue":                       connect.DataSourceQueue(),
 			"aws_connect_quick_connect":               connect.DataSourceQuickConnect(),
 
+			"aws_costexplorer_cost_category": costexplorer.DataSourceCostExplorerCostCategory(),
+			"aws_costexplorer_tags":          costexplorer.DataSourceCostExplorerTags(),
+
 			"aws_cur_report_definition": cur.DataSourceReportDefinition(),
 
 			"aws_datapipeline_pipeline":            datapipeline.DataSourcePipeline(),

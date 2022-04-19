@@ -15,7 +15,7 @@ import (
 	tfcostexplorer "github.com/hashicorp/terraform-provider-aws/internal/service/costexplorer"
 )
 
-func TestAccCostExplorerCostCategoryDefinition_basic(t *testing.T) {
+func TestAccCostExplorerCostCategory_basic(t *testing.T) {
 	var output costexplorer.CostCategory
 	resourceName := "aws_costexplorer_cost_category.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -23,13 +23,13 @@ func TestAccCostExplorerCostCategoryDefinition_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCostExplorerCostCategoryDefinitionDestroy,
+		CheckDestroy:      testAccCheckCostExplorerCostCategoryDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCostExplorerCostCategoryDefinitionConfig(rName),
+				Config: testAccCostExplorerCostCategoryConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostExplorerCostCategoryDefinitionExists(resourceName, &output),
+					testAccCheckCostExplorerCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -42,7 +42,7 @@ func TestAccCostExplorerCostCategoryDefinition_basic(t *testing.T) {
 	})
 }
 
-func TestAccCostExplorerCostCategoryDefinition_complete(t *testing.T) {
+func TestAccCostExplorerCostCategory_complete(t *testing.T) {
 	var output costexplorer.CostCategory
 	resourceName := "aws_costexplorer_cost_category.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -50,20 +50,20 @@ func TestAccCostExplorerCostCategoryDefinition_complete(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCostExplorerCostCategoryDefinitionDestroy,
+		CheckDestroy:      testAccCheckCostExplorerCostCategoryDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCostExplorerCostCategoryDefinitionConfig(rName),
+				Config: testAccCostExplorerCostCategoryConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostExplorerCostCategoryDefinitionExists(resourceName, &output),
+					testAccCheckCostExplorerCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
-				Config: testAccCostExplorerCostCategoryDefinitionOperandAndConfig(rName),
+				Config: testAccCostExplorerCostCategoryOperandAndConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostExplorerCostCategoryDefinitionExists(resourceName, &output),
+					testAccCheckCostExplorerCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -76,7 +76,7 @@ func TestAccCostExplorerCostCategoryDefinition_complete(t *testing.T) {
 	})
 }
 
-func TestAccCostExplorerCostCategoryDefinition_splitCharge(t *testing.T) {
+func TestAccCostExplorerCostCategory_splitCharge(t *testing.T) {
 	var output costexplorer.CostCategory
 	resourceName := "aws_costexplorer_cost_category.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -84,20 +84,20 @@ func TestAccCostExplorerCostCategoryDefinition_splitCharge(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCostExplorerCostCategoryDefinitionDestroy,
+		CheckDestroy:      testAccCheckCostExplorerCostCategoryDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCostExplorerCostCategoryDefinitionSplitChargesConfig(rName, "PROPORTIONAL"),
+				Config: testAccCostExplorerCostCategorySplitChargesConfig(rName, "PROPORTIONAL"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostExplorerCostCategoryDefinitionExists(resourceName, &output),
+					testAccCheckCostExplorerCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
-				Config: testAccCostExplorerCostCategoryDefinitionSplitChargesConfig(rName, "EVEN"),
+				Config: testAccCostExplorerCostCategorySplitChargesConfig(rName, "EVEN"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostExplorerCostCategoryDefinitionExists(resourceName, &output),
+					testAccCheckCostExplorerCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -110,7 +110,7 @@ func TestAccCostExplorerCostCategoryDefinition_splitCharge(t *testing.T) {
 	})
 }
 
-func TestAccCostExplorerCostCategoryDefinition_disappears(t *testing.T) {
+func TestAccCostExplorerCostCategory_disappears(t *testing.T) {
 	var output costexplorer.CostCategory
 	resourceName := "aws_costexplorer_cost_category.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -118,13 +118,13 @@ func TestAccCostExplorerCostCategoryDefinition_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCostExplorerCostCategoryDefinitionDestroy,
+		CheckDestroy:      testAccCheckCostExplorerCostCategoryDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCostExplorerCostCategoryDefinitionConfig(rName),
+				Config: testAccCostExplorerCostCategoryConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostExplorerCostCategoryDefinitionExists(resourceName, &output),
+					testAccCheckCostExplorerCostCategoryExists(resourceName, &output),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcostexplorer.ResourceCostExplorerCostCategory(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -133,7 +133,7 @@ func TestAccCostExplorerCostCategoryDefinition_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckCostExplorerCostCategoryDefinitionExists(resourceName string, output *costexplorer.CostCategory) resource.TestCheckFunc {
+func testAccCheckCostExplorerCostCategoryExists(resourceName string, output *costexplorer.CostCategory) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -144,11 +144,11 @@ func testAccCheckCostExplorerCostCategoryDefinitionExists(resourceName string, o
 		resp, err := conn.DescribeCostCategoryDefinition(&costexplorer.DescribeCostCategoryDefinitionInput{CostCategoryArn: aws.String(rs.Primary.ID)})
 
 		if err != nil {
-			return fmt.Errorf("problem checking for CE Cost Category Definition existence: %w", err)
+			return fmt.Errorf("problem checking for CE Cost Category  existence: %w", err)
 		}
 
 		if resp == nil {
-			return fmt.Errorf("CE Cost Category Definition %q does not exist", rs.Primary.ID)
+			return fmt.Errorf("CE Cost Category  %q does not exist", rs.Primary.ID)
 		}
 
 		*output = *resp.CostCategory
@@ -157,7 +157,7 @@ func testAccCheckCostExplorerCostCategoryDefinitionExists(resourceName string, o
 	}
 }
 
-func testAccCheckCostExplorerCostCategoryDefinitionDestroy(s *terraform.State) error {
+func testAccCheckCostExplorerCostCategoryDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CostExplorerConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -172,11 +172,11 @@ func testAccCheckCostExplorerCostCategoryDefinitionDestroy(s *terraform.State) e
 		}
 
 		if err != nil {
-			return fmt.Errorf("problem while checking CE Cost Category Definition was destroyed: %w", err)
+			return fmt.Errorf("problem while checking CE Cost Category  was destroyed: %w", err)
 		}
 
 		if resp != nil && resp.CostCategory != nil {
-			return fmt.Errorf("CE Cost Category Definition %q still exists", rs.Primary.ID)
+			return fmt.Errorf("CE Cost Category  %q still exists", rs.Primary.ID)
 		}
 	}
 
@@ -184,7 +184,7 @@ func testAccCheckCostExplorerCostCategoryDefinitionDestroy(s *terraform.State) e
 
 }
 
-func testAccCostExplorerCostCategoryDefinitionConfig(name string) string {
+func testAccCostExplorerCostCategoryConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_costexplorer_cost_category" "test" {
   name         = %[1]q
@@ -226,7 +226,7 @@ resource "aws_costexplorer_cost_category" "test" {
 `, name)
 }
 
-func testAccCostExplorerCostCategoryDefinitionOperandAndConfig(name string) string {
+func testAccCostExplorerCostCategoryOperandAndConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_costexplorer_cost_category" "test" {
   name         = %[1]q
@@ -262,9 +262,8 @@ resource "aws_costexplorer_cost_category" "test" {
 `, name)
 }
 
-func testAccCostExplorerCostCategoryDefinitionSplitChargesConfig(name, method string) string {
+func testAccCostExplorerCostCategorySplitChargesConfig(name, method string) string {
 	return fmt.Sprintf(`
-
 resource "aws_costexplorer_cost_category" "test1" {
   name         = "%[1]s-1"
   rule_version = "CostCategoryExpression.v1"

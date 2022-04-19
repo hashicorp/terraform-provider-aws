@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccCostExplorerCostCategoryDefinitionDataSource_basic(t *testing.T) {
+func TestAccCostExplorerCostCategoryDataSource_basic(t *testing.T) {
 	var output costexplorer.CostCategory
 	resourceName := "aws_costexplorer_cost_category.test"
 	dataSourceName := "data.aws_costexplorer_cost_category.test"
@@ -22,10 +22,10 @@ func TestAccCostExplorerCostCategoryDefinitionDataSource_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCostExplorerCostCategoryDefinitionDataSourceConfig(rName),
+				Config: testAccCostExplorerCostCategoryDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostExplorerCostCategoryDefinitionExists(resourceName, &output),
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					testAccCheckCostExplorerCostCategoryExists(resourceName, &output),
+					resource.TestCheckResourceAttrPair(dataSourceName, "cost_category_arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "rule_version", resourceName, "rule_version"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "rule.%", resourceName, "rule.%"),
@@ -35,10 +35,10 @@ func TestAccCostExplorerCostCategoryDefinitionDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCostExplorerCostCategoryDefinitionDataSourceConfig(name string) string {
-	return fmt.Sprintf(testAccCostExplorerCostCategoryDefinitionConfig(name) + `
+func testAccCostExplorerCostCategoryDataSourceConfig(name string) string {
+	return fmt.Sprintf(testAccCostExplorerCostCategoryConfig(name) + `
 data "aws_costexplorer_cost_category" "test" {
-  arn = aws_costexplorer_cost_category.test.arn
+  cost_category_arn = aws_costexplorer_cost_category.test.arn
 }
 `)
 }
