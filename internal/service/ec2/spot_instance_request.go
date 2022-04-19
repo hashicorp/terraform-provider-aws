@@ -262,63 +262,21 @@ func resourceSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}) e
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	var request *ec2.SpotInstanceRequest
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+		return FindSpotInstanceRequestByID(conn, d.Id())
+	}, d.IsNewResource())
 
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
-		var err error
-
-		request, err = FindSpotInstanceRequestByID(conn, d.Id())
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeInvalidSpotInstanceRequestIDNotFound) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		if d.IsNewResource() && request == nil {
-			return resource.RetryableError(&resource.NotFoundError{
-				LastError: fmt.Errorf("EC2 Spot Instance Request (%s) not found", d.Id()),
-			})
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		request, err = FindSpotInstanceRequestByID(conn, d.Id())
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeInvalidSpotInstanceRequestIDNotFound) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Spot Instance Request (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Spot Instance Request (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 Spot Instance Request (%s): %w", d.Id(), err)
 	}
 
-	if request == nil {
-		if d.IsNewResource() {
-			return fmt.Errorf("error reading EC2 Spot Instance Request (%s): not found after creation", d.Id())
-		}
-
-		log.Printf("[WARN] EC2 Spot Instance Request (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if aws.StringValue(request.State) == ec2.SpotInstanceStateCancelled || aws.StringValue(request.State) == ec2.SpotInstanceStateClosed {
-		if d.IsNewResource() {
-			return fmt.Errorf("error reading EC2 Spot Instance Request (%s): %s after creation", d.Id(), aws.StringValue(request.State))
-		}
-
-		log.Printf("[WARN] EC2 Spot Instance Request (%s) %s, removing from state", d.Id(), aws.StringValue(request.State))
-		d.SetId("")
-		return nil
-	}
+	request := outputRaw.(*ec2.SpotInstanceRequest)
 
 	d.Set("spot_bid_status", request.Status.Code)
 	// Instance ID is not set if the request is still pending
@@ -360,21 +318,10 @@ func resourceSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}) e
 func readInstance(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	instance, err := InstanceFindByID(conn, d.Get("spot_instance_id").(string))
+	instance, err := FindInstanceByID(conn, d.Get("spot_instance_id").(string))
+
 	if err != nil {
-		// If the instance was not found, return nil so that we can show
-		// that the instance is gone.
-		if tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
-			return fmt.Errorf("no instance found")
-		}
-
-		// Some other error, report it
 		return err
-	}
-
-	// If nothing was found, then return no state
-	if instance == nil {
-		return fmt.Errorf("no instances found")
 	}
 
 	d.Set("public_dns", instance.PublicDnsName)

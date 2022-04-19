@@ -1481,35 +1481,81 @@ func FindSecurityGroups(conn *ec2.EC2, input *ec2.DescribeSecurityGroupsInput) (
 	return output, nil
 }
 
-// FindSpotInstanceRequestByID looks up a SpotInstanceRequest by ID. When not found, returns nil and potentially an API error.
-func FindSpotInstanceRequestByID(conn *ec2.EC2, id string) (*ec2.SpotInstanceRequest, error) {
-	input := &ec2.DescribeSpotInstanceRequestsInput{
-		SpotInstanceRequestIds: aws.StringSlice([]string{id}),
-	}
+func FindSpotInstanceRequests(conn *ec2.EC2, input *ec2.DescribeSpotInstanceRequestsInput) ([]*ec2.SpotInstanceRequest, error) {
+	var output []*ec2.SpotInstanceRequest
 
-	output, err := conn.DescribeSpotInstanceRequests(input)
+	err := conn.DescribeSpotInstanceRequestsPages(input, func(page *ec2.DescribeSpotInstanceRequestsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.SpotInstanceRequests {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSpotInstanceRequestIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, nil
+	return output, nil
+}
+
+func FindSpotInstanceRequest(conn *ec2.EC2, input *ec2.DescribeSpotInstanceRequestsInput) (*ec2.SpotInstanceRequest, error) {
+	output, err := FindSpotInstanceRequests(conn, input)
+
+	if err != nil {
+		return nil, err
 	}
 
-	for _, spotInstanceRequest := range output.SpotInstanceRequests {
-		if spotInstanceRequest == nil {
-			continue
-		}
-
-		if aws.StringValue(spotInstanceRequest.SpotInstanceRequestId) != id {
-			continue
-		}
-
-		return spotInstanceRequest, nil
+	if len(output) == 0 || output[0] == nil || output[0].State == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return nil, nil
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindSpotInstanceRequestByID(conn *ec2.EC2, id string) (*ec2.SpotInstanceRequest, error) {
+	input := &ec2.DescribeSpotInstanceRequestsInput{
+		SpotInstanceRequestIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindSpotInstanceRequest(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.SpotInstanceStateCancelled || state == ec2.SpotInstanceStateClosed {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.SpotInstanceRequestId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
 func FindSubnetByID(conn *ec2.EC2, id string) (*ec2.Subnet, error) {

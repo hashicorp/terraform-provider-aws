@@ -4373,7 +4373,7 @@ func testAccCheckInstanceExistsWithProvider(n string, v *ec2.Instance, providerF
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No EC2 Instance ID is set")
 		}
 
 		conn := providerF().Meta().(*conns.AWSClient).EC2Conn
