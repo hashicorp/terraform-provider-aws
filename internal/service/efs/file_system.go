@@ -61,7 +61,6 @@ func ResourceFileSystem() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(efs.PerformanceMode_Values(), false),
 			},
 
