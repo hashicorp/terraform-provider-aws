@@ -320,6 +320,7 @@ type Config struct {
 	SkipRegionValidation           bool
 	SkipRequestingAccountId        bool
 	STSRegion                      string
+	SuppressDebugLog               bool
 	TerraformVersion               string
 	Token                          string
 	UseDualStackEndpoint           bool
@@ -648,6 +649,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		SkipEC2MetadataApiCheck: c.SkipMetadataApiCheck,
 		SkipRequestingAccountId: c.SkipRequestingAccountId,
 		StsEndpoint:             c.Endpoints[names.STS],
+		SuppressDebugLog:        c.SuppressDebugLog,
 		Token:                   c.Token,
 		UseDualStackEndpoint:    c.UseDualStackEndpoint,
 		UseFIPSEndpoint:         c.UseFIPSEndpoint,
