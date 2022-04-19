@@ -1734,17 +1734,8 @@ func instanceDisableAPITermination(conn *ec2.EC2, id string, disableAPITerminati
 func modifyAttributeWithInstanceStopStart(conn *ec2.EC2, input *ec2.ModifyInstanceAttributeInput) error {
 	id := aws.StringValue(input.InstanceId)
 
-	log.Printf("[INFO] Stopping EC2 Instance: %s", id)
-	_, err := conn.StopInstances(&ec2.StopInstancesInput{
-		InstanceIds: aws.StringSlice([]string{id}),
-	})
-
-	if err != nil {
-		return fmt.Errorf("stopping EC2 Instance (%s): %w", id, err)
-	}
-
-	if _, err := WaitInstanceStopped(conn, id, InstanceStopTimeout); err != nil {
-		return fmt.Errorf("waiting for EC2 Instance (%s) stop: %w", id, err)
+	if err := StopInstance(conn, id, InstanceStopTimeout); err != nil {
+		return err
 	}
 
 	if _, err := conn.ModifyInstanceAttribute(input); err != nil {
@@ -1752,7 +1743,7 @@ func modifyAttributeWithInstanceStopStart(conn *ec2.EC2, input *ec2.ModifyInstan
 	}
 
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433.
-	_, err = tfresource.RetryWhenAWSErrMessageContains(InstanceAttributePropagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrMessageContains(InstanceAttributePropagationTimeout,
 		func() (interface{}, error) {
 			return conn.StartInstances(&ec2.StartInstancesInput{
 				InstanceIds: aws.StringSlice([]string{id}),
@@ -1770,37 +1761,6 @@ func modifyAttributeWithInstanceStopStart(conn *ec2.EC2, input *ec2.ModifyInstan
 	}
 
 	return nil
-}
-
-// InstanceStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
-// an EC2 instance.
-func InstanceStateRefreshFunc(conn *ec2.EC2, instanceID string, failStates []string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		instance, err := InstanceFindByID(conn, instanceID)
-		if err != nil {
-			if !tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
-				log.Printf("Error on InstanceStateRefresh: %s", err)
-				return nil, "", err
-			}
-		}
-
-		if instance == nil || instance.State == nil {
-			// Sometimes AWS just has consistency issues and doesn't see
-			// our instance yet. Return an empty state.
-			return nil, "", nil
-		}
-
-		state := aws.StringValue(instance.State.Name)
-
-		for _, failState := range failStates {
-			if state == failState {
-				return instance, state, fmt.Errorf("Failed to reach target state. Reason: %s",
-					stringifyStateReason(instance.StateReason))
-			}
-		}
-
-		return instance, state, nil
-	}
 }
 
 // MetadataOptionsRefreshFunc returns a resource.StateRefreshFunc that is used to watch
@@ -1883,17 +1843,6 @@ func VolumeStateRefreshFunc(conn *ec2.EC2, volumeID, failState string) resource.
 
 		return i, state, nil
 	}
-}
-
-func stringifyStateReason(sr *ec2.StateReason) string {
-	if sr.Message != nil {
-		return aws.StringValue(sr.Message)
-	}
-	if sr.Code != nil {
-		return aws.StringValue(sr.Code)
-	}
-
-	return sr.String()
 }
 
 func readBlockDevices(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2) error {
@@ -2773,6 +2722,25 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 	return opts, nil
 }
 
+// StopInstance stops an EC2 instance and waits for the instance to stop.
+func StopInstance(conn *ec2.EC2, id string, timeout time.Duration) error {
+	log.Printf("[INFO] Stopping EC2 Instance: %s", id)
+	_, err := conn.StopInstances(&ec2.StopInstancesInput{
+		InstanceIds: aws.StringSlice([]string{id}),
+	})
+
+	if err != nil {
+		return fmt.Errorf("stopping EC2 Instance (%s): %w", id, err)
+	}
+
+	if _, err := WaitInstanceStopped(conn, id, timeout); err != nil {
+		return fmt.Errorf("waiting for EC2 Instance (%s) stop: %w", id, err)
+	}
+
+	return nil
+}
+
+// terminateInstance shuts down an EC2 instance and waits for the instance to be deleted.
 func terminateInstance(conn *ec2.EC2, id string, timeout time.Duration) error {
 	log.Printf("[INFO] Terminating EC2 Instance: %s", id)
 	_, err := conn.TerminateInstances(&ec2.TerminateInstancesInput{

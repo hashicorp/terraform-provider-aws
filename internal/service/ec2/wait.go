@@ -364,7 +364,7 @@ func WaitInstanceCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.
 
 	if output, ok := outputRaw.(*ec2.Instance); ok {
 		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(stateReason.Code), aws.StringValue(stateReason.Message)))
+			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
 		}
 
 		return output, err
@@ -382,7 +382,7 @@ func WaitInstanceDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.
 			ec2.InstanceStateNameStopping,
 			ec2.InstanceStateNameStopped,
 		},
-		Target:     []string{},
+		Target:     []string{ec2.InstanceStateNameTerminated},
 		Refresh:    StatusInstanceState(conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
@@ -393,7 +393,30 @@ func WaitInstanceDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.
 
 	if output, ok := outputRaw.(*ec2.Instance); ok {
 		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(stateReason.Code), aws.StringValue(stateReason.Message)))
+			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitInstanceReady(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameStopping},
+		Target:     []string{ec2.InstanceStateNameRunning, ec2.InstanceStateNameStopped},
+		Refresh:    StatusInstanceState(conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Instance); ok {
+		if stateReason := output.StateReason; stateReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
 		}
 
 		return output, err
@@ -416,7 +439,7 @@ func WaitInstanceStarted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.
 
 	if output, ok := outputRaw.(*ec2.Instance); ok {
 		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(stateReason.Code), aws.StringValue(stateReason.Message)))
+			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
 		}
 
 		return output, err
@@ -444,7 +467,7 @@ func WaitInstanceStopped(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.
 
 	if output, ok := outputRaw.(*ec2.Instance); ok {
 		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(stateReason.Code), aws.StringValue(stateReason.Message)))
+			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
 		}
 
 		return output, err

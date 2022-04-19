@@ -4394,15 +4394,7 @@ func testAccCheckStopInstance(v *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		_, err := conn.StopInstances(&ec2.StopInstancesInput{
-			InstanceIds: []*string{v.InstanceId},
-		})
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfec2.WaitInstanceStopped(conn, aws.StringValue(v.InstanceId), 10*time.Minute)
+		err := tfec2.StopInstance(conn, aws.StringValue(v.InstanceId), 10*time.Minute)
 
 		if err != nil {
 			return err

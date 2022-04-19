@@ -102,20 +102,8 @@ func resourceVolumeAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 		// This handles the situation where the instance is created by
 		// a spot request and whilst the request has been fulfilled the
 		// instance is not running yet
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameStopping},
-			Target:     []string{ec2.InstanceStateNameRunning, ec2.InstanceStateNameStopped},
-			Refresh:    InstanceStateRefreshFunc(conn, iID, []string{ec2.InstanceStateNameTerminated}),
-			Timeout:    10 * time.Minute,
-			Delay:      10 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
-
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return fmt.Errorf(
-				"Error waiting for instance (%s) to become ready: %s",
-				iID, err)
+		if _, err := WaitInstanceReady(conn, iID, 10*time.Minute); err != nil {
+			return fmt.Errorf("waiting for EC2 Instance (%s) to be ready: %w", iID, err)
 		}
 
 		// not attached
@@ -206,16 +194,8 @@ func resourceVolumeAttachmentDelete(d *schema.ResourceData, meta interface{}) er
 	iID := d.Get("instance_id").(string)
 
 	if _, ok := d.GetOk("stop_instance_before_detaching"); ok {
-		_, err := conn.StopInstances(&ec2.StopInstancesInput{
-			InstanceIds: []*string{aws.String(iID)},
-		})
-
-		if err != nil {
-			return fmt.Errorf("stopping EC2 Instance (%s): %w", iID, err)
-		}
-
-		if _, err := WaitInstanceStopped(conn, iID, InstanceStopTimeout); err != nil {
-			return fmt.Errorf("waiting for EC2 Instance (%s) stop: %w", iID, err)
+		if err := StopInstance(conn, iID, InstanceStopTimeout); err != nil {
+			return err
 		}
 	}
 

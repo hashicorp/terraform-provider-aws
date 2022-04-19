@@ -90,25 +90,10 @@ func TestAccEC2VolumeAttachment_attachStopped(t *testing.T) {
 	stopInstance := func() {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		_, err := conn.StopInstances(&ec2.StopInstancesInput{
-			InstanceIds: []*string{i.InstanceId},
-		})
-		if err != nil {
-			t.Fatalf("error stopping instance (%s): %s", aws.StringValue(i.InstanceId), err)
-		}
+		err := tfec2.StopInstance(conn, aws.StringValue(i.InstanceId), 10*time.Minute)
 
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameRunning, ec2.InstanceStateNameStopping},
-			Target:     []string{ec2.InstanceStateNameStopped},
-			Refresh:    tfec2.InstanceStateRefreshFunc(conn, *i.InstanceId, []string{}),
-			Timeout:    10 * time.Minute,
-			Delay:      10 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
-
-		_, err = stateConf.WaitForState()
 		if err != nil {
-			t.Fatalf("Error waiting for instance(%s) to stop: %s", *i.InstanceId, err)
+			t.Fatal(err)
 		}
 	}
 
@@ -119,7 +104,7 @@ func TestAccEC2VolumeAttachment_attachStopped(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVolumeAttachmentConfigBase(rName),
+				Config: testAccVolumeAttachmentBaseConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists("aws_instance.test", &i),
 				),
@@ -311,20 +296,12 @@ func testAccCheckVolumeAttachmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccVolumeAttachmentInstanceOnlyConfigBase(rName string) string {
+func testAccVolumeAttachmentInstanceOnlyBaseConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_instance" "test" {
   ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -337,8 +314,8 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccVolumeAttachmentConfigBase(rName string) string {
-	return testAccVolumeAttachmentInstanceOnlyConfigBase(rName) + fmt.Sprintf(`
+func testAccVolumeAttachmentBaseConfig(rName string) string {
+	return acctest.ConfigCompose(testAccVolumeAttachmentInstanceOnlyBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   size              = 1
@@ -347,22 +324,21 @@ resource "aws_ebs_volume" "test" {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccVolumeAttachmentConfig(rName string) string {
-	return testAccVolumeAttachmentConfigBase(rName) + `
+	return acctest.ConfigCompose(testAccVolumeAttachmentBaseConfig(rName), `
 resource "aws_volume_attachment" "test" {
   device_name = "/dev/sdh"
   volume_id   = aws_ebs_volume.test.id
   instance_id = aws_instance.test.id
 }
-`
+`)
 }
 
 func testAccVolumeAttachmentStopInstanceConfig(rName string) string {
-	return acctest.ConfigCompose(testAccVolumeAttachmentInstanceOnlyConfigBase(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccVolumeAttachmentInstanceOnlyBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   size              = 1000
@@ -382,7 +358,7 @@ resource "aws_volume_attachment" "test" {
 }
 
 func testAccVolumeAttachmentConfigSkipDestroy(rName string) string {
-	return testAccVolumeAttachmentConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccVolumeAttachmentBaseConfig(rName), fmt.Sprintf(`
 data "aws_ebs_volume" "test" {
   filter {
     name   = "size"
@@ -406,11 +382,11 @@ resource "aws_volume_attachment" "test" {
   instance_id  = aws_instance.test.id
   skip_destroy = true
 }
-`, rName)
+`, rName))
 }
 
 func testAccVolumeAttachmentUpdateConfig(rName string, detach bool) string {
-	return testAccVolumeAttachmentConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccVolumeAttachmentBaseConfig(rName), fmt.Sprintf(`
 resource "aws_volume_attachment" "test" {
   device_name  = "/dev/sdh"
   volume_id    = aws_ebs_volume.test.id
@@ -418,7 +394,7 @@ resource "aws_volume_attachment" "test" {
   force_detach = %[1]t
   skip_destroy = %[1]t
 }
-`, detach)
+`, detach))
 }
 
 func testAccVolumeAttachmentImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
