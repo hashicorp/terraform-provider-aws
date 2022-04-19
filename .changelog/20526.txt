@@ -1,0 +1,15 @@
+```release-note:new-resource
+aws_route53recoveryreadiness_cell
+```
+
+```release-note:new-resource
+aws_route53recoveryreadiness_recovery_group
+```
+
+```release-note:new-resource
+aws_route53recoveryreadiness_resource_set
+```
+
+```release-note:new-resource
+aws_route53recoveryreadiness_readiness_check
+```

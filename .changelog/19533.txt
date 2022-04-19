@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_iam_policy_document: No longer show changes when there's a single condition
+```

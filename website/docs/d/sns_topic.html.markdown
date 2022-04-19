@@ -1,5 +1,5 @@
 ---
-subcategory: "SNS"
+subcategory: "SNS (Simple Notification)"
 layout: "aws"
 page_title: "AWS: aws_sns_topic"
 description: |-
@@ -14,7 +14,7 @@ without having to hard code the ARNs as input.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_sns_topic" "example" {
   name = "an_example_topic"
 }

@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EBS (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ebs_snapshot_ids"
 description: |-
@@ -13,7 +13,7 @@ criteria.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ebs_snapshot_ids" "ebs_volumes" {
   owners = ["self"]
 

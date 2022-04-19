@@ -1,5 +1,5 @@
 ---
-subcategory: "Autoscaling"
+subcategory: "Auto Scaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_group"
 description: |-
@@ -12,7 +12,7 @@ Use this data source to get information on an existing autoscaling group.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_autoscaling_group" "foo" {
   name = "foo"
 }

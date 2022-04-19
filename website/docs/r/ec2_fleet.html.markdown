@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_ec2_fleet"
 description: |-
@@ -12,7 +12,7 @@ Provides a resource to manage EC2 Fleets.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ec2_fleet" "example" {
   launch_template_config {
     launch_template_specification {
@@ -34,11 +34,12 @@ The following arguments are supported:
 
 * `launch_template_config` - (Required) Nested argument containing EC2 Launch Template configurations. Defined below.
 * `target_capacity_specification` - (Required) Nested argument containing target capacity configurations. Defined below.
+* `context` - (Optional) Reserved.
 * `excess_capacity_termination_policy` - (Optional) Whether running instances should be terminated if the total target capacity of the EC2 Fleet is decreased below the current size of the EC2. Valid values: `no-termination`, `termination`. Defaults to `termination`.
 * `on_demand_options` - (Optional) Nested argument containing On-Demand configurations. Defined below.
 * `replace_unhealthy_instances` - (Optional) Whether EC2 Fleet should replace unhealthy instances. Defaults to `false`.
 * `spot_options` - (Optional) Nested argument containing Spot configurations. Defined below.
-* `tags` - (Optional) Map of Fleet tags. To tag instances at launch, specify the tags in the Launch Template.
+* `tags` - (Optional) Map of Fleet tags. To tag instances at launch, specify the tags in the Launch Template. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `terminate_instances` - (Optional) Whether to terminate instances for an EC2 Fleet if it is deleted successfully. Defaults to `false`.
 * `terminate_instances_with_expiration` - (Optional) Whether running instances should be terminated when the EC2 Fleet expires. Defaults to `false`.
 * `type` - (Optional) The type of request. Indicates whether the EC2 Fleet only requests the target capacity, or also attempts to maintain it. Valid values: `maintain`, `request`. Defaults to `maintain`.
@@ -60,7 +61,7 @@ The following arguments are supported:
 
 Example:
 
-```hcl
+```terraform
 resource "aws_ec2_fleet" "example" {
   # ... other configuration ...
 
@@ -121,6 +122,7 @@ resource "aws_ec2_fleet" "example" {
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Fleet identifier
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -132,7 +134,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_ec2_fleet` can be imported by using the Fleet identifier, e.g.
+`aws_ec2_fleet` can be imported by using the Fleet identifier, e.g.,
 
 ```
 $ terraform import aws_ec2_fleet.example fleet-b9b55d27-c5fc-41ac-a6f3-48fcc91f080c

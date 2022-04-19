@@ -16,7 +16,7 @@ Provides a Pinpoint Baidu Channel resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_pinpoint_app" "app" {}
 
 resource "aws_pinpoint_baidu_channel" "channel" {
@@ -36,9 +36,13 @@ The following arguments are supported:
 * `api_key` - (Required) Platform credential API key from Baidu.
 * `secret_key` - (Required) Platform credential Secret key from Baidu.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
-Pinpoint Baidu Channel can be imported using the `application-id`, e.g.
+Pinpoint Baidu Channel can be imported using the `application-id`, e.g.,
 
 ```
 $ terraform import aws_pinpoint_baidu_channel.channel application-id

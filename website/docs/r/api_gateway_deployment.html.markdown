@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway (REST APIs)"
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_deployment"
 description: |-
@@ -25,7 +25,7 @@ To properly capture all REST API configuration in a deployment, this resource mu
 
 An end-to-end example of a REST API configured with OpenAPI can be found in the [`/examples/api-gateway-rest-api-openapi` directory within the GitHub repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/api-gateway-rest-api-openapi).
 
-```hcl
+```terraform
 resource "aws_api_gateway_rest_api" "example" {
   body = jsonencode({
     openapi = "3.0.1"
@@ -71,7 +71,7 @@ resource "aws_api_gateway_stage" "example" {
 
 ### Terraform Resources
 
-```hcl
+```terraform
 resource "aws_api_gateway_rest_api" "example" {
   name = "example"
 }
@@ -143,8 +143,8 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the deployment
 * `invoke_url` - The URL to invoke the API pointing to the stage,
-  e.g. `https://z4675bid1j.execute-api.eu-west-2.amazonaws.com/prod`
+  e.g., `https://z4675bid1j.execute-api.eu-west-2.amazonaws.com/prod`
 * `execution_arn` - The execution ARN to be used in [`lambda_permission`](/docs/providers/aws/r/lambda_permission.html)'s `source_arn`
   when allowing API Gateway to invoke a Lambda function,
-  e.g. `arn:aws:execute-api:eu-west-2:123456789012:z4675bid1j/prod`
+  e.g., `arn:aws:execute-api:eu-west-2:123456789012:z4675bid1j/prod`
 * `created_date` - The creation date of the deployment

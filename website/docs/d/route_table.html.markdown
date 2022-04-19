@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_route_table"
 description: |-
@@ -16,7 +16,7 @@ This resource can prove useful when a module accepts a Subnet ID as an input var
 
 The following example shows how one might accept a Route Table ID as a variable and use this data source to obtain the data necessary to create a route.
 
-```hcl
+```terraform
 variable "subnet_id" {}
 
 data "aws_route_table" "selected" {
@@ -68,11 +68,13 @@ When relevant, routes are also exported with the following attributes:
 For destinations:
 
 * `cidr_block` - CIDR block of the route.
+* `destination_prefix_list_id` - The ID of a [managed prefix list](ec2_managed_prefix_list.html) destination of the route.
 * `ipv6_cidr_block` - IPv6 CIDR block of the route.
 
 For targets:
 
 * `carrier_gateway_id` - ID of the Carrier Gateway.
+* `core_network_arn` - ARN of the core network.
 * `egress_only_gateway_id` - ID of the Egress Only Internet Gateway.
 * `gateway_id` - Internet Gateway ID.
 * `instance_id` - EC2 instance ID.

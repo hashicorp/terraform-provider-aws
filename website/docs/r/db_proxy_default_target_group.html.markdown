@@ -1,5 +1,5 @@
 ---
-subcategory: "RDS"
+subcategory: "RDS (Relational Database)"
 layout: "aws"
 page_title: "AWS: aws_db_proxy_default_target_group"
 description: |-
@@ -14,7 +14,7 @@ The `aws_db_proxy_default_target_group` behaves differently from normal resource
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_db_proxy" "example" {
   name                   = "example"
   debug_logging          = false
@@ -83,7 +83,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DB proxy default target groups can be imported using the `db_proxy_name`, e.g.
+DB proxy default target groups can be imported using the `db_proxy_name`, e.g.,
 
 ```
 $ terraform import aws_db_proxy_default_target_group.example example

@@ -1,5 +1,5 @@
 ---
-subcategory: "WAFv2"
+subcategory: "WAF"
 layout: "aws"
 page_title: "AWS: aws_wafv2_regex_pattern_set"
 description: |-
@@ -12,7 +12,7 @@ Retrieves the summary of a WAFv2 Regex Pattern Set.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_wafv2_regex_pattern_set" "example" {
   name  = "some-regex-pattern-set"
   scope = "REGIONAL"

@@ -1,5 +1,5 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_public_access_block"
 description: |-
@@ -12,7 +12,7 @@ Manages S3 bucket-level Public Access Block configuration. For more information 
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "example" {
   bucket = "example"
 }
@@ -48,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_s3_bucket_public_access_block` can be imported by using the bucket name, e.g.
+`aws_s3_bucket_public_access_block` can be imported by using the bucket name, e.g.,
 
 ```
 $ terraform import aws_s3_bucket_public_access_block.example my-bucket
