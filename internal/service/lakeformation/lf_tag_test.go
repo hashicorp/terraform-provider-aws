@@ -130,7 +130,7 @@ func testAccCheckAWSLakeFormationLFTagsDestroy(s *terraform.State) error {
 				continue
 			}
 			// If the lake formation admin has been revoked, there will be access denied instead of entity not found
-			if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
+			if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeAccessDeniedException) {
 				continue
 			}
 			return err
