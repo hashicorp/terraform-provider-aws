@@ -1692,6 +1692,76 @@ func FindSubnetIPv6CIDRBlockAssociationByID(conn *ec2.EC2, associationID string)
 	return nil, &resource.NotFoundError{}
 }
 
+func FindVolumeModifications(conn *ec2.EC2, input *ec2.DescribeVolumesModificationsInput) ([]*ec2.VolumeModification, error) {
+	var output []*ec2.VolumeModification
+
+	err := conn.DescribeVolumesModificationsPages(input, func(page *ec2.DescribeVolumesModificationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.VolumesModifications {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVolumeNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindVolumeModification(conn *ec2.EC2, input *ec2.DescribeVolumesModificationsInput) (*ec2.VolumeModification, error) {
+	output, err := FindVolumeModifications(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindVolumeModificationByID(conn *ec2.EC2, id string) (*ec2.VolumeModification, error) {
+	input := &ec2.DescribeVolumesModificationsInput{
+		VolumeIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindVolumeModification(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.VolumeId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func FindVPCAttribute(conn *ec2.EC2, vpcID string, attribute string) (bool, error) {
 	input := &ec2.DescribeVpcAttributeInput{
 		Attribute: aws.String(attribute),

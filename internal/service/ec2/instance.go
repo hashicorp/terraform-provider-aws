@@ -1550,7 +1550,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("root_block_device.0") && !d.IsNewResource() {
 		volumeID := d.Get("root_block_device.0.volume_id").(string)
 
-		input := ec2.ModifyVolumeInput{
+		input := &ec2.ModifyVolumeInput{
 			VolumeId: aws.String(volumeID),
 		}
 		modifyVolume := false
@@ -1593,34 +1593,22 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 		if modifyVolume {
-			_, err := conn.ModifyVolume(&input)
+			log.Printf("[DEBUG] Modifying volume: %s", input)
+			_, err := conn.ModifyVolume(input)
+
 			if err != nil {
-				return fmt.Errorf("error modifying EC2 Volume %q: %w", volumeID, err)
+				return fmt.Errorf("updating EC2 Instance (%s) volume (%s): %w", d.Id(), volumeID, err)
 			}
 
-			// The volume is useable once the state is "optimizing", but will not be at full performance.
-			// Optimization can take hours. e.g. a full 1 TiB drive takes approximately 6 hours to optimize,
-			// according to https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/monitoring-volume-modifications.html
-			stateConf := &resource.StateChangeConf{
-				Pending:    []string{ec2.VolumeModificationStateModifying},
-				Target:     []string{ec2.VolumeModificationStateCompleted, ec2.VolumeModificationStateOptimizing},
-				Refresh:    VolumeStateRefreshFunc(conn, volumeID, ec2.VolumeModificationStateFailed),
-				Timeout:    d.Timeout(schema.TimeoutUpdate),
-				Delay:      30 * time.Second,
-				MinTimeout: 30 * time.Second,
-			}
-
-			_, err = stateConf.WaitForState()
-			if err != nil {
-				return fmt.Errorf("error waiting for EC2 volume (%s) to be modified: %w", volumeID, err)
+			if _, err := WaitVolumeModificationComplete(conn, volumeID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return fmt.Errorf("waiting for EC2 Instance (%s) volume (%s) update: %w", d.Id(), volumeID, err)
 			}
 		}
 
 		if d.HasChange("root_block_device.0.delete_on_termination") {
 			deviceName := d.Get("root_block_device.0.device_name").(string)
 			if v, ok := d.Get("root_block_device.0.delete_on_termination").(bool); ok {
-				_, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
-					InstanceId: aws.String(d.Id()),
+				input := &ec2.ModifyInstanceAttributeInput{
 					BlockDeviceMappings: []*ec2.InstanceBlockDeviceMappingSpecification{
 						{
 							DeviceName: aws.String(deviceName),
@@ -1629,23 +1617,18 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 							},
 						},
 					},
-				})
-				if err != nil {
-					return fmt.Errorf("error modifying delete on termination attribute for EC2 instance %q block device %q: %w", d.Id(), deviceName, err)
+					InstanceId: aws.String(d.Id()),
 				}
 
-				stateConf := &resource.StateChangeConf{
-					Target:     []string{strconv.FormatBool(v)},
-					Refresh:    RootBlockDeviceDeleteOnTerminationRefreshFunc(conn, d.Id()),
-					Timeout:    d.Timeout(schema.TimeoutUpdate),
-					Delay:      10 * time.Second,
-					MinTimeout: 3 * time.Second,
+				log.Printf("[DEBUG] Modifying EC2 Instance attribute: %s", input)
+				_, err := conn.ModifyInstanceAttribute(input)
+
+				if err != nil {
+					return fmt.Errorf("updating EC2 Instance (%s) root block device (%s) DeleteOnTermination attribute: %w", d.Id(), deviceName, err)
 				}
 
-				_, err = stateConf.WaitForState()
-				if err != nil {
-					return fmt.Errorf("Error waiting for instance (%s) to apply DeleteOnTermination attribute update: %s",
-						d.Id(), err)
+				if _, err := WaitInstanceRootBlockDeviceDeleteOnTerminationUpdated(conn, d.Id(), v, d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return fmt.Errorf("waiting for EC2 Instance (%s) root block device DeleteOnTermination update: %w", d.Id(), err)
 				}
 			}
 		}
@@ -1752,64 +1735,6 @@ func modifyInstanceAttributeWithStopStart(conn *ec2.EC2, input *ec2.ModifyInstan
 	}
 
 	return nil
-}
-
-// RootBlockDeviceDeleteOnTerminationRefreshFunc returns a resource.StateRefreshFunc
-// that is used to watch changes in an EC2 instance's root block device's delete on termination attribute.
-func RootBlockDeviceDeleteOnTerminationRefreshFunc(conn *ec2.EC2, instanceID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		instance, err := InstanceFindByID(conn, instanceID)
-		if err != nil {
-			if !tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
-				log.Printf("Error on InstanceStateRefresh: %s", err)
-				return nil, "", err
-			}
-		}
-
-		if instance == nil || len(instance.BlockDeviceMappings) == 0 {
-			// Sometimes AWS just has consistency issues and doesn't see
-			// our instance yet. Return an empty state.
-			return nil, "", nil
-		}
-
-		var deleteOnTermination string
-		for _, bd := range instance.BlockDeviceMappings {
-			if blockDeviceIsRoot(bd, instance) {
-				deleteOnTermination = strconv.FormatBool(aws.BoolValue(bd.Ebs.DeleteOnTermination))
-				break
-			}
-		}
-
-		return instance, deleteOnTermination, nil
-	}
-}
-
-// VolumeStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
-// an EC2 root device volume.
-func VolumeStateRefreshFunc(conn *ec2.EC2, volumeID, failState string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeVolumesModifications(&ec2.DescribeVolumesModificationsInput{
-			VolumeIds: []*string{aws.String(volumeID)},
-		})
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidVolumeID.NotFound", "does not exist") {
-				return nil, "", nil
-			}
-			log.Printf("Error on VolumeStateRefresh: %s", err)
-			return nil, "", err
-		}
-		if resp == nil || len(resp.VolumesModifications) == 0 || resp.VolumesModifications[0] == nil {
-			return nil, "", nil
-		}
-
-		i := resp.VolumesModifications[0]
-		state := aws.StringValue(i.ModificationState)
-		if state == failState {
-			return i, state, fmt.Errorf("Failed to reach target state. Reason: %s", aws.StringValue(i.StatusMessage))
-		}
-
-		return i, state, nil
-	}
 }
 
 func readBlockDevices(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2) error {

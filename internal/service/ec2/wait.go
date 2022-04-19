@@ -495,6 +495,24 @@ func WaitInstanceMetadataOptionsApplied(conn *ec2.EC2, id string, timeout time.D
 	return nil, err
 }
 
+func WaitInstanceRootBlockDeviceDeleteOnTerminationUpdated(conn *ec2.EC2, id string, expectedValue bool, timeout time.Duration) (*ec2.EbsInstanceBlockDevice, error) {
+	stateConf := &resource.StateChangeConf{
+		Target:     []string{strconv.FormatBool(expectedValue)},
+		Refresh:    StatusInstanceRootBlockDeviceDeleteOnTermination(conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.EbsInstanceBlockDevice); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 const ManagedPrefixListEntryCreateTimeout = 5 * time.Minute
 
 func WaitRouteDeleted(conn *ec2.EC2, routeFinder RouteFinder, routeTableID, destination string, timeout time.Duration) (*ec2.Route, error) {
@@ -1175,6 +1193,30 @@ func WaitTransitGatewayRouteTablePropagationStateDisabled(conn *ec2.EC2, transit
 	}
 
 	if output, ok := outputRaw.(*ec2.TransitGatewayRouteTablePropagation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVolumeModificationComplete(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.VolumeModification, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.VolumeModificationStateModifying},
+		// The volume is useable once the state is "optimizing", but will not be at full performance.
+		// Optimization can take hours. e.g. a full 1 TiB drive takes approximately 6 hours to optimize,
+		// according to https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/monitoring-volume-modifications.html.
+		Target:     []string{ec2.VolumeModificationStateCompleted, ec2.VolumeModificationStateOptimizing},
+		Refresh:    StatusVolumeModificationState(conn, id),
+		Timeout:    timeout,
+		Delay:      30 * time.Second,
+		MinTimeout: 30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VolumeModification); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+
 		return output, err
 	}
 

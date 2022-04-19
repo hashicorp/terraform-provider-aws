@@ -241,6 +241,28 @@ func StatusInstanceMetadataOptionsState(conn *ec2.EC2, id string) resource.State
 	}
 }
 
+func StatusInstanceRootBlockDeviceDeleteOnTermination(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindInstanceByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		for _, v := range output.BlockDeviceMappings {
+			if aws.StringValue(v.DeviceName) == aws.StringValue(output.RootDeviceName) && v.Ebs != nil {
+				return v.Ebs, strconv.FormatBool(aws.BoolValue(v.Ebs.DeleteOnTermination)), nil
+			}
+		}
+
+		return nil, "", nil
+	}
+}
+
 func StatusNATGatewayState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindNATGatewayByID(conn, id)
@@ -610,6 +632,22 @@ func StatusTransitGatewayRouteTablePropagationState(conn *ec2.EC2, transitGatewa
 		}
 
 		return transitGatewayRouteTablePropagation, aws.StringValue(transitGatewayRouteTablePropagation.State), nil
+	}
+}
+
+func StatusVolumeModificationState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindVolumeModificationByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.ModificationState), nil
 	}
 }
 

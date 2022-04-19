@@ -530,6 +530,7 @@ func TestAccEC2Instance_userDataBase64_update(t *testing.T) {
 func TestAccEC2Instance_gp2IopsDevice(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	testCheck := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -555,7 +556,7 @@ func TestAccEC2Instance_gp2IopsDevice(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceGP2IopsDevice(),
+				Config: testAccInstanceGP2IopsDevice(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
@@ -586,7 +587,7 @@ func TestAccEC2Instance_gp2WithIopsValue(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccInstanceGP2WithIopsValue(),
+				Config:      testAccInstanceGP2WithIopsValue,
 				ExpectError: regexp.MustCompile(`error creating resource: iops attribute not supported for root_block_device with volume_type gp2`),
 			},
 		},
@@ -596,6 +597,7 @@ func TestAccEC2Instance_gp2WithIopsValue(t *testing.T) {
 func TestAccEC2Instance_blockDevices(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	testCheck := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -646,7 +648,7 @@ func TestAccEC2Instance_blockDevices(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceBlockDevicesConfig(rootVolumeSize),
+				Config: testAccInstanceBlockDevicesConfig(rName, rootVolumeSize),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
@@ -713,6 +715,7 @@ func TestAccEC2Instance_blockDevices(t *testing.T) {
 func TestAccEC2Instance_rootInstanceStore(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -721,7 +724,7 @@ func TestAccEC2Instance_rootInstanceStore(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigRootInstanceStore(),
+				Config: testAccInstanceConfigRootInstanceStore(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
@@ -742,6 +745,7 @@ func TestAccEC2Instance_rootInstanceStore(t *testing.T) {
 func TestAccEC2Instance_noAMIEphemeralDevices(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	testCheck := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -776,7 +780,7 @@ func TestAccEC2Instance_noAMIEphemeralDevices(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigNoAMIEphemeralDevices(),
+				Config: testAccInstanceConfigNoAMIEphemeralDevices(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
@@ -1854,6 +1858,7 @@ func TestAccEC2Instance_changeInstanceTypeAndUserDataBase64(t *testing.T) {
 func TestAccEC2Instance_EBSRootDevice_basic(t *testing.T) {
 	var instance ec2.Instance
 	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1862,7 +1867,7 @@ func TestAccEC2Instance_EBSRootDevice_basic(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceEBSRootDeviceBasic(),
+				Config: testAccInstanceEBSRootDeviceBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
@@ -1883,6 +1888,7 @@ func TestAccEC2Instance_EBSRootDevice_modifySize(t *testing.T) {
 	var original ec2.Instance
 	var updated ec2.Instance
 	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	deleteOnTermination := "true"
 	volumeType := "gp2"
@@ -1897,7 +1903,7 @@ func TestAccEC2Instance_EBSRootDevice_modifySize(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceRootBlockDevice(originalSize, deleteOnTermination, volumeType),
+				Config: testAccInstanceRootBlockDevice(rName, originalSize, deleteOnTermination, volumeType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", originalSize),
@@ -1906,7 +1912,7 @@ func TestAccEC2Instance_EBSRootDevice_modifySize(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceRootBlockDevice(updatedSize, deleteOnTermination, volumeType),
+				Config: testAccInstanceRootBlockDevice(rName, updatedSize, deleteOnTermination, volumeType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
@@ -1923,6 +1929,7 @@ func TestAccEC2Instance_EBSRootDevice_modifyType(t *testing.T) {
 	var original ec2.Instance
 	var updated ec2.Instance
 	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	volumeSize := "30"
 	deleteOnTermination := "true"
@@ -1937,7 +1944,7 @@ func TestAccEC2Instance_EBSRootDevice_modifyType(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceRootBlockDevice(volumeSize, deleteOnTermination, originalType),
+				Config: testAccInstanceRootBlockDevice(rName, volumeSize, deleteOnTermination, originalType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
@@ -1946,7 +1953,7 @@ func TestAccEC2Instance_EBSRootDevice_modifyType(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceRootBlockDevice(volumeSize, deleteOnTermination, updatedType),
+				Config: testAccInstanceRootBlockDevice(rName, volumeSize, deleteOnTermination, updatedType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
@@ -1963,6 +1970,7 @@ func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io1(t *testing.T) {
 	var original ec2.Instance
 	var updated ec2.Instance
 	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	volumeSize := "30"
 	deleteOnTermination := "true"
@@ -1978,7 +1986,7 @@ func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io1(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceRootBlockDeviceWithIOPS(volumeSize, deleteOnTermination, volumeType, originalIOPS),
+				Config: testAccInstanceRootBlockDeviceWithIOPS(rName, volumeSize, deleteOnTermination, volumeType, originalIOPS),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
@@ -1988,7 +1996,7 @@ func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io1(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceRootBlockDeviceWithIOPS(volumeSize, deleteOnTermination, volumeType, updatedIOPS),
+				Config: testAccInstanceRootBlockDeviceWithIOPS(rName, volumeSize, deleteOnTermination, volumeType, updatedIOPS),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
@@ -2006,6 +2014,7 @@ func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io2(t *testing.T) {
 	var original ec2.Instance
 	var updated ec2.Instance
 	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	volumeSize := "30"
 	deleteOnTermination := "true"
@@ -2021,7 +2030,7 @@ func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io2(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceRootBlockDeviceWithIOPS(volumeSize, deleteOnTermination, volumeType, originalIOPS),
+				Config: testAccInstanceRootBlockDeviceWithIOPS(rName, volumeSize, deleteOnTermination, volumeType, originalIOPS),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
@@ -2031,7 +2040,7 @@ func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io2(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceRootBlockDeviceWithIOPS(volumeSize, deleteOnTermination, volumeType, updatedIOPS),
+				Config: testAccInstanceRootBlockDeviceWithIOPS(rName, volumeSize, deleteOnTermination, volumeType, updatedIOPS),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
@@ -2049,6 +2058,7 @@ func TestAccEC2Instance_EBSRootDeviceModifyThroughput_gp3(t *testing.T) {
 	var original ec2.Instance
 	var updated ec2.Instance
 	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	volumeSize := "30"
 	deleteOnTermination := "true"
@@ -2064,7 +2074,7 @@ func TestAccEC2Instance_EBSRootDeviceModifyThroughput_gp3(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceRootBlockDeviceWithThroughput(volumeSize, deleteOnTermination, volumeType, originalThroughput),
+				Config: testAccInstanceRootBlockDeviceWithThroughput(rName, volumeSize, deleteOnTermination, volumeType, originalThroughput),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
@@ -2074,7 +2084,7 @@ func TestAccEC2Instance_EBSRootDeviceModifyThroughput_gp3(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceRootBlockDeviceWithThroughput(volumeSize, deleteOnTermination, volumeType, updatedThroughput),
+				Config: testAccInstanceRootBlockDeviceWithThroughput(rName, volumeSize, deleteOnTermination, volumeType, updatedThroughput),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
@@ -2092,6 +2102,7 @@ func TestAccEC2Instance_EBSRootDevice_modifyDeleteOnTermination(t *testing.T) {
 	var original ec2.Instance
 	var updated ec2.Instance
 	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	volumeSize := "30"
 	volumeType := "gp2"
@@ -2106,7 +2117,7 @@ func TestAccEC2Instance_EBSRootDevice_modifyDeleteOnTermination(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceRootBlockDevice(volumeSize, originalDeleteOnTermination, volumeType),
+				Config: testAccInstanceRootBlockDevice(rName, volumeSize, originalDeleteOnTermination, volumeType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
@@ -2115,7 +2126,7 @@ func TestAccEC2Instance_EBSRootDevice_modifyDeleteOnTermination(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceRootBlockDevice(volumeSize, updatedDeleteOnTermination, volumeType),
+				Config: testAccInstanceRootBlockDevice(rName, volumeSize, updatedDeleteOnTermination, volumeType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
@@ -2132,6 +2143,7 @@ func TestAccEC2Instance_EBSRootDevice_modifyAll(t *testing.T) {
 	var original ec2.Instance
 	var updated ec2.Instance
 	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	originalSize := "30"
 	updatedSize := "32"
@@ -2151,7 +2163,7 @@ func TestAccEC2Instance_EBSRootDevice_modifyAll(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceRootBlockDevice(originalSize, originalDeleteOnTermination, originalType),
+				Config: testAccInstanceRootBlockDevice(rName, originalSize, originalDeleteOnTermination, originalType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", originalSize),
@@ -2160,7 +2172,7 @@ func TestAccEC2Instance_EBSRootDevice_modifyAll(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceRootBlockDeviceWithIOPS(updatedSize, updatedDeleteOnTermination, updatedType, updatedIOPS),
+				Config: testAccInstanceRootBlockDeviceWithIOPS(rName, updatedSize, updatedDeleteOnTermination, updatedType, updatedIOPS),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
@@ -2178,6 +2190,7 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifySize(t *testing.
 	var before ec2.Instance
 	var after ec2.Instance
 	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	deleteOnTermination := "true"
 
@@ -2191,7 +2204,7 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifySize(t *testing.
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceBlockDevicesWithDeleteOnTerminateConfig(originalRootVolumeSize, deleteOnTermination),
+				Config: testAccInstanceBlockDevicesWithDeleteOnTerminateConfig(rName, originalRootVolumeSize, deleteOnTermination),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", originalRootVolumeSize),
@@ -2207,7 +2220,7 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifySize(t *testing.
 				),
 			},
 			{
-				Config: testAccInstanceBlockDevicesWithDeleteOnTerminateConfig(updatedRootVolumeSize, deleteOnTermination),
+				Config: testAccInstanceBlockDevicesWithDeleteOnTerminateConfig(rName, updatedRootVolumeSize, deleteOnTermination),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &after),
 					testAccCheckInstanceNotRecreated(&before, &after),
@@ -2231,6 +2244,7 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifyDeleteOnTerminat
 	var before ec2.Instance
 	var after ec2.Instance
 	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	rootVolumeSize := "10"
 
@@ -2244,7 +2258,7 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifyDeleteOnTerminat
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceBlockDevicesWithDeleteOnTerminateConfig(rootVolumeSize, originalDeleteOnTermination),
+				Config: testAccInstanceBlockDevicesWithDeleteOnTerminateConfig(rName, rootVolumeSize, originalDeleteOnTermination),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", rootVolumeSize),
@@ -2261,7 +2275,7 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifyDeleteOnTerminat
 				),
 			},
 			{
-				Config: testAccInstanceBlockDevicesWithDeleteOnTerminateConfig(rootVolumeSize, updatedDeleteOnTermination),
+				Config: testAccInstanceBlockDevicesWithDeleteOnTerminateConfig(rName, rootVolumeSize, updatedDeleteOnTermination),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &after),
 					testAccCheckInstanceNotRecreated(&before, &after),
@@ -2285,8 +2299,8 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifyDeleteOnTerminat
 // Test to validate fix for GH-ISSUE #1318 (dynamic ebs_block_devices forcing replacement after state refresh)
 func TestAccEC2Instance_EBSRootDevice_multipleDynamicEBSBlockDevices(t *testing.T) {
 	var instance ec2.Instance
-
 	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -2295,7 +2309,7 @@ func TestAccEC2Instance_EBSRootDevice_multipleDynamicEBSBlockDevices(t *testing.
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDynamicEBSBlockDevicesConfig(),
+				Config: testAccInstanceDynamicEBSBlockDevicesConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "3"),
@@ -4839,8 +4853,8 @@ resource "aws_instance" "test" {
 `, rName, instanceType, userData))
 }
 
-func testAccInstanceGP2IopsDevice() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
+func testAccInstanceGP2IopsDevice(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.medium"
@@ -4849,12 +4863,15 @@ resource "aws_instance" "test" {
     volume_type = "gp2"
     volume_size = 11
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`)
+`, rName))
 }
 
-func testAccInstanceGP2WithIopsValue() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
+var testAccInstanceGP2WithIopsValue = acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.medium"
@@ -4865,12 +4882,15 @@ resource "aws_instance" "test" {
     # configured explicitly
     iops = 10
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `)
-}
 
-func testAccInstanceConfigRootInstanceStore() string {
-	return acctest.ConfigCompose(testAccLatestAmazonLinuxHVMInstanceStoreAMIConfig(), `
+func testAccInstanceConfigRootInstanceStore(rName string) string {
+	return acctest.ConfigCompose(testAccLatestAmazonLinuxHVMInstanceStoreAMIConfig(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-instance-store.id
 
@@ -4878,15 +4898,19 @@ resource "aws_instance" "test" {
   # http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html
   # tflint-ignore: aws_instance_previous_type
   instance_type = "m3.medium"
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`)
+`, rName))
 }
 
-func testAccInstanceConfigNoAMIEphemeralDevices() string {
+func testAccInstanceConfigNoAMIEphemeralDevices(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
-		`
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
@@ -4905,28 +4929,37 @@ resource "aws_instance" "test" {
     device_name = "/dev/sdc"
     no_device   = true
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`)
+`, rName))
 }
 
-func testAccInstanceEBSRootDeviceBasic() string {
-	return acctest.ConfigCompose(testAccInstanceAMIWithEBSRootVolume, `
+func testAccInstanceEBSRootDeviceBasic(rName string) string {
+	return acctest.ConfigCompose(testAccInstanceAMIWithEBSRootVolume, fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami = data.aws_ami.ami.id
 
   instance_type = "t2.medium"
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`)
+`, rName))
 }
 
-func testAccInstanceRootBlockDevice(size, delete, volumeType string) string {
-	return testAccInstanceRootBlockDeviceWithIOPS(size, delete, volumeType, "")
+func testAccInstanceRootBlockDevice(rName, size, delete, volumeType string) string {
+	return testAccInstanceRootBlockDeviceWithIOPS(rName, size, delete, volumeType, "")
 }
 
-func testAccInstanceRootBlockDeviceWithIOPS(size, delete, volumeType, iops string) string {
+func testAccInstanceRootBlockDeviceWithIOPS(rName, size, delete, volumeType, iops string) string {
 	if iops == "" {
 		iops = "null"
 	}
+
 	return acctest.ConfigCompose(testAccInstanceAMIWithEBSRootVolume, fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami = data.aws_ami.ami.id
@@ -4934,19 +4967,24 @@ resource "aws_instance" "test" {
   instance_type = "t2.medium"
 
   root_block_device {
-    volume_size           = %[1]s
-    delete_on_termination = %[2]s
-    volume_type           = %[3]q
-    iops                  = %[4]s
+    volume_size           = %[2]s
+    delete_on_termination = %[3]s
+    volume_type           = %[4]q
+    iops                  = %[5]s
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
-`, size, delete, volumeType, iops))
+`, rName, size, delete, volumeType, iops))
 }
 
-func testAccInstanceRootBlockDeviceWithThroughput(size, delete, volumeType, throughput string) string {
+func testAccInstanceRootBlockDeviceWithThroughput(rName, size, delete, volumeType, throughput string) string {
 	if throughput == "" {
 		throughput = "null"
 	}
+
 	return acctest.ConfigCompose(testAccInstanceAMIWithEBSRootVolume, fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami = data.aws_ami.ami.id
@@ -4954,13 +4992,17 @@ resource "aws_instance" "test" {
   instance_type = "t2.medium"
 
   root_block_device {
-    volume_size           = %[1]s
-    delete_on_termination = %[2]s
-    volume_type           = %[3]q
-    throughput            = %[4]s
+    volume_size           = %[2]s
+    delete_on_termination = %[3]s
+    volume_type           = %[4]q
+    throughput            = %[5]s
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
-`, size, delete, volumeType, throughput))
+`, rName, size, delete, volumeType, throughput))
 }
 
 func TestAccEC2Instance_gp3RootBlockDevice(t *testing.T) {
@@ -5050,11 +5092,11 @@ data "aws_ami" "ami" {
 }
 `
 
-func testAccInstanceBlockDevicesConfig(size string) string {
-	return testAccInstanceBlockDevicesWithDeleteOnTerminateConfig(size, "")
+func testAccInstanceBlockDevicesConfig(rName, size string) string {
+	return testAccInstanceBlockDevicesWithDeleteOnTerminateConfig(rName, size, "")
 }
 
-func testAccInstanceBlockDevicesWithDeleteOnTerminateConfig(size, delete string) string {
+func testAccInstanceBlockDevicesWithDeleteOnTerminateConfig(rName, size, delete string) string {
 	if delete == "" {
 		delete = "null"
 	}
@@ -5067,8 +5109,8 @@ resource "aws_instance" "test" {
 
   root_block_device {
     volume_type           = "gp2"
-    volume_size           = %[1]s
-    delete_on_termination = %[2]s
+    volume_size           = %[2]s
+    delete_on_termination = %[3]s
   }
 
   ebs_block_device {
@@ -5110,21 +5152,29 @@ resource "aws_instance" "test" {
     throughput  = 300
     iops        = 4000
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, size, delete))
+`, rName, size, delete))
 }
 
 func testAccInstanceConfigSourceDestEnable(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false),
-		`
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.small"
   subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`)
+`, rName))
 }
 
 func testAccInstanceConfigSourceDestDisable(rName string) string {
@@ -7080,25 +7130,29 @@ data "aws_ami" "amzn-ami-minimal-pv-ebs" {
 `
 }
 
-func testAccInstanceDynamicEBSBlockDevicesConfig() string {
-	return acctest.ConfigCompose(testAccLatestAmazonLinuxPVEBSAMIConfig(), `
+func testAccInstanceDynamicEBSBlockDevicesConfig(rName string) string {
+	return acctest.ConfigCompose(testAccLatestAmazonLinuxPVEBSAMIConfig(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-pv-ebs.id
   # tflint-ignore: aws_instance_previous_type
   instance_type = "m3.medium"
+
+  tags = {
+    Name = %[1]q
+  }
 
   dynamic "ebs_block_device" {
     for_each = ["a", "b", "c"]
     iterator = device
 
     content {
-      device_name = format("/dev/sd%s", device.value)
+      device_name = format("/dev/sd%%s", device.value)
       volume_size = "10"
       volume_type = "gp2"
     }
   }
 }
-`)
+`, rName))
 }
 
 func testAccInstanceConfigCapacityReservationSpecification_unspecified(rName string) string {
