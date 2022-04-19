@@ -1620,9 +1620,10 @@ func TestAccEC2SecurityGroup_ruleDescription(t *testing.T) {
 }
 
 func TestAccEC2SecurityGroup_defaultEgressVPC(t *testing.T) {
+	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	// VPC
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -1630,9 +1631,11 @@ func TestAccEC2SecurityGroup_defaultEgressVPC(t *testing.T) {
 		CheckDestroy: testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityGroupDefaultEgressConfig,
+				Config: testAccSecurityGroupDefaultEgressConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExistsWithoutDefault(resourceName),
+					testAccCheckSecurityGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
 				),
 			},
 			{
@@ -2623,35 +2626,6 @@ func testAccCheckSecurityGroupIngressPrefixListAttributes(group *ec2.SecurityGro
 	}
 }
 
-func testAccCheckSecurityGroupExistsWithoutDefault(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Security Group is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-		group, err := tfec2.FindSecurityGroupByID(conn, rs.Primary.ID)
-		if tfresource.NotFound(err) {
-			return fmt.Errorf("Security Group (%s) not found: %w", rs.Primary.ID, err)
-		}
-		if err != nil {
-			return err
-		}
-
-		if len(group.IpPermissionsEgress) != 1 {
-			return fmt.Errorf("Security Group should have only 1 egress rule, got %d", len(group.IpPermissionsEgress))
-		}
-
-		return nil
-	}
-}
-
 func testAccCheckSecurityGroupRuleCount(group *ec2.SecurityGroup, expectedIngressCount, expectedEgressCount int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		id := aws.StringValue(group.GroupId)
@@ -3345,19 +3319,19 @@ resource "aws_security_group" "test2" {
 `, rName)
 }
 
-const testAccSecurityGroupDefaultEgressConfig = `
-resource "aws_vpc" "tf_sg_egress_test" {
+func testAccSecurityGroupDefaultEgressConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-default-egress"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
-  name        = "terraform_acceptance_test_example_1"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.tf_sg_egress_test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   egress {
     protocol    = "tcp"
@@ -3365,8 +3339,13 @@ resource "aws_security_group" "test" {
     to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`
+`, rName)
+}
 
 func testAccSecurityGroupConfig_drift() string {
 	return fmt.Sprintf(`
