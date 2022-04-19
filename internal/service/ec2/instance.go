@@ -1520,37 +1520,28 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("metadata_options") && !d.IsNewResource() {
 		if v, ok := d.GetOk("metadata_options"); ok {
-			if mo, ok := v.([]interface{})[0].(map[string]interface{}); ok {
-				log.Printf("[DEBUG] Modifying metadata options for Instance (%s)", d.Id())
+			if tfMap, ok := v.([]interface{})[0].(map[string]interface{}); ok {
 				input := &ec2.ModifyInstanceMetadataOptionsInput{
+					HttpEndpoint: aws.String(tfMap["http_endpoint"].(string)),
 					InstanceId:   aws.String(d.Id()),
-					HttpEndpoint: aws.String(mo["http_endpoint"].(string)),
 				}
-				if mo["http_endpoint"].(string) == ec2.InstanceMetadataEndpointStateEnabled {
-					// These parameters are not allowed unless HttpEndpoint is enabled
-					input.HttpTokens = aws.String(mo["http_tokens"].(string))
-					input.HttpPutResponseHopLimit = aws.Int64(int64(mo["http_put_response_hop_limit"].(int)))
-					input.InstanceMetadataTags = aws.String(mo["instance_metadata_tags"].(string))
+
+				if tfMap["http_endpoint"].(string) == ec2.InstanceMetadataEndpointStateEnabled {
+					// These parameters are not allowed unless HttpEndpoint is enabled.
+					input.HttpPutResponseHopLimit = aws.Int64(int64(tfMap["http_put_response_hop_limit"].(int)))
+					input.HttpTokens = aws.String(tfMap["http_tokens"].(string))
+					input.InstanceMetadataTags = aws.String(tfMap["instance_metadata_tags"].(string))
 				}
+
+				log.Printf("[DEBUG] Modifying EC2 Instance metadata options: %s", input)
 				_, err := conn.ModifyInstanceMetadataOptions(input)
+
 				if err != nil {
-					return fmt.Errorf("Error updating metadata options: %s", err)
+					return fmt.Errorf("updating EC2 Instance (%s) metadata options: %w", d.Id(), err)
 				}
 
-				stateConf := &resource.StateChangeConf{
-					Pending:    []string{ec2.InstanceMetadataOptionsStatePending},
-					Target:     []string{ec2.InstanceMetadataOptionsStateApplied},
-					Refresh:    MetadataOptionsRefreshFunc(conn, d.Id()),
-					Timeout:    d.Timeout(schema.TimeoutUpdate),
-					Delay:      10 * time.Second,
-					MinTimeout: 3 * time.Second,
-				}
-
-				_, err = stateConf.WaitForState()
-				if err != nil {
-					return fmt.Errorf(
-						"Error waiting for instance (%s) to apply metadata options update: %s",
-						d.Id(), err)
+				if _, err := WaitInstanceMetadataOptionsApplied(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return fmt.Errorf("waiting for EC2 Instance (%s) metadata options update: %w", d.Id(), err)
 				}
 			}
 		}
@@ -1761,30 +1752,6 @@ func modifyInstanceAttributeWithStopStart(conn *ec2.EC2, input *ec2.ModifyInstan
 	}
 
 	return nil
-}
-
-// MetadataOptionsRefreshFunc returns a resource.StateRefreshFunc that is used to watch
-// changes in an EC2 instance's metadata options.
-func MetadataOptionsRefreshFunc(conn *ec2.EC2, instanceID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		instance, err := InstanceFindByID(conn, instanceID)
-		if err != nil {
-			if !tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
-				log.Printf("Error on InstanceStateRefresh: %s", err)
-				return nil, "", err
-			}
-		}
-
-		if instance == nil || instance.MetadataOptions == nil {
-			// Sometimes AWS just has consistency issues and doesn't see
-			// our instance yet. Return an empty state.
-			return nil, "", nil
-		}
-
-		state := aws.StringValue(instance.MetadataOptions.State)
-
-		return instance, state, nil
-	}
 }
 
 // RootBlockDeviceDeleteOnTerminationRefreshFunc returns a resource.StateRefreshFunc

@@ -476,6 +476,25 @@ func WaitInstanceStopped(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.
 	return nil, err
 }
 
+func WaitInstanceMetadataOptionsApplied(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.InstanceMetadataOptionsResponse, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.InstanceMetadataOptionsStatePending},
+		Target:     []string{ec2.InstanceMetadataOptionsStateApplied},
+		Refresh:    StatusInstanceMetadataOptionsState(conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.InstanceMetadataOptionsResponse); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 const ManagedPrefixListEntryCreateTimeout = 5 * time.Minute
 
 func WaitRouteDeleted(conn *ec2.EC2, routeFinder RouteFinder, routeTableID, destination string, timeout time.Duration) (*ec2.Route, error) {
