@@ -210,7 +210,7 @@ func processingConfigurationSchema() *schema.Schema {
 										"parameter_value": {
 											Type:         schema.TypeString,
 											Required:     true,
-											ValidateFunc: validation.StringLenBetween(1, 512),
+											ValidateFunc: validation.StringLenBetween(1, 5120),
 										},
 									},
 								},
