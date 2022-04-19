@@ -1405,7 +1405,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				},
 			}
 
-			if err := modifyAttributeWithInstanceStopStart(conn, input); err != nil {
+			if err := modifyInstanceAttributeWithStopStart(conn, input); err != nil {
 				return fmt.Errorf("updating EC2 Instance (%s) type: %w", d.Id(), err)
 			}
 		}
@@ -1432,7 +1432,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				},
 			}
 
-			if err := modifyAttributeWithInstanceStopStart(conn, input); err != nil {
+			if err := modifyInstanceAttributeWithStopStart(conn, input); err != nil {
 				return fmt.Errorf("updating EC2 Instance (%s) user data: %w", d.Id(), err)
 			}
 		}
@@ -1455,14 +1455,14 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				},
 			}
 
-			if err := modifyAttributeWithInstanceStopStart(conn, input); err != nil {
+			if err := modifyInstanceAttributeWithStopStart(conn, input); err != nil {
 				return fmt.Errorf("updating Ec2 Instance (%s) user data base64: %w", d.Id(), err)
 			}
 		}
 	}
 
 	if d.HasChange("disable_api_termination") && !d.IsNewResource() {
-		err := instanceDisableAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool))
+		err := disableInstanceAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool))
 
 		if err != nil {
 			return fmt.Errorf("error modifying instance (%s) attribute (%s): %w", d.Id(), ec2.InstanceAttributeNameDisableApiTermination, err)
@@ -1696,7 +1696,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	if err := instanceDisableAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool)); err != nil {
+	if err := disableInstanceAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool)); err != nil {
 		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API termination: %s", d.Id(), err)
 	}
 
@@ -1707,7 +1707,7 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func instanceDisableAPITermination(conn *ec2.EC2, id string, disableAPITermination bool) error {
+func disableInstanceAPITermination(conn *ec2.EC2, id string, disableAPITermination bool) error {
 	_, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
 		DisableApiTermination: &ec2.AttributeBooleanValue{
 			Value: aws.Bool(disableAPITermination),
@@ -1727,11 +1727,11 @@ func instanceDisableAPITermination(conn *ec2.EC2, id string, disableAPITerminati
 	return nil
 }
 
-// modifyAttributeWithInstanceStopStart modifies a specific attribute provided
+// modifyInstanceAttributeWithStopStart modifies a specific attribute provided
 // as input by first stopping the EC2 instance before the modification
 // and then starting up the EC2 instance after modification.
 // Reference: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html
-func modifyAttributeWithInstanceStopStart(conn *ec2.EC2, input *ec2.ModifyInstanceAttributeInput) error {
+func modifyInstanceAttributeWithStopStart(conn *ec2.EC2, input *ec2.ModifyInstanceAttributeInput) error {
 	id := aws.StringValue(input.InstanceId)
 
 	if err := StopInstance(conn, id, InstanceStopTimeout); err != nil {
