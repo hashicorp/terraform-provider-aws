@@ -3443,9 +3443,6 @@ resource "aws_security_group" "test1" {
 
 const testAccSecurityGroupInvalidIngressCIDR = `
 resource "aws_security_group" "test" {
-  name        = "testing-foo"
-  description = "foo-testing"
-
   ingress {
     from_port   = 0
     to_port     = 0
@@ -3457,9 +3454,6 @@ resource "aws_security_group" "test" {
 
 const testAccSecurityGroupInvalidEgressCIDR = `
 resource "aws_security_group" "test" {
-  name        = "testing-foo"
-  description = "foo-testing"
-
   egress {
     from_port   = 0
     to_port     = 0
@@ -3471,9 +3465,6 @@ resource "aws_security_group" "test" {
 
 const testAccSecurityGroupInvalidIPv6IngressCIDR = `
 resource "aws_security_group" "test" {
-  name        = "testing-foo"
-  description = "foo-testing"
-
   ingress {
     from_port        = 0
     to_port          = 0
@@ -3485,9 +3476,6 @@ resource "aws_security_group" "test" {
 
 const testAccSecurityGroupInvalidIPv6EgressCIDR = `
 resource "aws_security_group" "test" {
-  name        = "testing-foo"
-  description = "foo-testing"
-
   egress {
     from_port        = 0
     to_port          = 0
