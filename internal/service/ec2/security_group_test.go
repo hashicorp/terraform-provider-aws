@@ -1197,6 +1197,75 @@ func TestAccEC2SecurityGroup_forceRevokeRulesFalse(t *testing.T) {
 	})
 }
 
+func TestAccEC2SecurityGroup_change(t *testing.T) {
+	var group ec2.SecurityGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecurityGroupConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupExists(resourceName, &group),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+			},
+			{
+				Config: testAccSecurityGroupChangeConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+						"cidr_blocks.#":      "1",
+						"cidr_blocks.0":      "10.0.0.0/8",
+						"description":        "",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "8000",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"cidr_blocks.#":      "1",
+						"cidr_blocks.0":      "10.0.0.0/8",
+						"description":        "",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "9000",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+						"cidr_blocks.#":      "2",
+						"cidr_blocks.0":      "0.0.0.0/0",
+						"cidr_blocks.1":      "10.0.0.0/8",
+						"description":        "",
+						"from_port":          "80",
+						"ipv6_cidr_blocks.#": "0",
+						"protocol":           "tcp",
+						"security_groups.#":  "0",
+						"self":               "false",
+						"to_port":            "8000",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2SecurityGroup_ipv6(t *testing.T) {
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1412,34 +1481,8 @@ func TestAccEC2SecurityGroup_vpcProtoNumIngress(t *testing.T) {
 
 func TestAccEC2SecurityGroup_multiIngress(t *testing.T) {
 	var group ec2.SecurityGroup
-	resourceName := "aws_security_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSecurityGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSecurityGroupMultiIngressConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists(resourceName, &group),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
-			},
-		},
-	})
-}
-
-func TestAccEC2SecurityGroup_change(t *testing.T) {
-	var group ec2.SecurityGroup
+	resourceName := "aws_security_group.test1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1448,7 +1491,7 @@ func TestAccEC2SecurityGroup_change(t *testing.T) {
 		CheckDestroy: testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityGroupConfig(rName),
+				Config: testAccSecurityGroupMultiIngressConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
 				),
@@ -1458,48 +1501,6 @@ func TestAccEC2SecurityGroup_change(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
-			},
-			{
-				Config: testAccSecurityGroupChangeConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
-						"cidr_blocks.#":      "1",
-						"cidr_blocks.0":      "10.0.0.0/8",
-						"description":        "",
-						"from_port":          "80",
-						"ipv6_cidr_blocks.#": "0",
-						"protocol":           "tcp",
-						"security_groups.#":  "0",
-						"self":               "false",
-						"to_port":            "8000",
-					}),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"cidr_blocks.#":      "1",
-						"cidr_blocks.0":      "10.0.0.0/8",
-						"description":        "",
-						"from_port":          "80",
-						"ipv6_cidr_blocks.#": "0",
-						"protocol":           "tcp",
-						"security_groups.#":  "0",
-						"self":               "false",
-						"to_port":            "9000",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"cidr_blocks.#":      "2",
-						"cidr_blocks.0":      "0.0.0.0/0",
-						"cidr_blocks.1":      "10.0.0.0/8",
-						"description":        "",
-						"from_port":          "80",
-						"ipv6_cidr_blocks.#": "0",
-						"protocol":           "tcp",
-						"security_groups.#":  "0",
-						"self":               "false",
-						"to_port":            "8000",
-					}),
-				),
 			},
 		},
 	})
@@ -3271,19 +3272,19 @@ resource "aws_security_group" "test" {
 `, rName)
 }
 
-const testAccSecurityGroupMultiIngressConfig = `
-resource "aws_vpc" "foo" {
+func testAccSecurityGroupMultiIngressConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-multi-ingress"
+    Name = %[1]q
   }
 }
 
-resource "aws_security_group" "test" {
-  name        = "terraform_acceptance_test_example_1"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.foo.id
+resource "aws_security_group" "test1" {
+  name   = "%[1]s-1"
+  vpc_id = aws_vpc.test.id
 
   ingress {
     protocol    = "tcp"
@@ -3298,12 +3299,15 @@ resource "aws_security_group" "test" {
     to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test2" {
-  name        = "terraform_acceptance_test_example_2"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.foo.id
+  name   = "%[1]s-2"
+  vpc_id = aws_vpc.test.id
 
   ingress {
     protocol    = "tcp"
@@ -3323,7 +3327,7 @@ resource "aws_security_group" "test2" {
     protocol        = "tcp"
     from_port       = 80
     to_port         = 8000
-    security_groups = [aws_security_group.test.id]
+    security_groups = [aws_security_group.test1.id]
   }
 
   egress {
@@ -3332,8 +3336,13 @@ resource "aws_security_group" "test2" {
     to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`
+`, rName)
+}
 
 const testAccSecurityGroupDefaultEgressConfig = `
 resource "aws_vpc" "tf_sg_egress_test" {
