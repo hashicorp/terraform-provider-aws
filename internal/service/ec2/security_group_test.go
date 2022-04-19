@@ -1837,7 +1837,8 @@ func TestAccEC2SecurityGroup_cidrAndGroups(t *testing.T) {
 
 func TestAccEC2SecurityGroup_ingressWithCIDRAndSGsVPC(t *testing.T) {
 	var group ec2.SecurityGroup
-	resourceName := "aws_security_group.test"
+	resourceName := "aws_security_group.test1"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1846,10 +1847,9 @@ func TestAccEC2SecurityGroup_ingressWithCIDRAndSGsVPC(t *testing.T) {
 		CheckDestroy: testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityGroupConfig_ingressWithCIDRAndSGs,
+				Config: testAccSecurityGroupIngressWithCIDRAndSGsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
-					testAccCheckSecurityGroupSGandCIDRAttributes(&group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						"cidr_blocks.#":      "1",
@@ -1889,7 +1889,7 @@ func TestAccEC2SecurityGroup_ingressWithCIDRAndSGsVPC(t *testing.T) {
 
 func TestAccEC2SecurityGroup_ingressWithCIDRAndSGsClassic(t *testing.T) {
 	var group ec2.SecurityGroup
-	resourceName := "aws_security_group.test"
+	resourceName := "aws_security_group.test1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -3546,29 +3546,32 @@ resource "aws_security_group" "test1" {
 `, rName)
 }
 
-const testAccSecurityGroupConfig_ingressWithCIDRAndSGs = `
-resource "aws_vpc" "foo" {
+func testAccSecurityGroupIngressWithCIDRAndSGsConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-ingress-w-cidr-and-sg"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test2" {
-  name        = "tf_other_acc_tests"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.foo.id
+  name   = "%[1]s-2"
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test"
+    Name = %[1]q
   }
 }
 
-resource "aws_security_group" "test" {
-  name        = "terraform_acceptance_test_example"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.foo.id
+resource "aws_security_group" "test1" {
+  name   = "%[1]s-1"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 
   ingress {
     protocol  = "tcp"
@@ -3594,12 +3597,9 @@ resource "aws_security_group" "test" {
     to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
   }
-
-  tags = {
-    Name = "tf-acc-test"
-  }
 }
-`
+`, rName)
+}
 
 func testAccSecurityGroupConfig_ingressWithCIDRAndSGs_classic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigEC2ClassicRegionProvider(), fmt.Sprintf(`
