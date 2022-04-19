@@ -1650,8 +1650,9 @@ func TestAccEC2SecurityGroup_defaultEgressVPC(t *testing.T) {
 
 // Testing drift detection with groups containing the same port and types
 func TestAccEC2SecurityGroup_drift(t *testing.T) {
-	resourceName := "aws_security_group.test"
 	var group ec2.SecurityGroup
+	resourceName := "aws_security_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1660,10 +1661,9 @@ func TestAccEC2SecurityGroup_drift(t *testing.T) {
 		CheckDestroy: testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityGroupConfig_drift(),
+				Config: testAccSecurityGroupDriftConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "description", "Used in the terraform acceptance tests"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
@@ -1705,7 +1705,8 @@ func TestAccEC2SecurityGroup_drift(t *testing.T) {
 
 func TestAccEC2SecurityGroup_driftComplex(t *testing.T) {
 	var group ec2.SecurityGroup
-	resourceName := "aws_security_group.test"
+	resourceName := "aws_security_group.test1"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1714,10 +1715,9 @@ func TestAccEC2SecurityGroup_driftComplex(t *testing.T) {
 		CheckDestroy: testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityGroupConfig_drift_complex(),
+				Config: testAccSecurityGroupDriftComplexConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "description", "Used in the terraform acceptance tests"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						"cidr_blocks.#":      "1",
@@ -3347,11 +3347,10 @@ resource "aws_security_group" "test" {
 `, rName)
 }
 
-func testAccSecurityGroupConfig_drift() string {
+func testAccSecurityGroupDriftConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
-  name        = "tf_acc_%d"
-  description = "Used in the terraform acceptance tests"
+  name = %[1]q
 
   ingress {
     protocol    = "tcp"
@@ -3368,32 +3367,30 @@ resource "aws_security_group" "test" {
   }
 
   tags = {
-    Name = "tf-acc-test"
+    Name = %[1]q
   }
 }
-`, sdkacctest.RandInt())
+`, rName)
 }
 
-func testAccSecurityGroupConfig_drift_complex() string {
+func testAccSecurityGroupDriftComplexConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-drift-complex"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test2" {
-  name        = "tf_acc_%d"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.foo.id
+  name   = "%[1]s-2"
+  vpc_id = aws_vpc.test.id
 }
 
-resource "aws_security_group" "test" {
-  name        = "tf_acc_%d"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.foo.id
+resource "aws_security_group" "test1" {
+  name   = "%[1]s-1"
+  vpc_id = aws_vpc.test.id
 
   ingress {
     protocol    = "tcp"
@@ -3441,7 +3438,7 @@ resource "aws_security_group" "test" {
     Name = "tf-acc-test"
   }
 }
-`, sdkacctest.RandInt(), sdkacctest.RandInt())
+`, rName)
 }
 
 const testAccSecurityGroupInvalidIngressCIDR = `
