@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"reflect"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -32,23 +33,18 @@ func ResourceContainerService() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			// required fields
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringIsNotWhiteSpace,
-			},
-			"power": {
+			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
-			"scale": {
-				Type:     schema.TypeInt,
-				Required: true,
+			"availability_zone": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
-
-			// optional fields
+			"created_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"deployment": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -102,8 +98,9 @@ func ResourceContainerService() *schema.Resource {
 													Required: true,
 												},
 												"protocol": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(lightsail.ContainerServiceProtocol_Values(), false),
 												},
 											},
 										},
@@ -185,6 +182,32 @@ func ResourceContainerService() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 63),
+					validation.StringMatch(regexp.MustCompile(`^[a-z0-9]{1,2}|[a-z0-9][a-z0-9-]+[a-z0-9]$`), ""),
+				),
+			},
+			"power": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(lightsail.ContainerServicePowerName_Values(), false),
+			},
+			"power_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"principal_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"private_domain_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"public_domain_names": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -214,44 +237,25 @@ func ResourceContainerService() *schema.Resource {
 					},
 				},
 			},
-
-			// additional fields returned by lightsail container API
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"availability_zone": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"power_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"principal_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_domain_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"resource_type": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"scale": {
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntBetween(1, 20),
 			},
 			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			// tags
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -419,6 +423,7 @@ func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.Set("arn", cs.Arn)
 	d.Set("availability_zone", cs.Location.AvailabilityZone)
+	d.Set("created_at", aws.TimeValue(cs.CreatedAt).Format(time.RFC3339))
 	d.Set("power_id", cs.PowerId)
 	d.Set("principal_arn", cs.PrincipalArn)
 	d.Set("private_domain_name", cs.PrivateDomainName)

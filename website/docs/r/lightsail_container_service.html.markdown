@@ -47,7 +47,8 @@ The following arguments are supported:
 * `name` - (Required) The name for the container service. Names must be of length 1 to 63, and be
   unique within each AWS Region in your Lightsail account.
 * `power` - (Required) The power specification for the container service. The power specifies the amount of memory,
-  the number of vCPUs, and the monthly price of each node of the container service.
+  the number of vCPUs, and the monthly price of each node of the container service. 
+  Possible values: `nano`, `micro`, `small`, `medium`, `large`, `xlarge`.
 * `scale` - (Required) The scale specification for the container service. The scale specifies the allocated compute
   nodes of the container service.
 * `is_disabled` - (Optional) A Boolean value indicating whether the container service is disabled. Defaults to `false`.
@@ -136,7 +137,7 @@ resource "aws_lightsail_container_service" "my_container_service" {
         * `value` - (Required) The environment variable value.
     * `port` - (Optional) The open firewall ports of the container.
         * `port_number` - (Required) The port number.
-        * `protocol` - (Required) The protocol. Possible values: `"HTTP"`, `HTTPS`, `TCP`, `UDP`.
+        * `protocol` - (Required) The protocol. Possible values: `HTTP`, `HTTPS`, `TCP`, `UDP`.
 * `public_endpoint` - (Optional) Describes the public endpoint configuration of a deployment.
     * `container_name` - (Required) The name of the container for the endpoint.
     * `container_port` - (Required) The port of the container to which traffic is forwarded to.

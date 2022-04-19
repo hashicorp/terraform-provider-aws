@@ -35,6 +35,7 @@ func TestAccContainerService_basic(t *testing.T) {
 				Config: testAccContainerServiceConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(resourceName, &cs),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "power", "nano"),
 					resource.TestCheckResourceAttr(resourceName, "scale", "1"),
@@ -54,9 +55,15 @@ func TestAccContainerService_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccContainerServiceConfigScale(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContainerServiceExists(resourceName, &cs),
+					resource.TestCheckResourceAttr(resourceName, "scale", "2"),
+				),
+			},
 		},
 	})
-
 }
 
 func TestAccContainerService_disappears(t *testing.T) {
@@ -636,7 +643,7 @@ func TestAccContainerService_PublicDomainNames(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccContainerServiceConfigPublicDomainNames(rName),
-				ExpectError: regexp.MustCompile("NotFoundException: The specified certificate does not exist"),
+				ExpectError: regexp.MustCompile(`do not exist`),
 			},
 		},
 	})
