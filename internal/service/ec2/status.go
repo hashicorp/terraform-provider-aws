@@ -204,7 +204,10 @@ func StatusInstanceIAMInstanceProfile(conn *ec2.EC2, id string) resource.StateRe
 
 func StatusInstanceState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindInstanceByID(conn, id)
+		// Don't call FindInstanceByID as it maps useful status codes to NotFoundError.
+		output, err := FindInstance(conn, &ec2.DescribeInstancesInput{
+			InstanceIds: aws.StringSlice([]string{id}),
+		})
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
