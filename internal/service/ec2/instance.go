@@ -1304,10 +1304,12 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChanges("secondary_private_ips", "vpc_security_group_ids") && !d.IsNewResource() {
-		instance, err := InstanceFindByID(conn, d.Id())
+		instance, err := FindInstanceByID(conn, d.Id())
+
 		if err != nil {
-			return fmt.Errorf("error retrieving instance %q: %w", d.Id(), err)
+			return fmt.Errorf("reading EC2 Instance (%s): %w", d.Id(), err)
 		}
+
 		var primaryInterface ec2.InstanceNetworkInterface
 		for _, ni := range instance.NetworkInterfaces {
 			if aws.Int64Value(ni.Attachment.DeviceIndex) == 0 {
@@ -2883,42 +2885,6 @@ func flattenCapacityReservationTarget(crt *ec2.CapacityReservationTargetResponse
 	}
 
 	return []interface{}{m}
-}
-
-// InstanceFindByID returns the EC2 instance by ID
-// * If the instance is found, returns the instance and nil
-// * If no instance is found, returns nil and nil
-// * If an error occurs, returns nil and the error
-func InstanceFindByID(conn *ec2.EC2, id string) (*ec2.Instance, error) {
-	instances, err := resourceInstanceFind(conn, &ec2.DescribeInstancesInput{
-		InstanceIds: aws.StringSlice([]string{id}),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if len(instances) == 0 {
-		return nil, nil
-	}
-
-	return instances[0], nil
-}
-
-// resourceInstanceFind returns EC2 instances matching the input parameters
-// * If instances are found, returns a slice of instances and nil
-// * If no instances are found, returns an empty slice and nil
-// * If an error occurs, returns nil and the error
-func resourceInstanceFind(conn *ec2.EC2, params *ec2.DescribeInstancesInput) ([]*ec2.Instance, error) {
-	resp, err := conn.DescribeInstances(params)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(resp.Reservations) == 0 {
-		return []*ec2.Instance{}, nil
-	}
-
-	return resp.Reservations[0].Instances, nil
 }
 
 func getInstanceLaunchTemplate(conn *ec2.EC2, d *schema.ResourceData) ([]map[string]interface{}, error) {

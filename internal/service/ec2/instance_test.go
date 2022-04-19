@@ -3106,8 +3106,8 @@ func TestAccEC2Instance_LaunchTemplate_swapIDAndName(t *testing.T) {
 func TestAccEC2Instance_GetPasswordData_falseToTrue(t *testing.T) {
 	var before, after ec2.Instance
 	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
@@ -3149,8 +3149,8 @@ func TestAccEC2Instance_GetPasswordData_falseToTrue(t *testing.T) {
 func TestAccEC2Instance_GetPasswordData_trueToFalse(t *testing.T) {
 	var before, after ec2.Instance
 	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
