@@ -2915,7 +2915,6 @@ func TestAccEC2Instance_LaunchTemplate_basic(t *testing.T) {
 	launchTemplateResourceName := "aws_launch_template.test"
 	amiDataSourceName := "data.aws_ami.amzn-ami-minimal-hvm-ebs"
 	instanceTypeDataSourceName := "data.aws_ec2_instance_type_offering.available"
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2945,7 +2944,6 @@ func TestAccEC2Instance_LaunchTemplate_overrideTemplate(t *testing.T) {
 	launchTemplateResourceName := "aws_launch_template.test"
 	amiDataSourceName := "data.aws_ami.amzn-ami-minimal-hvm-ebs"
 	instanceTypeDataSourceName := "data.aws_ec2_instance_type_offering.small"
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2971,7 +2969,6 @@ func TestAccEC2Instance_LaunchTemplate_setSpecificVersion(t *testing.T) {
 	var v1, v2 ec2.Instance
 	resourceName := "aws_instance.test"
 	launchTemplateResourceName := "aws_launch_template.test"
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -3005,7 +3002,6 @@ func TestAccEC2Instance_LaunchTemplateModifyTemplate_defaultVersion(t *testing.T
 	var v1, v2 ec2.Instance
 	resourceName := "aws_instance.test"
 	launchTemplateResourceName := "aws_launch_template.test"
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -3039,7 +3035,6 @@ func TestAccEC2Instance_LaunchTemplate_updateTemplateVersion(t *testing.T) {
 	var v1, v2 ec2.Instance
 	resourceName := "aws_instance.test"
 	launchTemplateResourceName := "aws_launch_template.test"
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -3073,7 +3068,6 @@ func TestAccEC2Instance_LaunchTemplate_swapIDAndName(t *testing.T) {
 	var v1, v2 ec2.Instance
 	resourceName := "aws_instance.test"
 	launchTemplateResourceName := "aws_launch_template.test"
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -7248,6 +7242,10 @@ resource "aws_instance" "test" {
   launch_template {
     id = aws_launch_template.test.id
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }
@@ -7270,6 +7268,10 @@ resource "aws_instance" "test" {
   launch_template {
     id = aws_launch_template.test.id
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }
@@ -7290,6 +7292,10 @@ resource "aws_instance" "test" {
     id      = aws_launch_template.test.id
     version = aws_launch_template.test.default_version
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }
@@ -7308,6 +7314,10 @@ resource "aws_launch_template" "test" {
 resource "aws_instance" "test" {
   launch_template {
     id = aws_launch_template.test.id
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 `, rName))
@@ -7331,6 +7341,10 @@ resource "aws_instance" "test" {
     id      = aws_launch_template.test.id
     version = aws_launch_template.test.default_version
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }
@@ -7349,6 +7363,10 @@ resource "aws_launch_template" "test" {
 resource "aws_instance" "test" {
   launch_template {
     name = aws_launch_template.test.name
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 `, rName))

@@ -661,20 +661,23 @@ func ResourceInstance() *schema.Resource {
 					stateVersion := diff.Get("launch_template.0.version")
 
 					var err error
-					var templateId, instanceVersion, defaultVersion, latestVersion string
+					var launchTemplateID, instanceVersion, defaultVersion, latestVersion string
 
-					templateId, err = getInstanceLaunchTemplateID(conn, diff.Id())
+					launchTemplateID, err = findInstanceLaunchTemplateID(conn, diff.Id())
+
 					if err != nil {
 						return err
 					}
 
-					if templateId != "" {
-						instanceVersion, err = getInstanceLaunchTemplateVersion(conn, diff.Id())
+					if launchTemplateID != "" {
+						instanceVersion, err = findInstanceLaunchTemplateVersion(conn, diff.Id())
+
 						if err != nil {
 							return err
 						}
 
-						_, defaultVersion, latestVersion, err = getLaunchTemplateSpecification(conn, templateId)
+						_, defaultVersion, latestVersion, err = findLaunchTemplate(conn, launchTemplateID)
+
 						if err != nil {
 							return err
 						}
@@ -705,12 +708,10 @@ func ResourceInstance() *schema.Resource {
 				return diff.HasChange("launch_template.0.id")
 			}),
 			customdiff.ForceNewIf("user_data", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				replace := diff.Get("user_data_replace_on_change")
-				return replace.(bool)
+				return diff.Get("user_data_replace_on_change").(bool)
 			}),
 			customdiff.ForceNewIf("user_data_base64", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				replace := diff.Get("user_data_replace_on_change")
-				return replace.(bool)
+				return diff.Get("user_data_replace_on_change").(bool)
 			}),
 		),
 	}
@@ -939,10 +940,12 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	{
-		launchTemplate, err := getInstanceLaunchTemplate(conn, d)
+		launchTemplate, err := flattenInstanceLaunchTemplate(conn, d.Id(), d.Get("launch_template.0.version").(string))
+
 		if err != nil {
-			return fmt.Errorf("error reading Instance (%s) Launch Template: %w", d.Id(), err)
+			return fmt.Errorf("reading EC2 Instance (%s) launch template: %w", d.Id(), err)
 		}
+
 		if err := d.Set("launch_template", launchTemplate); err != nil {
 			return fmt.Errorf("error setting launch_template: %w", err)
 		}
@@ -2887,119 +2890,96 @@ func flattenCapacityReservationTarget(crt *ec2.CapacityReservationTargetResponse
 	return []interface{}{m}
 }
 
-func getInstanceLaunchTemplate(conn *ec2.EC2, d *schema.ResourceData) ([]map[string]interface{}, error) {
-	attrs := map[string]interface{}{}
-	result := make([]map[string]interface{}, 0)
+func flattenInstanceLaunchTemplate(conn *ec2.EC2, instanceID, previousLaunchTemplateVersion string) ([]interface{}, error) {
+	launchTemplateID, err := findInstanceLaunchTemplateID(conn, instanceID)
 
-	id, err := getInstanceLaunchTemplateID(conn, d.Id())
 	if err != nil {
 		return nil, err
 	}
-	if id == "" {
+
+	if launchTemplateID == "" {
 		return nil, nil
 	}
 
-	name, defaultVersion, latestVersion, err := getLaunchTemplateSpecification(conn, id)
+	name, defaultVersion, latestVersion, err := findLaunchTemplate(conn, launchTemplateID)
 
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateId.Malformed") || tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateId.NotFound") {
-			// Instance is tagged with non existent template just set it to nil
-			log.Printf("[WARN] Launch template %s not found, removing from state", id)
-			return nil, nil
-		}
-		return nil, fmt.Errorf("error reading Launch Template: %s", err)
+	if tfresource.NotFound(err) {
+		return nil, nil
 	}
 
-	attrs["id"] = id
-	attrs["name"] = name
+	if err != nil {
+		return nil, fmt.Errorf("reading EC2 Launch Template (%s): %w", launchTemplateID, err)
+	}
 
-	liveVersion, err := getInstanceLaunchTemplateVersion(conn, d.Id())
+	tfMap := map[string]interface{}{
+		"id":   launchTemplateID,
+		"name": name,
+	}
+
+	currentLaunchTemplateVersion, err := findInstanceLaunchTemplateVersion(conn, instanceID)
+
 	if err != nil {
 		return nil, err
 	}
 
-	dltvi := &ec2.DescribeLaunchTemplateVersionsInput{
-		LaunchTemplateId: aws.String(id),
-		Versions:         []*string{aws.String(liveVersion)},
+	_, err = FindLaunchTemplateVersionByTwoPartKey(conn, launchTemplateID, currentLaunchTemplateVersion)
+
+	if tfresource.NotFound(err) {
+		return []interface{}{tfMap}, nil
 	}
 
-	if _, err := conn.DescribeLaunchTemplateVersions(dltvi); err != nil {
-		if tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateId.VersionNotFound") {
-			// Instance is tagged with non existent template version, just don't set it
-			log.Printf("[WARN] Launch template %s version %s not found, removing from state", id, liveVersion)
-			result = append(result, attrs)
-			return result, nil
-		}
-		return nil, fmt.Errorf("error reading Launch Template Version: %s", err)
-	}
-
-	if stateVersion, ok := d.GetOk("launch_template.0.version"); ok {
-		switch stateVersion {
-		case LaunchTemplateVersionDefault:
-			if liveVersion == defaultVersion {
-				attrs["version"] = LaunchTemplateVersionDefault
-			} else {
-				attrs["version"] = liveVersion
-			}
-		case LaunchTemplateVersionLatest:
-			if liveVersion == latestVersion {
-				attrs["version"] = LaunchTemplateVersionLatest
-			} else {
-				attrs["version"] = liveVersion
-			}
-		default:
-			attrs["version"] = liveVersion
-		}
-	}
-
-	result = append(result, attrs)
-
-	return result, nil
-}
-
-func getInstanceLaunchTemplateID(conn *ec2.EC2, instanceId string) (string, error) {
-	idTag := "aws:ec2launchtemplate:id"
-
-	launchTemplateId, err := getInstanceTagValue(conn, instanceId, idTag)
 	if err != nil {
-		return "", fmt.Errorf("error reading Instance Launch Template Id Tag: %s", err)
-	}
-	if launchTemplateId == nil {
-		return "", nil
+		return nil, fmt.Errorf("reading EC2 Launch Template (%s) version (%s): %w", launchTemplateID, currentLaunchTemplateVersion, err)
 	}
 
-	return *launchTemplateId, nil
+	switch previousLaunchTemplateVersion {
+	case LaunchTemplateVersionDefault:
+		if currentLaunchTemplateVersion == defaultVersion {
+			tfMap["version"] = LaunchTemplateVersionDefault
+		} else {
+			tfMap["version"] = currentLaunchTemplateVersion
+		}
+	case LaunchTemplateVersionLatest:
+		if currentLaunchTemplateVersion == latestVersion {
+			tfMap["version"] = LaunchTemplateVersionLatest
+		} else {
+			tfMap["version"] = currentLaunchTemplateVersion
+		}
+	default:
+		tfMap["version"] = currentLaunchTemplateVersion
+	}
+
+	return []interface{}{tfMap}, nil
 }
 
-func getInstanceLaunchTemplateVersion(conn *ec2.EC2, instanceId string) (string, error) {
-	versionTag := "aws:ec2launchtemplate:version"
+func findInstanceLaunchTemplateID(conn *ec2.EC2, id string) (string, error) {
+	launchTemplateID, err := findInstanceTagValue(conn, id, "aws:ec2launchtemplate:id")
 
-	launchTemplateVersion, err := getInstanceTagValue(conn, instanceId, versionTag)
 	if err != nil {
-		return "", fmt.Errorf("error reading Instance Launch Template Version Tag: %s", err)
-	}
-	if launchTemplateVersion == nil {
-		return "", nil
+		return "", fmt.Errorf("reading EC2 Instance (%s) launch template ID tag: %w", id, err)
 	}
 
-	return *launchTemplateVersion, nil
+	return launchTemplateID, nil
 }
 
-// getLaunchTemplateSpecification takes conn and template id
-// returns name, default version, latest version
-func getLaunchTemplateSpecification(conn *ec2.EC2, id string) (string, string, string, error) {
-	dlt, err := conn.DescribeLaunchTemplates(&ec2.DescribeLaunchTemplatesInput{
-		LaunchTemplateIds: []*string{aws.String(id)},
-	})
+func findInstanceLaunchTemplateVersion(conn *ec2.EC2, id string) (string, error) {
+	launchTemplateVersion, err := findInstanceTagValue(conn, id, "aws:ec2launchtemplate:version")
+
+	if err != nil {
+		return "", fmt.Errorf("reading EC2 Instance (%s) launch template version tag: %w", id, err)
+	}
+
+	return launchTemplateVersion, nil
+}
+
+func findLaunchTemplate(conn *ec2.EC2, id string) (string, string, string, error) {
+	lt, err := FindLaunchTemplateByID(conn, id)
+
 	if err != nil {
 		return "", "", "", err
 	}
 
-	name := *dlt.LaunchTemplates[0].LaunchTemplateName
-	defaultVersion := strconv.FormatInt(*dlt.LaunchTemplates[0].DefaultVersionNumber, 10)
-	latestVersion := strconv.FormatInt(*dlt.LaunchTemplates[0].LatestVersionNumber, 10)
-
-	return name, defaultVersion, latestVersion, nil
+	return aws.StringValue(lt.LaunchTemplateName), strconv.FormatInt(aws.Int64Value(lt.DefaultVersionNumber), 10), strconv.FormatInt(aws.Int64Value(lt.LatestVersionNumber), 10), nil
 }
 
 func expandEc2LaunchTemplateSpecification(specs []interface{}) *ec2.LaunchTemplateSpecification {
@@ -3025,6 +3005,30 @@ func expandEc2LaunchTemplateSpecification(specs []interface{}) *ec2.LaunchTempla
 	}
 
 	return result
+}
+
+func findInstanceTagValue(conn *ec2.EC2, instanceID, tagKey string) (string, error) {
+	input := &ec2.DescribeTagsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"resource-id": instanceID,
+			"key":         tagKey,
+		}),
+	}
+
+	output, err := conn.DescribeTags(input)
+
+	if err != nil {
+		return "", err
+	}
+
+	switch count := len(output.Tags); count {
+	case 0:
+		return "", nil
+	case 1:
+		return aws.StringValue(output.Tags[0].Value), nil
+	default:
+		return "", tfresource.NewTooManyResultsError(count, input)
+	}
 }
 
 // isSnowballEdgeInstance returns whether or not the specified instance ID indicates an SBE instance.
