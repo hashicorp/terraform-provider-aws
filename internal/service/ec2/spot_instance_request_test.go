@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -600,36 +599,23 @@ func testAccCheckSpotInstanceRequestAttributesCheckSIRWithoutSpot(
 	}
 }
 
-func testAccCheckSpotInstanceRequest_InstanceAttributes(sir *ec2.SpotInstanceRequest, rName string) resource.TestCheckFunc {
+func testAccCheckSpotInstanceRequest_InstanceAttributes(v *ec2.SpotInstanceRequest, sgName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		instance, err := tfec2.InstanceFindByID(conn, aws.StringValue(sir.InstanceId))
+
+		instance, err := tfec2.FindInstanceByID(conn, aws.StringValue(v.InstanceId))
+
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, "InvalidInstanceID.NotFound") {
-				return fmt.Errorf("Spot Instance %q not found", aws.StringValue(sir.InstanceId))
-			}
 			return err
 		}
 
-		// If nothing was found, then return no state
-		if instance == nil {
-			return fmt.Errorf("Spot Instance not found")
-		}
-
-		var sgMatch bool
-		for _, s := range instance.SecurityGroups {
-			// Hardcoded name for the security group that should be added inside the
-			// VPC
-			if *s.GroupName == rName {
-				sgMatch = true
+		for _, v := range instance.SecurityGroups {
+			if aws.StringValue(v.GroupName) == sgName {
+				return nil
 			}
 		}
 
-		if !sgMatch {
-			return fmt.Errorf("Error in matching Spot Instance Security Group, expected %s, got %s", rName, instance.SecurityGroups)
-		}
-
-		return nil
+		return fmt.Errorf("Error in matching Spot Instance Security Group, expected %s, got %v", sgName, instance.SecurityGroups)
 	}
 }
 
