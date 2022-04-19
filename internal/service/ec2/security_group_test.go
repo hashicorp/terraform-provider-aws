@@ -1789,19 +1789,19 @@ func TestAccEC2SecurityGroup_invalidCIDRBlock(t *testing.T) {
 		CheckDestroy: testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSecurityGroupInvalidIngressCIDR,
+				Config:      testAccSecurityGroupInvalidIngressCIDRConfig,
 				ExpectError: regexp.MustCompile("invalid CIDR address: 1.2.3.4/33"),
 			},
 			{
-				Config:      testAccSecurityGroupInvalidEgressCIDR,
+				Config:      testAccSecurityGroupInvalidEgressCIDRConfig,
 				ExpectError: regexp.MustCompile("invalid CIDR address: 1.2.3.4/33"),
 			},
 			{
-				Config:      testAccSecurityGroupInvalidIPv6IngressCIDR,
+				Config:      testAccSecurityGroupInvalidIPv6IngressCIDRConfig,
 				ExpectError: regexp.MustCompile("invalid CIDR address: ::/244"),
 			},
 			{
-				Config:      testAccSecurityGroupInvalidIPv6EgressCIDR,
+				Config:      testAccSecurityGroupInvalidIPv6EgressCIDRConfig,
 				ExpectError: regexp.MustCompile("invalid CIDR address: ::/244"),
 			},
 		},
@@ -3441,7 +3441,7 @@ resource "aws_security_group" "test1" {
 `, rName)
 }
 
-const testAccSecurityGroupInvalidIngressCIDR = `
+const testAccSecurityGroupInvalidIngressCIDRConfig = `
 resource "aws_security_group" "test" {
   ingress {
     from_port   = 0
@@ -3452,7 +3452,7 @@ resource "aws_security_group" "test" {
 }
 `
 
-const testAccSecurityGroupInvalidEgressCIDR = `
+const testAccSecurityGroupInvalidEgressCIDRConfig = `
 resource "aws_security_group" "test" {
   egress {
     from_port   = 0
@@ -3463,7 +3463,7 @@ resource "aws_security_group" "test" {
 }
 `
 
-const testAccSecurityGroupInvalidIPv6IngressCIDR = `
+const testAccSecurityGroupInvalidIPv6IngressCIDRConfig = `
 resource "aws_security_group" "test" {
   ingress {
     from_port        = 0
@@ -3474,7 +3474,7 @@ resource "aws_security_group" "test" {
 }
 `
 
-const testAccSecurityGroupInvalidIPv6EgressCIDR = `
+const testAccSecurityGroupInvalidIPv6EgressCIDRConfig = `
 resource "aws_security_group" "test" {
   egress {
     from_port        = 0
