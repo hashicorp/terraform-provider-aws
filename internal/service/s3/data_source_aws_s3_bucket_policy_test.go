@@ -6,18 +6,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	awspolicy "github.com/hashicorp/awspolicyequivalence"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	awspolicy "github.com/jen20/awspolicyequivalence"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccDataSourceS3BucketPolicy_basic(t *testing.T) {
-	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:  func() { acctest.PreCheck(t) },
+		Providers: acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				// prepare resources which wil be fetched with data source
@@ -35,7 +37,7 @@ func TestAccDataSourceS3BucketPolicy_basic(t *testing.T) {
 }
 
 func testAccCheckAWSS3BucketPolicyExists(n string) resource.TestCheckFunc {
-	return testAccCheckAWSS3BucketPolicyExistsWithProvider(n, func() *schema.Provider { return testAccProvider })
+	return testAccCheckAWSS3BucketPolicyExistsWithProvider(n, func() *schema.Provider { return acctest.Provider })
 }
 
 func testAccCheckAWSS3BucketPolicyPolicyMatch(resource1, attr1, resource2, attr2 string) resource.TestCheckFunc {
@@ -90,15 +92,12 @@ func testAccCheckAWSS3BucketPolicyExistsWithProvider(n string, providerF func() 
 
 		provider := providerF()
 
-		conn := provider.Meta().(*AWSClient).s3conn
+		conn := provider.Meta().(*conns.AWSClient).S3Conn
 		_, err := conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
 			Bucket: aws.String(rs.Primary.ID),
 		})
 
 		if err != nil {
-			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
-				return fmt.Errorf("s3 bucket not found")
-			}
 			return err
 		}
 		return nil

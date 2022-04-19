@@ -1,18 +1,19 @@
 package s3
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func DataSourceAwsS3BucketPolicy() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsS3BucketPolicyRead,
+		ReadWithoutTimeout: dataSourceAwsS3BucketPolicyRead,
 
 		Schema: map[string]*schema.Schema{
 			"bucket": {
@@ -27,7 +28,7 @@ func DataSourceAwsS3BucketPolicy() *schema.Resource {
 	}
 }
 
-func dataSourceAwsS3BucketPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsS3BucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucketName := d.Get("bucket").(string)
@@ -37,11 +38,12 @@ func dataSourceAwsS3BucketPolicyRead(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG] Reading S3 bucket policy: %s", input)
 	output, err := conn.GetBucketPolicy(input)
 	if err != nil {
-		return fmt.Errorf("failed getting S3 bucket policy (%s): %w", bucketName, err)
+		return diag.Errorf("failed getting S3 bucket policy (%s): %w", bucketName, err)
 	}
 
 	policy := *output.Policy
 	d.SetId(bucketName)
 	d.Set("policy", policy)
+
 	return nil
 }
