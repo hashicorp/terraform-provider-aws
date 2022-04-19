@@ -1810,7 +1810,8 @@ func TestAccEC2SecurityGroup_invalidCIDRBlock(t *testing.T) {
 
 func TestAccEC2SecurityGroup_cidrAndGroups(t *testing.T) {
 	var group ec2.SecurityGroup
-	resourceName := "aws_security_group.test"
+	resourceName := "aws_security_group.test1"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1819,10 +1820,9 @@ func TestAccEC2SecurityGroup_cidrAndGroups(t *testing.T) {
 		CheckDestroy: testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityGroupCombindCIDRandGroups,
+				Config: testAccSecurityGroupCombinedCIDRAndGroupsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
-					// testAccCheckSecurityGroupAttributes(&group),
 				),
 			},
 			{
@@ -3485,45 +3485,50 @@ resource "aws_security_group" "test" {
 }
 `
 
-const testAccSecurityGroupCombindCIDRandGroups = `
-resource "aws_vpc" "foo" {
+func testAccSecurityGroupCombinedCIDRAndGroupsConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-combine-rand-groups"
+    Name = %[1]q
   }
 }
 
-resource "aws_security_group" "two" {
-  name   = "tf-test-1"
-  vpc_id = aws_vpc.foo.id
+resource "aws_security_group" "test2" {
+  name   = "%[1]s-2"
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-test-1"
+    Name = %[1]q
   }
 }
 
-resource "aws_security_group" "one" {
-  name   = "tf-test-2"
-  vpc_id = aws_vpc.foo.id
+resource "aws_security_group" "test3" {
+  name   = "%[1]s-3"
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-test-w"
+    Name = %[1]q
   }
 }
 
-resource "aws_security_group" "three" {
-  name   = "tf-test-3"
-  vpc_id = aws_vpc.foo.id
+resource "aws_security_group" "test4" {
+  name   = "%[1]s-4"
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-test-3"
+    Name = %[1]q
   }
 }
 
-resource "aws_security_group" "test" {
-  name   = "tf-mix-test"
-  vpc_id = aws_vpc.foo.id
+resource "aws_security_group" "test1" {
+  name   = "%[1]s-1"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 
   ingress {
     from_port   = 80
@@ -3532,17 +3537,14 @@ resource "aws_security_group" "test" {
     cidr_blocks = ["10.0.0.0/16", "10.1.0.0/16", "10.7.0.0/16"]
 
     security_groups = [
-      aws_security_group.one.id,
-      aws_security_group.two.id,
-      aws_security_group.three.id,
+      aws_security_group.test2.id,
+      aws_security_group.test3.id,
+      aws_security_group.test4.id,
     ]
   }
-
-  tags = {
-    Name = "tf-mix-test"
-  }
 }
-`
+`, rName)
+}
 
 const testAccSecurityGroupConfig_ingressWithCIDRAndSGs = `
 resource "aws_vpc" "foo" {
