@@ -171,6 +171,7 @@ Describes a target Capacity Reservation.
 This `capacity_reservation_target` block supports the following:
 
 * `capacity_reservation_id` - (Optional) The ID of the Capacity Reservation in which to run the instance.
+* `capacity_reservation_resource_group_arn` - (Optional) The ARN of the Capacity Reservation resource group in which to run the instance.
 
 ### Credit Specification
 
@@ -253,6 +254,7 @@ Each `network_interface` block supports the following:
 
 * `delete_on_termination` - (Optional) Whether or not to delete the network interface on instance termination. Defaults to `false`. Currently, the only valid value is `false`, as this is only supported when creating new network interfaces when launching an instance.
 * `device_index` - (Required) Integer index of the network interface attachment. Limited by instance type.
+* `network_card_index` - (Optional) Integer index of the network card. Limited by instance type. The default index is `0`.
 * `network_interface_id` - (Required) ID of the network interface to attach.
 
 ### Launch Template Specification

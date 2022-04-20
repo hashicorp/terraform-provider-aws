@@ -13,6 +13,7 @@ import (
 func TestAccEC2InstanceDataSource_basic(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -20,7 +21,7 @@ func TestAccEC2InstanceDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig,
+				Config: testAccInstanceDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
@@ -35,9 +36,9 @@ func TestAccEC2InstanceDataSource_basic(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_tags(t *testing.T) {
-	rInt := sdkacctest.RandInt()
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -45,7 +46,7 @@ func TestAccEC2InstanceDataSource_tags(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_Tags(rInt),
+				Config: testAccInstanceDataSourceTagsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
@@ -59,6 +60,7 @@ func TestAccEC2InstanceDataSource_tags(t *testing.T) {
 func TestAccEC2InstanceDataSource_azUserData(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -66,7 +68,7 @@ func TestAccEC2InstanceDataSource_azUserData(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_AzUserData,
+				Config: testAccInstanceDataSourceAzUserDataConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
@@ -82,6 +84,7 @@ func TestAccEC2InstanceDataSource_azUserData(t *testing.T) {
 func TestAccEC2InstanceDataSource_gp2IopsDevice(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -89,7 +92,7 @@ func TestAccEC2InstanceDataSource_gp2IopsDevice(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_gp2IopsDevice,
+				Config: testAccInstanceDataSourceGp2IopsDeviceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -107,6 +110,7 @@ func TestAccEC2InstanceDataSource_gp2IopsDevice(t *testing.T) {
 func TestAccEC2InstanceDataSource_gp3ThroughputDevice(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -114,7 +118,7 @@ func TestAccEC2InstanceDataSource_gp3ThroughputDevice(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_gp3ThroughputDevice,
+				Config: testAccInstanceDataSourceGp3ThroughputDeviceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -132,6 +136,7 @@ func TestAccEC2InstanceDataSource_gp3ThroughputDevice(t *testing.T) {
 func TestAccEC2InstanceDataSource_blockDevices(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -139,7 +144,7 @@ func TestAccEC2InstanceDataSource_blockDevices(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_blockDevices,
+				Config: testAccInstanceDataSourceBlockDevicesConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -158,13 +163,15 @@ func TestAccEC2InstanceDataSource_blockDevices(t *testing.T) {
 
 // Test to verify that ebs_block_device kms_key_id does not elicit a panic
 func TestAccEC2InstanceDataSource_EBSBlockDevice_kmsKeyID(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_EbsBlockDevice_KmsKeyId,
+				Config: testAccInstanceDataSourceEbsBlockDeviceKmsKeyIdConfig(rName),
 			},
 		},
 	})
@@ -172,13 +179,15 @@ func TestAccEC2InstanceDataSource_EBSBlockDevice_kmsKeyID(t *testing.T) {
 
 // Test to verify that root_block_device kms_key_id does not elicit a panic
 func TestAccEC2InstanceDataSource_RootBlockDevice_kmsKeyID(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_RootBlockDevice_KmsKeyId,
+				Config: testAccInstanceDataSourceRootBlockDeviceKmsKeyIdConfig(rName),
 			},
 		},
 	})
@@ -187,6 +196,7 @@ func TestAccEC2InstanceDataSource_RootBlockDevice_kmsKeyID(t *testing.T) {
 func TestAccEC2InstanceDataSource_rootInstanceStore(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -194,7 +204,7 @@ func TestAccEC2InstanceDataSource_rootInstanceStore(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_rootInstanceStore,
+				Config: testAccInstanceDataSourceRootInstanceStoreConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -210,7 +220,7 @@ func TestAccEC2InstanceDataSource_rootInstanceStore(t *testing.T) {
 func TestAccEC2InstanceDataSource_privateIP(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -218,7 +228,7 @@ func TestAccEC2InstanceDataSource_privateIP(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_privateIP(rName),
+				Config: testAccInstanceDataSourcePrivateIPConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -232,7 +242,7 @@ func TestAccEC2InstanceDataSource_privateIP(t *testing.T) {
 func TestAccEC2InstanceDataSource_secondaryPrivateIPs(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -240,7 +250,7 @@ func TestAccEC2InstanceDataSource_secondaryPrivateIPs(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_secondaryPrivateIPs(rName),
+				Config: testAccInstanceDataSourceSecondaryPrivateIPsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -262,7 +272,7 @@ func TestAccEC2InstanceDataSource_ipv6Addresses(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_ipv6Addresses(rName),
+				Config: testAccInstanceDataSourceIpv6AddressesConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -276,7 +286,7 @@ func TestAccEC2InstanceDataSource_ipv6Addresses(t *testing.T) {
 func TestAccEC2InstanceDataSource_keyPair(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-test-key-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
@@ -289,7 +299,7 @@ func TestAccEC2InstanceDataSource_keyPair(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_keyPair(rName, publicKey),
+				Config: testAccInstanceDataSourceKeyPairConfig(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
@@ -304,7 +314,7 @@ func TestAccEC2InstanceDataSource_keyPair(t *testing.T) {
 func TestAccEC2InstanceDataSource_vpc(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -312,7 +322,7 @@ func TestAccEC2InstanceDataSource_vpc(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_VPC(rName),
+				Config: testAccInstanceDataSourceVPCConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -328,7 +338,7 @@ func TestAccEC2InstanceDataSource_vpc(t *testing.T) {
 func TestAccEC2InstanceDataSource_placementGroup(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -336,7 +346,7 @@ func TestAccEC2InstanceDataSource_placementGroup(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_PlacementGroup(rName),
+				Config: testAccInstanceDataSourcePlacementGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "placement_group", resourceName, "placement_group"),
 				),
@@ -346,9 +356,9 @@ func TestAccEC2InstanceDataSource_placementGroup(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_securityGroups(t *testing.T) {
-	rInt := sdkacctest.RandInt()
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -356,7 +366,7 @@ func TestAccEC2InstanceDataSource_securityGroups(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_SecurityGroups(rInt),
+				Config: testAccInstanceDataSourceSecurityGroupsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -372,7 +382,7 @@ func TestAccEC2InstanceDataSource_securityGroups(t *testing.T) {
 func TestAccEC2InstanceDataSource_vpcSecurityGroups(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -380,7 +390,7 @@ func TestAccEC2InstanceDataSource_vpcSecurityGroups(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_VPCSecurityGroups(rName),
+				Config: testAccInstanceDataSourceVPCSecurityGroupsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -394,8 +404,8 @@ func TestAccEC2InstanceDataSource_vpcSecurityGroups(t *testing.T) {
 
 func TestAccEC2InstanceDataSource_GetPasswordData_trueToFalse(t *testing.T) {
 	datasourceName := "data.aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
@@ -407,14 +417,14 @@ func TestAccEC2InstanceDataSource_GetPasswordData_trueToFalse(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_getPasswordData(rName, publicKey, true),
+				Config: testAccInstanceDataSourceGetPasswordDataConfig(rName, publicKey, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_password_data", "true"),
 					resource.TestCheckResourceAttrSet(datasourceName, "password_data"),
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceConfig_getPasswordData(rName, publicKey, false),
+				Config: testAccInstanceDataSourceGetPasswordDataConfig(rName, publicKey, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_password_data", "false"),
 					resource.TestCheckNoResourceAttr(datasourceName, "password_data"),
@@ -426,8 +436,8 @@ func TestAccEC2InstanceDataSource_GetPasswordData_trueToFalse(t *testing.T) {
 
 func TestAccEC2InstanceDataSource_GetPasswordData_falseToTrue(t *testing.T) {
 	datasourceName := "data.aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
@@ -439,14 +449,14 @@ func TestAccEC2InstanceDataSource_GetPasswordData_falseToTrue(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_getPasswordData(rName, publicKey, false),
+				Config: testAccInstanceDataSourceGetPasswordDataConfig(rName, publicKey, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_password_data", "false"),
 					resource.TestCheckNoResourceAttr(datasourceName, "password_data"),
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceConfig_getPasswordData(rName, publicKey, true),
+				Config: testAccInstanceDataSourceGetPasswordDataConfig(rName, publicKey, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_password_data", "true"),
 					resource.TestCheckResourceAttrSet(datasourceName, "password_data"),
@@ -458,7 +468,7 @@ func TestAccEC2InstanceDataSource_GetPasswordData_falseToTrue(t *testing.T) {
 
 func TestAccEC2InstanceDataSource_getUserData(t *testing.T) {
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -466,21 +476,21 @@ func TestAccEC2InstanceDataSource_getUserData(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfigGetUserData(rName, true),
+				Config: testAccInstanceDataSourceGetUserDataConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "user_data_base64", "IyEvYmluL2Jhc2gKCmVjaG8gImhlbGxvIHdvcmxkIgo="),
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceConfigGetUserData(rName, false),
+				Config: testAccInstanceDataSourceGetUserDataConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "false"),
 					resource.TestCheckNoResourceAttr(datasourceName, "user_data_base64"),
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceConfigGetUserData(rName, true),
+				Config: testAccInstanceDataSourceGetUserDataConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "user_data_base64", "IyEvYmluL2Jhc2gKCmVjaG8gImhlbGxvIHdvcmxkIgo="),
@@ -493,7 +503,7 @@ func TestAccEC2InstanceDataSource_getUserData(t *testing.T) {
 func TestAccEC2InstanceDataSource_GetUserData_noUserData(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -501,7 +511,7 @@ func TestAccEC2InstanceDataSource_GetUserData_noUserData(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(rName, true),
+				Config: testAccInstanceDataSourceGetUserDataNoUserDataConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "true"),
 					resource.TestCheckNoResourceAttr(datasourceName, "user_data_base64"),
@@ -509,7 +519,7 @@ func TestAccEC2InstanceDataSource_GetUserData_noUserData(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(rName, false),
+				Config: testAccInstanceDataSourceGetUserDataNoUserDataConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "false"),
 					resource.TestCheckNoResourceAttr(datasourceName, "user_data_base64"),
@@ -517,7 +527,7 @@ func TestAccEC2InstanceDataSource_GetUserData_noUserData(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(rName, true),
+				Config: testAccInstanceDataSourceGetUserDataNoUserDataConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "true"),
 					resource.TestCheckNoResourceAttr(datasourceName, "user_data_base64"),
@@ -531,7 +541,7 @@ func TestAccEC2InstanceDataSource_GetUserData_noUserData(t *testing.T) {
 func TestAccEC2InstanceDataSource_creditSpecification(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", sdkacctest.RandString(12))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -540,7 +550,7 @@ func TestAccEC2InstanceDataSource_creditSpecification(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 
-				Config: testAccInstanceDataSourceConfig_creditSpecification(rName),
+				Config: testAccInstanceDataSourceCreditSpecificationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "credit_specification.#", resourceName, "credit_specification.#"),
@@ -562,7 +572,7 @@ func TestAccEC2InstanceDataSource_metadataOptions(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_metadataOptions(rName),
+				Config: testAccInstanceDataSourceMetadataOptionsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "metadata_options.#", resourceName, "metadata_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "metadata_options.0.http_endpoint", resourceName, "metadata_options.0.http_endpoint"),
@@ -586,7 +596,7 @@ func TestAccEC2InstanceDataSource_enclaveOptions(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_enclaveOptions(rName),
+				Config: testAccInstanceDataSourceEnclaveOptionsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "enclave_options.#", resourceName, "enclave_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "enclave_options.0.enabled", resourceName, "enclave_options.0.enabled"),
@@ -597,9 +607,9 @@ func TestAccEC2InstanceDataSource_enclaveOptions(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_blockDeviceTags(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -607,7 +617,7 @@ func TestAccEC2InstanceDataSource_blockDeviceTags(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_blockDeviceTags(rName),
+				Config: testAccInstanceDataSourceBlockDeviceTagsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
 				),
@@ -617,13 +627,14 @@ func TestAccEC2InstanceDataSource_blockDeviceTags(t *testing.T) {
 }
 
 // Lookup based on InstanceID
-var testAccInstanceDataSourceConfig = acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + `
+func testAccInstanceDataSourceConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.small"
 
   tags = {
-    Name = "HelloWorld"
+    Name = %[1]q
   }
 }
 
@@ -633,33 +644,37 @@ data "aws_instance" "test" {
     values = [aws_instance.test.id]
   }
 }
-`
+`, rName))
+}
 
 // Use the tags attribute to filter
-func testAccInstanceDataSourceConfig_Tags(rInt int) string {
-	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
+func testAccInstanceDataSourceTagsConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.small"
 
   tags = {
-    Name     = "HelloWorld"
-    TestSeed = "%[1]d"
+    Name     = %[1]q
+    TestSeed = "%[2]d"
   }
 }
 
 data "aws_instance" "test" {
   instance_tags = {
     Name     = aws_instance.test.tags["Name"]
-    TestSeed = "%[1]d"
+    TestSeed = "%[2]d"
   }
 }
-`, rInt)
+`, rName, sdkacctest.RandInt()))
 }
 
 // filter on tag, populate more attributes
-var testAccInstanceDataSourceConfig_AzUserData = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-	acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
+func testAccInstanceDataSourceAzUserDataConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -668,17 +683,19 @@ resource "aws_instance" "test" {
   user_data     = "test:-with-character's"
 
   tags = {
-    TFAccTest = "YesThisIsATest"
+    Name = %[1]q
   }
 }
 
 data "aws_instance" "test" {
   instance_id = aws_instance.test.id
 }
-`)
+`, rName))
+}
 
 // GP2IopsDevice
-var testAccInstanceDataSourceConfig_gp2IopsDevice = acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + `
+func testAccInstanceDataSourceGp2IopsDeviceConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.medium"
@@ -687,15 +704,21 @@ resource "aws_instance" "test" {
     volume_type = "gp2"
     volume_size = 11
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_instance" "test" {
   instance_id = aws_instance.test.id
 }
-`
+`, rName))
+}
 
 // GP3ThroughputDevice
-var testAccInstanceDataSourceConfig_gp3ThroughputDevice = acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + `
+func testAccInstanceDataSourceGp3ThroughputDeviceConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.medium"
@@ -705,15 +728,21 @@ resource "aws_instance" "test" {
     volume_size = 10
     throughput  = 300
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_instance" "test" {
   instance_id = aws_instance.test.id
 }
-`
+`, rName))
+}
 
 // Block Device
-var testAccInstanceDataSourceConfig_blockDevices = acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + `
+func testAccInstanceDataSourceBlockDevicesConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.medium"
@@ -753,14 +782,20 @@ resource "aws_instance" "test" {
     volume_type = "gp3"
     throughput  = 300
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_instance" "test" {
   instance_id = aws_instance.test.id
 }
-`
+`, rName))
+}
 
-var testAccInstanceDataSourceConfig_EbsBlockDevice_KmsKeyId = acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + `
+func testAccInstanceDataSourceEbsBlockDeviceKmsKeyIdConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
@@ -780,14 +815,20 @@ resource "aws_instance" "test" {
     kms_key_id  = aws_kms_key.test.arn
     volume_size = 9
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_instance" "test" {
   instance_id = aws_instance.test.id
 }
-`
+`, rName))
+}
 
-var testAccInstanceDataSourceConfig_RootBlockDevice_KmsKeyId = acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + `
+func testAccInstanceDataSourceRootBlockDeviceKmsKeyIdConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
@@ -802,56 +843,84 @@ resource "aws_instance" "test" {
     volume_type = "gp2"
     volume_size = 11
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_instance" "test" {
   instance_id = aws_instance.test.id
 }
-`
+`, rName))
+}
 
-var testAccInstanceDataSourceConfig_rootInstanceStore = acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + `
+func testAccInstanceDataSourceRootInstanceStoreConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.medium"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_instance" "test" {
   instance_id = aws_instance.test.id
 }
-`
+`, rName))
+}
 
-func testAccInstanceDataSourceConfig_privateIP(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), testAccInstanceVPCBasicConfig(rName), `
+func testAccInstanceDataSourcePrivateIPConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false, 1),
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.test.id
-  private_ip    = "10.0.0.42"
+  private_ip    = "10.1.1.42"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_instance" "test" {
   instance_id = aws_instance.test.id
 }
-`)
+`, rName))
 }
 
-func testAccInstanceDataSourceConfig_secondaryPrivateIPs(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), testAccInstanceVPCBasicConfig(rName), `
+func testAccInstanceDataSourceSecondaryPrivateIPsConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false, 1),
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                   = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type         = "t2.micro"
   subnet_id             = aws_subnet.test.id
-  secondary_private_ips = ["10.0.0.42"]
+  secondary_private_ips = ["10.1.1.42"]
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_instance" "test" {
   instance_id = aws_instance.test.id
 }
-`)
+`, rName))
 }
 
-func testAccInstanceDataSourceConfig_ipv6Addresses(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), testAccInstanceVPCIPv6Config(rName), fmt.Sprintf(`
+func testAccInstanceDataSourceIpv6AddressesConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCIPv6Config(rName),
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type      = "t2.micro"
@@ -869,7 +938,7 @@ data "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourceConfig_keyPair(rName, publicKey string) string {
+func testAccInstanceDataSourceKeyPairConfig(rName, publicKey string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
@@ -900,8 +969,11 @@ data "aws_instance" "test" {
 `, rName, publicKey))
 }
 
-func testAccInstanceDataSourceConfig_VPC(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), testAccInstanceVPCBasicConfig(rName), `
+func testAccInstanceDataSourceVPCConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false, 1),
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "t2.small"
@@ -910,16 +982,23 @@ resource "aws_instance" "test" {
   #tenancy                     = "dedicated"
   # pre-encoded base64 data
   user_data = "3dc39dda39be1205215e776bad998da361a5955d"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_instance" "test" {
   instance_id = aws_instance.test.id
 }
-`)
+`, rName))
 }
 
-func testAccInstanceDataSourceConfig_PlacementGroup(rName string) string {
-	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + testAccInstanceVPCBasicConfig(rName) + fmt.Sprintf(`
+func testAccInstanceDataSourcePlacementGroupConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false, 1),
+		fmt.Sprintf(`
 resource "aws_placement_group" "test" {
   name     = %[1]q
   strategy = "cluster"
@@ -935,19 +1014,22 @@ resource "aws_instance" "test" {
 
   # pre-encoded base64 data
   user_data = "3dc39dda39be1205215e776bad998da361a5955d"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_instance" "test" {
   instance_id = aws_instance.test.id
 }
-`, rName)
+`, rName))
 }
 
-func testAccInstanceDataSourceConfig_SecurityGroups(rInt int) string {
-	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
-resource "aws_security_group" "tf_test_foo" {
-  name        = "tf_test_foo-%d"
-  description = "foo"
+func testAccInstanceDataSourceSecurityGroupsConfig(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
 
   ingress {
     protocol  = "icmp"
@@ -955,44 +1037,54 @@ resource "aws_security_group" "tf_test_foo" {
     to_port   = -1
     self      = true
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_instance" "test" {
   ami             = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type   = "t2.small"
-  security_groups = [aws_security_group.tf_test_foo.name]
+  security_groups = [aws_security_group.test.name]
   user_data       = "foo:-with-character's"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_instance" "test" {
   instance_id = aws_instance.test.id
 }
-`, rInt)
+`, rName))
 }
 
-func testAccInstanceDataSourceConfig_VPCSecurityGroups(rName string) string {
+func testAccInstanceDataSourceVPCSecurityGroupsConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		testAccInstanceVPCBasicConfig(rName),
+		testAccInstanceVPCConfig(rName, false, 1),
 		testAccInstanceVPCSecurityGroupConfig(rName),
-		`
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type          = "t2.micro"
   vpc_security_group_ids = [aws_security_group.test.id]
   subnet_id              = aws_subnet.test.id
   depends_on             = [aws_internet_gateway.test]
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_instance" "test" {
   instance_id = aws_instance.test.id
 }
-`)
+`, rName))
 }
 
-func testAccInstanceDataSourceConfig_getPasswordData(rName, publicKey string, val bool) string {
-	return acctest.ConfigCompose(
-		testAccLatestWindowsServer2016CoreAMIConfig(),
-		fmt.Sprintf(`
+func testAccInstanceDataSourceGetPasswordDataConfig(rName, publicKey string, val bool) string {
+	return acctest.ConfigCompose(testAccLatestWindowsServer2016CoreAMIConfig(), fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = %[2]q
@@ -1002,6 +1094,10 @@ resource "aws_instance" "test" {
   ami           = data.aws_ami.win2016core-ami.id
   instance_type = "t2.medium"
   key_name      = aws_key_pair.test.key_name
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_instance" "test" {
@@ -1012,8 +1108,11 @@ data "aws_instance" "test" {
 `, rName, publicKey, val))
 }
 
-func testAccInstanceDataSourceConfigGetUserData(rName string, getUserData bool) string {
-	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + testAccInstanceVPCBasicConfig(rName) + fmt.Sprintf(`
+func testAccInstanceDataSourceGetUserDataConfig(rName string, getUserData bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false, 1),
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
@@ -1024,33 +1123,46 @@ resource "aws_instance" "test" {
 
 echo "hello world"
 EUD
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_instance" "test" {
   get_user_data = %[2]t
   instance_id   = aws_instance.test.id
 }
-`, rName, getUserData)
+`, rName, getUserData))
 }
 
-func testAccInstanceDataSourceConfigGetUserDataNoUserData(rName string, getUserData bool) string {
-	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + testAccInstanceVPCBasicConfig(rName) + fmt.Sprintf(`
+func testAccInstanceDataSourceGetUserDataNoUserDataConfig(rName string, getUserData bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false, 1),
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_instance" "test" {
   get_user_data = %[2]t
   instance_id   = aws_instance.test.id
 }
-`, rName, getUserData)
+`, rName, getUserData))
 }
 
-func testAccInstanceDataSourceConfig_creditSpecification(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		testAccInstanceVPCBasicConfig(rName), `
+func testAccInstanceDataSourceCreditSpecificationConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false, 1),
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
@@ -1059,18 +1171,22 @@ resource "aws_instance" "test" {
   credit_specification {
     cpu_credits = "unlimited"
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_instance" "test" {
   instance_id = aws_instance.test.id
 }
-`)
+`, rName))
 }
 
-func testAccInstanceDataSourceConfig_metadataOptions(rName string) string {
+func testAccInstanceDataSourceMetadataOptionsConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		testAccInstanceVPCConfig(rName, false),
+		testAccInstanceVPCConfig(rName, false, 0),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
@@ -1096,10 +1212,10 @@ data "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourceConfig_enclaveOptions(rName string) string {
+func testAccInstanceDataSourceEnclaveOptionsConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		testAccInstanceVPCConfig(rName, false),
+		testAccInstanceVPCConfig(rName, false, 0),
 		acctest.AvailableEC2InstanceTypeForRegion("c5a.xlarge", "c5.xlarge"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
@@ -1122,7 +1238,7 @@ data "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourceConfig_blockDeviceTags(rName string) string {
+func testAccInstanceDataSourceBlockDeviceTagsConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
