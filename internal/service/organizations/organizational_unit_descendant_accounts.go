@@ -66,14 +66,14 @@ func getDescendantOrganizationalUnits(parent_id string) []*organizations.Organiz
 		ParentId: aws.String(parent_id),
 	}
 
-    // Descendants will hold all generations of OUs under parent_id.
+	// Descendants will hold all generations of OUs under parent_id.
 	var descendants []*organizations.OrganizationalUnit
 	// Children will hold immediate child OUs of parent_id.
 	var children []*organizations.OrganizationalUnit
 	// result will hold any descendants of immediate child OUs.
 	var result []*organizations.OrganizationalUnit
 
-    // Get all immediate children OUs.
+	// Get all immediate children OUs.
 	err := conn.ListOrganizationalUnitsForParentPages(params,
 		func(page *organizations.ListOrganizationalUnitsForParentOutput, lastPage bool) bool {
 			children = append(children, page.OrganizationalUnits...)
@@ -85,57 +85,57 @@ func getDescendantOrganizationalUnits(parent_id string) []*organizations.Organiz
 		return fmt.Errorf("error listing Organizations Organization Units for parent (%s): %w", parent_id, err)
 	}
 
-    // If child OUs exist, get all their descendants.
+	// If child OUs exist, get all their descendants.
 	if children = flattenOrganizationalUnits(children); children != nil {
-        for _, ou := range children {
-            // Append this child ou and all it's descendants.
-            descendants = append(descendants, ou)
-            if result = getDescendantOrganizationalUnits(ou); result != nil{
-                descendants = append(descendants, result)
-            }
-        }
+		for _, ou := range children {
+			// Append this child ou and all it's descendants.
+			descendants = append(descendants, ou)
+			if result = getDescendantOrganizationalUnits(ou); result != nil {
+				descendants = append(descendants, result)
+			}
+		}
 
-        return descendants
+		return descendants
 	}
 
-    //Base Case. ParentId has no children.
+	//Base Case. ParentId has no children.
 	return nil
 }
 
 func dataSourceOrganizationalUnitDescendantAccountsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
-    // Collect all the OUs of which we need to list children.
+	// Collect all the OUs of which we need to list children.
 	var organizationalUnits []*organizations.OrganizationalUnit
 	organizationalUnits = append(organizationalUnits, d.Get("parent_id").(string))
 
-    // Get all descendant organizational units.
-    var descendantOUs []*organizations.OrganizationalUnit
+	// Get all descendant organizational units.
+	var descendantOUs []*organizations.OrganizationalUnit
 
-    if descendantOUs = getDescendantOrganizationalUnits(parent_id); descendantOUs != nil{
-	    organizationalUnits = append(organizationalUnits, descendantOUs)
+	if descendantOUs = getDescendantOrganizationalUnits(parent_id); descendantOUs != nil {
+		organizationalUnits = append(organizationalUnits, descendantOUs)
 	}
 
-    var accounts []*organizations.Account
+	var accounts []*organizations.Account
 
-    for _, ou := range organizationalUnits {
-         // Get immediate child accounts of ou.
-         parent_id = ou.get("Id")
-        params := &organizations.ListAccountsForParentInput{
-            ParentId: aws.String(parent_id),
-        }
+	for _, ou := range organizationalUnits {
+		// Get immediate child accounts of ou.
+		parent_id = ou.get("Id")
+		params := &organizations.ListAccountsForParentInput{
+			ParentId: aws.String(parent_id),
+		}
 
-        err := conn.ListAccountsForParentPages(params,
-            func(page *organizations.ListAccountsForParentOutput, lastPage bool) bool {
-                accounts = append(accounts, page.Accounts...)
+		err := conn.ListAccountsForParentPages(params,
+			func(page *organizations.ListAccountsForParentOutput, lastPage bool) bool {
+				accounts = append(accounts, page.Accounts...)
 
-                return !lastPage
-            })
+				return !lastPage
+			})
 
-        if err != nil {
-            return fmt.Errorf("error listing Organizations Accounts for parent (%s): %w", parent_id, err)
-        }
-    }
+		if err != nil {
+			return fmt.Errorf("error listing Organizations Accounts for parent (%s): %w", parent_id, err)
+		}
+	}
 
 	d.SetId(parent_id)
 
