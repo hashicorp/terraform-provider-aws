@@ -1745,7 +1745,7 @@ func modifyInstanceAttributeWithStopStart(conn *ec2.EC2, input *ec2.ModifyInstan
 	}
 
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433.
-	_, err := tfresource.RetryWhenAWSErrMessageContains(InstanceAttributePropagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrMessageContains(PropagationTimeout,
 		func() (interface{}, error) {
 			return conn.StartInstances(&ec2.StartInstancesInput{
 				InstanceIds: aws.StringSlice([]string{id}),
