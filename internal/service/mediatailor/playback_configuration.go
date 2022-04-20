@@ -7,10 +7,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -20,6 +22,9 @@ func ResourcePlaybackConfiguration() *schema.Resource {
 		ReadContext:   resourcePlaybackConfigurationRead,
 		UpdateContext: resourcePlaybackConfigurationPut,
 		DeleteContext: resourcePlaybackConfigurationDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"ad_decision_server_url": {
 				Type:     schema.TypeString,
@@ -203,6 +208,9 @@ func ResourcePlaybackConfiguration() *schema.Resource {
 				Computed: true,
 			},
 		},
+		CustomizeDiff: customdiff.All(
+			customdiff.ForceNewIfChange("name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
+		),
 	}
 }
 
@@ -239,11 +247,11 @@ func resourcePlaybackConfigurationPut(ctx context.Context, d *schema.ResourceDat
 		params.AdDecisionServerUrl = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("avail_suppression_mode"); ok && v != "" {
+	if v, ok := d.GetOk("avail_suppression_mode"); ok && v != nil {
 		params.AvailSuppression.Mode = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("avail_suppression_value"); ok && v != "" {
+	if v, ok := d.GetOk("avail_suppression_value"); ok && v != nil {
 		params.AvailSuppression.Value = aws.String(v.(string))
 	}
 
@@ -278,10 +286,10 @@ func resourcePlaybackConfigurationPut(ctx context.Context, d *schema.ResourceDat
 		params.ConfigurationAliases = map[string]map[string]*string{}
 	}
 
-	if v, ok := d.GetOk("dash_mpd_location"); ok && v != "" {
+	if v, ok := d.GetOk("dash_mpd_location"); ok && v != nil {
 		params.DashConfiguration.MpdLocation = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("dash_origin_manifest_type"); ok && v != "" {
+	if v, ok := d.GetOk("dash_origin_manifest_type"); ok && v != nil {
 		params.DashConfiguration.OriginManifestType = aws.String(v.(string))
 	}
 
@@ -361,7 +369,8 @@ func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceDa
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error parsing the name from resource arn: %v", err))
 		}
-		resourceName = resourceArn.Resource
+		arnSections := strings.Split(resourceArn.Resource, "/")
+		resourceName = arnSections[len(arnSections)-1]
 	}
 
 	res, err := conn.GetPlaybackConfiguration(&mediatailor.GetPlaybackConfigurationInput{Name: aws.String(resourceName)})
