@@ -17,7 +17,7 @@ import (
 )
 
 func TestAccACMCertificate_emailValidation(t *testing.T) {
-	resourceName := "aws_acm_certificate.cert"
+	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
@@ -49,7 +49,7 @@ func TestAccACMCertificate_emailValidation(t *testing.T) {
 }
 
 func TestAccACMCertificate_dnsValidation(t *testing.T) {
-	resourceName := "aws_acm_certificate.cert"
+	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
@@ -85,7 +85,7 @@ func TestAccACMCertificate_dnsValidation(t *testing.T) {
 }
 
 func TestAccACMCertificate_root(t *testing.T) {
-	resourceName := "aws_acm_certificate.cert"
+	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -121,7 +121,7 @@ func TestAccACMCertificate_root(t *testing.T) {
 
 func TestAccACMCertificate_privateCert(t *testing.T) {
 	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
-	resourceName := "aws_acm_certificate.cert"
+	resourceName := "aws_acm_certificate.test"
 
 	commonName := acctest.RandomDomain()
 	certificateDomainName := commonName.RandomSubdomain().String()
@@ -176,7 +176,7 @@ func TestAccACMCertificate_Root_trailingPeriod(t *testing.T) {
 }
 
 func TestAccACMCertificate_rootAndWildcardSan(t *testing.T) {
-	resourceName := "aws_acm_certificate.cert"
+	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
 
@@ -236,7 +236,7 @@ func TestAccACMCertificate_SubjectAlternativeNames_emptyString(t *testing.T) {
 }
 
 func TestAccACMCertificate_San_single(t *testing.T) {
-	resourceName := "aws_acm_certificate.cert"
+	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	sanDomain := acctest.ACMCertificateRandomSubDomain(rootDomain)
@@ -279,7 +279,7 @@ func TestAccACMCertificate_San_single(t *testing.T) {
 }
 
 func TestAccACMCertificate_San_multiple(t *testing.T) {
-	resourceName := "aws_acm_certificate.cert"
+	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	sanDomain1 := acctest.ACMCertificateRandomSubDomain(rootDomain)
@@ -331,7 +331,7 @@ func TestAccACMCertificate_San_trailingPeriod(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	sanDomain := acctest.ACMCertificateRandomSubDomain(rootDomain)
-	resourceName := "aws_acm_certificate.cert"
+	resourceName := "aws_acm_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -371,7 +371,7 @@ func TestAccACMCertificate_San_trailingPeriod(t *testing.T) {
 }
 
 func TestAccACMCertificate_San_matches_domain(t *testing.T) {
-	resourceName := "aws_acm_certificate.cert"
+	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	sanDomain := rootDomain
@@ -384,17 +384,22 @@ func TestAccACMCertificate_San_matches_domain(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcmCertificateConfig_subjectAlternativeNames(domain, strconv.Quote(sanDomain), acm.ValidationMethodDns),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile(`certificate/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
 						"domain_name":          domain,
 						"resource_record_type": "CNAME",
 					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
+						"domain_name":          sanDomain,
+						"resource_record_type": "CNAME",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusPendingValidation),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domain),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", sanDomain),
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodDns),
 				),
@@ -409,7 +414,7 @@ func TestAccACMCertificate_San_matches_domain(t *testing.T) {
 }
 
 func TestAccACMCertificate_wildcard(t *testing.T) {
-	resourceName := "aws_acm_certificate.cert"
+	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
 
@@ -446,7 +451,7 @@ func TestAccACMCertificate_wildcard(t *testing.T) {
 }
 
 func TestAccACMCertificate_wildcardAndRootSan(t *testing.T) {
-	resourceName := "aws_acm_certificate.cert"
+	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
 
@@ -488,7 +493,7 @@ func TestAccACMCertificate_wildcardAndRootSan(t *testing.T) {
 }
 
 func TestAccACMCertificate_disableCTLogging(t *testing.T) {
-	resourceName := "aws_acm_certificate.cert"
+	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -526,7 +531,7 @@ func TestAccACMCertificate_disableCTLogging(t *testing.T) {
 }
 
 func TestAccACMCertificate_tags(t *testing.T) {
-	resourceName := "aws_acm_certificate.cert"
+	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
@@ -693,7 +698,7 @@ func TestAccACMCertificate_PrivateKey_tags(t *testing.T) {
 
 func testAccAcmCertificateConfig(domainName, validationMethod string) string {
 	return fmt.Sprintf(`
-resource "aws_acm_certificate" "cert" {
+resource "aws_acm_certificate" "test" {
   domain_name       = "%s"
   validation_method = "%s"
 }
@@ -716,7 +721,7 @@ resource "aws_acmpca_certificate_authority" "test" {
   }
 }
 
-resource "aws_acm_certificate" "cert" {
+resource "aws_acm_certificate" "test" {
   domain_name               = %[2]q
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
 }
@@ -725,17 +730,17 @@ resource "aws_acm_certificate" "cert" {
 
 func testAccAcmCertificateConfig_subjectAlternativeNames(domainName, subjectAlternativeNames, validationMethod string) string {
 	return fmt.Sprintf(`
-resource "aws_acm_certificate" "cert" {
-  domain_name               = "%s"
-  subject_alternative_names = [%s]
-  validation_method         = "%s"
+resource "aws_acm_certificate" "test" {
+  domain_name               = %[1]q
+  subject_alternative_names = [%[2]s]
+  validation_method         = %[3]q
 }
 `, domainName, subjectAlternativeNames, validationMethod)
 }
 
 func testAccAcmCertificateConfig_oneTag(domainName, validationMethod, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
-resource "aws_acm_certificate" "cert" {
+resource "aws_acm_certificate" "test" {
   domain_name       = "%s"
   validation_method = "%s"
 
@@ -748,7 +753,7 @@ resource "aws_acm_certificate" "cert" {
 
 func testAccAcmCertificateConfig_twoTags(domainName, validationMethod, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
-resource "aws_acm_certificate" "cert" {
+resource "aws_acm_certificate" "test" {
   domain_name       = "%s"
   validation_method = "%s"
 
@@ -800,7 +805,7 @@ resource "aws_acm_certificate" "test" {
 
 func testAccAcmCertificateConfig_disableCTLogging(domainName, validationMethod string) string {
 	return fmt.Sprintf(`
-resource "aws_acm_certificate" "cert" {
+resource "aws_acm_certificate" "test" {
   domain_name       = "%s"
   validation_method = "%s"
   options {
