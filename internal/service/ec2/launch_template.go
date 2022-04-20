@@ -1129,24 +1129,6 @@ func expandLaunchTemplateCapacityReservationSpecificationRequest(tfMap map[strin
 	return apiObject
 }
 
-func expandCapacityReservationTarget(tfMap map[string]interface{}) *ec2.CapacityReservationTarget {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &ec2.CapacityReservationTarget{}
-
-	if v, ok := tfMap["capacity_reservation_id"].(string); ok && v != "" {
-		apiObject.CapacityReservationId = aws.String(v)
-	}
-
-	if v, ok := tfMap["capacity_reservation_resource_group_arn"].(string); ok && v != "" {
-		apiObject.CapacityReservationResourceGroupArn = aws.String(v)
-	}
-
-	return apiObject
-}
-
 func expandLaunchTemplateCpuOptionsRequest(tfMap map[string]interface{}) *ec2.LaunchTemplateCpuOptionsRequest {
 	if tfMap == nil {
 		return nil
@@ -1861,24 +1843,6 @@ func flattenLaunchTemplateCapacityReservationSpecificationResponse(apiObject *ec
 
 	if v := apiObject.CapacityReservationTarget; v != nil {
 		tfMap["capacity_reservation_target"] = []interface{}{flattenCapacityReservationTargetResponse(v)}
-	}
-
-	return tfMap
-}
-
-func flattenCapacityReservationTargetResponse(apiObject *ec2.CapacityReservationTargetResponse) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.CapacityReservationId; v != nil {
-		tfMap["capacity_reservation_id"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.CapacityReservationResourceGroupArn; v != nil {
-		tfMap["capacity_reservation_resource_group_arn"] = aws.StringValue(v)
 	}
 
 	return tfMap

@@ -476,6 +476,24 @@ func WaitInstanceStopped(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.
 	return nil, err
 }
 
+func WaitInstanceCapacityReservationSpecificationUpdated(conn *ec2.EC2, instanceID string, expectedValue *ec2.CapacityReservationSpecification) (*ec2.Instance, error) {
+	stateConf := &resource.StateChangeConf{
+		Target:     []string{strconv.FormatBool(true)},
+		Refresh:    StatusInstanceCapacityReservationSpecificationEquals(conn, instanceID, expectedValue),
+		Timeout:    PropagationTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Instance); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func WaitInstanceMetadataOptionsApplied(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.InstanceMetadataOptionsResponse, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{ec2.InstanceMetadataOptionsStatePending},

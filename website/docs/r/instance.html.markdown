@@ -171,6 +171,7 @@ Describes a target Capacity Reservation.
 This `capacity_reservation_target` block supports the following:
 
 * `capacity_reservation_id` - (Optional) The ID of the Capacity Reservation in which to run the instance.
+* `capacity_reservation_resource_group_arn` - (Optional) The ARN of the Capacity Reservation resource group in which to run the instance.
 
 ### Credit Specification
 
