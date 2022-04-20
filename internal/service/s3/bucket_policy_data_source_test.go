@@ -18,8 +18,9 @@ import (
 func TestAccDataSourceS3BucketPolicy_basic(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acctest.PreCheck(t) },
-		Providers: acctest.Providers,
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				// prepare resources which wil be fetched with data source
