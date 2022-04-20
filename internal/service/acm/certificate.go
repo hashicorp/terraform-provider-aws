@@ -601,3 +601,45 @@ func stripCR(b []byte) []byte {
 	}
 	return c[:i]
 }
+
+func findCertificate(conn *acm.ACM, input *acm.DescribeCertificateInput) (*acm.CertificateDetail, error) {
+	output, err := conn.DescribeCertificate(input)
+
+	if tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Certificate == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Certificate, nil
+}
+
+func FindCertificateByARN(conn *acm.ACM, arn string) (*acm.CertificateDetail, error) {
+	input := &acm.DescribeCertificateInput{
+		CertificateArn: aws.String(arn),
+	}
+
+	output, err := findCertificate(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := aws.StringValue(output.Status); status == acm.CertificateStatusValidationTimedOut {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}

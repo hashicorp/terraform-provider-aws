@@ -7,19 +7,20 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfacm "github.com/hashicorp/terraform-provider-aws/internal/service/acm"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccACMCertificate_emailValidation(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
+	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -30,6 +31,7 @@ func TestAccACMCertificate_emailValidation(t *testing.T) {
 			{
 				Config: testAccAcmCertificateConfig(domain, acm.ValidationMethodEmail),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAcmCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "0"),
@@ -52,6 +54,7 @@ func TestAccACMCertificate_dnsValidation(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
+	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -62,6 +65,7 @@ func TestAccACMCertificate_dnsValidation(t *testing.T) {
 			{
 				Config: testAccAcmCertificateConfig(domain, acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAcmCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
@@ -87,6 +91,7 @@ func TestAccACMCertificate_dnsValidation(t *testing.T) {
 func TestAccACMCertificate_root(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
+	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -97,6 +102,7 @@ func TestAccACMCertificate_root(t *testing.T) {
 			{
 				Config: testAccAcmCertificateConfig(rootDomain, acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAcmCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", rootDomain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
@@ -122,9 +128,9 @@ func TestAccACMCertificate_root(t *testing.T) {
 func TestAccACMCertificate_privateCert(t *testing.T) {
 	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
 	resourceName := "aws_acm_certificate.test"
-
 	commonName := acctest.RandomDomain()
 	certificateDomainName := commonName.RandomSubdomain().String()
+	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -135,6 +141,7 @@ func TestAccACMCertificate_privateCert(t *testing.T) {
 			{
 				Config: testAccAcmCertificateConfig_privateCert(commonName.String(), certificateDomainName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAcmCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", certificateDomainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "0"),
@@ -179,6 +186,7 @@ func TestAccACMCertificate_rootAndWildcardSan(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
+	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -189,6 +197,7 @@ func TestAccACMCertificate_rootAndWildcardSan(t *testing.T) {
 			{
 				Config: testAccAcmCertificateConfig_subjectAlternativeNames(rootDomain, strconv.Quote(wildcardDomain), acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAcmCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", rootDomain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "2"),
@@ -240,6 +249,7 @@ func TestAccACMCertificate_San_single(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	sanDomain := acctest.ACMCertificateRandomSubDomain(rootDomain)
+	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -250,6 +260,7 @@ func TestAccACMCertificate_San_single(t *testing.T) {
 			{
 				Config: testAccAcmCertificateConfig_subjectAlternativeNames(domain, strconv.Quote(sanDomain), acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAcmCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "2"),
@@ -284,6 +295,7 @@ func TestAccACMCertificate_San_multiple(t *testing.T) {
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	sanDomain1 := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	sanDomain2 := acctest.ACMCertificateRandomSubDomain(rootDomain)
+	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -294,6 +306,7 @@ func TestAccACMCertificate_San_multiple(t *testing.T) {
 			{
 				Config: testAccAcmCertificateConfig_subjectAlternativeNames(domain, fmt.Sprintf("%q, %q", sanDomain1, sanDomain2), acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAcmCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "3"),
@@ -332,6 +345,7 @@ func TestAccACMCertificate_San_trailingPeriod(t *testing.T) {
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	sanDomain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	resourceName := "aws_acm_certificate.test"
+	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -342,6 +356,7 @@ func TestAccACMCertificate_San_trailingPeriod(t *testing.T) {
 			{
 				Config: testAccAcmCertificateConfig_subjectAlternativeNames(domain, strconv.Quote(sanDomain), acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAcmCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile(`certificate/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "2"),
@@ -375,6 +390,7 @@ func TestAccACMCertificate_San_matches_domain(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	sanDomain := rootDomain
+	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -385,6 +401,7 @@ func TestAccACMCertificate_San_matches_domain(t *testing.T) {
 			{
 				Config: testAccAcmCertificateConfig_subjectAlternativeNames(domain, strconv.Quote(sanDomain), acm.ValidationMethodDns),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAcmCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile(`certificate/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "2"),
@@ -417,6 +434,7 @@ func TestAccACMCertificate_wildcard(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
+	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -427,6 +445,7 @@ func TestAccACMCertificate_wildcard(t *testing.T) {
 			{
 				Config: testAccAcmCertificateConfig(wildcardDomain, acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAcmCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", wildcardDomain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
@@ -454,6 +473,7 @@ func TestAccACMCertificate_wildcardAndRootSan(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
+	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -464,6 +484,7 @@ func TestAccACMCertificate_wildcardAndRootSan(t *testing.T) {
 			{
 				Config: testAccAcmCertificateConfig_subjectAlternativeNames(wildcardDomain, strconv.Quote(rootDomain), acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAcmCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", wildcardDomain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "2"),
@@ -495,6 +516,7 @@ func TestAccACMCertificate_wildcardAndRootSan(t *testing.T) {
 func TestAccACMCertificate_disableCTLogging(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
+	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -505,6 +527,7 @@ func TestAccACMCertificate_disableCTLogging(t *testing.T) {
 			{
 				Config: testAccAcmCertificateConfig_disableCTLogging(rootDomain, acm.ValidationMethodDns),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAcmCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", rootDomain),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
@@ -533,18 +556,16 @@ func TestAccACMCertificate_disableCTLogging(t *testing.T) {
 //lintignore:AT002
 func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
-
 	commonName := "example.com"
 	caKey := acctest.TLSRSAPrivateKeyPEM(2048)
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(caKey)
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(caKey, caCertificate, key, commonName)
-
 	newCaKey := acctest.TLSRSAPrivateKeyPEM(2048)
 	newCaCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(newCaKey)
 	newCertificate := acctest.TLSRSAX509LocallySignedCertificatePEM(newCaKey, newCaCertificate, key, commonName)
-
 	withoutChainDomain := acctest.RandomDomainName()
+	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -555,6 +576,7 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 			{
 				Config: testAccAcmCertificateConfigPrivateKey(certificate, key, caCertificate),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAcmCertificateExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", commonName),
 				),
@@ -589,6 +611,7 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 //lintignore:AT002
 func TestAccACMCertificate_Imported_ipAddress(t *testing.T) { // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7103
 	resourceName := "aws_acm_certificate.test"
+	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -599,6 +622,7 @@ func TestAccACMCertificate_Imported_ipAddress(t *testing.T) { // Reference: http
 			{
 				Config: testAccAcmCertificateConfigPrivateKeyWithoutChain("1.2.3.4"),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAcmCertificateExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "0"),
@@ -622,6 +646,7 @@ func TestAccACMCertificate_PrivateKey_tags(t *testing.T) {
 	certificate1 := acctest.TLSRSAX509SelfSignedCertificatePEM(key1, "1.2.3.4")
 	key2 := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate2 := acctest.TLSRSAX509SelfSignedCertificatePEM(key2, "5.6.7.8")
+	var v acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -632,6 +657,7 @@ func TestAccACMCertificate_PrivateKey_tags(t *testing.T) {
 			{
 				Config: testAccAcmCertificateConfigTags1(certificate1, key1, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAcmCertificateExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -668,6 +694,31 @@ func TestAccACMCertificate_PrivateKey_tags(t *testing.T) {
 	})
 }
 
+func testAccCheckAcmCertificateExists(n string, v *acm.CertificateDetail) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ACM Certificate ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
+
+		output, err := tfacm.FindCertificateByARN(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
 func testAccCheckAcmCertificateDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
 
@@ -675,18 +726,18 @@ func testAccCheckAcmCertificateDestroy(s *terraform.State) error {
 		if rs.Type != "aws_acm_certificate" {
 			continue
 		}
-		_, err := conn.DescribeCertificate(&acm.DescribeCertificateInput{
-			CertificateArn: aws.String(rs.Primary.ID),
-		})
 
-		if err == nil {
-			return fmt.Errorf("Certificate still exists.")
+		_, err := tfacm.FindCertificateByARN(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		// Verify the error is what we want
-		if !tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceNotFoundException) {
+		if err != nil {
 			return err
 		}
+
+		return fmt.Errorf("ACM Certificate %s still exists", rs.Primary.ID)
 	}
 
 	return nil
