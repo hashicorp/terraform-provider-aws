@@ -22,13 +22,6 @@ func DataSourceInstance() *schema.Resource {
 		Read: dataSourceInstanceRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter":        DataSourceFiltersSchema(),
-			"tags":          tftags.TagsSchemaComputed(),
-			"instance_tags": tftags.TagsSchemaComputed(),
-			"instance_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"ami": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -37,153 +30,29 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"instance_state": {
-				Type:     schema.TypeString,
+			"associate_public_ip_address": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"availability_zone": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"placement_group": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"placement_partition_number": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"tenancy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"host_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"key_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"get_password_data": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"password_data": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"public_dns": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"public_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_dns": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"private_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"secondary_private_ips": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"ipv6_addresses": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"iam_instance_profile": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"subnet_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"outpost_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"network_interface_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"associate_public_ip_address": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"ebs_optimized": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"source_dest_check": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"monitoring": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"get_user_data": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"user_data": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"user_data_base64": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"security_groups": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"vpc_security_group_ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"ephemeral_block_device": {
+			"credit_specification": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						"cpu_credits": {
 							Type:     schema.TypeString,
-							Required: true,
-						},
-
-						"virtual_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"no_device": {
-							Type:     schema.TypeBool,
-							Optional: true,
+							Computed: true,
 						},
 					},
 				},
+			},
+			"disable_api_termination": {
+				Type:     schema.TypeBool,
+				Computed: true,
 			},
 			"ebs_block_device": {
 				Type:     schema.TypeSet,
@@ -194,50 +63,40 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-
 						"device_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"encrypted": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-
 						"iops": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"kms_key_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"snapshot_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"tags": tftags.TagsSchemaComputed(),
-
 						"throughput": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
+						"volume_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"volume_size": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"volume_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"volume_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -252,97 +111,7 @@ func DataSourceInstance() *schema.Resource {
 					return create.StringHashcode(buf.String())
 				},
 			},
-			"root_block_device": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-
-						"device_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"encrypted": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-
-						"iops": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-
-						"kms_key_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"tags": tftags.TagsSchemaComputed(),
-
-						"throughput": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-
-						"volume_size": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-
-						"volume_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"volume_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"credit_specification": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cpu_credits": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"metadata_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"http_endpoint": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"http_tokens": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"http_put_response_hop_limit": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"instance_metadata_tags": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"disable_api_termination": {
+			"ebs_optimized": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -356,6 +125,216 @@ func DataSourceInstance() *schema.Resource {
 							Computed: true,
 						},
 					},
+				},
+			},
+			"ephemeral_block_device": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"device_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"no_device": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"virtual_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"filter": DataSourceFiltersSchema(),
+			"get_password_data": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"get_user_data": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"host_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"iam_instance_profile": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"instance_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"instance_tags": tftags.TagsSchemaComputed(),
+			"instance_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"instance_state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ipv6_addresses": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"key_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"metadata_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"http_endpoint": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"http_put_response_hop_limit": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"http_tokens": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"instance_metadata_tags": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"monitoring": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"network_interface_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"outpost_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"password_data": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"placement_group": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"placement_partition_number": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"private_dns": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"private_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"public_dns": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"public_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"root_block_device": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"delete_on_termination": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"device_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"encrypted": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"iops": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"tags": tftags.TagsSchemaComputed(),
+						"throughput": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"volume_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"volume_size": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"volume_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"secondary_private_ips": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"security_groups": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"source_dest_check": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"subnet_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags": tftags.TagsSchemaComputed(),
+			"tenancy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"user_data": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"user_data_base64": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"vpc_security_group_ids": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 		},
