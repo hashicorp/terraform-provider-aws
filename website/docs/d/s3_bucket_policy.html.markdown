@@ -8,19 +8,19 @@ description: |-
 
 # Data Source: aws_s3_bucket_policy
 
-The bucket-policy data source returns IAM policy of an S3 bucket.
+The bucket policy data source returns IAM policy of an S3 bucket.
 
 ## Example Usage
 
 The following example retrieves IAM policy of a specified S3 bucket.
 
 ```terraform
-data "aws_s3_bucket_policy" "policy" {
+data "aws_s3_bucket_policy" "example" {
   bucket = "example-bucket-name"
 }
 
 output "foo" {
-  value = data.aws_s3_bucket_policy.policy
+  value = data.aws_s3_bucket_policy.example.policy
 }
 ```
 
