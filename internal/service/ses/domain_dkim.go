@@ -14,6 +14,7 @@ func ResourceDomainDKIM() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceDomainDKIMCreate,
 		Read:   resourceDomainDKIMRead,
+		Update: resourceDomainDKIMUpdate,
 		Delete: resourceDomainDKIMDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -32,11 +33,11 @@ func ResourceDomainDKIM() *schema.Resource {
 			},
 			"selector": {
 				Type:     schema.TypeString,
-				Optional: true,
+				ForceNew: true,
 			},
 			"private_key": {
 				Type:     schema.TypeString,
-				Optional: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -102,6 +103,10 @@ func resourceDomainDKIMRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("dkim_tokens", aws.StringValueSlice(res.DkimAttributes.Tokens))
+	return nil
+}
+
+func resourceDomainDKIMUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
