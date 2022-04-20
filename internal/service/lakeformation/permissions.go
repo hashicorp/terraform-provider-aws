@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
@@ -41,6 +42,8 @@ func ResourcePermissions() *schema.Resource {
 					"catalog_resource",
 					"data_location",
 					"database",
+					"lf_tag",
+					"lf_tag_policy",
 					"table",
 					"table_with_columns",
 				},
@@ -55,6 +58,8 @@ func ResourcePermissions() *schema.Resource {
 					"catalog_resource",
 					"data_location",
 					"database",
+					"lf_tag",
+					"lf_tag_policy",
 					"table",
 					"table_with_columns",
 				},
@@ -86,6 +91,8 @@ func ResourcePermissions() *schema.Resource {
 					"catalog_resource",
 					"data_location",
 					"database",
+					"lf_tag",
+					"lf_tag_policy",
 					"table",
 					"table_with_columns",
 				},
@@ -102,6 +109,104 @@ func ResourcePermissions() *schema.Resource {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
+						},
+					},
+				},
+			},
+			"lf_tag": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				ExactlyOneOf: []string{
+					"catalog_resource",
+					"data_location",
+					"database",
+					"lf_tag",
+					"lf_tag_policy",
+					"table",
+					"table_with_columns",
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringLenBetween(1, 128),
+						},
+						"values": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MinItems: 1,
+							MaxItems: 15,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validateLFTagValues(),
+							},
+							Set: schema.HashString,
+						},
+						"catalog_id": {
+							Type:     schema.TypeString,
+							ForceNew: true,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"lf_tag_policy": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				ExactlyOneOf: []string{
+					"catalog_resource",
+					"data_location",
+					"database",
+					"lf_tag",
+					"lf_tag_policy",
+					"table",
+					"table_with_columns",
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"catalog_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: verify.ValidAccountID,
+						},
+						"expression": {
+							Type:     schema.TypeList,
+							Required: true,
+							MinItems: 1,
+							MaxItems: 5,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"key": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 128),
+									},
+									"values": {
+										Type:     schema.TypeSet,
+										Required: true,
+										MinItems: 1,
+										MaxItems: 15,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validateLFTagValues(),
+										},
+										Set: schema.HashString,
+									},
+								},
+							},
+						},
+						"resource_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(lakeformation.ResourceType_Values(), false),
 						},
 					},
 				},
@@ -142,6 +247,8 @@ func ResourcePermissions() *schema.Resource {
 					"catalog_resource",
 					"data_location",
 					"database",
+					"lf_tag",
+					"lf_tag_policy",
 					"table",
 					"table_with_columns",
 				},
@@ -192,6 +299,8 @@ func ResourcePermissions() *schema.Resource {
 					"catalog_resource",
 					"data_location",
 					"database",
+					"lf_tag",
+					"lf_tag_policy",
 					"table",
 					"table_with_columns",
 				},
@@ -297,6 +406,14 @@ func resourcePermissionsCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("lf_tag"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Resource.LFTag = ExpandLFTagKeyResource(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("lf_tag_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Resource.LFTagPolicy = ExpandLFTagPolicyResource(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Resource.Table = ExpandTableResource(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -374,6 +491,14 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("lf_tag"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Resource.LFTag = ExpandLFTagKeyResource(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("lf_tag_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Resource.LFTagPolicy = ExpandLFTagPolicyResource(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	tableType := ""
 
 	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -445,6 +570,8 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("catalog_resource", false)
 		d.Set("data_location", nil)
 		d.Set("database", nil)
+		d.Set("lf_tag", nil)
+		d.Set("lf_tag_policy", nil)
 		d.Set("table_with_columns", nil)
 		d.Set("table", nil)
 		return nil
@@ -478,6 +605,22 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	} else {
 		d.Set("database", nil)
+	}
+
+	if cleanPermissions[0].Resource.LFTag != nil {
+		if err := d.Set("lf_tag", []interface{}{flattenLakeFormationLFTagKeyResource(cleanPermissions[0].Resource.LFTag)}); err != nil {
+			return fmt.Errorf("error setting database: %w", err)
+		}
+	} else {
+		d.Set("lf_tag", nil)
+	}
+
+	if cleanPermissions[0].Resource.LFTagPolicy != nil {
+		if err := d.Set("lf_tag_policy", []interface{}{flattenLakeFormationLFTagPolicyResource(cleanPermissions[0].Resource.LFTagPolicy)}); err != nil {
+			return fmt.Errorf("error setting database: %w", err)
+		}
+	} else {
+		d.Set("lf_tag_policy", nil)
 	}
 
 	tableSet := false
@@ -559,6 +702,14 @@ func resourcePermissionsDelete(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("lf_tag"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Resource.LFTag = ExpandLFTagKeyResource(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("lf_tag_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Resource.LFTagPolicy = ExpandLFTagPolicyResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -715,6 +866,131 @@ func flattenLakeFormationDatabaseResource(apiObject *lakeformation.DatabaseResou
 
 	if v := apiObject.Name; v != nil {
 		tfMap["name"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func ExpandLFTagPolicyResource(tfMap map[string]interface{}) *lakeformation.LFTagPolicyResource {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &lakeformation.LFTagPolicyResource{}
+
+	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+		apiObject.CatalogId = aws.String(v)
+	}
+
+	if v, ok := tfMap["expression"]; ok && v != nil {
+		apiObject.Expression = ExpandLFTagExpression(v.([]interface{}))
+	}
+
+	if v, ok := tfMap["resource_type"].(string); ok && v != "" {
+		apiObject.ResourceType = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func ExpandLFTagExpression(expression []interface{}) []*lakeformation.LFTag {
+	tagSlice := []*lakeformation.LFTag{}
+	for _, element := range expression {
+		elementMap := element.(map[string]interface{})
+
+		tag := &lakeformation.LFTag{
+			TagKey:    aws.String(elementMap["key"].(string)),
+			TagValues: flex.ExpandStringSet(elementMap["values"].(*schema.Set)),
+		}
+
+		tagSlice = append(tagSlice, tag)
+	}
+
+	return tagSlice
+}
+
+func flattenLakeFormationLFTagPolicyResource(apiObject *lakeformation.LFTagPolicyResource) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CatalogId; v != nil {
+		tfMap["catalog_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Expression; v != nil {
+		tfMap["expression"] = flattenLakeFormationLFTagExpression(v)
+	}
+
+	if v := apiObject.ResourceType; v != nil {
+		tfMap["resource_type"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenLakeFormationLFTagExpression(ts []*lakeformation.LFTag) []map[string]interface{} {
+	tagSlice := make([]map[string]interface{}, len(ts))
+	if len(ts) > 0 {
+		for i, t := range ts {
+			tag := make(map[string]interface{})
+
+			if v := aws.StringValue(t.TagKey); v != "" {
+				tag["key"] = v
+			}
+
+			if v := flex.FlattenStringList(t.TagValues); v != nil {
+				tag["values"] = v
+			}
+
+			tagSlice[i] = tag
+		}
+	}
+
+	return tagSlice
+}
+
+func ExpandLFTagKeyResource(tfMap map[string]interface{}) *lakeformation.LFTagKeyResource {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &lakeformation.LFTagKeyResource{}
+
+	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+		apiObject.CatalogId = aws.String(v)
+	}
+
+	if v, ok := tfMap["key"].(string); ok && v != "" {
+		apiObject.TagKey = aws.String(v)
+	}
+
+	if v, ok := tfMap["values"].(*schema.Set); ok && v != nil {
+		apiObject.TagValues = flex.ExpandStringSet(v)
+	}
+
+	return apiObject
+}
+
+func flattenLakeFormationLFTagKeyResource(apiObject *lakeformation.LFTagKeyResource) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CatalogId; v != nil {
+		tfMap["catalog_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.TagKey; v != nil {
+		tfMap["key"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.TagValues; v != nil {
+		tfMap["values"] = flex.FlattenStringSet(v)
 	}
 
 	return tfMap
@@ -905,6 +1181,8 @@ func flattenLakeFormationPermissions(apiObjects []*lakeformation.PrincipalResour
 		}
 	}
 
+	sort.Strings(tfList)
+
 	return tfList
 }
 
@@ -920,6 +1198,8 @@ func flattenLakeFormationGrantPermissions(apiObjects []*lakeformation.PrincipalR
 			tfList = append(tfList, aws.StringValue(grantPermission))
 		}
 	}
+
+	sort.Strings(tfList)
 
 	return tfList
 }
