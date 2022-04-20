@@ -90,7 +90,7 @@ func dataSourceOrganizationalUnitChildAccountsRead(d *schema.ResourceData, meta 
 }
 
 func flattenAccounts(accounts []*organizations.Account) []map[string]interface{} {
-	if len(ous) == 0 {
+	if len(accounts) == 0 {
 		return nil
 	}
 	var result []map[string]interface{}
