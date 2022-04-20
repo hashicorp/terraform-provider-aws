@@ -1,5 +1,5 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_policy"
 description: |-
@@ -28,10 +28,10 @@ output "foo" {
 
 The following arguments are supported:
 
-* `bucket` - (Required) The name of the bucket to read the policy from.
+* `bucket` - (Required) The bucket name.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `policy` - IAM policy attached to the S3 bucket
+* `policy` - IAM bucket policy.
