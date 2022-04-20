@@ -41,7 +41,7 @@ resource "aws_organizations_organization" "test" {}
 
 resource "aws_organizations_account" "test0" {
   name  = "test0"
-  email = "john@doe.org"
+  email = "john+test0@doe.org"
   parent_id = aws_organizations_organization.test.roots[0].id
 }
 
@@ -52,7 +52,7 @@ resource "aws_organizations_organizational_unit" "test0" {
 
 resource "aws_organizations_account" "test1" {
   name  = "test1"
-  email = "john@doe.org"
+  email = "john+test1@doe.org"
   parent_id = aws_organizations_organizational_unit.test0.id
 }
 
@@ -63,7 +63,7 @@ resource "aws_organizations_organizational_unit" "test1" {
 
 resource "aws_organizations_account" "test2" {
   name  = "test2"
-  email = "john@doe.org"
+  email = "john+test2@doe.org"
   parent_id = aws_organizations_organizational_unit.test1.id
 }
 
