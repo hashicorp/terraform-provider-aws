@@ -44,15 +44,12 @@ data "aws_lakeformation_permissions" "test" {
 ```terraform
 data "aws_lakeformation_permissions" "test" {
   principal = aws_iam_role.workflow_role.arn
-
   lf_tag_policy {
     resource_type = "DATABASE"
-
     expression {
       key    = "Team"
       values = ["Sales"]
     }
-
     expression {
       key    = "Environment"
       values = ["Dev", "Production"]
