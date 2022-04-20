@@ -30,14 +30,17 @@ func ResourceDomainDKIM() *schema.Resource {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
 			},
 			"selector": {
 				Type:     schema.TypeString,
 				ForceNew: true,
+				Optional: true,
 			},
 			"private_key": {
 				Type:     schema.TypeString,
 				ForceNew: true,
+				Optional: true,
 			},
 		},
 	}
