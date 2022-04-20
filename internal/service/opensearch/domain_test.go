@@ -1111,7 +1111,7 @@ func TestAccOpenSearchDomain_Encryption_atRestDefaultKey(t *testing.T) {
 		CheckDestroy: testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName),
+				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "Elasticsearch_6.0", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					testAccCheckDomainEncrypted(true, &domain),
@@ -1175,7 +1175,7 @@ func TestAccOpenSearchDomain_Encryption_nodeToNode(t *testing.T) {
 		CheckDestroy: testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_nodeToNodeEncryption(rName),
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "Elasticsearch_6.0", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					testAccCheckNodeToNodeEncrypted(true, &domain),
@@ -1186,6 +1186,166 @@ func TestAccOpenSearchDomain_Encryption_nodeToNode(t *testing.T) {
 				ImportState:       true,
 				ImportStateId:     rName[:28],
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchDomain_Encryption_atRestEnable(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain1, domain2 opensearchservice.DomainStatus
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "OpenSearch_1.1", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckDomainEncrypted(false, &domain1),
+				),
+			},
+			{
+				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "OpenSearch_1.1", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain2),
+					testAccCheckDomainEncrypted(true, &domain2),
+					testAccCheckDomainNotRecreated(&domain1, &domain2),
+				),
+			},
+			{
+				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "OpenSearch_1.1", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckDomainEncrypted(false, &domain1),
+					testAccCheckDomainRecreated(&domain1, &domain2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchDomain_Encryption_atRestEnableLegacy(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain1, domain2 opensearchservice.DomainStatus
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "Elasticsearch_5.6", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckDomainEncrypted(false, &domain1),
+				),
+			},
+			{
+				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "Elasticsearch_5.6", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain2),
+					testAccCheckDomainEncrypted(true, &domain2),
+					testAccCheckDomainRecreated(&domain1, &domain2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchDomain_Encryption_nodeToNodeEnable(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain1, domain2 opensearchservice.DomainStatus
+	resourceName := "aws_opensearch_domain.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "OpenSearch_1.1", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckNodeToNodeEncrypted(false, &domain1),
+				),
+			},
+			{
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "OpenSearch_1.1", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain2),
+					testAccCheckNodeToNodeEncrypted(true, &domain2),
+					testAccCheckDomainNotRecreated(&domain1, &domain2),
+				),
+			},
+			{
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "OpenSearch_1.1", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckNodeToNodeEncrypted(false, &domain1),
+					testAccCheckDomainRecreated(&domain1, &domain2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchDomain_Encryption_nodeToNodeEnableLegacy(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain1, domain2 opensearchservice.DomainStatus
+	resourceName := "aws_opensearch_domain.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleOpenSearch(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "Elasticsearch_5.6", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckNodeToNodeEncrypted(false, &domain1),
+				),
+			},
+			{
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "Elasticsearch_5.6", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain2),
+					testAccCheckNodeToNodeEncrypted(true, &domain2),
+					testAccCheckDomainRecreated(&domain1, &domain2),
+				),
+			},
+			{
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "Elasticsearch_5.6", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckNodeToNodeEncrypted(false, &domain1),
+					testAccCheckDomainRecreated(&domain1, &domain2),
+				),
 			},
 		},
 	})
@@ -1484,7 +1644,7 @@ func testAccCheckNumberOfInstances(numberOfInstances int, status *opensearchserv
 func testAccCheckDomainEncrypted(encrypted bool, status *opensearchservice.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.EncryptionAtRestOptions
-		if *conf.Enabled != encrypted {
+		if aws.BoolValue(conf.Enabled) != encrypted {
 			return fmt.Errorf("Encrypt at rest not set properly. Given: %t, Expected: %t", *conf.Enabled, encrypted)
 		}
 		return nil
@@ -1560,25 +1720,20 @@ func testAccCheckDomainExists(n string, domain *opensearchservice.DomainStatus) 
 	}
 }
 
+func testAccCheckDomainRecreated(i, j *opensearchservice.DomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(i.DomainId) == aws.StringValue(j.DomainId) {
+			return fmt.Errorf("domain (%s) was not recreated, before ID (%s), after ID (%s)", aws.StringValue(i.DomainName), aws.StringValue(i.DomainId), aws.StringValue(j.DomainId))
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckDomainNotRecreated(i, j *opensearchservice.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn
-
-		iConfig, err := conn.DescribeDomainConfig(&opensearchservice.DescribeDomainConfigInput{
-			DomainName: i.DomainName,
-		})
-		if err != nil {
-			return err
-		}
-		jConfig, err := conn.DescribeDomainConfig(&opensearchservice.DescribeDomainConfigInput{
-			DomainName: j.DomainName,
-		})
-		if err != nil {
-			return err
-		}
-
-		if !aws.TimeValue(iConfig.DomainConfig.ClusterConfig.Status.CreationDate).Equal(aws.TimeValue(jConfig.DomainConfig.ClusterConfig.Status.CreationDate)) {
-			return fmt.Errorf("OpenSearch Domain was recreated")
+		if aws.StringValue(i.DomainId) != aws.StringValue(j.DomainId) {
+			return fmt.Errorf("domain (%s) was recreated, before ID (%s), after ID (%s)", aws.StringValue(i.DomainName), aws.StringValue(i.DomainId), aws.StringValue(j.DomainId))
 		}
 
 		return nil
@@ -2237,14 +2392,13 @@ data "aws_iam_policy_document" "test" {
 `, rName)
 }
 
-func testAccDomainConfig_encryptAtRestDefaultKey(rName string) string {
+func testAccDomainConfig_encryptAtRestDefaultKey(rName, version string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
 
-  engine_version = "Elasticsearch_6.0"
+  engine_version = %[2]q
 
-  # Encrypt at rest requires m4/c4/r4/i2 instances. See http://docs.aws.amazon.com/opensearch-service/latest/developerguide/aes-supported-instance-types.html
   cluster_config {
     instance_type = "m4.large.search"
   }
@@ -2255,10 +2409,10 @@ resource "aws_opensearch_domain" "test" {
   }
 
   encrypt_at_rest {
-    enabled = true
+    enabled = %[3]t
   }
 }
-`, rName)
+`, rName, version, enabled)
 }
 
 func testAccDomainConfig_encryptAtRestWithKey(rName string) string {
@@ -2291,12 +2445,12 @@ resource "aws_opensearch_domain" "test" {
 `, rName)
 }
 
-func testAccDomainConfig_nodeToNodeEncryption(rName string) string {
+func testAccDomainConfig_nodeToNodeEncryption(rName, version string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
 
-  engine_version = "Elasticsearch_6.0"
+  engine_version = %[2]q
 
   cluster_config {
     instance_type = "m4.large.search"
@@ -2308,10 +2462,10 @@ resource "aws_opensearch_domain" "test" {
   }
 
   node_to_node_encryption {
-    enabled = true
+    enabled = %[3]t
   }
 }
-`, rName)
+`, rName, version, enabled)
 }
 
 func testAccDomainConfig_complex(rName string) string {
