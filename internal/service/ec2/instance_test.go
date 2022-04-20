@@ -1304,7 +1304,7 @@ func TestAccEC2Instance_BlockDeviceTags_volumeTags(t *testing.T) {
 				Config: testAccInstanceConfigBlockDeviceTagsNoVolumeTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					resource.TestCheckNoResourceAttr(resourceName, "volume_tags"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "0"),
 				),
 			},
 		},
