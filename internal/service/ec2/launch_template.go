@@ -1147,20 +1147,6 @@ func expandLaunchTemplateCpuOptionsRequest(tfMap map[string]interface{}) *ec2.La
 	return apiObject
 }
 
-func expandCreditSpecificationRequest(tfMap map[string]interface{}) *ec2.CreditSpecificationRequest {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &ec2.CreditSpecificationRequest{}
-
-	if v, ok := tfMap["cpu_credits"].(string); ok && v != "" {
-		apiObject.CpuCredits = aws.String(v)
-	}
-
-	return apiObject
-}
-
 func expandElasticGpuSpecification(tfMap map[string]interface{}) *ec2.ElasticGpuSpecification {
 	if tfMap == nil {
 		return nil

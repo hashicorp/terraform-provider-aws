@@ -576,23 +576,30 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 		}
 	}
 
-	var creditSpecifications []map[string]interface{}
-
 	// AWS Standard will return InstanceCreditSpecification.NotSupported errors for EC2 Instance IDs outside T2 and T3 instance types
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8055
 	if strings.HasPrefix(aws.StringValue(instance.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(instance.InstanceType), "t3") {
-		var err error
-		creditSpecifications, err = getCreditSpecifications(conn, d.Id())
+		instanceCreditSpecification, err := FindInstanceCreditSpecificationByID(conn, d.Id())
 
-		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US)
-		// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362
-		if err != nil && !tfawserr.ErrCodeEquals(err, "UnsupportedOperation") {
-			return fmt.Errorf("error getting EC2 Instance (%s) Credit Specifications: %w", d.Id(), err)
+		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US).
+		// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362.
+		if tfawserr.ErrCodeEquals(err, ErrCodeUnsupportedOperation) {
+			err = nil
 		}
-	}
 
-	if err := d.Set("credit_specification", creditSpecifications); err != nil {
-		return fmt.Errorf("error setting credit_specification: %w", err)
+		if err != nil {
+			return fmt.Errorf("reading EC2 Instance (%s) credit specification: %w", d.Id(), err)
+		}
+
+		if instanceCreditSpecification != nil {
+			if err := d.Set("credit_specification", []interface{}{flattenInstanceCreditSpecification(instanceCreditSpecification)}); err != nil {
+				return fmt.Errorf("error setting credit_specification: %w", err)
+			}
+		} else {
+			d.Set("credit_specification", nil)
+		}
+	} else {
+		d.Set("credit_specification", nil)
 	}
 
 	if err := d.Set("metadata_options", flattenEc2InstanceMetadataOptions(instance.MetadataOptions)); err != nil {

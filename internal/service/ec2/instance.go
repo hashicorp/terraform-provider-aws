@@ -1143,16 +1143,24 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	// AWS Standard will return InstanceCreditSpecification.NotSupported errors for EC2 Instance IDs outside T2 and T3 instance types
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8055
 	if strings.HasPrefix(aws.StringValue(instance.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(instance.InstanceType), "t3") {
-		creditSpecifications, err := getCreditSpecifications(conn, d.Id())
+		instanceCreditSpecification, err := FindInstanceCreditSpecificationByID(conn, d.Id())
 
-		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US)
-		// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362
-		if err != nil && !tfawserr.ErrCodeEquals(err, "UnsupportedOperation") {
-			return fmt.Errorf("error getting EC2 Instance (%s) Credit Specifications: %s", d.Id(), err)
+		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US).
+		// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362.
+		if tfawserr.ErrCodeEquals(err, ErrCodeUnsupportedOperation) {
+			err = nil
 		}
 
-		if err := d.Set("credit_specification", creditSpecifications); err != nil {
-			return fmt.Errorf("error setting credit_specification: %s", err)
+		if err != nil {
+			return fmt.Errorf("reading EC2 Instance (%s) credit specification: %w", d.Id(), err)
+		}
+
+		if instanceCreditSpecification != nil {
+			if err := d.Set("credit_specification", []interface{}{flattenInstanceCreditSpecification(instanceCreditSpecification)}); err != nil {
+				return fmt.Errorf("error setting credit_specification: %w", err)
+			}
+		} else {
+			d.Set("credit_specification", nil)
 		}
 	}
 
@@ -1518,18 +1526,17 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("credit_specification") && !d.IsNewResource() {
 		if v, ok := d.GetOk("credit_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			creditSpecification := v.([]interface{})[0].(map[string]interface{})
-			log.Printf("[DEBUG] Modifying credit specification for Instance (%s)", d.Id())
-			_, err := conn.ModifyInstanceCreditSpecification(&ec2.ModifyInstanceCreditSpecificationInput{
-				InstanceCreditSpecifications: []*ec2.InstanceCreditSpecificationRequest{
-					{
-						InstanceId: aws.String(d.Id()),
-						CpuCredits: aws.String(creditSpecification["cpu_credits"].(string)),
-					},
-				},
-			})
+			instanceCreditSpecification := expandInstanceCreditSpecificationRequest(v.([]interface{})[0].(map[string]interface{}))
+			instanceCreditSpecification.InstanceId = aws.String(d.Id())
+			input := &ec2.ModifyInstanceCreditSpecificationInput{
+				InstanceCreditSpecifications: []*ec2.InstanceCreditSpecificationRequest{instanceCreditSpecification},
+			}
+
+			log.Printf("[DEBUG] Modifying EC2 Instance credit specification: %s", input)
+			_, err := conn.ModifyInstanceCreditSpecification(input)
+
 			if err != nil {
-				return fmt.Errorf("Error updating Instance credit specification: %s", err)
+				return fmt.Errorf("updating EC2 Instance (%s) credit specification: %w", d.Id(), err)
 			}
 		}
 	}
@@ -2477,13 +2484,11 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 		}
 	}
 
-	if v, ok := d.GetOk("credit_specification"); ok {
-		// Only T2 and T3 are burstable performance instance types and supports Unlimited
+	if v, ok := d.GetOk("credit_specification"); ok && len(v.([]interface{})) > 0 {
+		// Only T2 and T3 are burstable performance instance types and supports Unlimited.
 		if strings.HasPrefix(instanceType, "t2") || strings.HasPrefix(instanceType, "t3") {
-			if cs, ok := v.([]interface{})[0].(map[string]interface{}); ok {
-				opts.CreditSpecification = &ec2.CreditSpecificationRequest{
-					CpuCredits: aws.String(cs["cpu_credits"].(string)),
-				}
+			if v, ok := v.([]interface{})[0].(map[string]interface{}); ok {
+				opts.CreditSpecification = expandCreditSpecificationRequest(v)
 			} else {
 				log.Print("[WARN] credit_specification is defined but the value of cpu_credits is missing, default value will be used.")
 			}
@@ -2759,24 +2764,6 @@ func blockDeviceTagsDefined(d *schema.ResourceData) bool {
 	return false
 }
 
-func getCreditSpecifications(conn *ec2.EC2, instanceId string) ([]map[string]interface{}, error) {
-	var creditSpecifications []map[string]interface{}
-	creditSpecification := make(map[string]interface{})
-
-	attr, err := conn.DescribeInstanceCreditSpecifications(&ec2.DescribeInstanceCreditSpecificationsInput{
-		InstanceIds: []*string{aws.String(instanceId)},
-	})
-	if err != nil {
-		return creditSpecifications, err
-	}
-	if len(attr.InstanceCreditSpecifications) > 0 {
-		creditSpecification["cpu_credits"] = aws.StringValue(attr.InstanceCreditSpecifications[0].CpuCredits)
-		creditSpecifications = append(creditSpecifications, creditSpecification)
-	}
-
-	return creditSpecifications, nil
-}
-
 func expandEc2InstanceMetadataOptions(l []interface{}) *ec2.InstanceMetadataOptionsRequest {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -2935,11 +2922,7 @@ func flattenCapacityReservationTargetResponse(apiObject *ec2.CapacityReservation
 
 func capacityReservationSpecificationResponsesEqual(v1 *ec2.CapacityReservationSpecificationResponse, v2 *ec2.CapacityReservationSpecification) bool {
 	if v1 == nil {
-		if v2 == nil {
-			return true
-		}
-
-		return false
+		return v2 == nil
 	}
 
 	if v2 == nil {
@@ -2979,6 +2962,48 @@ func capacityReservationTargetResponsesEqual(v1 *ec2.CapacityReservationTargetRe
 	}
 
 	return true
+}
+
+func expandCreditSpecificationRequest(tfMap map[string]interface{}) *ec2.CreditSpecificationRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.CreditSpecificationRequest{}
+
+	if v, ok := tfMap["cpu_credits"].(string); ok && v != "" {
+		apiObject.CpuCredits = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandInstanceCreditSpecificationRequest(tfMap map[string]interface{}) *ec2.InstanceCreditSpecificationRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.InstanceCreditSpecificationRequest{}
+
+	if v, ok := tfMap["cpu_credits"].(string); ok && v != "" {
+		apiObject.CpuCredits = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenInstanceCreditSpecification(apiObject *ec2.InstanceCreditSpecification) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CpuCredits; v != nil {
+		tfMap["cpu_credits"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 func expandEc2LaunchTemplateSpecification(specs []interface{}) *ec2.LaunchTemplateSpecification {
