@@ -39,6 +39,25 @@ data "aws_lakeformation_permissions" "test" {
 }
 ```
 
+### Permissions For Tag-Based Access Control
+
+```terraform
+data "aws_lakeformation_permissions" "test" {
+  principal = aws_iam_role.workflow_role.arn
+  lf_tag_policy {
+    resource_type = "DATABASE"
+    expression {
+      key    = "Team"
+      values = ["Sales"]
+    }
+    expression {
+      key    = "Environment"
+      values = ["Dev", "Production"]
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -50,6 +69,8 @@ One of the following is required:
 * `catalog_resource` - Whether the permissions are to be granted for the Data Catalog. Defaults to `false`.
 * `data_location` - Configuration block for a data location resource. Detailed below.
 * `database` - Configuration block for a database resource. Detailed below.
+* `lf_tag` - (Optional) Configuration block for an LF-tag resource. Detailed below.
+* `lf_tag_policy` - (Optional) Configuration block for an LF-tag policy resource. Detailed below.
 * `table` - Configuration block for a table resource. Detailed below.
 * `table_with_columns` - Configuration block for a table with columns resource. Detailed below.
 
@@ -76,6 +97,33 @@ The following argument is required:
 The following argument is optional:
 
 * `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
+
+### lf_tag
+
+The following arguments are required:
+
+* `key` – (Required) The key-name for the tag.
+* `values` - (Required) A list of possible values an attribute can take.
+
+The following argument is optional:
+
+* `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
+
+### lf_tag_policy
+
+The following arguments are required:
+
+* `resource_type` – (Required) The resource type for which the tag policy applies. Valid values are `DATABASE` and `TABLE`.
+* `expression` - (Required) A list of tag conditions that apply to the resource's tag policy. Configuration block for tag conditions that apply to the policy. See [`expression`](#expression) below.
+
+The following argument is optional:
+
+* `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
+
+#### expression
+
+* `key` – (Required) The key-name of an LF-Tag.
+* `values` - (Required) A list of possible values of an LF-Tag.
 
 ### table
 
