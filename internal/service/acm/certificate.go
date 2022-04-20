@@ -52,9 +52,10 @@ func ResourceCertificate() *schema.Resource {
 				Computed: true,
 			},
 			"certificate_authority_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"certificate_body": {
 				Type:     schema.TypeString,
@@ -109,13 +110,10 @@ func ResourceCertificate() *schema.Resource {
 						"certificate_transparency_logging_preference": {
 							Type:          schema.TypeString,
 							Optional:      true,
-							Default:       acm.CertificateTransparencyLoggingPreferenceEnabled,
 							ForceNew:      true,
+							Default:       acm.CertificateTransparencyLoggingPreferenceEnabled,
+							ValidateFunc:  validation.StringInSlice(acm.CertificateTransparencyLoggingPreference_Values(), false),
 							ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
-							ValidateFunc: validation.StringInSlice([]string{
-								acm.CertificateTransparencyLoggingPreferenceEnabled,
-								acm.CertificateTransparencyLoggingPreferenceDisabled,
-							}, false),
 						},
 					},
 				},
@@ -174,7 +172,7 @@ func ResourceCertificate() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				// Attempt to calculate the domain validation options based on domains present in domain_name and subject_alternative_names
-				if diff.Get("validation_method").(string) == "DNS" && (diff.HasChange("domain_name") || diff.HasChange("subject_alternative_names")) {
+				if diff.Get("validation_method").(string) == acm.ValidationMethodDns && (diff.HasChange("domain_name") || diff.HasChange("subject_alternative_names")) {
 					domainValidationOptionsList := []interface{}{map[string]interface{}{
 						// AWS Provider 3.0 -- plan-time validation prevents "domain_name"
 						// argument to accept a string with trailing period; thus, trim of trailing period
