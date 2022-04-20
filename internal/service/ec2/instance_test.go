@@ -5834,7 +5834,7 @@ resource "aws_instance" "test" {
   }
 
   tags = {
-	Name = %[1]q
+    Name = %[1]q
   }
 }
 `, rName))
