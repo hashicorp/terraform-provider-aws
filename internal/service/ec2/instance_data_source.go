@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceInstance() *schema.Resource {
@@ -147,7 +148,7 @@ func DataSourceInstance() *schema.Resource {
 					},
 				},
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"get_password_data": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -346,60 +347,31 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	filters, filtersOk := d.GetOk("filter")
-	instanceID, instanceIDOk := d.GetOk("instance_id")
-	tags, tagsOk := d.GetOk("instance_tags")
-
-	if !filtersOk && !instanceIDOk && !tagsOk {
-		return fmt.Errorf("One of filters, instance_tags, or instance_id must be assigned")
-	}
-
 	// Build up search parameters
-	params := &ec2.DescribeInstancesInput{}
-	if filtersOk {
-		params.Filters = BuildFiltersDataSource(filters.(*schema.Set))
-	}
-	if instanceIDOk {
-		params.InstanceIds = []*string{aws.String(instanceID.(string))}
-	}
-	if tagsOk {
-		params.Filters = append(params.Filters, ec2TagFiltersFromMap(tags.(map[string]interface{}))...)
+	input := &ec2.DescribeInstancesInput{}
+
+	if tags, tagsOk := d.GetOk("instance_tags"); tagsOk {
+		input.Filters = append(input.Filters, BuildTagFilterList(
+			Tags(tftags.New(tags.(map[string]interface{}))),
+		)...)
 	}
 
-	log.Printf("[DEBUG] Reading IAM Instance: %s", params)
-	resp, err := conn.DescribeInstances(params)
+	input.Filters = append(input.Filters, BuildCustomFilterList(
+		d.Get("filter").(*schema.Set),
+	)...)
+	if len(input.Filters) == 0 {
+		// Don't send an empty filters list; the EC2 API won't accept it.
+		input.Filters = nil
+	}
+
+	if v, ok := d.GetOk("instance_id"); ok {
+		input.InstanceIds = aws.StringSlice([]string{v.(string)})
+	}
+
+	instance, err := FindInstance(conn, input)
+
 	if err != nil {
-		return err
-	}
-
-	// If no instances were returned, return
-	if len(resp.Reservations) == 0 {
-		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
-	}
-
-	var filteredInstances []*ec2.Instance
-
-	// loop through reservations, and remove terminated instances, populate instance slice
-	for _, res := range resp.Reservations {
-		for _, instance := range res.Instances {
-			if instance.State != nil && aws.StringValue(instance.State.Name) != ec2.InstanceStateNameTerminated {
-				filteredInstances = append(filteredInstances, instance)
-			}
-		}
-	}
-
-	var instance *ec2.Instance
-	if len(filteredInstances) < 1 {
-		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
-	}
-
-	// (TODO: Support a list of instances to be returned)
-	// Possibly with a different data source that returns a list of individual instance data sources
-	if len(filteredInstances) > 1 {
-		return fmt.Errorf("Your query returned more than one result. Please try a more " +
-			"specific search criteria.")
-	} else {
-		instance = filteredInstances[0]
+		return tfresource.SingularDataSourceFindError("EC2 Instance", err)
 	}
 
 	log.Printf("[DEBUG] aws_instance - Single Instance ID found: %s", aws.StringValue(instance.InstanceId))
