@@ -102,7 +102,7 @@ func resourceVolumeAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 		// This handles the situation where the instance is created by
 		// a spot request and whilst the request has been fulfilled the
 		// instance is not running yet
-		if _, err := WaitInstanceReady(conn, iID, 10*time.Minute); err != nil {
+		if _, err := WaitInstanceReady(conn, iID, InstanceReadyTimeout); err != nil {
 			return fmt.Errorf("waiting for EC2 Instance (%s) to be ready: %w", iID, err)
 		}
 

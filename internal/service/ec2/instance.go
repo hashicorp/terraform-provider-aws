@@ -2942,11 +2942,7 @@ func capacityReservationSpecificationResponsesEqual(v1 *ec2.CapacityReservationS
 
 func capacityReservationTargetResponsesEqual(v1 *ec2.CapacityReservationTargetResponse, v2 *ec2.CapacityReservationTarget) bool {
 	if v1 == nil {
-		if v2 == nil {
-			return true
-		}
-
-		return false
+		return v2 == nil
 	}
 
 	if v2 == nil {

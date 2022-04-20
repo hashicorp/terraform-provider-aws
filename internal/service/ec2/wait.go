@@ -17,6 +17,7 @@ const (
 	// Maximum amount of time to wait for EC2 Instance attribute modifications to propagate
 	InstanceAttributePropagationTimeout = 2 * time.Minute
 
+	InstanceReadyTimeout = 10 * time.Minute
 	InstanceStartTimeout = 10 * time.Minute
 	InstanceStopTimeout  = 10 * time.Minute
 
