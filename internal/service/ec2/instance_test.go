@@ -5437,7 +5437,9 @@ resource "aws_instance" "test" {
 func testAccEc2InstanceConfigDedicatedInstance(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		testAccInstanceVPCConfig(rName, false, 0),
+		// Prevent frequent errors like
+		//	"InsufficientInstanceCapacity: We currently do not have sufficient m1.small capacity in the Availability Zone you requested (us-west-2a)."
+		testAccInstanceVPCConfig(rName, false, 1),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
