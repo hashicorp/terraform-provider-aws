@@ -3,6 +3,7 @@ package lambda
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"log"
 	"regexp"
 	"strings"
@@ -91,6 +92,12 @@ func ResourcePermission() *schema.Resource {
 				ConflictsWith: []string{"statement_id"},
 				ValidateFunc:  validPolicyStatementID(),
 			},
+			"function_url_authorization_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(lambda.FunctionUrlAuthType_Values(), false),
+			},
 		},
 	}
 }
@@ -116,10 +123,11 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 	defer conns.GlobalMutexKV.Unlock(functionName)
 
 	input := lambda.AddPermissionInput{
-		Action:       aws.String(d.Get("action").(string)),
-		FunctionName: aws.String(functionName),
-		Principal:    aws.String(d.Get("principal").(string)),
-		StatementId:  aws.String(statementId),
+		Action:              aws.String(d.Get("action").(string)),
+		FunctionName:        aws.String(functionName),
+		Principal:           aws.String(d.Get("principal").(string)),
+		StatementId:         aws.String(statementId),
+		FunctionUrlAuthType: aws.String(d.Get("function_url_authorization_type").(string)),
 	}
 
 	if v, ok := d.GetOk("event_source_token"); ok {
