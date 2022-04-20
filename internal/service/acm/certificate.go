@@ -368,7 +368,7 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 			return resource.NonRetryableError(err)
 		}
 
-		d.Set("validation_method", resourceCertificateValidationMethod(resp.Certificate))
+		d.Set("validation_method", certificateValidationMethod(resp.Certificate))
 
 		if err := d.Set("options", flattenAcmCertificateOptions(resp.Certificate.Options)); err != nil {
 			return resource.NonRetryableError(fmt.Errorf("error setting certificate options: %s", err))
@@ -395,18 +395,6 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
-}
-
-func resourceCertificateValidationMethod(certificate *acm.CertificateDetail) string {
-	if aws.StringValue(certificate.Type) == acm.CertificateTypeAmazonIssued {
-		for _, domainValidation := range certificate.DomainValidationOptions {
-			if domainValidation.ValidationMethod != nil {
-				return aws.StringValue(domainValidation.ValidationMethod)
-			}
-		}
-	}
-
-	return "NONE"
 }
 
 func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -445,6 +433,40 @@ func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	return resourceCertificateRead(d, meta)
+}
+
+func resourceCertificateDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).ACMConn
+
+	log.Printf("[INFO] Deleting ACM Certificate: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(AcmCertificateCrossServicePropagationTimeout,
+		func() (interface{}, error) {
+			return conn.DeleteCertificate(&acm.DeleteCertificateInput{
+				CertificateArn: aws.String(d.Id()),
+			})
+		}, acm.ErrCodeResourceInUseException)
+
+	if tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("deleting ACM Certificate (%s): %w", d.Id(), err)
+	}
+
+	return nil
+}
+
+func certificateValidationMethod(certificate *acm.CertificateDetail) string {
+	if aws.StringValue(certificate.Type) == acm.CertificateTypeAmazonIssued {
+		for _, v := range certificate.DomainValidationOptions {
+			if v.ValidationMethod != nil {
+				return aws.StringValue(v.ValidationMethod)
+			}
+		}
+	}
+
+	return "NONE"
 }
 
 func flattenSubjectAlternativeNames(cert *acm.CertificateDetail) []string {
@@ -493,44 +515,6 @@ func convertValidationOptions(certificate *acm.CertificateDetail) ([]map[string]
 	}
 
 	return domainValidationResult, emailValidationResult, nil
-}
-
-func resourceCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMConn
-
-	log.Printf("[INFO] Deleting ACM Certificate: %s", d.Id())
-
-	params := &acm.DeleteCertificateInput{
-		CertificateArn: aws.String(d.Id()),
-	}
-
-	err := resource.Retry(AcmCertificateCrossServicePropagationTimeout, func() *resource.RetryError {
-		_, err := conn.DeleteCertificate(params)
-
-		if tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceInUseException) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteCertificate(params)
-	}
-
-	if tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceNotFoundException) {
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error deleting ACM Certificate (%s): %w", d.Id(), err)
-	}
-
-	return nil
 }
 
 func acmDomainValidationOptionsHash(v interface{}) int {
