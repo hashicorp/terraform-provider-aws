@@ -676,7 +676,7 @@ func ResourceInstance() *schema.Resource {
 							return err
 						}
 
-						_, defaultVersion, latestVersion, err = findLaunchTemplate(conn, launchTemplateID)
+						_, defaultVersion, latestVersion, err = findLaunchTemplateNameAndVersions(conn, launchTemplateID)
 
 						if err != nil {
 							return err
@@ -2901,7 +2901,7 @@ func flattenInstanceLaunchTemplate(conn *ec2.EC2, instanceID, previousLaunchTemp
 		return nil, nil
 	}
 
-	name, defaultVersion, latestVersion, err := findLaunchTemplate(conn, launchTemplateID)
+	name, defaultVersion, latestVersion, err := findLaunchTemplateNameAndVersions(conn, launchTemplateID)
 
 	if tfresource.NotFound(err) {
 		return nil, nil
@@ -2972,7 +2972,8 @@ func findInstanceLaunchTemplateVersion(conn *ec2.EC2, id string) (string, error)
 	return launchTemplateVersion, nil
 }
 
-func findLaunchTemplate(conn *ec2.EC2, id string) (string, string, string, error) {
+// findLaunchTemplateNameAndVersions returns the specified launch template's name, default version and latest version.
+func findLaunchTemplateNameAndVersions(conn *ec2.EC2, id string) (string, string, string, error) {
 	lt, err := FindLaunchTemplateByID(conn, id)
 
 	if err != nil {
