@@ -6,14 +6,18 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func DataSourceAwsS3BucketPolicy() *schema.Resource {
+func DataSourceBucketPolicy() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceAwsS3BucketPolicyRead,
+		ReadWithoutTimeout: dataSourceBucketPolicyRead,
 
 		Schema: map[string]*schema.Schema{
 			"bucket": {
@@ -28,22 +32,49 @@ func DataSourceAwsS3BucketPolicy() *schema.Resource {
 	}
 }
 
-func dataSourceAwsS3BucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	bucketName := d.Get("bucket").(string)
-	input := &s3.GetBucketPolicyInput{
-		Bucket: aws.String(bucketName),
-	}
-	log.Printf("[DEBUG] Reading S3 bucket policy: %s", input)
-	output, err := conn.GetBucketPolicy(input)
+	name := d.Get("bucket").(string)
+
+	out, err := FindBucketPolicy(ctx, conn, name)
 	if err != nil {
-		return diag.Errorf("failed getting S3 bucket policy (%s): %w", bucketName, err)
+		return diag.Errorf("failed getting S3 bucket policy (%s): %s", name, err)
 	}
 
-	policy := *output.Policy
-	d.SetId(bucketName)
+	policy, err := structure.NormalizeJsonString(aws.StringValue(out.Policy))
+	if err != nil {
+		return diag.Errorf("policy (%s) is an invalid JSON: %s", policy, err)
+	}
+
+	d.SetId(name)
 	d.Set("policy", policy)
 
 	return nil
+}
+
+func FindBucketPolicy(ctx context.Context, conn *s3.S3, name string) (*s3.GetBucketPolicyOutput, error) {
+	in := &s3.GetBucketPolicyInput{
+		Bucket: aws.String(name),
+	}
+	log.Printf("[DEBUG] Reading S3 bucket policy: %s", in)
+
+	out, err := conn.GetBucketPolicyWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchBucketPolicy) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
 }
