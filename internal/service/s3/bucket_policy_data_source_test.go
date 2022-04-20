@@ -142,7 +142,7 @@ func testAccDataSourceBucketPolicyConfigBasicConfig(rName string) string {
 data "aws_s3_bucket_policy" "test" {
   bucket = aws_s3_bucket.test.id
 
-depends_on = [aws_s3_bucket_policy.test]
+  depends_on = [aws_s3_bucket_policy.test]
 }
 `))
 }
