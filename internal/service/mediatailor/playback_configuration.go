@@ -11,37 +11,30 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"regexp"
+	"time"
 )
 
 func ResourcePlaybackConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourcePlaybackConfigurationCreate,
+		CreateContext: resourcePlaybackConfigurationPut,
 		ReadContext:   resourcePlaybackConfigurationRead,
-		UpdateContext: resourcePlaybackConfigurationUpdate,
+		UpdateContext: resourcePlaybackConfigurationPut,
 		DeleteContext: resourcePlaybackConfigurationDelete,
 		Schema: map[string]*schema.Schema{
 			"ad_decision_server_url": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"avail_suppression": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"mode": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice([]string{"OFF", "BEHIND_LIVE_EDGE"}, false),
-						},
-						"value": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^\d{2}:\d{2}:\d{2}$`), "must be valid HH:MM:SS string"),
-						},
-					},
-				},
+			"avail_suppression_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice([]string{"OFF", "BEHIND_LIVE_EDGE"}, false),
+			},
+			"avail_suppression_value": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^\d{2}:\d{2}:\d{2}$`), "must be valid HH:MM:SS string"),
 			},
 			"bumper": {
 				Type:     schema.TypeList,
@@ -86,25 +79,17 @@ func ResourcePlaybackConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"dash_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"mpd_location": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice([]string{"DISABLED", "EMT_DEFAULT"}, false),
-						},
-						"origin_manifest_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice([]string{"SINGLE_PERIOD", "MULTI_PERIOD"}, false),
-						},
-					},
-				},
+			"dash_mpd_location": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice([]string{"DISABLED", "EMT_DEFAULT"}, false),
+			},
+			"dash_origin_manifest_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice([]string{"SINGLE_PERIOD", "MULTI_PERIOD"}, false),
 			},
 			"dash_manifest_endpoint_prefix": {
 				Type:     schema.TypeString,
@@ -221,8 +206,32 @@ func ResourcePlaybackConfiguration() *schema.Resource {
 	}
 }
 
-func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlaybackConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).MediaTailorConn
+
+	if d.HasChange("tags") {
+		oldValue, newValue := d.GetChange("tags")
+		var removedTags []string
+		for k := range oldValue.(map[string]interface{}) {
+			if _, ok := (newValue.(map[string]interface{}))[k]; !ok {
+				removedTags = append(removedTags, k)
+			}
+		}
+		if len(removedTags) > 0 {
+			var removedValuesPointers []*string
+			for i := range removedTags {
+				removedValuesPointers = append(removedValuesPointers, &removedTags[i])
+			}
+
+			resourceArn := d.Get("playback_configuration_arn")
+
+			untagInput := mediatailor.UntagResourceInput{ResourceArn: aws.String(resourceArn.(string)), TagKeys: removedValuesPointers}
+			_, err := conn.UntagResource(&untagInput)
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("error while removing tags: %v", err))
+			}
+		}
+	}
 
 	var params mediatailor.PutPlaybackConfigurationInput
 
@@ -230,16 +239,12 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 		params.AdDecisionServerUrl = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("avail_suppression"); ok && v.([]interface{})[0] != nil {
-		val := v.([]interface{})[0].(map[string]interface{})
-		temp := mediatailor.AvailSuppression{}
-		if str, ok := val["mode"]; ok {
-			temp.Mode = aws.String(str.(string))
-		}
-		if str, ok := val["value"]; ok {
-			temp.Value = aws.String(str.(string))
-		}
-		params.AvailSuppression = &temp
+	if v, ok := d.GetOk("avail_suppression_mode"); ok && v != "" {
+		params.AvailSuppression.Mode = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("avail_suppression_value"); ok && v != "" {
+		params.AvailSuppression.Value = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("bumper"); ok && v.([]interface{})[0] != nil {
@@ -269,18 +274,15 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 	if v, ok := d.GetOk("configuration_aliases"); ok {
 		val := v.(map[string]map[string]*string)
 		params.ConfigurationAliases = val
+	} else {
+		params.ConfigurationAliases = map[string]map[string]*string{}
 	}
 
-	if v, ok := d.GetOk("dash_configuration"); ok && v.([]interface{})[0] != nil {
-		val := v.([]interface{})[0].(map[string]interface{})
-		temp := mediatailor.DashConfigurationForPut{}
-		if str, ok := val["mpd_location"]; ok {
-			temp.MpdLocation = aws.String(str.(string))
-		}
-		if str, ok := val["origin_manifest_type"]; ok {
-			temp.OriginManifestType = aws.String(str.(string))
-		}
-		params.DashConfiguration = &temp
+	if v, ok := d.GetOk("dash_mpd_location"); ok && v != "" {
+		params.DashConfiguration.MpdLocation = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("dash_origin_manifest_type"); ok && v != "" {
+		params.DashConfiguration.OriginManifestType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("live_pre_roll_configuration"); ok && v.([]interface{})[0] != nil {
@@ -321,7 +323,7 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 		params.SlateAdUrl = aws.String(v.(string))
 	}
 
-	tempMap := make(map[string]*string)
+	tempMap := map[string]*string{}
 	if v, ok := d.GetOk("tags"); ok {
 		val := v.(map[string]interface{})
 		for k, value := range val {
@@ -329,8 +331,8 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 			tempMap[k] = &temp
 		}
 	}
-
 	params.Tags = tempMap
+
 	if v, ok := d.GetOk("transcode_profile_name"); ok {
 		params.TranscodeProfileName = aws.String(v.(string))
 	}
@@ -345,6 +347,7 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 	}
 
 	d.SetId(*playbackConfiguration.PlaybackConfigurationArn)
+	d.Set("last_updated", time.Now().Format(time.RFC850))
 
 	return resourcePlaybackConfigurationRead(ctx, d, meta)
 }
@@ -367,17 +370,8 @@ func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set("ad_decision_server_url", res.AdDecisionServerUrl)
-
-	if !(*res.AvailSuppression.Mode == "OFF" && res.AvailSuppression.Value == nil) {
-		temp := map[string]interface{}{}
-		if res.AvailSuppression.Mode != nil {
-			temp["mode"] = res.AvailSuppression.Mode
-		}
-		if res.AvailSuppression.Value != nil {
-			temp["value"] = res.AvailSuppression.Value
-		}
-		d.Set("avail_suppression", []interface{}{temp})
-	}
+	d.Set("avail_suppression_mode", res.AvailSuppression.Mode)
+	d.Set("avail_suppression_value", res.AvailSuppression.Value)
 
 	if res.Bumper.StartUrl != nil || res.Bumper.EndUrl != nil {
 		temp := map[string]interface{}{}
@@ -402,19 +396,8 @@ func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set("configuration_aliases", res.ConfigurationAliases)
-
-	//if *res.DashConfiguration.MpdLocation != "EMT_DEFAULT" && *res.DashConfiguration.OriginManifestType != "MULTI_PERIOD" {
-	if res.DashConfiguration != nil {
-		temp := map[string]interface{}{}
-		if res.DashConfiguration.MpdLocation != nil {
-			temp["mpd_location"] = res.DashConfiguration.MpdLocation
-		}
-		if res.DashConfiguration.OriginManifestType != nil {
-			temp["origin_manifest_type"] = res.DashConfiguration.OriginManifestType
-		}
-		d.Set("dash_configuration", []interface{}{temp})
-	}
-
+	d.Set("dash_mpd_location", res.DashConfiguration.MpdLocation)
+	d.Set("dash_origin_manifest_type", res.DashConfiguration.OriginManifestType)
 	d.Set("dash_manifest_endpoint_prefix", res.DashConfiguration.ManifestEndpointPrefix)
 
 	if res.HlsConfiguration != nil {
@@ -466,10 +449,6 @@ func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("transcode_profile_name", res.TranscodeProfileName)
 	d.Set("video_content_source_url", res.VideoContentSourceUrl)
 
-	return nil
-}
-
-func resourcePlaybackConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
