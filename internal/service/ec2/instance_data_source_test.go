@@ -875,13 +875,13 @@ data "aws_instance" "test" {
 func testAccInstanceDataSourcePrivateIPConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		testAccInstanceVPCBasicConfig(rName),
+		testAccInstanceVPCConfig(rName, false, 1),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.test.id
-  private_ip    = "10.0.0.42"
+  private_ip    = "10.1.1.42"
 
   tags = {
     Name = %[1]q
@@ -897,13 +897,13 @@ data "aws_instance" "test" {
 func testAccInstanceDataSourceSecondaryPrivateIPsConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		testAccInstanceVPCBasicConfig(rName),
+		testAccInstanceVPCConfig(rName, false, 1),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                   = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type         = "t2.micro"
   subnet_id             = aws_subnet.test.id
-  secondary_private_ips = ["10.0.0.42"]
+  secondary_private_ips = ["10.1.1.42"]
 
   tags = {
     Name = %[1]q
@@ -972,7 +972,7 @@ data "aws_instance" "test" {
 func testAccInstanceDataSourceVPCConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		testAccInstanceVPCBasicConfig(rName),
+		testAccInstanceVPCConfig(rName, false, 1),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -997,7 +997,7 @@ data "aws_instance" "test" {
 func testAccInstanceDataSourcePlacementGroupConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		testAccInstanceVPCBasicConfig(rName),
+		testAccInstanceVPCConfig(rName, false, 1),
 		fmt.Sprintf(`
 resource "aws_placement_group" "test" {
   name     = %[1]q
@@ -1062,7 +1062,7 @@ data "aws_instance" "test" {
 
 func testAccInstanceDataSourceVPCSecurityGroupsConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		testAccInstanceVPCBasicConfig(rName),
+		testAccInstanceVPCConfig(rName, false, 1),
 		testAccInstanceVPCSecurityGroupConfig(rName),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
@@ -1111,7 +1111,7 @@ data "aws_instance" "test" {
 func testAccInstanceDataSourceGetUserDataConfig(rName string, getUserData bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		testAccInstanceVPCBasicConfig(rName),
+		testAccInstanceVPCConfig(rName, false, 1),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -1139,7 +1139,7 @@ data "aws_instance" "test" {
 func testAccInstanceDataSourceGetUserDataNoUserDataConfig(rName string, getUserData bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		testAccInstanceVPCBasicConfig(rName),
+		testAccInstanceVPCConfig(rName, false, 1),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -1161,7 +1161,7 @@ data "aws_instance" "test" {
 func testAccInstanceDataSourceCreditSpecificationConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		testAccInstanceVPCBasicConfig(rName),
+		testAccInstanceVPCConfig(rName, false, 1),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
