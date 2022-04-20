@@ -530,55 +530,6 @@ func TestAccACMCertificate_disableCTLogging(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificate_tags(t *testing.T) {
-	resourceName := "aws_acm_certificate.test"
-	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
-	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAcmCertificateConfig(domain, acm.ValidationMethodDns),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
-			{
-				Config: testAccAcmCertificateConfig_twoTags(domain, acm.ValidationMethodDns, "Hello", "World", "Foo", "Bar"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Hello", "World"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Foo", "Bar"),
-				),
-			},
-			{
-				Config: testAccAcmCertificateConfig_twoTags(domain, acm.ValidationMethodDns, "Hello", "World", "Foo", "Baz"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Hello", "World"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Foo", "Baz"),
-				),
-			},
-			{
-				Config: testAccAcmCertificateConfig_oneTag(domain, acm.ValidationMethodDns, "Environment", "Test"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "Test"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 //lintignore:AT002
 func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
@@ -667,6 +618,10 @@ func TestAccACMCertificate_Imported_ipAddress(t *testing.T) { // Reference: http
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/15055
 func TestAccACMCertificate_PrivateKey_tags(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
+	key1 := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate1 := acctest.TLSRSAX509SelfSignedCertificatePEM(key1, "1.2.3.4")
+	key2 := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate2 := acctest.TLSRSAX509SelfSignedCertificatePEM(key2, "5.6.7.8")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -675,9 +630,10 @@ func TestAccACMCertificate_PrivateKey_tags(t *testing.T) {
 		CheckDestroy: testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateConfigPrivateKeyTags("1.2.3.4"),
+				Config: testAccAcmCertificateConfigTags1(certificate1, key1, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -687,13 +643,53 @@ func TestAccACMCertificate_PrivateKey_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"private_key", "certificate_body"},
 			},
 			{
-				Config: testAccAcmCertificateConfigPrivateKeyTags("5.6.7.8"),
+				Config: testAccAcmCertificateConfigTags2(certificate1, key1, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAcmCertificateConfigTags1(certificate1, key1, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAcmCertificateConfigTags1(certificate2, key2, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 		},
 	})
+}
+
+func testAccCheckAcmCertificateDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_acm_certificate" {
+			continue
+		}
+		_, err := conn.DescribeCertificate(&acm.DescribeCertificateInput{
+			CertificateArn: aws.String(rs.Primary.ID),
+		})
+
+		if err == nil {
+			return fmt.Errorf("Certificate still exists.")
+		}
+
+		// Verify the error is what we want
+		if !tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceNotFoundException) {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func testAccAcmCertificateConfig(domainName, validationMethod string) string {
@@ -738,33 +734,6 @@ resource "aws_acm_certificate" "test" {
 `, domainName, subjectAlternativeNames, validationMethod)
 }
 
-func testAccAcmCertificateConfig_oneTag(domainName, validationMethod, tag1Key, tag1Value string) string {
-	return fmt.Sprintf(`
-resource "aws_acm_certificate" "test" {
-  domain_name       = "%s"
-  validation_method = "%s"
-
-  tags = {
-    "%s" = "%s"
-  }
-}
-`, domainName, validationMethod, tag1Key, tag1Value)
-}
-
-func testAccAcmCertificateConfig_twoTags(domainName, validationMethod, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return fmt.Sprintf(`
-resource "aws_acm_certificate" "test" {
-  domain_name       = "%s"
-  validation_method = "%s"
-
-  tags = {
-    "%s" = "%s"
-    "%s" = "%s"
-  }
-}
-`, domainName, validationMethod, tag1Key, tag1Value, tag2Key, tag2Value)
-}
-
 func testAccAcmCertificateConfigPrivateKeyWithoutChain(commonName string) string {
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, commonName)
@@ -777,20 +746,31 @@ resource "aws_acm_certificate" "test" {
 `, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
-func testAccAcmCertificateConfigPrivateKeyTags(commonName string) string {
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, commonName)
-
+func testAccAcmCertificateConfigTags1(certificate, key, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[1]s"
   private_key      = "%[2]s"
 
   tags = {
-    key1 = "value1"
+    %[3]q = %[4]q
   }
 }
-`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
+`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), tagKey1, tagValue1)
+}
+
+func testAccAcmCertificateConfigTags2(certificate, key, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body = "%[1]s"
+  private_key      = "%[2]s"
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+}
+`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccAcmCertificateConfigPrivateKey(certificate, privateKey, chain string) string {
@@ -813,28 +793,4 @@ resource "aws_acm_certificate" "test" {
   }
 }
 `, domainName, validationMethod)
-}
-
-func testAccCheckAcmCertificateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_acm_certificate" {
-			continue
-		}
-		_, err := conn.DescribeCertificate(&acm.DescribeCertificateInput{
-			CertificateArn: aws.String(rs.Primary.ID),
-		})
-
-		if err == nil {
-			return fmt.Errorf("Certificate still exists.")
-		}
-
-		// Verify the error is what we want
-		if !tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceNotFoundException) {
-			return err
-		}
-	}
-
-	return nil
 }
