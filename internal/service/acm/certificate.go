@@ -41,10 +41,21 @@ func ResourceCertificate() *schema.Resource {
 		Read:   resourceCertificateRead,
 		Update: resourceCertificateUpdate,
 		Delete: resourceCertificateDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"certificate_authority_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"certificate_body": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -52,16 +63,6 @@ func ResourceCertificate() *schema.Resource {
 			"certificate_chain": {
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-			"private_key": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-			},
-			"certificate_authority_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
 			},
 			"domain_name": {
 				// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
@@ -71,37 +72,8 @@ func ResourceCertificate() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
 				ValidateFunc:  validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
-			},
-			"subject_alternative_names": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
-					// trailing period, no longer requiring a custom StateFunc
-					// to prevent ACM API error
-					Type: schema.TypeString,
-					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 253),
-						validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
-					),
-				},
-				Set:           schema.HashString,
 				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
-			},
-			"validation_method": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain", "certificate_authority_arn"},
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"domain_validation_options": {
 				Type:     schema.TypeSet,
@@ -128,24 +100,10 @@ func ResourceCertificate() *schema.Resource {
 				},
 				Set: acmDomainValidationOptionsHash,
 			},
-			"validation_emails": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"options": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if _, ok := d.GetOk("private_key"); ok {
-						// ignore diffs for imported certs; they have a different logging preference
-						// default to requested certs which can't be changed by the ImportCertificate API
-						return true
-					}
-					// behave just like verify.SuppressMissingOptionalConfigurationBlock() for requested certs
-					return old == "1" && new == "0"
-				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"certificate_transparency_logging_preference": {
@@ -161,14 +119,58 @@ func ResourceCertificate() *schema.Resource {
 						},
 					},
 				},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if _, ok := d.GetOk("private_key"); ok {
+						// ignore diffs for imported certs; they have a different logging preference
+						// default to requested certs which can't be changed by the ImportCertificate API
+						return true
+					}
+					// behave just like verify.SuppressMissingOptionalConfigurationBlock() for requested certs
+					return old == "1" && new == "0"
+				},
+			},
+			"private_key": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"subject_alternative_names": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
+					// trailing period, no longer requiring a custom StateFunc
+					// to prevent ACM API error
+					Type: schema.TypeString,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 253),
+						validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+					),
+				},
+				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"validation_emails": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"validation_method": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain", "certificate_authority_arn"},
+			},
 		},
+
 		CustomizeDiff: customdiff.Sequence(
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				// Attempt to calculate the domain validation options based on domains present in domain_name and subject_alternative_names
