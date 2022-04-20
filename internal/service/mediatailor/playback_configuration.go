@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -331,13 +332,119 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).MediaTailorConn
 
+	resourceName := d.Get("name").(string)
+	if len(resourceName) == 0 && len(d.Id()) > 0 {
+		resourceArn, err := arn.Parse(d.Id())
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("error parsing the name from resource arn: %v", err))
+		}
+		resourceName = resourceArn.Resource
+	}
+
+	res, err := conn.GetPlaybackConfiguration(&mediatailor.GetPlaybackConfigurationInput{Name: aws.String(resourceName)})
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error while retrieving the resource: %v", err))
+	}
+
+	d.Set("ad_decision_server_url", res.AdDecisionServerUrl)
+	if res.AvailSuppression != nil {
+		temp := map[string]interface{}{}
+		if res.AvailSuppression.Mode != nil {
+			temp["mode"] = res.AvailSuppression.Mode
+		}
+		if res.AvailSuppression.Value != nil {
+			temp["value"] = res.AvailSuppression.Value
+		}
+		d.Set("avail_suppression", []interface{}{temp})
+	}
+	if res.Bumper != nil {
+		temp := map[string]interface{}{}
+		if res.Bumper.StartUrl != nil {
+			temp["end_url"] = res.Bumper.EndUrl
+		}
+		if res.Bumper.StartUrl != nil {
+			temp["start_url"] = res.Bumper.StartUrl
+		}
+		d.Set("bumper", []interface{}{temp})
+	}
+	if res.CdnConfiguration != nil {
+		temp := map[string]interface{}{}
+		if res.CdnConfiguration.AdSegmentUrlPrefix != nil {
+			temp["ad_segment_url_prefix"] = res.CdnConfiguration.AdSegmentUrlPrefix
+		}
+		if res.CdnConfiguration.ContentSegmentUrlPrefix != nil {
+			temp["content_segment_url_prefix"] = res.CdnConfiguration.ContentSegmentUrlPrefix
+		}
+		d.Set("cdn_configuration", []interface{}{temp})
+	}
+	d.Set("configuration_aliases", res.ConfigurationAliases)
+	if res.DashConfiguration != nil {
+		temp := map[string]interface{}{}
+		if res.DashConfiguration.ManifestEndpointPrefix != nil {
+			temp["manifest_endpoint_prefix"] = res.DashConfiguration.ManifestEndpointPrefix
+		}
+		if res.DashConfiguration.MpdLocation != nil {
+			temp["mpd_location"] = res.DashConfiguration.MpdLocation
+		}
+		if res.DashConfiguration.OriginManifestType != nil {
+			temp["origin_manifest_type"] = res.DashConfiguration.OriginManifestType
+		}
+		d.Set("dash_configuration", []interface{}{temp})
+	}
+	if res.HlsConfiguration != nil {
+		temp := map[string]interface{}{}
+		if res.HlsConfiguration.ManifestEndpointPrefix != nil {
+			temp["manifest_endpoint_prefix"] = res.HlsConfiguration.ManifestEndpointPrefix
+		}
+		d.Set("hls_configuration", []interface{}{temp})
+	}
+	if res.LivePreRollConfiguration != nil {
+		temp := map[string]interface{}{}
+		if res.LivePreRollConfiguration.AdDecisionServerUrl != nil {
+			temp["ad_decision_server_url"] = res.LivePreRollConfiguration.AdDecisionServerUrl
+		}
+		if res.LivePreRollConfiguration.MaxDurationSeconds != nil {
+			temp["max_duration_seconds"] = res.LivePreRollConfiguration.MaxDurationSeconds
+		}
+		d.Set("live_pre_roll_configuration", temp)
+	}
+	if res.LogConfiguration != nil {
+		if res.LogConfiguration.PercentEnabled != nil {
+			d.Set("log_configuration", []interface{}{map[string]interface{}{
+				"percent_enabled": res.LogConfiguration.PercentEnabled,
+			}})
+		}
+	} else {
+		d.Set("log_configuration", []interface{}{map[string]interface{}{
+			"percent_enabled": 0,
+		}})
+	}
+	if *res.ManifestProcessingRules.AdMarkerPassthrough.Enabled == true {
+		d.Set("manifest_processing_rules", []interface{}{map[string]interface{}{
+			"ad_marker_passthrough": []interface{}{map[string]interface{}{
+				"enabled": res.ManifestProcessingRules.AdMarkerPassthrough.Enabled,
+			}},
+		}})
+	}
+	d.Set("name", res.Name)
+	d.Set("personalization_threshold_seconds", res.PersonalizationThresholdSeconds)
+	d.Set("playback_configuration_arn", res.PlaybackConfigurationArn)
+	d.Set("playback_endpoint_prefix", res.PlaybackEndpointPrefix)
+	d.Set("session_initialization_endpoint_prefix", res.SessionInitializationEndpointPrefix)
+	d.Set("slate_ad_url", res.SlateAdUrl)
+	d.Set("tags", res.Tags)
+	d.Set("transcode_profile_name", res.TranscodeProfileName)
+	d.Set("video_content_source_url", res.VideoContentSourceUrl)
+
+	return nil
 }
 
 func resourcePlaybackConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
+	return nil
 }
 
 func resourcePlaybackConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
+	return nil
 }
