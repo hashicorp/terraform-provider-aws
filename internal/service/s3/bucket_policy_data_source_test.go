@@ -138,11 +138,11 @@ data "aws_iam_policy_document" "test" {
 }
 
 func testAccDataSourceBucketPolicyConfigBasicConfig(rName string) string {
-	return acctest.ConfigCompose(testAccDataSourceBucketPolicyBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataSourceBucketPolicyBaseConfig(rName), `
 data "aws_s3_bucket_policy" "test" {
   bucket = aws_s3_bucket.test.id
 
   depends_on = [aws_s3_bucket_policy.test]
 }
-`))
+`)
 }
