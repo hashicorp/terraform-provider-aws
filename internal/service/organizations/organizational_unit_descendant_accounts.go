@@ -59,19 +59,21 @@ func DataSourceOrganizationalUnitDescendantAccounts() *schema.Resource {
 }
 
 // Todo: Get all child OUs
-func getDescendantOrganizationalUnits(parent_id string) []*organizations.OrganizationalUnit {
+func getDescendantOrganizationalUnitsIDs(parent_id string, meta interface{}) ([]string, error) {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	params := &organizations.ListOrganizationalUnitsForParentInput{
 		ParentId: aws.String(parent_id),
 	}
 
-	// Descendants will hold all generations of OUs under parent_id.
-	var descendants []*organizations.OrganizationalUnit
+	// Descendants will hold IDs of all generations of OUs under parent_id.
+	var descendants []string
 	// Children will hold immediate child OUs of parent_id.
 	var children []*organizations.OrganizationalUnit
+	// ChildOUIds will hold the OU IDs of child ous.
+	var childOUIds []string
 	// result will hold any descendants of immediate child OUs.
-	var result []*organizations.OrganizationalUnit
+	var result []string
 
 	// Get all immediate children OUs.
 	err := conn.ListOrganizationalUnitsForParentPages(params,
@@ -82,47 +84,57 @@ func getDescendantOrganizationalUnits(parent_id string) []*organizations.Organiz
 		})
 
 	if err != nil {
-		return fmt.Errorf("error listing Organizations Organization Units for parent (%s): %w", parent_id, err)
+		return nil, fmt.Errorf("error listing Organizations Organization Units for parent (%s): %w", parent_id, err)
 	}
 
-	// If child OUs exist, get all their descendants.
-	if children = flattenOrganizationalUnits(children); children != nil {
-		for _, ou := range children {
-			// Append this child ou and all it's descendants.
-			descendants = append(descendants, ou)
-			if result = getDescendantOrganizationalUnits(ou); result != nil {
-				descendants = append(descendants, result)
+	if childOUIds = getIDsFromOUs(children); childOUIds != nil {
+		for _, id := range childOUIds {
+			// Append this child ou Id and all it's descendants Ids.
+			descendants = append(descendants, id)
+
+			result, err = getDescendantOrganizationalUnitsIDs(id, meta)
+			if err != nil {
+				return descendants, err
+			} else if descendants != nil {
+				descendants = append(descendants, result...)
+			} else {
+				return nil, nil
 			}
 		}
 
-		return descendants
+		return descendants, nil
 	}
 
 	//Base Case. ParentId has no children.
-	return nil
+	return nil, nil
 }
 
 func dataSourceOrganizationalUnitDescendantAccountsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
+	parent_id := d.Get("parent_id").(string)
+
 	// Collect all the OUs of which we need to list children.
-	var organizationalUnits []*organizations.OrganizationalUnit
-	organizationalUnits = append(organizationalUnits, d.Get("parent_id").(string))
+	var organizationalUnitIDs []string
+	organizationalUnitIDs = append(organizationalUnitIDs, parent_id)
 
 	// Get all descendant organizational units.
-	var descendantOUs []*organizations.OrganizationalUnit
+	// 	var descendantOUs []*organizations.OrganizationalUnit
 
-	if descendantOUs = getDescendantOrganizationalUnits(parent_id); descendantOUs != nil {
-		organizationalUnits = append(organizationalUnits, descendantOUs)
+	descendantOUs, err := getDescendantOrganizationalUnitsIDs(organizationalUnitIDs[0], meta)
+	if err != nil {
+		return err
+	} else if descendantOUs != nil {
+		// If descendant OUs are found, add them to organizationalUnits.
+		organizationalUnitIDs = append(organizationalUnitIDs, descendantOUs...)
 	}
 
 	var accounts []*organizations.Account
 
-	for _, ou := range organizationalUnits {
+	for _, id := range organizationalUnitIDs {
 		// Get immediate child accounts of ou.
-		parent_id = ou.get("Id")
 		params := &organizations.ListAccountsForParentInput{
-			ParentId: aws.String(parent_id),
+			ParentId: aws.String(id),
 		}
 
 		err := conn.ListAccountsForParentPages(params,
@@ -133,7 +145,7 @@ func dataSourceOrganizationalUnitDescendantAccountsRead(d *schema.ResourceData, 
 			})
 
 		if err != nil {
-			return fmt.Errorf("error listing Organizations Accounts for parent (%s): %w", parent_id, err)
+			return fmt.Errorf("error listing Organizations Accounts for parent (%s): %w", id, err)
 		}
 	}
 
@@ -146,36 +158,32 @@ func dataSourceOrganizationalUnitDescendantAccountsRead(d *schema.ResourceData, 
 	return nil
 }
 
-func flattenOrganizationalUnits(ous []*organizations.OrganizationalUnit) []map[string]interface{} {
+func getIDsFromOUs(ous []*organizations.OrganizationalUnit) []string {
 	if len(ous) == 0 {
 		return nil
 	}
-	var result []map[string]interface{}
+	var result []string
 	for _, ou := range ous {
-		result = append(result, map[string]interface{}{
-			"arn":  aws.StringValue(ou.Arn),
-			"id":   aws.StringValue(ou.Id),
-			"name": aws.StringValue(ou.Name),
-		})
+		result = append(result, aws.StringValue(ou.Id))
 	}
 	return result
 }
 
-func flattenAccounts(accounts []*organizations.Account) []map[string]interface{} {
-	if len(ous) == 0 {
-		return nil
-	}
-	var result []map[string]interface{}
-	for _, account := range accounts {
-		result = append(result, map[string]interface{}{
-			"arn":              aws.StringValue(account.Arn),
-			"email":            aws.StringValue(account.Email),
-			"id":               aws.StringValue(account.Id),
-			"joined_method":    aws.StringValue(account.JoinedMethod),
-			"joined_timestamp": aws.StringValue(account.JoinedTimestamp),
-			"name":             aws.StringValue(account.Name),
-			"status":           aws.StringValue(account.Status),
-		})
-	}
-	return result
-}
+// func flattenAccounts(accounts []*organizations.Account) []map[string]interface{} {
+// 	if len(accounts) == 0 {
+// 		return nil
+// 	}
+// 	var result []map[string]interface{}
+// 	for _, account := range accounts {
+// 		result = append(result, map[string]interface{}{
+// 			"arn":              aws.StringValue(account.Arn),
+// 			"email":            aws.StringValue(account.Email),
+// 			"id":               aws.StringValue(account.Id),
+// 			"joined_method":    aws.StringValue(account.JoinedMethod),
+// 			"joined_timestamp": aws.StringValue(account.JoinedTimestamp),
+// 			"name":             aws.StringValue(account.Name),
+// 			"status":           aws.StringValue(account.Status),
+// 		})
+// 	}
+// 	return result
+// }

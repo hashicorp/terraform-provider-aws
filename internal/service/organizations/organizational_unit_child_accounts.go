@@ -100,7 +100,7 @@ func flattenAccounts(accounts []*organizations.Account) []map[string]interface{}
 			"email":            aws.StringValue(account.Email),
 			"id":               aws.StringValue(account.Id),
 			"joined_method":    aws.StringValue(account.JoinedMethod),
-			"joined_timestamp": aws.StringValue(account.JoinedTimestamp),
+			"joined_timestamp": aws.TimeValue(account.JoinedTimestamp),
 			"name":             aws.StringValue(account.Name),
 			"status":           aws.StringValue(account.Status),
 		})
