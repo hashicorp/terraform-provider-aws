@@ -32,6 +32,7 @@ func ResourcePlaybackConfiguration() *schema.Resource {
 						"mode": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice([]string{"OFF", "BEHIND_LIVE_EDGE"}, false),
 						},
 						"value": {
@@ -90,22 +91,24 @@ func ResourcePlaybackConfiguration() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"manifest_endpoint_prefix": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"mpd_location": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice([]string{"DISABLED", "EMT_DEFAULT"}, false),
 						},
 						"origin_manifest_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice([]string{"SINGLE_PERIOD", "MULTI_PERIOD"}, false),
 						},
 					},
 				},
+			},
+			"dash_manifest_endpoint_prefix": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"hls_configuration": {
 				Type:     schema.TypeList,
@@ -226,6 +229,7 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 	if v, ok := d.GetOk("ad_decision_server_url"); ok {
 		params.AdDecisionServerUrl = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("avail_suppression"); ok && v.([]interface{})[0] != nil {
 		val := v.([]interface{})[0].(map[string]interface{})
 		temp := mediatailor.AvailSuppression{}
@@ -237,6 +241,7 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 		}
 		params.AvailSuppression = &temp
 	}
+
 	if v, ok := d.GetOk("bumper"); ok && v.([]interface{})[0] != nil {
 		val := v.([]interface{})[0].(map[string]interface{})
 		temp := mediatailor.Bumper{}
@@ -248,6 +253,7 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 		}
 		params.Bumper = &temp
 	}
+
 	if v, ok := d.GetOk("cdn_configuration"); ok && v.([]interface{})[0] != nil {
 		val := v.([]interface{})[0].(map[string]interface{})
 		temp := mediatailor.CdnConfiguration{}
@@ -259,10 +265,12 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 		}
 		params.CdnConfiguration = &temp
 	}
+
 	if v, ok := d.GetOk("configuration_aliases"); ok {
 		val := v.(map[string]map[string]*string)
 		params.ConfigurationAliases = val
 	}
+
 	if v, ok := d.GetOk("dash_configuration"); ok && v.([]interface{})[0] != nil {
 		val := v.([]interface{})[0].(map[string]interface{})
 		temp := mediatailor.DashConfigurationForPut{}
@@ -274,6 +282,7 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 		}
 		params.DashConfiguration = &temp
 	}
+
 	if v, ok := d.GetOk("live_pre_roll_configuration"); ok && v.([]interface{})[0] != nil {
 		val := v.([]interface{})[0].(map[string]interface{})
 		temp := mediatailor.LivePreRollConfiguration{}
@@ -285,6 +294,7 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 		}
 		params.LivePreRollConfiguration = &temp
 	}
+
 	if v, ok := d.GetOk("manifest_processing_rules"); ok && v.([]interface{})[0] != nil {
 		val := v.([]interface{})[0].(map[string]interface{})
 		temp := mediatailor.ManifestProcessingRules{}
@@ -298,15 +308,19 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 		}
 		params.ManifestProcessingRules = &temp
 	}
+
 	if v, ok := d.GetOk("name"); ok {
 		params.Name = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("personalization_threshold_seconds"); ok {
 		params.PersonalizationThresholdSeconds = aws.Int64(int64(v.(int)))
 	}
+
 	if v, ok := d.GetOk("slate_ad_url"); ok {
 		params.SlateAdUrl = aws.String(v.(string))
 	}
+
 	tempMap := make(map[string]*string)
 	if v, ok := d.GetOk("tags"); ok {
 		val := v.(map[string]interface{})
@@ -315,10 +329,12 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 			tempMap[k] = &temp
 		}
 	}
+
 	params.Tags = tempMap
 	if v, ok := d.GetOk("transcode_profile_name"); ok {
 		params.TranscodeProfileName = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("video_content_source_url"); ok {
 		params.VideoContentSourceUrl = aws.String(v.(string))
 	}
@@ -327,7 +343,9 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error while creating the playback configuration: %v", err))
 	}
+
 	d.SetId(*playbackConfiguration.PlaybackConfigurationArn)
+
 	return resourcePlaybackConfigurationRead(ctx, d, meta)
 }
 
@@ -349,7 +367,8 @@ func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set("ad_decision_server_url", res.AdDecisionServerUrl)
-	if res.AvailSuppression != nil {
+
+	if !(*res.AvailSuppression.Mode == "OFF" && res.AvailSuppression.Value == nil) {
 		temp := map[string]interface{}{}
 		if res.AvailSuppression.Mode != nil {
 			temp["mode"] = res.AvailSuppression.Mode
@@ -359,7 +378,8 @@ func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceDa
 		}
 		d.Set("avail_suppression", []interface{}{temp})
 	}
-	if res.Bumper != nil {
+
+	if res.Bumper.StartUrl != nil || res.Bumper.EndUrl != nil {
 		temp := map[string]interface{}{}
 		if res.Bumper.StartUrl != nil {
 			temp["end_url"] = res.Bumper.EndUrl
@@ -369,7 +389,8 @@ func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceDa
 		}
 		d.Set("bumper", []interface{}{temp})
 	}
-	if res.CdnConfiguration != nil {
+
+	if res.CdnConfiguration.AdSegmentUrlPrefix != nil || res.CdnConfiguration.ContentSegmentUrlPrefix != nil {
 		temp := map[string]interface{}{}
 		if res.CdnConfiguration.AdSegmentUrlPrefix != nil {
 			temp["ad_segment_url_prefix"] = res.CdnConfiguration.AdSegmentUrlPrefix
@@ -379,12 +400,12 @@ func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceDa
 		}
 		d.Set("cdn_configuration", []interface{}{temp})
 	}
+
 	d.Set("configuration_aliases", res.ConfigurationAliases)
+
+	//if *res.DashConfiguration.MpdLocation != "EMT_DEFAULT" && *res.DashConfiguration.OriginManifestType != "MULTI_PERIOD" {
 	if res.DashConfiguration != nil {
 		temp := map[string]interface{}{}
-		if res.DashConfiguration.ManifestEndpointPrefix != nil {
-			temp["manifest_endpoint_prefix"] = res.DashConfiguration.ManifestEndpointPrefix
-		}
 		if res.DashConfiguration.MpdLocation != nil {
 			temp["mpd_location"] = res.DashConfiguration.MpdLocation
 		}
@@ -393,6 +414,9 @@ func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceDa
 		}
 		d.Set("dash_configuration", []interface{}{temp})
 	}
+
+	d.Set("dash_manifest_endpoint_prefix", res.DashConfiguration.ManifestEndpointPrefix)
+
 	if res.HlsConfiguration != nil {
 		temp := map[string]interface{}{}
 		if res.HlsConfiguration.ManifestEndpointPrefix != nil {
@@ -400,6 +424,7 @@ func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceDa
 		}
 		d.Set("hls_configuration", []interface{}{temp})
 	}
+
 	if res.LivePreRollConfiguration != nil {
 		temp := map[string]interface{}{}
 		if res.LivePreRollConfiguration.AdDecisionServerUrl != nil {
@@ -410,6 +435,7 @@ func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceDa
 		}
 		d.Set("live_pre_roll_configuration", temp)
 	}
+
 	if res.LogConfiguration != nil {
 		if res.LogConfiguration.PercentEnabled != nil {
 			d.Set("log_configuration", []interface{}{map[string]interface{}{
@@ -421,6 +447,7 @@ func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceDa
 			"percent_enabled": 0,
 		}})
 	}
+
 	if *res.ManifestProcessingRules.AdMarkerPassthrough.Enabled == true {
 		d.Set("manifest_processing_rules", []interface{}{map[string]interface{}{
 			"ad_marker_passthrough": []interface{}{map[string]interface{}{
@@ -428,6 +455,7 @@ func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceDa
 			}},
 		}})
 	}
+
 	d.Set("name", res.Name)
 	d.Set("personalization_threshold_seconds", res.PersonalizationThresholdSeconds)
 	d.Set("playback_configuration_arn", res.PlaybackConfigurationArn)
@@ -446,5 +474,12 @@ func resourcePlaybackConfigurationUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourcePlaybackConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).MediaTailorConn
+
+	_, err := conn.DeletePlaybackConfiguration(&mediatailor.DeletePlaybackConfigurationInput{Name: aws.String(d.Get("name").(string))})
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error while deleting the resource: %v", err))
+	}
+	d.SetId("")
 	return nil
 }
