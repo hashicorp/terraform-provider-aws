@@ -52,18 +52,22 @@ func ResourceCertificate() *schema.Resource {
 				Computed: true,
 			},
 			"certificate_authority_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ValidateFunc:  verify.ValidARN,
+				ConflictsWith: []string{"certificate_body", "private_key", "validation_method"},
 			},
 			"certificate_body": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				RequiredWith:  []string{"private_key"},
+				ConflictsWith: []string{"certificate_authority_arn", "domain_name", "validation_method"},
 			},
 			"certificate_chain": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"certificate_authority_arn", "domain_name", "validation_method"},
 			},
 			"domain_name": {
 				// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
@@ -74,7 +78,8 @@ func ResourceCertificate() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ValidateFunc:  validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
-				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
+				ExactlyOneOf:  []string{"domain_name", "private_key"},
+				ConflictsWith: []string{"certificate_body", "certificate_chain", "private_key"},
 			},
 			"domain_validation_options": {
 				Type:     schema.TypeSet,
@@ -113,7 +118,7 @@ func ResourceCertificate() *schema.Resource {
 							ForceNew:      true,
 							Default:       acm.CertificateTransparencyLoggingPreferenceEnabled,
 							ValidateFunc:  validation.StringInSlice(acm.CertificateTransparencyLoggingPreference_Values(), false),
-							ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
+							ConflictsWith: []string{"certificate_body", "certificate_chain", "private_key"},
 						},
 					},
 				},
@@ -128,9 +133,10 @@ func ResourceCertificate() *schema.Resource {
 				},
 			},
 			"private_key": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				ExactlyOneOf: []string{"domain_name", "private_key"},
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -151,7 +157,7 @@ func ResourceCertificate() *schema.Resource {
 						validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
 					),
 				},
-				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
+				ConflictsWith: []string{"certificate_body", "certificate_chain", "private_key"},
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -165,7 +171,7 @@ func ResourceCertificate() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain", "certificate_authority_arn"},
+				ConflictsWith: []string{"certificate_authority_arn", "certificate_body", "certificate_chain", "private_key"},
 			},
 		},
 
@@ -226,21 +232,17 @@ func ResourceCertificate() *schema.Resource {
 
 func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("domain_name"); ok {
-		if _, ok := d.GetOk("certificate_authority_arn"); ok {
-			return resourceCertificateCreateRequested(d, meta)
+		_, v1 := d.GetOk("certificate_authority_arn")
+		_, v2 := d.GetOk("validation_method")
+
+		if !v1 && !v2 {
+			return errors.New("`certificate_authority_arn` or `validation_method` must be set when creating an ACM certificate")
 		}
 
-		if _, ok := d.GetOk("validation_method"); !ok {
-			return errors.New("validation_method must be set when creating a certificate")
-		}
 		return resourceCertificateCreateRequested(d, meta)
-	} else if _, ok := d.GetOk("private_key"); ok {
-		if _, ok := d.GetOk("certificate_body"); !ok {
-			return errors.New("certificate_body must be set when importing a certificate with private_key")
-		}
-		return resourceCertificateCreateImported(d, meta)
 	}
-	return errors.New("certificate must be imported (private_key) or created (domain_name)")
+
+	return resourceCertificateCreateImported(d, meta)
 }
 
 func resourceCertificateCreateImported(d *schema.ResourceData, meta interface{}) error {
@@ -626,4 +628,44 @@ func FindCertificateByARN(conn *acm.ACM, arn string) (*acm.CertificateDetail, er
 	}
 
 	return output, nil
+}
+
+func statusCertificate(conn *acm.ACM, arn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindCertificateByARN(conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitCertificateIssued(conn *acm.ACM, arn string, timeout time.Duration) (*acm.CertificateDetail, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{acm.CertificateStatusPendingValidation},
+		Target:  []string{acm.CertificateStatusIssued},
+		Refresh: statusCertificate(conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*acm.CertificateDetail); ok {
+		switch aws.StringValue(output.Status) {
+		case acm.CertificateStatusFailed:
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
+		case acm.CertificateStatusRevoked:
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.RevocationReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }
