@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -305,7 +306,7 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 		d.SetId(aws.StringValue(output.CertificateArn))
 	}
 
-	if _, err := waitCertificateIssued(conn, d.Id(), AcmCertificateDnsValidationAssignmentTimeout); err != nil {
+	if _, err := waitCertificateDomainValidationsAvailable(conn, d.Id(), AcmCertificateDnsValidationAssignmentTimeout); err != nil {
 		return fmt.Errorf("waiting for ACM Certificate (%s) to be issued: %w", d.Id(), err)
 	}
 
@@ -615,14 +616,9 @@ func FindCertificateByARN(conn *acm.ACM, arn string) (*acm.CertificateDetail, er
 	return output, nil
 }
 
-func statusCertificate(conn *acm.ACM, arn string) resource.StateRefreshFunc {
+func statusCertificateDomainValidationsAvailable(conn *acm.ACM, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		// Don't call FindCertificateByARN as it maps useful status codes to NotFoundError.
-		input := &acm.DescribeCertificateInput{
-			CertificateArn: aws.String(arn),
-		}
-
-		output, err := findCertificate(conn, input)
+		certificate, err := FindCertificateByARN(conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -632,28 +628,42 @@ func statusCertificate(conn *acm.ACM, arn string) resource.StateRefreshFunc {
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		domainValidationsAvailable := true
+
+		switch aws.StringValue(certificate.Type) {
+		case acm.CertificateTypeAmazonIssued:
+			domainValidationsAvailable = false
+
+			for _, v := range certificate.DomainValidationOptions {
+				if v.ResourceRecord != nil || len(v.ValidationEmails) > 0 || (aws.StringValue(v.ValidationStatus) == acm.DomainStatusSuccess) {
+					domainValidationsAvailable = true
+
+					break
+				}
+			}
+
+		case acm.CertificateTypePrivate:
+			// While ACM PRIVATE certificates do not need to be validated, there is a slight delay for
+			// the API to fill in all certificate details, which is during the PENDING_VALIDATION status.
+			if aws.StringValue(certificate.Status) == acm.DomainStatusPendingValidation {
+				domainValidationsAvailable = false
+			}
+		}
+
+		return certificate, strconv.FormatBool(domainValidationsAvailable), nil
 	}
 }
 
-func waitCertificateIssued(conn *acm.ACM, arn string, timeout time.Duration) (*acm.CertificateDetail, error) {
+func waitCertificateDomainValidationsAvailable(conn *acm.ACM, arn string, timeout time.Duration) (*acm.CertificateDetail, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{acm.CertificateStatusPendingValidation},
-		Target:  []string{acm.CertificateStatusIssued},
-		Refresh: statusCertificate(conn, arn),
+		Target:  []string{strconv.FormatBool(true)},
+		Refresh: statusCertificateDomainValidationsAvailable(conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*acm.CertificateDetail); ok {
-		switch aws.StringValue(output.Status) {
-		case acm.CertificateStatusFailed:
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
-		case acm.CertificateStatusRevoked:
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.RevocationReason)))
-		}
-
 		return output, err
 	}
 
