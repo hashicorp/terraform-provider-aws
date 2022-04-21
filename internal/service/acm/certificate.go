@@ -33,6 +33,8 @@ const (
 	// Maximum amount of time for ACM Certificate asynchronous DNS validation record assignment.
 	// This timeout is unrelated to any creation or validation of those assigned DNS records.
 	AcmCertificateDnsValidationAssignmentTimeout = 5 * time.Minute
+
+	certificateValidationMethodNone = "NONE"
 )
 
 func ResourceCertificate() *schema.Resource {
@@ -171,6 +173,7 @@ func ResourceCertificate() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
+				ValidateFunc:  validation.StringInSlice(append(acm.ValidationMethod_Values(), certificateValidationMethodNone), false),
 				ConflictsWith: []string{"certificate_authority_arn", "certificate_body", "certificate_chain", "private_key"},
 			},
 		},
@@ -302,6 +305,10 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 		d.SetId(aws.StringValue(output.CertificateArn))
 	}
 
+	if _, err := waitCertificateIssued(conn, d.Id(), AcmCertificateDnsValidationAssignmentTimeout); err != nil {
+		return fmt.Errorf("waiting for ACM Certificate (%s) to be issued: %w", d.Id(), err)
+	}
+
 	return resourceCertificateRead(d, meta)
 }
 
@@ -310,81 +317,56 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	params := &acm.DescribeCertificateInput{
-		CertificateArn: aws.String(d.Id()),
+	certificate, err := FindCertificateByARN(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] ACM Certificate %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	return resource.Retry(AcmCertificateDnsValidationAssignmentTimeout, func() *resource.RetryError {
-		resp, err := conn.DescribeCertificate(params)
+	if err != nil {
+		return fmt.Errorf("reading ACM Certificate (%s): %w", d.Id(), err)
+	}
 
-		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] ACM Certificate (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
+	domainValidationOptions, validationEmails := flattenDomainValidations(certificate.DomainValidationOptions)
+
+	d.Set("arn", certificate.CertificateArn)
+	d.Set("certificate_authority_arn", certificate.CertificateAuthorityArn)
+	d.Set("domain_name", certificate.DomainName)
+	if err := d.Set("domain_validation_options", domainValidationOptions); err != nil {
+		return fmt.Errorf("error setting domain_validation_options: %w", err)
+	}
+	if certificate.Options != nil {
+		if err := d.Set("options", []interface{}{flattenCertificateOptions(certificate.Options)}); err != nil {
+			return fmt.Errorf("error setting options: %w", err)
 		}
+	} else {
+		d.Set("options", nil)
+	}
+	d.Set("status", certificate.Status)
+	d.Set("subject_alternative_names", aws.StringValueSlice(certificate.SubjectAlternativeNames))
+	d.Set("validation_emails", validationEmails)
+	d.Set("validation_method", certificateValidationMethod(certificate))
 
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("error reading ACM Certificate (%s): %w", d.Id(), err))
-		}
+	tags, err := ListTags(conn, d.Id())
 
-		if resp == nil || resp.Certificate == nil {
-			return resource.NonRetryableError(fmt.Errorf("error reading ACM Certificate (%s): empty response", d.Id()))
-		}
+	if err != nil {
+		return fmt.Errorf("listing tags for ACM Certificate (%s): %w", d.Id(), err)
+	}
 
-		if !d.IsNewResource() && aws.StringValue(resp.Certificate.Status) == acm.CertificateStatusValidationTimedOut {
-			log.Printf("[WARN] ACM Certificate (%s) validation timed out, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-		d.Set("domain_name", resp.Certificate.DomainName)
-		d.Set("arn", resp.Certificate.CertificateArn)
-		d.Set("certificate_authority_arn", resp.Certificate.CertificateAuthorityArn)
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
 
-		if err := d.Set("subject_alternative_names", flattenSubjectAlternativeNames(resp.Certificate)); err != nil {
-			return resource.NonRetryableError(err)
-		}
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
 
-		domainValidationOptions, emailValidationOptions, err := convertValidationOptions(resp.Certificate)
-
-		if err != nil {
-			return resource.RetryableError(err)
-		}
-
-		if err := d.Set("domain_validation_options", domainValidationOptions); err != nil {
-			return resource.NonRetryableError(err)
-		}
-		if err := d.Set("validation_emails", emailValidationOptions); err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		d.Set("validation_method", certificateValidationMethod(resp.Certificate))
-
-		if err := d.Set("options", flattenCertificateOptions(resp.Certificate.Options)); err != nil {
-			return resource.NonRetryableError(fmt.Errorf("error setting certificate options: %s", err))
-		}
-
-		d.Set("status", resp.Certificate.Status)
-
-		tags, err := ListTags(conn, d.Id())
-
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("error listing tags for ACM Certificate (%s): %s", d.Id(), err))
-		}
-
-		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-		//lintignore:AWSR002
-		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return resource.NonRetryableError(fmt.Errorf("error setting tags: %w", err))
-		}
-
-		if err := d.Set("tags_all", tags.Map()); err != nil {
-			return resource.NonRetryableError(fmt.Errorf("error setting tags_all: %w", err))
-		}
-
-		return nil
-	})
+	return nil
 }
 
 func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -411,17 +393,19 @@ func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
 			_, err := conn.ImportCertificate(input)
 
 			if err != nil {
-				return fmt.Errorf("error re-importing ACM Certificate (%s): %w", d.Id(), err)
+				return fmt.Errorf("re-importing ACM Certificate (%s): %w", d.Id(), err)
 			}
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
+
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
+
 	return resourceCertificateRead(d, meta)
 }
 
@@ -456,55 +440,7 @@ func certificateValidationMethod(certificate *acm.CertificateDetail) string {
 		}
 	}
 
-	return "NONE"
-}
-
-func flattenSubjectAlternativeNames(cert *acm.CertificateDetail) []string {
-	sans := cert.SubjectAlternativeNames
-	vs := make([]string, 0)
-	for _, v := range sans {
-		vs = append(vs, aws.StringValue(v))
-	}
-	return vs
-}
-
-func convertValidationOptions(certificate *acm.CertificateDetail) ([]map[string]interface{}, []string, error) {
-	var domainValidationResult []map[string]interface{}
-	var emailValidationResult []string
-
-	switch aws.StringValue(certificate.Type) {
-	case acm.CertificateTypeAmazonIssued:
-		if len(certificate.DomainValidationOptions) == 0 && aws.StringValue(certificate.Status) == acm.DomainStatusPendingValidation {
-			log.Printf("[DEBUG] No validation options need to retry.")
-			return nil, nil, fmt.Errorf("No validation options need to retry.")
-		}
-		for _, o := range certificate.DomainValidationOptions {
-			if o.ResourceRecord != nil {
-				validationOption := map[string]interface{}{
-					"domain_name":           aws.StringValue(o.DomainName),
-					"resource_record_name":  aws.StringValue(o.ResourceRecord.Name),
-					"resource_record_type":  aws.StringValue(o.ResourceRecord.Type),
-					"resource_record_value": aws.StringValue(o.ResourceRecord.Value),
-				}
-				domainValidationResult = append(domainValidationResult, validationOption)
-			} else if o.ValidationEmails != nil && len(o.ValidationEmails) > 0 {
-				for _, validationEmail := range o.ValidationEmails {
-					emailValidationResult = append(emailValidationResult, *validationEmail)
-				}
-			} else if o.ValidationStatus == nil || aws.StringValue(o.ValidationStatus) == acm.DomainStatusPendingValidation {
-				log.Printf("[DEBUG] Asynchronous ACM service domain validation assignment not complete, need to retry: %#v", o)
-				return nil, nil, fmt.Errorf("asynchronous ACM service domain validation assignment not complete, need to retry: %#v", o)
-			}
-		}
-	case acm.CertificateTypePrivate:
-		// While ACM PRIVATE certificates do not need to be validated, there is a slight delay for
-		// the API to fill in all certificate details, which is during the PENDING_VALIDATION status.
-		if aws.StringValue(certificate.Status) == acm.DomainStatusPendingValidation {
-			return nil, nil, fmt.Errorf("certificate still pending issuance")
-		}
-	}
-
-	return domainValidationResult, emailValidationResult, nil
+	return certificateValidationMethodNone
 }
 
 func acmDomainValidationOptionsHash(v interface{}) int {
@@ -535,12 +471,75 @@ func expandCertificateOptions(tfMap map[string]interface{}) *acm.CertificateOpti
 	return apiObject
 }
 
-func flattenCertificateOptions(co *acm.CertificateOptions) []interface{} {
-	m := map[string]interface{}{
-		"certificate_transparency_logging_preference": aws.StringValue(co.CertificateTransparencyLoggingPreference),
+func flattenCertificateOptions(apiObject *acm.CertificateOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	return []interface{}{m}
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CertificateTransparencyLoggingPreference; v != nil {
+		tfMap["certificate_transparency_logging_preference"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenDomainValidation(apiObject *acm.DomainValidation) (map[string]interface{}, []string) {
+	if apiObject == nil {
+		return nil, nil
+	}
+
+	tfMap := map[string]interface{}{}
+	var tfStrings []string
+
+	if v := apiObject.ResourceRecord; v != nil {
+		if v := apiObject.DomainName; v != nil {
+			tfMap["domain_name"] = aws.StringValue(v)
+		}
+
+		if v := v.Name; v != nil {
+			tfMap["resource_record_name"] = aws.StringValue(v)
+		}
+
+		if v := v.Type; v != nil {
+			tfMap["resource_record_type"] = aws.StringValue(v)
+		}
+
+		if v := v.Value; v != nil {
+			tfMap["resource_record_value"] = aws.StringValue(v)
+		}
+	}
+
+	tfStrings = aws.StringValueSlice(apiObject.ValidationEmails)
+
+	return tfMap, tfStrings
+}
+
+func flattenDomainValidations(apiObjects []*acm.DomainValidation) ([]interface{}, []string) {
+	if len(apiObjects) == 0 {
+		return nil, nil
+	}
+
+	var tfList []interface{}
+	var tfStrings []string
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		v1, v2 := flattenDomainValidation(apiObject)
+
+		if len(v1) > 0 {
+			tfList = append(tfList, v1)
+		}
+		if len(v2) > 0 {
+			tfStrings = append(tfStrings, v2...)
+		}
+	}
+
+	return tfList, tfStrings
 }
 
 func isChangeNormalizeCertRemoval(oldRaw, newRaw interface{}) bool {
@@ -556,22 +555,22 @@ func isChangeNormalizeCertRemoval(oldRaw, newRaw interface{}) bool {
 		return false
 	}
 
+	// strip CRs from raw literals. Lifted from go/scanner/scanner.go
+	// See https://github.com/golang/go/blob/release-branch.go1.6/src/go/scanner/scanner.go#L479
+	stripCR := func(b []byte) []byte {
+		c := make([]byte, len(b))
+		i := 0
+		for _, ch := range b {
+			if ch != '\r' {
+				c[i] = ch
+				i++
+			}
+		}
+		return c[:i]
+	}
+
 	newCleanVal := sha1.Sum(stripCR([]byte(strings.TrimSpace(new))))
 	return hex.EncodeToString(newCleanVal[:]) == old
-}
-
-// strip CRs from raw literals. Lifted from go/scanner/scanner.go
-// See https://github.com/golang/go/blob/release-branch.go1.6/src/go/scanner/scanner.go#L479
-func stripCR(b []byte) []byte {
-	c := make([]byte, len(b))
-	i := 0
-	for _, ch := range b {
-		if ch != '\r' {
-			c[i] = ch
-			i++
-		}
-	}
-	return c[:i]
 }
 
 func findCertificate(conn *acm.ACM, input *acm.DescribeCertificateInput) (*acm.CertificateDetail, error) {
