@@ -331,7 +331,7 @@ AWS documentation: [Amazon Cognito Authentication for Kibana](https://docs.aws.a
 
 ~> **Note:** You can enable `node_to_node_encryption` _in place_ for an existing, unencrypted domain only if you are using OpenSearch or your Elasticsearch version is 6.7 or greater. For other versions, if you enable `node_to_node_encryption`, Terraform will recreate the domain, potentially causing data loss. For any version, if you disable `node_to_node_encryption` for an existing, node-to-node encrypted domain, Terraform will recreate the domain, potentially causing data loss.
 
-* `enabled` - (Required) Whether to enable node-to-node encryption. If the `node_to_node_encryption` block is not provided then this defaults to `false`.
+* `enabled` - (Required) Whether to enable node-to-node encryption. If the `node_to_node_encryption` block is not provided then this defaults to `false`. Enabling node-to-node encryption of a new domain requires an `engine_version` of `OpenSearch_X.Y` or `Elasticsearch_6.0` or greater.
 
 ### snapshot_options
 
