@@ -1,6 +1,7 @@
 package organizations_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/organizations"
@@ -11,6 +12,10 @@ import (
 func testAccOrganizationalUnitChildAccountsDataSource_basic(t *testing.T) {
 	resourceName := "aws_organizations_account.test"
 	dataSourceName := "data.aws_organizations_organizational_unit_child_accounts.test"
+
+	domain := acctest.RandomDomainName()
+	address := acctest.RandomEmailAddress(domain)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
@@ -20,7 +25,7 @@ func testAccOrganizationalUnitChildAccountsDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationalUnitChildAccountsDataSourceConfig,
+				Config: testAccOrganizationalUnitChildAccountsDataSourceConfig(address),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "accounts.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "accounts.0.arn"),
@@ -36,16 +41,18 @@ func testAccOrganizationalUnitChildAccountsDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccOrganizationalUnitChildAccountsDataSourceConfig = `
+func testAccOrganizationalUnitChildAccountsDataSourceConfig(rAddress string) string {
+	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {}
 
 resource "aws_organizations_account" "test" {
   name  = "test"
-  email = "john@doe.org"
+  email = %[1]q
   parent_id = aws_organizations_organization.test.roots[0].id
 }
 
 data "aws_organizations_organizational_unit_child_accounts" "test" {
   parent_id = aws_organizations_organization.test.roots[0].id
 }
-`
+`, rAddress)
+}
