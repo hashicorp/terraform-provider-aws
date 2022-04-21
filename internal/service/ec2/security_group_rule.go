@@ -227,7 +227,7 @@ information and instructions for recovery. Error: %w`, sg_id, autherr)
 	id := IPPermissionIDHash(sg_id, ruleType, perm)
 	log.Printf("[DEBUG] Computed group rule ID %s", id)
 
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(60*time.Minute, func() *resource.RetryError {
 		sg, err := FindSecurityGroupByID(conn, sg_id)
 
 		if err != nil {
