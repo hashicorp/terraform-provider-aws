@@ -117,7 +117,7 @@ The following arguments are optional:
   When `engine` is `redis` and the version is 6 or higher, the major and minor version can be set, e.g., `6.2`,
   or the minor version can be unspecified which will use the latest version at creation time, e.g., `6.x`.
   Otherwise, specify the full version desired, e.g., `5.0.6`.
-  The actual engine version used is returned in the attribute `engine_version_actual`, [defined below](#engine_version_actual).
+  The actual engine version used is returned in the attribute `engine_version_actual`, see [Attributes Reference](#attributes-reference) below.
 * `final_snapshot_identifier` - (Optional, Redis only) Name of your final cluster snapshot. If omitted, no final snapshot will be made.
 * `log_delivery_configuration` - (Optional, Redis only) Specifies the destination and format of Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log). See the documentation on [Amazon ElastiCache](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html). See [Log Delivery Configuration](#log-delivery-configuration) below for more details.
 * `maintenance_window` – (Optional) Specifies the weekly time range for when maintenance
