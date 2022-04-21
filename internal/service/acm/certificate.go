@@ -231,6 +231,10 @@ func ResourceCertificate() *schema.Resource {
 }
 
 func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).ACMConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
 	if _, ok := d.GetOk("domain_name"); ok {
 		_, v1 := d.GetOk("certificate_authority_arn")
 		_, v2 := d.GetOk("validation_method")
@@ -239,80 +243,64 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 			return errors.New("`certificate_authority_arn` or `validation_method` must be set when creating an ACM certificate")
 		}
 
-		return resourceCertificateCreateRequested(d, meta)
-	}
-
-	return resourceCertificateCreateImported(d, meta)
-}
-
-func resourceCertificateCreateImported(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	input := &acm.ImportCertificateInput{
-		Certificate: []byte(d.Get("certificate_body").(string)),
-		PrivateKey:  []byte(d.Get("private_key").(string)),
-	}
-
-	if v, ok := d.GetOk("certificate_chain"); ok {
-		input.CertificateChain = []byte(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	output, err := conn.ImportCertificate(input)
-
-	if err != nil {
-		return fmt.Errorf("error importing ACM Certificate: %w", err)
-	}
-
-	d.SetId(aws.StringValue(output.CertificateArn))
-
-	return resourceCertificateRead(d, meta)
-}
-
-func resourceCertificateCreateRequested(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	params := &acm.RequestCertificateInput{
-		DomainName:       aws.String(d.Get("domain_name").(string)),
-		IdempotencyToken: aws.String(resource.PrefixedUniqueId("tf")), // 32 character limit
-		Options:          expandAcmCertificateOptions(d.Get("options").([]interface{})),
-	}
-
-	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	if caARN, ok := d.GetOk("certificate_authority_arn"); ok {
-		params.CertificateAuthorityArn = aws.String(caARN.(string))
-	}
-
-	if sans, ok := d.GetOk("subject_alternative_names"); ok {
-		subjectAlternativeNames := make([]*string, len(sans.(*schema.Set).List()))
-		for i, sanRaw := range sans.(*schema.Set).List() {
-			subjectAlternativeNames[i] = aws.String(sanRaw.(string))
+		domainName := d.Get("domain_name").(string)
+		input := &acm.RequestCertificateInput{
+			DomainName:       aws.String(domainName),
+			IdempotencyToken: aws.String(resource.PrefixedUniqueId("tf")), // 32 character limit
 		}
-		params.SubjectAlternativeNames = subjectAlternativeNames
+
+		if v, ok := d.GetOk("certificate_authority_arn"); ok {
+			input.CertificateAuthorityArn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.Options = expandCertificateOptions(v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		if v, ok := d.GetOk("subject_alternative_names"); ok {
+			for _, v := range v.(*schema.Set).List() {
+				input.SubjectAlternativeNames = append(input.SubjectAlternativeNames, aws.String(v.(string)))
+			}
+		}
+
+		if v, ok := d.GetOk("validation_method"); ok {
+			input.ValidationMethod = aws.String(v.(string))
+		}
+
+		if len(tags) > 0 {
+			input.Tags = Tags(tags.IgnoreAWS())
+		}
+
+		log.Printf("[DEBUG] Requesting ACM Certificate: %s", input)
+		output, err := conn.RequestCertificate(input)
+
+		if err != nil {
+			return fmt.Errorf("requesting ACM Certificate (%s): %w", domainName, err)
+		}
+
+		d.SetId(aws.StringValue(output.CertificateArn))
+	} else {
+		input := &acm.ImportCertificateInput{
+			Certificate: []byte(d.Get("certificate_body").(string)),
+			PrivateKey:  []byte(d.Get("private_key").(string)),
+		}
+
+		if v, ok := d.GetOk("certificate_chain"); ok {
+			input.CertificateChain = []byte(v.(string))
+		}
+
+		if len(tags) > 0 {
+			input.Tags = Tags(tags.IgnoreAWS())
+		}
+
+		output, err := conn.ImportCertificate(input)
+
+		if err != nil {
+			return fmt.Errorf("importing ACM Certificate: %w", err)
+		}
+
+		d.SetId(aws.StringValue(output.CertificateArn))
 	}
-
-	if v, ok := d.GetOk("validation_method"); ok {
-		params.ValidationMethod = aws.String(v.(string))
-	}
-
-	log.Printf("[DEBUG] ACM Certificate Request: %#v", params)
-	resp, err := conn.RequestCertificate(params)
-
-	if err != nil {
-		return fmt.Errorf("Error requesting certificate: %s", err)
-	}
-
-	d.SetId(aws.StringValue(resp.CertificateArn))
 
 	return resourceCertificateRead(d, meta)
 }
@@ -372,7 +360,7 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 
 		d.Set("validation_method", certificateValidationMethod(resp.Certificate))
 
-		if err := d.Set("options", flattenAcmCertificateOptions(resp.Certificate.Options)); err != nil {
+		if err := d.Set("options", flattenCertificateOptions(resp.Certificate.Options)); err != nil {
 			return resource.NonRetryableError(fmt.Errorf("error setting certificate options: %s", err))
 		}
 
@@ -533,23 +521,21 @@ func acmDomainValidationOptionsHash(v interface{}) int {
 	return 0
 }
 
-func expandAcmCertificateOptions(l []interface{}) *acm.CertificateOptions {
-	if len(l) == 0 || l[0] == nil {
+func expandCertificateOptions(tfMap map[string]interface{}) *acm.CertificateOptions {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	apiObject := &acm.CertificateOptions{}
 
-	options := &acm.CertificateOptions{}
-
-	if v, ok := m["certificate_transparency_logging_preference"]; ok {
-		options.CertificateTransparencyLoggingPreference = aws.String(v.(string))
+	if v, ok := tfMap["certificate_transparency_logging_preference"].(string); ok && v != "" {
+		apiObject.CertificateTransparencyLoggingPreference = aws.String(v)
 	}
 
-	return options
+	return apiObject
 }
 
-func flattenAcmCertificateOptions(co *acm.CertificateOptions) []interface{} {
+func flattenCertificateOptions(co *acm.CertificateOptions) []interface{} {
 	m := map[string]interface{}{
 		"certificate_transparency_logging_preference": aws.StringValue(co.CertificateTransparencyLoggingPreference),
 	}
@@ -632,7 +618,12 @@ func FindCertificateByARN(conn *acm.ACM, arn string) (*acm.CertificateDetail, er
 
 func statusCertificate(conn *acm.ACM, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindCertificateByARN(conn, arn)
+		// Don't call FindCertificateByARN as it maps useful status codes to NotFoundError.
+		input := &acm.DescribeCertificateInput{
+			CertificateArn: aws.String(arn),
+		}
+
+		output, err := findCertificate(conn, input)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
