@@ -563,11 +563,17 @@ func setEngineVersionFromCacheCluster(d *schema.ResourceData, c *elasticache.Cac
 		return fmt.Errorf("error reading ElastiCache Cache Cluster (%s) engine version: %w", d.Id(), err)
 	}
 	if engineVersion.Segments()[0] < 6 {
-		d.Set("engine_version", engineVersion.String()) // e.g. 3.2.10
+		d.Set("engine_version", engineVersion.String())
 	} else {
-		d.Set("engine_version", fmt.Sprintf("%d.%d", engineVersion.Segments()[0], engineVersion.Segments()[1])) // e.g. 6.2
+		// Handle major-only version number
+		configVersion := d.Get("engine_version").(string)
+		if t, _ := regexp.MatchString(`[6-9]\.x`, configVersion); t {
+			d.Set("engine_version", fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
+		} else {
+			d.Set("engine_version", fmt.Sprintf("%d.%d", engineVersion.Segments()[0], engineVersion.Segments()[1]))
+		}
 	}
-	d.Set("engine_version_actual", engineVersion.String()) // e.g. 6.0.5
+	d.Set("engine_version_actual", engineVersion.String())
 
 	return nil
 }

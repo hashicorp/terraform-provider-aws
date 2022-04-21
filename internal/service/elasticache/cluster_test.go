@@ -599,7 +599,7 @@ func TestAccElastiCacheCluster_EngineVersion_redis(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v1, v2, v3, v4, v5, v6 elasticache.CacheCluster
+	var v1, v2, v3, v4, v5, v6, v7, v8 elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
 
@@ -641,7 +641,7 @@ func TestAccElastiCacheCluster_EngineVersion_redis(t *testing.T) {
 					testAccCheckClusterExists(resourceName, &v4),
 					testAccCheckClusterNotRecreated(&v3, &v4),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.0"),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.0\.[[:digit:]]+$`)),
 				),
 			},
 			{
@@ -650,7 +650,7 @@ func TestAccElastiCacheCluster_EngineVersion_redis(t *testing.T) {
 					testAccCheckClusterExists(resourceName, &v5),
 					testAccCheckClusterNotRecreated(&v4, &v5),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
 				),
 			},
 			{
@@ -660,6 +660,24 @@ func TestAccElastiCacheCluster_EngineVersion_redis(t *testing.T) {
 					testAccCheckClusterRecreated(&v5, &v6),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.6"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "5.0.6"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_EngineVersion_Redis(rName, "6.x"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &v7),
+					testAccCheckClusterNotRecreated(&v6, &v7),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
+				),
+			},
+			{
+				Config: testAccClusterConfig_EngineVersion_Redis(rName, "6.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &v8),
+					testAccCheckClusterRecreated(&v7, &v8),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.0"),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.0\.[[:digit:]]+$`)),
 				),
 			},
 		},

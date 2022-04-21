@@ -140,7 +140,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v1, v2, v3, v4, v5, v6 elasticache.ReplicationGroup
+	var v1, v2, v3, v4, v5, v6, v7, v8 elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -201,6 +201,24 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 					testAccCheckReplicationGroupRecreated(&v5, &v6),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.6"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "5.0.6"),
+				),
+			},
+			{
+				Config: testAccReplicationGroupConfig_EngineVersion(rName, "6.x"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &v7),
+					testAccCheckReplicationGroupNotRecreated(&v6, &v7),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
+				),
+			},
+			{
+				Config: testAccReplicationGroupConfig_EngineVersion(rName, "6.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &v8),
+					testAccCheckReplicationGroupRecreated(&v7, &v8),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.0"),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.0\.[[:digit:]]+$`)),
 				),
 			},
 		},

@@ -114,7 +114,8 @@ The following arguments are optional:
 * `engine_version` – (Optional) Version number of the cache engine to be used.
   If not set, defaults to the latest version.
   See [Describe Cache Engine Versions](https://docs.aws.amazon.com/cli/latest/reference/elasticache/describe-cache-engine-versions.html) in the AWS Documentation for supported versions.
-  When `engine` is `redis` and the version is 6 or higher, only the major and minor version can be set, e.g., `6.2`.
+  When `engine` is `redis` and the version is 6 or higher, the major and minor version can be set, e.g., `6.2`,
+  or the minor version can be unspecified which will use the latest version at creation time, e.g., `6.x`.
   Otherwise, specify the full version desired, e.g., `5.0.6`.
   The actual engine version used is returned in the attribute `engine_version_actual`, [defined below](#engine_version_actual).
 * `final_snapshot_identifier` - (Optional, Redis only) Name of your final cluster snapshot. If omitted, no final snapshot will be made.
