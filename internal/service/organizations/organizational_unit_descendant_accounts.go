@@ -119,8 +119,6 @@ func dataSourceOrganizationalUnitDescendantAccountsRead(d *schema.ResourceData, 
 	organizationalUnitIDs = append(organizationalUnitIDs, parent_id)
 
 	// Get all descendant organizational units.
-	// 	var descendantOUs []*organizations.OrganizationalUnit
-
 	descendantOUs, err := getDescendantOrganizationalUnitsIDs(organizationalUnitIDs[0], meta)
 	if err != nil {
 		return err
