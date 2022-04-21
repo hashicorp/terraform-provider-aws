@@ -12,7 +12,6 @@ func testAccOrganizationalUnitDescendantAccountsDataSource_basic(t *testing.T) {
 	resourceName1 := "aws_organizations_account.test1"
 	resourceName2 := "aws_organizations_account.test2"
 	resourceName3 := "aws_organizations_account.test3"
-
 	dataSourceName := "data.aws_organizations_organizational_unit_descendant_accounts.test"
 
 	domain := acctest.RandomDomainName()
