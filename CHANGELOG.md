@@ -720,6 +720,82 @@ BUG FIXES:
 * resource/aws_waf_rule_group: Prevent panic when expanding the rule group's set of `activated_rule` ([#22978](https://github.com/hashicorp/terraform-provider-aws/issues/22978))
 * resource/aws_wafregional_rule_group: Prevent panic when expanding the rule group's set of `activated_rule` ([#22978](https://github.com/hashicorp/terraform-provider-aws/issues/22978))
 
+## 3.75.1 (March 24, 2022)
+
+BUG FIXES:
+
+* resource/aws_route_table_association: Retry resource Read for EC2 eventual consistency ([#23806](https://github.com/hashicorp/terraform-provider-aws/issues/23806))
+
+## 3.75.0 (March 18, 2022)
+
+NOTES:
+
+* resource/aws_s3_bucket: The `acceleration_status` argument has been deprecated. Use the `aws_s3_bucket_accelerate_configuration` resource instead. ([#23471](https://github.com/hashicorp/terraform-provider-aws/issues/23471))
+* resource/aws_s3_bucket: The `acl` and `grant` arguments have been deprecated. Use the `aws_s3_bucket_acl` resource instead. ([#23419](https://github.com/hashicorp/terraform-provider-aws/issues/23419))
+* resource/aws_s3_bucket: The `cors_rule` argument has been deprecated. Use the `aws_s3_bucket_cors_configuration` resource instead. ([#23434](https://github.com/hashicorp/terraform-provider-aws/issues/23434))
+* resource/aws_s3_bucket: The `lifecycle_rule` argument has been deprecated. Use the `aws_s3_bucket_lifecycle_configuration` resource instead. ([#23445](https://github.com/hashicorp/terraform-provider-aws/issues/23445))
+* resource/aws_s3_bucket: The `logging` argument has been deprecated. Use the `aws_s3_bucket_logging` resource instead. ([#23430](https://github.com/hashicorp/terraform-provider-aws/issues/23430))
+* resource/aws_s3_bucket: The `object_lock_configuration.object_lock_enabled` argument has been deprecated. Use the top-level argument `object_lock_enabled` instead. ([#23449](https://github.com/hashicorp/terraform-provider-aws/issues/23449))
+* resource/aws_s3_bucket: The `object_lock_configuration.rule` argument has been deprecated. Use the `aws_s3_bucket_object_lock_configuration` resource instead. ([#23449](https://github.com/hashicorp/terraform-provider-aws/issues/23449))
+* resource/aws_s3_bucket: The `replication_configuration` argument has been deprecated. Use the `aws_s3_bucket_replication_configuration` resource instead. ([#23716](https://github.com/hashicorp/terraform-provider-aws/issues/23716))
+* resource/aws_s3_bucket: The `request_payer` argument has been deprecated. Use the `aws_s3_bucket_request_payment_configuration` resource instead. ([#23473](https://github.com/hashicorp/terraform-provider-aws/issues/23473))
+* resource/aws_s3_bucket: The `server_side_encryption_configuration` argument has been deprecated. Use the `aws_s3_bucket_server_side_encryption_configuration` resource instead. ([#23476](https://github.com/hashicorp/terraform-provider-aws/issues/23476))
+* resource/aws_s3_bucket: The `versioning` argument has been deprecated. Use the `aws_s3_bucket_versioning` resource instead. ([#23432](https://github.com/hashicorp/terraform-provider-aws/issues/23432))
+* resource/aws_s3_bucket: The `website`, `website_domain`, and `website_endpoint` arguments have been deprecated. Use the `aws_s3_bucket_website_configuration` resource instead. ([#23435](https://github.com/hashicorp/terraform-provider-aws/issues/23435))
+
+FEATURES:
+
+* **New Resource:** `aws_s3_bucket_accelerate_configuration` ([#23471](https://github.com/hashicorp/terraform-provider-aws/issues/23471))
+* **New Resource:** `aws_s3_bucket_acl` ([#23419](https://github.com/hashicorp/terraform-provider-aws/issues/23419))
+* **New Resource:** `aws_s3_bucket_cors_configuration` ([#23434](https://github.com/hashicorp/terraform-provider-aws/issues/23434))
+* **New Resource:** `aws_s3_bucket_lifecycle_configuration` ([#23445](https://github.com/hashicorp/terraform-provider-aws/issues/23445))
+* **New Resource:** `aws_s3_bucket_logging` ([#23430](https://github.com/hashicorp/terraform-provider-aws/issues/23430))
+* **New Resource:** `aws_s3_bucket_object_lock_configuration` ([#23449](https://github.com/hashicorp/terraform-provider-aws/issues/23449))
+* **New Resource:** `aws_s3_bucket_request_payment_configuration` ([#23473](https://github.com/hashicorp/terraform-provider-aws/issues/23473))
+* **New Resource:** `aws_s3_bucket_server_side_encryption_configuration` ([#23476](https://github.com/hashicorp/terraform-provider-aws/issues/23476))
+* **New Resource:** `aws_s3_bucket_versioning` ([#23432](https://github.com/hashicorp/terraform-provider-aws/issues/23432))
+* **New Resource:** `aws_s3_bucket_website_configuration` ([#23435](https://github.com/hashicorp/terraform-provider-aws/issues/23435))
+
+ENHANCEMENTS:
+
+* resource/aws_lambda_function: Add support for `dotnet6` `runtime` value ([#23670](https://github.com/hashicorp/terraform-provider-aws/issues/23670))
+* resource/aws_lambda_layer_version: Add support for `dotnet6` `compatible_runtimes` value ([#23670](https://github.com/hashicorp/terraform-provider-aws/issues/23670))
+* resource/aws_s3_bucket: Add top-level `object_lock_enabled` parameter ([#23449](https://github.com/hashicorp/terraform-provider-aws/issues/23449))
+* resource/aws_s3_bucket_acl: Support resource import for S3 bucket names consisting of uppercase letters, underscores, and a maximum of 255 characters ([#23679](https://github.com/hashicorp/terraform-provider-aws/issues/23679))
+* resource/aws_s3_bucket_lifecycle_configuration: Support empty string filtering (default behavior of the `aws_s3_bucket.lifecycle_rule` parameter in provider versions prior to v4.0) ([#23750](https://github.com/hashicorp/terraform-provider-aws/issues/23750))
+* resource/aws_s3_bucket_replication_configuration: Add `token` field to specify
+x-amz-bucket-object-lock-token for enabling replication on object lock enabled
+buckets or enabling object lock on an existing bucket. ([#23716](https://github.com/hashicorp/terraform-provider-aws/issues/23716))
+* resource/aws_s3_bucket_versioning: Add missing support for `Disabled` bucket versioning ([#23731](https://github.com/hashicorp/terraform-provider-aws/issues/23731))
+
+BUG FIXES:
+
+* resource/aws_s3_bucket: Prevent panic when expanding the bucket's list of `cors_rule` ([#7547](https://github.com/hashicorp/terraform-provider-aws/issues/7547))
+* resource/aws_s3_bucket_replication_configuration: Change `rule` configuration block to list instead of set ([#23737](https://github.com/hashicorp/terraform-provider-aws/issues/23737))
+* resource/aws_s3_bucket_replication_configuration: Correctly configure empty `rule.filter` configuration block in API requests ([#23716](https://github.com/hashicorp/terraform-provider-aws/issues/23716))
+* resource/aws_s3_bucket_replication_configuration: Ensure both `key` and `value` arguments of the `rule.filter.tag` configuration block are correctly populated in the outgoing API request and terraform state. ([#23716](https://github.com/hashicorp/terraform-provider-aws/issues/23716))
+* resource/aws_s3_bucket_replication_configuration: Prevent inconsistent final plan when `rule.filter.prefix` is an empty string ([#23716](https://github.com/hashicorp/terraform-provider-aws/issues/23716))
+* resource/aws_s3_bucket_replication_configuration: Set `rule.id` as Computed to prevent drift when the value is not configured ([#23737](https://github.com/hashicorp/terraform-provider-aws/issues/23737))
+
+## 3.74.3 (February 17, 2022)
+
+BUG FIXES:
+
+* resource/aws_ecs_capacity_provider: Fix tagging error preventing use in ISO partitions ([#23030](https://github.com/hashicorp/terraform-provider-aws/issues/23030))
+* resource/aws_ecs_cluster: Fix tagging error preventing use in ISO partitions ([#23030](https://github.com/hashicorp/terraform-provider-aws/issues/23030))
+* resource/aws_ecs_service: Fix tagging error preventing use in ISO partitions ([#23030](https://github.com/hashicorp/terraform-provider-aws/issues/23030))
+* resource/aws_ecs_task_definition: Fix tagging error preventing use in ISO partitions ([#23030](https://github.com/hashicorp/terraform-provider-aws/issues/23030))
+* resource/aws_ecs_task_set: Fix tagging error preventing use in ISO partitions ([#23030](https://github.com/hashicorp/terraform-provider-aws/issues/23030))
+* resource/aws_waf_rule_group: Prevent panic when expanding the rule group's set of `activated_rule` ([#22978](https://github.com/hashicorp/terraform-provider-aws/issues/22978))
+* resource/aws_wafregional_rule_group: Prevent panic when expanding the rule group's set of `activated_rule` ([#22978](https://github.com/hashicorp/terraform-provider-aws/issues/22978))
+
+## 3.74.2 (February 11, 2022)
+
+BUG FIXES:
+
+* resource/aws_rds_cluster: Fix crash when configured `engine_version` string is shorter than the `EngineVersion` string returned from the AWS API ([#23039](https://github.com/hashicorp/terraform-provider-aws/issues/23039))
+* resource/aws_vpn_connection: Add support for `ipsec.1-aes256` connection type ([#23127](https://github.com/hashicorp/terraform-provider-aws/issues/23127))
+
 ## 3.74.1 (February 7, 2022)
 
 BUG FIXES:
