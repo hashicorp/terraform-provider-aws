@@ -68,30 +68,19 @@ func ResourceDomain() *schema.Resource {
 			customdiff.ForceNewIf("encrypt_at_rest.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				// cannot disable (at all) or enable if < 6.7 without forcenew
 				o, n := d.GetChange("encrypt_at_rest.0.enabled")
-				fmt.Printf("ear - old: %t, new: %t\n", o.(bool), n.(bool))
 				if o.(bool) && !n.(bool) {
 					return true
 				}
-				fmt.Printf("force new? %t\n", inPlaceEncryptionEnableVersion(d.Get("elasticsearch_version").(string)))
-				return inPlaceEncryptionEnableVersion(d.Get("elasticsearch_version").(string))
-			}),
-			customdiff.ForceNewIf("encrypt_at_rest.0.kms_key_id", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
-				// cannot change if < 6.7 without forcenew
-				o, n := d.GetChange("encrypt_at_rest.0.kms_key_id")
-				if o.(string) != "" && n.(string) != "" && (strings.HasSuffix(o.(string), n.(string)) || strings.HasSuffix(n.(string), o.(string))) {
-					return false
-				}
-				fmt.Printf("force new? %t\n", inPlaceEncryptionEnableVersion(d.Get("elasticsearch_version").(string)))
-				return inPlaceEncryptionEnableVersion(d.Get("elasticsearch_version").(string))
+
+				return !inPlaceEncryptionEnableVersion(d.Get("elasticsearch_version").(string))
 			}),
 			customdiff.ForceNewIf("node_to_node_encryption.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				o, n := d.GetChange("node_to_node_encryption.0.enabled")
-				fmt.Printf("ntne - old: %t, new: %t\n", o.(bool), n.(bool))
 				if o.(bool) && !n.(bool) {
 					return true
 				}
-				fmt.Printf("force new? %t\n", inPlaceEncryptionEnableVersion(d.Get("elasticsearch_version").(string)))
-				return inPlaceEncryptionEnableVersion(d.Get("elasticsearch_version").(string))
+
+				return !inPlaceEncryptionEnableVersion(d.Get("elasticsearch_version").(string))
 			}),
 			verify.SetTagsDiff,
 		),
@@ -431,6 +420,7 @@ func ResourceDomain() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
+							ForceNew:         true,
 							DiffSuppressFunc: suppressEquivalentKmsKeyIds,
 						},
 					},
@@ -1013,8 +1003,6 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticsearchConn
 
-	fmt.Printf("deleting %s\n", d.Id())
-
 	name := d.Get("domain_name").(string)
 
 	log.Printf("[DEBUG] Deleting Elasticsearch Domain: %s", d.Id())
@@ -1053,6 +1041,8 @@ func resourceDomainImport(d *schema.ResourceData, meta interface{}) ([]*schema.R
 	return []*schema.ResourceData{d}, nil
 }
 
+// inPlaceEncryptionEnableVersion returns true if, based on version, encryption
+// can be enabled in place (without ForceNew)
 func inPlaceEncryptionEnableVersion(version string) bool {
 	var want, got *gversion.Version
 	var err error
@@ -1060,7 +1050,7 @@ func inPlaceEncryptionEnableVersion(version string) bool {
 		return false
 	}
 
-	if got, err = gversion.NewVersion(version); err != nil || got.GreaterThanOrEqual(want) {
+	if got, err = gversion.NewVersion(version); err != nil || got.LessThan(want) {
 		return false
 	}
 

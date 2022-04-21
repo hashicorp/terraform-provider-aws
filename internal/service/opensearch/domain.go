@@ -67,26 +67,19 @@ func ResourceDomain() *schema.Resource {
 			}),
 			customdiff.ForceNewIf("encrypt_at_rest.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				o, n := d.GetChange("encrypt_at_rest.0.enabled")
-				fmt.Printf("ear - old: %t, new: %t\n", o.(bool), n.(bool))
 				if o.(bool) && !n.(bool) {
 					return true
 				}
-				fmt.Printf("force new? %t\n", inPlaceEncryptionEnableVersion(d.Get("engine_version").(string)))
-				return inPlaceEncryptionEnableVersion(d.Get("engine_version").(string))
-			}),
-			customdiff.ForceNewIf("encrypt_at_rest.0.kms_key_id", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
-				// cannot change if < 6.7 without forcenew
-				fmt.Printf("force new? %t\n", inPlaceEncryptionEnableVersion(d.Get("engine_version").(string)))
-				return inPlaceEncryptionEnableVersion(d.Get("engine_version").(string))
+
+				return !inPlaceEncryptionEnableVersion(d.Get("engine_version").(string))
 			}),
 			customdiff.ForceNewIf("node_to_node_encryption.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				o, n := d.GetChange("node_to_node_encryption.0.enabled")
-				fmt.Printf("ntne - old: %t, new: %t\n", o.(bool), n.(bool))
 				if o.(bool) && !n.(bool) {
 					return true
 				}
-				fmt.Printf("force new? %t\n", inPlaceEncryptionEnableVersion(d.Get("engine_version").(string)))
-				return inPlaceEncryptionEnableVersion(d.Get("engine_version").(string))
+
+				return !inPlaceEncryptionEnableVersion(d.Get("engine_version").(string))
 			}),
 			verify.SetTagsDiff,
 		),
@@ -421,6 +414,7 @@ func ResourceDomain() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
+							ForceNew:         true,
 							DiffSuppressFunc: suppressEquivalentKmsKeyIds,
 						},
 					},
@@ -959,7 +953,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 			if v, ok := d.GetOk("encrypt_at_rest"); ok {
 				options := v.([]interface{})
 				if options[0] == nil {
-					return fmt.Errorf("At least one field is expected inside encrypt_at_rest")
+					return fmt.Errorf("at least one field is expected inside encrypt_at_rest")
 				}
 
 				s := options[0].(map[string]interface{})
@@ -1066,9 +1060,11 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+// inPlaceEncryptionEnableVersion returns true if, based on version, encryption
+// can be enabled in place (without ForceNew)
 func inPlaceEncryptionEnableVersion(version string) bool {
 	if strings.HasPrefix(strings.ToLower(version), "opensearch") {
-		return false
+		return true
 	}
 
 	version = strings.TrimPrefix(strings.ToLower(version), "elasticsearch_")
@@ -1079,10 +1075,10 @@ func inPlaceEncryptionEnableVersion(version string) bool {
 	}
 
 	if got, err = gversion.NewVersion(version); err != nil || got.GreaterThanOrEqual(want) {
-		return false
+		return true
 	}
 
-	return true
+	return false
 }
 
 func suppressEquivalentKmsKeyIds(k, old, new string, d *schema.ResourceData) bool {

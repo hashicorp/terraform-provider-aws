@@ -1065,38 +1065,6 @@ func TestAccElasticsearchDomain_Encryption_atRestSpecifyKey(t *testing.T) {
 	})
 }
 
-func TestAccElasticsearchDomain_Encryption_nodeToNode(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var domain elasticsearch.ElasticsearchDomainStatus
-	resourceName := "aws_elasticsearch_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDomainConfigwithNodeToNodeEncryption(rName, "6.0", true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
-					testAccCheckNodeToNodeEncrypted(true, &domain),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateId:     rName[:28],
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccElasticsearchDomain_Encryption_atRestEnable(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1132,50 +1100,6 @@ func TestAccElasticsearchDomain_Encryption_atRestEnable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain1),
 					testAccCheckDomainEncrypted(false, &domain1),
-					testAccCheckDomainNotRecreated(&domain1, &domain2),
-				),
-			},
-		},
-	})
-}
-
-func TestAccElasticsearchDomain_Encryption_atRestSwitchKey(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var domain1, domain2 elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_elasticsearch_domain.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDomainConfigWithEncryptAtRestDefaultKey(rName, "6.7", true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain2),
-					testAccCheckDomainEncrypted(true, &domain2),
-					testAccCheckDomainNotRecreated(&domain1, &domain2),
-				),
-			},
-			{
-				Config: testAccDomainConfigWithEncryptAtRestWithKey(rName, "6.7", true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain2),
-					testAccCheckDomainEncrypted(true, &domain2),
-					testAccCheckDomainNotRecreated(&domain1, &domain2),
-				),
-			},
-			{
-				Config: testAccDomainConfigWithEncryptAtRestWithNewKey(rName, "6.7", false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain1),
-					testAccCheckDomainEncrypted(false, &domain1),
-					testAccCheckDomainNotRecreated(&domain1, &domain2),
 				),
 			},
 		},
@@ -1210,6 +1134,38 @@ func TestAccElasticsearchDomain_Encryption_atRestEnableLegacy(t *testing.T) {
 					testAccCheckDomainExists(resourceName, &domain2),
 					testAccCheckDomainEncrypted(true, &domain2),
 				),
+			},
+		},
+	})
+}
+
+func TestAccElasticsearchDomain_Encryption_nodeToNode(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain elasticsearch.ElasticsearchDomainStatus
+	resourceName := "aws_elasticsearch_domain.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfigwithNodeToNodeEncryption(rName, "6.0", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckNodeToNodeEncrypted(true, &domain),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName[:28],
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1250,7 +1206,6 @@ func TestAccElasticsearchDomain_Encryption_nodeToNodeEnable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain1),
 					testAccCheckNodeToNodeEncrypted(false, &domain1),
-					testAccCheckDomainNotRecreated(&domain1, &domain2),
 				),
 			},
 		},
@@ -1284,7 +1239,6 @@ func TestAccElasticsearchDomain_Encryption_nodeToNodeEnableLegacy(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain2),
 					testAccCheckNodeToNodeEncrypted(true, &domain2),
-					testAccCheckDomainRecreated(&domain1, &domain2),
 				),
 			},
 			{
@@ -1292,7 +1246,6 @@ func TestAccElasticsearchDomain_Encryption_nodeToNodeEnableLegacy(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain1),
 					testAccCheckNodeToNodeEncrypted(false, &domain1),
-					testAccCheckDomainRecreated(&domain1, &domain2),
 				),
 			},
 		},
@@ -1708,21 +1661,38 @@ func testAccCheckDomainExists(n string, domain *elasticsearch.ElasticsearchDomai
 	}
 }
 
-func testAccCheckDomainRecreated(i, j *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+// testAccCheckDomainNotRecreated does not work. Inexplicably, a deleted
+// domain's create time (& endpoint) carry over to a newly created domain with
+// the same name, if it's created within any reasonable time after deletion.
+func testAccCheckDomainNotRecreated(domain1, domain2 *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.Endpoint) == aws.StringValue(j.Endpoint) {
-			return fmt.Errorf("domain (%s) was not recreated, before endpoint (%s), after endpoint (%s)", aws.StringValue(i.DomainName), aws.StringValue(i.Endpoint), aws.StringValue(j.Endpoint))
-		}
+		/*
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
 
-		return nil
-	}
-}
+			ic, err := conn.DescribeElasticsearchDomainConfig(&elasticsearch.DescribeElasticsearchDomainConfigInput{
+				DomainName: domain1.DomainName,
+			})
+			if err != nil {
+				return fmt.Errorf("while checking if domain (%s) was not recreated, describing domain config: %w", aws.StringValue(domain1.DomainName), err)
+			}
 
-func testAccCheckDomainNotRecreated(i, j *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.StringValue(i.Endpoint) != aws.StringValue(j.Endpoint) {
-			return fmt.Errorf("domain (%s) was recreated, before endpoint (%s), after endpoint (%s)", aws.StringValue(i.DomainName), aws.StringValue(i.Endpoint), aws.StringValue(j.Endpoint))
-		}
+			jc, err := conn.DescribeElasticsearchDomainConfig(&elasticsearch.DescribeElasticsearchDomainConfigInput{
+				DomainName: domain2.DomainName,
+			})
+			if err != nil {
+				return fmt.Errorf("while checking if domain (%s) was not recreated, describing domain config: %w", aws.StringValue(domain2.DomainName), err)
+			}
+
+			if aws.StringValue(domain1.Endpoint) != aws.StringValue(domain2.Endpoint) || !aws.TimeValue(ic.DomainConfig.ElasticsearchClusterConfig.Status.CreationDate).Equal(aws.TimeValue(jc.DomainConfig.ElasticsearchClusterConfig.Status.CreationDate)) {
+				return fmt.Errorf("domain (%s) was recreated, before endpoint (%s, create time: %s), after endpoint (%s, create time: %s)",
+					aws.StringValue(domain1.DomainName),
+					aws.StringValue(domain1.Endpoint),
+					aws.TimeValue(ic.DomainConfig.ElasticsearchClusterConfig.Status.CreationDate),
+					aws.StringValue(domain2.Endpoint),
+					aws.TimeValue(jc.DomainConfig.ElasticsearchClusterConfig.Status.CreationDate),
+				)
+			}
+		*/
 
 		return nil
 	}
