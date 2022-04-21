@@ -22,6 +22,10 @@ func ResourceCertificateValidation() *schema.Resource {
 		Read:   resourceCertificateValidationRead,
 		Delete: resourceCertificateValidationDelete,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(75 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"certificate_arn": {
 				Type:     schema.TypeString,
@@ -35,9 +39,6 @@ func ResourceCertificateValidation() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-		},
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(45 * time.Minute),
 		},
 	}
 }
