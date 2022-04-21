@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_s3_bucket_policy` ([#17738](https://github.com/hashicorp/terraform-provider-aws/issues/17738))
 * **New Resource:** `aws_transfer_workflow` ([#24248](https://github.com/hashicorp/terraform-provider-aws/issues/24248))
 
 ENHANCEMENTS:
