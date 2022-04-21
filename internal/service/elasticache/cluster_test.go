@@ -1421,7 +1421,7 @@ resource "aws_elasticache_cluster" "test" {
 func testAccClusterConfig_snapshots(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
-  cluster_id               = "tf-%s"
+  cluster_id               = %[1]q
   engine                   = "redis"
   node_type                = "cache.t3.small"
   num_cache_nodes          = 1
@@ -1435,7 +1435,7 @@ resource "aws_elasticache_cluster" "test" {
 func testAccClusterConfig_snapshotsUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
-  cluster_id               = "tf-%s"
+  cluster_id               = %[1]q
   engine                   = "redis"
   node_type                = "cache.t3.small"
   num_cache_nodes          = 1
