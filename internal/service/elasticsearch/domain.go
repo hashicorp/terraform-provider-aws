@@ -65,6 +65,23 @@ func ResourceDomain() *schema.Resource {
 				}
 				return true
 			}),
+			customdiff.ForceNewIf("encrypt_at_rest.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				// cannot disable (at all) or enable if < 6.7 without forcenew
+				o, n := d.GetChange("encrypt_at_rest.0.enabled")
+				if o.(bool) && !n.(bool) {
+					return true
+				}
+
+				return !inPlaceEncryptionEnableVersion(d.Get("elasticsearch_version").(string))
+			}),
+			customdiff.ForceNewIf("node_to_node_encryption.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				o, n := d.GetChange("node_to_node_encryption.0.enabled")
+				if o.(bool) && !n.(bool) {
+					return true
+				}
+
+				return !inPlaceEncryptionEnableVersion(d.Get("elasticsearch_version").(string))
+			}),
 			verify.SetTagsDiff,
 		),
 
@@ -398,7 +415,6 @@ func ResourceDomain() *schema.Resource {
 						"enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
-							ForceNew: true,
 						},
 						"kms_key_id": {
 							Type:             schema.TypeString,
@@ -451,7 +467,6 @@ func ResourceDomain() *schema.Resource {
 						"enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
-							ForceNew: true,
 						},
 					},
 				},
@@ -892,6 +907,29 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
+		if d.HasChange("encrypt_at_rest") {
+			input.EncryptionAtRestOptions = nil
+			if v, ok := d.GetOk("encrypt_at_rest"); ok {
+				options := v.([]interface{})
+				if options[0] == nil {
+					return fmt.Errorf("At least one field is expected inside encrypt_at_rest")
+				}
+
+				s := options[0].(map[string]interface{})
+				input.EncryptionAtRestOptions = expandEncryptAtRestOptions(s)
+			}
+		}
+
+		if d.HasChange("node_to_node_encryption") {
+			input.NodeToNodeEncryptionOptions = nil
+			if v, ok := d.GetOk("node_to_node_encryption"); ok {
+				options := v.([]interface{})
+
+				s := options[0].(map[string]interface{})
+				input.NodeToNodeEncryptionOptions = expandNodeToNodeEncryptionOptions(s)
+			}
+		}
+
 		if d.HasChange("snapshot_options") {
 			options := d.Get("snapshot_options").([]interface{})
 
@@ -1001,6 +1039,22 @@ func resourceDomainImport(d *schema.ResourceData, meta interface{}) ([]*schema.R
 	d.SetId(aws.StringValue(ds.ARN))
 
 	return []*schema.ResourceData{d}, nil
+}
+
+// inPlaceEncryptionEnableVersion returns true if, based on version, encryption
+// can be enabled in place (without ForceNew)
+func inPlaceEncryptionEnableVersion(version string) bool {
+	var want, got *gversion.Version
+	var err error
+	if want, err = gversion.NewVersion("6.7"); err != nil {
+		return false
+	}
+
+	if got, err = gversion.NewVersion(version); err != nil || got.LessThan(want) {
+		return false
+	}
+
+	return true
 }
 
 func suppressEquivalentKmsKeyIds(k, old, new string, d *schema.ResourceData) bool {

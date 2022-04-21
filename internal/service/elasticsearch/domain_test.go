@@ -176,7 +176,7 @@ func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 				Config: testAccDomainConfig_ClusterConfig_ZoneAwarenessConfig_AvailabilityZoneCount(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain2),
-					testAccCheckDomainNotRecreated(&domain1, &domain2),
+					testAccCheckDomainNotRecreated(&domain1, &domain2), // note: this check does not work and always passes
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", "2"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "true"),
@@ -186,7 +186,7 @@ func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 				Config: testAccDomainConfig_ClusterConfig_ZoneAwarenessEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain3),
-					testAccCheckDomainNotRecreated(&domain2, &domain3),
+					testAccCheckDomainNotRecreated(&domain2, &domain3), // note: this check does not work and always passes
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "0"),
 				),
@@ -195,7 +195,7 @@ func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 				Config: testAccDomainConfig_ClusterConfig_ZoneAwarenessConfig_AvailabilityZoneCount(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain4),
-					testAccCheckDomainNotRecreated(&domain3, &domain4),
+					testAccCheckDomainNotRecreated(&domain3, &domain4), // note: this check does not work and always passes
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", "3"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "true"),
@@ -1001,7 +1001,7 @@ func TestAccElasticsearchDomain_policyIgnoreEquivalent(t *testing.T) {
 	})
 }
 
-func TestAccElasticsearchDomain_EncryptAtRestDefault_key(t *testing.T) {
+func TestAccElasticsearchDomain_Encryption_atRestDefaultKey(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1017,7 +1017,7 @@ func TestAccElasticsearchDomain_EncryptAtRestDefault_key(t *testing.T) {
 		CheckDestroy: testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigWithEncryptAtRestDefaultKey(rName),
+				Config: testAccDomainConfigWithEncryptAtRestDefaultKey(rName, "6.0", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					testAccCheckDomainEncrypted(true, &domain),
@@ -1033,7 +1033,7 @@ func TestAccElasticsearchDomain_EncryptAtRestDefault_key(t *testing.T) {
 	})
 }
 
-func TestAccElasticsearchDomain_EncryptAtRestSpecify_key(t *testing.T) {
+func TestAccElasticsearchDomain_Encryption_atRestSpecifyKey(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1049,7 +1049,7 @@ func TestAccElasticsearchDomain_EncryptAtRestSpecify_key(t *testing.T) {
 		CheckDestroy: testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigWithEncryptAtRestWithKey(rName),
+				Config: testAccDomainConfigWithEncryptAtRestWithKey(rName, "6.0", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					testAccCheckDomainEncrypted(true, &domain),
@@ -1065,7 +1065,81 @@ func TestAccElasticsearchDomain_EncryptAtRestSpecify_key(t *testing.T) {
 	})
 }
 
-func TestAccElasticsearchDomain_nodeToNodeEncryption(t *testing.T) {
+func TestAccElasticsearchDomain_Encryption_atRestEnable(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain1, domain2 elasticsearch.ElasticsearchDomainStatus
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticsearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfigWithEncryptAtRestDefaultKey(rName, "6.7", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckDomainEncrypted(false, &domain1),
+				),
+			},
+			{
+				Config: testAccDomainConfigWithEncryptAtRestDefaultKey(rName, "6.7", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain2),
+					testAccCheckDomainEncrypted(true, &domain2),
+					testAccCheckDomainNotRecreated(&domain1, &domain2), // note: this check does not work and always passes
+				),
+			},
+			{
+				Config: testAccDomainConfigWithEncryptAtRestDefaultKey(rName, "6.7", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckDomainEncrypted(false, &domain1),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElasticsearchDomain_Encryption_atRestEnableLegacy(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain1, domain2 elasticsearch.ElasticsearchDomainStatus
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticsearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfigWithEncryptAtRestDefaultKey(rName, "5.6", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckDomainEncrypted(false, &domain1),
+				),
+			},
+			{
+				Config: testAccDomainConfigWithEncryptAtRestDefaultKey(rName, "5.6", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain2),
+					testAccCheckDomainEncrypted(true, &domain2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElasticsearchDomain_Encryption_nodeToNode(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1081,7 +1155,7 @@ func TestAccElasticsearchDomain_nodeToNodeEncryption(t *testing.T) {
 		CheckDestroy: testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigwithNodeToNodeEncryption(rName),
+				Config: testAccDomainConfigwithNodeToNodeEncryption(rName, "6.0", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					testAccCheckNodeToNodeEncrypted(true, &domain),
@@ -1092,6 +1166,87 @@ func TestAccElasticsearchDomain_nodeToNodeEncryption(t *testing.T) {
 				ImportState:       true,
 				ImportStateId:     rName[:28],
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccElasticsearchDomain_Encryption_nodeToNodeEnable(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain1, domain2 elasticsearch.ElasticsearchDomainStatus
+	resourceName := "aws_elasticsearch_domain.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfigwithNodeToNodeEncryption(rName, "6.7", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckNodeToNodeEncrypted(false, &domain1),
+				),
+			},
+			{
+				Config: testAccDomainConfigwithNodeToNodeEncryption(rName, "6.7", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain2),
+					testAccCheckNodeToNodeEncrypted(true, &domain2),
+					testAccCheckDomainNotRecreated(&domain1, &domain2), // note: this check does not work and always passes
+				),
+			},
+			{
+				Config: testAccDomainConfigwithNodeToNodeEncryption(rName, "6.7", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckNodeToNodeEncrypted(false, &domain1),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElasticsearchDomain_Encryption_nodeToNodeEnableLegacy(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain1, domain2 elasticsearch.ElasticsearchDomainStatus
+	resourceName := "aws_elasticsearch_domain.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfigwithNodeToNodeEncryption(rName, "6.0", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckNodeToNodeEncrypted(false, &domain1),
+				),
+			},
+			{
+				Config: testAccDomainConfigwithNodeToNodeEncryption(rName, "6.0", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain2),
+					testAccCheckNodeToNodeEncrypted(true, &domain2),
+				),
+			},
+			{
+				Config: testAccDomainConfigwithNodeToNodeEncryption(rName, "6.0", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckNodeToNodeEncrypted(false, &domain1),
+				),
 			},
 		},
 	})
@@ -1301,7 +1456,7 @@ func TestAccElasticsearchDomain_Update_version(t *testing.T) {
 				Config: testAccDomainConfig_ClusterUpdateVersion(rName, "5.6"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain2),
-					testAccCheckDomainNotRecreated(&domain1, &domain2),
+					testAccCheckDomainNotRecreated(&domain1, &domain2), // note: this check does not work and always passes
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_version", "5.6"),
 				),
 			},
@@ -1309,7 +1464,7 @@ func TestAccElasticsearchDomain_Update_version(t *testing.T) {
 				Config: testAccDomainConfig_ClusterUpdateVersion(rName, "6.3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain3),
-					testAccCheckDomainNotRecreated(&domain2, &domain3),
+					testAccCheckDomainNotRecreated(&domain2, &domain3), // note: this check does not work and always passes
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_version", "6.3"),
 				),
 			},
@@ -1506,26 +1661,40 @@ func testAccCheckDomainExists(n string, domain *elasticsearch.ElasticsearchDomai
 	}
 }
 
-func testAccCheckDomainNotRecreated(i, j *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+// testAccCheckDomainNotRecreated does not work. Inexplicably, a deleted
+// domain's create time (& endpoint) carry over to a newly created domain with
+// the same name, if it's created within any reasonable time after deletion.
+// Also, domain ID is not unique and is simply the domain name so won't work
+// for this check either.
+func testAccCheckDomainNotRecreated(domain1, domain2 *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
+		/*
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
 
-		iConfig, err := conn.DescribeElasticsearchDomainConfig(&elasticsearch.DescribeElasticsearchDomainConfigInput{
-			DomainName: i.DomainName,
-		})
-		if err != nil {
-			return err
-		}
-		jConfig, err := conn.DescribeElasticsearchDomainConfig(&elasticsearch.DescribeElasticsearchDomainConfigInput{
-			DomainName: j.DomainName,
-		})
-		if err != nil {
-			return err
-		}
+			ic, err := conn.DescribeElasticsearchDomainConfig(&elasticsearch.DescribeElasticsearchDomainConfigInput{
+				DomainName: domain1.DomainName,
+			})
+			if err != nil {
+				return fmt.Errorf("while checking if domain (%s) was not recreated, describing domain config: %w", aws.StringValue(domain1.DomainName), err)
+			}
 
-		if !aws.TimeValue(iConfig.DomainConfig.ElasticsearchClusterConfig.Status.CreationDate).Equal(aws.TimeValue(jConfig.DomainConfig.ElasticsearchClusterConfig.Status.CreationDate)) {
-			return fmt.Errorf("ES Domain was recreated")
-		}
+			jc, err := conn.DescribeElasticsearchDomainConfig(&elasticsearch.DescribeElasticsearchDomainConfigInput{
+				DomainName: domain2.DomainName,
+			})
+			if err != nil {
+				return fmt.Errorf("while checking if domain (%s) was not recreated, describing domain config: %w", aws.StringValue(domain2.DomainName), err)
+			}
+
+			if aws.StringValue(domain1.Endpoint) != aws.StringValue(domain2.Endpoint) || !aws.TimeValue(ic.DomainConfig.ElasticsearchClusterConfig.Status.CreationDate).Equal(aws.TimeValue(jc.DomainConfig.ElasticsearchClusterConfig.Status.CreationDate)) {
+				return fmt.Errorf("domain (%s) was recreated, before endpoint (%s, create time: %s), after endpoint (%s, create time: %s)",
+					aws.StringValue(domain1.DomainName),
+					aws.StringValue(domain1.Endpoint),
+					aws.TimeValue(ic.DomainConfig.ElasticsearchClusterConfig.Status.CreationDate),
+					aws.StringValue(domain2.Endpoint),
+					aws.TimeValue(jc.DomainConfig.ElasticsearchClusterConfig.Status.CreationDate),
+				)
+			}
+		*/
 
 		return nil
 	}
@@ -2126,12 +2295,12 @@ data "aws_iam_policy_document" "test" {
 `, rName)
 }
 
-func testAccDomainConfigWithEncryptAtRestDefaultKey(rName string) string {
+func testAccDomainConfigWithEncryptAtRestDefaultKey(rName, version string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
 
-  elasticsearch_version = "6.0"
+  elasticsearch_version = %[2]q
 
   # Encrypt at rest requires m4/c4/r4/i2 instances. See http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-supported-instance-types.html
   cluster_config {
@@ -2144,13 +2313,13 @@ resource "aws_elasticsearch_domain" "test" {
   }
 
   encrypt_at_rest {
-    enabled = true
+    enabled = %[3]t
   }
 }
-`, rName)
+`, rName, version, enabled)
 }
 
-func testAccDomainConfigWithEncryptAtRestWithKey(rName string) string {
+func testAccDomainConfigWithEncryptAtRestWithKey(rName, version string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -2160,7 +2329,7 @@ resource "aws_kms_key" "test" {
 resource "aws_elasticsearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
 
-  elasticsearch_version = "6.0"
+  elasticsearch_version = %[2]q
 
   # Encrypt at rest requires m4/c4/r4/i2 instances. See http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-supported-instance-types.html
   cluster_config {
@@ -2173,19 +2342,19 @@ resource "aws_elasticsearch_domain" "test" {
   }
 
   encrypt_at_rest {
-    enabled    = true
+    enabled    = %[3]t
     kms_key_id = aws_kms_key.test.key_id
   }
 }
-`, rName)
+`, rName, version, enabled)
 }
 
-func testAccDomainConfigwithNodeToNodeEncryption(rName string) string {
+func testAccDomainConfigwithNodeToNodeEncryption(rName, version string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
 
-  elasticsearch_version = "6.0"
+  elasticsearch_version = %[2]q
 
   cluster_config {
     instance_type = "m4.large.elasticsearch"
@@ -2197,10 +2366,10 @@ resource "aws_elasticsearch_domain" "test" {
   }
 
   node_to_node_encryption {
-    enabled = true
+    enabled = %[3]t
   }
 }
-`, rName)
+`, rName, version, enabled)
 }
 
 func testAccDomainConfig_complex(rName string) string {
