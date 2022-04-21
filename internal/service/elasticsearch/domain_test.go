@@ -176,7 +176,7 @@ func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 				Config: testAccDomainConfig_ClusterConfig_ZoneAwarenessConfig_AvailabilityZoneCount(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain2),
-					testAccCheckDomainNotRecreated(&domain1, &domain2),
+					testAccCheckDomainNotRecreated(&domain1, &domain2), // note: this check does not work and always passes
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", "2"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "true"),
@@ -186,7 +186,7 @@ func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 				Config: testAccDomainConfig_ClusterConfig_ZoneAwarenessEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain3),
-					testAccCheckDomainNotRecreated(&domain2, &domain3),
+					testAccCheckDomainNotRecreated(&domain2, &domain3), // note: this check does not work and always passes
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "0"),
 				),
@@ -195,7 +195,7 @@ func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 				Config: testAccDomainConfig_ClusterConfig_ZoneAwarenessConfig_AvailabilityZoneCount(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain4),
-					testAccCheckDomainNotRecreated(&domain3, &domain4),
+					testAccCheckDomainNotRecreated(&domain3, &domain4), // note: this check does not work and always passes
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", "3"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "true"),
@@ -1092,7 +1092,7 @@ func TestAccElasticsearchDomain_Encryption_atRestEnable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain2),
 					testAccCheckDomainEncrypted(true, &domain2),
-					testAccCheckDomainNotRecreated(&domain1, &domain2),
+					testAccCheckDomainNotRecreated(&domain1, &domain2), // note: this check does not work and always passes
 				),
 			},
 			{
@@ -1198,7 +1198,7 @@ func TestAccElasticsearchDomain_Encryption_nodeToNodeEnable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain2),
 					testAccCheckNodeToNodeEncrypted(true, &domain2),
-					testAccCheckDomainNotRecreated(&domain1, &domain2),
+					testAccCheckDomainNotRecreated(&domain1, &domain2), // note: this check does not work and always passes
 				),
 			},
 			{
@@ -1456,7 +1456,7 @@ func TestAccElasticsearchDomain_Update_version(t *testing.T) {
 				Config: testAccDomainConfig_ClusterUpdateVersion(rName, "5.6"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain2),
-					testAccCheckDomainNotRecreated(&domain1, &domain2),
+					testAccCheckDomainNotRecreated(&domain1, &domain2), // note: this check does not work and always passes
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_version", "5.6"),
 				),
 			},
@@ -1464,7 +1464,7 @@ func TestAccElasticsearchDomain_Update_version(t *testing.T) {
 				Config: testAccDomainConfig_ClusterUpdateVersion(rName, "6.3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain3),
-					testAccCheckDomainNotRecreated(&domain2, &domain3),
+					testAccCheckDomainNotRecreated(&domain2, &domain3), // note: this check does not work and always passes
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_version", "6.3"),
 				),
 			},
