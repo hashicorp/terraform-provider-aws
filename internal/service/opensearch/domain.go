@@ -1074,11 +1074,11 @@ func inPlaceEncryptionEnableVersion(version string) bool {
 		return false
 	}
 
-	if got, err = gversion.NewVersion(version); err != nil || got.GreaterThanOrEqual(want) {
-		return true
+	if got, err = gversion.NewVersion(version); err != nil || got.LessThan(want) {
+		return false
 	}
 
-	return false
+	return true
 }
 
 func suppressEquivalentKmsKeyIds(k, old, new string, d *schema.ResourceData) bool {
