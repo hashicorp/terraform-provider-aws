@@ -29,7 +29,7 @@ func testAccOrganizationalUnitDescendantAccountsDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationalUnitChildAccountsDataSourceConfig(address1, address2, address3),
+				Config: testAccOrganizationalUnitDescendantAccountsDataSourceConfig(address1, address2, address3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "accounts.#", "3"),
 					resource.TestCheckResourceAttrPair(resourceName1, "arn", dataSourceName, "accounts.0.arn"),
@@ -61,7 +61,7 @@ func testAccOrganizationalUnitDescendantAccountsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccOrganizationalUnitChildAccountsDataSourceConfig(rAddress1 string, rAddress2 string, rAddress3 string) string {
+func testAccOrganizationalUnitDescendantAccountsDataSourceConfig(rAddress1 string, rAddress2 string, rAddress3 string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {}
 
