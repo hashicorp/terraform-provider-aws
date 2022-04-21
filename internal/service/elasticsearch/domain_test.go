@@ -2347,41 +2347,6 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName, version, enabled)
 }
 
-func testAccDomainConfigWithEncryptAtRestWithNewKey(rName, version string, enabled bool) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
-resource "aws_kms_key" "test2" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
-resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
-
-  elasticsearch_version = %[2]q
-
-  # Encrypt at rest requires m4/c4/r4/i2 instances. See http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-supported-instance-types.html
-  cluster_config {
-    instance_type = "m4.large.elasticsearch"
-  }
-
-  ebs_options {
-    ebs_enabled = true
-    volume_size = 10
-  }
-
-  encrypt_at_rest {
-    enabled    = %[3]t
-    kms_key_id = aws_kms_key.test2.key_id
-  }
-}
-`, rName, version, enabled)
-}
-
 func testAccDomainConfigwithNodeToNodeEncryption(rName, version string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
