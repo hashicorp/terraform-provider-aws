@@ -8,7 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfacm "github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 )
 
 func TestAccACMCertificateValidation_basic(t *testing.T) {
@@ -25,8 +28,9 @@ func TestAccACMCertificateValidation_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Test that validation succeeds
 			{
-				Config: testAccAcmCertificateValidation_basic(rootDomain, domain),
+				Config: testAccAcmCertificateValidationConfig(rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAcmCertificateValidationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", certificateResourceName, "arn"),
 				),
 			},
@@ -208,7 +212,30 @@ func TestAccACMCertificateValidation_validationRecordFQDNSWildcardAndRoot(t *tes
 	})
 }
 
-func testAccAcmCertificateValidation_basic(rootZoneDomain, domainName string) string {
+func testAccCheckAcmCertificateValidationExists(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ACM Certificate Validation ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
+
+		_, err := tfacm.FindCertificateValidationByARN(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+}
+
+func testAccAcmCertificateValidationConfig(rootZoneDomain, domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   domain_name       = %[1]q
