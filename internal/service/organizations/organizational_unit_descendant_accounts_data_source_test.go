@@ -29,7 +29,7 @@ func testAccOrganizationalUnitDescendantAccountsDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationalUnitChildAccountsDataSourceConfig,
+				Config: testAccOrganizationalUnitChildAccountsDataSourceConfig(address1, address2, address3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "accounts.#", "3"),
 					resource.TestCheckResourceAttrPair(resourceName1, "arn", dataSourceName, "accounts.0.arn"),
