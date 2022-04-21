@@ -49,8 +49,8 @@ func TestAccACMCertificateValidation_timeout(t *testing.T) {
 		CheckDestroy: testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAcmCertificateValidation_timeout(domain),
-				ExpectError: regexp.MustCompile("Expected certificate to be issued but was in state PENDING_VALIDATION"),
+				Config:      testAccAcmCertificateValidationTimeoutConfig(domain),
+				ExpectError: regexp.MustCompile(`timeout while waiting for state to become 'ISSUED' \(last state: 'PENDING_VALIDATION'`),
 			},
 		},
 	})
@@ -284,7 +284,7 @@ resource "aws_acm_certificate_validation" "test" {
 `, domainName, rootZoneDomain)
 }
 
-func testAccAcmCertificateValidation_timeout(domainName string) string {
+func testAccAcmCertificateValidationTimeoutConfig(domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   domain_name       = %[1]q
