@@ -1664,6 +1664,8 @@ func testAccCheckDomainExists(n string, domain *elasticsearch.ElasticsearchDomai
 // testAccCheckDomainNotRecreated does not work. Inexplicably, a deleted
 // domain's create time (& endpoint) carry over to a newly created domain with
 // the same name, if it's created within any reasonable time after deletion.
+// Also, domain ID is not unique and is simply the domain name so won't work
+// for this check either.
 func testAccCheckDomainNotRecreated(domain1, domain2 *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		/*
