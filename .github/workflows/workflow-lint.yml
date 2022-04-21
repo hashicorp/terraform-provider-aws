@@ -18,6 +18,6 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Install actionlint
-        run: cd tools && go install github.com/rhysd/actionlint/cmd/actionlint@latest
+        run: cd tools && go install github.com/rhysd/actionlint/cmd/actionlint
       - name: Run actionlint on workflow files
         run: actionlint -shellcheck=

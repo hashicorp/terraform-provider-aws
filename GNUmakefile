@@ -141,7 +141,7 @@ tools:
 	cd tools && go install github.com/terraform-linters/tflint
 	cd tools && go install github.com/pavius/impi/cmd/impi
 	cd tools && go install github.com/hashicorp/go-changelog/cmd/changelog-build
-	cd tools && go install github.com/rhysd/actionlint/cmd/actionlint@latest
+	cd tools && go install github.com/rhysd/actionlint/cmd/actionlint
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
