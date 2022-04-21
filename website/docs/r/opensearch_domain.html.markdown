@@ -316,7 +316,7 @@ AWS documentation: [Amazon Cognito Authentication for Kibana](https://docs.aws.a
 
 ### encrypt_at_rest
 
-~> **Note:** You can enable `encrypt_at_rest` in place if your Elasticsearch version is 6.7 or greater. If you disable `encrypt_rest_rest`, once you enable it, for any version, or enable for 6.6 and below, Terraform will recreate the domain, which can cause data loss. Similarly, you can change the `kms_key_id` in place if your version is 6.7 or great. Otherwise, Terraform will recreate the domain, which can cause data loss.
+~> **Note:** You can enable `encrypt_at_rest` in place if your Elasticsearch version is 6.7 or greater. If you disable `encrypt_rest_rest`, once you enable it, for any version, or enable for 6.6 and below, Terraform will recreate the domain, which can cause data loss. In contrast, AWS does not support changing the `kms_key_id`. If you change the key, Terraform will recreate the domain, which can cause data loss.
 
 * `enabled` - (Required) Whether to enable encryption at rest. If the `encrypt_at_rest` block is not provided then this defaults to `false`.
 * `kms_key_id` - (Optional) KMS key ARN to encrypt the Elasticsearch domain with. If not specified then it defaults to using the `aws/es` service KMS key. Note that KMS will accept a KMS key ID but will return the key ARN. To prevent Terraform detecting unwanted changes, use the key ARN instead.
