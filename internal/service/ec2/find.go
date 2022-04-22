@@ -1667,6 +1667,37 @@ func FindSpotFleetRequestByID(conn *ec2.EC2, id string) (*ec2.SpotFleetRequestCo
 	return output, nil
 }
 
+func FindSpotFleetRequestHistoryRecords(conn *ec2.EC2, input *ec2.DescribeSpotFleetRequestHistoryInput) ([]*ec2.HistoryRecord, error) {
+	var output []*ec2.HistoryRecord
+
+	err := describeSpotFleetRequestHistoryPages(conn, input, func(page *ec2.DescribeSpotFleetRequestHistoryOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.HistoryRecords {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSpotFleetRequestIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func FindSpotInstanceRequests(conn *ec2.EC2, input *ec2.DescribeSpotInstanceRequestsInput) ([]*ec2.SpotInstanceRequest, error) {
 	var output []*ec2.SpotInstanceRequest
 
