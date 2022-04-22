@@ -314,12 +314,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						"tags": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
+						"tags": tftags.TagsSchemaForceNew(),
 						"user_data": {
 							Type:     schema.TypeString,
 							Optional: true,
