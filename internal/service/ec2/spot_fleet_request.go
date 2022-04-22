@@ -937,7 +937,7 @@ func resourceSpotFleetRequestDelete(d *schema.ResourceData, meta interface{}) er
 	terminateInstances := d.Get("terminate_instances_with_expiration").(bool)
 
 	log.Printf("[INFO] Cancelling spot fleet request: %s", d.Id())
-	err := deleteSpotFleetRequest(d.Id(), terminateInstances, d.Timeout(schema.TimeoutDelete), conn)
+	err := deleteSpotFleetRequest(conn, d.Id(), terminateInstances, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return fmt.Errorf("error deleting spot request (%s): %w", d.Id(), err)
 	}
@@ -945,11 +945,12 @@ func resourceSpotFleetRequestDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func deleteSpotFleetRequest(spotFleetRequestID string, terminateInstances bool, timeout time.Duration, conn *ec2.EC2) error {
+func deleteSpotFleetRequest(conn *ec2.EC2, spotFleetRequestID string, terminateInstances bool, timeout time.Duration) error {
 	_, err := conn.CancelSpotFleetRequests(&ec2.CancelSpotFleetRequestsInput{
 		SpotFleetRequestIds: []*string{aws.String(spotFleetRequestID)},
 		TerminateInstances:  aws.Bool(terminateInstances),
 	})
+
 	if err != nil {
 		return err
 	}
