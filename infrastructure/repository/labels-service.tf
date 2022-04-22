@@ -44,7 +44,7 @@ locals {
 
 
 resource "github_issue_label" "service" {
-  for_each = var.services
+  for_each = local.services
 
   repository  = "terraform-provider-aws"
   name        = "service/${each.value}"
