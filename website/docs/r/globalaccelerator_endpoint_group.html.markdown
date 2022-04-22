@@ -12,7 +12,7 @@ Provides a Global Accelerator endpoint group.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_globalaccelerator_endpoint_group" "example" {
   listener_arn = aws_globalaccelerator_listener.example.id
 
@@ -58,6 +58,8 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The Amazon Resource Name (ARN) of the endpoint group.
 * `arn` - The Amazon Resource Name (ARN) of the endpoint group.
 
+## Timeouts
+
 `aws_globalaccelerator_endpoint_group` provides the following
 [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
@@ -67,7 +69,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Global Accelerator endpoint groups can be imported using the `id`, e.g.
+Global Accelerator endpoint groups can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_globalaccelerator_endpoint_group.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxx/endpoint-group/xxxxxxxx

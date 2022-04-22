@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
+subcategory: "ELB (Elastic Load Balancing)"
 layout: "aws"
 page_title: "AWS: aws_lb"
 description: |-
@@ -16,13 +16,13 @@ Provides a Load Balancer resource.
 
 ### Application Load Balancer
 
-```hcl
+```terraform
 resource "aws_lb" "test" {
   name               = "test-lb-tf"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.lb_sg.id]
-  subnets            = aws_subnet.public.*.id
+  subnets            = [for subnet in aws_subnet.public : subnet.id]
 
   enable_deletion_protection = true
 
@@ -40,12 +40,12 @@ resource "aws_lb" "test" {
 
 ### Network Load Balancer
 
-```hcl
+```terraform
 resource "aws_lb" "test" {
   name               = "test-lb-tf"
   internal           = false
   load_balancer_type = "network"
-  subnets            = aws_subnet.public.*.id
+  subnets            = [for subnet in aws_subnet.public : subnet.id]
 
   enable_deletion_protection = true
 
@@ -57,7 +57,7 @@ resource "aws_lb" "test" {
 
 ### Specifying Elastic IPs
 
-```hcl
+```terraform
 resource "aws_lb" "example" {
   name               = "example"
   load_balancer_type = "network"
@@ -76,7 +76,7 @@ resource "aws_lb" "example" {
 
 ### Specifying private IP addresses for an internal-facing load balancer
 
-```hcl
+```terraform
 resource "aws_lb" "example" {
   name               = "example"
   load_balancer_type = "network"
@@ -120,9 +120,11 @@ for load balancers of type `network` will force a recreation of the resource.
 * `enable_cross_zone_load_balancing` - (Optional) If true, cross-zone load balancing of the load balancer will be enabled.
    This is a `network` load balancer feature. Defaults to `false`.
 * `enable_http2` - (Optional) Indicates whether HTTP/2 is enabled in `application` load balancers. Defaults to `true`.
+* `enable_waf_fail_open` - (Optional) Indicates whether to allow a WAF-enabled load balancer to route requests to targets if it is unable to forward the request to AWS WAF. Defaults to `false`.
 * `customer_owned_ipv4_pool` - (Optional) The ID of the customer owned ipv4 pool to use for this load balancer.
 * `ip_address_type` - (Optional) The type of IP addresses used by the subnets for your load balancer. The possible values are `ipv4` and `dualstack`
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `desync_mitigation_mode` - (Optional) Determines how the load balancer handles requests that might pose a security risk to an application due to HTTP desync. Valid values are `monitor`, `defensive` (default), `strictest`.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Access Logs (`access_logs`) support the following:
 
@@ -135,6 +137,7 @@ Subnet Mapping (`subnet_mapping`) blocks support the following:
 * `subnet_id` - (Required) The id of the subnet of which to attach to the load balancer. You can specify only one subnet per Availability Zone.
 * `allocation_id` - (Optional) The allocation ID of the Elastic IP address.
 * `private_ipv4_address` - (Optional) A private ipv4 address within the subnet to assign to the internal-facing load balancer.
+* `ipv6_address` - (Optional) An ipv6 address within the subnet to assign to the internet-facing load balancer.
 
 ## Attributes Reference
 
@@ -144,6 +147,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the load balancer (matches `id`).
 * `arn_suffix` - The ARN suffix for use with CloudWatch Metrics.
 * `dns_name` - The DNS name of the load balancer.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `zone_id` - The canonical hosted zone ID of the load balancer (to be used in a Route 53 Alias record).
 * `subnet_mapping.*.outpost_id` - ID of the Outpost containing the load balancer.
 
@@ -158,7 +162,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-LBs can be imported using their ARN, e.g.
+LBs can be imported using their ARN, e.g.,
 
 ```
 $ terraform import aws_lb.bar arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188

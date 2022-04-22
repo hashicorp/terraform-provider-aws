@@ -1,5 +1,5 @@
 ---
-subcategory: "IoT"
+subcategory: "IoT Core"
 layout: "aws"
 page_title: "AWS: aws_iot_thing"
 description: |-
@@ -12,7 +12,7 @@ Creates and manages an AWS IoT Thing.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iot_thing" "example" {
   name = "example"
 
@@ -38,7 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IOT Things can be imported using the name, e.g.
+IOT Things can be imported using the name, e.g.,
 
 ```
 $ terraform import aws_iot_thing.example example

@@ -1,5 +1,5 @@
 ---
-subcategory: "SES"
+subcategory: "SES (Simple Email)"
 layout: "aws"
 page_title: "AWS: aws_ses_domain_identity_verification"
 description: |-
@@ -18,7 +18,7 @@ deploy the required DNS verification records, and wait for verification to compl
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ses_domain_identity" "example" {
   domain = "example.com"
 }

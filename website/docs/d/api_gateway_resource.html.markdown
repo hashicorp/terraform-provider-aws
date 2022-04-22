@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway (REST APIs)"
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_resource"
 description: |-
@@ -13,7 +13,7 @@ To fetch the Resource, you must provide the REST API id as well as the full path
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_api_gateway_rest_api" "my_rest_api" {
   name = "my-rest-api"
 }

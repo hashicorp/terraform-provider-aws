@@ -1,5 +1,5 @@
 ---
-subcategory: "SSM"
+subcategory: "SSM (Systems Manager)"
 layout: "aws"
 page_title: "AWS: aws_ssm_patch_baseline"
 description: |-
@@ -14,7 +14,7 @@ Provides an SSM Patch Baseline data source. Useful if you wish to reuse the defa
 
 To retrieve a baseline provided by AWS:
 
-```hcl
+```terraform
 data "aws_ssm_patch_baseline" "centos" {
   owner            = "AWS"
   name_prefix      = "AWS-"
@@ -24,7 +24,7 @@ data "aws_ssm_patch_baseline" "centos" {
 
 To retrieve a baseline on your account:
 
-```hcl
+```terraform
 data "aws_ssm_patch_baseline" "default_custom" {
   owner            = "Self"
   name_prefix      = "MyCustomBaseline"

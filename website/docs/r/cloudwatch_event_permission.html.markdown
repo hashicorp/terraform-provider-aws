@@ -1,5 +1,5 @@
 ---
-subcategory: "EventBridge (CloudWatch Events)"
+subcategory: "EventBridge"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_permission"
 description: |-
@@ -12,11 +12,13 @@ Provides a resource to create an EventBridge permission to support cross-account
 
 ~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
 
+~> **Note:** The EventBridge bus policy resource  (`aws_cloudwatch_event_bus_policy`) is incompatible with the EventBridge permission resource (`aws_cloudwatch_event_permission`) and will overwrite permissions.
+
 ## Example Usage
 
 ### Account Access
 
-```hcl
+```terraform
 resource "aws_cloudwatch_event_permission" "DevAccountAccess" {
   principal    = "123456789012"
   statement_id = "DevAccountAccess"
@@ -25,7 +27,7 @@ resource "aws_cloudwatch_event_permission" "DevAccountAccess" {
 
 ### Organization Access
 
-```hcl
+```terraform
 resource "aws_cloudwatch_event_permission" "OrganizationAccess" {
   principal    = "*"
   statement_id = "OrganizationAccess"
@@ -62,7 +64,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EventBridge permissions can be imported using the `event_bus_name/statement_id` (if you omit `event_bus_name`, the `default` event bus will be used), e.g.
+EventBridge permissions can be imported using the `event_bus_name/statement_id` (if you omit `event_bus_name`, the `default` event bus will be used), e.g.,
 
 ```shell
 $ terraform import aws_cloudwatch_event_permission.DevAccountAccess example-event-bus/DevAccountAccess

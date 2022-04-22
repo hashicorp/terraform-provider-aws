@@ -1,5 +1,5 @@
 ---
-subcategory: "EKS"
+subcategory: "EKS (Elastic Kubernetes)"
 layout: "aws"
 page_title: "AWS: aws_eks_cluster_auth"
 description: |-
@@ -19,7 +19,7 @@ server configured.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_eks_cluster" "example" {
   name = "example"
 }

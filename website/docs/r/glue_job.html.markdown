@@ -16,7 +16,7 @@ Provides a Glue Job resource.
 
 ### Python Job
 
-```hcl
+```terraform
 resource "aws_glue_job" "example" {
   name     = "example"
   role_arn = aws_iam_role.example.arn
@@ -29,7 +29,7 @@ resource "aws_glue_job" "example" {
 
 ### Scala Job
 
-```hcl
+```terraform
 resource "aws_glue_job" "example" {
   name     = "example"
   role_arn = aws_iam_role.example.arn
@@ -44,9 +44,23 @@ resource "aws_glue_job" "example" {
 }
 ```
 
+### Streaming Job
+
+```terraform
+resource "aws_glue_job" "example" {
+  name     = "example streaming job"
+  role_arn = aws_iam_role.example.arn
+
+  command {
+    name            = "gluestreaming"
+    script_location = "s3://${aws_s3_bucket.example.bucket}/example.script"
+  }
+}
+```
+
 ### Enabling CloudWatch Logs and Metrics
 
-```hcl
+```terraform
 resource "aws_cloudwatch_log_group" "example" {
   name              = "example"
   retention_in_days = 14
@@ -81,15 +95,15 @@ The following arguments are supported:
 * `name` – (Required) The name you assign to this job. It must be unique in your account.
 * `notification_property` - (Optional) Notification property of the job. Defined below.
 * `role_arn` – (Required) The ARN of the IAM role associated with this job.
-* `tags` - (Optional) Key-value map of resource tags
-* `timeout` – (Optional) The job timeout in minutes. The default is 2880 minutes (48 hours).
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `timeout` – (Optional) The job timeout in minutes. The default is 2880 minutes (48 hours) for `glueetl` and `pythonshell` jobs, and null (unlimted) for `gluestreaming` jobs.
 * `security_configuration` - (Optional) The name of the Security Configuration to be associated with the job.
 * `worker_type` - (Optional) The type of predefined worker that is allocated when a job runs. Accepts a value of Standard, G.1X, or G.2X.
 * `number_of_workers` - (Optional) The number of workers of a defined workerType that are allocated when a job runs.
 
 ### command Argument Reference
 
-* `name` - (Optional) The name of the job command. Defaults to `glueetl`. Use `pythonshell` for Python Shell Job Type, `max_capacity` needs to be set if `pythonshell` is chosen.
+* `name` - (Optional) The name of the job command. Defaults to `glueetl`. Use `pythonshell` for Python Shell Job Type, or `gluestreaming` for Streaming Job Type. `max_capacity` needs to be set if `pythonshell` is chosen.
 * `script_location` - (Required) Specifies the S3 path to a script that executes a job.
 * `python_version` - (Optional) The Python version being used to execute a Python shell job. Allowed values are 2 or 3.
 
@@ -107,10 +121,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of Glue Job
 * `id` - Job name
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-Glue Jobs can be imported using `name`, e.g.
+Glue Jobs can be imported using `name`, e.g.,
 
 ```
 $ terraform import aws_glue_job.MyJob MyJob

@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53 Resolver"
+subcategory: "Route 53 Resolver"
 layout: "aws"
 page_title: "AWS: aws_route53_resolver_rule"
 description: |-
@@ -14,7 +14,7 @@ description: |-
 
 The following example shows how to get a Route53 Resolver rule based on its associated domain name and rule type.
 
-```hcl
+```terraform
 data "aws_route53_resolver_rule" "example" {
   domain_name = "subdomain.example.com"
   rule_type   = "SYSTEM"
