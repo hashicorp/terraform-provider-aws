@@ -15,7 +15,7 @@ import (
 	tfathena "github.com/hashicorp/terraform-provider-aws/internal/service/athena"
 )
 
-func TestAccDataCatalog_basic(t *testing.T) {
+func TestAccAthenaDataCatalog_basic(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_athena_data_catalog.test"
 
@@ -52,7 +52,7 @@ func TestAccDataCatalog_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataCatalog_type_lambda(t *testing.T) {
+func TestAccAthenaDataCatalog_type_lambda(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_athena_data_catalog.test"
 
@@ -86,7 +86,7 @@ func TestAccDataCatalog_type_lambda(t *testing.T) {
 	})
 }
 
-func TestAccDataCatalog_type_hive(t *testing.T) {
+func TestAccAthenaDataCatalog_type_hive(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_athena_data_catalog.test"
 
@@ -119,7 +119,7 @@ func TestAccDataCatalog_type_hive(t *testing.T) {
 	})
 }
 
-func TestAccDataCatalog_type_glue(t *testing.T) {
+func TestAccAthenaDataCatalog_type_glue(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_athena_data_catalog.test"
 
@@ -152,7 +152,7 @@ func TestAccDataCatalog_type_glue(t *testing.T) {
 	})
 }
 
-func TestAccDataCatalog_parameters(t *testing.T) {
+func TestAccAthenaDataCatalog_parameters(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_athena_data_catalog.test"
 
