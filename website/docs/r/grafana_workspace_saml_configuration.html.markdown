@@ -66,6 +66,7 @@ The following arguments are optional:
 * `name_assertion` - (Optional) The name assertion.
 * `org_assertion` - (Optional) The org assertion.
 * `role_assertion` - (Optional) The role assertion.
+* `tags` - (Optional) A map of tags to populate on the created table. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
