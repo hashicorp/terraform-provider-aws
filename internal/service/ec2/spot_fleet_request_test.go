@@ -1776,7 +1776,7 @@ resource "aws_iam_policy_attachment" "test" {
 }
 
 func testAccSpotFleetRequestConfig(rName, publicKey, validUntil string) string {
-	return testAccSpotFleetRequestBaseConfig(rName, publicKey) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.05"
@@ -1794,7 +1794,7 @@ resource "aws_spot_fleet_request" "test" {
 
   depends_on = [aws_iam_policy_attachment.test]
 }
-`, validUntil)
+`, validUntil))
 }
 
 func testAccSpotFleetRequestTags1Config(rName, publicKey, validUntil, tagKey1, tagValue1 string) string {

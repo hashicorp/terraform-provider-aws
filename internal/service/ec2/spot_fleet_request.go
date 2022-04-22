@@ -932,22 +932,12 @@ func resourceSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceSpotFleetRequestDelete(d *schema.ResourceData, meta interface{}) error {
-	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CancelSpotFleetRequests.html
 	conn := meta.(*conns.AWSClient).EC2Conn
+
+	log.Printf("[INFO] Deleting EC2 Spot Fleet Request: %s", d.Id())
 	terminateInstances := d.Get("terminate_instances_with_expiration").(bool)
-
-	log.Printf("[INFO] Cancelling spot fleet request: %s", d.Id())
-	err := deleteSpotFleetRequest(conn, d.Id(), terminateInstances, d.Timeout(schema.TimeoutDelete))
-	if err != nil {
-		return fmt.Errorf("error deleting spot request (%s): %w", d.Id(), err)
-	}
-
-	return nil
-}
-
-func deleteSpotFleetRequest(conn *ec2.EC2, spotFleetRequestID string, terminateInstances bool, timeout time.Duration) error {
 	output, err := conn.CancelSpotFleetRequests(&ec2.CancelSpotFleetRequestsInput{
-		SpotFleetRequestIds: aws.StringSlice([]string{spotFleetRequestID}),
+		SpotFleetRequestIds: aws.StringSlice([]string{d.Id()}),
 		TerminateInstances:  aws.Bool(terminateInstances),
 	})
 
@@ -960,55 +950,33 @@ func deleteSpotFleetRequest(conn *ec2.EC2, spotFleetRequestID string, terminateI
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("cancelling EC2 Spot Fleet Request (%s): %w", d.Id(), err)
 	}
 
-	// Only wait for instance termination if requested
+	// Only wait for instance termination if requested.
 	if !terminateInstances {
 		return nil
 	}
 
-	activeInstances := func(fleetRequestID string) (int, error) {
-		resp, err := conn.DescribeSpotFleetInstances(&ec2.DescribeSpotFleetInstancesInput{
-			SpotFleetRequestId: aws.String(fleetRequestID),
-		})
-
-		if err != nil || resp == nil {
-			return 0, fmt.Errorf("error reading Spot Fleet Instances (%s): %w", spotFleetRequestID, err)
+	_, err = tfresource.RetryUntilNotFound(d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		input := &ec2.DescribeSpotFleetInstancesInput{
+			SpotFleetRequestId: aws.String(d.Id()),
 		}
+		output, err := FindSpotFleetInstances(conn, input)
 
-		return len(resp.ActiveInstances), nil
-	}
-
-	err = resource.Retry(timeout, func() *resource.RetryError {
-		n, err := activeInstances(spotFleetRequestID)
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return nil, err
 		}
 
-		if n > 0 {
-			log.Printf("[DEBUG] Active instance count in Spot Fleet Request (%s): %d", spotFleetRequestID, n)
-			return resource.RetryableError(fmt.Errorf("fleet still has (%d) running instances", n))
+		if len(output) == 0 {
+			return nil, tfresource.NewEmptyResultError(input)
 		}
 
-		log.Printf("[DEBUG] Active instance count is 0 for Spot Fleet Request (%s), removing", spotFleetRequestID)
-		return nil
+		return output, nil
 	})
 
-	if tfresource.TimedOut(err) {
-		n, err := activeInstances(spotFleetRequestID)
-		if err != nil {
-			return err
-		}
-
-		if n > 0 {
-			log.Printf("[DEBUG] Active instance count in Spot Fleet Request (%s): %d", spotFleetRequestID, n)
-			return fmt.Errorf("fleet still has (%d) running instances", n)
-		}
-	}
-
 	if err != nil {
-		return fmt.Errorf("error reading Spot Fleet Instances (%s): %s", spotFleetRequestID, err)
+		return fmt.Errorf("waiting for EC2 Spot Fleet Request (%s) active instance count to reach 0: %w", d.Id(), err)
 	}
 
 	return nil

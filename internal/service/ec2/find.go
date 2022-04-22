@@ -1582,14 +1582,6 @@ func FindSpotFleetInstances(conn *ec2.EC2, input *ec2.DescribeSpotFleetInstances
 	return output, nil
 }
 
-func FindSpotFleetInstancesByID(conn *ec2.EC2, id string) ([]*ec2.ActiveInstance, error) {
-	input := &ec2.DescribeSpotFleetInstancesInput{
-		SpotFleetRequestId: aws.String(id),
-	}
-
-	return FindSpotFleetInstances(conn, input)
-}
-
 func FindSpotFleetRequests(conn *ec2.EC2, input *ec2.DescribeSpotFleetRequestsInput) ([]*ec2.SpotFleetRequestConfig, error) {
 	var output []*ec2.SpotFleetRequestConfig
 
