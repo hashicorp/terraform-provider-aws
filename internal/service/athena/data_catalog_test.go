@@ -48,6 +48,73 @@ func TestAccAthenaDataCatalog_basic(t *testing.T) {
 	})
 }
 
+func TestAccDataCatalog_disappears(t *testing.T) {
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_athena_data_catalog.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDataCatalogDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataCatalogConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataCatalogExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfathena.ResourceDataCatalog(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAthenaDataCatalog_tags(t *testing.T) {
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_athena_data_catalog.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDataCatalogDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataCatalogConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataCatalogExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"parameters"},
+			},
+			{
+				Config: testAccDataCatalogConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataCatalogExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccDataCatalogConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataCatalogExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAthenaDataCatalog_type_lambda(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_athena_data_catalog.test"
@@ -176,28 +243,6 @@ func TestAccAthenaDataCatalog_parameters(t *testing.T) {
 	})
 }
 
-func TestAccDataCatalog_disappears(t *testing.T) {
-	rName := "tf-test-" + sdkacctest.RandString(8)
-	resourceName := "aws_athena_data_catalog.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDataCatalogDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataCatalogConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataCatalogExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfathena.ResourceDataCatalog(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
 func testAccCheckDataCatalogExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -269,6 +314,45 @@ resource "aws_athena_data_catalog" "test" {
 `, rName)
 }
 
+func testAccDataCatalogConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_athena_data_catalog" "test" {
+  name = %[1]q
+  type = "LAMBDA"
+
+  description = "Testing tags"
+
+  parameters = {
+    "function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccDataCatalogConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_athena_data_catalog" "test" {
+  name = %[1]q
+  type = "LAMBDA"
+
+  description = "Testing tags"
+
+  parameters = {
+    "function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
 func testAccDataCatalogTypeLambdaConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_athena_data_catalog" "test" {
@@ -279,10 +363,6 @@ resource "aws_athena_data_catalog" "test" {
   parameters = {
     "metadata-function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
     "record-function"   = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
-  }
-
-  tags = {
-    Test = "test"
   }
 }
 `, rName)
@@ -298,10 +378,6 @@ resource "aws_athena_data_catalog" "test" {
   parameters = {
     "metadata-function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
   }
-
-  tags = {
-    Test = "test"
-  }
 }
 `, rName)
 }
@@ -315,10 +391,6 @@ resource "aws_athena_data_catalog" "test" {
 
   parameters = {
     "catalog-id" = "123456789012"
-  }
-
-  tags = {
-    Test = "test"
   }
 }
 `, rName)

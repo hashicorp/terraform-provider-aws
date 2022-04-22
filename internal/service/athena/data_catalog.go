@@ -40,7 +40,7 @@ func ResourceDataCatalog() *schema.Resource {
 			},
 			"description": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -53,7 +53,7 @@ func ResourceDataCatalog() *schema.Resource {
 			},
 			"parameters": {
 				Type:     schema.TypeMap,
-				Optional: true,
+				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				ValidateDiagFunc: allDiagFunc(
 					validation.MapKeyLenBetween(1, 255),
