@@ -185,6 +185,7 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
+
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -223,6 +224,18 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("role_arn", workspace.WorkspaceRoleArn)
 	d.Set("saml_configuration_status", workspace.Authentication.SamlConfigurationStatus)
 	d.Set("stack_set_name", workspace.StackSetName)
+
+
+	tags := KeyValueTags(scope.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+	
 
 	return nil
 }
@@ -281,7 +294,7 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 		if verify.CheckISOErrorTagsUnsupported(err) {
 			// ISO partitions may not support tagging, giving error
 			log.Printf("[WARN] failed updating tags for Grafana Workspace (%s): %s", d.Id(), err)
-			return resourceTopicRead(d, meta)
+			return resourceWorkspaceRead(d, meta)
 		}
 
 		if err != nil {
