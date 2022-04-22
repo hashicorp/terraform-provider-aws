@@ -77,14 +77,13 @@ func resourceDataCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
-
 	input := &athena.CreateDataCatalogInput{
 		Name:        aws.String(name),
 		Description: aws.String(d.Get("description").(string)),
 		Type:        aws.String(d.Get("type").(string)),
 	}
 
-	if v, ok := d.GetOk("parameters"); ok {
+	if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
 		input.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
@@ -92,20 +91,80 @@ func resourceDataCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	if err := input.Validate(); err != nil {
-		return diag.Errorf("Error validating Athena Data Catalog (%s): %s", name, err)
-	}
-
-	log.Printf("[DEBUG] Creating Data Catalog: %s", input)
+	log.Printf("[DEBUG] Creating Athena Data Catalog: %s", input)
 	_, err := conn.CreateDataCatalogWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating Athena Data Catalog (%s): %s", name, err)
+		return diag.Errorf("creating Athena Data Catalog (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
 	return resourceDataCatalogRead(ctx, d, meta)
+}
+
+func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).AthenaConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	input := &athena.GetDataCatalogInput{
+		Name: aws.String(d.Id()),
+	}
+
+	dataCatalog, err := conn.GetDataCatalogWithContext(ctx, input)
+
+	// If the resource doesn't exist, the API returns a `ErrCodeInvalidRequestException` error.
+	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, "was not found") {
+		log.Printf("[WARN] Athena Data Catalog (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return diag.Errorf("reading Athena Data Catalog (%s): %s", d.Id(), err)
+	}
+
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
+		Service:   "athena",
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("datacatalog/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+	d.Set("description", dataCatalog.DataCatalog.Description)
+	d.Set("type", dataCatalog.DataCatalog.Type)
+
+	// NOTE: This is a workaround for the fact that the API sets default values for parameters that are not set.
+	// Because the API sets default values, what's returned by the API is different than what's set by the user.
+	parameters := map[string]*string{}
+	if v, ok := d.GetOk("parameters"); ok {
+		if m, ok := v.(map[string]interface{}); ok {
+			parameters = flex.ExpandStringMap(m)
+		}
+	}
+
+	d.Set("parameters", aws.StringValueMap(parameters))
+
+	tags, err := ListTags(conn, arn)
+
+	if err != nil {
+		return diag.Errorf("listing tags for Athena Data Catalog (%s): %s", d.Id(), err)
+	}
+
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.Errorf("setting tags: %s", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.Errorf("error setting tags_all: %s", err)
+	}
+
+	return nil
 }
 
 func resourceDataCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -128,25 +187,19 @@ func resourceDataCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.Parameters = parameters
 		}
 
-		log.Printf("[DEBUG] Updating Athena Data Catalog (%s)", d.Id())
-
-		if err := input.Validate(); err != nil {
-			return diag.Errorf("Error validating Athena Data Catalog (%s): %s", d.Id(), err)
-		}
-
+		log.Printf("[DEBUG] Updating Athena Data Catalog: %s", input)
 		_, err := conn.UpdateDataCatalogWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("error updating Athena Data Catalog (%s): %s", d.Id(), err)
+			return diag.Errorf("updating Athena Data Catalog (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		log.Printf("[DEBUG] Updating Athena Data Catalog (%s) tags", d.Id())
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating Athena Data Catalog (%s) tags: %s", d.Id(), err)
+			return diag.Errorf("updating Athena Data Catalog (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -157,7 +210,6 @@ func resourceDataCatalogDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).AthenaConn
 
 	log.Printf("[DEBUG] Deleting Athena Data Catalog: (%s)", d.Id())
-
 	_, err := conn.DeleteDataCatalogWithContext(ctx, &athena.DeleteDataCatalogInput{
 		Name: aws.String(d.Id()),
 	})
@@ -167,73 +219,7 @@ func resourceDataCatalogDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Athena Data Catalog (%s): %s", d.Id(), err)
-	}
-
-	return nil
-}
-
-func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AthenaConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	input := &athena.GetDataCatalogInput{
-		Name: aws.String(d.Id()),
-	}
-
-	dataCatalog, err := conn.GetDataCatalogWithContext(ctx, input)
-
-	// If the resource doesn't exist, the API returns a `ErrCodeInvalidRequestException` error.
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, "was not found") {
-		log.Printf("[WARN] Athena Data Catalog (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if err != nil {
-		return diag.Errorf("error reading Athena Data Catalog (%s): %s", d.Id(), err)
-	}
-
-	d.Set("description", dataCatalog.DataCatalog.Description)
-	d.Set("type", dataCatalog.DataCatalog.Type)
-
-	// NOTE: This is a workaround for the fact that the API sets default values for parameters that are not set.
-	// Because the API sets default values, what's returned by the API is different than what's set by the user.
-	parameters := map[string]*string{}
-	if v, ok := d.GetOk("parameters"); ok {
-		if m, ok := v.(map[string]interface{}); ok {
-			parameters = flex.ExpandStringMap(m)
-		}
-	}
-
-	d.Set("parameters", aws.StringValueMap(parameters))
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Service:   "athena",
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("datacatalog/%s", d.Id()),
-	}
-
-	d.Set("arn", arn.String())
-
-	tags, err := ListTags(conn, arn.String())
-
-	if err != nil {
-		return diag.Errorf("error listing tags for Athena Data Catalog (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags for Athena Data Catalog (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all for Athena Data Catalog (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Athena Data Catalog (%s): %s", d.Id(), err)
 	}
 
 	return nil
