@@ -248,7 +248,6 @@ S3 (Simple Storage)
 S3 Control
 S3 Glacier
 S3 on Outposts
-SageMaker
 SDB (SimpleDB)
 SES (Simple Email)
 SESv2 (Simple Email V2)
