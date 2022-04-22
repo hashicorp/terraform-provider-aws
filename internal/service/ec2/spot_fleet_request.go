@@ -946,10 +946,18 @@ func resourceSpotFleetRequestDelete(d *schema.ResourceData, meta interface{}) er
 }
 
 func deleteSpotFleetRequest(conn *ec2.EC2, spotFleetRequestID string, terminateInstances bool, timeout time.Duration) error {
-	_, err := conn.CancelSpotFleetRequests(&ec2.CancelSpotFleetRequestsInput{
-		SpotFleetRequestIds: []*string{aws.String(spotFleetRequestID)},
+	output, err := conn.CancelSpotFleetRequests(&ec2.CancelSpotFleetRequestsInput{
+		SpotFleetRequestIds: aws.StringSlice([]string{spotFleetRequestID}),
 		TerminateInstances:  aws.Bool(terminateInstances),
 	})
+
+	if err == nil && output != nil {
+		err = CancelSpotFleetRequestsError(output.UnsuccessfulFleetRequests)
+	}
+
+	if tfawserr.ErrCodeEquals(err, ec2.CancelBatchErrorCodeFleetRequestIdDoesNotExist) {
+		return nil
+	}
 
 	if err != nil {
 		return err
