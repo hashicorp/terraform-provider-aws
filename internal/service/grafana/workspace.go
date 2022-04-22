@@ -117,17 +117,22 @@ func ResourceWorkspace() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &managedgrafana.CreateWorkspaceInput{
 		AccountAccessType:       aws.String(d.Get("account_access_type").(string)),
 		AuthenticationProviders: flex.ExpandStringList(d.Get("authentication_providers").([]interface{})),
 		ClientToken:             aws.String(resource.UniqueId()),
 		PermissionType:          aws.String(d.Get("permission_type").(string)),
+		Tags:                    Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("data_sources"); ok {
@@ -180,6 +185,8 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	workspace, err := FindWorkspaceByID(conn, d.Id())
 
@@ -265,6 +272,21 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("stack_set_name") {
 		input.StackSetName = aws.String(d.Get("stack_set_name").(string))
+	}
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		err := UpdateTags(conn, d.Id(), o, n)
+
+		if verify.CheckISOErrorTagsUnsupported(err) {
+			// ISO partitions may not support tagging, giving error
+			log.Printf("[WARN] failed updating tags for Grafana Workspace (%s): %s", d.Id(), err)
+			return resourceTopicRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed updating tags for Grafana Workspace (%s): %w", d.Id(), err)
+		}
 	}
 
 	_, err := conn.UpdateWorkspace(input)
