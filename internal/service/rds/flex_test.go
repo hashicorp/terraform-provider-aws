@@ -127,3 +127,47 @@ func TestExpandClusterScalingConfiguration_basic(t *testing.T) {
 		}
 	}
 }
+
+func TestExpandClusterServerlessV2ScalingConfiguration_basic(t *testing.T) {
+	type testCase struct {
+		EngineMode string
+		Input      []interface{}
+		ExpectNil  bool
+	}
+	cases := []testCase{}
+
+	// RDS Cluster Scaling Configuration v2 is , but we're relying on AWS errors.
+	// If Terraform adds whole-resource validation, we can do our own validation at plan time.
+	for _, engineMode := range []string{"global", "multimaster", "parallelquery", "provisioned", "serverless"} {
+		cases = append(cases, []testCase{
+			{
+				EngineMode: engineMode,
+				Input: []interface{}{
+					map[string]interface{}{
+						"max_capacity": 32.0,
+						"min_capacity": 4.0,
+					},
+				},
+				ExpectNil: false,
+			},
+			{
+				EngineMode: engineMode,
+				Input:      []interface{}{},
+				ExpectNil:  true,
+			}, {
+				EngineMode: engineMode,
+				Input: []interface{}{
+					nil,
+				},
+				ExpectNil: true,
+			},
+		}...)
+	}
+
+	for _, tc := range cases {
+		output := ExpandClusterServerlessV2ScalingConfiguration(tc.Input)
+		if tc.ExpectNil != (output == nil) {
+			t.Errorf("EngineMode %q: Expected nil: %t, Got: %v", tc.EngineMode, tc.ExpectNil, output)
+		}
+	}
+}

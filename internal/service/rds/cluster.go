@@ -236,6 +236,27 @@ func ResourceCluster() *schema.Resource {
 				},
 			},
 
+			"serverlessv2_scaling_configuration": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"max_capacity": {
+							Type:     schema.TypeFloat,
+							Optional: true,
+							Default:  clusterScalingConfiguration_DefaultMaxCapacity,
+						},
+						"min_capacity": {
+							Type:     schema.TypeFloat,
+							Optional: true,
+							Default:  clusterScalingConfiguration_DefaultMinCapacity,
+						},
+					},
+				},
+			},
+
 			"allocated_storage": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -541,14 +562,15 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if _, ok := d.GetOk("snapshot_identifier"); ok {
 		opts := rds.RestoreDBClusterFromSnapshotInput{
-			CopyTagsToSnapshot:   aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
-			DBClusterIdentifier:  aws.String(identifier),
-			DeletionProtection:   aws.Bool(d.Get("deletion_protection").(bool)),
-			Engine:               aws.String(d.Get("engine").(string)),
-			EngineMode:           aws.String(d.Get("engine_mode").(string)),
-			ScalingConfiguration: ExpandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
-			SnapshotIdentifier:   aws.String(d.Get("snapshot_identifier").(string)),
-			Tags:                 Tags(tags.IgnoreAWS()),
+			CopyTagsToSnapshot:               aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
+			DBClusterIdentifier:              aws.String(identifier),
+			DeletionProtection:               aws.Bool(d.Get("deletion_protection").(bool)),
+			Engine:                           aws.String(d.Get("engine").(string)),
+			EngineMode:                       aws.String(d.Get("engine_mode").(string)),
+			ScalingConfiguration:             ExpandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
+			ServerlessV2ScalingConfiguration: ExpandClusterServerlessV2ScalingConfiguration(d.Get("serverlessv2_scaling_configuration").([]interface{})),
+			SnapshotIdentifier:               aws.String(d.Get("snapshot_identifier").(string)),
+			Tags:                             Tags(tags.IgnoreAWS()),
 		}
 
 		if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
@@ -831,6 +853,8 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 					modifyDbClusterInput.PreferredMaintenanceWindow = aws.String(val.(string))
 				case "scaling_configuration":
 					modifyDbClusterInput.ScalingConfiguration = ExpandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{}))
+				case "serverlessv2_scaling_configuration":
+					modifyDbClusterInput.ServerlessV2ScalingConfiguration = ExpandClusterServerlessV2ScalingConfiguration(d.Get("serverlessv2_scaling_configuration").([]interface{}))
 				}
 			}
 		}
@@ -847,13 +871,14 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	} else {
 
 		createOpts := &rds.CreateDBClusterInput{
-			CopyTagsToSnapshot:   aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
-			DBClusterIdentifier:  aws.String(identifier),
-			DeletionProtection:   aws.Bool(d.Get("deletion_protection").(bool)),
-			Engine:               aws.String(d.Get("engine").(string)),
-			EngineMode:           aws.String(d.Get("engine_mode").(string)),
-			ScalingConfiguration: ExpandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
-			Tags:                 Tags(tags.IgnoreAWS()),
+			CopyTagsToSnapshot:               aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
+			DBClusterIdentifier:              aws.String(identifier),
+			DeletionProtection:               aws.Bool(d.Get("deletion_protection").(bool)),
+			Engine:                           aws.String(d.Get("engine").(string)),
+			EngineMode:                       aws.String(d.Get("engine_mode").(string)),
+			ScalingConfiguration:             ExpandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
+			ServerlessV2ScalingConfiguration: ExpandClusterServerlessV2ScalingConfiguration(d.Get("serverlessv2_scaling_configuration").([]interface{})),
+			Tags:                             Tags(tags.IgnoreAWS()),
 		}
 
 		// Note: Username and password credentials are required and valid
@@ -1310,6 +1335,11 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("scaling_configuration") {
 		req.ScalingConfiguration = ExpandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{}))
+		requestUpdate = true
+	}
+
+	if d.HasChange("serverlessv2_scaling_configuration") {
+		req.ServerlessV2ScalingConfiguration = ExpandClusterServerlessV2ScalingConfiguration(d.Get("serverlessv2_scaling_configuration").([]interface{}))
 		requestUpdate = true
 	}
 

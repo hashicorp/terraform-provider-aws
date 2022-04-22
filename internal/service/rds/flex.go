@@ -46,6 +46,34 @@ func flattenRDSScalingConfigurationInfo(scalingConfigurationInfo *rds.ScalingCon
 	return []interface{}{m}
 }
 
+func ExpandClusterServerlessV2ScalingConfiguration(l []interface{}) *rds.ServerlessV2ScalingConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	scalingConfiguration := &rds.ServerlessV2ScalingConfiguration{
+		MaxCapacity: aws.Float64(float64(m["max_capacity"].(float64))),
+		MinCapacity: aws.Float64(float64(m["min_capacity"].(float64))),
+	}
+
+	return scalingConfiguration
+}
+
+func flattenRDSServerlessV2ScalingConfigurationInfo(scalingConfigurationInfo *rds.ServerlessV2ScalingConfigurationInfo) []interface{} {
+	if scalingConfigurationInfo == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"max_capacity": aws.Float64Value(scalingConfigurationInfo.MaxCapacity),
+		"min_capacity": aws.Float64Value(scalingConfigurationInfo.MinCapacity),
+	}
+
+	return []interface{}{m}
+}
+
 func expandOptionConfiguration(configured []interface{}) []*rds.OptionConfiguration {
 	var option []*rds.OptionConfiguration
 
