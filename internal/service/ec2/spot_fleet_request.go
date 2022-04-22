@@ -538,376 +538,6 @@ func ResourceSpotFleetRequest() *schema.Resource {
 	}
 }
 
-func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{}) (*ec2.SpotFleetLaunchSpecification, error) {
-	conn := meta.(*conns.AWSClient).EC2Conn
-
-	opts := &ec2.SpotFleetLaunchSpecification{
-		ImageId:      aws.String(d["ami"].(string)),
-		InstanceType: aws.String(d["instance_type"].(string)),
-		SpotPrice:    aws.String(d["spot_price"].(string)),
-	}
-
-	placement := new(ec2.SpotPlacement)
-	if v, ok := d["availability_zone"]; ok {
-		placement.AvailabilityZone = aws.String(v.(string))
-		opts.Placement = placement
-	}
-
-	if v, ok := d["placement_tenancy"]; ok {
-		placement.Tenancy = aws.String(v.(string))
-		opts.Placement = placement
-	}
-
-	if v, ok := d["placement_group"]; ok {
-		if v.(string) != "" {
-			// If instanceInterruptionBehavior is set to STOP, this can't be set at all, even to an empty string, so check for "" to avoid those errors
-			placement.GroupName = aws.String(v.(string))
-			opts.Placement = placement
-		}
-	}
-
-	if v, ok := d["ebs_optimized"]; ok {
-		opts.EbsOptimized = aws.Bool(v.(bool))
-	}
-
-	if v, ok := d["monitoring"]; ok {
-		opts.Monitoring = &ec2.SpotFleetMonitoring{
-			Enabled: aws.Bool(v.(bool)),
-		}
-	}
-
-	if v, ok := d["iam_instance_profile"]; ok {
-		opts.IamInstanceProfile = &ec2.IamInstanceProfileSpecification{
-			Name: aws.String(v.(string)),
-		}
-	}
-
-	if v, ok := d["iam_instance_profile_arn"]; ok && v.(string) != "" {
-		opts.IamInstanceProfile = &ec2.IamInstanceProfileSpecification{
-			Arn: aws.String(v.(string)),
-		}
-	}
-
-	if v, ok := d["user_data"]; ok {
-		opts.UserData = aws.String(verify.Base64Encode([]byte(v.(string))))
-	}
-
-	if v, ok := d["key_name"]; ok && v != "" {
-		opts.KeyName = aws.String(v.(string))
-	}
-
-	if v, ok := d["weighted_capacity"]; ok && v != "" {
-		wc, err := strconv.ParseFloat(v.(string), 64)
-		if err != nil {
-			return nil, err
-		}
-		opts.WeightedCapacity = aws.Float64(wc)
-	}
-
-	var securityGroupIds []*string
-	if v, ok := d["vpc_security_group_ids"]; ok {
-		if s := v.(*schema.Set); s.Len() > 0 {
-			for _, v := range s.List() {
-				securityGroupIds = append(securityGroupIds, aws.String(v.(string)))
-			}
-		}
-	}
-
-	if m, ok := d["tags"].(map[string]interface{}); ok && len(m) > 0 {
-		tagsSpec := make([]*ec2.SpotFleetTagSpecification, 0)
-
-		tags := Tags(tftags.New(m).IgnoreAWS())
-
-		spec := &ec2.SpotFleetTagSpecification{
-			ResourceType: aws.String(ec2.ResourceTypeInstance),
-			Tags:         tags,
-		}
-
-		tagsSpec = append(tagsSpec, spec)
-
-		opts.TagSpecifications = tagsSpec
-	}
-
-	subnetId, hasSubnetId := d["subnet_id"]
-	if hasSubnetId {
-		opts.SubnetId = aws.String(subnetId.(string))
-	}
-
-	associatePublicIpAddress, hasPublicIpAddress := d["associate_public_ip_address"]
-	if hasPublicIpAddress && associatePublicIpAddress.(bool) && hasSubnetId {
-
-		// If we have a non-default VPC / Subnet specified, we can flag
-		// AssociatePublicIpAddress to get a Public IP assigned. By default these are not provided.
-		// You cannot specify both SubnetId and the NetworkInterface.0.* parameters though, otherwise
-		// you get: Network interfaces and an instance-level subnet ID may not be specified on the same request
-		// You also need to attach Security Groups to the NetworkInterface instead of the instance,
-		// to avoid: Network interfaces and an instance-level security groups may not be specified on
-		// the same request
-		ni := &ec2.InstanceNetworkInterfaceSpecification{
-			AssociatePublicIpAddress: aws.Bool(true),
-			DeleteOnTermination:      aws.Bool(true),
-			DeviceIndex:              aws.Int64(0),
-			SubnetId:                 aws.String(subnetId.(string)),
-			Groups:                   securityGroupIds,
-		}
-
-		opts.NetworkInterfaces = []*ec2.InstanceNetworkInterfaceSpecification{ni}
-		opts.SubnetId = aws.String("")
-	} else {
-		for _, id := range securityGroupIds {
-			opts.SecurityGroups = append(opts.SecurityGroups, &ec2.GroupIdentifier{GroupId: id})
-		}
-	}
-
-	blockDevices, err := readSpotFleetBlockDeviceMappingsFromConfig(d, conn)
-	if err != nil {
-		return nil, err
-	}
-	if len(blockDevices) > 0 {
-		opts.BlockDeviceMappings = blockDevices
-	}
-
-	return opts, nil
-}
-
-func readSpotFleetBlockDeviceMappingsFromConfig(
-	d map[string]interface{}, conn *ec2.EC2) ([]*ec2.BlockDeviceMapping, error) {
-	blockDevices := make([]*ec2.BlockDeviceMapping, 0)
-
-	if v, ok := d["ebs_block_device"]; ok {
-		vL := v.(*schema.Set).List()
-		for _, v := range vL {
-			bd := v.(map[string]interface{})
-			ebs := &ec2.EbsBlockDevice{
-				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
-			}
-
-			if v, ok := bd["snapshot_id"].(string); ok && v != "" {
-				ebs.SnapshotId = aws.String(v)
-			}
-
-			if v, ok := bd["encrypted"].(bool); ok && v {
-				ebs.Encrypted = aws.Bool(v)
-			}
-
-			if v, ok := bd["kms_key_id"].(string); ok && v != "" {
-				ebs.KmsKeyId = aws.String(v)
-			}
-
-			if v, ok := bd["volume_size"].(int); ok && v != 0 {
-				ebs.VolumeSize = aws.Int64(int64(v))
-			}
-
-			if v, ok := bd["volume_type"].(string); ok && v != "" {
-				ebs.VolumeType = aws.String(v)
-			}
-
-			if v, ok := bd["iops"].(int); ok && v > 0 {
-				ebs.Iops = aws.Int64(int64(v))
-			}
-
-			if v, ok := bd["throughput"].(int); ok && v > 0 {
-				ebs.Throughput = aws.Int64(int64(v))
-			}
-
-			blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
-				DeviceName: aws.String(bd["device_name"].(string)),
-				Ebs:        ebs,
-			})
-		}
-	}
-
-	if v, ok := d["ephemeral_block_device"]; ok {
-		vL := v.(*schema.Set).List()
-		for _, v := range vL {
-			bd := v.(map[string]interface{})
-			blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
-				DeviceName:  aws.String(bd["device_name"].(string)),
-				VirtualName: aws.String(bd["virtual_name"].(string)),
-			})
-		}
-	}
-
-	if v, ok := d["root_block_device"]; ok {
-		vL := v.(*schema.Set).List()
-		if len(vL) > 1 {
-			return nil, fmt.Errorf("Cannot specify more than one root_block_device.")
-		}
-		for _, v := range vL {
-			bd := v.(map[string]interface{})
-			ebs := &ec2.EbsBlockDevice{
-				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
-			}
-
-			if v, ok := bd["encrypted"].(bool); ok && v {
-				ebs.Encrypted = aws.Bool(v)
-			}
-
-			if v, ok := bd["kms_key_id"].(string); ok && v != "" {
-				ebs.KmsKeyId = aws.String(v)
-			}
-
-			if v, ok := bd["volume_size"].(int); ok && v != 0 {
-				ebs.VolumeSize = aws.Int64(int64(v))
-			}
-
-			if v, ok := bd["volume_type"].(string); ok && v != "" {
-				ebs.VolumeType = aws.String(v)
-			}
-
-			if v, ok := bd["iops"].(int); ok && v > 0 {
-				ebs.Iops = aws.Int64(int64(v))
-			}
-
-			if v, ok := bd["throughput"].(int); ok && v > 0 {
-				ebs.Throughput = aws.Int64(int64(v))
-			}
-
-			if dn, err := FetchRootDeviceName(d["ami"].(string), conn); err == nil {
-				if dn == nil {
-					return nil, fmt.Errorf(
-						"Expected 1 AMI for ID: %s, got none",
-						d["ami"].(string))
-				}
-
-				blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
-					DeviceName: dn,
-					Ebs:        ebs,
-				})
-			} else {
-				return nil, err
-			}
-		}
-	}
-
-	return blockDevices, nil
-}
-
-func buildSpotFleetLaunchSpecifications(
-	d *schema.ResourceData, meta interface{}) ([]*ec2.SpotFleetLaunchSpecification, error) {
-
-	userSpecs := d.Get("launch_specification").(*schema.Set).List()
-	specs := make([]*ec2.SpotFleetLaunchSpecification, len(userSpecs))
-	for i, userSpec := range userSpecs {
-		userSpecMap := userSpec.(map[string]interface{})
-		// panic: interface conversion: interface {} is map[string]interface {}, not *schema.ResourceData
-		opts, err := buildSpotFleetLaunchSpecification(userSpecMap, meta)
-		if err != nil {
-			return nil, err
-		}
-		specs[i] = opts
-	}
-
-	return specs, nil
-}
-
-func buildLaunchTemplateConfigs(d *schema.ResourceData) []*ec2.LaunchTemplateConfig {
-	launchTemplateConfigs := d.Get("launch_template_config").(*schema.Set)
-	configs := make([]*ec2.LaunchTemplateConfig, 0)
-
-	for _, launchTemplateConfig := range launchTemplateConfigs.List() {
-
-		ltc := &ec2.LaunchTemplateConfig{}
-
-		ltcMap := launchTemplateConfig.(map[string]interface{})
-
-		//launch template spec
-		if v, ok := ltcMap["launch_template_specification"]; ok {
-			vL := v.([]interface{})
-			lts := vL[0].(map[string]interface{})
-
-			flts := &ec2.FleetLaunchTemplateSpecification{}
-
-			if v, ok := lts["id"].(string); ok && v != "" {
-				flts.LaunchTemplateId = aws.String(v)
-			}
-
-			if v, ok := lts["name"].(string); ok && v != "" {
-				flts.LaunchTemplateName = aws.String(v)
-			}
-
-			if v, ok := lts["version"].(string); ok && v != "" {
-				flts.Version = aws.String(v)
-			}
-
-			ltc.LaunchTemplateSpecification = flts
-
-		}
-
-		if v, ok := ltcMap["overrides"]; ok && v.(*schema.Set).Len() > 0 {
-			vL := v.(*schema.Set).List()
-			overrides := make([]*ec2.LaunchTemplateOverrides, 0)
-
-			for _, v := range vL {
-				ors := v.(map[string]interface{})
-				lto := &ec2.LaunchTemplateOverrides{}
-
-				if v, ok := ors["availability_zone"].(string); ok && v != "" {
-					lto.AvailabilityZone = aws.String(v)
-				}
-
-				if v, ok := ors["instance_type"].(string); ok && v != "" {
-					lto.InstanceType = aws.String(v)
-				}
-
-				if v, ok := ors["spot_price"].(string); ok && v != "" {
-					lto.SpotPrice = aws.String(v)
-				}
-
-				if v, ok := ors["subnet_id"].(string); ok && v != "" {
-					lto.SubnetId = aws.String(v)
-				}
-
-				if v, ok := ors["weighted_capacity"].(float64); ok && v > 0 {
-					lto.WeightedCapacity = aws.Float64(v)
-				}
-
-				if v, ok := ors["priority"].(float64); ok {
-					lto.Priority = aws.Float64(v)
-				}
-
-				overrides = append(overrides, lto)
-			}
-
-			ltc.Overrides = overrides
-		}
-
-		configs = append(configs, ltc)
-	}
-
-	return configs
-}
-
-func expandSpotMaintenanceStrategies(l []interface{}) *ec2.SpotMaintenanceStrategies {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	fleetSpotMaintenanceStrategies := &ec2.SpotMaintenanceStrategies{
-		CapacityRebalance: expandSpotCapacityRebalance(m["capacity_rebalance"].([]interface{})),
-	}
-
-	return fleetSpotMaintenanceStrategies
-}
-
-func expandSpotCapacityRebalance(l []interface{}) *ec2.SpotCapacityRebalance {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	capacityRebalance := &ec2.SpotCapacityRebalance{}
-
-	if v, ok := m["replacement_strategy"]; ok && v.(string) != "" {
-		capacityRebalance.ReplacementStrategy = aws.String(v.(string))
-	}
-
-	return capacityRebalance
-}
-
 func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) error {
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RequestSpotFleet.html
 	conn := meta.(*conns.AWSClient).EC2Conn
@@ -1105,94 +735,6 @@ func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) er
 	return resourceSpotFleetRequestRead(d, meta)
 }
 
-func resourceSpotFleetRequestStateRefreshFunc(d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		conn := meta.(*conns.AWSClient).EC2Conn
-		req := &ec2.DescribeSpotFleetRequestsInput{
-			SpotFleetRequestIds: []*string{aws.String(d.Id())},
-		}
-		resp, err := conn.DescribeSpotFleetRequests(req)
-
-		if err != nil {
-			log.Printf("Error on retrieving Spot Fleet Request when waiting: %s", err)
-			return nil, "", nil
-		}
-
-		if resp == nil {
-			return nil, "", nil
-		}
-
-		if len(resp.SpotFleetRequestConfigs) == 0 {
-			return nil, "", nil
-		}
-
-		spotFleetRequest := resp.SpotFleetRequestConfigs[0]
-
-		return spotFleetRequest, aws.StringValue(spotFleetRequest.SpotFleetRequestState), nil
-	}
-}
-
-func resourceSpotFleetRequestFulfillmentRefreshFunc(id string, conn *ec2.EC2) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		req := &ec2.DescribeSpotFleetRequestsInput{
-			SpotFleetRequestIds: []*string{aws.String(id)},
-		}
-		resp, err := conn.DescribeSpotFleetRequests(req)
-
-		if err != nil {
-			log.Printf("Error on retrieving Spot Fleet Request when waiting: %s", err)
-			return nil, "", nil
-		}
-
-		if resp == nil {
-			return nil, "", nil
-		}
-
-		if len(resp.SpotFleetRequestConfigs) == 0 {
-			return nil, "", nil
-		}
-
-		cfg := resp.SpotFleetRequestConfigs[0]
-		status := aws.StringValue(cfg.ActivityStatus)
-
-		var fleetError error
-		if status == ec2.ActivityStatusError {
-			var events []*ec2.HistoryRecord
-
-			// Query "information" events (e.g. launchSpecUnusable b/c low bid price)
-			out, err := conn.DescribeSpotFleetRequestHistory(&ec2.DescribeSpotFleetRequestHistoryInput{
-				EventType:          aws.String(ec2.EventTypeInformation),
-				SpotFleetRequestId: aws.String(id),
-				StartTime:          cfg.CreateTime,
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed to get the reason of 'error' state: %s", err)
-			}
-			if len(out.HistoryRecords) > 0 {
-				events = out.HistoryRecords
-			}
-
-			out, err = conn.DescribeSpotFleetRequestHistory(&ec2.DescribeSpotFleetRequestHistoryInput{
-				EventType:          aws.String(ec2.EventTypeError),
-				SpotFleetRequestId: aws.String(id),
-				StartTime:          cfg.CreateTime,
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed to get the reason of 'error' state: %s", err)
-			}
-			if len(out.HistoryRecords) > 0 {
-				events = append(events, out.HistoryRecords...)
-			}
-
-			if len(events) > 0 {
-				fleetError = fmt.Errorf("Last events: %v", events)
-			}
-		}
-
-		return cfg, status, fleetError
-	}
-}
-
 func resourceSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) error {
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSpotFleetRequests.html
 	conn := meta.(*conns.AWSClient).EC2Conn
@@ -1333,6 +875,590 @@ func resourceSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	return nil
+}
+
+func resourceSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{}) error {
+	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifySpotFleetRequest.html
+	conn := meta.(*conns.AWSClient).EC2Conn
+
+	if d.HasChangesExcept("tags", "tags_all") {
+		req := &ec2.ModifySpotFleetRequestInput{
+			SpotFleetRequestId: aws.String(d.Id()),
+		}
+
+		if d.HasChange("target_capacity") {
+			req.TargetCapacity = aws.Int64(int64(d.Get("target_capacity").(int)))
+		}
+
+		if d.HasChange("on_demand_target_capacity") {
+			req.OnDemandTargetCapacity = aws.Int64(int64(d.Get("on_demand_target_capacity").(int)))
+		}
+
+		if d.HasChange("excess_capacity_termination_policy") {
+			if val, ok := d.GetOk("excess_capacity_termination_policy"); ok {
+				req.ExcessCapacityTerminationPolicy = aws.String(val.(string))
+			}
+		}
+
+		log.Printf("[DEBUG] Modifying Spot Fleet Request: %#v", req)
+		if _, err := conn.ModifySpotFleetRequest(req); err != nil {
+			return fmt.Errorf("error updating spot request (%s): %w", d.Id(), err)
+		}
+
+		log.Println("[INFO] Waiting for Spot Fleet Request to be modified")
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{ec2.BatchStateModifying},
+			Target:     []string{ec2.BatchStateActive},
+			Refresh:    resourceSpotFleetRequestStateRefreshFunc(d, meta),
+			Timeout:    10 * time.Minute,
+			MinTimeout: 10 * time.Second,
+			Delay:      30 * time.Second,
+		}
+
+		_, err := stateConf.WaitForState()
+		if err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %w", err)
+		}
+	}
+
+	return resourceSpotFleetRequestRead(d, meta)
+}
+
+func resourceSpotFleetRequestDelete(d *schema.ResourceData, meta interface{}) error {
+	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CancelSpotFleetRequests.html
+	conn := meta.(*conns.AWSClient).EC2Conn
+	terminateInstances := d.Get("terminate_instances_with_expiration").(bool)
+
+	log.Printf("[INFO] Cancelling spot fleet request: %s", d.Id())
+	err := deleteSpotFleetRequest(d.Id(), terminateInstances, d.Timeout(schema.TimeoutDelete), conn)
+	if err != nil {
+		return fmt.Errorf("error deleting spot request (%s): %w", d.Id(), err)
+	}
+
+	return nil
+}
+
+func deleteSpotFleetRequest(spotFleetRequestID string, terminateInstances bool, timeout time.Duration, conn *ec2.EC2) error {
+	_, err := conn.CancelSpotFleetRequests(&ec2.CancelSpotFleetRequestsInput{
+		SpotFleetRequestIds: []*string{aws.String(spotFleetRequestID)},
+		TerminateInstances:  aws.Bool(terminateInstances),
+	})
+	if err != nil {
+		return err
+	}
+
+	// Only wait for instance termination if requested
+	if !terminateInstances {
+		return nil
+	}
+
+	activeInstances := func(fleetRequestID string) (int, error) {
+		resp, err := conn.DescribeSpotFleetInstances(&ec2.DescribeSpotFleetInstancesInput{
+			SpotFleetRequestId: aws.String(fleetRequestID),
+		})
+
+		if err != nil || resp == nil {
+			return 0, fmt.Errorf("error reading Spot Fleet Instances (%s): %w", spotFleetRequestID, err)
+		}
+
+		return len(resp.ActiveInstances), nil
+	}
+
+	err = resource.Retry(timeout, func() *resource.RetryError {
+		n, err := activeInstances(spotFleetRequestID)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		if n > 0 {
+			log.Printf("[DEBUG] Active instance count in Spot Fleet Request (%s): %d", spotFleetRequestID, n)
+			return resource.RetryableError(fmt.Errorf("fleet still has (%d) running instances", n))
+		}
+
+		log.Printf("[DEBUG] Active instance count is 0 for Spot Fleet Request (%s), removing", spotFleetRequestID)
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		n, err := activeInstances(spotFleetRequestID)
+		if err != nil {
+			return err
+		}
+
+		if n > 0 {
+			log.Printf("[DEBUG] Active instance count in Spot Fleet Request (%s): %d", spotFleetRequestID, n)
+			return fmt.Errorf("fleet still has (%d) running instances", n)
+		}
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading Spot Fleet Instances (%s): %s", spotFleetRequestID, err)
+	}
+
+	return nil
+}
+
+func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{}) (*ec2.SpotFleetLaunchSpecification, error) {
+	conn := meta.(*conns.AWSClient).EC2Conn
+
+	opts := &ec2.SpotFleetLaunchSpecification{
+		ImageId:      aws.String(d["ami"].(string)),
+		InstanceType: aws.String(d["instance_type"].(string)),
+		SpotPrice:    aws.String(d["spot_price"].(string)),
+	}
+
+	placement := new(ec2.SpotPlacement)
+	if v, ok := d["availability_zone"]; ok {
+		placement.AvailabilityZone = aws.String(v.(string))
+		opts.Placement = placement
+	}
+
+	if v, ok := d["placement_tenancy"]; ok {
+		placement.Tenancy = aws.String(v.(string))
+		opts.Placement = placement
+	}
+
+	if v, ok := d["placement_group"]; ok {
+		if v.(string) != "" {
+			// If instanceInterruptionBehavior is set to STOP, this can't be set at all, even to an empty string, so check for "" to avoid those errors
+			placement.GroupName = aws.String(v.(string))
+			opts.Placement = placement
+		}
+	}
+
+	if v, ok := d["ebs_optimized"]; ok {
+		opts.EbsOptimized = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d["monitoring"]; ok {
+		opts.Monitoring = &ec2.SpotFleetMonitoring{
+			Enabled: aws.Bool(v.(bool)),
+		}
+	}
+
+	if v, ok := d["iam_instance_profile"]; ok {
+		opts.IamInstanceProfile = &ec2.IamInstanceProfileSpecification{
+			Name: aws.String(v.(string)),
+		}
+	}
+
+	if v, ok := d["iam_instance_profile_arn"]; ok && v.(string) != "" {
+		opts.IamInstanceProfile = &ec2.IamInstanceProfileSpecification{
+			Arn: aws.String(v.(string)),
+		}
+	}
+
+	if v, ok := d["user_data"]; ok {
+		opts.UserData = aws.String(verify.Base64Encode([]byte(v.(string))))
+	}
+
+	if v, ok := d["key_name"]; ok && v != "" {
+		opts.KeyName = aws.String(v.(string))
+	}
+
+	if v, ok := d["weighted_capacity"]; ok && v != "" {
+		wc, err := strconv.ParseFloat(v.(string), 64)
+		if err != nil {
+			return nil, err
+		}
+		opts.WeightedCapacity = aws.Float64(wc)
+	}
+
+	var securityGroupIds []*string
+	if v, ok := d["vpc_security_group_ids"]; ok {
+		if s := v.(*schema.Set); s.Len() > 0 {
+			for _, v := range s.List() {
+				securityGroupIds = append(securityGroupIds, aws.String(v.(string)))
+			}
+		}
+	}
+
+	if m, ok := d["tags"].(map[string]interface{}); ok && len(m) > 0 {
+		tagsSpec := make([]*ec2.SpotFleetTagSpecification, 0)
+
+		tags := Tags(tftags.New(m).IgnoreAWS())
+
+		spec := &ec2.SpotFleetTagSpecification{
+			ResourceType: aws.String(ec2.ResourceTypeInstance),
+			Tags:         tags,
+		}
+
+		tagsSpec = append(tagsSpec, spec)
+
+		opts.TagSpecifications = tagsSpec
+	}
+
+	subnetId, hasSubnetId := d["subnet_id"]
+	if hasSubnetId {
+		opts.SubnetId = aws.String(subnetId.(string))
+	}
+
+	associatePublicIpAddress, hasPublicIpAddress := d["associate_public_ip_address"]
+	if hasPublicIpAddress && associatePublicIpAddress.(bool) && hasSubnetId {
+
+		// If we have a non-default VPC / Subnet specified, we can flag
+		// AssociatePublicIpAddress to get a Public IP assigned. By default these are not provided.
+		// You cannot specify both SubnetId and the NetworkInterface.0.* parameters though, otherwise
+		// you get: Network interfaces and an instance-level subnet ID may not be specified on the same request
+		// You also need to attach Security Groups to the NetworkInterface instead of the instance,
+		// to avoid: Network interfaces and an instance-level security groups may not be specified on
+		// the same request
+		ni := &ec2.InstanceNetworkInterfaceSpecification{
+			AssociatePublicIpAddress: aws.Bool(true),
+			DeleteOnTermination:      aws.Bool(true),
+			DeviceIndex:              aws.Int64(0),
+			SubnetId:                 aws.String(subnetId.(string)),
+			Groups:                   securityGroupIds,
+		}
+
+		opts.NetworkInterfaces = []*ec2.InstanceNetworkInterfaceSpecification{ni}
+		opts.SubnetId = aws.String("")
+	} else {
+		for _, id := range securityGroupIds {
+			opts.SecurityGroups = append(opts.SecurityGroups, &ec2.GroupIdentifier{GroupId: id})
+		}
+	}
+
+	blockDevices, err := readSpotFleetBlockDeviceMappingsFromConfig(d, conn)
+	if err != nil {
+		return nil, err
+	}
+	if len(blockDevices) > 0 {
+		opts.BlockDeviceMappings = blockDevices
+	}
+
+	return opts, nil
+}
+
+func readSpotFleetBlockDeviceMappingsFromConfig(d map[string]interface{}, conn *ec2.EC2) ([]*ec2.BlockDeviceMapping, error) {
+	blockDevices := make([]*ec2.BlockDeviceMapping, 0)
+
+	if v, ok := d["ebs_block_device"]; ok {
+		vL := v.(*schema.Set).List()
+		for _, v := range vL {
+			bd := v.(map[string]interface{})
+			ebs := &ec2.EbsBlockDevice{
+				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
+			}
+
+			if v, ok := bd["snapshot_id"].(string); ok && v != "" {
+				ebs.SnapshotId = aws.String(v)
+			}
+
+			if v, ok := bd["encrypted"].(bool); ok && v {
+				ebs.Encrypted = aws.Bool(v)
+			}
+
+			if v, ok := bd["kms_key_id"].(string); ok && v != "" {
+				ebs.KmsKeyId = aws.String(v)
+			}
+
+			if v, ok := bd["volume_size"].(int); ok && v != 0 {
+				ebs.VolumeSize = aws.Int64(int64(v))
+			}
+
+			if v, ok := bd["volume_type"].(string); ok && v != "" {
+				ebs.VolumeType = aws.String(v)
+			}
+
+			if v, ok := bd["iops"].(int); ok && v > 0 {
+				ebs.Iops = aws.Int64(int64(v))
+			}
+
+			if v, ok := bd["throughput"].(int); ok && v > 0 {
+				ebs.Throughput = aws.Int64(int64(v))
+			}
+
+			blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
+				DeviceName: aws.String(bd["device_name"].(string)),
+				Ebs:        ebs,
+			})
+		}
+	}
+
+	if v, ok := d["ephemeral_block_device"]; ok {
+		vL := v.(*schema.Set).List()
+		for _, v := range vL {
+			bd := v.(map[string]interface{})
+			blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
+				DeviceName:  aws.String(bd["device_name"].(string)),
+				VirtualName: aws.String(bd["virtual_name"].(string)),
+			})
+		}
+	}
+
+	if v, ok := d["root_block_device"]; ok {
+		vL := v.(*schema.Set).List()
+		if len(vL) > 1 {
+			return nil, fmt.Errorf("Cannot specify more than one root_block_device.")
+		}
+		for _, v := range vL {
+			bd := v.(map[string]interface{})
+			ebs := &ec2.EbsBlockDevice{
+				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
+			}
+
+			if v, ok := bd["encrypted"].(bool); ok && v {
+				ebs.Encrypted = aws.Bool(v)
+			}
+
+			if v, ok := bd["kms_key_id"].(string); ok && v != "" {
+				ebs.KmsKeyId = aws.String(v)
+			}
+
+			if v, ok := bd["volume_size"].(int); ok && v != 0 {
+				ebs.VolumeSize = aws.Int64(int64(v))
+			}
+
+			if v, ok := bd["volume_type"].(string); ok && v != "" {
+				ebs.VolumeType = aws.String(v)
+			}
+
+			if v, ok := bd["iops"].(int); ok && v > 0 {
+				ebs.Iops = aws.Int64(int64(v))
+			}
+
+			if v, ok := bd["throughput"].(int); ok && v > 0 {
+				ebs.Throughput = aws.Int64(int64(v))
+			}
+
+			if dn, err := FetchRootDeviceName(d["ami"].(string), conn); err == nil {
+				if dn == nil {
+					return nil, fmt.Errorf(
+						"Expected 1 AMI for ID: %s, got none",
+						d["ami"].(string))
+				}
+
+				blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
+					DeviceName: dn,
+					Ebs:        ebs,
+				})
+			} else {
+				return nil, err
+			}
+		}
+	}
+
+	return blockDevices, nil
+}
+
+func buildSpotFleetLaunchSpecifications(d *schema.ResourceData, meta interface{}) ([]*ec2.SpotFleetLaunchSpecification, error) {
+
+	userSpecs := d.Get("launch_specification").(*schema.Set).List()
+	specs := make([]*ec2.SpotFleetLaunchSpecification, len(userSpecs))
+	for i, userSpec := range userSpecs {
+		userSpecMap := userSpec.(map[string]interface{})
+		// panic: interface conversion: interface {} is map[string]interface {}, not *schema.ResourceData
+		opts, err := buildSpotFleetLaunchSpecification(userSpecMap, meta)
+		if err != nil {
+			return nil, err
+		}
+		specs[i] = opts
+	}
+
+	return specs, nil
+}
+
+func buildLaunchTemplateConfigs(d *schema.ResourceData) []*ec2.LaunchTemplateConfig {
+	launchTemplateConfigs := d.Get("launch_template_config").(*schema.Set)
+	configs := make([]*ec2.LaunchTemplateConfig, 0)
+
+	for _, launchTemplateConfig := range launchTemplateConfigs.List() {
+
+		ltc := &ec2.LaunchTemplateConfig{}
+
+		ltcMap := launchTemplateConfig.(map[string]interface{})
+
+		//launch template spec
+		if v, ok := ltcMap["launch_template_specification"]; ok {
+			vL := v.([]interface{})
+			lts := vL[0].(map[string]interface{})
+
+			flts := &ec2.FleetLaunchTemplateSpecification{}
+
+			if v, ok := lts["id"].(string); ok && v != "" {
+				flts.LaunchTemplateId = aws.String(v)
+			}
+
+			if v, ok := lts["name"].(string); ok && v != "" {
+				flts.LaunchTemplateName = aws.String(v)
+			}
+
+			if v, ok := lts["version"].(string); ok && v != "" {
+				flts.Version = aws.String(v)
+			}
+
+			ltc.LaunchTemplateSpecification = flts
+
+		}
+
+		if v, ok := ltcMap["overrides"]; ok && v.(*schema.Set).Len() > 0 {
+			vL := v.(*schema.Set).List()
+			overrides := make([]*ec2.LaunchTemplateOverrides, 0)
+
+			for _, v := range vL {
+				ors := v.(map[string]interface{})
+				lto := &ec2.LaunchTemplateOverrides{}
+
+				if v, ok := ors["availability_zone"].(string); ok && v != "" {
+					lto.AvailabilityZone = aws.String(v)
+				}
+
+				if v, ok := ors["instance_type"].(string); ok && v != "" {
+					lto.InstanceType = aws.String(v)
+				}
+
+				if v, ok := ors["spot_price"].(string); ok && v != "" {
+					lto.SpotPrice = aws.String(v)
+				}
+
+				if v, ok := ors["subnet_id"].(string); ok && v != "" {
+					lto.SubnetId = aws.String(v)
+				}
+
+				if v, ok := ors["weighted_capacity"].(float64); ok && v > 0 {
+					lto.WeightedCapacity = aws.Float64(v)
+				}
+
+				if v, ok := ors["priority"].(float64); ok {
+					lto.Priority = aws.Float64(v)
+				}
+
+				overrides = append(overrides, lto)
+			}
+
+			ltc.Overrides = overrides
+		}
+
+		configs = append(configs, ltc)
+	}
+
+	return configs
+}
+
+func expandSpotMaintenanceStrategies(l []interface{}) *ec2.SpotMaintenanceStrategies {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	fleetSpotMaintenanceStrategies := &ec2.SpotMaintenanceStrategies{
+		CapacityRebalance: expandSpotCapacityRebalance(m["capacity_rebalance"].([]interface{})),
+	}
+
+	return fleetSpotMaintenanceStrategies
+}
+
+func expandSpotCapacityRebalance(l []interface{}) *ec2.SpotCapacityRebalance {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	capacityRebalance := &ec2.SpotCapacityRebalance{}
+
+	if v, ok := m["replacement_strategy"]; ok && v.(string) != "" {
+		capacityRebalance.ReplacementStrategy = aws.String(v.(string))
+	}
+
+	return capacityRebalance
+}
+
+func resourceSpotFleetRequestStateRefreshFunc(d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		conn := meta.(*conns.AWSClient).EC2Conn
+		req := &ec2.DescribeSpotFleetRequestsInput{
+			SpotFleetRequestIds: []*string{aws.String(d.Id())},
+		}
+		resp, err := conn.DescribeSpotFleetRequests(req)
+
+		if err != nil {
+			log.Printf("Error on retrieving Spot Fleet Request when waiting: %s", err)
+			return nil, "", nil
+		}
+
+		if resp == nil {
+			return nil, "", nil
+		}
+
+		if len(resp.SpotFleetRequestConfigs) == 0 {
+			return nil, "", nil
+		}
+
+		spotFleetRequest := resp.SpotFleetRequestConfigs[0]
+
+		return spotFleetRequest, aws.StringValue(spotFleetRequest.SpotFleetRequestState), nil
+	}
+}
+
+func resourceSpotFleetRequestFulfillmentRefreshFunc(id string, conn *ec2.EC2) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		req := &ec2.DescribeSpotFleetRequestsInput{
+			SpotFleetRequestIds: []*string{aws.String(id)},
+		}
+		resp, err := conn.DescribeSpotFleetRequests(req)
+
+		if err != nil {
+			log.Printf("Error on retrieving Spot Fleet Request when waiting: %s", err)
+			return nil, "", nil
+		}
+
+		if resp == nil {
+			return nil, "", nil
+		}
+
+		if len(resp.SpotFleetRequestConfigs) == 0 {
+			return nil, "", nil
+		}
+
+		cfg := resp.SpotFleetRequestConfigs[0]
+		status := aws.StringValue(cfg.ActivityStatus)
+
+		var fleetError error
+		if status == ec2.ActivityStatusError {
+			var events []*ec2.HistoryRecord
+
+			// Query "information" events (e.g. launchSpecUnusable b/c low bid price)
+			out, err := conn.DescribeSpotFleetRequestHistory(&ec2.DescribeSpotFleetRequestHistoryInput{
+				EventType:          aws.String(ec2.EventTypeInformation),
+				SpotFleetRequestId: aws.String(id),
+				StartTime:          cfg.CreateTime,
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to get the reason of 'error' state: %s", err)
+			}
+			if len(out.HistoryRecords) > 0 {
+				events = out.HistoryRecords
+			}
+
+			out, err = conn.DescribeSpotFleetRequestHistory(&ec2.DescribeSpotFleetRequestHistoryInput{
+				EventType:          aws.String(ec2.EventTypeError),
+				SpotFleetRequestId: aws.String(id),
+				StartTime:          cfg.CreateTime,
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to get the reason of 'error' state: %s", err)
+			}
+			if len(out.HistoryRecords) > 0 {
+				events = append(events, out.HistoryRecords...)
+			}
+
+			if len(events) > 0 {
+				fleetError = fmt.Errorf("Last events: %v", events)
+			}
+		}
+
+		return cfg, status, fleetError
+	}
 }
 
 func flattenSpotFleetRequestLaunchTemplateOverrides(override *ec2.LaunchTemplateOverrides) map[string]interface{} {
@@ -1534,10 +1660,7 @@ func ephemeralBlockDevicesToSet(bdm []*ec2.BlockDeviceMapping) *schema.Set {
 	return set
 }
 
-func rootBlockDeviceToSet(
-	bdm []*ec2.BlockDeviceMapping,
-	rootDevName *string,
-) *schema.Set {
+func rootBlockDeviceToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *schema.Set {
 	set := &schema.Set{F: hashRootBlockDevice}
 
 	if rootDevName != nil {
@@ -1578,134 +1701,6 @@ func rootBlockDeviceToSet(
 	}
 
 	return set
-}
-
-func resourceSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{}) error {
-	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifySpotFleetRequest.html
-	conn := meta.(*conns.AWSClient).EC2Conn
-
-	if d.HasChangesExcept("tags", "tags_all") {
-		req := &ec2.ModifySpotFleetRequestInput{
-			SpotFleetRequestId: aws.String(d.Id()),
-		}
-
-		if d.HasChange("target_capacity") {
-			req.TargetCapacity = aws.Int64(int64(d.Get("target_capacity").(int)))
-		}
-
-		if d.HasChange("on_demand_target_capacity") {
-			req.OnDemandTargetCapacity = aws.Int64(int64(d.Get("on_demand_target_capacity").(int)))
-		}
-
-		if d.HasChange("excess_capacity_termination_policy") {
-			if val, ok := d.GetOk("excess_capacity_termination_policy"); ok {
-				req.ExcessCapacityTerminationPolicy = aws.String(val.(string))
-			}
-		}
-
-		log.Printf("[DEBUG] Modifying Spot Fleet Request: %#v", req)
-		if _, err := conn.ModifySpotFleetRequest(req); err != nil {
-			return fmt.Errorf("error updating spot request (%s): %w", d.Id(), err)
-		}
-
-		log.Println("[INFO] Waiting for Spot Fleet Request to be modified")
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{ec2.BatchStateModifying},
-			Target:     []string{ec2.BatchStateActive},
-			Refresh:    resourceSpotFleetRequestStateRefreshFunc(d, meta),
-			Timeout:    10 * time.Minute,
-			MinTimeout: 10 * time.Second,
-			Delay:      30 * time.Second,
-		}
-
-		_, err := stateConf.WaitForState()
-		if err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
-		}
-	}
-
-	return resourceSpotFleetRequestRead(d, meta)
-}
-
-func resourceSpotFleetRequestDelete(d *schema.ResourceData, meta interface{}) error {
-	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CancelSpotFleetRequests.html
-	conn := meta.(*conns.AWSClient).EC2Conn
-	terminateInstances := d.Get("terminate_instances_with_expiration").(bool)
-
-	log.Printf("[INFO] Cancelling spot fleet request: %s", d.Id())
-	err := deleteSpotFleetRequest(d.Id(), terminateInstances, d.Timeout(schema.TimeoutDelete), conn)
-	if err != nil {
-		return fmt.Errorf("error deleting spot request (%s): %w", d.Id(), err)
-	}
-
-	return nil
-}
-
-func deleteSpotFleetRequest(spotFleetRequestID string, terminateInstances bool, timeout time.Duration, conn *ec2.EC2) error {
-	_, err := conn.CancelSpotFleetRequests(&ec2.CancelSpotFleetRequestsInput{
-		SpotFleetRequestIds: []*string{aws.String(spotFleetRequestID)},
-		TerminateInstances:  aws.Bool(terminateInstances),
-	})
-	if err != nil {
-		return err
-	}
-
-	// Only wait for instance termination if requested
-	if !terminateInstances {
-		return nil
-	}
-
-	activeInstances := func(fleetRequestID string) (int, error) {
-		resp, err := conn.DescribeSpotFleetInstances(&ec2.DescribeSpotFleetInstancesInput{
-			SpotFleetRequestId: aws.String(fleetRequestID),
-		})
-
-		if err != nil || resp == nil {
-			return 0, fmt.Errorf("error reading Spot Fleet Instances (%s): %w", spotFleetRequestID, err)
-		}
-
-		return len(resp.ActiveInstances), nil
-	}
-
-	err = resource.Retry(timeout, func() *resource.RetryError {
-		n, err := activeInstances(spotFleetRequestID)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		if n > 0 {
-			log.Printf("[DEBUG] Active instance count in Spot Fleet Request (%s): %d", spotFleetRequestID, n)
-			return resource.RetryableError(fmt.Errorf("fleet still has (%d) running instances", n))
-		}
-
-		log.Printf("[DEBUG] Active instance count is 0 for Spot Fleet Request (%s), removing", spotFleetRequestID)
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		n, err := activeInstances(spotFleetRequestID)
-		if err != nil {
-			return err
-		}
-
-		if n > 0 {
-			log.Printf("[DEBUG] Active instance count in Spot Fleet Request (%s): %d", spotFleetRequestID, n)
-			return fmt.Errorf("fleet still has (%d) running instances", n)
-		}
-	}
-
-	if err != nil {
-		return fmt.Errorf("error reading Spot Fleet Instances (%s): %s", spotFleetRequestID, err)
-	}
-
-	return nil
 }
 
 func hashEphemeralBlockDevice(v interface{}) int {
