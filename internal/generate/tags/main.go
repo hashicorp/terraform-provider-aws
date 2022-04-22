@@ -973,6 +973,7 @@ func init() {
 	awsServiceNames["globalaccelerator"] = "GlobalAccelerator"
 	awsServiceNames["glue"] = "Glue"
 	awsServiceNames["gluedatabrew"] = "GlueDataBrew"
+	awsServiceNames["grafana"] = "ManagedGrafana"
 	awsServiceNames["greengrass"] = "Greengrass"
 	awsServiceNames["greengrassv2"] = "GreengrassV2"
 	awsServiceNames["groundstation"] = "GroundStation"
