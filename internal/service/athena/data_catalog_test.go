@@ -48,7 +48,7 @@ func TestAccAthenaDataCatalog_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataCatalog_disappears(t *testing.T) {
+func TestAccAthenaDataCatalog_disappears(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_athena_data_catalog.test"
 
