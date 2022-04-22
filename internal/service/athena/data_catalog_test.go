@@ -356,7 +356,7 @@ resource "aws_athena_data_catalog" "test" {
 func testAccDataCatalogTypeLambdaConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_athena_data_catalog" "test" {
-  name        =  %[1]q
+  name        = %[1]q
   description = "A test data catalog using Lambda"
   type        = "LAMBDA"
 
