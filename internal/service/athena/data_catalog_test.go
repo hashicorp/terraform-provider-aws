@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -63,7 +63,7 @@ func TestAccDataCatalog_type_lambda(t *testing.T) {
 		CheckDestroy: testAccCheckDataCatalogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataCatalogConfig_type_lambda(rName),
+				Config: testAccDataCatalogTypeLambdaConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "A test data catalog using Lambda"),
@@ -97,7 +97,7 @@ func TestAccDataCatalog_type_hive(t *testing.T) {
 		CheckDestroy: testAccCheckDataCatalogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataCatalogConfig_type_hive(rName),
+				Config: testAccDataCatalogTypeHiveConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "A test data catalog using Hive"),
@@ -130,7 +130,7 @@ func TestAccDataCatalog_type_glue(t *testing.T) {
 		CheckDestroy: testAccCheckDataCatalogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataCatalogConfig_type_glue(rName),
+				Config: testAccDataCatalogTypeGlueConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "A test data catalog using Glue"),
@@ -163,7 +163,7 @@ func TestAccDataCatalog_parameters(t *testing.T) {
 		CheckDestroy: testAccCheckDataCatalogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataCatalogConfig_parameters(rName),
+				Config: testAccDataCatalogParametersConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -206,93 +206,6 @@ func TestAccDataCatalog_disappears(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccDataCatalogConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_athena_data_catalog" "test" {
-	name = %[1]q
-	description = "A test data catalog"
-	type = "LAMBDA"
-
-	parameters = {
-	  "function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
-	}
-
-	tags = {
-	  Test = "test"
-	}
-}
-`, rName)
-}
-
-func testAccDataCatalogConfig_type_lambda(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_athena_data_catalog" "test" {
-	name = %[1]q
-	description = "A test data catalog using Lambda"
-	type = "LAMBDA"
-
-	parameters = {
-	  "metadata-function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
-	  "record-function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
-	}
-
-	tags = {
-	  Test = "test"
-	}
-}
-`, rName)
-}
-
-func testAccDataCatalogConfig_type_hive(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_athena_data_catalog" "test" {
-	name = %[1]q
-	description = "A test data catalog using Hive"
-	type = "HIVE"
-
-	parameters = {
-	  "metadata-function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
-	}
-
-	tags = {
-	  Test = "test"
-	}
-}
-`, rName)
-}
-
-func testAccDataCatalogConfig_type_glue(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_athena_data_catalog" "test" {
-	name = %[1]q
-	description = "A test data catalog using Glue"
-	type = "GLUE"
-
-	parameters = {
-	  "catalog-id" = "123456789012"
-	}
-
-	tags = {
-	  Test = "test"
-	}
-}
-`, rName)
-}
-
-func testAccDataCatalogConfig_parameters(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_athena_data_catalog" "test" {
-	name = %[1]q
-	description = "Testing parameters attribute"
-	type = "LAMBDA"
-
-	parameters = {
-	  "function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
-	}
-}
-`, rName)
 }
 
 func testAccCheckDataCatalogExists(n string) resource.TestCheckFunc {
@@ -350,4 +263,91 @@ func testAccCheckDataCatalogDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccDataCatalogConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_athena_data_catalog" "test" {
+  name        = %[1]q
+  description = "A test data catalog"
+  type        = "LAMBDA"
+
+  parameters = {
+    "function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
+  }
+
+  tags = {
+    Test = "test"
+  }
+}
+`, rName)
+}
+
+func testAccDataCatalogTypeLambdaConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_athena_data_catalog" "test" {
+  name =        %[1]q
+  description = "A test data catalog using Lambda"
+  type =        "LAMBDA"
+
+  parameters = {
+    "metadata-function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
+    "record-function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
+  }
+
+  tags = {
+    Test = "test"
+  }
+}
+`, rName)
+}
+
+func testAccDataCatalogTypeHiveConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_athena_data_catalog" "test" {
+  name        = %[1]q
+  description = "A test data catalog using Hive"
+  type        = "HIVE"
+
+  parameters = {
+    "metadata-function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
+  }
+
+  tags = {
+    Test = "test"
+  }
+}
+`, rName)
+}
+
+func testAccDataCatalogTypeGlueConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_athena_data_catalog" "test" {
+  name        = %[1]q
+  description = "A test data catalog using Glue"
+  type        = "GLUE"
+
+  parameters = {
+    "catalog-id" = "123456789012"
+  }
+
+  tags = {
+    Test = "test"
+  }
+}
+`, rName)
+}
+
+func testAccDataCatalogParametersConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_athena_data_catalog" "test" {
+  name        = %[1]q
+  description = "Testing parameters attribute"
+  type        = "LAMBDA"
+
+  parameters = {
+    "function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
+  }
+}
+`, rName)
 }
