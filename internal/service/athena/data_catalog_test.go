@@ -34,7 +34,7 @@ func TestAccAthenaDataCatalog_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "type", "LAMBDA"),
 					resource.TestCheckResourceAttr(resourceName, "description", "A test data catalog"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"), //lintignore:AWSAT003,AWSAT005
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -132,8 +132,8 @@ func TestAccAthenaDataCatalog_type_lambda(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "A test data catalog using Lambda"),
 					resource.TestCheckResourceAttr(resourceName, "type", "LAMBDA"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.metadata-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.record-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.metadata-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"), //lintignore:AWSAT003,AWSAT005
+					resource.TestCheckResourceAttr(resourceName, "parameters.record-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"),   //lintignore:AWSAT003,AWSAT005
 				),
 			},
 			{
@@ -163,7 +163,7 @@ func TestAccAthenaDataCatalog_type_hive(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "A test data catalog using Hive"),
 					resource.TestCheckResourceAttr(resourceName, "type", "HIVE"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.metadata-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.metadata-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"), //lintignore:AWSAT003,AWSAT005
 				),
 			},
 			{
@@ -221,7 +221,7 @@ func TestAccAthenaDataCatalog_parameters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.function", "arn:aws:lambda:us-east-1:123456789012:function:test-function-1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.function", "arn:aws:lambda:us-east-1:123456789012:function:test-function-1"), //lintignore:AWSAT003,AWSAT005
 				),
 			},
 			{
@@ -235,8 +235,8 @@ func TestAccAthenaDataCatalog_parameters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.metadata-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function-2"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.record-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function-2"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.metadata-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function-2"), //lintignore:AWSAT003,AWSAT005
+					resource.TestCheckResourceAttr(resourceName, "parameters.record-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function-2"),   //lintignore:AWSAT003,AWSAT005
 				),
 			},
 		},
@@ -301,6 +301,7 @@ func testAccCheckDataCatalogDestroy(s *terraform.State) error {
 }
 
 func testAccDataCatalogConfig(rName string) string {
+	//lintignore:AWSAT003,AWSAT005
 	return fmt.Sprintf(`
 resource "aws_athena_data_catalog" "test" {
   name        = %[1]q
@@ -315,6 +316,7 @@ resource "aws_athena_data_catalog" "test" {
 }
 
 func testAccDataCatalogConfigTags1(rName, tagKey1, tagValue1 string) string {
+	//lintignore:AWSAT003,AWSAT005
 	return fmt.Sprintf(`
 resource "aws_athena_data_catalog" "test" {
   name = %[1]q
@@ -334,6 +336,7 @@ resource "aws_athena_data_catalog" "test" {
 }
 
 func testAccDataCatalogConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	//lintignore:AWSAT003,AWSAT005
 	return fmt.Sprintf(`
 resource "aws_athena_data_catalog" "test" {
   name = %[1]q
@@ -354,6 +357,7 @@ resource "aws_athena_data_catalog" "test" {
 }
 
 func testAccDataCatalogTypeLambdaConfig(rName string) string {
+	//lintignore:AWSAT003,AWSAT005
 	return fmt.Sprintf(`
 resource "aws_athena_data_catalog" "test" {
   name        = %[1]q
@@ -369,6 +373,7 @@ resource "aws_athena_data_catalog" "test" {
 }
 
 func testAccDataCatalogTypeHiveConfig(rName string) string {
+	//lintignore:AWSAT003,AWSAT005
 	return fmt.Sprintf(`
 resource "aws_athena_data_catalog" "test" {
   name        = %[1]q
@@ -397,6 +402,7 @@ resource "aws_athena_data_catalog" "test" {
 }
 
 func testAccDataCatalogParametersConfig(rName string) string {
+	//lintignore:AWSAT003,AWSAT005
 	return fmt.Sprintf(`
 resource "aws_athena_data_catalog" "test" {
   name        = %[1]q
@@ -411,6 +417,7 @@ resource "aws_athena_data_catalog" "test" {
 }
 
 func testAccDataCatalogParametersUpdatedConfig(rName string) string {
+	//lintignore:AWSAT003,AWSAT005
 	return fmt.Sprintf(`
 resource "aws_athena_data_catalog" "test" {
   name        = %[1]q
