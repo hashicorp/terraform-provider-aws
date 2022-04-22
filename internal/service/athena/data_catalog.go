@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -38,6 +38,10 @@ func ResourceDataCatalog() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -46,19 +50,6 @@ func ResourceDataCatalog() *schema.Resource {
 					validation.StringLenBetween(1, 129),
 					validation.StringMatch(regexp.MustCompile(`[\w@-]*`), ""),
 				),
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					athena.DataCatalogTypeLambda,
-					athena.DataCatalogTypeGlue,
-					athena.DataCatalogTypeHive,
-				}, false),
 			},
 			"parameters": {
 				Type:     schema.TypeMap,
@@ -71,6 +62,11 @@ func ResourceDataCatalog() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"type": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(athena.DataCatalogType_Values(), false),
+			},
 		},
 	}
 }
