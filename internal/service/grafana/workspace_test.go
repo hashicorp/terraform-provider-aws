@@ -219,7 +219,7 @@ func testAccGrafanaWorkspace_tags(t *testing.T) {
 		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfigTags("key1", "value1"),
+				Config: testAccWorkspaceConfigTags(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -403,7 +403,7 @@ resource "aws_organizations_organizational_unit" "test" {
 `, rName))
 }
 
-func testAccWokspaceConfigTags(rName, tagKey, tagValue string) string {
+func testAccWorkspaceConfigTags(rName, tagKey, tagValue string) string {
 	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
 resource "aws_grafana_workspace" "test" {
 	account_access_type       = "CURRENT_ACCOUNT"
