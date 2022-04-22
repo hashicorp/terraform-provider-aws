@@ -29,12 +29,14 @@ func ResourceSpotFleetRequest() *schema.Resource {
 		Read:   resourceSpotFleetRequestRead,
 		Delete: resourceSpotFleetRequestDelete,
 		Update: resourceSpotFleetRequestUpdate,
+
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("instance_pools_to_use_count", 1)
 				return []*schema.ResourceData{d}, nil
 			},
 		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(15 * time.Minute),
@@ -44,42 +46,74 @@ func ResourceSpotFleetRequest() *schema.Resource {
 		MigrateState:  SpotFleetRequestMigrateState,
 
 		Schema: map[string]*schema.Schema{
+			"allocation_strategy": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      ec2.AllocationStrategyLowestPrice,
+				ValidateFunc: validation.StringInSlice(ec2.AllocationStrategy_Values(), false),
+			},
+			"client_token": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			// Provided constants do not have the correct casing so going with hard-coded values.
+			"excess_capacity_termination_policy": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "Default",
+				ValidateFunc: validation.StringInSlice([]string{
+					"Default",
+					"NoTermination",
+				}, false),
+			},
+			"fleet_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.FleetTypeMaintain,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.FleetType_Values(), false),
+			},
 			"iam_fleet_role": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"replace_unhealthy_instances": {
-				Type:     schema.TypeBool,
+			"instance_interruption_behaviour": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.InstanceInterruptionBehaviorTerminate,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
+			},
+			"instance_pools_to_use_count": {
+				Type:     schema.TypeInt,
 				Optional: true,
+				Default:  1,
 				ForceNew: true,
-				Default:  false,
 			},
-			"wait_for_fulfillment": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			// http://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-SpotFleetLaunchSpecification
-			// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetLaunchSpecification.html
 			"launch_specification": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"vpc_security_group_ids": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
+						"ami": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
 						},
 						"associate_public_ip_address": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
+						},
+						"availability_zone": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
 						},
 						"ebs_block_device": {
 							Type:     schema.TypeSet,
@@ -145,6 +179,11 @@ func ResourceSpotFleetRequest() *schema.Resource {
 							},
 							Set: hashEbsBlockDevice,
 						},
+						"ebs_optimized": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"ephemeral_block_device": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -163,6 +202,46 @@ func ResourceSpotFleetRequest() *schema.Resource {
 								},
 							},
 							Set: hashEphemeralBlockDevice,
+						},
+						"iam_instance_profile": {
+							Type:     schema.TypeString,
+							ForceNew: true,
+							Optional: true,
+						},
+						"iam_instance_profile_arn": {
+							Type:         schema.TypeString,
+							ForceNew:     true,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"instance_type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"key_name": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							Computed:     true,
+							ValidateFunc: validation.NoZeroValues,
+						},
+						"monitoring": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"placement_group": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+						"placement_tenancy": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(ec2.Tenancy_Values(), false),
 						},
 						"root_block_device": {
 							// TODO: This is a set because we don't support singleton
@@ -224,60 +303,22 @@ func ResourceSpotFleetRequest() *schema.Resource {
 							},
 							Set: hashRootBlockDevice,
 						},
-						"ebs_optimized": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"iam_instance_profile": {
+						"spot_price": {
 							Type:     schema.TypeString,
-							ForceNew: true,
 							Optional: true,
-						},
-						"iam_instance_profile_arn": {
-							Type:         schema.TypeString,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"ami": {
-							Type:     schema.TypeString,
-							Required: true,
 							ForceNew: true,
 						},
-						"instance_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"key_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							Computed:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
-						"monitoring": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"placement_group": {
+						"subnet_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-						"placement_tenancy": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(ec2.Tenancy_Values(), false),
-						},
-						"spot_price": {
-							Type:     schema.TypeString,
+						"tags": {
+							Type:     schema.TypeMap,
 							Optional: true,
 							ForceNew: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"user_data": {
 							Type:     schema.TypeString,
@@ -292,28 +333,16 @@ func ResourceSpotFleetRequest() *schema.Resource {
 								}
 							},
 						},
+						"vpc_security_group_ids": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"weighted_capacity": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
-						},
-						"subnet_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						"availability_zone": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-						"tags": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -321,10 +350,9 @@ func ResourceSpotFleetRequest() *schema.Resource {
 				ExactlyOneOf: []string{"launch_specification", "launch_template_config"},
 			},
 			"launch_template_config": {
-				Type:         schema.TypeSet,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"launch_specification", "launch_template_config"},
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"launch_template_specification": {
@@ -370,6 +398,12 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Optional: true,
 										ForceNew: true,
 									},
+									"priority": {
+										Type:     schema.TypeFloat,
+										Optional: true,
+										Computed: true,
+										ForceNew: true,
+									},
 									"spot_price": {
 										Type:     schema.TypeString,
 										Optional: true,
@@ -388,59 +422,93 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
-									"priority": {
-										Type:     schema.TypeFloat,
-										Optional: true,
-										Computed: true,
-										ForceNew: true,
-									},
 								},
 							},
 							Set: hashLaunchTemplateOverrides,
 						},
 					},
 				},
+				ExactlyOneOf: []string{"launch_specification", "launch_template_config"},
 			},
-			// Everything on a spot fleet is ForceNew except target_capacity and excess_capacity_termination_policy,
-			// see https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#ModifySpotFleetRequestInput
-			"target_capacity": {
-				Type:     schema.TypeInt,
-				Required: true,
+			"load_balancers": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"allocation_strategy": {
+			"on_demand_allocation_strategy": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      ec2.AllocationStrategyLowestPrice,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ec2.AllocationStrategy_Values(), false),
+				Default:      ec2.OnDemandAllocationStrategyLowestPrice,
+				ValidateFunc: validation.StringInSlice(ec2.OnDemandAllocationStrategy_Values(), false),
 			},
-			"instance_pools_to_use_count": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  1,
-				ForceNew: true,
-			},
-			// Provided constants do not have the correct casing so going with hard-coded values.
-			"excess_capacity_termination_policy": {
+			"on_demand_max_total_price": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "Default",
-				ValidateFunc: validation.StringInSlice([]string{
-					"Default",
-					"NoTermination",
-				}, false),
+				ForceNew: true,
 			},
-			"instance_interruption_behaviour": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      ec2.InstanceInterruptionBehaviorTerminate,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
+			"on_demand_target_capacity": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"replace_unhealthy_instances": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  false,
+			},
+			"spot_maintenance_strategies": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"capacity_rebalance": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							MaxItems:         1,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"replacement_strategy": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(ec2.ReplacementStrategy_Values(), false),
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"spot_price": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+			},
+			"spot_request_state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
+			"target_capacity": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+			"target_group_arns": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidARN,
+				},
 			},
 			"terminate_instances_with_expiration": {
 				Type:     schema.TypeBool,
@@ -459,94 +527,11 @@ func ResourceSpotFleetRequest() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 			},
-			"fleet_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      ec2.FleetTypeMaintain,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ec2.FleetType_Values(), false),
-			},
-			"spot_maintenance_strategies": {
-				Type:     schema.TypeList,
+			"wait_for_fulfillment": {
+				Type:     schema.TypeBool,
 				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"capacity_rebalance": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if old == "1" && new == "0" {
-									return true
-								}
-								return false
-							},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"replacement_strategy": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringInSlice(ec2.ReplacementStrategy_Values(), false),
-									},
-								},
-							},
-						},
-					},
-				},
+				Default:  false,
 			},
-			"spot_request_state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"client_token": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"load_balancers": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"target_group_arns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
-				},
-				Set: schema.HashString,
-			},
-			"on_demand_allocation_strategy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      ec2.OnDemandAllocationStrategyLowestPrice,
-				ValidateFunc: validation.StringInSlice(ec2.OnDemandAllocationStrategy_Values(), false),
-			},
-			"on_demand_max_total_price": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"on_demand_target_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
