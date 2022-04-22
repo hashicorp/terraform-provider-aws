@@ -205,6 +205,36 @@ func testAccGrafanaWorkspace_organization(t *testing.T) {
 	})
 }
 
+func testAccGrafanaWorkspace_tags(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_grafana_workspace.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy: testAccCheckWorkspaceDestroy,
+		Providers:    acctest.Providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspaceConfigTags("key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkspaceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccGrafanaWorkspace_dataSources(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
@@ -371,6 +401,20 @@ resource "aws_organizations_organizational_unit" "test" {
   parent_id = data.aws_organizations_organization.test.roots[0].id
 }
 `, rName))
+}
+
+func testAccWokspaceConfigTags(rName, tagKey, tagValue string) string {
+	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
+resource "aws_grafana_workspace" "test" {
+	account_access_type       = "CURRENT_ACCOUNT"
+	authentication_providers  = ["SAML"]
+	permission_type           = "SERVICE_MANAGED"
+
+	tags = {
+		%[1]q = %[2]q
+	  }
+	}
+	`, tagKey1, tagValue1))
 }
 
 func testAccWorkspaceConfigDataSources(rName string) string {
