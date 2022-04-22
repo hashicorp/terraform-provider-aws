@@ -3,6 +3,7 @@ package networkmanager
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -28,6 +29,14 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"condition_logic": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"and",
+								"or",
+							}, false),
+						},
 						"description": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -37,14 +46,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.IntBetween(1, 65535),
 						},
-						"condition_logic": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"and",
-								"or",
-							}, false),
-						},
+
 						"conditions": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -102,7 +104,8 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 									"segment": {
 										Type:     schema.TypeString,
 										Optional: true,
-										//"^[a-zA-Z][A-Za-z0-9]{0,63}$"
+										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z][A-Za-z0-9]{0,63}$`),
+											"must begin with a letter and contain only alphanumeric characters"),
 									},
 									"tag_value_of_key": {
 										Type:     schema.TypeString,
@@ -112,7 +115,8 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Default:  false,
-										//"^[a-zA-Z][A-Za-z0-9]{0,63}$"
+										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z][A-Za-z0-9]{0,63}$`),
+											"must begin with a letter and contain only alphanumeric characters"),
 									},
 								},
 							},
@@ -130,12 +134,11 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 							Required: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
-								// ValidateFunc: validation.StringMatch(regexp.MustCompile(validAsnRanges), ""),
 							},
 						},
 						"vpn_ecmp_support": {
 							Type:     schema.TypeBool,
-							Default:  false,
+							Default:  true,
 							Optional: true,
 						},
 						"inside_cidr_blocks": {
@@ -160,19 +163,16 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 									},
 									"asn": {
 										Type:     schema.TypeInt,
-										Default:  false,
 										Optional: true,
 										ValidateFunc: validation.Any(
 											validation.IntBetween(64512, 65534),
 											validation.IntBetween(4200000000, 4294967294),
 										),
 									},
-									// TODO: recheck type?
 									"inside_cidr_blocks": {
 										Type:     schema.TypeList,
 										Optional: true,
-										// "(^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])/([1-2][0-9]|3[0-2]|[0-9])$)|(^((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]d|1dd|[1-9]?d)(.(25[0-5]|2[0-4]d|1dd|[1-9]?d)){3}))|:)))(%.+)?s*(/([0-9]|[1-9][0-9]|1[0-1][0-9]|12[0-8]))$)"
-										Elem: &schema.Schema{Type: schema.TypeString},
+										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 								},
 							},
@@ -190,12 +190,29 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"allow_filter": setOfString, // "^[a-zA-Z][A-Za-z0-9]{0,63}$"
-						"deny_filter":  setOfString, // "^[a-zA-Z][A-Za-z0-9]{0,63}$"
+						"allow_filter": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z][A-Za-z0-9]{0,63}$`),
+									"must begin with a letter and contain only alphanumeric characters"),
+							},
+						},
+						"deny_filter": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z][A-Za-z0-9]{0,63}$`),
+									"must begin with a letter and contain only alphanumeric characters"),
+							},
+						},
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
-							// "^[a-zA-Z][A-Za-z0-9]{0,63}$"
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z][A-Za-z0-9]{0,63}$`),
+								"must begin with a letter and contain only alphanumeric characters"),
 						},
 						"description": {
 							Type:     schema.TypeString,
@@ -209,7 +226,6 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 								ValidateFunc: verify.ValidRegionName,
 							},
 						},
-
 						"isolate_attachments": {
 							Type:     schema.TypeBool,
 							Default:  false,
@@ -217,7 +233,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 						},
 						"require_attachment_acceptance": {
 							Type:     schema.TypeBool,
-							Default:  false,
+							Default:  true,
 							Optional: true,
 						},
 					},
@@ -241,16 +257,34 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 							}, false),
 						},
 
-						"destinations": setOfString,
-						// can be either a list of attachments or ["blackhole"]
-
-						"destination_cidr_blocks": setOfString,
-						// list of cidrs ipv4 or ipv6 or a mixture of 4/
-
+						"destinations": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.Any(
+									validation.StringInSlice([]string{
+										"blackhole",
+									}, false),
+									validation.StringMatch(regexp.MustCompile(`^attachment-[0-9a-f]{17}$`),
+										"must be a list of valid attachment ids or a list with only the word \"blackhole\"."),
+								),
+							},
+						},
+						"destination_cidr_blocks": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.Any(
+									verify.ValidIPv4CIDRNetworkAddress,
+									verify.ValidIPv6CIDRNetworkAddress,
+								),
+							},
+						},
 						"mode": {
 							Type:     schema.TypeString,
 							Optional: true,
-							//"^attachment\\-route$"
 							ValidateFunc: validation.StringInSlice([]string{
 								"attachment-route",
 							}, false),
@@ -258,9 +292,9 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 						"segment": {
 							Type:     schema.TypeString,
 							Required: true,
-							//"^[a-zA-Z][A-Za-z0-9]{0,63}$"
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z][A-Za-z0-9]{0,63}$`),
+								"must begin with a letter and contain only alphanumeric characters"),
 						},
-
 						"share_with":        setOfString,
 						"share_with_except": setOfString,
 					},
@@ -285,28 +319,28 @@ func dataSourceCoreNetworkPolicyDocumentRead(d *schema.ResourceData, meta interf
 	}
 
 	// CoreNetworkConfiguration
-	networkConfiguration, err := expandDataCoreNetworkPolicyNetworkConfiguration(d)
+	networkConfiguration, err := expandDataCoreNetworkPolicyNetworkConfiguration(d.Get("core_network_configuration").([]interface{}))
 	if err != nil {
 		return err
 	}
 	mergedDoc.CoreNetworkConfiguration = networkConfiguration
 
 	// AttachmentPolicies
-	attachmentPolicies, err := expandDataCoreNetworkPolicyAttachmentPolicies(d)
+	attachmentPolicies, err := expandDataCoreNetworkPolicyAttachmentPolicies(d.Get("attachment_policies").([]interface{}))
 	if err != nil {
 		return err
 	}
 	mergedDoc.AttachmentPolicies = attachmentPolicies
 
 	// SegmentActions
-	segment_actions, err := expandDataCoreNetworkPolicySegmentActions(d)
+	segment_actions, err := expandDataCoreNetworkPolicySegmentActions(d.Get("segment_actions").([]interface{}))
 	if err != nil {
 		return err
 	}
 	mergedDoc.SegmentActions = segment_actions
 
 	// Segments
-	segments, err := expandDataCoreNetworkPolicySegments(d)
+	segments, err := expandDataCoreNetworkPolicySegments(d.Get("segments").([]interface{}))
 	if err != nil {
 		return err
 	}
@@ -325,8 +359,7 @@ func dataSourceCoreNetworkPolicyDocumentRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func expandDataCoreNetworkPolicySegmentActions(d *schema.ResourceData) ([]*CoreNetworkPolicySegmentAction, error) {
-	var cfgSegmentActionsIntf = d.Get("segment_actions").([]interface{})
+func expandDataCoreNetworkPolicySegmentActions(cfgSegmentActionsIntf []interface{}) ([]*CoreNetworkPolicySegmentAction, error) {
 	sgmtActions := make([]*CoreNetworkPolicySegmentAction, len(cfgSegmentActionsIntf))
 	for i, sgmtActionI := range cfgSegmentActionsIntf {
 		cfgSA := sgmtActionI.(map[string]interface{})
@@ -356,12 +389,12 @@ func expandDataCoreNetworkPolicySegmentActions(d *schema.ResourceData) ([]*CoreN
 				return nil, fmt.Errorf("Cannot specify \"mode\" if action = \"create-route\".")
 			}
 
-			if dest, ok := cfgSA["dest"]; ok {
-				sgmtAction.Destinations = dest.(string)
+			if dest := cfgSA["destinations"].(*schema.Set).List(); len(dest) > 0 {
+				sgmtAction.Destinations = CoreNetworkPolicyDecodeConfigStringList(dest)
 			}
 
-			if destCidrB, ok := cfgSA["destination_cidr_blocks"]; ok {
-				sgmtAction.DestinationCidrBlocks = destCidrB.(string)
+			if destCidrB := cfgSA["destination_cidr_blocks"].(*schema.Set).List(); len(destCidrB) > 0 {
+				sgmtAction.DestinationCidrBlocks = CoreNetworkPolicyDecodeConfigStringList(destCidrB)
 			}
 		}
 
@@ -391,8 +424,7 @@ func expandDataCoreNetworkPolicySegmentActions(d *schema.ResourceData) ([]*CoreN
 	return sgmtActions, nil
 }
 
-func expandDataCoreNetworkPolicyAttachmentPolicies(d *schema.ResourceData) ([]*CoreNetworkAttachmentPolicy, error) {
-	var cfgAttachmentPolicyIntf = d.Get("attachment_policies").([]interface{})
+func expandDataCoreNetworkPolicyAttachmentPolicies(cfgAttachmentPolicyIntf []interface{}) ([]*CoreNetworkAttachmentPolicy, error) {
 	aPolicies := make([]*CoreNetworkAttachmentPolicy, len(cfgAttachmentPolicyIntf))
 	ruleMap := make(map[string]struct{})
 
@@ -520,8 +552,7 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesAction(tfList []interface{}) (
 	return aP, nil
 }
 
-func expandDataCoreNetworkPolicySegments(d *schema.ResourceData) ([]*CoreNetworkPolicySegment, error) {
-	var cfgSgmtIntf = d.Get("segments").([]interface{})
+func expandDataCoreNetworkPolicySegments(cfgSgmtIntf []interface{}) ([]*CoreNetworkPolicySegment, error) {
 	Sgmts := make([]*CoreNetworkPolicySegment, len(cfgSgmtIntf))
 	nameMap := make(map[string]struct{})
 
@@ -562,8 +593,7 @@ func expandDataCoreNetworkPolicySegments(d *schema.ResourceData) ([]*CoreNetwork
 	return Sgmts, nil
 }
 
-func expandDataCoreNetworkPolicyNetworkConfiguration(d *schema.ResourceData) (*CoreNetworkPolicyCoreNetworkConfiguration, error) {
-	var networkCfgIntf = d.Get("core_network_configuration").([]interface{})
+func expandDataCoreNetworkPolicyNetworkConfiguration(networkCfgIntf []interface{}) (*CoreNetworkPolicyCoreNetworkConfiguration, error) {
 	m := networkCfgIntf[0].(map[string]interface{})
 
 	nc := &CoreNetworkPolicyCoreNetworkConfiguration{}
