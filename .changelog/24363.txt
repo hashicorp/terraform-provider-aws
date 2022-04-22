@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_rds_cluster: Add `serverlessv2_scaling_configuration` argument
+```
+
+```release-note:enhancement
+resource/aws_rds_cluster_instance: Add tests for instance_type `db.serverless` (i.e. provide tests for Aurora Serverless v2)
+```
