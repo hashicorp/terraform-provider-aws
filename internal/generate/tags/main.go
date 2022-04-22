@@ -798,6 +798,8 @@ func awsServiceName(s string) (string, error) {
 		return "directoryservice", nil
 	case "events":
 		return "eventbridge", nil
+	case "grafana":
+		return "managedgrafana", nil
 	case "lexmodels":
 		return "lexmodelbuildingservice", nil
 	case "serverlessrepo":
@@ -833,6 +835,8 @@ func awsServiceNameUpper(s string) (string, error) {
 		return awsServiceNames["directoryservice"], nil
 	case "events":
 		return awsServiceNames["eventbridge"], nil
+	case "grafana":
+		return awsServiceNames["managedgrafana"], nil
 	case "lexmodels":
 		return awsServiceNames["lexmodelbuildingservice"], nil
 	case "serverlessrepo":
@@ -973,7 +977,6 @@ func init() {
 	awsServiceNames["globalaccelerator"] = "GlobalAccelerator"
 	awsServiceNames["glue"] = "Glue"
 	awsServiceNames["gluedatabrew"] = "GlueDataBrew"
-	awsServiceNames["grafana"] = "ManagedGrafana"
 	awsServiceNames["greengrass"] = "Greengrass"
 	awsServiceNames["greengrassv2"] = "GreengrassV2"
 	awsServiceNames["groundstation"] = "GroundStation"
@@ -1027,6 +1030,7 @@ func init() {
 	awsServiceNames["machinelearning"] = "MachineLearning"
 	awsServiceNames["macie"] = "Macie"
 	awsServiceNames["macie2"] = "Macie2"
+	awsServiceNames["managedgrafana"] = "ManagedGrafana"
 	awsServiceNames["managedblockchain"] = "ManagedBlockchain"
 	awsServiceNames["marketplacecatalog"] = "MarketplaceCatalog"
 	awsServiceNames["marketplacecommerceanalytics"] = "MarketplaceCommerceAnalytics"
