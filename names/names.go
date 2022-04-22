@@ -52,45 +52,6 @@ func init() {
 	}
 }
 
-const (
-	// column indices of CSV
-	//awsCLIV2Command         = 0
-	//awsCLIV2CommandNoDashes = 1
-	//goV1Package             = 2
-	//goV2Package             = 3
-	//providerPackageActual   = 4
-	//providerPackageCorrect  = 5
-	//splitPackageRealPackage = 6
-	//aliases                 = 7
-	//providerNameUpper       = 8
-	//goV1ClientName          = 9
-	//skipClientGenerate      = 10
-	//sdkVersion              = 11
-	//resourcePrefixActual    = 12
-	//resourcePrefixCorrect   = 13
-	//filePrefix              = 14
-	//docPrefix               = 15
-	//humanFriendly           = 16
-	//brand                   = 17
-	//exclude                 = 18
-	//allowedSubcategory      = 19
-	//deprecatedEnvVar        = 20
-	//envVar                  = 21
-	//note                    = 22
-	goV1Package            = 2
-	goV2Package            = 3
-	providerPackageActual  = 4
-	providerPackageCorrect = 5
-	aliases                = 7
-	providerNameUpper      = 8
-	goV1ClientName         = 9
-	humanFriendly          = 16
-	brand                  = 17
-	exclude                = 18
-	deprecatedEnvVar       = 20
-	envVar                 = 21
-)
-
 //go:embed names_data.csv
 var namesData string
 
@@ -110,35 +71,35 @@ func readCSVIntoServiceData() error {
 			continue
 		}
 
-		if l[exclude] != "" {
+		if l[ColExclude] != "" {
 			continue
 		}
 
-		if l[providerPackageActual] == "" && l[providerPackageCorrect] == "" {
+		if l[ColProviderPackageActual] == "" && l[ColProviderPackageCorrect] == "" {
 			continue
 		}
 
-		p := l[providerPackageCorrect]
+		p := l[ColProviderPackageCorrect]
 
-		if l[providerPackageActual] != "" {
-			p = l[providerPackageActual]
+		if l[ColProviderPackageActual] != "" {
+			p = l[ColProviderPackageActual]
 		}
 
 		serviceData[p] = &ServiceDatum{
-			Brand:             l[brand],
-			DeprecatedEnvVar:  l[deprecatedEnvVar],
-			EnvVar:            l[envVar],
-			GoV1ClientName:    l[goV1ClientName],
-			GoV1Package:       l[goV1Package],
-			GoV2Package:       l[goV2Package],
-			HumanFriendly:     l[humanFriendly],
-			ProviderNameUpper: l[providerNameUpper],
+			Brand:             l[ColBrand],
+			DeprecatedEnvVar:  l[ColDeprecatedEnvVar],
+			EnvVar:            l[ColEnvVar],
+			GoV1ClientName:    l[ColGoV1ClientName],
+			GoV1Package:       l[ColGoV1Package],
+			GoV2Package:       l[ColGoV2Package],
+			HumanFriendly:     l[ColHumanFriendly],
+			ProviderNameUpper: l[ColProviderNameUpper],
 		}
 
 		a := []string{p}
 
-		if l[aliases] != "" {
-			a = append(a, strings.Split(l[aliases], ";")...)
+		if l[ColAliases] != "" {
+			a = append(a, strings.Split(l[ColAliases], ";")...)
 		}
 
 		serviceData[p].Aliases = a

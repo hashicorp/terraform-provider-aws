@@ -12,6 +12,8 @@ import (
 	"os"
 	"sort"
 	"text/template"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const filename = `awsclient_gen.go`
@@ -26,41 +28,6 @@ type ServiceDatum struct {
 type TemplateData struct {
 	Services []ServiceDatum
 }
-
-const (
-	// column indices of CSV
-	//awsCLIV2Command         = 0
-	//awsCLIV2CommandNoDashes = 1
-	//goV1Package             = 2
-	//goV2Package             = 3
-	//providerPackageActual   = 4
-	//providerPackageCorrect  = 5
-	//splitPackageRealPackage = 6
-	//aliases                 = 7
-	//providerNameUpper       = 8
-	//goV1ClientName          = 9
-	//skipClientGenerate      = 10
-	//sdkVersion              = 11
-	//resourcePrefixActual    = 12
-	//resourcePrefixCorrect   = 13
-	//filePrefix              = 14
-	//docPrefix               = 15
-	//humanFriendly           = 16
-	//brand                   = 17
-	//exclude                 = 18
-	//allowedSubcategory      = 19
-	//deprecatedEnvVar        = 20
-	//envVar                  = 21
-	//note                    = 22
-	goV1Package            = 2
-	goV2Package            = 3
-	providerPackageActual  = 4
-	providerPackageCorrect = 5
-	providerNameUpper      = 8
-	goV1ClientName         = 9
-	sdkVersion             = 11
-	exclude                = 18
-)
 
 func main() {
 	fmt.Printf("Generating internal/conns/%s\n", filename)
@@ -86,24 +53,24 @@ func main() {
 			continue
 		}
 
-		if l[exclude] != "" {
+		if l[names.ColExclude] != "" {
 			continue
 		}
 
-		if l[providerPackageActual] == "" && l[providerPackageCorrect] == "" {
+		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
 			continue
 		}
 
 		s := ServiceDatum{
-			ProviderNameUpper: l[providerNameUpper],
-			SDKVersion:        l[sdkVersion],
+			ProviderNameUpper: l[names.ColProviderNameUpper],
+			SDKVersion:        l[names.ColSDKVersion],
 		}
 
-		if l[sdkVersion] == "1" {
-			s.GoPackage = l[goV1Package]
-			s.ClientName = l[goV1ClientName]
+		if l[names.ColSDKVersion] == "1" {
+			s.GoPackage = l[names.ColGoV1Package]
+			s.ClientName = l[names.ColGoV1ClientName]
 		} else {
-			s.GoPackage = l[goV2Package]
+			s.GoPackage = l[names.ColGoV2Package]
 			s.ClientName = "Client"
 		}
 

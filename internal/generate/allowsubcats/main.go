@@ -12,6 +12,8 @@ import (
 	"sort"
 	"strings"
 	"text/template"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const filename = `../../../website/allowed-subcategories.txt`
@@ -24,38 +26,8 @@ type TemplateData struct {
 	Services []ServiceDatum
 }
 
-const (
-	// column indices of CSV
-	//awsCLIV2Command         = 0
-	//awsCLIV2CommandNoDashes = 1
-	//goV1Package             = 2
-	//goV2Package             = 3
-	//providerPackageActual   = 4
-	//providerPackageCorrect  = 5
-	//splitPackageRealPackage = 6
-	//aliases                 = 7
-	//providerNameUpper       = 8
-	//goV1ClientName          = 9
-	//skipClientGenerate      = 10
-	//sdkVersion              = 11
-	//resourcePrefixActual    = 12
-	//resourcePrefixCorrect   = 13
-	//filePrefix              = 14
-	//docPrefix               = 15
-	//humanFriendly           = 16
-	//brand                   = 17
-	//exclude                 = 18
-	//allowedSubcategory      = 19
-	//deprecatedEnvVar        = 20
-	//envVar                  = 21
-	//note                    = 22
-	humanFriendly      = 16
-	exclude            = 18
-	allowedSubcategory = 19
-)
-
 func main() {
-	fmt.Printf("Generating %s\n", strings.TrimPrefix(filename, "../../.."))
+	fmt.Printf("Generating %s\n", strings.TrimPrefix(filename, "../../../"))
 
 	f, err := os.Open("../../../names/names_data.csv")
 	if err != nil {
@@ -78,12 +50,12 @@ func main() {
 			continue
 		}
 
-		if l[exclude] != "" && l[allowedSubcategory] == "" {
+		if l[names.ColExclude] != "" && l[names.ColAllowedSubcategory] == "" {
 			continue
 		}
 
 		sd := ServiceDatum{
-			HumanFriendly: l[humanFriendly],
+			HumanFriendly: l[names.ColHumanFriendly],
 		}
 
 		td.Services = append(td.Services, sd)
