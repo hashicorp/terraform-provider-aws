@@ -203,7 +203,7 @@ func testAccCheckCodeRepositoryDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Sagemaker Code Repository (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("error reading SageMaker Code Repository (%s): %w", rs.Primary.ID, err)
 		}
 
 		if aws.StringValue(codeRepository.CodeRepositoryName) == rs.Primary.ID {

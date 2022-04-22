@@ -1,14 +1,14 @@
 ---
-subcategory: "Sagemaker"
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_studio_lifecycle_config"
 description: |-
-  Provides a Sagemaker Studio Lifecycle Config resource.
+  Provides a SageMaker Studio Lifecycle Config resource.
 ---
 
 # Resource: aws_sagemaker_studio_lifecycle_config
 
-Provides a Sagemaker Studio Lifecycle Config resource.
+Provides a SageMaker Studio Lifecycle Config resource.
 
 ## Example Usage
 
@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Code Studio Lifecycle Configs can be imported using the `studio_lifecycle_config_name`, e.g.,
+SageMaker Code Studio Lifecycle Configs can be imported using the `studio_lifecycle_config_name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_studio_lifecycle_config.example example
