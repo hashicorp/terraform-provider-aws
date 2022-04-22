@@ -2163,7 +2163,7 @@ func assumeRoleSchema() *schema.Schema {
 func endpointsSchema() *schema.Schema {
 	endpointsAttributes := make(map[string]*schema.Schema)
 
-	for _, serviceKey := range names.HCLKeys() {
+	for _, serviceKey := range names.Aliases() {
 		endpointsAttributes[serviceKey] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -2287,10 +2287,10 @@ func expandEndpoints(endpointsSetList []interface{}, out map[string]string) erro
 	for _, endpointsSetI := range endpointsSetList {
 		endpoints := endpointsSetI.(map[string]interface{})
 
-		for _, hclKey := range names.HCLKeys() {
+		for _, hclKey := range names.Aliases() {
 			var serviceKey string
 			var err error
-			if serviceKey, err = names.ServiceForHCLKey(hclKey); err != nil {
+			if serviceKey, err = names.ProviderPackageForAlias(hclKey); err != nil {
 				return fmt.Errorf("failed to assign endpoint (%s): %w", hclKey, err)
 			}
 
@@ -2300,19 +2300,19 @@ func expandEndpoints(endpointsSetList []interface{}, out map[string]string) erro
 		}
 	}
 
-	for _, service := range names.ServiceKeys() {
+	for _, service := range names.ProviderPackages() {
 		if out[service] != "" {
 			continue
 		}
 
-		envvar := names.ServiceEnvVar(service)
+		envvar := names.EnvVar(service)
 		if envvar != "" {
 			if v := os.Getenv(envvar); v != "" {
 				out[service] = v
 				continue
 			}
 		}
-		if envvarDeprecated := names.ServiceDeprecatedEnvVar(service); envvarDeprecated != "" {
+		if envvarDeprecated := names.DeprecatedEnvVar(service); envvarDeprecated != "" {
 			if v := os.Getenv(envvarDeprecated); v != "" {
 				log.Printf("[WARN] The environment variable %q is deprecated. Use %q instead.", envvarDeprecated, envvar)
 				out[service] = v
