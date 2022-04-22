@@ -134,6 +134,7 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 	}.String()
 	d.Set("arn", arn)
 	d.Set("description", dataCatalog.DataCatalog.Description)
+	d.Set("name", dataCatalog.DataCatalog.Name)
 	d.Set("type", dataCatalog.DataCatalog.Type)
 
 	// NOTE: This is a workaround for the fact that the API sets default values for parameters that are not set.
@@ -153,14 +154,6 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 	} else {
 		d.Set("parameters", nil)
 	}
-	parameters := map[string]*string{}
-	if v, ok := d.GetOk("parameters"); ok {
-		if m, ok := v.(map[string]interface{}); ok {
-			parameters = flex.ExpandStringMap(m)
-		}
-	}
-
-	d.Set("parameters", aws.StringValueMap(parameters))
 
 	tags, err := ListTags(conn, arn)
 
@@ -195,8 +188,6 @@ func resourceDataCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta
 		if d.HasChange("parameters") {
 			if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
 				input.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
-			} else {
-				input.Parameters = make(map[string]*string, 0)
 			}
 		}
 

@@ -39,13 +39,10 @@ func TestAccAthenaDataCatalog_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"name",
-					"parameters",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"parameters"},
 			},
 		},
 	})
@@ -73,13 +70,10 @@ func TestAccAthenaDataCatalog_type_lambda(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"name",
-					"parameters",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"parameters"},
 			},
 		},
 	})
@@ -106,13 +100,10 @@ func TestAccAthenaDataCatalog_type_hive(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"name",
-					"parameters",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"parameters"},
 			},
 		},
 	})
@@ -139,13 +130,10 @@ func TestAccAthenaDataCatalog_type_glue(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"name",
-					"parameters",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"parameters"},
 			},
 		},
 	})
@@ -165,21 +153,24 @@ func TestAccAthenaDataCatalog_parameters(t *testing.T) {
 				Config: testAccDataCatalogParametersConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "LAMBDA"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Testing parameters attribute"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.function", "arn:aws:lambda:us-east-1:123456789012:function:test-function-1"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"name",
-					"parameters",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"parameters"},
+			},
+			{
+				Config: testAccDataCatalogParametersUpdatedConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataCatalogExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.metadata-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function-2"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.record-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function-2"),
+				),
 			},
 		},
 	})
@@ -341,7 +332,22 @@ resource "aws_athena_data_catalog" "test" {
   type        = "LAMBDA"
 
   parameters = {
-    "function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
+    "function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function-1"
+  }
+}
+`, rName)
+}
+
+func testAccDataCatalogParametersUpdatedConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_athena_data_catalog" "test" {
+  name        = %[1]q
+  description = "Testing parameters attribute"
+  type        = "LAMBDA"
+
+  parameters = {
+    "metadata-function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function-2"
+    "record-function"   = "arn:aws:lambda:us-east-1:123456789012:function:test-function-2"
   }
 }
 `, rName)
