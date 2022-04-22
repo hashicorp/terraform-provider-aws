@@ -23,6 +23,7 @@ gen:
 	rm -f internal/service/**/*_gen.go
 	rm -f names/*_gen.go
 	rm -f website/allowed-subcategories.txt
+	rm -f internal/conns/*_gen.go
 	go generate ./...
 
 sweep:

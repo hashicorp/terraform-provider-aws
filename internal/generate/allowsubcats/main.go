@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"sort"
+	"strings"
 	"text/template"
 )
 
@@ -54,6 +55,8 @@ const (
 )
 
 func main() {
+	fmt.Printf("Generating %s\n", strings.TrimPrefix(filename, "../../.."))
+
 	f, err := os.Open("../../../names/names_data.csv")
 	if err != nil {
 		log.Fatal(err)
@@ -69,8 +72,6 @@ func main() {
 	}
 
 	td := TemplateData{}
-
-	fmt.Printf("Generate allowed-subcategories.txt\n")
 
 	for i, l := range data {
 		if i < 1 { // no header
