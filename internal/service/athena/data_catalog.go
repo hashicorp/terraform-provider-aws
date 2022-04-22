@@ -138,6 +138,21 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	// NOTE: This is a workaround for the fact that the API sets default values for parameters that are not set.
 	// Because the API sets default values, what's returned by the API is different than what's set by the user.
+	if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
+		parameters := make(map[string]string, 0)
+
+		for key, val := range v.(map[string]interface{}) {
+			if v, ok := dataCatalog.DataCatalog.Parameters[key]; ok {
+				parameters[key] = aws.StringValue(v)
+			} else {
+				parameters[key] = val.(string)
+			}
+		}
+
+		d.Set("parameters", parameters)
+	} else {
+		d.Set("parameters", nil)
+	}
 	parameters := map[string]*string{}
 	if v, ok := d.GetOk("parameters"); ok {
 		if m, ok := v.(map[string]interface{}); ok {
@@ -178,13 +193,11 @@ func resourceDataCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange("parameters") {
-			parameters := map[string]*string{}
-			if v, ok := d.GetOk("parameters"); ok {
-				if m, ok := v.(map[string]interface{}); ok {
-					parameters = flex.ExpandStringMap(m)
-				}
+			if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
+				input.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
+			} else {
+				input.Parameters = make(map[string]*string, 0)
 			}
-			input.Parameters = parameters
 		}
 
 		log.Printf("[DEBUG] Updating Athena Data Catalog: %s", input)

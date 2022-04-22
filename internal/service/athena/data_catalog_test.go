@@ -35,8 +35,7 @@ func TestAccAthenaDataCatalog_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "A test data catalog"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -275,10 +274,6 @@ resource "aws_athena_data_catalog" "test" {
   parameters = {
     "function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
   }
-
-  tags = {
-    Test = "test"
-  }
 }
 `, rName)
 }
@@ -292,7 +287,7 @@ resource "aws_athena_data_catalog" "test" {
 
   parameters = {
     "metadata-function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
-    "record-function" = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
+    "record-function"   = "arn:aws:lambda:us-east-1:123456789012:function:test-function"
   }
 
   tags = {
