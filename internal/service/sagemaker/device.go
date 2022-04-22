@@ -78,7 +78,7 @@ func resourceDeviceCreate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("device_fleet_name").(string)
 	input := &sagemaker.RegisterDevicesInput{
 		DeviceFleetName: aws.String(name),
-		Devices:         expandSagemakerDevice(d.Get("device").([]interface{})),
+		Devices:         expandDevice(d.Get("device").([]interface{})),
 	}
 
 	_, err := conn.RegisterDevices(input)
@@ -114,8 +114,8 @@ func resourceDeviceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("agent_version", device.AgentVersion)
 	d.Set("arn", arn)
 
-	if err := d.Set("device", flattenSagemakerDevice(device)); err != nil {
-		return fmt.Errorf("error setting device for Sagemaker Device (%s): %w", d.Id(), err)
+	if err := d.Set("device", flattenDevice(device)); err != nil {
+		return fmt.Errorf("error setting device for SageMaker Device (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -131,7 +131,7 @@ func resourceDeviceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &sagemaker.UpdateDevicesInput{
 		DeviceFleetName: aws.String(deviceFleetName),
-		Devices:         expandSagemakerDevice(d.Get("device").([]interface{})),
+		Devices:         expandDevice(d.Get("device").([]interface{})),
 	}
 
 	log.Printf("[DEBUG] sagemaker Device update config: %s", input.String())
@@ -167,7 +167,7 @@ func resourceDeviceDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandSagemakerDevice(l []interface{}) []*sagemaker.Device {
+func expandDevice(l []interface{}) []*sagemaker.Device {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -189,7 +189,7 @@ func expandSagemakerDevice(l []interface{}) []*sagemaker.Device {
 	return []*sagemaker.Device{config}
 }
 
-func flattenSagemakerDevice(config *sagemaker.DescribeDeviceOutput) []map[string]interface{} {
+func flattenDevice(config *sagemaker.DescribeDeviceOutput) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}

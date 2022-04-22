@@ -1100,7 +1100,7 @@ When encountering these types of components, the acceptance testing can be setup
 
 To convert to serialized (one test at a time) acceptance testing:
 
-- Convert all existing capital `T` test functions with the limited component to begin with a lowercase `t`, e.g., `TestAccSagemakerDomain_basic` becomes `testAccSagemakerDomain_basic`. This will prevent the test framework from executing these tests directly as the prefix `Test` is required.
+- Convert all existing capital `T` test functions with the limited component to begin with a lowercase `t`, e.g., `TestAccSageMakerDomain_basic` becomes `testAccSageMakerDomain_basic`. This will prevent the test framework from executing these tests directly as the prefix `Test` is required.
     - In each of these test functions, convert `resource.ParallelTest` to `resource.Test`
 - Create a capital `T` `TestAcc{Service}{Thing}_serial` test function that then references all the lowercase `t` test functions. If multiple test files are referenced, this new test be created in a new shared file such as `internal/service/{SERVICE}/{SERVICE}_test.go`. The contents of this test can be setup like the following:
 

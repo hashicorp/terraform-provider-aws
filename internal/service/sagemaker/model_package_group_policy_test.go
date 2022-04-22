@@ -103,7 +103,7 @@ func testAccCheckModelPackageGroupPolicyDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Sagemaker Model Package Group Policy (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("error reading SageMaker Model Package Group Policy (%s): %w", rs.Primary.ID, err)
 		}
 	}
 

@@ -177,7 +177,7 @@ func testAccCheckProjectDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Sagemaker Project (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("error reading SageMaker Project (%s): %w", rs.Primary.ID, err)
 		}
 
 		if aws.StringValue(Project.ProjectName) == rs.Primary.ID {

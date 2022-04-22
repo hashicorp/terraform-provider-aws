@@ -135,7 +135,7 @@ S3 (Simple Storage)
 S3 Control
 S3 Glacier
 S3 on Outposts
-Sagemaker
+SageMaker
 SDB (SimpleDB)
 Secrets Manager
 Security Hub

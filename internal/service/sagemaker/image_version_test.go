@@ -127,7 +127,7 @@ func testAccCheckImageVersionDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Sagemaker Image Version (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("error reading SageMaker Image Version (%s): %w", rs.Primary.ID, err)
 		}
 
 		if aws.StringValue(imageVersion.ImageVersionArn) == rs.Primary.Attributes["arn"] {
