@@ -163,7 +163,7 @@ func resourceGlobalReplicationGroupCreate(d *schema.ResourceData, meta interface
 	d.SetId(aws.StringValue(output.GlobalReplicationGroup.GlobalReplicationGroupId))
 
 	if _, err := WaitGlobalReplicationGroupAvailable(conn, d.Id(), GlobalReplicationGroupDefaultCreatedTimeout); err != nil {
-		return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) availability: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) creation: %w", d.Id(), err)
 	}
 
 	return resourceGlobalReplicationGroupRead(d, meta)
