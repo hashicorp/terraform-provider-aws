@@ -113,6 +113,8 @@ func ResourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
