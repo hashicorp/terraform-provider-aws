@@ -21,6 +21,7 @@ build: fmtcheck
 
 gen:
 	rm -f internal/service/**/*_gen.go
+	rm -f names/*_gen.go
 	go generate ./...
 
 sweep:
