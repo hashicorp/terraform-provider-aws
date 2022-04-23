@@ -67,6 +67,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The Amazon Resource Name (ARN) of the Grafana workspace.
 * `endpoint` - The endpoint of the Grafana workspace.
 * `grafana_version` - The version of Grafana running on the workspace.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
