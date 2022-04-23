@@ -220,8 +220,8 @@ func testAccGrafanaWorkspace_tags(t *testing.T) {
 		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfigTags(rName, "key1", "value1"),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Config: testAccWorkspaceConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -231,6 +231,23 @@ func testAccGrafanaWorkspace_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccWorkspaceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkspaceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccWorkspaceConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkspaceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -417,6 +434,43 @@ resource "aws_grafana_workspace" "test" {
 	  }
 	}
 	`, tagKey, tagValue))
+}
+
+func testAccWorkspaceConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
+resource "aws_grafana_workspace" "test" {
+		account_access_type       = "CURRENT_ACCOUNT"
+		authentication_providers  = ["SAML"]
+		permission_type           = "SERVICE_MANAGED"
+		name                      = %[1]q
+		role_arn                  = aws_iam_role.test.arn
+	
+  
+	tags = {
+	  %[2]q = %[3]q
+	}
+
+  }
+  `, rName, tagKey1, tagValue1))
+}
+
+func testAccWorkspaceConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
+resource "aws_grafana_workspace" "test" {
+	account_access_type       = "CURRENT_ACCOUNT"
+	authentication_providers  = ["SAML"]
+	permission_type           = "SERVICE_MANAGED"
+	role_arn                  = aws_iam_role.test.arn
+	name                      = %[1]q
+	
+  
+	tags = {
+	  %[2]q = %[3]q
+	  %[4]q = %[5]q
+	}
+  
+  }
+  `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccWorkspaceConfigDataSources(rName string) string {
