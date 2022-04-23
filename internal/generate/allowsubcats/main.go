@@ -16,7 +16,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const filename = `../../../website/allowed-subcategories.txt`
+const (
+	filename      = `../../../website/allowed-subcategories.txt`
+	namesDataFile = "../../../names/names_data.csv"
+)
 
 type ServiceDatum struct {
 	HumanFriendly string
@@ -29,7 +32,7 @@ type TemplateData struct {
 func main() {
 	fmt.Printf("Generating %s\n", strings.TrimPrefix(filename, "../../../"))
 
-	f, err := os.Open("../../../names/names_data.csv")
+	f, err := os.Open(namesDataFile)
 	if err != nil {
 		log.Fatal(err)
 	}
