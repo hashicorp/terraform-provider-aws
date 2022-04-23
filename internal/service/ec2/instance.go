@@ -75,6 +75,13 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"automatic_recovery_behavior": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     false,
+				ValidateFunc: validation.StringInSlice(ec2.InstanceAutoRecoveryState_Values(), false),
+			},
 			"capacity_reservation_specification": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -933,6 +940,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("private_dns", instance.PrivateDnsName)
 	d.Set("private_ip", instance.PrivateIpAddress)
 	d.Set("outpost_arn", instance.OutpostArn)
+	d.Set("automatic_recovery_behavior", instance.MaintenanceOptions.AutoRecovery)
 
 	if instance.IamInstanceProfile != nil && instance.IamInstanceProfile.Arn != nil {
 		name, err := tfiam.InstanceProfileARNToName(aws.StringValue(instance.IamInstanceProfile.Arn))
@@ -1500,6 +1508,17 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			InstanceInitiatedShutdownBehavior: &ec2.AttributeValue{
 				Value: aws.String(d.Get("instance_initiated_shutdown_behavior").(string)),
 			},
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("automatic_recovery_behavior") {
+		log.Printf("[INFO] Modifying instance automatic recovery settings %s", d.Id())
+		_, err := conn.ModifyInstanceMaintenanceOptions(&ec2.ModifyInstanceMaintenanceOptionsInput{
+			InstanceId:   aws.String(d.Id()),
+			AutoRecovery: aws.String(d.Get("automatic_recovery_behavior").(string)),
 		})
 		if err != nil {
 			return err
