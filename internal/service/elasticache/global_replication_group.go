@@ -70,8 +70,8 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 			},
 			// Leaving space for `engine_version` for creation and updating.
 			// `engine_version` cannot be used for returning the version because, starting with Redis 6,
-			// version configuration is major-version-only: `engine_version = "6.x"`, while `engine_version_actual`
-			// will be e.g. `6.0.5`
+			// version configuration is major-version-only: `engine_version = "6.x"` or major-minor-version-only: `engine_version = "6.2"`,
+			// while `engine_version_actual` will be the full version e.g. `6.0.5`
 			// See also https://github.com/hashicorp/terraform-provider-aws/issues/15625
 			"engine_version_actual": {
 				Type:     schema.TypeString,
@@ -163,7 +163,7 @@ func resourceGlobalReplicationGroupCreate(d *schema.ResourceData, meta interface
 	d.SetId(aws.StringValue(output.GlobalReplicationGroup.GlobalReplicationGroupId))
 
 	if _, err := WaitGlobalReplicationGroupAvailable(conn, d.Id(), GlobalReplicationGroupDefaultCreatedTimeout); err != nil {
-		return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) availability: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) creation: %w", d.Id(), err)
 	}
 
 	return resourceGlobalReplicationGroupRead(d, meta)
