@@ -376,6 +376,7 @@ func testAccWorkspaceConfig_basic(rName string) string {
 		authentication_providers  = ["SAML"]
 		permission_type           = "SERVICE_MANAGED"
 		name                      = %[1]q
+	}
 		`, rName)
 }
 
