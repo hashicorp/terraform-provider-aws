@@ -326,7 +326,7 @@ func testAccCheckUserProfileDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Sagemaker User Profile (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("error reading SageMaker User Profile (%s): %w", rs.Primary.ID, err)
 		}
 
 		userProfileArn := aws.StringValue(userProfile.UserProfileArn)

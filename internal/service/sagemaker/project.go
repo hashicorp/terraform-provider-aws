@@ -121,13 +121,13 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 		return conn.CreateProject(input)
 	})
 	if err != nil {
-		return fmt.Errorf("error creating Sagemaker project: %w", err)
+		return fmt.Errorf("error creating SageMaker project: %w", err)
 	}
 
 	d.SetId(name)
 
 	if _, err := WaitProjectCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Sagemaker Project (%s) to be created: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for SageMaker Project (%s) to be created: %w", d.Id(), err)
 	}
 
 	return resourceProjectRead(d, meta)
@@ -142,7 +142,7 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			d.SetId("")
-			log.Printf("[WARN] Unable to find Sagemaker Project (%s); removing from state", d.Id())
+			log.Printf("[WARN] Unable to find SageMaker Project (%s); removing from state", d.Id())
 			return nil
 		}
 		return fmt.Errorf("error reading SageMaker Project (%s): %w", d.Id(), err)
@@ -201,7 +201,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if _, err := WaitProjectUpdated(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for Sagemaker Project (%s) to be updated: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for SageMaker Project (%s) to be updated: %w", d.Id(), err)
 		}
 	}
 

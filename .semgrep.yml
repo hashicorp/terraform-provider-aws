@@ -560,6 +560,7 @@ rules:
         - internal/
       exclude:
         - providerlint/vendor/
+        - internal/generate/
     patterns:
       - pattern-either:
         - pattern: |

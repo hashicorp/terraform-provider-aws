@@ -1,14 +1,14 @@
 ---
-subcategory: "Sagemaker"
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_device_fleet"
 description: |-
-  Provides a Sagemaker Device Fleet resource.
+  Provides a SageMaker Device Fleet resource.
 ---
 
 # Resource: aws_sagemaker_device_fleet
 
-Provides a Sagemaker Device Fleet resource.
+Provides a SageMaker Device Fleet resource.
 
 ## Example Usage
 
@@ -51,7 +51,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Device Fleets can be imported using the `name`, e.g.,
+SageMaker Device Fleets can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_device_fleet.example my-fleet

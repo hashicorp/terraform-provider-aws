@@ -51,7 +51,7 @@ func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttr(resourceName, "data_tiering_enabled", "false"),
@@ -140,7 +140,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v1, v2, v3, v4, v5 elasticache.ReplicationGroup
+	var v1, v2, v3, v4, v5, v6, v7, v8 elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -177,21 +177,48 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccReplicationGroupConfig_EngineVersion(rName, "6.x"),
+				Config: testAccReplicationGroupConfig_EngineVersion(rName, "6.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &v4),
 					testAccCheckReplicationGroupNotRecreated(&v3, &v4),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.0"),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
+				),
+			},
+			{
+				Config: testAccReplicationGroupConfig_EngineVersion(rName, "6.2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &v5),
+					testAccCheckReplicationGroupNotRecreated(&v4, &v5),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
 				),
 			},
 			{
 				Config: testAccReplicationGroupConfig_EngineVersion(rName, "5.0.6"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationGroupExists(resourceName, &v5),
-					testAccCheckReplicationGroupRecreated(&v4, &v5),
+					testAccCheckReplicationGroupExists(resourceName, &v6),
+					testAccCheckReplicationGroupRecreated(&v5, &v6),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.6"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "5.0.6"),
+				),
+			},
+			{
+				Config: testAccReplicationGroupConfig_EngineVersion(rName, "6.x"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &v7),
+					testAccCheckReplicationGroupNotRecreated(&v6, &v7),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
+				),
+			},
+			{
+				Config: testAccReplicationGroupConfig_EngineVersion(rName, "6.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &v8),
+					testAccCheckReplicationGroupRecreated(&v7, &v8),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.0"),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.0\.[[:digit:]]+$`)),
 				),
 			},
 		},
@@ -2374,7 +2401,7 @@ func TestAccElastiCacheReplicationGroup_dataTiering(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
 					resource.TestCheckResourceAttr(resourceName, "data_tiering_enabled", "true"),
 				),
 			},
@@ -3480,7 +3507,7 @@ resource "aws_elasticache_replication_group" "primary" {
   subnet_group_name = aws_elasticache_subnet_group.primary.name
 
   engine         = "redis"
-  engine_version = "6.x"
+  engine_version = "6.2"
   node_type      = "cache.m5.large"
 
   parameter_group_name = "default.redis6.x.cluster.on"
@@ -3531,7 +3558,7 @@ resource "aws_elasticache_replication_group" "primary" {
   subnet_group_name = aws_elasticache_subnet_group.primary.name
 
   engine         = "redis"
-  engine_version = "6.x"
+  engine_version = "6.2"
   node_type      = "cache.m5.large"
 
   parameter_group_name = "default.redis6.x.cluster.on"
