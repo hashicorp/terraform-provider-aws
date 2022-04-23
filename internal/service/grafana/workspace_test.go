@@ -446,7 +446,7 @@ resource "aws_grafana_workspace" "test" {
 }
 
 func testAccWorkspaceConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccWorkspaceConfig_basic(rName), fmt.Sprintf(`
 resource "aws_grafana_workspace" "test" {
 	role_arn                  = aws_iam_role.test.arn
 	name                      = %[1]q
