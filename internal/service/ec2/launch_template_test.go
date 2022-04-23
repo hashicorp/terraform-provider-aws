@@ -46,6 +46,7 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "hibernation_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iam_instance_profile.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "image_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "automatic_recovery_behavior", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_initiated_shutdown_behavior", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_market_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", ""),
@@ -428,6 +429,7 @@ func TestAccEC2LaunchTemplate_data(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elastic_gpu_specifications.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "iam_instance_profile.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "image_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "automatic_recovery_behavior"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_initiated_shutdown_behavior"),
 					resource.TestCheckResourceAttr(resourceName, "instance_market_options.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_type"),
@@ -1821,7 +1823,7 @@ resource "aws_launch_template" "test" {
 
   image_id                             = "ami-12a3b456"
   instance_initiated_shutdown_behavior = "terminate"
-
+  automatic_recovery_behavior		   = "disabled"
   instance_market_options {
     market_type = "spot"
   }

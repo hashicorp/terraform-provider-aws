@@ -110,6 +110,7 @@ resource "aws_launch_template" "foo" {
 
 The following arguments are supported:
 
+* `automatic_recovery_behavior` - (Optional) The automatic recovery behavior of the Instance. Can be `"default"` or `"dedicated"`. (Default: `"default"`). See [Recover your instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-recover.html) for more details.
 * `block_device_mappings` - (Optional) Specify volumes to attach to the instance besides the volumes specified by the AMI.
   See [Block Devices](#block-devices) below for details.
 * `capacity_reservation_specification` - (Optional) Targeting for EC2 capacity reservations. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.

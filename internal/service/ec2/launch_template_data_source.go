@@ -22,6 +22,10 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"automatic_recovery_behavior": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"block_device_mappings": {
 				Type:     schema.TypeList,
 				Computed: true,
