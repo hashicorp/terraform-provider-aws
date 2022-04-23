@@ -25,6 +25,7 @@ func TestAccGrafana_serial(t *testing.T) {
 			"dataSources":              testAccGrafanaWorkspace_dataSources,
 			"permissionType":           testAccGrafanaWorkspace_permissionType,
 			"notificationDestinations": testAccGrafanaWorkspace_notificationDestinations,
+			"tags":                     testAccGrafanaWorkspace_tags,
 		},
 		"DataSource": {
 			"basic": testAccGrafanaWorkspaceDataSource_basic,
