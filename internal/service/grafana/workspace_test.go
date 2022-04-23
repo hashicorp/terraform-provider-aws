@@ -414,7 +414,7 @@ resource "aws_grafana_workspace" "test" {
 		%[1]q = %[2]q
 	  }
 	}
-	`, tagKey1, tagValue1))
+	`, tagKey, tagValue))
 }
 
 func testAccWorkspaceConfigDataSources(rName string) string {
