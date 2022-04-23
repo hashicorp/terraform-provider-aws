@@ -16,7 +16,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const filename = `config_gen.go`
+const (
+	filename      = `config_gen.go`
+	namesDataFile = "../../names/names_data.csv"
+)
 
 type ServiceDatum struct {
 	SDKVersion        string
@@ -31,7 +34,7 @@ type TemplateData struct {
 func main() {
 	fmt.Printf("Generating internal/conns/%s\n", filename)
 
-	f, err := os.Open("../../names/names_data.csv")
+	f, err := os.Open(namesDataFile)
 	if err != nil {
 		log.Fatal(err)
 	}
