@@ -410,6 +410,7 @@ resource "aws_grafana_workspace" "test" {
 	account_access_type       = "CURRENT_ACCOUNT"
 	authentication_providers  = ["SAML"]
 	permission_type           = "SERVICE_MANAGED"
+	role_arn                  = aws_iam_role.test.arn
 
 	tags = {
 		%[1]q = %[2]q
