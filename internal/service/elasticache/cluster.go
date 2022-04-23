@@ -305,7 +305,7 @@ func ResourceCluster() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			CustomizeDiffValidateClusterAZMode,
 			CustomizeDiffValidateClusterEngineVersion,
-			CustomizeDiffEngineVersion,
+			customizeDiffEngineVersionForceNewOnDowngrade,
 			CustomizeDiffValidateClusterNumCacheNodes,
 			CustomizeDiffClusterMemcachedNodeType,
 			CustomizeDiffValidateClusterMemcachedSnapshotIdentifier,
@@ -565,7 +565,13 @@ func setEngineVersionFromCacheCluster(d *schema.ResourceData, c *elasticache.Cac
 	if engineVersion.Segments()[0] < 6 {
 		d.Set("engine_version", engineVersion.String())
 	} else {
-		d.Set("engine_version", fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
+		// Handle major-only version number
+		configVersion := d.Get("engine_version").(string)
+		if t, _ := regexp.MatchString(`[6-9]\.x`, configVersion); t {
+			d.Set("engine_version", fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
+		} else {
+			d.Set("engine_version", fmt.Sprintf("%d.%d", engineVersion.Segments()[0], engineVersion.Segments()[1]))
+		}
 	}
 	d.Set("engine_version_actual", engineVersion.String())
 
