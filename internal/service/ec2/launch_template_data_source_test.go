@@ -171,6 +171,7 @@ resource "aws_launch_template" "test" {
   instance_market_options {
     market_type = "spot"
   }
+
   automatic_recovery_behavior = "disabled"
   disable_api_termination = true
   ebs_optimized           = false
