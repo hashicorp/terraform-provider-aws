@@ -39,6 +39,10 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"automatic_recovery_behavior": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"credit_specification": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -421,6 +425,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 		d.Set("host_id", instance.Placement.HostId)
 	}
 	d.Set("ami", instance.ImageId)
+	d.Set("automatic_recovery_behavior", instance.MaintenanceOptions.AutoRecovery)
 	d.Set("instance_type", instance.InstanceType)
 	d.Set("key_name", instance.KeyName)
 	d.Set("public_dns", instance.PublicDnsName)

@@ -538,6 +538,34 @@ func TestAccEC2InstanceDataSource_GetUserData_noUserData(t *testing.T) {
 	})
 }
 
+func TestAccEC2InstanceDataSource_automaticRecoveryBehavior(t *testing.T) {
+	resourceName := "aws_instance.test"
+	datasourceName := "data.aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  acctest.Providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceAutomaticRecoveryBehavior(rName, "default"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
+					resource.TestCheckResourceAttr(datasourceName, "automatic_recovery_behavior", "default"),
+				),
+			},
+			{
+				Config: testAccInstanceDataSourceAutomaticRecoveryBehavior(rName, "disabled"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
+					resource.TestCheckResourceAttr(datasourceName, "automatic_recovery_behavior", "disabled"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2InstanceDataSource_creditSpecification(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
@@ -1156,6 +1184,28 @@ data "aws_instance" "test" {
   instance_id   = aws_instance.test.id
 }
 `, rName, getUserData))
+}
+
+func testAccInstanceDataSourceAutomaticRecoveryBehavior(rName string, val string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false, 1),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type               = "t2.micro"
+  automatic_recovery_behavior = %[2]q
+  subnet_id     			  = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_instance" "test" {
+	instance_id = aws_instance.test.id
+}
+`, rName, val))
 }
 
 func testAccInstanceDataSourceCreditSpecificationConfig(rName string) string {
