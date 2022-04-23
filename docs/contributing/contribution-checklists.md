@@ -859,8 +859,6 @@ into Terraform.
 
     - Determine the service identifier using the rule described in [the Naming Guide](./naming.md#service-identifier).
     - In `names/names_data.csv`, add a new line with all the requested data for the service following the guidance in the [`names` README](../../names/README.md). **_Be very careful when adding or changing data in `names_data.csv`! The Provider and generators depend on the file being correct._**
-    - In `website/docs/guides/custom-service-endpoints.html.md`: Add the service
-    name in the list of customizable endpoints.
     - In `infrastructure/repository/labels-service.tf`: Add the new service to create a repository label.
     - In `.github/labeler-issue-triage.yml`: Add the new service to automated issue labeling. E.g., with the `quicksight` service
 
