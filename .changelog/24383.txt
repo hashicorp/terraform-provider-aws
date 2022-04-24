@@ -1,0 +1,3 @@
+```release-note:bug
+ses/receipt_filter: Update validation pattern for aws_ses_receipt_filter.name
+```
