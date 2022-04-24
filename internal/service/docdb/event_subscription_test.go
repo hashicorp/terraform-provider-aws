@@ -1,0 +1,334 @@
+package docdb_test
+
+import (
+	"context"
+	"fmt"
+	"testing"
+
+	docdb "github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfdocdb "github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+)
+
+func TestAccDocDBEventSubscription_basic(t *testing.T) {
+	var eventSubscription docdb.EventSubscription
+	resourceName := "aws_docdb_event_subscription.test"
+	snsTopicResourceName := "aws_sns_topic.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDocDBEventSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocDBEventSubscriptionConfigEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocDBEventSubscriptionExists(resourceName, &eventSubscription),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "source_type", "db-cluster"),
+					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "failure"),
+					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", snsTopicResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDocDBEventSubscription_disappears(t *testing.T) {
+	var eventSubscription docdb.EventSubscription
+	resourceName := "aws_docdb_event_subscription.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDocDBEventSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocDBEventSubscriptionConfigEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocDBEventSubscriptionExists(resourceName, &eventSubscription),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdocdb.ResourceEventSubscription(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccDocDBEventSubscription_enabled(t *testing.T) {
+	var eventSubscription docdb.EventSubscription
+	resourceName := "aws_docdb_event_subscription.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDocDBEventSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocDBEventSubscriptionConfigEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocDBEventSubscriptionExists(resourceName, &eventSubscription),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDocDBEventSubscriptionConfigEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocDBEventSubscriptionExists(resourceName, &eventSubscription),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+				),
+			},
+			{
+				Config: testAccDocDBEventSubscriptionConfigEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocDBEventSubscriptionExists(resourceName, &eventSubscription),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDocDBEventSubscription_eventCategories(t *testing.T) {
+	var eventSubscription docdb.EventSubscription
+	resourceName := "aws_docdb_event_subscription.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDocDBEventSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocDBEventSubscriptionConfigEventCategories2(rName, "creation", "failure"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocDBEventSubscriptionExists(resourceName, &eventSubscription),
+					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "failure"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDocDBEventSubscriptionConfigEventCategories2(rName, "configuration change", "deletion"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocDBEventSubscriptionExists(resourceName, &eventSubscription),
+					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "configuration change"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "deletion"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDocDBEventSubscription_tags(t *testing.T) {
+	var eventSubscription docdb.EventSubscription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_docdb_event_subscription.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDocDBEventSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocDBEventSubscriptionConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocDBEventSubscriptionExists(resourceName, &eventSubscription),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDocDBEventSubscriptionConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocDBEventSubscriptionExists(resourceName, &eventSubscription),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccDocDBEventSubscriptionConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocDBEventSubscriptionExists(resourceName, &eventSubscription),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckDocDBEventSubscriptionDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_docdb_event_subscription" {
+			continue
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
+
+		_, err := tfdocdb.FindEventSubscriptionById(context.TODO(), conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("DocDB Event Subscription %s still exists", rs.Primary.ID)
+	}
+
+	return nil
+}
+
+func testAccCheckDocDBEventSubscriptionExists(n string, eventSubscription *docdb.EventSubscription) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
+		_, err := tfdocdb.FindEventSubscriptionById(context.TODO(), conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+}
+
+func testAccDocDBEventSubscriptionConfigBase(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_docdb_cluster" "test" {
+  cluster_identifier  = %[1]q
+  availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
+  skip_final_snapshot = true
+}
+
+data "aws_docdb_orderable_db_instance" "test" {
+  engine                     = "docdb"
+  preferred_instance_classes = ["db.t3.medium", "db.r4.large", "db.r5.large", "db.r5.xlarge"]
+}
+
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+`, rName))
+}
+
+func testAccDocDBEventSubscriptionConfigEnabled(rName string, enabled bool) string {
+	return acctest.ConfigCompose(
+		testAccDocDBEventSubscriptionConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_docdb_event_subscription" "test" {
+  name             = %[1]q
+  enabled          = %[2]t
+  event_categories = ["creation", "failure"]
+  source_type      = "db-cluster"
+  source_ids       = [aws_docdb_cluster.test.id]
+  sns_topic_arn    = aws_sns_topic.test.arn
+}
+`, rName, enabled))
+}
+
+func testAccDocDBEventSubscriptionConfigEventCategories2(rName string, eventCategory1 string, eventCategory2 string) string {
+	return acctest.ConfigCompose(
+		testAccDocDBEventSubscriptionConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_docdb_event_subscription" "test" {
+  name             = %[1]q
+  enabled          = false
+  event_categories = [%[2]q, %[3]q]
+  source_type      = "db-cluster"
+  source_ids       = [aws_docdb_cluster.test.id]
+  sns_topic_arn    = aws_sns_topic.test.arn
+}
+`, rName, eventCategory1, eventCategory2))
+}
+
+func testAccDocDBEventSubscriptionConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(
+		testAccDocDBEventSubscriptionConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_docdb_event_subscription" "test" {
+  name             = %[1]q
+  enabled          = true
+  event_categories = ["creation", "failure"]
+  source_type      = "db-cluster"
+  source_ids       = [aws_docdb_cluster.test.id]
+  sns_topic_arn    = aws_sns_topic.test.arn
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccDocDBEventSubscriptionConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccDocDBEventSubscriptionConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_docdb_event_subscription" "test" {
+  name             = %[1]q
+  enabled          = true
+  event_categories = ["creation", "failure"]
+  source_type      = "db-cluster"
+  source_ids       = [aws_docdb_cluster.test.id]
+  sns_topic_arn    = aws_sns_topic.test.arn
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
