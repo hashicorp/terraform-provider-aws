@@ -79,7 +79,6 @@ func ResourceInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ForceNew:     false,
 				ValidateFunc: validation.StringInSlice(ec2.InstanceAutoRecoveryState_Values(), false),
 			},
 			"capacity_reservation_specification": {
