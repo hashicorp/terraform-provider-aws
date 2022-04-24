@@ -14,7 +14,7 @@ Provides a DB event subscription resource.
 
 ```terraform
 resource "aws_docdb_cluster" "example" {
-  cluster_identifier  = %[1]q
+  cluster_identifier  = "example"
   availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
   master_username     = "foo"
   master_password     = "mustbeeightcharaters"
