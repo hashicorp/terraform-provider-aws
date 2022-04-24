@@ -1214,6 +1214,11 @@ To run sweepers with an assumed role, use the following additional environment v
 * `TF_AWS_ASSUME_ROLE_EXTERNAL_ID` - Optional.
 * `TF_AWS_ASSUME_ROLE_SESSION_NAME` - Optional.
 
+### Sweeper Checklists
+
+- [ ] __Add Service To Sweeper List__: To allowing sweeping for a given service, it needs to be registered in the list of services to be sweeped, at [Sweeper service list](/internal/sweep/sweep_test.go).
+- [ ] __Add Resource Sweeper Implemnetation__: See [Writing Test Sweepers](#writing-test-sweepers).
+
 ### Writing Test Sweepers
 
 The first step is to initialize the resource into the test sweeper framework:
