@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -144,14 +145,14 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	sub, err := FindEventSubscriptionById(ctx, conn, d.Id())
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("Error reading DocDB Event Subscription %s: %w", d.Id(), err))
-	}
-
-	if sub == nil {
-		log.Printf("[DEBUG] DocDB Event Subscription (%s) not found - removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN]DocDB Event Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error reading DocDB Event Subscription %s: %w", d.Id(), err))
 	}
 
 	d.Set("arn", sub.EventSubscriptionArn)
