@@ -1274,7 +1274,7 @@ func sweepThings(region string) error {
         continue
       }
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+      sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
     }
 
     return !lastPage
@@ -1338,7 +1338,7 @@ func sweepThings(region string) error {
         continue
       }
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+      sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
     }
 
     if aws.StringValue(output.NextToken) == "" {
