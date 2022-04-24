@@ -288,16 +288,8 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := UpdateTags(conn, d.Id(), o, n)
-
-		if verify.CheckISOErrorTagsUnsupported(err) {
-			// ISO partitions may not support tagging, giving error
-			log.Printf("[WARN] failed updating tags for Grafana Workspace (%s): %s", d.Id(), err)
-			return resourceWorkspaceRead(d, meta)
-		}
-
-		if err != nil {
-			return fmt.Errorf("failed updating tags for Grafana Workspace (%s): %w", d.Id(), err)
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating Grafana Workspace (%s) tags: %w", d.Id(), err)
 		}
 	}
 
