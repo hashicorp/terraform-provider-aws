@@ -424,35 +424,35 @@ resource "aws_organizations_organizational_unit" "test" {
 func testAccWorkspaceConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
 resource "aws_grafana_workspace" "test" {
-		account_access_type       = "CURRENT_ACCOUNT"
-		authentication_providers  = ["SAML"]
-		permission_type           = "SERVICE_MANAGED"
-		name                      = %[1]q
-		role_arn                  = aws_iam_role.test.arn
-	
-	tags = {
-	  %[2]q = %[3]q
-	}
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = ["SAML"]
+  permission_type          = "SERVICE_MANAGED"
+  name                     = %[1]q
+  role_arn                 = aws_iam_role.test.arn
 
+  tags = {
+    %[2]q = %[3]q
   }
+
+}
   `, rName, tagKey1, tagValue1))
 }
 
 func testAccWorkspaceConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
 resource "aws_grafana_workspace" "test" {
-	account_access_type       = "CURRENT_ACCOUNT"
-	authentication_providers  = ["SAML"]
-	permission_type           = "SERVICE_MANAGED"
-	name                      = %[1]q
-	role_arn                  = aws_iam_role.test.arn
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = ["SAML"]
+  permission_type          = "SERVICE_MANAGED"
+  name                     = %[1]q
+  role_arn                 = aws_iam_role.test.arn
 
-	tags = {
-	  %[2]q = %[3]q
-	  %[4]q = %[5]q
-	}
-  
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
+
+}
   `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
