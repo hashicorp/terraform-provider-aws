@@ -233,11 +233,13 @@ func testAccCheckDocDBEventSubscriptionExists(n string, eventSubscription *docdb
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
-		_, err := tfdocdb.FindEventSubscriptionById(context.TODO(), conn, rs.Primary.ID)
+		res, err := tfdocdb.FindEventSubscriptionById(context.TODO(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
+
+		*eventSubscription = *res
 
 		return nil
 	}
