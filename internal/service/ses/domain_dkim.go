@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sesv2"
+	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -14,7 +14,6 @@ func ResourceDomainDKIM() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceDomainDKIMCreate,
 		Read:   resourceDomainDKIMRead,
-		Update: resourceDomainDKIMUpdate,
 		Delete: resourceDomainDKIMDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -30,53 +29,23 @@ func ResourceDomainDKIM() *schema.Resource {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-			},
-			"selector": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-			},
-			"private_key": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
 			},
 		},
 	}
 }
 
 func resourceDomainDKIMCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESV2Conn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	domainName := d.Get("domain").(string)
 
-	var selector string
-	if v, ok := d.GetOk("selector"); ok {
-		selector = v.(string)
+	createOpts := &ses.VerifyDomainDkimInput{
+		Domain: aws.String(domainName),
 	}
 
-	var privateKey string
-	if v, ok := d.GetOk("private_key"); ok {
-		privateKey = v.(string)
-	}
-
-	createOpts := &sesv2.CreateEmailIdentityInput{
-		EmailIdentity: aws.String(domainName),
-	}
-	// ByoDKIM:
-	if selector != "" {
-		createOpts = &sesv2.CreateEmailIdentityInput{
-			EmailIdentity: aws.String(domainName),
-			DkimSigningAttributes: &sesv2.DkimSigningAttributes{
-				DomainSigningPrivateKey: aws.String(privateKey),
-				DomainSigningSelector:   aws.String(selector),
-			},
-		}
-	}
-	_, err := conn.CreateEmailIdentity(createOpts)
+	_, err := conn.VerifyDomainDkim(createOpts)
 	if err != nil {
-		return fmt.Errorf("error requesting SES domain identity verification: %s", err)
+		return fmt.Errorf("Error requesting SES domain identity verification: %s", err)
 	}
 
 	d.SetId(domainName)
@@ -85,42 +54,35 @@ func resourceDomainDKIMCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainDKIMRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESV2Conn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	domainName := d.Id()
 	d.Set("domain", domainName)
 
-	readOpts := &sesv2.GetEmailIdentityInput{
-		EmailIdentity: aws.String(domainName),
+	readOpts := &ses.GetIdentityDkimAttributesInput{
+		Identities: []*string{
+			aws.String(domainName),
+		},
 	}
 
-	res, err := conn.GetEmailIdentity(readOpts)
+	response, err := conn.GetIdentityDkimAttributes(readOpts)
 	if err != nil {
 		log.Printf("[WARN] Error fetching identity verification attributes for %s: %s", d.Id(), err)
 		return err
 	}
-	if res.DkimAttributes == nil {
+
+	verificationAttrs, ok := response.DkimAttributes[domainName]
+	if !ok {
 		log.Printf("[WARN] Domain not listed in response when fetching verification attributes for %s", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	d.Set("dkim_tokens", aws.StringValueSlice(res.DkimAttributes.Tokens))
-	return nil
-}
-
-func resourceDomainDKIMUpdate(d *schema.ResourceData, meta interface{}) error {
+	d.Set("dkim_tokens", aws.StringValueSlice(verificationAttrs.DkimTokens))
 	return nil
 }
 
 func resourceDomainDKIMDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESV2Conn
 
-	domainName := d.Id()
-	deleteOpts := &sesv2.DeleteEmailIdentityInput{EmailIdentity: aws.String(domainName)}
-	_, err := conn.DeleteEmailIdentity(deleteOpts)
-	if err != nil {
-		return fmt.Errorf("error deleting identity %s: %s", d.Id(), err)
-	}
 	return nil
 }

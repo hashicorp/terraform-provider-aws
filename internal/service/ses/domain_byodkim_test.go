@@ -2,19 +2,20 @@ package ses_test
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/aws/aws-sdk-go/service/sesv2"
 	"regexp"
 	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccSESDomainDKIM_basic(t *testing.T) {
+func TestAccSESDomainBYODKIM_basic(t *testing.T) {
 	resourceName := "aws_ses_domain_dkim.test"
 	domain := acctest.RandomDomainName()
 
@@ -25,21 +26,21 @@ func TestAccSESDomainDKIM_basic(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainDKIMDestroy,
+		CheckDestroy: testAccCheckDomainBYODKIMDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testAccDomainDKIMConfig, domain),
+				Config: fmt.Sprintf(testAccDomainBYODKIMConfig, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainDKIMExists(resourceName),
-					testAccCheckDomainDKIMTokens(resourceName),
+					testAccCheckDomainBYODKIMExists(resourceName),
+					testAccCheckDomainBYODKIMTokens(resourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckDomainDKIMDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+func testAccCheckDomainBYODKIMDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_domain_dkim" {
@@ -47,19 +48,20 @@ func testAccCheckDomainDKIMDestroy(s *terraform.State) error {
 		}
 
 		domain := rs.Primary.ID
-		params := &ses.GetIdentityDkimAttributesInput{
-			Identities: []*string{
-				aws.String(domain),
-			},
+		params := &sesv2.GetEmailIdentityInput{
+			EmailIdentity: aws.String(domain),
 		}
 
-		resp, err := conn.GetIdentityDkimAttributes(params)
+		res, err := conn.GetEmailIdentity(params)
+		if err != nil {
+			return err
+		}
 
 		if err != nil {
 			return err
 		}
 
-		if resp.DkimAttributes[domain] != nil {
+		if res.DkimAttributes != nil {
 			return fmt.Errorf("SES Domain Dkim %s still exists.", domain)
 		}
 	}
@@ -67,7 +69,7 @@ func testAccCheckDomainDKIMDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckDomainDKIMExists(n string) resource.TestCheckFunc {
+func testAccCheckDomainBYODKIMExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -79,20 +81,18 @@ func testAccCheckDomainDKIMExists(n string) resource.TestCheckFunc {
 		}
 
 		domain := rs.Primary.ID
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Conn
 
-		params := &ses.GetIdentityDkimAttributesInput{
-			Identities: []*string{
-				aws.String(domain),
-			},
+		params := &sesv2.GetEmailIdentityInput{
+			EmailIdentity: aws.String(domain),
 		}
 
-		response, err := conn.GetIdentityDkimAttributes(params)
+		res, err := conn.GetEmailIdentity(params)
 		if err != nil {
 			return err
 		}
 
-		if response.DkimAttributes[domain] == nil {
+		if res.DkimAttributes == nil {
 			return fmt.Errorf("SES Domain DKIM %s not found in AWS", domain)
 		}
 
@@ -100,7 +100,7 @@ func testAccCheckDomainDKIMExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckDomainDKIMTokens(n string) resource.TestCheckFunc {
+func testAccCheckDomainBYODKIMTokens(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
 
@@ -123,12 +123,14 @@ func testAccCheckDomainDKIMTokens(n string) resource.TestCheckFunc {
 	}
 }
 
-const testAccDomainDKIMConfig = `
+const testAccDomainBYODKIMConfig = `
 resource "aws_ses_domain_identity" "test" {
   domain = %[1]q
 }
 
-resource "aws_ses_domain_dkim" "test" {
+resource "aws_ses_domain_byodkim" "test" {
   domain = aws_ses_domain_identity.test.domain
+  selector = default
+  private_key = default
 }
 `

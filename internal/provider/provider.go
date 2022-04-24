@@ -1872,9 +1872,11 @@ func Provider() *schema.Provider {
 
 			"aws_servicequotas_service_quota": servicequotas.ResourceServiceQuota(),
 
-			"aws_ses_active_receipt_rule_set":      ses.ResourceActiveReceiptRuleSet(),
-			"aws_ses_configuration_set":            ses.ResourceConfigurationSet(),
-			"aws_ses_domain_dkim":                  ses.ResourceDomainDKIM(),
+			"aws_ses_active_receipt_rule_set": ses.ResourceActiveReceiptRuleSet(),
+			"aws_ses_configuration_set":       ses.ResourceConfigurationSet(),
+			"aws_ses_domain_dkim":             ses.ResourceDomainDKIM(),
+			"aws_ses_domain_byodkim":          ses.ResourceDomainBYODKIM(),
+
 			"aws_ses_domain_identity":              ses.ResourceDomainIdentity(),
 			"aws_ses_domain_identity_verification": ses.ResourceDomainIdentityVerification(),
 			"aws_ses_domain_mail_from":             ses.ResourceDomainMailFrom(),
