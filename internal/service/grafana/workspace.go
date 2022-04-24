@@ -296,7 +296,7 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.UpdateWorkspace(input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Grafana Workspac (%s): %w", d.Id(), err)
+		return fmt.Errorf("error updating Grafana Workspace (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waitWorkspaceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
