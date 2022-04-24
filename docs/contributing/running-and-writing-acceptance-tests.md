@@ -1240,14 +1240,14 @@ Then add the actual implementation. Preferably, if a paginated SDK call is avail
 
 ```go
 func sweepThings(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+  client, err := sweep.SharedRegionalSweepClient(region)
 
   if err != nil {
     return fmt.Errorf("error getting client: %w", err)
   }
 
   conn := client.(*conns.AWSClient).ExampleConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+  sweepResources := make([]*sweep.SweepResource, 0)
   var errs *multierror.Error
 
   input := &example.ListThingsInput{}
@@ -1289,11 +1289,11 @@ func sweepThings(region string) error {
     errs = multierror.Append(errs, fmt.Errorf("error listing Example Thing for %s: %w", region, err))
   }
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+  if err := sweep.SweepOrchestrator(sweepResources); err != nil {
     errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
   }
 
-	if sweep.SkipSweepError(err) {
+  if sweep.SkipSweepError(err) {
     log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
     return nil
   }
@@ -1306,14 +1306,14 @@ Otherwise, if no paginated SDK call is available:
 
 ```go
 func sweepThings(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+  client, err := sweep.SharedRegionalSweepClient(region)
 
   if err != nil {
     return fmt.Errorf("error getting client: %w", err)
   }
 
   conn := client.(*conns.AWSClient).ExampleConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+  sweepResources := make([]*sweep.SweepResource, 0)
   var errs *multierror.Error
 
   input := &example.ListThingsInput{}
@@ -1353,11 +1353,11 @@ func sweepThings(region string) error {
     input.NextToken = output.NextToken
   }
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+  if err := sweep.SweepOrchestrator(sweepResources); err != nil {
     errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
   }
 
-	if sweep.SkipSweepError(err) {
+  if sweep.SkipSweepError(err) {
     log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
     return nil
   }
