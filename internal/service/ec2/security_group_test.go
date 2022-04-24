@@ -1160,6 +1160,59 @@ func TestAccEC2SecurityGroup_NamePrefix_terraformPrefix(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23708
+func TestAccEC2SecurityGroup_name_change(t *testing.T) {
+	var group ec2.SecurityGroup
+	var instance ec2.Instance
+	sgResourceName := "aws_security_group.test"
+	instanceResourceName := "aws_instance.test"
+
+	testInstangeGotSecGroupCheck := func() resource.TestCheckFunc {
+		return func(*terraform.State) error {
+			if group.GroupId == nil {
+				return fmt.Errorf("bad group_id: got nil")
+			}
+			if len(instance.SecurityGroups) != 1 {
+				return fmt.Errorf("bad len security_groups: got != 1")
+			}
+			if *instance.SecurityGroups[0].GroupId != *group.GroupId {
+				return fmt.Errorf("bad security_group, got: %v want: %v",
+					*instance.SecurityGroups[0].GroupId,
+					*group.GroupId)
+			}
+
+			return nil
+		}
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSecurityGroupAndInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecurityGroupNameConfigChange("terraform-test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckInstanceExists(instanceResourceName, &instance),
+					resource.TestCheckResourceAttr(sgResourceName, "name", "terraform-test"),
+					testInstangeGotSecGroupCheck(),
+				),
+			},
+			{
+				Config: testAccSecurityGroupNameConfigChange("terraform-test-2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckInstanceExists(instanceResourceName, &instance),
+					resource.TestCheckResourceAttr(sgResourceName, "name", "terraform-test-2"),
+					testInstangeGotSecGroupCheck(),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2SecurityGroup_self(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
@@ -2089,6 +2142,14 @@ func testRemoveRuleCycle(primary, secondary *ec2.SecurityGroup) resource.TestChe
 		}
 		return nil
 	}
+}
+
+func testAccCheckSecurityGroupAndInstanceDestroy(s *terraform.State) error {
+	err := testAccCheckInstanceDestroy(s)
+	if err != nil {
+		return err
+	}
+	return testAccCheckSecurityGroupDestroy(s)
 }
 
 func testAccCheckSecurityGroupDestroy(s *terraform.State) error {
@@ -4398,4 +4459,43 @@ resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 }
 `
+}
+
+func testAccSecurityGroupNameConfigChange(sgName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-security-group-name"
+  }
+}
+
+resource "aws_subnet" "test" {
+	vpc_id            = aws_vpc.test.id
+	cidr_block        = "10.0.0.0/24"
+	availability_zone = data.aws_availability_zones.available.names[0]
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  lifecycle {
+	# Necessary if changing 'name' or 'name_prefix' properties.
+    create_before_destroy = true 
+  }
+}
+
+resource "aws_instance" "test" {
+	ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+	instance_type     = "t2.micro"
+	vpc_security_group_ids   = [aws_security_group.test.id]
+	subnet_id         = aws_subnet.test.id
+	availability_zone = data.aws_availability_zones.available.names[0]
+}
+`, sgName))
 }
