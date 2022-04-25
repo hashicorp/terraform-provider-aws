@@ -1195,7 +1195,7 @@ resource "aws_instance" "test" {
   ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "t2.micro"
   automatic_recovery_behavior = %[2]q
-  subnet_id     			  = aws_subnet.test.id
+  subnet_id                   = aws_subnet.test.id
 
   tags = {
     Name = %[1]q
