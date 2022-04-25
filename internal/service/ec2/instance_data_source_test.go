@@ -1203,7 +1203,7 @@ resource "aws_instance" "test" {
 }
 
 data "aws_instance" "test" {
-	instance_id = aws_instance.test.id
+  instance_id = aws_instance.test.id
 }
 `, rName, val))
 }
