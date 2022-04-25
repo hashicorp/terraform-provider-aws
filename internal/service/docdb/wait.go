@@ -44,7 +44,7 @@ func WaitForGlobalClusterDeletion(ctx context.Context, conn *docdb.DocDB, global
 	return err
 }
 
-func waitEventSubscriptionActive(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.EventSubscription, error) {
+func waitEventSubscriptionActive(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.EventSubscription, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"creating", "modifying"},
 		Target:  []string{"active"},

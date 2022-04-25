@@ -11,7 +11,7 @@ import (
 
 func statusEventSubscription(ctx context.Context, conn *docdb.DocDB, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindEventSubscriptionById(ctx, conn, id)
+		output, err := FindEventSubscriptionByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -91,7 +91,7 @@ func findGlobalClusterIdByArn(ctx context.Context, conn *docdb.DocDB, arn string
 	return ""
 }
 
-func FindEventSubscriptionById(ctx context.Context, conn *docdb.DocDB, id string) (*docdb.EventSubscription, error) {
+func FindEventSubscriptionByID(ctx context.Context, conn *docdb.DocDB, id string) (*docdb.EventSubscription, error) {
 	var eventSubscription *docdb.EventSubscription
 
 	input := &docdb.DescribeEventSubscriptionsInput{

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfdocdb "github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -28,17 +29,46 @@ func TestAccDocDBEventSubscription_basic(t *testing.T) {
 		CheckDestroy: testAccCheckDocDBEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocDBEventSubscriptionConfigEnabled(rName, true),
+				Config: testAccDocDBEventSubscriptionEnabledConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocDBEventSubscriptionExists(resourceName, &eventSubscription),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "source_type", "db-cluster"),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "failure"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_type", "db-cluster"),
 					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", snsTopicResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDocDBEventSubscription_nameGenerated(t *testing.T) {
+	var eventSubscription docdb.EventSubscription
+	resourceName := "aws_docdb_event_subscription.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDocDBEventSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocDBEventSubscriptionNameGeneratedConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocDBEventSubscriptionExists(resourceName, &eventSubscription),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
 				),
 			},
 			{
@@ -62,7 +92,7 @@ func TestAccDocDBEventSubscription_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckDocDBEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocDBEventSubscriptionConfigEnabled(rName, true),
+				Config: testAccDocDBEventSubscriptionEnabledConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocDBEventSubscriptionExists(resourceName, &eventSubscription),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdocdb.ResourceEventSubscription(), resourceName),
@@ -85,7 +115,7 @@ func TestAccDocDBEventSubscription_enabled(t *testing.T) {
 		CheckDestroy: testAccCheckDocDBEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocDBEventSubscriptionConfigEnabled(rName, false),
+				Config: testAccDocDBEventSubscriptionEnabledConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocDBEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
@@ -97,14 +127,14 @@ func TestAccDocDBEventSubscription_enabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDocDBEventSubscriptionConfigEnabled(rName, true),
+				Config: testAccDocDBEventSubscriptionEnabledConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocDBEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 				),
 			},
 			{
-				Config: testAccDocDBEventSubscriptionConfigEnabled(rName, false),
+				Config: testAccDocDBEventSubscriptionEnabledConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocDBEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
@@ -126,7 +156,7 @@ func TestAccDocDBEventSubscription_eventCategories(t *testing.T) {
 		CheckDestroy: testAccCheckDocDBEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocDBEventSubscriptionConfigEventCategories2(rName, "creation", "failure"),
+				Config: testAccDocDBEventSubscriptionEventCategories2Config(rName, "creation", "failure"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocDBEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
@@ -140,7 +170,7 @@ func TestAccDocDBEventSubscription_eventCategories(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDocDBEventSubscriptionConfigEventCategories2(rName, "configuration change", "deletion"),
+				Config: testAccDocDBEventSubscriptionEventCategories2Config(rName, "configuration change", "deletion"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocDBEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
@@ -205,7 +235,7 @@ func testAccCheckDocDBEventSubscriptionDestroy(s *terraform.State) error {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
 
-		_, err := tfdocdb.FindEventSubscriptionById(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfdocdb.FindEventSubscriptionByID(context.TODO(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -229,11 +259,12 @@ func testAccCheckDocDBEventSubscriptionExists(n string, eventSubscription *docdb
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No DocDB Event Subscription ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
-		res, err := tfdocdb.FindEventSubscriptionById(context.TODO(), conn, rs.Primary.ID)
+
+		res, err := tfdocdb.FindEventSubscriptionByID(context.TODO(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -245,7 +276,7 @@ func testAccCheckDocDBEventSubscriptionExists(n string, eventSubscription *docdb
 	}
 }
 
-func testAccDocDBEventSubscriptionConfigBase(rName string) string {
+func testAccDocDBEventSubscriptionBaseConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_docdb_cluster" "test" {
   cluster_identifier  = %[1]q
@@ -266,9 +297,9 @@ resource "aws_sns_topic" "test" {
 `, rName))
 }
 
-func testAccDocDBEventSubscriptionConfigEnabled(rName string, enabled bool) string {
+func testAccDocDBEventSubscriptionEnabledConfig(rName string, enabled bool) string {
 	return acctest.ConfigCompose(
-		testAccDocDBEventSubscriptionConfigBase(rName),
+		testAccDocDBEventSubscriptionBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_docdb_event_subscription" "test" {
   name             = %[1]q
@@ -281,9 +312,23 @@ resource "aws_docdb_event_subscription" "test" {
 `, rName, enabled))
 }
 
-func testAccDocDBEventSubscriptionConfigEventCategories2(rName string, eventCategory1 string, eventCategory2 string) string {
+func testAccDocDBEventSubscriptionNameGeneratedConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDocDBEventSubscriptionConfigBase(rName),
+		testAccDocDBEventSubscriptionBaseConfig(rName),
+		`
+resource "aws_docdb_event_subscription" "test" {
+  enabled          = true
+  event_categories = ["creation", "failure"]
+  source_type      = "db-cluster"
+  source_ids       = [aws_docdb_cluster.test.id]
+  sns_topic_arn    = aws_sns_topic.test.arn
+}
+`)
+}
+
+func testAccDocDBEventSubscriptionEventCategories2Config(rName string, eventCategory1 string, eventCategory2 string) string {
+	return acctest.ConfigCompose(
+		testAccDocDBEventSubscriptionBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_docdb_event_subscription" "test" {
   name             = %[1]q
@@ -298,7 +343,7 @@ resource "aws_docdb_event_subscription" "test" {
 
 func testAccDocDBEventSubscriptionConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccDocDBEventSubscriptionConfigBase(rName),
+		testAccDocDBEventSubscriptionBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_docdb_event_subscription" "test" {
   name             = %[1]q
@@ -317,7 +362,7 @@ resource "aws_docdb_event_subscription" "test" {
 
 func testAccDocDBEventSubscriptionConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccDocDBEventSubscriptionConfigBase(rName),
+		testAccDocDBEventSubscriptionBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_docdb_event_subscription" "test" {
   name             = %[1]q
