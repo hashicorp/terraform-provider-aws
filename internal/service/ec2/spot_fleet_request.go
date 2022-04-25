@@ -771,7 +771,7 @@ func resourceSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) erro
 
 	if len(config.LaunchTemplateConfigs) > 0 {
 		if err := d.Set("launch_template_config", flattenFleetLaunchTemplateConfig(config.LaunchTemplateConfigs)); err != nil {
-			return fmt.Errorf("error setting launch_template_config: %w", err)
+			return fmt.Errorf("setting launch_template_config: %w", err)
 		}
 	}
 
@@ -788,7 +788,7 @@ func resourceSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) erro
 				flatLbs = append(flatLbs, lb.Name)
 			}
 			if err := d.Set("load_balancers", flex.FlattenStringSet(flatLbs)); err != nil {
-				return fmt.Errorf("error setting load_balancers: %w", err)
+				return fmt.Errorf("setting load_balancers: %w", err)
 			}
 		}
 
@@ -798,7 +798,7 @@ func resourceSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) erro
 				flatTgs = append(flatTgs, tg.Arn)
 			}
 			if err := d.Set("target_group_arns", flex.FlattenStringSet(flatTgs)); err != nil {
-				return fmt.Errorf("error setting target_group_arns: %w", err)
+				return fmt.Errorf("setting target_group_arns: %w", err)
 			}
 		}
 	}
@@ -811,49 +811,39 @@ func resourceSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		req := &ec2.ModifySpotFleetRequestInput{
+		input := &ec2.ModifySpotFleetRequestInput{
 			SpotFleetRequestId: aws.String(d.Id()),
 		}
 
 		if d.HasChange("target_capacity") {
-			req.TargetCapacity = aws.Int64(int64(d.Get("target_capacity").(int)))
+			input.TargetCapacity = aws.Int64(int64(d.Get("target_capacity").(int)))
 		}
 
 		if d.HasChange("on_demand_target_capacity") {
-			req.OnDemandTargetCapacity = aws.Int64(int64(d.Get("on_demand_target_capacity").(int)))
+			input.OnDemandTargetCapacity = aws.Int64(int64(d.Get("on_demand_target_capacity").(int)))
 		}
 
 		if d.HasChange("excess_capacity_termination_policy") {
 			if val, ok := d.GetOk("excess_capacity_termination_policy"); ok {
-				req.ExcessCapacityTerminationPolicy = aws.String(val.(string))
+				input.ExcessCapacityTerminationPolicy = aws.String(val.(string))
 			}
 		}
 
-		log.Printf("[DEBUG] Modifying Spot Fleet Request: %#v", req)
-		if _, err := conn.ModifySpotFleetRequest(req); err != nil {
-			return fmt.Errorf("error updating spot request (%s): %w", d.Id(), err)
+		log.Printf("[DEBUG] Modifying EC2 Spot Fleet Request: %s", input)
+		if _, err := conn.ModifySpotFleetRequest(input); err != nil {
+			return fmt.Errorf("updating EC2 Spot Fleet Request (%s): %w", d.Id(), err)
 		}
 
-		log.Println("[INFO] Waiting for Spot Fleet Request to be modified")
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{ec2.BatchStateModifying},
-			Target:     []string{ec2.BatchStateActive},
-			Refresh:    resourceSpotFleetRequestStateRefreshFunc(d, meta),
-			Timeout:    10 * time.Minute,
-			MinTimeout: 10 * time.Second,
-			Delay:      30 * time.Second,
-		}
-
-		_, err := stateConf.WaitForState()
-		if err != nil {
-			return err
+		if _, err := WaitSpotFleetRequestUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("waiting for EC2 Spot Fleet Request (%s) update: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
+
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+			return fmt.Errorf("updating tags: %w", err)
 		}
 	}
 
@@ -1277,94 +1267,6 @@ func expandSpotCapacityRebalance(l []interface{}) *ec2.SpotCapacityRebalance {
 	}
 
 	return capacityRebalance
-}
-
-func resourceSpotFleetRequestStateRefreshFunc(d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		conn := meta.(*conns.AWSClient).EC2Conn
-		req := &ec2.DescribeSpotFleetRequestsInput{
-			SpotFleetRequestIds: []*string{aws.String(d.Id())},
-		}
-		resp, err := conn.DescribeSpotFleetRequests(req)
-
-		if err != nil {
-			log.Printf("Error on retrieving Spot Fleet Request when waiting: %s", err)
-			return nil, "", nil
-		}
-
-		if resp == nil {
-			return nil, "", nil
-		}
-
-		if len(resp.SpotFleetRequestConfigs) == 0 {
-			return nil, "", nil
-		}
-
-		spotFleetRequest := resp.SpotFleetRequestConfigs[0]
-
-		return spotFleetRequest, aws.StringValue(spotFleetRequest.SpotFleetRequestState), nil
-	}
-}
-
-func resourceSpotFleetRequestFulfillmentRefreshFunc(id string, conn *ec2.EC2) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		req := &ec2.DescribeSpotFleetRequestsInput{
-			SpotFleetRequestIds: []*string{aws.String(id)},
-		}
-		resp, err := conn.DescribeSpotFleetRequests(req)
-
-		if err != nil {
-			log.Printf("Error on retrieving Spot Fleet Request when waiting: %s", err)
-			return nil, "", nil
-		}
-
-		if resp == nil {
-			return nil, "", nil
-		}
-
-		if len(resp.SpotFleetRequestConfigs) == 0 {
-			return nil, "", nil
-		}
-
-		cfg := resp.SpotFleetRequestConfigs[0]
-		status := aws.StringValue(cfg.ActivityStatus)
-
-		var fleetError error
-		if status == ec2.ActivityStatusError {
-			var events []*ec2.HistoryRecord
-
-			// Query "information" events (e.g. launchSpecUnusable b/c low bid price)
-			out, err := conn.DescribeSpotFleetRequestHistory(&ec2.DescribeSpotFleetRequestHistoryInput{
-				EventType:          aws.String(ec2.EventTypeInformation),
-				SpotFleetRequestId: aws.String(id),
-				StartTime:          cfg.CreateTime,
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed to get the reason of 'error' state: %s", err)
-			}
-			if len(out.HistoryRecords) > 0 {
-				events = out.HistoryRecords
-			}
-
-			out, err = conn.DescribeSpotFleetRequestHistory(&ec2.DescribeSpotFleetRequestHistoryInput{
-				EventType:          aws.String(ec2.EventTypeError),
-				SpotFleetRequestId: aws.String(id),
-				StartTime:          cfg.CreateTime,
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed to get the reason of 'error' state: %s", err)
-			}
-			if len(out.HistoryRecords) > 0 {
-				events = append(events, out.HistoryRecords...)
-			}
-
-			if len(events) > 0 {
-				fleetError = fmt.Errorf("Last events: %v", events)
-			}
-		}
-
-		return cfg, status, fleetError
-	}
 }
 
 func flattenSpotFleetRequestLaunchTemplateOverrides(override *ec2.LaunchTemplateOverrides) map[string]interface{} {

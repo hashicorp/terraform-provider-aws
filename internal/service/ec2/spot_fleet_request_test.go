@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEC2SpotFleetRequest_basic(t *testing.T) {
@@ -157,7 +158,7 @@ func TestAccEC2SpotFleetRequest_launchTemplate(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSpotFleetRequestDestroy,
@@ -193,7 +194,7 @@ func TestAccEC2SpotFleetRequest_LaunchTemplate_multiple(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSpotFleetRequestDestroy,
@@ -223,7 +224,7 @@ func TestAccEC2SpotFleetRequest_launchTemplateWithOverrides(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSpotFleetRequestDestroy,
@@ -259,7 +260,7 @@ func TestAccEC2SpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSpotFleetRequestDestroy,
@@ -305,7 +306,7 @@ func TestAccEC2SpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSpotFleetRequestDestroy,
@@ -345,7 +346,7 @@ func TestAccEC2SpotFleetRequest_onDemandTargetCapacity(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSpotFleetRequestDestroy,
@@ -393,7 +394,7 @@ func TestAccEC2SpotFleetRequest_onDemandMaxTotalPrice(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSpotFleetRequestDestroy,
@@ -427,7 +428,7 @@ func TestAccEC2SpotFleetRequest_onDemandAllocationStrategy(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckSpotFleetRequestDestroy,
@@ -1553,8 +1554,7 @@ func testAccCheckSpotFleetRequestRecreatedConfig(t *testing.T,
 	}
 }
 
-func testAccCheckSpotFleetRequestExists(
-	n string, sfr *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
+func testAccCheckSpotFleetRequestExists(n string, v *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1562,25 +1562,18 @@ func testAccCheckSpotFleetRequestExists(
 		}
 
 		if rs.Primary.ID == "" {
-			return errors.New("No Spot fleet request with that id exists")
+			return errors.New("No EC2 Spot Fleet Request ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		params := &ec2.DescribeSpotFleetRequestsInput{
-			SpotFleetRequestIds: []*string{&rs.Primary.ID},
-		}
-		resp, err := conn.DescribeSpotFleetRequests(params)
+		output, err := tfec2.FindSpotFleetRequestByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if v := len(resp.SpotFleetRequestConfigs); v != 1 {
-			return fmt.Errorf("Expected 1 request returned, got %d", v)
-		}
-
-		*sfr = *resp.SpotFleetRequestConfigs[0]
+		*v = *output
 
 		return nil
 	}
@@ -1594,14 +1587,17 @@ func testAccCheckSpotFleetRequestDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := conn.CancelSpotFleetRequests(&ec2.CancelSpotFleetRequestsInput{
-			SpotFleetRequestIds: []*string{aws.String(rs.Primary.ID)},
-			TerminateInstances:  aws.Bool(true),
-		})
+		_, err := tfec2.FindSpotFleetRequestByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
-			return fmt.Errorf("Error cancelling spot request (%s): %s", rs.Primary.ID, err)
+			return err
 		}
+
+		return fmt.Errorf("EC2 Spot Fleet Request %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -1661,9 +1657,7 @@ func testAccCheckSpotFleetRequest_PlacementAttributes(
 func testAccPreCheckSpotFleetRequest(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-	input := &ec2.DescribeSpotFleetRequestsInput{}
-
-	_, err := conn.DescribeSpotFleetRequests(input)
+	_, err := tfec2.FindSpotFleetRequests(conn, &ec2.DescribeSpotFleetRequestsInput{})
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
