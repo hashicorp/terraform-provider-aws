@@ -920,7 +920,7 @@ func TestAccEC2Instance_sourceDestCheck(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_automaticRecoveryBehavior(t *testing.T) {
+func TestAccEC2Instance_autoRecovery(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -932,17 +932,17 @@ func TestAccEC2Instance_automaticRecoveryBehavior(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigAutomaticRecoveryBehavior(rName, "default"),
+				Config: testAccInstanceAutoRecoveryConfig(rName, "default"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "automatic_recovery_behavior", "default"),
+					resource.TestCheckResourceAttr(resourceName, "auto_recovery", "default"),
 				),
 			},
 			{
-				Config: testAccInstanceConfigAutomaticRecoveryBehavior(rName, "disabled"),
+				Config: testAccInstanceAutoRecoveryConfig(rName, "disabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "automatic_recovery_behavior", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "auto_recovery", "disabled"),
 				),
 			},
 			{
@@ -5433,15 +5433,15 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfigAutomaticRecoveryBehavior(rName string, val string) string {
+func testAccInstanceAutoRecoveryConfig(rName string, val string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type               = "t2.micro"
-  automatic_recovery_behavior = %[2]q
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+  auto_recovery = %[2]q
 
   tags = {
     Name = %[1]q

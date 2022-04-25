@@ -93,7 +93,7 @@ The following arguments are supported:
 * `ami` - (Optional) AMI to use for the instance. Required unless `launch_template` is specified and the Launch Template specifes an AMI. If an AMI is specified in the Launch Template, setting `ami` will override the AMI specified in the Launch Template.
 * `associate_public_ip_address` - (Optional) Whether to associate a public IP address with an instance in a VPC.
 * `availability_zone` - (Optional) AZ to start the instance in.
-* `automatic_recovery_behavior` - (Optional) The automatic recovery behavior of the Instance. Can be `"default"` or `"dedicated"`. (Default: `"default"`). See [Recover your instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-recover.html) for more details.
+* `auto_recovery` - (Optional) The automatic recovery behavior of the Instance. Can be `"default"` or `"dedicated"`. (Default: `"default"`). See [Recover your instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-recover.html) for more details.
 
 * `capacity_reservation_specification` - (Optional) Describes an instance's Capacity Reservation targeting option. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
 

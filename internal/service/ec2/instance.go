@@ -69,17 +69,17 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 				Optional: true,
 			},
+			"auto_recovery": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(ec2.InstanceAutoRecoveryState_Values(), false),
+			},
 			"availability_zone": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
-			},
-			"automatic_recovery_behavior": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(ec2.InstanceAutoRecoveryState_Values(), false),
 			},
 			"capacity_reservation_specification": {
 				Type:     schema.TypeList,
@@ -932,7 +932,6 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("ami", instance.ImageId)
-	d.Set("automatic_recovery_behavior", instance.MaintenanceOptions.AutoRecovery)
 	d.Set("instance_type", instance.InstanceType)
 	d.Set("key_name", instance.KeyName)
 	d.Set("public_dns", instance.PublicDnsName)
@@ -940,6 +939,10 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("private_dns", instance.PrivateDnsName)
 	d.Set("private_ip", instance.PrivateIpAddress)
 	d.Set("outpost_arn", instance.OutpostArn)
+
+	if v := instance.MaintenanceOptions; v != nil {
+		d.Set("auto_recovery", v.AutoRecovery)
+	}
 
 	if instance.IamInstanceProfile != nil && instance.IamInstanceProfile.Arn != nil {
 		name, err := tfiam.InstanceProfileARNToName(aws.StringValue(instance.IamInstanceProfile.Arn))
@@ -1513,11 +1516,11 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("automatic_recovery_behavior") {
+	if d.HasChange("auto_recovery") {
 		log.Printf("[INFO] Modifying instance automatic recovery settings %s", d.Id())
 		_, err := conn.ModifyInstanceMaintenanceOptions(&ec2.ModifyInstanceMaintenanceOptionsInput{
 			InstanceId:   aws.String(d.Id()),
-			AutoRecovery: aws.String(d.Get("automatic_recovery_behavior").(string)),
+			AutoRecovery: aws.String(d.Get("auto_recovery").(string)),
 		})
 		if err != nil {
 			return err
