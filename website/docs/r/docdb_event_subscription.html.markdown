@@ -45,7 +45,7 @@ The following arguments are supported:
 * `sns_topic` - (Required) The SNS topic to send events to.
 * `source_ids` - (Optional) A list of identifiers of the event sources for which events will be returned. If not specified, then all sources are included in the response. If specified, a source_type must also be specified.
 * `source_type` - (Optional) The type of source that will be generating the events. Valid options are `db-instance`, `db-cluster`, `db-parameter-group`, `db-security-group`,` db-cluster-snapshot`. If not set, all sources will be subscribed to.
-* `event_categories` - (Optional) A list of event categories for a SourceType that you want to subscribe to. See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Events.html or run `aws rds describe-event-categories`.
+* `event_categories` - (Optional) A list of event categories for a SourceType that you want to subscribe to. See http://docs.aws.amazon.com/AmazonDocDB/latest/UserGuide/USER_Events.html or run `aws docdb describe-event-categories`.
 * `enabled` - (Optional) A boolean flag to enable/disable the subscription. Defaults to true.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -53,9 +53,9 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The name of the RDS event notification subscription
-* `arn` - The Amazon Resource Name of the RDS event notification subscription
-* `customer_aws_id` - The AWS customer account associated with the RDS event notification subscription
+* `id` - The name of the DocDB event notification subscription
+* `arn` - The Amazon Resource Name of the DocDB event notification subscription
+* `customer_aws_id` - The AWS customer account associated with the DocDB event notification subscription
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
@@ -63,9 +63,9 @@ In addition to all arguments above, the following attributes are exported:
 `aws_docdb_event_subscription` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
 configuration options:
 
-- `create` - (Default `40m`) How long to wait for an RDS event notification subscription to be ready.
-- `delete` - (Default `40m`) How long to wait for an RDS event notification subscription to be deleted.
-- `update` - (Default `40m`) How long to wait for an RDS event notification subscription to be updated.
+- `create` - (Default `40m`) How long to wait for an DocDB event notification subscription to be ready.
+- `delete` - (Default `40m`) How long to wait for an DocDB event notification subscription to be deleted.
+- `update` - (Default `40m`) How long to wait for an DocDB event notification subscription to be updated.
 
 ## Import
 
