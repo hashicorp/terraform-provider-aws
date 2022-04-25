@@ -51,7 +51,7 @@ const (
 	CloudSearchDomain            = "cloudsearchdomain"
 	CloudTrail                   = "cloudtrail"
 	CloudWatch                   = "cloudwatch"
-	CloudWatchLogs               = "cloudwatchlogs"
+	CloudWatchLogs               = "logs"
 	CodeArtifact                 = "codeartifact"
 	CodeBuild                    = "codebuild"
 	CodeCommit                   = "codecommit"

@@ -118,7 +118,6 @@ provider "aws" {
   <li><code>cloudsearchdomain</code></li>
   <li><code>cloudtrail</code></li>
   <li><code>cloudwatch</code></li>
-  <li><code>cloudwatchlogs</code></li>
   <li><code>codeartifact</code></li>
   <li><code>codebuild</code></li>
   <li><code>codecommit</code></li>
@@ -240,6 +239,7 @@ provider "aws" {
   <li><code>licensemanager</code></li>
   <li><code>lightsail</code></li>
   <li><code>location</code> (or <code>locationservice</code>)</li>
+  <li><code>logs</code> (or <code>cloudwatchlogs</code>)</li>
   <li><code>lookoutequipment</code></li>
   <li><code>lookoutmetrics</code></li>
   <li><code>lookoutvision</code> (or <code>lookoutforvision</code>)</li>
