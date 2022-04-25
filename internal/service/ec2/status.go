@@ -237,6 +237,26 @@ func StatusInstanceCapacityReservationSpecificationEquals(conn *ec2.EC2, id stri
 	}
 }
 
+func StatusInstanceMaintenanceOptionsAutoRecovery(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindInstanceByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if v := output.MaintenanceOptions; v != nil {
+			return v, aws.StringValue(v.AutoRecovery), nil
+		}
+
+		return nil, "", nil
+	}
+}
+
 func StatusInstanceMetadataOptionsState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindInstanceByID(conn, id)

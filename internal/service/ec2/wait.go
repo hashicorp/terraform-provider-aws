@@ -493,6 +493,24 @@ func WaitInstanceCapacityReservationSpecificationUpdated(conn *ec2.EC2, instance
 	return nil, err
 }
 
+func WaitInstanceMaintenanceOptionsAutoRecoveryUpdated(conn *ec2.EC2, id, expectedValue string, timeout time.Duration) (*ec2.InstanceMaintenanceOptions, error) {
+	stateConf := &resource.StateChangeConf{
+		Target:     []string{expectedValue},
+		Refresh:    StatusInstanceMaintenanceOptionsAutoRecovery(conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.InstanceMaintenanceOptions); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func WaitInstanceMetadataOptionsApplied(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.InstanceMetadataOptionsResponse, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{ec2.InstanceMetadataOptionsStatePending},

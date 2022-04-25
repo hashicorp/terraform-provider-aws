@@ -1531,15 +1531,21 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("maintenance_options") {
+	if d.HasChange("maintenance_options") && !d.IsNewResource() {
+		autoRecovery := d.Get("maintenance_options.0.auto_recovery").(string)
+
 		log.Printf("[INFO] Modifying instance automatic recovery settings %s", d.Id())
 		_, err := conn.ModifyInstanceMaintenanceOptions(&ec2.ModifyInstanceMaintenanceOptionsInput{
-			AutoRecovery: aws.String(d.Get("maintenance_options.0.auto_recovery").(string)),
+			AutoRecovery: aws.String(autoRecovery),
 			InstanceId:   aws.String(d.Id()),
 		})
 
 		if err != nil {
 			return err
+		}
+
+		if _, err := WaitInstanceMaintenanceOptionsAutoRecoveryUpdated(conn, d.Id(), autoRecovery, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("waiting for EC2 Instance (%s) maintenance options update: %w", d.Id(), err)
 		}
 	}
 
