@@ -538,7 +538,7 @@ func TestAccEC2InstanceDataSource_GetUserData_noUserData(t *testing.T) {
 	})
 }
 
-func TestAccEC2InstanceDataSource_automaticRecoveryBehavior(t *testing.T) {
+func TestAccEC2InstanceDataSource_autoRecovery(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -549,17 +549,17 @@ func TestAccEC2InstanceDataSource_automaticRecoveryBehavior(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceAutomaticRecoveryBehavior(rName, "default"),
+				Config: testAccInstanceDataSourceAutoRecoveryConfig(rName, "default"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
-					resource.TestCheckResourceAttr(datasourceName, "automatic_recovery_behavior", "default"),
+					resource.TestCheckResourceAttr(datasourceName, "auto_recovery", "default"),
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceAutomaticRecoveryBehavior(rName, "disabled"),
+				Config: testAccInstanceDataSourceAutoRecoveryConfig(rName, "disabled"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
-					resource.TestCheckResourceAttr(datasourceName, "automatic_recovery_behavior", "disabled"),
+					resource.TestCheckResourceAttr(datasourceName, "auto_recovery", "disabled"),
 				),
 			},
 		},
@@ -1186,16 +1186,16 @@ data "aws_instance" "test" {
 `, rName, getUserData))
 }
 
-func testAccInstanceDataSourceAutomaticRecoveryBehavior(rName string, val string) string {
+func testAccInstanceDataSourceAutoRecoveryConfig(rName string, val string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false, 1),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type               = "t2.micro"
-  automatic_recovery_behavior = %[2]q
-  subnet_id                   = aws_subnet.test.id
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+  auto_recovery = %[2]q
+  subnet_id     = aws_subnet.test.id
 
   tags = {
     Name = %[1]q

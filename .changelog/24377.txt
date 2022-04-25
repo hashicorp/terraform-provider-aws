@@ -3,5 +3,9 @@
  ```
 
  ```release-note:enhancement
+ data-source/aws_instance: Add `auto_recovery` attribute
+ ```
+
+ ```release-note:enhancement
 resource/aws_launch_template: Add `automatic_recovery_behavior` argument
  ```

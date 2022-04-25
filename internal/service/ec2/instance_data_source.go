@@ -35,11 +35,11 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"availability_zone": {
+			"auto_recovery": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"automatic_recovery_behavior": {
+			"availability_zone": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -425,7 +425,9 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 		d.Set("host_id", instance.Placement.HostId)
 	}
 	d.Set("ami", instance.ImageId)
-	d.Set("automatic_recovery_behavior", instance.MaintenanceOptions.AutoRecovery)
+	if instance.MaintenanceOptions != nil {
+		d.Set("auto_recovery", instance.MaintenanceOptions.AutoRecovery)
+	}
 	d.Set("instance_type", instance.InstanceType)
 	d.Set("key_name", instance.KeyName)
 	d.Set("public_dns", instance.PublicDnsName)
