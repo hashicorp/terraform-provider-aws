@@ -1,7 +1,7 @@
 //go:build sweep
 // +build sweep
 
-package cloudwatchlogs
+package logs
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package cloudwatchlogs_test
+package logs_test
 
 import (
 	"fmt"
@@ -10,11 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
+	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccCloudWatchLogsSubscriptionFilter_basic(t *testing.T) {
+func TestAccLogsSubscriptionFilter_basic(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
 
 	lambdaFunctionResourceName := "aws_lambda_function.test"
@@ -49,7 +49,7 @@ func TestAccCloudWatchLogsSubscriptionFilter_basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchLogsSubscriptionFilter_many(t *testing.T) {
+func TestAccLogsSubscriptionFilter_many(t *testing.T) {
 	var sf cloudwatchlogs.SubscriptionFilter
 
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
@@ -69,7 +69,7 @@ func TestAccCloudWatchLogsSubscriptionFilter_many(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchLogsSubscriptionFilter_disappears(t *testing.T) {
+func TestAccLogsSubscriptionFilter_disappears(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
 
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
@@ -85,7 +85,7 @@ func TestAccCloudWatchLogsSubscriptionFilter_disappears(t *testing.T) {
 				Config: testAccSubscriptionFilterDestinationARNLambdaConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(resourceName, &filter),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchlogs.ResourceSubscriptionFilter(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceSubscriptionFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -93,7 +93,7 @@ func TestAccCloudWatchLogsSubscriptionFilter_disappears(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchLogsSubscriptionFilter_Disappears_logGroup(t *testing.T) {
+func TestAccLogsSubscriptionFilter_Disappears_logGroup(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
 	var logGroup cloudwatchlogs.LogGroup
 
@@ -112,7 +112,7 @@ func TestAccCloudWatchLogsSubscriptionFilter_Disappears_logGroup(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(resourceName, &filter),
 					testAccCheckCloudWatchLogGroupExists(logGroupResourceName, &logGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchlogs.ResourceGroup(), logGroupResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceGroup(), logGroupResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -120,7 +120,7 @@ func TestAccCloudWatchLogsSubscriptionFilter_Disappears_logGroup(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchLogsSubscriptionFilter_DestinationARN_kinesisDataFirehose(t *testing.T) {
+func TestAccLogsSubscriptionFilter_DestinationARN_kinesisDataFirehose(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
 
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
@@ -150,7 +150,7 @@ func TestAccCloudWatchLogsSubscriptionFilter_DestinationARN_kinesisDataFirehose(
 	})
 }
 
-func TestAccCloudWatchLogsSubscriptionFilter_DestinationARN_kinesisStream(t *testing.T) {
+func TestAccLogsSubscriptionFilter_DestinationARN_kinesisStream(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
 
 	kinesisStream := "aws_kinesis_stream.test"
@@ -180,7 +180,7 @@ func TestAccCloudWatchLogsSubscriptionFilter_DestinationARN_kinesisStream(t *tes
 	})
 }
 
-func TestAccCloudWatchLogsSubscriptionFilter_distribution(t *testing.T) {
+func TestAccLogsSubscriptionFilter_distribution(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
 
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
@@ -216,7 +216,7 @@ func TestAccCloudWatchLogsSubscriptionFilter_distribution(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchLogsSubscriptionFilter_roleARN(t *testing.T) {
+func TestAccLogsSubscriptionFilter_roleARN(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
 
 	iamRoleResourceName1 := "aws_iam_role.test"
@@ -265,7 +265,7 @@ func testAccCheckCloudwatchLogSubscriptionFilterDestroy(s *terraform.State) erro
 		logGroupName := rs.Primary.Attributes["log_group_name"]
 		filterName := rs.Primary.Attributes["name"]
 
-		_, err := tfcloudwatchlogs.FindSubscriptionFilter(conn, logGroupName, filterName)
+		_, err := tflogs.FindSubscriptionFilter(conn, logGroupName, filterName)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -299,7 +299,7 @@ func testAccCheckSubscriptionFilterExists(n string, filter *cloudwatchlogs.Subsc
 		logGroupName := rs.Primary.Attributes["log_group_name"]
 		filterName := rs.Primary.Attributes["name"]
 
-		sub, err := tfcloudwatchlogs.FindSubscriptionFilter(conn, logGroupName, filterName)
+		sub, err := tflogs.FindSubscriptionFilter(conn, logGroupName, filterName)
 
 		if err != nil {
 			return err

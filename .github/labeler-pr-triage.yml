@@ -159,7 +159,7 @@ service/cloudwatchevidently:
   - 'internal/service/cloudwatchevidently/**/*'
   - 'website/**/cloudwatchevidently_*'
 service/cloudwatchlogs:
-  - 'internal/service/cloudwatchlogs/**/*'
+  - 'internal/service/logs/**/*'
   - 'website/**/cloudwatch_log_*'
   - 'website/**/cloudwatch_query_definition*'
 service/cloudwatchrum:

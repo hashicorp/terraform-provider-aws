@@ -1,7 +1,8 @@
-package cloudwatchlogs_test
+package logs_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
@@ -10,26 +11,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
+	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 )
 
-func TestAccCloudWatchLogsDestinationPolicy_basic(t *testing.T) {
+func TestAccLogsDestination_basic(t *testing.T) {
 	var destination cloudwatchlogs.Destination
-	resourceName := "aws_cloudwatch_log_destination_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_destination.test"
+	streamResourceName := "aws_kinesis_stream.test"
+	roleResourceName := "aws_iam_role.test"
+	rstring := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestinationPolicyDestroy,
+		CheckDestroy: testAccCheckDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDestinationPolicyConfig(rName),
+				Config: testAccDestinationConfig(rstring),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDestinationPolicyExists(resourceName, &destination),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_name", "aws_cloudwatch_log_destination.test", "name"),
-					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
+					testAccCheckDestinationExists(resourceName, &destination),
+					resource.TestCheckResourceAttrPair(resourceName, "target_arn", streamResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "logs", regexp.MustCompile(`destination:.+`)),
 				),
 			},
 			{
@@ -37,33 +41,49 @@ func TestAccCloudWatchLogsDestinationPolicy_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+		},
+	})
+}
+
+func TestAccLogsDestination_disappears(t *testing.T) {
+	var destination cloudwatchlogs.Destination
+	resourceName := "aws_cloudwatch_log_destination.test"
+
+	rstring := sdkacctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckDestinationDestroy,
+		Steps: []resource.TestStep{
 			{
-				Config: testAccDestinationPolicyForceUpdateConfig(rName),
+				Config: testAccDestinationConfig(rstring),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDestinationPolicyExists(resourceName, &destination),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_name", "aws_cloudwatch_log_destination.test", "name"),
-					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
+					testAccCheckDestinationExists(resourceName, &destination),
+					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceDestination(), resourceName),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
 }
 
-func testAccCheckDestinationPolicyDestroy(s *terraform.State) error {
+func testAccCheckDestinationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudwatch_log_destination_policy" {
+		if rs.Type != "aws_cloudwatch_log_destination" {
 			continue
 		}
-		_, exists, err := tfcloudwatchlogs.LookupDestination(conn, rs.Primary.ID, nil)
+		_, exists, err := tflogs.LookupDestination(conn, rs.Primary.ID, nil)
 
 		if err != nil {
 			return fmt.Errorf("error reading CloudWatch Log Destination (%s): %w", rs.Primary.ID, err)
 		}
 
 		if exists {
-			return fmt.Errorf("Bad: Destination Policy still exists: %q", rs.Primary.ID)
+			return fmt.Errorf("Bad: Destination still exists: %q", rs.Primary.ID)
 		}
 	}
 
@@ -71,7 +91,7 @@ func testAccCheckDestinationPolicyDestroy(s *terraform.State) error {
 
 }
 
-func testAccCheckDestinationPolicyExists(n string, d *cloudwatchlogs.Destination) resource.TestCheckFunc {
+func testAccCheckDestinationExists(n string, d *cloudwatchlogs.Destination) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -79,12 +99,12 @@ func testAccCheckDestinationPolicyExists(n string, d *cloudwatchlogs.Destination
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
-		destination, exists, err := tfcloudwatchlogs.LookupDestination(conn, rs.Primary.ID, nil)
+		destination, exists, err := tflogs.LookupDestination(conn, rs.Primary.ID, nil)
 		if err != nil {
 			return err
 		}
-		if !exists || destination.AccessPolicy == nil {
-			return fmt.Errorf("Bad: Destination Policy %q does not exist", rs.Primary.ID)
+		if !exists {
+			return fmt.Errorf("Bad: Destination %q does not exist", rs.Primary.ID)
 		}
 
 		*d = *destination
@@ -93,10 +113,10 @@ func testAccCheckDestinationPolicyExists(n string, d *cloudwatchlogs.Destination
 	}
 }
 
-func testAccDestinationPolicyBaseConfig(rName string) string {
+func testAccDestinationConfig(rstring string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
-  name        = %[1]q
+  name        = "RootAccess_%[1]s"
   shard_count = 1
 }
 
@@ -122,7 +142,7 @@ data "aws_iam_policy_document" "role" {
 }
 
 resource "aws_iam_role" "test" {
-  name               = %[1]q
+  name               = "CWLtoKinesisRole_%[1]s"
   assume_role_policy = data.aws_iam_policy_document.role.json
 }
 
@@ -153,13 +173,13 @@ data "aws_iam_policy_document" "policy" {
 }
 
 resource "aws_iam_role_policy" "test" {
-  name   = %[1]q
+  name   = "Permissions-Policy-For-CWL_%[1]s"
   role   = aws_iam_role.test.id
   policy = data.aws_iam_policy_document.policy.json
 }
 
 resource "aws_cloudwatch_log_destination" "test" {
-  name       = %[1]q
+  name       = "testDestination_%[1]s"
   target_arn = aws_kinesis_stream.test.arn
   role_arn   = aws_iam_role.test.arn
   depends_on = [aws_iam_role_policy.test]
@@ -186,46 +206,10 @@ data "aws_iam_policy_document" "access" {
     ]
   }
 }
-`, rName)
-}
 
-func testAccDestinationPolicyConfig(rName string) string {
-	return testAccDestinationPolicyBaseConfig(rName) + `
 resource "aws_cloudwatch_log_destination_policy" "test" {
   destination_name = aws_cloudwatch_log_destination.test.name
   access_policy    = data.aws_iam_policy_document.access.json
 }
-`
-}
-
-func testAccDestinationPolicyForceUpdateConfig(rName string) string {
-	return testAccDestinationPolicyBaseConfig(rName) + `
-data "aws_iam_policy_document" "access2" {
-  statement {
-    effect = "Allow"
-
-    principals {
-      type = "AWS"
-
-      identifiers = [
-        "000000000000",
-      ]
-    }
-
-    actions = [
-      "logs:*",
-    ]
-
-    resources = [
-      aws_cloudwatch_log_destination.test.arn,
-    ]
-  }
-}
-
-resource "aws_cloudwatch_log_destination_policy" "test" {
-  destination_name = aws_cloudwatch_log_destination.test.name
-  access_policy    = data.aws_iam_policy_document.access2.json
-  force_update     = true
-}
-`
+`, rstring)
 }

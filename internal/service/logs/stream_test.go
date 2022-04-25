@@ -1,4 +1,4 @@
-package cloudwatchlogs_test
+package logs_test
 
 import (
 	"fmt"
@@ -11,10 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
+	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 )
 
-func TestAccCloudWatchLogsStream_basic(t *testing.T) {
+func TestAccLogsStream_basic(t *testing.T) {
 	var ls cloudwatchlogs.LogStream
 	resourceName := "aws_cloudwatch_log_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -41,7 +41,7 @@ func TestAccCloudWatchLogsStream_basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchLogsStream_disappears(t *testing.T) {
+func TestAccLogsStream_disappears(t *testing.T) {
 	var ls cloudwatchlogs.LogStream
 	resourceName := "aws_cloudwatch_log_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -56,7 +56,7 @@ func TestAccCloudWatchLogsStream_disappears(t *testing.T) {
 				Config: testAccStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogStreamExists(resourceName, &ls),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchlogs.ResourceStream(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -64,7 +64,7 @@ func TestAccCloudWatchLogsStream_disappears(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchLogsStream_Disappears_logGroup(t *testing.T) {
+func TestAccLogsStream_Disappears_logGroup(t *testing.T) {
 	var ls cloudwatchlogs.LogStream
 	var lg cloudwatchlogs.LogGroup
 	resourceName := "aws_cloudwatch_log_stream.test"
@@ -82,7 +82,7 @@ func TestAccCloudWatchLogsStream_Disappears_logGroup(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogStreamExists(resourceName, &ls),
 					testAccCheckCloudWatchLogGroupExists(logGroupResourceName, &lg),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchlogs.ResourceGroup(), logGroupResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceGroup(), logGroupResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -99,7 +99,7 @@ func testAccCheckCloudWatchLogStreamExists(n string, ls *cloudwatchlogs.LogStrea
 
 		logGroupName := rs.Primary.Attributes["log_group_name"]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
-		logGroup, exists, err := tfcloudwatchlogs.LookupStream(conn, rs.Primary.ID, logGroupName, nil)
+		logGroup, exists, err := tflogs.LookupStream(conn, rs.Primary.ID, logGroupName, nil)
 		if err != nil {
 			return err
 		}
@@ -122,7 +122,7 @@ func testAccCheckStreamDestroy(s *terraform.State) error {
 		}
 
 		logGroupName := rs.Primary.Attributes["log_group_name"]
-		_, exists, err := tfcloudwatchlogs.LookupStream(conn, rs.Primary.ID, logGroupName, nil)
+		_, exists, err := tflogs.LookupStream(conn, rs.Primary.ID, logGroupName, nil)
 
 		if tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeResourceNotFoundException) {
 			continue
@@ -160,7 +160,7 @@ func TestValidateCloudWatchLogStreamName(t *testing.T) {
 		"logstream/1234",
 	}
 	for _, v := range validNames {
-		_, errors := tfcloudwatchlogs.ValidStreamName(v, "name")
+		_, errors := tflogs.ValidStreamName(v, "name")
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid CloudWatch LogStream name: %q", v, errors)
 		}
@@ -172,7 +172,7 @@ func TestValidateCloudWatchLogStreamName(t *testing.T) {
 		"stringwith:colon",
 	}
 	for _, v := range invalidNames {
-		_, errors := tfcloudwatchlogs.ValidStreamName(v, "name")
+		_, errors := tflogs.ValidStreamName(v, "name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid CloudWatch LogStream name", v)
 		}
