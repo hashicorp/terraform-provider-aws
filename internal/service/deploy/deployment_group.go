@@ -1,4 +1,4 @@
-package codedeploy
+package deploy
 
 import (
 	"bytes"
@@ -39,7 +39,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 
 				applicationName := idParts[0]
 				deploymentGroupName := idParts[1]
-				conn := meta.(*conns.AWSClient).CodeDeployConn
+				conn := meta.(*conns.AWSClient).DeployConn
 
 				input := &codedeploy.GetDeploymentGroupInput{
 					ApplicationName:     aws.String(applicationName),
@@ -485,7 +485,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 }
 
 func resourceDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeDeployConn
+	conn := meta.(*conns.AWSClient).DeployConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	// required fields
@@ -585,7 +585,7 @@ func resourceDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeDeployConn
+	conn := meta.(*conns.AWSClient).DeployConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -597,15 +597,14 @@ func resourceDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error
 		DeploymentGroupName: aws.String(deploymentGroupName),
 	})
 
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException) ||
-			tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeApplicationDoesNotExistException) {
-			log.Printf("[INFO] CodeDeployment DeploymentGroup %s not found", deploymentGroupName)
-			d.SetId("")
-			return nil
-		}
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException) {
+		log.Printf("[WARN] CodeDeploy Deployment Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
-		return fmt.Errorf("Error reading CodeDeploy deployment group (%s): %w", d.Id(), err)
+	if err != nil {
+		return fmt.Errorf("finding CodeDeploy Deployment Group (%s): %w", d.Id(), err)
 	}
 
 	group := resp.DeploymentGroupInfo
@@ -696,7 +695,7 @@ func resourceDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeDeployConn
+	conn := meta.(*conns.AWSClient).DeployConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		// required fields
@@ -822,7 +821,7 @@ func resourceDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceDeploymentGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeDeployConn
+	conn := meta.(*conns.AWSClient).DeployConn
 
 	log.Printf("[DEBUG] Deleting CodeDeploy DeploymentGroup %s", d.Id())
 	_, err := conn.DeleteDeploymentGroup(&codedeploy.DeleteDeploymentGroupInput{

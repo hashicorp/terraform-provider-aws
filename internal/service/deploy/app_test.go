@@ -1,4 +1,4 @@
-package codedeploy_test
+package deploy_test
 
 import (
 	"errors"
@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfcodedeploy "github.com/hashicorp/terraform-provider-aws/internal/service/codedeploy"
+	tfcodedeploy "github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
 )
 
 func TestAccCodeDeployApp_basic(t *testing.T) {
@@ -244,7 +244,7 @@ func TestAccCodeDeployApp_disappears(t *testing.T) {
 }
 
 func testAccCheckAppDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeDeployConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DeployConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codedeploy_app" {
@@ -276,7 +276,7 @@ func testAccCheckAppExists(name string, application *codedeploy.ApplicationInfo)
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeDeployConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeployConn
 
 		input := &codedeploy.GetApplicationInput{
 			ApplicationName: aws.String(rs.Primary.Attributes["name"]),

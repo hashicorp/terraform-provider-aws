@@ -1,4 +1,4 @@
-package codedeploy
+package deploy
 
 import (
 	"fmt"

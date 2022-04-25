@@ -1,12 +1,12 @@
-package codedeploy
+package deploy
 
 import (
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -140,7 +140,7 @@ func ResourceDeploymentConfig() *schema.Resource {
 }
 
 func resourceDeploymentConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeDeployConn
+	conn := meta.(*conns.AWSClient).DeployConn
 
 	input := &codedeploy.CreateDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Get("deployment_config_name").(string)),
@@ -160,22 +160,22 @@ func resourceDeploymentConfigCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceDeploymentConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeDeployConn
+	conn := meta.(*conns.AWSClient).DeployConn
 
 	input := &codedeploy.GetDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Id()),
 	}
 
 	resp, err := conn.GetDeploymentConfig(input)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeDeploymentConfigDoesNotExistException) {
+		log.Printf("[WARN] CodeDeploy Deployment Config (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "DeploymentConfigDoesNotExistException" {
-				log.Printf("[DEBUG] CodeDeploy Deployment Config (%s) not found", d.Id())
-				d.SetId("")
-				return nil
-			}
-		}
-		return err
+		return fmt.Errorf("finding CodeDeploy Deployment Config (%s): %w", d.Id(), err)
 	}
 
 	if resp.DeploymentConfigInfo == nil {
@@ -198,7 +198,7 @@ func resourceDeploymentConfigRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceDeploymentConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeDeployConn
+	conn := meta.(*conns.AWSClient).DeployConn
 
 	input := &codedeploy.DeleteDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Id()),

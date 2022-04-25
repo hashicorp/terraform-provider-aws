@@ -45,7 +45,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codecommit"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/codedeploy"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarnotifications"
@@ -58,6 +57,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dax"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/detective"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
@@ -1086,9 +1086,9 @@ func Provider() *schema.Provider {
 			"aws_codecommit_repository":                         codecommit.ResourceRepository(),
 			"aws_codecommit_trigger":                            codecommit.ResourceTrigger(),
 
-			"aws_codedeploy_app":               codedeploy.ResourceApp(),
-			"aws_codedeploy_deployment_config": codedeploy.ResourceDeploymentConfig(),
-			"aws_codedeploy_deployment_group":  codedeploy.ResourceDeploymentGroup(),
+			"aws_codedeploy_app":               deploy.ResourceApp(),
+			"aws_codedeploy_deployment_config": deploy.ResourceDeploymentConfig(),
+			"aws_codedeploy_deployment_group":  deploy.ResourceDeploymentGroup(),
 
 			"aws_codepipeline":         codepipeline.ResourceCodePipeline(),
 			"aws_codepipeline_webhook": codepipeline.ResourceWebhook(),
