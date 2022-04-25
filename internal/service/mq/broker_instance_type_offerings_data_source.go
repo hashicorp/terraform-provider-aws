@@ -93,19 +93,30 @@ func dataSourcemqBrokerInstanceTypeOfferingsRead(d *schema.ResourceData, meta in
 		input.StorageType = aws.String(v.(string))
 	}
 
-	output, err := conn.DescribeBrokerInstanceOptions(input)
+	bios := make([]*mq.BrokerInstanceOption, 0)
+	for {
+		output, err := conn.DescribeBrokerInstanceOptions(input)
 
-	if err != nil {
-		return fmt.Errorf("error listing MQ Broker Instance Type Offerings: %w", err)
-	}
+		if err != nil {
+			return fmt.Errorf("error listing MQ Broker Instance Type Offerings: %w", err)
+		}
 
-	if output == nil {
-		return fmt.Errorf("empty response while reading MQ Broker Instance Type Offerings")
+		if output == nil {
+			return fmt.Errorf("empty response while reading MQ Broker Instance Type Offerings")
+		}
+
+		bios = append(bios, output.BrokerInstanceOptions...)
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	if err := d.Set("broker_instance_options", flattenBrokerInstanceOptions(output.BrokerInstanceOptions)); err != nil {
+	if err := d.Set("broker_instance_options", flattenBrokerInstanceOptions(bios)); err != nil {
 		return fmt.Errorf("error setting broker_instance_options: %w", err)
 	}
 
