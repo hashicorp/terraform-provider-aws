@@ -173,8 +173,8 @@ resource "aws_launch_template" "test" {
   }
 
   automatic_recovery_behavior = "disabled"
-  disable_api_termination = true
-  ebs_optimized           = false
+  disable_api_termination 	  = true
+  ebs_optimized               = false
 
   kernel_id = "aki-a12bc3de"
   key_name  = "test"

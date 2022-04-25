@@ -1809,9 +1809,9 @@ resource "aws_launch_template" "test" {
   block_device_mappings {
     device_name = "test"
   }
-
-  disable_api_termination = true
-  ebs_optimized           = false
+  automatic_recovery_behavior = "disabled"
+  disable_api_termination     = true
+  ebs_optimized               = false
 
   elastic_gpu_specifications {
     type = "test"
@@ -1824,7 +1824,6 @@ resource "aws_launch_template" "test" {
   image_id                             = "ami-12a3b456"
   instance_initiated_shutdown_behavior = "terminate"
 
-  automatic_recovery_behavior		   = "disabled"
   instance_market_options {
     market_type = "spot"
   }
