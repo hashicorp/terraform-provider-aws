@@ -5,8 +5,8 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -167,15 +167,15 @@ func resourceDeploymentConfigRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	resp, err := conn.GetDeploymentConfig(input)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeDeploymentConfigDoesNotExistException) {
+		log.Printf("[WARN] CodeDeploy Deployment Config (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "DeploymentConfigDoesNotExistException" {
-				log.Printf("[DEBUG] CodeDeploy Deployment Config (%s) not found", d.Id())
-				d.SetId("")
-				return nil
-			}
-		}
-		return err
+		return fmt.Errorf("finding CodeDeploy Deployment Config (%s): %w", d.Id(), err)
 	}
 
 	if resp.DeploymentConfigInfo == nil {

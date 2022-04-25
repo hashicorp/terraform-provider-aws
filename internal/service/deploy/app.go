@@ -136,15 +136,15 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	resp, err := conn.GetApplication(&codedeploy.GetApplicationInput{
 		ApplicationName: aws.String(application),
 	})
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeApplicationDoesNotExistException) {
-			d.SetId("")
-			log.Printf("[WARN] CodeDeploy Application (%s) not found, removing from state", d.Id())
-			return nil
-		}
 
-		log.Printf("[ERROR] Error finding CodeDeploy application: %s", err)
-		return err
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeApplicationDoesNotExistException) {
+		log.Printf("[WARN] CodeDeploy Application (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("finding CodeDeploy Application (%s): %w", d.Id(), err)
 	}
 
 	app := resp.Application

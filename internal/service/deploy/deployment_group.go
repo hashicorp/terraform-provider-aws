@@ -597,15 +597,14 @@ func resourceDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error
 		DeploymentGroupName: aws.String(deploymentGroupName),
 	})
 
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException) ||
-			tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeApplicationDoesNotExistException) {
-			log.Printf("[INFO] CodeDeployment DeploymentGroup %s not found", deploymentGroupName)
-			d.SetId("")
-			return nil
-		}
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException) {
+		log.Printf("[WARN] CodeDeploy Deployment Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
-		return fmt.Errorf("Error reading CodeDeploy deployment group (%s): %w", d.Id(), err)
+	if err != nil {
+		return fmt.Errorf("finding CodeDeploy Deployment Group (%s): %w", d.Id(), err)
 	}
 
 	group := resp.DeploymentGroupInfo
