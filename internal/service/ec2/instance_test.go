@@ -5441,7 +5441,10 @@ func testAccInstanceAutoRecoveryConfig(rName string, val string) string {
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
-  auto_recovery = %[2]q
+
+  maintenance_options {
+    auto_recovery = %[2]q
+  }
 
   tags = {
     Name = %[1]q

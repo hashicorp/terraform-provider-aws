@@ -1,5 +1,5 @@
 ```release-note:enhancement
-resource/aws_instance: Add `auto_recovery` argument
+resource/aws_instance: Add `maintenance_options` argument
 ```
 
 ```release-note:enhancement

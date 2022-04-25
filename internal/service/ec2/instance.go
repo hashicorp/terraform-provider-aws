@@ -69,12 +69,6 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 				Optional: true,
 			},
-			"auto_recovery": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(ec2.InstanceAutoRecoveryState_Values(), false),
-			},
 			"availability_zone": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -388,6 +382,22 @@ func ResourceInstance() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 							Default:      LaunchTemplateVersionDefault,
+						},
+					},
+				},
+			},
+			"maintenance_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auto_recovery": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(ec2.InstanceAutoRecoveryState_Values(), false),
 						},
 					},
 				},
@@ -776,6 +786,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		Ipv6Addresses:                     instanceOpts.Ipv6Addresses,
 		KeyName:                           instanceOpts.KeyName,
 		LaunchTemplate:                    instanceOpts.LaunchTemplate,
+		MaintenanceOptions:                instanceOpts.MaintenanceOptions,
 		MaxCount:                          aws.Int64(1),
 		MetadataOptions:                   instanceOpts.MetadataOptions,
 		MinCount:                          aws.Int64(1),
@@ -923,12 +934,16 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("hibernation", v.Configured)
 	}
 
-	if err := d.Set("metadata_options", flattenEc2InstanceMetadataOptions(instance.MetadataOptions)); err != nil {
-		return fmt.Errorf("error setting metadata_options: %s", err)
+	if err := d.Set("enclave_options", flattenEc2EnclaveOptions(instance.EnclaveOptions)); err != nil {
+		return fmt.Errorf("error setting enclave_options: %w", err)
 	}
 
-	if err := d.Set("enclave_options", flattenEc2EnclaveOptions(instance.EnclaveOptions)); err != nil {
-		return fmt.Errorf("error setting enclave_options: %s", err)
+	if err := d.Set("maintenance_options", flattenInstanceMaintenanceOptions(instance.MaintenanceOptions)); err != nil {
+		return fmt.Errorf("error setting maintenance_options: %w", err)
+	}
+
+	if err := d.Set("metadata_options", flattenEc2InstanceMetadataOptions(instance.MetadataOptions)); err != nil {
+		return fmt.Errorf("error setting metadata_options: %w", err)
 	}
 
 	d.Set("ami", instance.ImageId)
@@ -939,12 +954,6 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("private_dns", instance.PrivateDnsName)
 	d.Set("private_ip", instance.PrivateIpAddress)
 	d.Set("outpost_arn", instance.OutpostArn)
-
-	if v := instance.MaintenanceOptions; v != nil {
-		d.Set("auto_recovery", v.AutoRecovery)
-	} else {
-		d.Set("auto_recovery", nil)
-	}
 
 	if instance.IamInstanceProfile != nil && instance.IamInstanceProfile.Arn != nil {
 		name, err := tfiam.InstanceProfileARNToName(aws.StringValue(instance.IamInstanceProfile.Arn))
@@ -2474,6 +2483,7 @@ type awsInstanceOpts struct {
 	HibernationOptions                *ec2.HibernationOptionsRequest
 	MetadataOptions                   *ec2.InstanceMetadataOptionsRequest
 	EnclaveOptions                    *ec2.EnclaveOptionsRequest
+	MaintenanceOptions                *ec2.InstanceMaintenanceOptionsRequest
 }
 
 func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOpts, error) {
@@ -2658,6 +2668,10 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 
 	if v, ok := d.GetOk("capacity_reservation_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		opts.CapacityReservationSpecification = expandCapacityReservationSpecification(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("attribute_name"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		opts.MaintenanceOptions = expandInstanceMaintenanceOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	return opts, nil
@@ -3020,6 +3034,34 @@ func flattenInstanceCreditSpecification(apiObject *ec2.InstanceCreditSpecificati
 
 	if v := apiObject.CpuCredits; v != nil {
 		tfMap["cpu_credits"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func expandInstanceMaintenanceOptionsRequest(tfMap map[string]interface{}) *ec2.InstanceMaintenanceOptionsRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.InstanceMaintenanceOptionsRequest{}
+
+	if v, ok := tfMap["auto_recovery"].(string); ok && v != "" {
+		apiObject.AutoRecovery = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenInstanceMaintenanceOptions(apiObject *ec2.InstanceMaintenanceOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AutoRecovery; v != nil {
+		tfMap["auto_recovery"] = aws.StringValue(v)
 	}
 
 	return tfMap
