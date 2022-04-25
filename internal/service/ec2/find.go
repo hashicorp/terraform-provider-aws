@@ -1620,7 +1620,7 @@ func FindSpotFleetRequest(conn *ec2.EC2, input *ec2.DescribeSpotFleetRequestsInp
 		return nil, err
 	}
 
-	if len(output) == 0 || output[0] == nil {
+	if len(output) == 0 || output[0] == nil || output[0].SpotFleetRequestConfig == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 

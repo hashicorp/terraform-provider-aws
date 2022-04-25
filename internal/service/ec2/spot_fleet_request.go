@@ -609,19 +609,15 @@ func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("valid_from"); ok {
-		validFrom, err := time.Parse(time.RFC3339, v.(string))
-		if err != nil {
-			return err
-		}
-		spotFleetConfig.ValidFrom = aws.Time(validFrom)
+		v, _ := time.Parse(time.RFC3339, v.(string))
+
+		spotFleetConfig.ValidFrom = aws.Time(v)
 	}
 
 	if v, ok := d.GetOk("valid_until"); ok {
-		validUntil, err := time.Parse(time.RFC3339, v.(string))
-		if err != nil {
-			return err
-		}
-		spotFleetConfig.ValidUntil = aws.Time(validUntil)
+		v, _ := time.Parse(time.RFC3339, v.(string))
+
+		spotFleetConfig.ValidUntil = aws.Time(v)
 	}
 
 	if v, ok := d.GetOk("load_balancers"); ok && v.(*schema.Set).Len() > 0 {
@@ -692,40 +688,21 @@ func resourceSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) erro
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	req := &ec2.DescribeSpotFleetRequestsInput{
-		SpotFleetRequestIds: []*string{aws.String(d.Id())},
-	}
-	resp, err := conn.DescribeSpotFleetRequests(req)
+	output, err := FindSpotFleetRequestByID(conn, d.Id())
 
-	if err != nil {
-		// If the spot request was not found, return nil so that we can show
-		// that it is gone.
-		if tfawserr.ErrCodeEquals(err, "InvalidSpotFleetRequestId.NotFound") {
-			d.SetId("")
-			return nil
-		}
-
-		// Some other error, report it
-		return err
-	}
-
-	sfr := resp.SpotFleetRequestConfigs[0]
-
-	// if the request is cancelled, then it is gone
-	cancelledStates := map[string]bool{
-		ec2.BatchStateCancelled:            true,
-		ec2.BatchStateCancelledRunning:     true,
-		ec2.BatchStateCancelledTerminating: true,
-	}
-	if _, ok := cancelledStates[*sfr.SpotFleetRequestState]; ok {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Spot Fleet Request %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	d.SetId(aws.StringValue(sfr.SpotFleetRequestId))
-	d.Set("spot_request_state", sfr.SpotFleetRequestState)
+	if err != nil {
+		return fmt.Errorf("reading EC2 Spot Fleet Request (%s): %w", d.Id(), err)
+	}
 
-	config := sfr.SpotFleetRequestConfig
+	d.Set("spot_request_state", output.SpotFleetRequestState)
+
+	config := output.SpotFleetRequestConfig
 
 	if config.AllocationStrategy != nil {
 		d.Set("allocation_strategy", config.AllocationStrategy)
@@ -780,15 +757,16 @@ func resourceSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("instance_interruption_behaviour", config.InstanceInterruptionBehavior)
 	d.Set("fleet_type", config.Type)
 	d.Set("launch_specification", launchSpec)
-	tags := KeyValueTags(sfr.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	if len(config.LaunchTemplateConfigs) > 0 {
