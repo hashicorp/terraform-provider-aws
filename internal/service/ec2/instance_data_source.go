@@ -35,10 +35,6 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"auto_recovery": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"availability_zone": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -192,6 +188,18 @@ func DataSourceInstance() *schema.Resource {
 			"key_name": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"maintenance_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auto_recovery": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"metadata_options": {
 				Type:     schema.TypeList,
@@ -424,19 +432,15 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	if instance.Placement.HostId != nil {
 		d.Set("host_id", instance.Placement.HostId)
 	}
+
 	d.Set("ami", instance.ImageId)
-	if instance.MaintenanceOptions != nil {
-		d.Set("auto_recovery", instance.MaintenanceOptions.AutoRecovery)
-	} else {
-		d.Set("auto_recovery", nil)
-	}
 	d.Set("instance_type", instance.InstanceType)
 	d.Set("key_name", instance.KeyName)
-	d.Set("public_dns", instance.PublicDnsName)
-	d.Set("public_ip", instance.PublicIpAddress)
+	d.Set("outpost_arn", instance.OutpostArn)
 	d.Set("private_dns", instance.PrivateDnsName)
 	d.Set("private_ip", instance.PrivateIpAddress)
-	d.Set("outpost_arn", instance.OutpostArn)
+	d.Set("public_dns", instance.PublicDnsName)
+	d.Set("public_ip", instance.PublicIpAddress)
 
 	if instance.IamInstanceProfile != nil && instance.IamInstanceProfile.Arn != nil {
 		name, err := tfiam.InstanceProfileARNToName(aws.StringValue(instance.IamInstanceProfile.Arn))
@@ -562,12 +566,16 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 		d.Set("credit_specification", nil)
 	}
 
-	if err := d.Set("metadata_options", flattenEc2InstanceMetadataOptions(instance.MetadataOptions)); err != nil {
-		return fmt.Errorf("error setting metadata_options: %w", err)
-	}
-
 	if err := d.Set("enclave_options", flattenEc2EnclaveOptions(instance.EnclaveOptions)); err != nil {
 		return fmt.Errorf("error setting enclave_options: %w", err)
+	}
+
+	if err := d.Set("maintenance_options", flattenInstanceMaintenanceOptions(instance.MaintenanceOptions)); err != nil {
+		return fmt.Errorf("error setting maintenance_options: %w", err)
+	}
+
+	if err := d.Set("metadata_options", flattenEc2InstanceMetadataOptions(instance.MetadataOptions)); err != nil {
+		return fmt.Errorf("error setting metadata_options: %w", err)
 	}
 
 	return nil
