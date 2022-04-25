@@ -9,12 +9,67 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourcePatchBaseline() *schema.Resource {
 	return &schema.Resource{
 		Read: dataPatchBaselineRead,
 		Schema: map[string]*schema.Schema{
+			"approved_patches": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"approved_patches_compliance_level": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"approved_patches_enable_non_security": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"approval_rule": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"approve_after_days": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"approve_until_date": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"compliance_level": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"enable_non_security": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"patch_filter": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"key": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"values": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"default_baseline": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -22,6 +77,23 @@ func DataSourcePatchBaseline() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"global_filter": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"values": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -42,6 +114,37 @@ func DataSourcePatchBaseline() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
+			"rejected_patches": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"rejected_patches_action": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"source": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"configuration": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"products": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -107,11 +210,29 @@ func dataPatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
 
 	baseline := filteredBaselines[0]
 
+	input := &ssm.GetPatchBaselineInput{
+		BaselineId: baseline.BaselineId,
+	}
+
+	output, err := conn.GetPatchBaseline(input)
+
+	if err != nil {
+		return fmt.Errorf("Error getting SSM PatchBaseline: %w", err)
+	}
+
 	d.SetId(aws.StringValue(baseline.BaselineId))
-	d.Set("name", baseline.BaselineName)
-	d.Set("description", baseline.BaselineDescription)
+	d.Set("approved_patches", aws.StringValueSlice(output.ApprovedPatches))
+	d.Set("approved_patches_compliance_level", output.ApprovedPatchesComplianceLevel)
+	d.Set("approved_patches_enable_non_security", output.ApprovedPatchesEnableNonSecurity)
+	d.Set("approval_rule", flattenPatchRuleGroup(output.ApprovalRules))
 	d.Set("default_baseline", baseline.DefaultBaseline)
+	d.Set("description", baseline.BaselineDescription)
+	d.Set("global_filter", flattenPatchFilterGroup(output.GlobalFilters))
+	d.Set("name", baseline.BaselineName)
 	d.Set("operating_system", baseline.OperatingSystem)
+	d.Set("rejected_patches", aws.StringValueSlice(output.RejectedPatches))
+	d.Set("rejected_patches_action", output.RejectedPatchesAction)
+	d.Set("source", flattenPatchSource(output.Sources))
 
 	return nil
 }
