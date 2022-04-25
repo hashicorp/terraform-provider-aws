@@ -88,7 +88,7 @@ func TestFetchRootDevice(t *testing.T) {
 				data := r.Data.(*ec2.DescribeImagesOutput)
 				data.Images = tc.images
 			})
-			name, _ := tfec2.FetchRootDeviceName("ami-123", conn)
+			name, _ := tfec2.FetchRootDeviceName(conn, "ami-123")
 			if tc.name != aws.StringValue(name) {
 				t.Errorf("Expected name %s, got %s", tc.name, aws.StringValue(name))
 			}

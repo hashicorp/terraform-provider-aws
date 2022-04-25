@@ -2001,25 +2001,17 @@ func fetchLaunchTemplateAmi(specs []interface{}, conn *ec2.EC2) (string, error) 
 	return "", nil
 }
 
-func FetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
-	if ami == "" {
+func FetchRootDeviceName(conn *ec2.EC2, amiID string) (*string, error) {
+	if amiID == "" {
 		return nil, errors.New("Cannot fetch root device name for blank AMI ID.")
 	}
 
-	log.Printf("[DEBUG] Describing AMI %q to get root block device name", ami)
-	res, err := conn.DescribeImages(&ec2.DescribeImagesInput{
-		ImageIds: []*string{aws.String(ami)},
-	})
+	image, err := FindImageByID(conn, amiID)
+
 	if err != nil {
 		return nil, err
 	}
 
-	// For a bad image, we just return nil so we don't block a refresh
-	if len(res.Images) == 0 {
-		return nil, nil
-	}
-
-	image := res.Images[0]
 	rootDeviceName := image.RootDeviceName
 
 	// Instance store backed AMIs do not provide a root device name.
@@ -2050,7 +2042,7 @@ func FetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
 	}
 
 	if rootDeviceName == nil {
-		return nil, fmt.Errorf("Error finding Root Device Name for AMI (%s)", ami)
+		return nil, fmt.Errorf("Error finding Root Device Name for AMI (%s)", amiID)
 	}
 
 	return rootDeviceName, nil
@@ -2255,10 +2247,10 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 				}
 			}
 
-			var ami string
+			var amiID string
 			if v, ok := d.GetOk("launch_template"); ok {
 				var err error
-				ami, err = fetchLaunchTemplateAmi(v.([]interface{}), conn)
+				amiID, err = fetchLaunchTemplateAmi(v.([]interface{}), conn)
 				if err != nil {
 					return nil, err
 				}
@@ -2266,18 +2258,18 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 
 			// AMI id from attributes overrides ami from launch template
 			if v, ok := d.GetOk("ami"); ok {
-				ami = v.(string)
+				amiID = v.(string)
 			}
 
-			if ami == "" {
+			if amiID == "" {
 				return nil, errors.New("`ami` must be set or provided via launch template")
 			}
 
-			if dn, err := FetchRootDeviceName(ami, conn); err == nil {
+			if dn, err := FetchRootDeviceName(conn, amiID); err == nil {
 				if dn == nil {
 					return nil, fmt.Errorf(
 						"Expected 1 AMI for ID: %s, got none",
-						ami)
+						amiID)
 				}
 
 				blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{

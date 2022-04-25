@@ -748,9 +748,10 @@ func resourceSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) erro
 			aws.TimeValue(config.ValidUntil).Format(time.RFC3339))
 	}
 
-	launchSpec, err := launchSpecsToSet(config.LaunchSpecifications, conn)
+	launchSpec, err := launchSpecsToSet(conn, config.LaunchSpecifications)
+
 	if err != nil {
-		return fmt.Errorf("error occurred while reading launch specification: %w", err)
+		return fmt.Errorf("reading EC2 Spot Fleet Request (%s) launch specifications: %w", d.Id(), err)
 	}
 
 	d.Set("replace_unhealthy_instances", config.ReplaceUnhealthyInstances)
@@ -1125,7 +1126,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(d map[string]interface{}, conn *
 				ebs.Throughput = aws.Int64(int64(v))
 			}
 
-			if dn, err := FetchRootDeviceName(d["ami"].(string), conn); err == nil {
+			if dn, err := FetchRootDeviceName(conn, d["ami"].(string)); err == nil {
 				if dn == nil {
 					return nil, fmt.Errorf(
 						"Expected 1 AMI for ID: %s, got none",
@@ -1298,10 +1299,10 @@ func flattenSpotFleetRequestLaunchTemplateOverrides(override *ec2.LaunchTemplate
 	return m
 }
 
-func launchSpecsToSet(launchSpecs []*ec2.SpotFleetLaunchSpecification, conn *ec2.EC2) (*schema.Set, error) {
+func launchSpecsToSet(conn *ec2.EC2, launchSpecs []*ec2.SpotFleetLaunchSpecification) (*schema.Set, error) {
 	specSet := &schema.Set{F: hashLaunchSpecification}
 	for _, spec := range launchSpecs {
-		rootDeviceName, err := FetchRootDeviceName(aws.StringValue(spec.ImageId), conn)
+		rootDeviceName, err := FetchRootDeviceName(conn, aws.StringValue(spec.ImageId))
 		if err != nil {
 			return nil, err
 		}

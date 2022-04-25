@@ -591,6 +591,59 @@ func FindHost(conn *ec2.EC2, input *ec2.DescribeHostsInput) (*ec2.Host, error) {
 	return host, nil
 }
 
+func FindImage(conn *ec2.EC2, input *ec2.DescribeImagesInput) (*ec2.Image, error) {
+	output, err := conn.DescribeImages(input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAMIIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Images) == 0 || output.Images[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Images); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.Images[0], nil
+}
+
+func FindImageByID(conn *ec2.EC2, id string) (*ec2.Image, error) {
+	input := &ec2.DescribeImagesInput{
+		ImageIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindImage(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.ImageStateDeregistered {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.ImageId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func FindImageAttribute(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeImageAttributeInput) (*ec2.DescribeImageAttributeOutput, error) {
 	output, err := conn.DescribeImageAttributeWithContext(ctx, input)
 
