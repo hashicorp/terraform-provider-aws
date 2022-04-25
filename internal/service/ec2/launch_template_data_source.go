@@ -22,7 +22,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"automatic_recovery_behavior": {
+			"auto_recovery": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
