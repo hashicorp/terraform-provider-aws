@@ -570,8 +570,12 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 		return fmt.Errorf("error setting enclave_options: %w", err)
 	}
 
-	if err := d.Set("maintenance_options", flattenInstanceMaintenanceOptions(instance.MaintenanceOptions)); err != nil {
-		return fmt.Errorf("error setting maintenance_options: %w", err)
+	if instance.MaintenanceOptions != nil {
+		if err := d.Set("maintenance_options", []interface{}{flattenInstanceMaintenanceOptions(instance.MaintenanceOptions)}); err != nil {
+			return fmt.Errorf("error setting maintenance_options: %w", err)
+		}
+	} else {
+		d.Set("maintenance_options", nil)
 	}
 
 	if err := d.Set("metadata_options", flattenEc2InstanceMetadataOptions(instance.MetadataOptions)); err != nil {

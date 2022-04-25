@@ -935,7 +935,8 @@ func TestAccEC2Instance_autoRecovery(t *testing.T) {
 				Config: testAccInstanceAutoRecoveryConfig(rName, "default"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_recovery", "default"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_options.0.auto_recovery", "default"),
 				),
 			},
 			{
@@ -948,7 +949,8 @@ func TestAccEC2Instance_autoRecovery(t *testing.T) {
 				Config: testAccInstanceAutoRecoveryConfig(rName, "disabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_recovery", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_options.0.auto_recovery", "disabled"),
 				),
 			},
 		},

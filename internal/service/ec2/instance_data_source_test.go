@@ -539,7 +539,6 @@ func TestAccEC2InstanceDataSource_GetUserData_noUserData(t *testing.T) {
 }
 
 func TestAccEC2InstanceDataSource_autoRecovery(t *testing.T) {
-	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -551,15 +550,15 @@ func TestAccEC2InstanceDataSource_autoRecovery(t *testing.T) {
 			{
 				Config: testAccInstanceDataSourceAutoRecoveryConfig(rName, "default"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
-					resource.TestCheckResourceAttr(datasourceName, "auto_recovery", "default"),
+					resource.TestCheckResourceAttr(datasourceName, "maintenance_options.#", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "maintenance_options.0.auto_recovery", "default"),
 				),
 			},
 			{
 				Config: testAccInstanceDataSourceAutoRecoveryConfig(rName, "disabled"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
-					resource.TestCheckResourceAttr(datasourceName, "auto_recovery", "disabled"),
+					resource.TestCheckResourceAttr(datasourceName, "maintenance_options.#", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "maintenance_options.0.auto_recovery", "disabled"),
 				),
 			},
 		},
@@ -1194,8 +1193,11 @@ func testAccInstanceDataSourceAutoRecoveryConfig(rName string, val string) strin
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
-  auto_recovery = %[2]q
   subnet_id     = aws_subnet.test.id
+
+  maintenance_options {
+    auto_recovery = %[2]q
+  }
 
   tags = {
     Name = %[1]q

@@ -25,7 +25,6 @@ func TestAccEC2LaunchTemplateDataSource_name(t *testing.T) {
 				Config: testAccLaunchTemplateDataSourceNameConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "auto_recovery", dataSourceName, "auto_recovery"),
 					resource.TestCheckResourceAttrPair(resourceName, "block_device_mappings.#", dataSourceName, "block_device_mappings.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "capacity_reservation_specification.#", dataSourceName, "capacity_reservation_specification.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "cpu_options.#", dataSourceName, "cpu_options.#"),
@@ -47,6 +46,7 @@ func TestAccEC2LaunchTemplateDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "key_name", dataSourceName, "key_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "latest_version", dataSourceName, "latest_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "license_specification.#", dataSourceName, "license_specification.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "maintenance_options.#", dataSourceName, "maintenance_options.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "metadata_options.#", dataSourceName, "metadata_options.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "monitoring.#", dataSourceName, "monitoring.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
@@ -172,7 +172,10 @@ resource "aws_launch_template" "test" {
     market_type = "spot"
   }
 
-  auto_recovery           = "disabled"
+  maintenance_options {
+    auto_recovery = "disabled"
+  }
+
   disable_api_termination = true
   ebs_optimized           = false
 
