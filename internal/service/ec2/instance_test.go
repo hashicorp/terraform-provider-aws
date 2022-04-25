@@ -46,6 +46,7 @@ func TestFetchRootDevice(t *testing.T) {
 		{
 			"device name in mappings",
 			[]*ec2.Image{{
+				ImageId:        aws.String("ami-123"),
 				RootDeviceType: aws.String("ebs"),
 				RootDeviceName: aws.String("/dev/xvda"),
 				BlockDeviceMappings: []*ec2.BlockDeviceMapping{
@@ -58,6 +59,7 @@ func TestFetchRootDevice(t *testing.T) {
 		{
 			"device name not in mappings",
 			[]*ec2.Image{{
+				ImageId:        aws.String("ami-123"),
 				RootDeviceType: aws.String("ebs"),
 				RootDeviceName: aws.String("/dev/xvda"),
 				BlockDeviceMappings: []*ec2.BlockDeviceMapping{
@@ -88,7 +90,7 @@ func TestFetchRootDevice(t *testing.T) {
 				data := r.Data.(*ec2.DescribeImagesOutput)
 				data.Images = tc.images
 			})
-			name, _ := tfec2.FetchRootDeviceName("ami-123", conn)
+			name, _ := tfec2.FetchRootDeviceName(conn, "ami-123")
 			if tc.name != aws.StringValue(name) {
 				t.Errorf("Expected name %s, got %s", tc.name, aws.StringValue(name))
 			}

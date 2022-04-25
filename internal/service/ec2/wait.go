@@ -1945,6 +1945,63 @@ func WaitPlacementGroupDeleted(conn *ec2.EC2, name string) (*ec2.PlacementGroup,
 	return nil, err
 }
 
+func WaitSpotFleetRequestCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.SpotFleetRequestConfig, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.BatchStateSubmitted},
+		Target:     []string{ec2.BatchStateActive},
+		Refresh:    StatusSpotFleetRequestState(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.SpotFleetRequestConfig); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitSpotFleetRequestFulfilled(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.SpotFleetRequestConfig, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.ActivityStatusPendingFulfillment},
+		Target:     []string{ec2.ActivityStatusFulfilled},
+		Refresh:    StatusSpotFleetActivityStatus(conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.SpotFleetRequestConfig); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitSpotFleetRequestUpdated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.SpotFleetRequestConfig, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.BatchStateModifying},
+		Target:     []string{ec2.BatchStateActive},
+		Refresh:    StatusSpotFleetRequestState(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.SpotFleetRequestConfig); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func WaitVPCEndpointAccepted(conn *ec2.EC2, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{VpcEndpointStatePendingAcceptance},
