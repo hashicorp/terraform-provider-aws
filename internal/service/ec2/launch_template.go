@@ -1619,6 +1619,8 @@ func expandLaunchTemplateTagSpecificationRequests(tfList []interface{}) []*ec2.L
 func flattenResponseLaunchTemplateData(d *schema.ResourceData, apiObject *ec2.ResponseLaunchTemplateData) error {
 	if apiObject.MaintenanceOptions != nil {
 		d.Set("auto_recovery", apiObject.MaintenanceOptions.AutoRecovery)
+	} else {
+		d.Set("auto_recovery", nil)
 	}
 	if err := d.Set("block_device_mappings", flattenLaunchTemplateBlockDeviceMappings(apiObject.BlockDeviceMappings)); err != nil {
 		return fmt.Errorf("error setting block_device_mappings: %w", err)

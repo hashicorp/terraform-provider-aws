@@ -942,6 +942,8 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	if v := instance.MaintenanceOptions; v != nil {
 		d.Set("auto_recovery", v.AutoRecovery)
+	} else {
+		d.Set("auto_recovery", nil)
 	}
 
 	if instance.IamInstanceProfile != nil && instance.IamInstanceProfile.Arn != nil {

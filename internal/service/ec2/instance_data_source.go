@@ -427,6 +427,8 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	d.Set("ami", instance.ImageId)
 	if instance.MaintenanceOptions != nil {
 		d.Set("auto_recovery", instance.MaintenanceOptions.AutoRecovery)
+	} else {
+		d.Set("auto_recovery", nil)
 	}
 	d.Set("instance_type", instance.InstanceType)
 	d.Set("key_name", instance.KeyName)
