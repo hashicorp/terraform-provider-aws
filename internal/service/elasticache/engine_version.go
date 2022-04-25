@@ -6,6 +6,7 @@ import (
 	"math"
 	"regexp"
 
+	"github.com/aws/aws-sdk-go/aws"
 	multierror "github.com/hashicorp/go-multierror"
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -129,4 +130,30 @@ func normalizeEngineVersion(version string) (*gversion.Version, error) {
 		}
 	}
 	return gversion.NewVersion(version)
+}
+
+func setEngineVersionMemcached(d *schema.ResourceData, version *string) {
+	d.Set("engine_version", aws.StringValue(version))
+	d.Set("engine_version_actual", aws.StringValue(version))
+}
+
+func setEngineVersionRedis(d *schema.ResourceData, version *string) error {
+	engineVersion, err := gversion.NewVersion(aws.StringValue(version))
+	if err != nil {
+		return fmt.Errorf("error reading engine version: %w", err)
+	}
+	if engineVersion.Segments()[0] < 6 {
+		d.Set("engine_version", engineVersion.String())
+	} else {
+		// Handle major-only version number
+		configVersion := d.Get("engine_version").(string)
+		if t, _ := regexp.MatchString(`[6-9]\.x`, configVersion); t {
+			d.Set("engine_version", fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
+		} else {
+			d.Set("engine_version", fmt.Sprintf("%d.%d", engineVersion.Segments()[0], engineVersion.Segments()[1]))
+		}
+	}
+	d.Set("engine_version_actual", engineVersion.String())
+
+	return nil
 }

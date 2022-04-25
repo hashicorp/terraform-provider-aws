@@ -68,11 +68,12 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			// Leaving space for `engine_version` for creation and updating.
-			// `engine_version` cannot be used for returning the version because, starting with Redis 6,
-			// version configuration is major-version-only: `engine_version = "6.x"` or major-minor-version-only: `engine_version = "6.2"`,
-			// while `engine_version_actual` will be the full version e.g. `6.0.5`
-			// See also https://github.com/hashicorp/terraform-provider-aws/issues/15625
+			"engine_version": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validRedisVersionString,
+			},
 			"engine_version_actual": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -166,7 +167,7 @@ func resourceGlobalReplicationGroupCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) creation: %w", d.Id(), err)
 	}
 
-	return resourceGlobalReplicationGroupRead(d, meta)
+	return resourceGlobalReplicationGroupUpdate(d, meta)
 }
 
 func resourceGlobalReplicationGroupRead(d *schema.ResourceData, meta interface{}) error {
@@ -194,10 +195,14 @@ func resourceGlobalReplicationGroupRead(d *schema.ResourceData, meta interface{}
 	d.Set("cache_node_type", globalReplicationGroup.CacheNodeType)
 	d.Set("cluster_enabled", globalReplicationGroup.ClusterEnabled)
 	d.Set("engine", globalReplicationGroup.Engine)
-	d.Set("engine_version_actual", globalReplicationGroup.EngineVersion)
 	d.Set("global_replication_group_description", globalReplicationGroup.GlobalReplicationGroupDescription)
 	d.Set("global_replication_group_id", globalReplicationGroup.GlobalReplicationGroupId)
 	d.Set("transit_encryption_enabled", globalReplicationGroup.TransitEncryptionEnabled)
+
+	err = setEngineVersionRedis(d, globalReplicationGroup.EngineVersion)
+	if err != nil {
+		return fmt.Errorf("error reading ElastiCache Replication Group: %w", err)
+	}
 
 	d.Set("primary_replication_group_id", flattenGlobalReplicationGroupPrimaryGroupID(globalReplicationGroup.Members))
 
@@ -210,6 +215,9 @@ func resourceGlobalReplicationGroupUpdate(d *schema.ResourceData, meta interface
 	// Only one field can be changed per request
 	updaters := map[string]globalReplicationGroupUpdater{}
 	if !d.IsNewResource() {
+		updaters["engine_version"] = func(input *elasticache.ModifyGlobalReplicationGroupInput) {
+			input.EngineVersion = aws.String(d.Get("engine_version").(string))
+		}
 		updaters["global_replication_group_description"] = func(input *elasticache.ModifyGlobalReplicationGroupInput) {
 			input.GlobalReplicationGroupDescription = aws.String(d.Get("global_replication_group_description").(string))
 		}
