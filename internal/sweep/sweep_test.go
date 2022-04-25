@@ -39,6 +39,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/cur"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/dax"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
