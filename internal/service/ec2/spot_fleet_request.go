@@ -39,6 +39,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(15 * time.Minute),
 		},
 
@@ -656,74 +657,29 @@ func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) er
 	// http://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-RequestSpotFleetInput
 	input := &ec2.RequestSpotFleetInput{
 		SpotFleetRequestConfig: spotFleetConfig,
-		DryRun:                 aws.Bool(false),
 	}
 
-	log.Printf("[DEBUG] Creating Spot Fleet Request: %s", input)
-
-	// Since IAM is eventually consistent, we retry creation as a newly created role may not
-	// take effect immediately, resulting in an InvalidSpotFleetRequestConfig error
-	var output *ec2.RequestSpotFleetOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
-		var err error
-		output, err = conn.RequestSpotFleet(input)
-
-		if tfawserr.ErrMessageContains(err, "InvalidSpotFleetRequestConfig", "Parameter: SpotFleetRequestConfig.IamFleetRole is invalid") {
-			return resource.RetryableError(err)
-		}
-
-		if tfawserr.ErrMessageContains(err, "InvalidSpotFleetRequestConfig", "The provided SpotFleetRequestConfig.IamFleetRole does not have permission to call") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.RequestSpotFleet(input)
-	}
+	log.Printf("[DEBUG] Creating EC2 Spot Fleet Request: %s", input)
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(tfiam.PropagationTimeout,
+		func() (interface{}, error) {
+			return conn.RequestSpotFleet(input)
+		},
+		ErrCodeInvalidSpotFleetRequestConfig, "SpotFleetRequestConfig.IamFleetRole",
+	)
 
 	if err != nil {
-		return fmt.Errorf("Error requesting spot fleet: %w", err)
+		return fmt.Errorf("creating EC2 Spot Fleet Request: %w", err)
 	}
 
-	d.SetId(aws.StringValue(output.SpotFleetRequestId))
+	d.SetId(aws.StringValue(outputRaw.(*ec2.RequestSpotFleetOutput).SpotFleetRequestId))
 
-	log.Printf("[INFO] Spot Fleet Request ID: %s", d.Id())
-	log.Println("[INFO] Waiting for Spot Fleet Request to be active")
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{ec2.BatchStateSubmitted},
-		Target:     []string{ec2.BatchStateActive},
-		Refresh:    resourceSpotFleetRequestStateRefreshFunc(d, meta),
-		Timeout:    d.Timeout(schema.TimeoutCreate), //10 * time.Minute,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return err
+	if _, err := WaitSpotFleetRequestCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("waiting for EC2 Spot Fleet Request (%s) create: %w", d.Id(), err)
 	}
 
 	if d.Get("wait_for_fulfillment").(bool) {
-		log.Println("[INFO] Waiting for Spot Fleet Request to be fulfilled")
-		spotStateConf := &resource.StateChangeConf{
-			Pending:    []string{ec2.ActivityStatusPendingFulfillment},
-			Target:     []string{ec2.ActivityStatusFulfilled},
-			Refresh:    resourceSpotFleetRequestFulfillmentRefreshFunc(d.Id(), meta.(*conns.AWSClient).EC2Conn),
-			Timeout:    d.Timeout(schema.TimeoutCreate),
-			Delay:      10 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
-
-		_, err = spotStateConf.WaitForState()
-
-		if err != nil {
-			return err
+		if _, err := WaitSpotFleetRequestFulfilled(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return fmt.Errorf("waiting for EC2 Spot Fleet Request (%s) fulfillment: %w", d.Id(), err)
 		}
 	}
 
