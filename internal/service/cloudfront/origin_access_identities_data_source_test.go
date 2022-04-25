@@ -2,7 +2,6 @@ package cloudfront_test
 
 import (
 	"fmt"
-	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -11,12 +10,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccCloudFrontOriginAccessIdentitiesDataSource_With_Filter(t *testing.T) {
+func TestAccCloudFrontOriginAccessIdentitiesDataSource_comments(t *testing.T) {
 	dataSourceName := "data.aws_cloudfront_origin_access_identities.test"
-	resource2Name := "aws_cloudfront_origin_access_identity.test.1"
-	rCount := strconv.Itoa(sdkacctest.RandIntRange(2, 5))
-	fCount := "1"
+	resourceName := "aws_cloudfront_origin_access_identity.test1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
@@ -24,25 +22,24 @@ func TestAccCloudFrontOriginAccessIdentitiesDataSource_With_Filter(t *testing.T)
 		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOriginAccessIdentitiesBasicDataSourceConfigFilter(rCount, rName),
+				Config: testAccOriginAccessIdentitiesDataSourceCommentsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", fCount),
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", fCount),
-					resource.TestCheckResourceAttr(dataSourceName, "s3_canonical_user_ids.#", fCount),
-					resource.TestCheckResourceAttrPair(dataSourceName, "arns.0", resource2Name, "iam_arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "ids.0", resource2Name, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "s3_canonical_user_ids.0", resource2Name, "s3_canonical_user_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "iam_arns.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "s3_canonical_user_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "iam_arns.*", resourceName, "iam_arn"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "ids.*", resourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "s3_canonical_user_ids.*", resourceName, "s3_canonical_user_id"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccCloudFrontOriginAccessIdentitiesDataSource_No_Filter(t *testing.T) {
+func TestAccCloudFrontOriginAccessIdentitiesDataSource_all(t *testing.T) {
 	dataSourceName := "data.aws_cloudfront_origin_access_identities.test"
-	resource1Name := "aws_cloudfront_origin_access_identity.test.0"
-	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
@@ -50,46 +47,47 @@ func TestAccCloudFrontOriginAccessIdentitiesDataSource_No_Filter(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOriginAccessIdentitiesBasicDataSourceConfigNoFilter(rCount, rName),
+				Config: testAccOriginAccessIdentitiesDataSourceNoCommentsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", rCount),
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", rCount),
-					resource.TestCheckResourceAttr(dataSourceName, "s3_canonical_user_ids.#", rCount),
-					resource.TestCheckResourceAttrPair(dataSourceName, "arns.0", resource1Name, "iam_arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "ids.0", resource1Name, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "s3_canonical_user_ids.0", resource1Name, "s3_canonical_user_id"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "iam_arns.#", "1"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "1"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "s3_canonical_user_ids.#", "1"),
 				),
 			},
 		},
 	})
 }
 
-func testAccOriginAccessIdentitiesBasicDataSourceConfigFilter(rCount, rName string) string {
+func testAccOriginAccessIdentitiesDataSourceCommentsConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudfront_origin_access_identity" "test" {
-  count = %[1]s
-  comment  = "%[2]s-${count.index}-comment"
+resource "aws_cloudfront_origin_access_identity" "test1" {
+  comment = "%[1]s-1-comment"
+}
+
+resource "aws_cloudfront_origin_access_identity" "test2" {
+  comment = "%[1]s-2-comment"
 }
 
 data "aws_cloudfront_origin_access_identities" "test" {
-	filter{
-		name = "comment"
-		values = [aws_cloudfront_origin_access_identity.test.1.comment]
+  comments = ["%[1]s-1-comment"]
 
-	}
+  depends_on = [aws_cloudfront_origin_access_identity.test1, aws_cloudfront_origin_access_identity.test2]
 }
-`, rCount, rName)
+`, rName)
 }
 
-func testAccOriginAccessIdentitiesBasicDataSourceConfigNoFilter(rCount, rName string) string {
+func testAccOriginAccessIdentitiesDataSourceNoCommentsConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudfront_origin_access_identity" "test" {
-  count = %[1]s
-  comment  = "%[2]s-${count.index}-comment"
+resource "aws_cloudfront_origin_access_identity" "test1" {
+  comment = "%[1]s-1-comment"
+}
+
+resource "aws_cloudfront_origin_access_identity" "test2" {
+  comment = "%[1]s-2-comment"
 }
 
 data "aws_cloudfront_origin_access_identities" "test" {
-
+  depends_on = [aws_cloudfront_origin_access_identity.test1, aws_cloudfront_origin_access_identity.test2]
 }
-`, rCount, rName)
+`, rName)
 }

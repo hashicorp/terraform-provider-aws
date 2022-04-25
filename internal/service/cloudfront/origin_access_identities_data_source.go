@@ -2,14 +2,13 @@ package cloudfront
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceOriginAccessIdentities() *schema.Resource {
@@ -17,30 +16,17 @@ func DataSourceOriginAccessIdentities() *schema.Resource {
 		Read: dataSourceOriginAccessIdentitiesRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+			"comments": {
+				Type:     schema.TypeSet,
 				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"values": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"ids": {
+			"iam_arns": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"arns": {
+			"ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -57,87 +43,59 @@ func DataSourceOriginAccessIdentities() *schema.Resource {
 func dataSourceOriginAccessIdentitiesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	comments := extractComments(d)
+	var comments []interface{}
 
-	input := &cloudfront.ListCloudFrontOriginAccessIdentitiesInput{}
+	if v, ok := d.GetOk("comments"); ok && v.(*schema.Set).Len() > 0 {
+		comments = v.(*schema.Set).List()
+	}
 
-	var results []*cloudfront.OriginAccessIdentitySummary
+	var output []*cloudfront.OriginAccessIdentitySummary
 
-	err := conn.ListCloudFrontOriginAccessIdentitiesPages(input, func(page *cloudfront.ListCloudFrontOriginAccessIdentitiesOutput, lastPage bool) bool {
+	err := conn.ListCloudFrontOriginAccessIdentitiesPages(&cloudfront.ListCloudFrontOriginAccessIdentitiesInput{}, func(page *cloudfront.ListCloudFrontOriginAccessIdentitiesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
-		for _, originAccessIdentity := range page.CloudFrontOriginAccessIdentityList.Items {
 
-			if originAccessIdentity == nil {
+		for _, v := range page.CloudFrontOriginAccessIdentityList.Items {
+			if v == nil {
 				continue
 			}
-			if len(comments) > 0 {
 
-				if ok := SliceContainsString(comments, *originAccessIdentity.Comment); !ok {
+			if len(comments) > 0 {
+				if _, ok := verify.SliceContainsString(comments, aws.StringValue(v.Comment)); !ok {
 					continue
 				}
-
 			}
 
-			results = append(results, originAccessIdentity)
+			output = append(output, v)
 		}
-		return !lastPage
 
+		return !lastPage
 	})
+
 	if err != nil {
-		return fmt.Errorf("error reading Cloudfront OriginAccessIdentities: %w", err)
+		return fmt.Errorf("listing CloudFront origin access identities: %w", err)
 	}
 
-	var arns, ids, s3UserIds []string
+	var iamARNs, ids, s3CanonicalUserIDs []string
 
-	for _, r := range results {
-		iamArn := arn.ARN{
+	for _, v := range output {
+		// See https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html#private-content-updating-s3-bucket-policies-principal.
+		iamARN := arn.ARN{
 			Partition: meta.(*conns.AWSClient).Partition,
 			Service:   "iam",
 			AccountID: "cloudfront",
-			Resource:  fmt.Sprintf("user/CloudFront Origin Access Identity %s", *r.Id),
+			Resource:  fmt.Sprintf("user/CloudFront Origin Access Identity %s", *v.Id),
 		}.String()
-		arns = append(arns, iamArn)
-		ids = append(ids, aws.StringValue(r.Id))
-		s3UserIds = append(s3UserIds, *r.S3CanonicalUserId)
+		iamARNs = append(iamARNs, iamARN)
+		ids = append(ids, aws.StringValue(v.Id))
+		s3CanonicalUserIDs = append(s3CanonicalUserIDs, aws.StringValue(v.S3CanonicalUserId))
 	}
 
-	accountId := meta.(*conns.AWSClient).AccountID
-	d.SetId(fmt.Sprintf("originaccessidentities-%s", accountId))
-
-	if err := d.Set("arns", arns); err != nil {
-		return fmt.Errorf("error setting arns: %w", err)
-	}
-
-	if err := d.Set("ids", ids); err != nil {
-		return fmt.Errorf("error setting ids: %w", err)
-	}
-
-	if err := d.Set("s3_canonical_user_ids", s3UserIds); err != nil {
-		return fmt.Errorf("error setting s3_canonical_user_ids: %w", err)
-	}
+	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.Set("iam_arns", iamARNs)
+	d.Set("ids", ids)
+	d.Set("s3_canonical_user_ids", s3CanonicalUserIDs)
 
 	return nil
-}
-
-func extractComments(d *schema.ResourceData) []*string {
-	if v, ok := d.GetOk("filter"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
-		if u, ok := tfMap["name"].(string); ok && u == "comment" {
-			if w, ok := tfMap["values"].(*schema.Set); ok && w.Len() > 0 {
-				return flex.ExpandStringSet(w)
-			}
-		}
-	}
-	return nil
-}
-
-func SliceContainsString(slice []*string, s string) bool {
-	for _, value := range slice {
-		if strings.EqualFold(*value, s) {
-			return true
-		}
-	}
-	return false
 }
