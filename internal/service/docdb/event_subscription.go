@@ -25,6 +25,7 @@ func ResourceEventSubscription() *schema.Resource {
 		ReadWithoutTimeout:   resourceEventSubscriptionRead,
 		UpdateWithoutTimeout: resourceEventSubscriptionUpdate,
 		DeleteWithoutTimeout: resourceEventSubscriptionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -34,10 +35,25 @@ func ResourceEventSubscription() *schema.Resource {
 			Delete: schema.DefaultTimeout(40 * time.Minute),
 			Update: schema.DefaultTimeout(40 * time.Minute),
 		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"customer_aws_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"event_categories": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -60,11 +76,6 @@ func ResourceEventSubscription() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"event_categories": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"source_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -73,15 +84,6 @@ func ResourceEventSubscription() *schema.Resource {
 			"source_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-			"enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"customer_aws_id": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
