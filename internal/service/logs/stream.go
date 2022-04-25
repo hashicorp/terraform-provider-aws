@@ -48,7 +48,7 @@ func ResourceStream() *schema.Resource {
 }
 
 func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 
 	log.Printf("[DEBUG] Creating CloudWatch Log Stream: %s", d.Get("name").(string))
 	_, err := conn.CreateLogStream(&cloudwatchlogs.CreateLogStreamInput{
@@ -65,7 +65,7 @@ func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 
 	group := d.Get("log_group_name").(string)
 
@@ -109,7 +109,7 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 
 	log.Printf("[INFO] Deleting CloudWatch Log Stream: %s", d.Id())
 	params := &cloudwatchlogs.DeleteLogStreamInput{

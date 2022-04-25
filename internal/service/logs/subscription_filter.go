@@ -69,7 +69,7 @@ func ResourceSubscriptionFilter() *schema.Resource {
 }
 
 func resourceSubscriptionFilterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 	params := getSubscriptionFilterInput(d)
 	log.Printf("[DEBUG] Creating SubscriptionFilter %#v", params)
 
@@ -105,7 +105,7 @@ func resourceSubscriptionFilterCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceSubscriptionFilterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 
 	params := getSubscriptionFilterInput(d)
 
@@ -161,7 +161,7 @@ func getSubscriptionFilterInput(d *schema.ResourceData) cloudwatchlogs.PutSubscr
 }
 
 func resourceSubscriptionFilterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 
 	log_group_name := d.Get("log_group_name").(string)
 	name := d.Get("name").(string) // "name" is a required field in the schema
@@ -188,7 +188,7 @@ func resourceSubscriptionFilterRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceSubscriptionFilterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 	log.Printf("[INFO] Deleting CloudWatch Log Group Subscription: %s", d.Id())
 	log_group_name := d.Get("log_group_name").(string)
 	name := d.Get("name").(string)

@@ -173,7 +173,7 @@ func testAccCheckQueryDefinitionExists(rName string, v *cloudwatchlogs.QueryDefi
 		if !ok {
 			return fmt.Errorf("Not found: %s", rName)
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
 		result, err := tflogs.FindQueryDefinition(context.Background(), conn, "", rs.Primary.ID)
 
@@ -192,7 +192,7 @@ func testAccCheckQueryDefinitionExists(rName string, v *cloudwatchlogs.QueryDefi
 }
 
 func testAccCheckQueryDefinitionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_query_definition" {

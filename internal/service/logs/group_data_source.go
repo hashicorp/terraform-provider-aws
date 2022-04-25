@@ -41,7 +41,7 @@ func DataSourceGroup() *schema.Resource {
 
 func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	logGroup, err := LookupGroup(conn, name)

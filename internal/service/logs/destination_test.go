@@ -70,7 +70,7 @@ func TestAccLogsDestination_disappears(t *testing.T) {
 }
 
 func testAccCheckDestinationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_destination" {
@@ -98,7 +98,7 @@ func testAccCheckDestinationExists(n string, d *cloudwatchlogs.Destination) reso
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 		destination, exists, err := tflogs.LookupDestination(conn, rs.Primary.ID, nil)
 		if err != nil {
 			return err

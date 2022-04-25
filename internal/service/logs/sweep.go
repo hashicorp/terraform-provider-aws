@@ -59,7 +59,7 @@ func sweepGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CloudWatchLogsConn
+	conn := client.(*conns.AWSClient).LogsConn
 	var sweeperErrs *multierror.Error
 
 	input := &cloudwatchlogs.DescribeLogGroupsInput{}
@@ -112,7 +112,7 @@ func sweeplogQueryDefinitions(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).CloudWatchLogsConn
+	conn := client.(*conns.AWSClient).LogsConn
 	sweepResources := make([]*sweep.SweepResource, 0)
 	var errs *multierror.Error
 
@@ -162,7 +162,7 @@ func sweepResourcePolicies(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).CloudWatchLogsConn
+	conn := client.(*conns.AWSClient).LogsConn
 
 	input := &cloudwatchlogs.DescribeResourcePoliciesInput{}
 

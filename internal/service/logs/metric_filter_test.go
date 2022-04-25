@@ -236,7 +236,7 @@ func testAccCheckCloudWatchLogMetricFilterExists(n string, mf *cloudwatchlogs.Me
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 		metricFilter, err := tflogs.LookupMetricFilter(conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["log_group_name"], nil)
 		if err != nil {
 			return err
@@ -249,7 +249,7 @@ func testAccCheckCloudWatchLogMetricFilterExists(n string, mf *cloudwatchlogs.Me
 }
 
 func testAccCheckMetricFilterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_metric_filter" {

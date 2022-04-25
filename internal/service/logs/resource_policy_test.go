@@ -82,7 +82,7 @@ func TestAccLogsResourcePolicy_ignoreEquivalent(t *testing.T) {
 
 func testAccCheckCloudWatchLogResourcePolicy(pr string, resourcePolicy *cloudwatchlogs.ResourcePolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 		rs, ok := s.RootModule().Resources[pr]
 		if !ok {
 			return fmt.Errorf("Not found: %s", pr)
@@ -107,7 +107,7 @@ func testAccCheckCloudWatchLogResourcePolicy(pr string, resourcePolicy *cloudwat
 }
 
 func testAccCheckResourcePolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_resource_policy" {

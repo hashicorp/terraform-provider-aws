@@ -98,7 +98,7 @@ func testAccCheckCloudWatchLogStreamExists(n string, ls *cloudwatchlogs.LogStrea
 		}
 
 		logGroupName := rs.Primary.Attributes["log_group_name"]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 		logGroup, exists, err := tflogs.LookupStream(conn, rs.Primary.ID, logGroupName, nil)
 		if err != nil {
 			return err
@@ -114,7 +114,7 @@ func testAccCheckCloudWatchLogStreamExists(n string, ls *cloudwatchlogs.LogStrea
 }
 
 func testAccCheckStreamDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_stream" {

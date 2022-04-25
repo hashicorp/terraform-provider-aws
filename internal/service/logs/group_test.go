@@ -324,7 +324,7 @@ func TestAccLogsGroup_kmsKey(t *testing.T) {
 
 func testAccCheckCloudWatchLogGroupDisappears(lg *cloudwatchlogs.LogGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 		opts := &cloudwatchlogs.DeleteLogGroupInput{
 			LogGroupName: lg.LogGroupName,
 		}
@@ -340,7 +340,7 @@ func testAccCheckCloudWatchLogGroupExists(n string, lg *cloudwatchlogs.LogGroup)
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 		logGroup, err := tflogs.LookupGroup(conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -356,7 +356,7 @@ func testAccCheckCloudWatchLogGroupExists(n string, lg *cloudwatchlogs.LogGroup)
 }
 
 func testAccCheckGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_group" {
