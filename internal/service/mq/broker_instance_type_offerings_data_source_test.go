@@ -28,7 +28,7 @@ func TestAccMQBrokeInstanceTypeOfferingsrDataSource_basic(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttrSet("data.aws_mq_broker_instance_type_offerings.storage", "broker_instance_options.#"),
 					resource.TestCheckTypeSetElemNestedAttrs("data.aws_mq_broker_instance_type_offerings.storage", "broker_instance_options.*", map[string]string{
-						"storage_type": "EBS",
+						"storage_type": "ebs",
 					}),
 					resource.TestCheckResourceAttrSet("data.aws_mq_broker_instance_type_offerings.instance", "broker_instance_options.#"),
 					resource.TestCheckTypeSetElemNestedAttrs("data.aws_mq_broker_instance_type_offerings.instance", "broker_instance_options.*", map[string]string{
@@ -37,7 +37,7 @@ func TestAccMQBrokeInstanceTypeOfferingsrDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.aws_mq_broker_instance_type_offerings.all", "broker_instance_options.#"),
 					resource.TestCheckTypeSetElemNestedAttrs("data.aws_mq_broker_instance_type_offerings.instance", "broker_instance_options.*", map[string]string{
 						"host_instance_type": "mq.m5.large",
-						"storage_type":       "EBS",
+						"storage_type":       "ebs",
 						"engine_type":        "ACTIVEMQ",
 					}),
 				),

@@ -38,7 +38,14 @@ func DataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 						"availability_zones": {
 							Type:     schema.TypeSet,
 							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
 						},
 						"engine_type": {
 							Type:     schema.TypeString,
@@ -131,9 +138,9 @@ func flattenBrokerInstanceOptions(bios []*mq.BrokerInstanceOption) []interface{}
 			tfMap["host_instance_type"] = aws.StringValue(bio.HostInstanceType)
 		}
 
-		// if bio.AvailabilityZones != nil {
-		// 	tfMap["availability_zones"] = flex.FlattenStringSet(bio.AvailabilityZones)
-		// }
+		if bio.AvailabilityZones != nil {
+			tfMap["availability_zones"] = flattenAvailabilityZones(bio.AvailabilityZones)
+		}
 
 		if bio.SupportedDeploymentModes != nil {
 			tfMap["supported_deployment_modes"] = flex.FlattenStringSet(bio.SupportedDeploymentModes)
@@ -141,6 +148,30 @@ func flattenBrokerInstanceOptions(bios []*mq.BrokerInstanceOption) []interface{}
 
 		if bio.SupportedEngineVersions != nil {
 			tfMap["supported_engine_versions"] = flex.FlattenStringList(bio.SupportedEngineVersions)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenAvailabilityZones(azs []*mq.AvailabilityZone) []interface{} {
+	if len(azs) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, az := range azs {
+		if az == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+
+		if az.Name != nil {
+			tfMap["name"] = aws.StringValue(az.Name)
 		}
 
 		tfList = append(tfList, tfMap)
