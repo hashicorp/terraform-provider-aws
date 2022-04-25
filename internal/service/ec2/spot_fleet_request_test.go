@@ -3083,8 +3083,8 @@ resource "aws_spot_fleet_request" "test" {
     key_name      = aws_key_pair.test.key_name
 
     tags = {
-		Name = %[1]q
-	  }
+      Name = %[1]q
+    }
   }
 
   depends_on = [aws_iam_policy_attachment.test]
