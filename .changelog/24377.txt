@@ -7,5 +7,5 @@
  ```
 
  ```release-note:enhancement
-resource/aws_launch_template: Add `automatic_recovery_behavior` argument
+resource/aws_launch_template: Add `auto_recovery` argument
  ```

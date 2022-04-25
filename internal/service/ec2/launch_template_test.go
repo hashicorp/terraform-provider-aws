@@ -32,6 +32,7 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLaunchTemplateExists(resourceName, &template),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`launch-template/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "auto_recovery", ""),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "0"),
@@ -46,7 +47,6 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "hibernation_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iam_instance_profile.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "image_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "automatic_recovery_behavior", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_initiated_shutdown_behavior", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_market_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", ""),
@@ -429,7 +429,7 @@ func TestAccEC2LaunchTemplate_data(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elastic_gpu_specifications.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "iam_instance_profile.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "image_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "automatic_recovery_behavior"),
+					resource.TestCheckResourceAttrSet(resourceName, "auto_recovery"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_initiated_shutdown_behavior"),
 					resource.TestCheckResourceAttr(resourceName, "instance_market_options.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_type"),
@@ -1809,9 +1809,10 @@ resource "aws_launch_template" "test" {
   block_device_mappings {
     device_name = "test"
   }
-  automatic_recovery_behavior = "disabled"
-  disable_api_termination     = true
-  ebs_optimized               = false
+
+  auto_recovery           = "disabled"
+  disable_api_termination = true
+  ebs_optimized           = false
 
   elastic_gpu_specifications {
     type = "test"

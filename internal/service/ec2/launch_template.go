@@ -40,7 +40,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"automatic_recovery_behavior": {
+			"auto_recovery": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(ec2.LaunchTemplateAutoRecoveryState_Values(), false),
@@ -955,7 +955,7 @@ func expandRequestLaunchTemplateData(d *schema.ResourceData) *ec2.RequestLaunchT
 		apiObject.ImageId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("automatic_recovery_behavior"); ok {
+	if v, ok := d.GetOk("auto_recovery"); ok {
 		apiObject.MaintenanceOptions = &ec2.LaunchTemplateInstanceMaintenanceOptionsRequest{
 			AutoRecovery: aws.String(v.(string)),
 		}
@@ -1617,6 +1617,9 @@ func expandLaunchTemplateTagSpecificationRequests(tfList []interface{}) []*ec2.L
 }
 
 func flattenResponseLaunchTemplateData(d *schema.ResourceData, apiObject *ec2.ResponseLaunchTemplateData) error {
+	if apiObject.MaintenanceOptions != nil {
+		d.Set("auto_recovery", apiObject.MaintenanceOptions.AutoRecovery)
+	}
 	if err := d.Set("block_device_mappings", flattenLaunchTemplateBlockDeviceMappings(apiObject.BlockDeviceMappings)); err != nil {
 		return fmt.Errorf("error setting block_device_mappings: %w", err)
 	}
@@ -1681,7 +1684,6 @@ func flattenResponseLaunchTemplateData(d *schema.ResourceData, apiObject *ec2.Re
 		d.Set("iam_instance_profile", nil)
 	}
 	d.Set("image_id", apiObject.ImageId)
-	d.Set("automatic_recovery_behavior", apiObject.MaintenanceOptions.AutoRecovery)
 	d.Set("instance_initiated_shutdown_behavior", apiObject.InstanceInitiatedShutdownBehavior)
 	if apiObject.InstanceMarketOptions != nil {
 		if err := d.Set("instance_market_options", []interface{}{flattenLaunchTemplateInstanceMarketOptions(apiObject.InstanceMarketOptions)}); err != nil {
