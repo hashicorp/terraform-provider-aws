@@ -32,7 +32,6 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLaunchTemplateExists(resourceName, &template),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`launch-template/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "auto_recovery", ""),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "0"),
@@ -54,6 +53,7 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "key_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "latest_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "license_specification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "monitoring.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -429,12 +429,12 @@ func TestAccEC2LaunchTemplate_data(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elastic_gpu_specifications.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "iam_instance_profile.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "image_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "auto_recovery"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_initiated_shutdown_behavior"),
 					resource.TestCheckResourceAttr(resourceName, "instance_market_options.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_type"),
 					resource.TestCheckResourceAttrSet(resourceName, "kernel_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_name"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "monitoring.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.security_groups.#", "1"),
@@ -1810,7 +1810,10 @@ resource "aws_launch_template" "test" {
     device_name = "test"
   }
 
-  auto_recovery           = "disabled"
+  maintenance_options {
+    auto_recovery = "disabled"
+  }
+
   disable_api_termination = true
   ebs_optimized           = false
 

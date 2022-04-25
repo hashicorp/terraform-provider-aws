@@ -7,7 +7,7 @@ data-source/aws_instance: Add `maintenance_options` attribute
 ```
 
 ```release-note:enhancement
-resource/aws_launch_template: Add `auto_recovery` argument
+resource/aws_launch_template: Add `maintenance_options` argument
 ```
 
 ```release-note:enhancement

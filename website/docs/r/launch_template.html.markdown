@@ -110,7 +110,6 @@ resource "aws_launch_template" "foo" {
 
 The following arguments are supported:
 
-* `auto_recovery` - (Optional) The automatic recovery behavior of the Instance. Can be `"default"` or `"dedicated"`. See [Recover your instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-recover.html) for more details.
 * `block_device_mappings` - (Optional) Specify volumes to attach to the instance besides the volumes specified by the AMI.
   See [Block Devices](#block-devices) below for details.
 * `capacity_reservation_specification` - (Optional) Targeting for EC2 capacity reservations. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
@@ -138,6 +137,7 @@ The following arguments are supported:
 * `kernel_id` - (Optional) The kernel ID.
 * `key_name` - (Optional) The key name to use for the instance.
 * `license_specification` - (Optional) A list of license specifications to associate with. See [License Specification](#license-specification) below for more details.
+* `maintenance_options` - (Optional) The maintenance options for the instance. See [Maintenance Options](#maintenance-options) below for more details.
 * `metadata_options` - (Optional) Customize the metadata options for the instance. See [Metadata Options](#metadata-options) below for more details.
 * `monitoring` - (Optional) The monitoring option for the instance. See [Monitoring](#monitoring) below for more details.
 * `name` - (Optional) The name of the launch template. If you leave this blank, Terraform will auto-generate a unique name.
@@ -264,6 +264,12 @@ Associate one of more license configurations.
 The `license_specification` block supports the following:
 
 * `license_configuration_arn` - (Required) ARN of the license configuration.
+
+### Maintenance Options
+
+The `maintenance_options` block supports the following:
+
+* `auto_recovery` - (Optional) Disables the automatic recovery behavior of your instance or sets it to default. Can be `"default"` or `"disabled"`. See [Recover your instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-recover.html) for more details.
 
 ### Market Options
 

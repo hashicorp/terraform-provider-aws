@@ -40,11 +40,6 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"auto_recovery": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(ec2.LaunchTemplateAutoRecoveryState_Values(), false),
-			},
 			"block_device_mappings": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -368,6 +363,20 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
+			"maintenance_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auto_recovery": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(ec2.LaunchTemplateAutoRecoveryState_Values(), false),
 						},
 					},
 				},
@@ -955,12 +964,6 @@ func expandRequestLaunchTemplateData(d *schema.ResourceData) *ec2.RequestLaunchT
 		apiObject.ImageId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("auto_recovery"); ok {
-		apiObject.MaintenanceOptions = &ec2.LaunchTemplateInstanceMaintenanceOptionsRequest{
-			AutoRecovery: aws.String(v.(string)),
-		}
-	}
-
 	if v, ok := d.GetOk("instance_initiated_shutdown_behavior"); ok {
 		apiObject.InstanceInitiatedShutdownBehavior = aws.String(v.(string))
 	}
@@ -979,6 +982,10 @@ func expandRequestLaunchTemplateData(d *schema.ResourceData) *ec2.RequestLaunchT
 
 	if v, ok := d.GetOk("license_specification"); ok && len(v.([]interface{})) > 0 {
 		apiObject.LicenseSpecifications = expandLaunchTemplateLicenseConfigurationRequests(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("maintenance_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.MaintenanceOptions = expandLaunchTemplateInstanceMaintenanceOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("metadata_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -1379,6 +1386,20 @@ func expandLaunchTemplateInstanceMetadataOptions(tfMap map[string]interface{}) *
 	return apiObject
 }
 
+func expandLaunchTemplateInstanceMaintenanceOptionsRequest(tfMap map[string]interface{}) *ec2.LaunchTemplateInstanceMaintenanceOptionsRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.LaunchTemplateInstanceMaintenanceOptionsRequest{}
+
+	if v, ok := tfMap["auto_recovery"].(string); ok && v != "" {
+		apiObject.AutoRecovery = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[string]interface{}) *ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest {
 	if tfMap == nil {
 		return nil
@@ -1617,11 +1638,6 @@ func expandLaunchTemplateTagSpecificationRequests(tfList []interface{}) []*ec2.L
 }
 
 func flattenResponseLaunchTemplateData(d *schema.ResourceData, apiObject *ec2.ResponseLaunchTemplateData) error {
-	if apiObject.MaintenanceOptions != nil {
-		d.Set("auto_recovery", apiObject.MaintenanceOptions.AutoRecovery)
-	} else {
-		d.Set("auto_recovery", nil)
-	}
 	if err := d.Set("block_device_mappings", flattenLaunchTemplateBlockDeviceMappings(apiObject.BlockDeviceMappings)); err != nil {
 		return fmt.Errorf("error setting block_device_mappings: %w", err)
 	}
@@ -1699,6 +1715,13 @@ func flattenResponseLaunchTemplateData(d *schema.ResourceData, apiObject *ec2.Re
 	d.Set("key_name", apiObject.KeyName)
 	if err := d.Set("license_specification", flattenLaunchTemplateLicenseConfigurations(apiObject.LicenseSpecifications)); err != nil {
 		return fmt.Errorf("error setting license_specification: %w", err)
+	}
+	if apiObject.MaintenanceOptions != nil {
+		if err := d.Set("maintenance_options", []interface{}{flattenLaunchTemplateInstanceMaintenanceOptions(apiObject.MaintenanceOptions)}); err != nil {
+			return fmt.Errorf("error setting maintenance_options: %w", err)
+		}
+	} else {
+		d.Set("maintenance_options", nil)
 	}
 	if apiObject.MetadataOptions != nil {
 		if err := d.Set("metadata_options", []interface{}{flattenLaunchTemplateInstanceMetadataOptions(apiObject.MetadataOptions)}); err != nil {
@@ -2042,6 +2065,20 @@ func flattenLaunchTemplateLicenseConfigurations(apiObjects []*ec2.LaunchTemplate
 	}
 
 	return tfList
+}
+
+func flattenLaunchTemplateInstanceMaintenanceOptions(apiObject *ec2.LaunchTemplateInstanceMaintenanceOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AutoRecovery; v != nil {
+		tfMap["auto_recovery"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 func flattenLaunchTemplateInstanceMetadataOptions(apiObject *ec2.LaunchTemplateInstanceMetadataOptions) map[string]interface{} {
