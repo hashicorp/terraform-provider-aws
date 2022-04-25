@@ -22,10 +22,6 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"auto_recovery": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"block_device_mappings": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -298,6 +294,18 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"license_configuration_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"maintenance_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auto_recovery": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
