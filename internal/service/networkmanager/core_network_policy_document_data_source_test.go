@@ -52,133 +52,239 @@ func TestAccCoreNetworkPolicyDocumentDataSource_edgeLocations(t *testing.T) {
 }
 
 var testAccCoreNetworkPolicyDocumentBasic = `
-data "aws_networkmanager_core_network_policy_document" test {
-
+data "aws_networkmanager_core_network_policy_document" "full" {
   core_network_configuration {
-      vpn_ecmp_support = false
-      asn_ranges = ["64512-64555"]
-      edge_locations {
-          location = "us-east-1"
-          asn = 64512
-      }
-      edge_locations {
-          location = "eu-central-1"
-          asn = 64513
-      }
+    vpn_ecmp_support = false
+    asn_ranges       = ["64512-64555", "4200000000-4294967294"]
+    inside_cidr_blocks = [
+      "10.1.0.0/16",
+      "192.0.0.0/8",
+      "2001:4860::/32"
+    ]
+    edge_locations {
+      location = "us-east-1"
+      asn      = 64555
+      inside_cidr_blocks = [
+        "10.1.0.0/24",
+        "192.128.0.0/10",
+        "2001:4860:F000::/40"
+      ]
+    }
+    edge_locations {
+      location = "us-west-2"
+      asn      = 4200000001
+      inside_cidr_blocks = [
+        "192.192.0.0/10",
+        "2001:4860:E000::/40"
+      ]
+    }
+
   }
 
   segments {
-    name = "shared"
-    description = "Segment for shared services"
+    name                          = "GoodSegmentSpecification"
+    description                   = "A good segment."
     require_attachment_acceptance = true
+    isolate_attachments           = false
+    edge_locations = [
+      "us-east-1",
+      "us-west-2"
+    ]
+  }
+
+  segments {
+    name                          = "AnotherGoodSegmentSpecification"
+    description                   = "A good segment."
+    require_attachment_acceptance = true
+    isolate_attachments           = false
+    allow_filter                  = ["AllowThisSegment"]
   }
   segments {
-    name = "prod"
-    description = "Segment for prod services"
+    name                          = "AllowThisSegment"
     require_attachment_acceptance = true
-  }
-    segments {
-    name = "finance"
-    description = "Segment for finance services"
-    require_attachment_acceptance = true
+    isolate_attachments           = false
+    deny_filter                   = ["DenyThisSegment"]
   }
   segments {
-    name = "hr"
-    description = "Segment for hr services"
+    name                          = "DenyThisSegment"
     require_attachment_acceptance = true
+    isolate_attachments           = false
   }
   segments {
-    name = "vpn"
-    description = "Segment for vpn services"
+    name                          = "a"
     require_attachment_acceptance = true
+    isolate_attachments           = false
+  }
+  segments {
+    name                          = "b"
+    require_attachment_acceptance = true
+    isolate_attachments           = false
+  }
+  segments {
+    name                          = "c"
+    require_attachment_acceptance = true
+    isolate_attachments           = false
   }
 
   segment_actions {
-    action = "share"
-    mode =  "attachment-route"
-    segment = "shared"
-    share_with = ["*"]
+    action = "create-route"
+    destination_cidr_blocks = [
+      "1.1.1.1/32",
+      "f:f:f::f/128"
+    ]
+    destinations = [
+      "attachment-11111111111111111",
+      "attachment-22222222222222222"
+    ]
+    segment = "GoodSegmentSpecification"
   }
 
   segment_actions {
-    action = "share"
-    mode =  "attachment-route"
-    segment = "vpn"
+    action     = "share"
+    mode       = "attachment-route"
+    segment    = "AnotherGoodSegmentSpecification"
     share_with = ["*"]
   }
+  segment_actions {
+    action  = "share"
+    mode    = "attachment-route"
+    segment = "AnotherGoodSegmentSpecification"
+    share_with_except = [
+      "a",
+      "b",
+      "c"
+    ]
+  }
+  segment_actions {
+    action  = "share"
+    mode    = "attachment-route"
+    segment = "GoodSegmentSpecification"
+    share_with_except = [
+      "a",
+      "b",
+      "c"
+    ]
+  }
+
   attachment_policies {
-    rule_number = 100
-    condition_logic = "or"
+    rule_number     = 1
+    condition_logic = "and"
 
     conditions {
-      type = "tag-value"
-      operator = "equals"
-      key = "segment"
-      value = "shared"
+      type     = "resource-id"
+      operator = "not-equals"
+      value    = "one"
     }
+
+    conditions {
+      type     = "region"
+      operator = "equals"
+      value    = "us-west-2"
+    }
+
+    conditions {
+      type     = "attachment-type"
+      operator = "equals"
+      value    = "connect"
+    }
+
+    conditions {
+      type     = "account-id"
+      operator = "contains"
+      value    = "one"
+    }
+
+    conditions {
+      type  = "tag-exists"
+      value = "tag-a"
+    }
+
+    conditions {
+      type     = "tag-value"
+      operator = "contains"
+      key      = "tag-b"
+      value    = "one"
+    }
+
     action {
-      association_method = "constant"
-      segment = "shared"
+      association_method = "tag"
+      tag_value_of_key   = "segment"
     }
   }
+
   attachment_policies {
-    rule_number = 200
+    rule_number     = 64
     condition_logic = "or"
 
     conditions {
-      type = "tag-value"
+      type     = "resource-id"
+      operator = "not-equals"
+      value    = "one"
+    }
+
+    conditions {
+      type     = "region"
       operator = "equals"
-      key = "segment"
-      value = "prod"
+      value    = "us-west-2"
+    }
+
+    conditions {
+      type     = "attachment-type"
+      operator = "equals"
+      value    = "vpc"
+    }
+
+    conditions {
+      type     = "account-id"
+      operator = "contains"
+      value    = "one"
+    }
+
+    conditions {
+      type  = "tag-exists"
+      value = "tag-a"
+    }
+
+    conditions {
+      type     = "tag-value"
+      operator = "contains"
+      key      = "tag-b"
+      value    = "one"
     }
     action {
       association_method = "constant"
-      segment = "prod"
+      segment            = "GoodSegmentSpecification"
+      require_acceptance = true
     }
   }
+
   attachment_policies {
-    rule_number = 300
+    rule_number     = 72
     condition_logic = "or"
 
     conditions {
-      type = "tag-value"
-      operator = "equals"
-      key = "segment"
-      value = "finance"
+      type = "any"
     }
     action {
       association_method = "constant"
-      segment = "finance"
+      segment            = "GoodSegmentSpecification"
+      require_acceptance = true
     }
   }
+
   attachment_policies {
-    rule_number = 400
+    rule_number     = 71
     condition_logic = "or"
 
     conditions {
-      type = "tag-value"
+      type     = "region"
       operator = "equals"
-      key = "segment"
-      value = "hr"
+      value    = "eu-west-1"
     }
     action {
       association_method = "constant"
-      segment = "hr"
-    }
-  }
-  attachment_policies {
-    rule_number = 500
-    condition_logic = "or"
-
-    conditions {
-      type = "tag-value"
-      operator = "equals"
-      key = "segment"
-      value = "vpn"
-    }
-    action {
-      association_method = "constant"
-      segment = "vpn"
+      segment            = "GoodSegmentSpecification"
+      require_acceptance = true
     }
   }
 }`

@@ -115,8 +115,6 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Default:  false,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z][A-Za-z0-9]{0,63}$`),
-											"must begin with a letter and contain only alphanumeric characters"),
 									},
 								},
 							},
@@ -503,8 +501,8 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{
 			}
 		}
 		if t == "tag-exists" {
-			if k["key"] == false || k["operator"] || k["value"] {
-				return nil, fmt.Errorf("You must set \"key\" and cannot set \"operator\", or \"value\" if type = \"tag-exists\".")
+			if k["key"] == true || k["operator"] == true || k["value"] == false {
+				return nil, fmt.Errorf("You must set \"value\" and cannot set \"operator\", or \"key\" if type = \"tag-exists\".")
 			}
 		}
 		if t == "tag-value" {
@@ -513,8 +511,8 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{
 			}
 		}
 		if t == "region" || t == "resource-id" || t == "account-id" {
-			if !k["key"] || k["operator"] || k["value"] {
-				return nil, fmt.Errorf("You must set \"key\" and \"operator\" and cannot set \"value\" if type = \"region\", \"resource-id\", or \"account-id\".")
+			if k["key"] || !k["operator"] || !k["value"] {
+				return nil, fmt.Errorf("You must set \"value\" and \"operator\" and cannot set \"key\" if type = \"region\", \"resource-id\", or \"account-id\".")
 			}
 		}
 		if t == "attachment-type" {
