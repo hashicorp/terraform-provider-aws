@@ -324,7 +324,7 @@ func schemaCostExplorerCostCategoryRuleExpressionComputed() *schema.Resource {
 }
 
 func dataSourceCostExplorerCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CostExplorerConn
+	conn := meta.(*conns.AWSClient).CEConn
 
 	resp, err := conn.DescribeCostCategoryDefinitionWithContext(ctx, &costexplorer.DescribeCostCategoryDefinitionInput{CostCategoryArn: aws.String(d.Get("cost_category_arn").(string))})
 

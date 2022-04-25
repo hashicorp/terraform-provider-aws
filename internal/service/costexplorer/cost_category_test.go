@@ -140,7 +140,7 @@ func testAccCheckCostExplorerCostCategoryExists(resourceName string, output *cos
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CostExplorerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn
 		resp, err := conn.DescribeCostCategoryDefinition(&costexplorer.DescribeCostCategoryDefinitionInput{CostCategoryArn: aws.String(rs.Primary.ID)})
 
 		if err != nil {
@@ -158,7 +158,7 @@ func testAccCheckCostExplorerCostCategoryExists(resourceName string, output *cos
 }
 
 func testAccCheckCostExplorerCostCategoryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CostExplorerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_costexplorer_cost_category" {

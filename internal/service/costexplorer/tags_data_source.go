@@ -86,7 +86,7 @@ func DataSourceCostExplorerTags() *schema.Resource {
 }
 
 func dataSourceCostExplorerTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CostExplorerConn
+	conn := meta.(*conns.AWSClient).CEConn
 
 	input := &costexplorer.GetTagsInput{
 		TimePeriod: expandCostExplorerTagsTimePeriod(d.Get("time_period").([]interface{})[0].(map[string]interface{})),

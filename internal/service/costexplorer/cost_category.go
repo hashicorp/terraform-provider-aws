@@ -380,7 +380,7 @@ func schemaCostExplorerCostCategoryRuleExpression() *schema.Resource {
 }
 
 func resourceCostExplorerCostCategoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CostExplorerConn
+	conn := meta.(*conns.AWSClient).CEConn
 	input := &costexplorer.CreateCostCategoryDefinitionInput{
 		Name:        aws.String(d.Get("name").(string)),
 		Rules:       expandCostExplorerCostCategoryRules(d.Get("rule").(*schema.Set).List()),
@@ -424,7 +424,7 @@ func resourceCostExplorerCostCategoryCreate(ctx context.Context, d *schema.Resou
 }
 
 func resourceCostExplorerCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CostExplorerConn
+	conn := meta.(*conns.AWSClient).CEConn
 
 	resp, err := conn.DescribeCostCategoryDefinitionWithContext(ctx, &costexplorer.DescribeCostCategoryDefinitionInput{CostCategoryArn: aws.String(d.Id())})
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
@@ -454,7 +454,7 @@ func resourceCostExplorerCostCategoryRead(ctx context.Context, d *schema.Resourc
 }
 
 func resourceCostExplorerCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CostExplorerConn
+	conn := meta.(*conns.AWSClient).CEConn
 
 	input := &costexplorer.UpdateCostCategoryDefinitionInput{
 		CostCategoryArn: aws.String(d.Id()),
@@ -480,7 +480,7 @@ func resourceCostExplorerCostCategoryUpdate(ctx context.Context, d *schema.Resou
 }
 
 func resourceCostExplorerCostCategoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CostExplorerConn
+	conn := meta.(*conns.AWSClient).CEConn
 
 	_, err := conn.DeleteCostCategoryDefinitionWithContext(ctx, &costexplorer.DeleteCostCategoryDefinitionInput{
 		CostCategoryArn: aws.String(d.Id()),
