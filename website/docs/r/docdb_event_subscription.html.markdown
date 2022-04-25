@@ -21,7 +21,6 @@ resource "aws_docdb_cluster" "example" {
   skip_final_snapshot = true
 }
 
-
 resource "aws_sns_topic" "example" {
   name = "example-events"
 }
