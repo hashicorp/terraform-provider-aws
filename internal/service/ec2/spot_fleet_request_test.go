@@ -56,6 +56,35 @@ func TestAccEC2SpotFleetRequest_basic(t *testing.T) {
 	})
 }
 
+func TestAccEC2SpotFleetRequest_disappears(t *testing.T) {
+	var sfr ec2.SpotFleetRequestConfig
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_spot_fleet_request.test"
+
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpotFleetRequestConfig(rName, publicKey, validUntil),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSpotFleetRequest(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccEC2SpotFleetRequest_tags(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -74,7 +103,7 @@ func TestAccEC2SpotFleetRequest_tags(t *testing.T) {
 		CheckDestroy: testAccCheckSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotFleetRequestTags1Config(rName, publicKey, validUntil, "key1", "value1"),
+				Config: testAccSpotFleetRequestConfigTags1(rName, publicKey, validUntil, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -88,7 +117,7 @@ func TestAccEC2SpotFleetRequest_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
 			},
 			{
-				Config: testAccSpotFleetRequestTags2Config(rName, publicKey, validUntil, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSpotFleetRequestConfigTags2(rName, publicKey, validUntil, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -97,7 +126,7 @@ func TestAccEC2SpotFleetRequest_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSpotFleetRequestTags1Config(rName, publicKey, validUntil, "key2", "value2"),
+				Config: testAccSpotFleetRequestConfigTags1(rName, publicKey, validUntil, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -1515,7 +1544,7 @@ func TestAccEC2SpotFleetRequest_withInstanceStoreAMI(t *testing.T) {
 	})
 }
 
-func TestAccEC2SpotFleetRequest_disappears(t *testing.T) {
+func TestAccEC2SpotFleetRequest_noTerminateInstancesWithExpiration(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1533,12 +1562,18 @@ func TestAccEC2SpotFleetRequest_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotFleetRequestConfig(rName, publicKey, validUntil),
+				Config: testAccSpotFleetRequestNoTerminateInstancesWithExpirationConfig(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSpotFleetRequest(), resourceName),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instances_on_delete", "true"),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instances_with_expiration", "false"),
 				),
-				ExpectNonEmptyPlan: true,
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"terminate_instances_on_delete", "wait_for_fulfillment"},
 			},
 		},
 	})
@@ -1796,7 +1831,7 @@ resource "aws_spot_fleet_request" "test" {
 `, rName, validUntil))
 }
 
-func testAccSpotFleetRequestTags1Config(rName, publicKey, validUntil, tagKey1, tagValue1 string) string {
+func testAccSpotFleetRequestConfigTags1(rName, publicKey, validUntil, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
@@ -1826,7 +1861,7 @@ resource "aws_spot_fleet_request" "test" {
 `, rName, validUntil, tagKey1, tagValue1))
 }
 
-func testAccSpotFleetRequestTags2Config(rName, publicKey, validUntil, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccSpotFleetRequestConfigTags2(rName, publicKey, validUntil, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
@@ -3203,4 +3238,30 @@ resource "aws_spot_fleet_request" "test" {
   depends_on = ["aws_iam_policy_attachment.test"]
 }
 `, rName, validUntil, strategy))
+}
+
+func testAccSpotFleetRequestNoTerminateInstancesWithExpirationConfig(rName, publicKey, validUntil string) string {
+	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                  = aws_iam_role.test.arn
+  spot_price                      = "0.05"
+  target_capacity                 = 2
+  valid_until                     = %[2]q
+  terminate_instances_on_delete   = true
+  instance_interruption_behaviour = "stop"
+  wait_for_fulfillment            = true
+
+  launch_specification {
+    instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    key_name      = aws_key_pair.test.key_name
+
+    tags = {
+      Name = %[1]q
+    }
+  }
+
+  depends_on = [aws_iam_policy_attachment.test]
+}
+`, rName, validUntil))
 }

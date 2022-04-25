@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -506,6 +507,11 @@ func ResourceSpotFleetRequest() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
+			"terminate_instances_on_delete": {
+				Type:         nullable.TypeNullableBool,
+				Optional:     true,
+				ValidateFunc: nullable.ValidateTypeStringNullableBool,
+			},
 			"terminate_instances_with_expiration": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -854,8 +860,13 @@ func resourceSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{}) er
 func resourceSpotFleetRequestDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	log.Printf("[INFO] Deleting EC2 Spot Fleet Request: %s", d.Id())
 	terminateInstances := d.Get("terminate_instances_with_expiration").(bool)
+	// If terminate_instances_on_delete is not null, its value is used.
+	if v, null, _ := nullable.Bool(d.Get("terminate_instances_on_delete").(string)).Value(); !null {
+		terminateInstances = v
+	}
+
+	log.Printf("[INFO] Deleting EC2 Spot Fleet Request: %s", d.Id())
 	output, err := conn.CancelSpotFleetRequests(&ec2.CancelSpotFleetRequestsInput{
 		SpotFleetRequestIds: aws.StringSlice([]string{d.Id()}),
 		TerminateInstances:  aws.Bool(terminateInstances),
@@ -1147,7 +1158,6 @@ func readSpotFleetBlockDeviceMappingsFromConfig(d map[string]interface{}, conn *
 }
 
 func buildSpotFleetLaunchSpecifications(d *schema.ResourceData, meta interface{}) ([]*ec2.SpotFleetLaunchSpecification, error) {
-
 	userSpecs := d.Get("launch_specification").(*schema.Set).List()
 	specs := make([]*ec2.SpotFleetLaunchSpecification, len(userSpecs))
 	for i, userSpec := range userSpecs {
