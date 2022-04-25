@@ -989,7 +989,7 @@ func expandRequestLaunchTemplateData(d *schema.ResourceData) *ec2.RequestLaunchT
 	}
 
 	if v, ok := d.GetOk("metadata_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.MetadataOptions = expandLaunchTemplateInstanceMetadataOptions(v.([]interface{})[0].(map[string]interface{}))
+		apiObject.MetadataOptions = expandLaunchTemplateInstanceMetadataOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("monitoring"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -1353,7 +1353,7 @@ func expandLaunchTemplateLicenseConfigurationRequests(tfList []interface{}) []*e
 	return apiObjects
 }
 
-func expandLaunchTemplateInstanceMetadataOptions(tfMap map[string]interface{}) *ec2.LaunchTemplateInstanceMetadataOptionsRequest {
+func expandLaunchTemplateInstanceMetadataOptionsRequest(tfMap map[string]interface{}) *ec2.LaunchTemplateInstanceMetadataOptionsRequest {
 	if tfMap == nil {
 		return nil
 	}
