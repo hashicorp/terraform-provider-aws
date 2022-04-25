@@ -592,6 +592,30 @@ func TestAccIoTTopicRule_updateKinesisErrorAction(t *testing.T) {
 	})
 }
 
+func TestAccIoTTopicRule_kafka(t *testing.T) {
+	rName := sdkacctest.RandString(5)
+	resourceName := "aws_iot_topic_rule.rule"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTopicRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTopicRule_kafka(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists("aws_iot_topic_rule.rule"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckTopicRuleDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 
@@ -902,6 +926,27 @@ resource "aws_iot_topic_rule" "rule" {
   }
 }
 `, rName, separator))
+}
+
+func testAccTopicRule_kafka(rName string) string {
+	return acctest.ConfigCompose(
+		testAccTopicRuleRole(rName),
+		fmt.Sprintf(`
+resource "aws_iot_topic_rule" "rule" {
+  name        = "test_rule_%[1]s"
+  description = "Example rule"
+  enabled     = true
+  sql         = "SELECT * FROM 'topic/test'"
+  sql_version = "2015-10-08"
+  kafka {
+    destination_arn       = "[vpc destination arn]"
+    topic                 = "fake_topic"
+    bootstrap_servers     = "b-1.localhost:9094"
+    ssl_keystore          = "$${get_secret('secret_name', 'SecretBinary', '', '${aws_iam_role.iot_role.arn}')}"
+    ssl_keystore_password = "password"
+  }
+}
+`, rName))
 }
 
 func testAccTopicRule_kinesis(rName string) string {
