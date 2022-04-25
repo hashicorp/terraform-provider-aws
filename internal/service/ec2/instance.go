@@ -1531,12 +1531,13 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("auto_recovery") {
+	if d.HasChange("maintenance_options") {
 		log.Printf("[INFO] Modifying instance automatic recovery settings %s", d.Id())
 		_, err := conn.ModifyInstanceMaintenanceOptions(&ec2.ModifyInstanceMaintenanceOptionsInput{
+			AutoRecovery: aws.String(d.Get("maintenance_options.0.auto_recovery").(string)),
 			InstanceId:   aws.String(d.Id()),
-			AutoRecovery: aws.String(d.Get("auto_recovery").(string)),
 		})
+
 		if err != nil {
 			return err
 		}
@@ -2674,7 +2675,7 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 		opts.CapacityReservationSpecification = expandCapacityReservationSpecification(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("attribute_name"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("maintenance_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		opts.MaintenanceOptions = expandInstanceMaintenanceOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
