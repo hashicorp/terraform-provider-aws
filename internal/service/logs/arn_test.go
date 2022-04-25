@@ -1,9 +1,9 @@
-package cloudwatchlogs_test
+package logs_test
 
 import (
 	"testing"
 
-	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
+	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 )
 
 func TestTrimLogGroupARNWildcardSuffix(t *testing.T) {
@@ -29,7 +29,7 @@ func TestTrimLogGroupARNWildcardSuffix(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
-			got := tfcloudwatchlogs.TrimLogGroupARNWildcardSuffix(testCase.InputARN)
+			got := tflogs.TrimLogGroupARNWildcardSuffix(testCase.InputARN)
 
 			if got != testCase.ExpectedARN {
 				t.Errorf("got %s, expected %s", got, testCase.ExpectedARN)

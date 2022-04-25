@@ -1,4 +1,4 @@
-package cloudwatchlogs
+package logs
 
 import (
 	"fmt"
@@ -67,7 +67,7 @@ func ResourceGroup() *schema.Resource {
 }
 
 func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -123,7 +123,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -186,7 +186,7 @@ func LookupGroup(conn *cloudwatchlogs.CloudWatchLogs, name string) (*cloudwatchl
 }
 
 func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 
 	name := d.Id()
 	log.Printf("[DEBUG] Updating CloudWatch Log Group: %q", name)
@@ -246,7 +246,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 	log.Printf("[INFO] Deleting CloudWatch Log Group: %s", d.Id())
 	_, err := conn.DeleteLogGroup(&cloudwatchlogs.DeleteLogGroupInput{
 		LogGroupName: aws.String(d.Get("name").(string)),

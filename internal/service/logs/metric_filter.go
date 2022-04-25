@@ -1,4 +1,4 @@
-package cloudwatchlogs
+package logs
 
 import (
 	"fmt"
@@ -101,7 +101,7 @@ func ResourceMetricFilter() *schema.Resource {
 }
 
 func resourceMetricFilterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 
 	name := d.Get("name").(string)
 	logGroupName := d.Get("log_group_name").(string)
@@ -136,7 +136,7 @@ func resourceMetricFilterUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceMetricFilterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 
 	mf, err := LookupMetricFilter(conn, d.Get("name").(string),
 		d.Get("log_group_name").(string), nil)
@@ -203,7 +203,7 @@ func LookupMetricFilter(conn *cloudwatchlogs.CloudWatchLogs,
 }
 
 func resourceMetricFilterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 
 	input := cloudwatchlogs.DeleteMetricFilterInput{
 		FilterName:   aws.String(d.Get("name").(string)),

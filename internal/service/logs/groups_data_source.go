@@ -1,4 +1,4 @@
-package cloudwatchlogs
+package logs
 
 import (
 	"fmt"
@@ -33,7 +33,7 @@ func DataSourceGroups() *schema.Resource {
 }
 
 func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 
 	input := &cloudwatchlogs.DescribeLogGroupsInput{
 		LogGroupNamePrefix: aws.String(d.Get("log_group_name_prefix").(string)),

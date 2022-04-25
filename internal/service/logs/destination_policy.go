@@ -1,4 +1,4 @@
-package cloudwatchlogs
+package logs
 
 import (
 	"fmt"
@@ -51,7 +51,7 @@ func ResourceDestinationPolicy() *schema.Resource {
 }
 
 func resourceDestinationPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 
 	destination_name := d.Get("destination_name").(string)
 
@@ -75,7 +75,7 @@ func resourceDestinationPolicyPut(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceDestinationPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 	destination, exists, err := LookupDestination(conn, d.Id(), nil)
 	if err != nil {
 		return err

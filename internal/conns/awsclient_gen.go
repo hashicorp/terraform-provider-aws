@@ -370,7 +370,6 @@ type AWSClient struct {
 	CloudSearchDomainConn            *cloudsearchdomain.CloudSearchDomain
 	CloudTrailConn                   *cloudtrail.CloudTrail
 	CloudWatchConn                   *cloudwatch.CloudWatch
-	CloudWatchLogsConn               *cloudwatchlogs.CloudWatchLogs
 	CodeArtifactConn                 *codeartifact.CodeArtifact
 	CodeBuildConn                    *codebuild.CodeBuild
 	CodeCommitConn                   *codecommit.CodeCommit
@@ -491,6 +490,7 @@ type AWSClient struct {
 	LicenseManagerConn               *licensemanager.LicenseManager
 	LightsailConn                    *lightsail.Lightsail
 	LocationConn                     *locationservice.LocationService
+	LogsConn                         *cloudwatchlogs.CloudWatchLogs
 	LookoutEquipmentConn             *lookoutequipment.LookoutEquipment
 	LookoutMetricsConn               *lookoutmetrics.LookoutMetrics
 	LookoutVisionConn                *lookoutforvision.LookoutForVision

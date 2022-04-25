@@ -1,4 +1,4 @@
-package cloudwatchlogs
+package logs
 
 import (
 	"context"
@@ -57,7 +57,7 @@ func ResourceQueryDefinition() *schema.Resource {
 }
 
 func resourceQueryDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 
 	input := getQueryDefinitionInput(d)
 	r, err := conn.PutQueryDefinitionWithContext(ctx, input)
@@ -86,7 +86,7 @@ func getQueryDefinitionInput(d *schema.ResourceData) *cloudwatchlogs.PutQueryDef
 }
 
 func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 
 	result, err := FindQueryDefinition(ctx, conn, d.Get("name").(string), d.Id())
 
@@ -111,7 +111,7 @@ func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceQueryDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 
 	_, err := conn.PutQueryDefinitionWithContext(ctx, getQueryDefinitionInput(d))
 	if err != nil {
@@ -122,7 +122,7 @@ func resourceQueryDefinitionUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceQueryDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 
 	input := &cloudwatchlogs.DeleteQueryDefinitionInput{
 		QueryDefinitionId: aws.String(d.Id()),

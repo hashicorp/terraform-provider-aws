@@ -42,7 +42,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudsearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codecommit"
@@ -108,6 +107,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
@@ -468,8 +468,8 @@ func Provider() *schema.Provider {
 			"aws_cloudwatch_event_connection": events.DataSourceConnection(),
 			"aws_cloudwatch_event_source":     events.DataSourceSource(),
 
-			"aws_cloudwatch_log_group":  cloudwatchlogs.DataSourceGroup(),
-			"aws_cloudwatch_log_groups": cloudwatchlogs.DataSourceGroups(),
+			"aws_cloudwatch_log_group":  logs.DataSourceGroup(),
+			"aws_cloudwatch_log_groups": logs.DataSourceGroups(),
 
 			"aws_codeartifact_authorization_token": codeartifact.DataSourceAuthorizationToken(),
 			"aws_codeartifact_repository_endpoint": codeartifact.DataSourceRepositoryEndpoint(),
@@ -1061,14 +1061,14 @@ func Provider() *schema.Provider {
 			"aws_cloudwatch_event_rule":            events.ResourceRule(),
 			"aws_cloudwatch_event_target":          events.ResourceTarget(),
 
-			"aws_cloudwatch_log_destination":         cloudwatchlogs.ResourceDestination(),
-			"aws_cloudwatch_log_destination_policy":  cloudwatchlogs.ResourceDestinationPolicy(),
-			"aws_cloudwatch_log_group":               cloudwatchlogs.ResourceGroup(),
-			"aws_cloudwatch_log_metric_filter":       cloudwatchlogs.ResourceMetricFilter(),
-			"aws_cloudwatch_log_resource_policy":     cloudwatchlogs.ResourceResourcePolicy(),
-			"aws_cloudwatch_log_stream":              cloudwatchlogs.ResourceStream(),
-			"aws_cloudwatch_log_subscription_filter": cloudwatchlogs.ResourceSubscriptionFilter(),
-			"aws_cloudwatch_query_definition":        cloudwatchlogs.ResourceQueryDefinition(),
+			"aws_cloudwatch_log_destination":         logs.ResourceDestination(),
+			"aws_cloudwatch_log_destination_policy":  logs.ResourceDestinationPolicy(),
+			"aws_cloudwatch_log_group":               logs.ResourceGroup(),
+			"aws_cloudwatch_log_metric_filter":       logs.ResourceMetricFilter(),
+			"aws_cloudwatch_log_resource_policy":     logs.ResourceResourcePolicy(),
+			"aws_cloudwatch_log_stream":              logs.ResourceStream(),
+			"aws_cloudwatch_log_subscription_filter": logs.ResourceSubscriptionFilter(),
+			"aws_cloudwatch_query_definition":        logs.ResourceQueryDefinition(),
 
 			"aws_codeartifact_domain":                        codeartifact.ResourceDomain(),
 			"aws_codeartifact_domain_permissions_policy":     codeartifact.ResourceDomainPermissionsPolicy(),

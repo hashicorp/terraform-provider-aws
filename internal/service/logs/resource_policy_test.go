@@ -1,4 +1,4 @@
-package cloudwatchlogs_test
+package logs_test
 
 import (
 	"fmt"
@@ -10,10 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
+	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 )
 
-func TestAccCloudWatchLogsResourcePolicy_basic(t *testing.T) {
+func TestAccLogsResourcePolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_resource_policy.test"
 	var resourcePolicy cloudwatchlogs.ResourcePolicy
@@ -49,7 +49,7 @@ func TestAccCloudWatchLogsResourcePolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchLogsResourcePolicy_ignoreEquivalent(t *testing.T) {
+func TestAccLogsResourcePolicy_ignoreEquivalent(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_resource_policy.test"
 	var resourcePolicy cloudwatchlogs.ResourcePolicy
@@ -82,7 +82,7 @@ func TestAccCloudWatchLogsResourcePolicy_ignoreEquivalent(t *testing.T) {
 
 func testAccCheckCloudWatchLogResourcePolicy(pr string, resourcePolicy *cloudwatchlogs.ResourcePolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 		rs, ok := s.RootModule().Resources[pr]
 		if !ok {
 			return fmt.Errorf("Not found: %s", pr)
@@ -92,7 +92,7 @@ func testAccCheckCloudWatchLogResourcePolicy(pr string, resourcePolicy *cloudwat
 			return fmt.Errorf("No ID is set")
 		}
 
-		policy, exists, err := tfcloudwatchlogs.LookupResourcePolicy(conn, rs.Primary.ID, nil)
+		policy, exists, err := tflogs.LookupResourcePolicy(conn, rs.Primary.ID, nil)
 		if err != nil {
 			return err
 		}
@@ -107,14 +107,14 @@ func testAccCheckCloudWatchLogResourcePolicy(pr string, resourcePolicy *cloudwat
 }
 
 func testAccCheckResourcePolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_resource_policy" {
 			continue
 		}
 
-		_, exists, err := tfcloudwatchlogs.LookupResourcePolicy(conn, rs.Primary.ID, nil)
+		_, exists, err := tflogs.LookupResourcePolicy(conn, rs.Primary.ID, nil)
 
 		if err != nil {
 			return fmt.Errorf("error reading CloudWatch Log Resource Policy (%s): %w", rs.Primary.ID, err)

@@ -1,4 +1,4 @@
-package cloudwatchlogs_test
+package logs_test
 
 import (
 	"fmt"
@@ -11,10 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
+	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 )
 
-func TestAccCloudWatchLogsDestination_basic(t *testing.T) {
+func TestAccLogsDestination_basic(t *testing.T) {
 	var destination cloudwatchlogs.Destination
 	resourceName := "aws_cloudwatch_log_destination.test"
 	streamResourceName := "aws_kinesis_stream.test"
@@ -45,7 +45,7 @@ func TestAccCloudWatchLogsDestination_basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchLogsDestination_disappears(t *testing.T) {
+func TestAccLogsDestination_disappears(t *testing.T) {
 	var destination cloudwatchlogs.Destination
 	resourceName := "aws_cloudwatch_log_destination.test"
 
@@ -61,7 +61,7 @@ func TestAccCloudWatchLogsDestination_disappears(t *testing.T) {
 				Config: testAccDestinationConfig(rstring),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(resourceName, &destination),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchlogs.ResourceDestination(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -70,13 +70,13 @@ func TestAccCloudWatchLogsDestination_disappears(t *testing.T) {
 }
 
 func testAccCheckDestinationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_destination" {
 			continue
 		}
-		_, exists, err := tfcloudwatchlogs.LookupDestination(conn, rs.Primary.ID, nil)
+		_, exists, err := tflogs.LookupDestination(conn, rs.Primary.ID, nil)
 
 		if err != nil {
 			return fmt.Errorf("error reading CloudWatch Log Destination (%s): %w", rs.Primary.ID, err)
@@ -98,8 +98,8 @@ func testAccCheckDestinationExists(n string, d *cloudwatchlogs.Destination) reso
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
-		destination, exists, err := tfcloudwatchlogs.LookupDestination(conn, rs.Primary.ID, nil)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
+		destination, exists, err := tflogs.LookupDestination(conn, rs.Primary.ID, nil)
 		if err != nil {
 			return err
 		}

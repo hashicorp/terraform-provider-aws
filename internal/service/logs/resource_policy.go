@@ -1,4 +1,4 @@
-package cloudwatchlogs
+package logs
 
 import (
 	"fmt"
@@ -47,7 +47,7 @@ func ResourceResourcePolicy() *schema.Resource {
 }
 
 func resourceResourcePolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy_document").(string))
 
@@ -74,7 +74,7 @@ func resourceResourcePolicyPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 	policyName := d.Get("policy_name").(string)
 	resourcePolicy, exists, err := LookupResourcePolicy(conn, policyName, nil)
 	if err != nil {
@@ -104,7 +104,7 @@ func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceResourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 	input := cloudwatchlogs.DeleteResourcePolicyInput{
 		PolicyName: aws.String(d.Id()),
 	}

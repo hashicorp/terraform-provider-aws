@@ -1,4 +1,4 @@
-package cloudwatchlogs_test
+package logs_test
 
 import (
 	"fmt"
@@ -10,10 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
+	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 )
 
-func TestAccCloudWatchLogsDestinationPolicy_basic(t *testing.T) {
+func TestAccLogsDestinationPolicy_basic(t *testing.T) {
 	var destination cloudwatchlogs.Destination
 	resourceName := "aws_cloudwatch_log_destination_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -50,13 +50,13 @@ func TestAccCloudWatchLogsDestinationPolicy_basic(t *testing.T) {
 }
 
 func testAccCheckDestinationPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_destination_policy" {
 			continue
 		}
-		_, exists, err := tfcloudwatchlogs.LookupDestination(conn, rs.Primary.ID, nil)
+		_, exists, err := tflogs.LookupDestination(conn, rs.Primary.ID, nil)
 
 		if err != nil {
 			return fmt.Errorf("error reading CloudWatch Log Destination (%s): %w", rs.Primary.ID, err)
@@ -78,8 +78,8 @@ func testAccCheckDestinationPolicyExists(n string, d *cloudwatchlogs.Destination
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
-		destination, exists, err := tfcloudwatchlogs.LookupDestination(conn, rs.Primary.ID, nil)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
+		destination, exists, err := tflogs.LookupDestination(conn, rs.Primary.ID, nil)
 		if err != nil {
 			return err
 		}

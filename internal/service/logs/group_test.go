@@ -1,4 +1,4 @@
-package cloudwatchlogs_test
+package logs_test
 
 import (
 	"fmt"
@@ -11,10 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
+	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 )
 
-func TestAccCloudWatchLogsGroup_basic(t *testing.T) {
+func TestAccLogsGroup_basic(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_group.test"
@@ -45,7 +45,7 @@ func TestAccCloudWatchLogsGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchLogsGroup_namePrefix(t *testing.T) {
+func TestAccLogsGroup_namePrefix(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	resourceName := "aws_cloudwatch_log_group.test"
 
@@ -72,7 +72,7 @@ func TestAccCloudWatchLogsGroup_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchLogsGroup_NamePrefix_retention(t *testing.T) {
+func TestAccLogsGroup_NamePrefix_retention(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_cloudwatch_log_group.test"
@@ -109,7 +109,7 @@ func TestAccCloudWatchLogsGroup_NamePrefix_retention(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchLogsGroup_generatedName(t *testing.T) {
+func TestAccLogsGroup_generatedName(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	resourceName := "aws_cloudwatch_log_group.test"
 
@@ -135,7 +135,7 @@ func TestAccCloudWatchLogsGroup_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchLogsGroup_retentionPolicy(t *testing.T) {
+func TestAccLogsGroup_retentionPolicy(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_group.test"
@@ -170,7 +170,7 @@ func TestAccCloudWatchLogsGroup_retentionPolicy(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchLogsGroup_multiple(t *testing.T) {
+func TestAccLogsGroup_multiple(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_group.alpha"
@@ -202,7 +202,7 @@ func TestAccCloudWatchLogsGroup_multiple(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchLogsGroup_disappears(t *testing.T) {
+func TestAccLogsGroup_disappears(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_group.test"
@@ -225,7 +225,7 @@ func TestAccCloudWatchLogsGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchLogsGroup_tagging(t *testing.T) {
+func TestAccLogsGroup_tagging(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_group.test"
@@ -288,7 +288,7 @@ func TestAccCloudWatchLogsGroup_tagging(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchLogsGroup_kmsKey(t *testing.T) {
+func TestAccLogsGroup_kmsKey(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_group.test"
@@ -324,7 +324,7 @@ func TestAccCloudWatchLogsGroup_kmsKey(t *testing.T) {
 
 func testAccCheckCloudWatchLogGroupDisappears(lg *cloudwatchlogs.LogGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 		opts := &cloudwatchlogs.DeleteLogGroupInput{
 			LogGroupName: lg.LogGroupName,
 		}
@@ -340,8 +340,8 @@ func testAccCheckCloudWatchLogGroupExists(n string, lg *cloudwatchlogs.LogGroup)
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
-		logGroup, err := tfcloudwatchlogs.LookupGroup(conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
+		logGroup, err := tflogs.LookupGroup(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -356,13 +356,13 @@ func testAccCheckCloudWatchLogGroupExists(n string, lg *cloudwatchlogs.LogGroup)
 }
 
 func testAccCheckGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_group" {
 			continue
 		}
-		logGroup, err := tfcloudwatchlogs.LookupGroup(conn, rs.Primary.ID)
+		logGroup, err := tflogs.LookupGroup(conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error reading CloudWatch Log Group (%s): %w", rs.Primary.ID, err)

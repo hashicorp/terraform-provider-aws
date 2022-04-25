@@ -1,4 +1,4 @@
-package cloudwatchlogs
+package logs
 
 import (
 	"fmt"
@@ -62,7 +62,7 @@ func ResourceDestination() *schema.Resource {
 }
 
 func resourceDestinationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 
 	name := d.Get("name").(string)
 	roleArn := d.Get("role_arn").(string)
@@ -98,7 +98,7 @@ func resourceDestinationPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDestinationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 
 	destination, exists, err := LookupDestination(conn, d.Id(), nil)
 	if err != nil {
@@ -118,7 +118,7 @@ func resourceDestinationRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDestinationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchLogsConn
+	conn := meta.(*conns.AWSClient).LogsConn
 
 	params := &cloudwatchlogs.DeleteDestinationInput{
 		DestinationName: aws.String(d.Id()),

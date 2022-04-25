@@ -1,4 +1,4 @@
-package cloudwatchlogs_test
+package logs_test
 
 import (
 	"fmt"
@@ -11,10 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
+	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 )
 
-func TestAccCloudWatchLogsMetricFilter_basic(t *testing.T) {
+func TestAccLogsMetricFilter_basic(t *testing.T) {
 	var mf cloudwatchlogs.MetricFilter
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
@@ -107,7 +107,7 @@ func TestAccCloudWatchLogsMetricFilter_basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchLogsMetricFilter_disappears(t *testing.T) {
+func TestAccLogsMetricFilter_disappears(t *testing.T) {
 	var mf cloudwatchlogs.MetricFilter
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
@@ -122,7 +122,7 @@ func TestAccCloudWatchLogsMetricFilter_disappears(t *testing.T) {
 				Config: testAccMetricFilterConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogMetricFilterExists(resourceName, &mf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchlogs.ResourceMetricFilter(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceMetricFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -130,7 +130,7 @@ func TestAccCloudWatchLogsMetricFilter_disappears(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchLogsMetricFilter_Disappears_logGroup(t *testing.T) {
+func TestAccLogsMetricFilter_Disappears_logGroup(t *testing.T) {
 	var mf cloudwatchlogs.MetricFilter
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
@@ -145,7 +145,7 @@ func TestAccCloudWatchLogsMetricFilter_Disappears_logGroup(t *testing.T) {
 				Config: testAccMetricFilterConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogMetricFilterExists(resourceName, &mf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchlogs.ResourceGroup(), "aws_cloudwatch_log_group.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceGroup(), "aws_cloudwatch_log_group.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -236,8 +236,8 @@ func testAccCheckCloudWatchLogMetricFilterExists(n string, mf *cloudwatchlogs.Me
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
-		metricFilter, err := tfcloudwatchlogs.LookupMetricFilter(conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["log_group_name"], nil)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
+		metricFilter, err := tflogs.LookupMetricFilter(conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["log_group_name"], nil)
 		if err != nil {
 			return err
 		}
@@ -249,14 +249,14 @@ func testAccCheckCloudWatchLogMetricFilterExists(n string, mf *cloudwatchlogs.Me
 }
 
 func testAccCheckMetricFilterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchLogsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_metric_filter" {
 			continue
 		}
 
-		_, err := tfcloudwatchlogs.LookupMetricFilter(conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["log_group_name"], nil)
+		_, err := tflogs.LookupMetricFilter(conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["log_group_name"], nil)
 		if err == nil {
 			return fmt.Errorf("MetricFilter Still Exists: %s", rs.Primary.ID)
 		}
