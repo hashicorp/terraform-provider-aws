@@ -1,7 +1,7 @@
 //go:build sweep
 // +build sweep
 
-package codedeploy
+package deploy
 
 import (
 	"fmt"
@@ -29,7 +29,7 @@ func sweepApps(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).CodeDeployConn
+	conn := client.(*conns.AWSClient).DeployConn
 	sweepResources := make([]*sweep.SweepResource, 0)
 	var errs *multierror.Error
 

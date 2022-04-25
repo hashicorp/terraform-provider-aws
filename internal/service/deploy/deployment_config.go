@@ -1,4 +1,4 @@
-package codedeploy
+package deploy
 
 import (
 	"fmt"
@@ -140,7 +140,7 @@ func ResourceDeploymentConfig() *schema.Resource {
 }
 
 func resourceDeploymentConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeDeployConn
+	conn := meta.(*conns.AWSClient).DeployConn
 
 	input := &codedeploy.CreateDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Get("deployment_config_name").(string)),
@@ -160,7 +160,7 @@ func resourceDeploymentConfigCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceDeploymentConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeDeployConn
+	conn := meta.(*conns.AWSClient).DeployConn
 
 	input := &codedeploy.GetDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Id()),
@@ -198,7 +198,7 @@ func resourceDeploymentConfigRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceDeploymentConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeDeployConn
+	conn := meta.(*conns.AWSClient).DeployConn
 
 	input := &codedeploy.DeleteDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Id()),

@@ -175,7 +175,7 @@ service/codecommit:
   - 'internal/service/codecommit/**/*'
   - 'website/**/codecommit_*'
 service/codedeploy:
-  - 'internal/service/codedeploy/**/*'
+  - 'internal/service/deploy/**/*'
   - 'website/**/codedeploy_*'
 service/codepipeline:
   - 'internal/service/codepipeline/**/*'

@@ -122,7 +122,6 @@ provider "aws" {
   <li><code>codeartifact</code></li>
   <li><code>codebuild</code></li>
   <li><code>codecommit</code></li>
-  <li><code>codedeploy</code> (or <code>deploy</code>)</li>
   <li><code>codeguruprofiler</code></li>
   <li><code>codegurureviewer</code></li>
   <li><code>codepipeline</code></li>
@@ -146,6 +145,7 @@ provider "aws" {
   <li><code>datapipeline</code></li>
   <li><code>datasync</code></li>
   <li><code>dax</code></li>
+  <li><code>deploy</code> (or <code>codedeploy</code>)</li>
   <li><code>detective</code></li>
   <li><code>devicefarm</code></li>
   <li><code>devopsguru</code></li>

@@ -1,4 +1,4 @@
-package codedeploy
+package deploy
 
 import (
 	"fmt"
@@ -31,7 +31,7 @@ func ResourceApp() *schema.Resource {
 				}
 
 				applicationName := d.Id()
-				conn := meta.(*conns.AWSClient).CodeDeployConn
+				conn := meta.(*conns.AWSClient).DeployConn
 
 				input := &codedeploy.GetApplicationInput{
 					ApplicationName: aws.String(applicationName),
@@ -94,7 +94,7 @@ func ResourceApp() *schema.Resource {
 }
 
 func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeDeployConn
+	conn := meta.(*conns.AWSClient).DeployConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -123,7 +123,7 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeDeployConn
+	conn := meta.(*conns.AWSClient).DeployConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -190,7 +190,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeDeployConn
+	conn := meta.(*conns.AWSClient).DeployConn
 
 	if d.HasChange("name") {
 		o, n := d.GetChange("name")
@@ -217,7 +217,7 @@ func resourceUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeDeployConn
+	conn := meta.(*conns.AWSClient).DeployConn
 
 	_, err := conn.DeleteApplication(&codedeploy.DeleteApplicationInput{
 		ApplicationName: aws.String(d.Get("name").(string)),

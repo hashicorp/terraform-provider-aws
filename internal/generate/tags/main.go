@@ -792,6 +792,8 @@ func awsServiceName(s string) (string, error) {
 		return "cloudcontrolapi", nil
 	case "cognitoidp":
 		return "cognitoidentityprovider", nil
+	case "deploy":
+		return "codedeploy", nil
 	case "dms":
 		return "databasemigrationservice", nil
 	case "ds":
@@ -827,6 +829,8 @@ func awsServiceNameUpper(s string) (string, error) {
 		return awsServiceNames["cloudcontrolapi"], nil
 	case "cognitoidp":
 		return awsServiceNames["cognitoidentityprovider"], nil
+	case "deploy":
+		return awsServiceNames["codedeploy"], nil
 	case "dms":
 		return awsServiceNames["databasemigrationservice"], nil
 	case "ds":
