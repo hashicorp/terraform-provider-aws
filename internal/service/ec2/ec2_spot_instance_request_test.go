@@ -19,6 +19,7 @@ import (
 func TestAccEC2SpotInstanceRequest_basic(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	resourceName := "aws_spot_instance_request.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -27,7 +28,7 @@ func TestAccEC2SpotInstanceRequest_basic(t *testing.T) {
 		CheckDestroy: testAccCheckSpotInstanceRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestConfig(),
+				Config: testAccSpotInstanceRequestConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(resourceName, &sir),
 					testAccCheckSpotInstanceRequestAttributes(&sir),
@@ -50,6 +51,7 @@ func TestAccEC2SpotInstanceRequest_basic(t *testing.T) {
 func TestAccEC2SpotInstanceRequest_disappears(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
 	resourceName := "aws_spot_instance_request.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -58,7 +60,7 @@ func TestAccEC2SpotInstanceRequest_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckSpotInstanceRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestConfig(),
+				Config: testAccSpotInstanceRequestConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(resourceName, &sir),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSpotInstanceRequest(), resourceName),
@@ -658,17 +660,24 @@ func testAccCheckSpotInstanceRequestRecreated(before, after *ec2.SpotInstanceReq
 	}
 }
 
-func testAccSpotInstanceRequestConfig() string {
+func testAccSpotInstanceRequestConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
-		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"), `
+		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
   ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
   spot_price           = "0.05"
   wait_for_fulfillment = true
 }
-`)
+
+resource "aws_ec2_tag" "test" {
+  resource_id = aws_spot_instance_request.test.spot_instance_id
+  key         = "Name"
+  value       = %[1]q
+}
+`, rName))
 }
 
 func testAccSpotInstanceRequestConfigTags1(rName, tagKey1, tagValue1 string) string {
@@ -685,6 +694,12 @@ resource "aws_spot_instance_request" "test" {
   tags = {
     %[2]q = %[3]q
   }
+}
+
+resource "aws_ec2_tag" "test" {
+  resource_id = aws_spot_instance_request.test.spot_instance_id
+  key         = "Name"
+  value       = %[1]q
 }
 `, rName, tagKey1, tagValue1))
 }
@@ -705,6 +720,12 @@ resource "aws_spot_instance_request" "test" {
     %[4]q = %[5]q
   }
 }
+
+resource "aws_ec2_tag" "test" {
+  resource_id = aws_spot_instance_request.test.spot_instance_id
+  key         = "Name"
+  value       = %[1]q
+}
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
@@ -724,6 +745,12 @@ resource "aws_spot_instance_request" "test" {
     Name = %[1]q
   }
 }
+
+resource "aws_ec2_tag" "test" {
+  resource_id = aws_spot_instance_request.test.spot_instance_id
+  key         = "Name"
+  value       = %[1]q
+}
 `, rName, validUntil))
 }
 
@@ -740,6 +767,12 @@ resource "aws_spot_instance_request" "test" {
   tags = {
     Name = %[1]q
   }
+}
+
+resource "aws_ec2_tag" "test" {
+  resource_id = aws_spot_instance_request.test.spot_instance_id
+  key         = "Name"
+  value       = %[1]q
 }
 `, rName))
 }
@@ -768,6 +801,12 @@ resource "aws_key_pair" "test" {
     Name = %[1]q
   }
 }
+
+resource "aws_ec2_tag" "test" {
+  resource_id = aws_spot_instance_request.test.spot_instance_id
+  key         = "Name"
+  value       = %[1]q
+}
 `, rName, publicKey))
 }
 
@@ -787,6 +826,12 @@ resource "aws_spot_instance_request" "test" {
     Name = %[1]q
   }
 }
+
+resource "aws_ec2_tag" "test" {
+  resource_id = aws_spot_instance_request.test.spot_instance_id
+  key         = "Name"
+  value       = %[1]q
+}
 `, rName))
 }
 
@@ -805,6 +850,12 @@ resource "aws_spot_instance_request" "test" {
   tags = {
     Name = %[1]q
   }
+}
+
+resource "aws_ec2_tag" "test" {
+  resource_id = aws_spot_instance_request.test.spot_instance_id
+  key         = "Name"
+  value       = %[1]q
 }
 `, rName))
 }
@@ -843,6 +894,12 @@ resource "aws_spot_instance_request" "test" {
   tags = {
     Name = %[1]q
   }
+}
+
+resource "aws_ec2_tag" "test" {
+  resource_id = aws_spot_instance_request.test.spot_instance_id
+  key         = "Name"
+  value       = %[1]q
 }
 `, rName))
 }
@@ -895,6 +952,12 @@ resource "aws_security_group" "test" {
     Name = %[1]q
   }
 }
+
+resource "aws_ec2_tag" "test" {
+  resource_id = aws_spot_instance_request.test.spot_instance_id
+  key         = "Name"
+  value       = %[1]q
+}
 `, rName))
 }
 
@@ -924,6 +987,12 @@ resource "aws_key_pair" "test" {
     Name = %[1]q
   }
 }
+
+resource "aws_ec2_tag" "test" {
+  resource_id = aws_spot_instance_request.test.spot_instance_id
+  key         = "Name"
+  value       = %[1]q
+}
 `, rName, publicKey))
 }
 
@@ -942,6 +1011,12 @@ resource "aws_spot_instance_request" "test" {
   tags = {
     Name = %[1]q
   }
+}
+
+resource "aws_ec2_tag" "test" {
+  resource_id = aws_spot_instance_request.test.spot_instance_id
+  key         = "Name"
+  value       = %[1]q
 }
 `, rName, interruptionBehavior))
 }
