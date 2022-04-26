@@ -65,18 +65,6 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bootstrap_brokers_public_sasl_iam": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_public_sasl_scram": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_public_tls": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"broker_node_group_info": {
 				Type:     schema.TypeList,
 				Required: true,

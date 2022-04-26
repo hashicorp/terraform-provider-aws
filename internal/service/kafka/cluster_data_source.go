@@ -36,18 +36,6 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bootstrap_brokers_public_sasl_iam": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_public_sasl_scram": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bootstrap_brokers_public_tls": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"cluster_name": {
 				Type:         schema.TypeString,
 				Required:     true,
