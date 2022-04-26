@@ -13,6 +13,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func StatusAvailabilityZoneOptInStatus(conn *ec2.EC2, groupName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindAvailabilityZoneByGroupName(conn, groupName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.OptInStatus), nil
+	}
+}
+
 func StatusCapacityReservationState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindCapacityReservationByID(conn, id)

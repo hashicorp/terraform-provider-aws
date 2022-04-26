@@ -45,9 +45,11 @@ func FindAvailabilityZone(conn *ec2.EC2, input *ec2.DescribeAvailabilityZonesInp
 	return output[0], nil
 }
 
-func FindAvailabilityZoneByName(conn *ec2.EC2, name string) (*ec2.AvailabilityZone, error) {
+func FindAvailabilityZoneByGroupName(conn *ec2.EC2, name string) (*ec2.AvailabilityZone, error) {
 	input := &ec2.DescribeAvailabilityZonesInput{
-		ZoneNames: aws.StringSlice([]string{name}),
+		Filters: BuildAttributeFilterList(map[string]string{
+			"group-name": name,
+		}),
 	}
 
 	output, err := FindAvailabilityZone(conn, input)
@@ -57,7 +59,7 @@ func FindAvailabilityZoneByName(conn *ec2.EC2, name string) (*ec2.AvailabilityZo
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.ZoneName) != name {
+	if aws.StringValue(output.GroupName) != name {
 		return nil, &resource.NotFoundError{
 			LastRequest: input,
 		}
