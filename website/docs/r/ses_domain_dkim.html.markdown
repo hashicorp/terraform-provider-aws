@@ -17,6 +17,8 @@ Domain ownership needs to be confirmed first using [ses_domain_identity Resource
 The following arguments are supported:
 
 * `domain` - (Required) Verified domain name to generate DKIM tokens for.
+* `origin` - (Optional) Indicates how DKIM was configured for the identity.
+  The possible values are: `AWS_SES`. Defaults to `AWS_SES`.
 
 ## Attributes Reference
 
@@ -27,7 +29,9 @@ In addition to all arguments above, the following attributes are exported:
   See below for an example of how this might be achieved
   when the domain is hosted in Route 53 and managed by Terraform.
   Find out more about verifying domains in Amazon SES
-  in the [AWS SES docs](http://docs.aws.amazon.com/ses/latest/DeveloperGuide/easy-dkim-dns-records.html).
+  in the [AWS SES docs](https://docs.aws.amazon.com/ses/latest/dg/send-email-authentication-dkim-easy-managing.html).
+* `status` - Describes whether or not Amazon SES has successfully located the
+  DKIM records in the DNS records for the domain.
 
 ## Example Usage
 
