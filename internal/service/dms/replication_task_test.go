@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccDMSReplicationTask_basic(t *testing.T) {
+func TestAccReplicationTask_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
 
@@ -61,7 +61,7 @@ func TestAccDMSReplicationTask_basic(t *testing.T) {
 	})
 }
 
-func TestAccDMSReplicationTask_cdcStartPosition(t *testing.T) {
+func TestAccReplicationTask_cdcStartPosition(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
 
@@ -88,7 +88,7 @@ func TestAccDMSReplicationTask_cdcStartPosition(t *testing.T) {
 	})
 }
 
-func TestAccDMSReplicationTask_startReplicationTask(t *testing.T) {
+func TestAccReplicationTask_startReplicationTask(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -128,6 +128,32 @@ func TestAccDMSReplicationTask_startReplicationTask(t *testing.T) {
 					testAccCheckReplicationTaskExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status", "stopped"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccReplicationTask_disappears(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_dms_replication_task.test"
+
+	tags := `
+    Test = "test"
+`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckReplicationTaskDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dmsReplicationTaskConfig(rName, tags),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationTaskExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfdms.ResourceReplicationTask(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
