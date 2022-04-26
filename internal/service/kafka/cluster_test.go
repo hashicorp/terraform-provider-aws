@@ -183,79 +183,6 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_instanceType(t *testing.T) {
 	})
 }
 
-func TestAccKafkaCluster_BrokerNodeGroupInfo_publicAccess(t *testing.T) {
-	var cluster1 kafka.ClusterInfo
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfigBrokerNodeGroupInfoNoPublicAccess(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.0.type", "DISABLED"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"bootstrap_brokers",          // API may mutate ordering and selection of brokers to return
-					"bootstrap_brokers_sasl_iam", // API may mutate ordering and selection of brokers to return
-					"current_version",
-				},
-			},
-			{
-				Config: testAccClusterConfigBrokerNodeGroupInfoPublicAccess(rName, "SERVICE_PROVIDED_EIPS"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.0.type", "SERVICE_PROVIDED_EIPS"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"bootstrap_brokers",                 // API may mutate ordering and selection of brokers to return
-					"bootstrap_brokers_sasl_iam",        // API may mutate ordering and selection of brokers to return
-					"bootstrap_brokers_public_sasl_iam", // API may mutate ordering and selection of brokers to return
-					"current_version",
-				},
-			},
-			{
-				Config: testAccClusterConfigBrokerNodeGroupInfoPublicAccess(rName, "DISABLED"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.0.type", "DISABLED"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"bootstrap_brokers",          // API may mutate ordering and selection of brokers to return
-					"bootstrap_brokers_sasl_iam", // API may mutate ordering and selection of brokers to return
-					"current_version",
-				},
-			},
-		},
-	})
-}
-
 func TestAccKafkaCluster_ClientAuthenticationSASL_scram(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1050,7 +977,7 @@ func testAccPreCheck(t *testing.T) {
 func testAccClusterBaseConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "example_vpc" {
-  cidr_block = "192.168.0.0/21"
+  cidr_block = "192.168.0.0/22"
 
   tags = {
     Name = %[1]q
@@ -1087,81 +1014,8 @@ resource "aws_subnet" "example_subnet_az3" {
   }
 }
 
-resource "aws_subnet" "example_public_subnet_az1" {
-  vpc_id                  = aws_vpc.example_vpc.id
-  cidr_block              = "192.168.3.0/24"
-  availability_zone       = data.aws_availability_zones.available.names[0]
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "example_public_subnet_az2" {
-  vpc_id                  = aws_vpc.example_vpc.id
-  cidr_block              = "192.168.4.0/24"
-  availability_zone       = data.aws_availability_zones.available.names[1]
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "example_public_subnet_az3" {
-  vpc_id                  = aws_vpc.example_vpc.id
-  cidr_block              = "192.168.5.0/24"
-  availability_zone       = data.aws_availability_zones.available.names[2]
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_internet_gateway" "example_igw" {
-  vpc_id = aws_vpc.example_vpc.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table" "example_route_tbl" {
-  vpc_id = aws_vpc.example_vpc.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.example_igw.id
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table_association" "route_tbl_assoc_1" {
-  subnet_id      = aws_subnet.example_public_subnet_az1.id
-  route_table_id = aws_route_table.example_route_tbl.id
-}
-
-resource "aws_route_table_association" "route_tbl_assoc_2" {
-  subnet_id      = aws_subnet.example_public_subnet_az2.id
-  route_table_id = aws_route_table.example_route_tbl.id
-}
-
-resource "aws_route_table_association" "route_tbl_assoc_3" {
-  subnet_id      = aws_subnet.example_public_subnet_az3.id
-  route_table_id = aws_route_table.example_route_tbl.id
-}
-
 resource "aws_security_group" "example_sg" {
   vpc_id = aws_vpc.example_vpc.id
-
-  tags = {
-    Name = %[1]q
-  }
 }
 `, rName))
 }
@@ -1215,55 +1069,6 @@ resource "aws_msk_cluster" "test" {
   }
 }
 `, rName, t))
-}
-
-func testAccClusterConfigBrokerNodeGroupInfoNoPublicAccess(rName string) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
-
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_public_subnet_az1.id, aws_subnet.example_public_subnet_az2.id, aws_subnet.example_public_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-  }
-
-  client_authentication {
-    sasl {
-      iam = true
-    }
-  }
-}
-`, rName))
-}
-
-func testAccClusterConfigBrokerNodeGroupInfoPublicAccess(rName string, pa string) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
-
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_public_subnet_az1.id, aws_subnet.example_public_subnet_az2.id, aws_subnet.example_public_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-    public_access {
-      type = %[2]q
-    }
-  }
-
-  client_authentication {
-    sasl {
-      iam = true
-    }
-  }
-}
-`, rName, pa))
 }
 
 func testAccClusterConfigRootCA(commonName string) string {
