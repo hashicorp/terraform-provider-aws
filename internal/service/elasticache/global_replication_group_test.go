@@ -251,10 +251,10 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_NoChange_
 	resourceName := "aws_elasticache_global_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGlobalReplicationGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGlobalReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalReplicationGroupConfig_EngineVersion(rName, primaryReplicationGroupId, "6.2", "6.2"),
@@ -283,10 +283,10 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_NoChange_
 	resourceName := "aws_elasticache_global_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGlobalReplicationGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGlobalReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalReplicationGroupConfig_EngineVersion(rName, primaryReplicationGroupId, "5.0.6", "5.0.6"),
@@ -316,10 +316,10 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorUpgr
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGlobalReplicationGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGlobalReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalReplicationGroupConfig_EngineVersion_Inherit(rName, primaryReplicationGroupId, "6.0"),

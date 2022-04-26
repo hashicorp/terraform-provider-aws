@@ -133,8 +133,8 @@ func normalizeEngineVersion(version string) (*gversion.Version, error) {
 }
 
 func setEngineVersionMemcached(d *schema.ResourceData, version *string) {
-	d.Set("engine_version", aws.StringValue(version))
-	d.Set("engine_version_actual", aws.StringValue(version))
+	d.Set("engine_version", version)
+	d.Set("engine_version_actual", version)
 }
 
 func setEngineVersionRedis(d *schema.ResourceData, version *string) error {
