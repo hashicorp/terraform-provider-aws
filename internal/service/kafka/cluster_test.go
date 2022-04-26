@@ -20,13 +20,10 @@ import (
 )
 
 const (
-	mskClusterPortPlaintext       = 9092
-	mskClusterPortSaslScram       = 9096
-	mskClusterPortSaslIam         = 9098
-	mskClusterPortTls             = 9094
-	mskClusterPortSaslScramPublic = 9196
-	mskClusterPortSaslIamPublic   = 9198
-	mskClusterPortTlsPublic       = 9194
+	mskClusterPortPlaintext = 9092
+	mskClusterPortSaslScram = 9096
+	mskClusterPortSaslIam   = 9098
+	mskClusterPortTls       = 9094
 
 	mskClusterPortZookeeper = 2181
 )
@@ -36,13 +33,10 @@ const (
 )
 
 var (
-	mskClusterBoostrapBrokersRegexp                = regexp.MustCompile(fmt.Sprintf(mskClusterBrokerRegexpFormat, mskClusterPortPlaintext))
-	mskClusterBoostrapBrokersSaslScramRegexp       = regexp.MustCompile(fmt.Sprintf(mskClusterBrokerRegexpFormat, mskClusterPortSaslScram))
-	mskClusterBoostrapBrokersSaslIamRegexp         = regexp.MustCompile(fmt.Sprintf(mskClusterBrokerRegexpFormat, mskClusterPortSaslIam))
-	mskClusterBoostrapBrokersTlsRegexp             = regexp.MustCompile(fmt.Sprintf(mskClusterBrokerRegexpFormat, mskClusterPortTls))
-	mskClusterBoostrapBrokersSaslScramPublicRegexp = regexp.MustCompile(fmt.Sprintf(mskClusterBrokerRegexpFormat, mskClusterPortSaslScramPublic))
-	mskClusterBoostrapBrokersSaslIamPublicRegexp   = regexp.MustCompile(fmt.Sprintf(mskClusterBrokerRegexpFormat, mskClusterPortSaslIamPublic))
-	mskClusterBoostrapBrokersTlsPublicRegexp       = regexp.MustCompile(fmt.Sprintf(mskClusterBrokerRegexpFormat, mskClusterPortTlsPublic))
+	mskClusterBoostrapBrokersRegexp          = regexp.MustCompile(fmt.Sprintf(mskClusterBrokerRegexpFormat, mskClusterPortPlaintext))
+	mskClusterBoostrapBrokersSaslScramRegexp = regexp.MustCompile(fmt.Sprintf(mskClusterBrokerRegexpFormat, mskClusterPortSaslScram))
+	mskClusterBoostrapBrokersSaslIamRegexp   = regexp.MustCompile(fmt.Sprintf(mskClusterBrokerRegexpFormat, mskClusterPortSaslIam))
+	mskClusterBoostrapBrokersTlsRegexp       = regexp.MustCompile(fmt.Sprintf(mskClusterBrokerRegexpFormat, mskClusterPortTls))
 
 	mskClusterZookeeperConnectStringRegexp = regexp.MustCompile(fmt.Sprintf(mskClusterBrokerRegexpFormat, mskClusterPortZookeeper))
 )
@@ -189,7 +183,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_instanceType(t *testing.T) {
 	})
 }
 
-func TestAccKafkaCluster_BrokerNodeGroupInfo_publicAccessSASLIam(t *testing.T) {
+func TestAccKafkaCluster_BrokerNodeGroupInfo_publicAccess(t *testing.T) {
 	var cluster1 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
@@ -201,226 +195,62 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_publicAccessSASLIam(t *testing.T) {
 		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfigBrokerNodeGroupInfoNoPublicAccessSASLIam(rName),
+				Config: testAccClusterConfigBrokerNodeGroupInfoNoPublicAccess(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.0.type", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "true"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
-					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", mskClusterBoostrapBrokersSaslIamRegexp),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_iam", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_scram", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_tls", ""),
 				),
 			},
 			{
-				Config: testAccClusterConfigBrokerNodeGroupInfoPublicAccessSASLIam(rName, "SERVICE_PROVIDED_EIPS"),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bootstrap_brokers",          // API may mutate ordering and selection of brokers to return
+					"bootstrap_brokers_sasl_iam", // API may mutate ordering and selection of brokers to return
+					"current_version",
+				},
+			},
+			{
+				Config: testAccClusterConfigBrokerNodeGroupInfoPublicAccess(rName, "SERVICE_PROVIDED_EIPS"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.0.type", "SERVICE_PROVIDED_EIPS"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "true"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
-					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", mskClusterBoostrapBrokersSaslIamRegexp),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
-					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_public_sasl_iam", mskClusterBoostrapBrokersSaslIamPublicRegexp),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_scram", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_tls", ""),
 				),
 			},
 			{
-				Config: testAccClusterConfigBrokerNodeGroupInfoPublicAccessSASLIam(rName, "DISABLED"),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bootstrap_brokers",                 // API may mutate ordering and selection of brokers to return
+					"bootstrap_brokers_sasl_iam",        // API may mutate ordering and selection of brokers to return
+					"bootstrap_brokers_public_sasl_iam", // API may mutate ordering and selection of brokers to return
+					"current_version",
+				},
+			},
+			{
+				Config: testAccClusterConfigBrokerNodeGroupInfoPublicAccess(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.0.type", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "true"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
-					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", mskClusterBoostrapBrokersSaslIamRegexp),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_iam", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_scram", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_tls", ""),
-				),
-			},
-		},
-	})
-}
-
-func TestAccKafkaCluster_BrokerNodeGroupInfo_publicAccessSASLScram(t *testing.T) {
-	var cluster1 kafka.ClusterInfo
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfigBrokerNodeGroupInfoNoPublicAccessSASLScram(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.0.type", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "true"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", ""),
-					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", mskClusterBoostrapBrokersSaslScramRegexp),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_iam", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_scram", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_tls", ""),
 				),
 			},
 			{
-				Config: testAccClusterConfigBrokerNodeGroupInfoPublicAccessSASLScram(rName, "SERVICE_PROVIDED_EIPS"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.0.type", "SERVICE_PROVIDED_EIPS"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "true"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", ""),
-					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", mskClusterBoostrapBrokersSaslScramRegexp),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_iam", ""),
-					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_public_sasl_scram", mskClusterBoostrapBrokersSaslScramPublicRegexp),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_tls", ""),
-				),
-			},
-			{
-				Config: testAccClusterConfigBrokerNodeGroupInfoPublicAccessSASLScram(rName, "DISABLED"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.0.type", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "true"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", ""),
-					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", mskClusterBoostrapBrokersSaslScramRegexp),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_iam", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_scram", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_tls", ""),
-				),
-			},
-		},
-	})
-}
-
-func TestAccKafkaCluster_BrokerNodeGroupInfo_publicAccessTLS(t *testing.T) {
-	var cluster1 kafka.ClusterInfo
-	var ca acmpca.CertificateAuthority
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
-	acmCAResourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfigRootCA(commonName),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(acmCAResourceName, &ca),
-					acctest.CheckACMPCACertificateAuthorityActivateCA(&ca),
-				),
-			},
-			{
-				Config: testAccClusterConfigBrokerNodeGroupInfoNoPublicAccessTLS(rName, commonName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.0.type", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.*", acmCAResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
-					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_iam", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_scram", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_tls", ""),
-				),
-			},
-			{
-				Config: testAccClusterConfigBrokerNodeGroupInfoPublicAccessTLS(rName, commonName, "SERVICE_PROVIDED_EIPS"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.0.type", "SERVICE_PROVIDED_EIPS"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.*", acmCAResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
-					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_iam", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_scram", ""),
-					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_public_tls", mskClusterBoostrapBrokersTlsPublicRegexp),
-				),
-			},
-			{
-				Config: testAccClusterConfigBrokerNodeGroupInfoPublicAccessTLS(rName, commonName, "DISABLED"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.public_access.0.type", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.*", acmCAResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
-					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_iam", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_scram", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_tls", ""),
-				),
-			},
-			{
-				Config: testAccClusterConfigClientAuthenticationTlsCertificateAuthorityArns(rName, commonName),
-				Check: resource.ComposeTestCheckFunc(
-					// CA must be DISABLED for deletion.
-					acctest.CheckACMPCACertificateAuthorityDisableCA(&ca),
-				),
-				ExpectNonEmptyPlan: true,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bootstrap_brokers",          // API may mutate ordering and selection of brokers to return
+					"bootstrap_brokers_sasl_iam", // API may mutate ordering and selection of brokers to return
+					"current_version",
+				},
 			},
 		},
 	})
@@ -1387,11 +1217,8 @@ resource "aws_msk_cluster" "test" {
 `, rName, t))
 }
 
-func testAccClusterConfigBrokerNodeGroupInfoNoPublicAccessSASLIam(rName string) string {
-	return acctest.ConfigCompose(
-		testAccClusterBaseConfig(rName),
-		testAccClusterConfigAllowEveryoneNoAclFoundFalse(rName),
-		fmt.Sprintf(`
+func testAccClusterConfigBrokerNodeGroupInfoNoPublicAccess(rName string) string {
+	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1402,11 +1229,6 @@ resource "aws_msk_cluster" "test" {
     ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
-  }
-
-  configuration_info {
-    arn      = aws_msk_configuration.test.arn
-    revision = aws_msk_configuration.test.latest_revision
   }
 
   client_authentication {
@@ -1418,74 +1240,8 @@ resource "aws_msk_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterConfigBrokerNodeGroupInfoNoPublicAccessSASLScram(rName string) string {
-	return acctest.ConfigCompose(
-		testAccClusterBaseConfig(rName),
-		testAccClusterConfigAllowEveryoneNoAclFoundFalse(rName),
-		fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
-
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_public_subnet_az1.id, aws_subnet.example_public_subnet_az2.id, aws_subnet.example_public_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-  }
-
-  configuration_info {
-    arn      = aws_msk_configuration.test.arn
-    revision = aws_msk_configuration.test.latest_revision
-  }
-
-  client_authentication {
-    sasl {
-      scram = true
-    }
-  }
-}
-`, rName))
-}
-
-func testAccClusterConfigBrokerNodeGroupInfoNoPublicAccessTLS(rName string, commonName string) string {
-	return acctest.ConfigCompose(
-		testAccClusterBaseConfig(rName),
-		testAccClusterConfigRootCA(commonName),
-		testAccClusterConfigAllowEveryoneNoAclFoundFalse(rName),
-		fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
-
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_public_subnet_az1.id, aws_subnet.example_public_subnet_az2.id, aws_subnet.example_public_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-  }
-
-  configuration_info {
-    arn      = aws_msk_configuration.test.arn
-    revision = aws_msk_configuration.test.latest_revision
-  }
-
-  client_authentication {
-    tls {
-      certificate_authority_arns = [aws_acmpca_certificate_authority.test.arn]
-    }
-  }
-}
-`, rName))
-}
-
-func testAccClusterConfigBrokerNodeGroupInfoPublicAccessSASLIam(rName string, pa string) string {
-	return acctest.ConfigCompose(
-		testAccClusterBaseConfig(rName),
-		testAccClusterConfigAllowEveryoneNoAclFoundFalse(rName),
-		fmt.Sprintf(`
+func testAccClusterConfigBrokerNodeGroupInfoPublicAccess(rName string, pa string) string {
+	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1499,11 +1255,6 @@ resource "aws_msk_cluster" "test" {
     public_access {
       type = %[2]q
     }
-  }
-
-  configuration_info {
-    arn      = aws_msk_configuration.test.arn
-    revision = aws_msk_configuration.test.latest_revision
   }
 
   client_authentication {
@@ -1513,87 +1264,6 @@ resource "aws_msk_cluster" "test" {
   }
 }
 `, rName, pa))
-}
-
-func testAccClusterConfigBrokerNodeGroupInfoPublicAccessSASLScram(rName string, pa string) string {
-	return acctest.ConfigCompose(
-		testAccClusterBaseConfig(rName),
-		testAccClusterConfigAllowEveryoneNoAclFoundFalse(rName),
-		fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
-
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_public_subnet_az1.id, aws_subnet.example_public_subnet_az2.id, aws_subnet.example_public_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-    public_access {
-      type = %[2]q
-    }
-  }
-
-  configuration_info {
-    arn      = aws_msk_configuration.test.arn
-    revision = aws_msk_configuration.test.latest_revision
-  }
-
-  client_authentication {
-    sasl {
-      scram = true
-    }
-  }
-}
-`, rName, pa))
-}
-
-func testAccClusterConfigBrokerNodeGroupInfoPublicAccessTLS(rName string, commonName string, pa string) string {
-	return acctest.ConfigCompose(
-		testAccClusterBaseConfig(rName),
-		testAccClusterConfigRootCA(commonName),
-		testAccClusterConfigAllowEveryoneNoAclFoundFalse(rName),
-		fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
-
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_public_subnet_az1.id, aws_subnet.example_public_subnet_az2.id, aws_subnet.example_public_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-    public_access {
-      type = %[2]q
-    }
-  }
-
-  configuration_info {
-    arn      = aws_msk_configuration.test.arn
-    revision = aws_msk_configuration.test.latest_revision
-  }
-
-  client_authentication {
-    tls {
-      certificate_authority_arns = [aws_acmpca_certificate_authority.test.arn]
-    }
-  }
-}
-`, rName, pa))
-}
-
-func testAccClusterConfigAllowEveryoneNoAclFoundFalse(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_msk_configuration" "test" {
-  kafka_versions = ["2.7.1"]
-  name           = %[1]q
-
-  server_properties = <<-PROPERTIES
-    allow.everyone.if.no.acl.found = false
-  PROPERTIES
-}`, rName)
 }
 
 func testAccClusterConfigRootCA(commonName string) string {
