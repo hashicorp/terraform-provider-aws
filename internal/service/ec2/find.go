@@ -13,6 +13,59 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+func FindAvailabilityZones(conn *ec2.EC2, input *ec2.DescribeAvailabilityZonesInput) ([]*ec2.AvailabilityZone, error) {
+	output, err := conn.DescribeAvailabilityZones(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.AvailabilityZones, nil
+}
+
+func FindAvailabilityZone(conn *ec2.EC2, input *ec2.DescribeAvailabilityZonesInput) (*ec2.AvailabilityZone, error) {
+	output, err := FindAvailabilityZones(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindAvailabilityZoneByName(conn *ec2.EC2, name string) (*ec2.AvailabilityZone, error) {
+	input := &ec2.DescribeAvailabilityZonesInput{
+		ZoneNames: aws.StringSlice([]string{name}),
+	}
+
+	output, err := FindAvailabilityZone(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.ZoneName) != name {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func FindCapacityReservation(conn *ec2.EC2, input *ec2.DescribeCapacityReservationsInput) (*ec2.CapacityReservation, error) {
 	output, err := FindCapacityReservations(conn, input)
 
