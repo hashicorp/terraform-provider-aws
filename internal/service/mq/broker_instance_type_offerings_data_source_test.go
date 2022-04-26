@@ -8,15 +8,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccMQBrokeInstanceTypeOfferingsrDataSource_basic(t *testing.T) {
-
+func TestAccMQBrokerInstanceTypeOfferingsDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(mq.EndpointsID, t) },
 		ErrorCheck: acctest.ErrorCheck(t, mq.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerDataSourceInstanceTypeOfferingsConfig_basic(),
+				Config: testAccBrokerDataSourceInstanceTypeOfferingsConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_mq_broker_instance_type_offerings.empty", "broker_instance_options.#"),
 					resource.TestCheckTypeSetElemNestedAttrs("data.aws_mq_broker_instance_type_offerings.empty", "broker_instance_options.*", map[string]string{
@@ -46,7 +45,7 @@ func TestAccMQBrokeInstanceTypeOfferingsrDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccBrokerDataSourceInstanceTypeOfferingsConfig_basic() string {
+func testAccBrokerDataSourceInstanceTypeOfferingsConfig() string {
 	return `
 data "aws_mq_broker_instance_type_offerings" "empty" {}
 
