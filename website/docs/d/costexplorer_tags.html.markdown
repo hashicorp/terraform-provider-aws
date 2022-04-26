@@ -1,5 +1,5 @@
 ---
-subcategory: "CostExplorer"
+subcategory: "CE (Cost Explorer)"
 layout: "aws"
 page_title: "AWS: aws_costexplorer_tags"
 description: |-
