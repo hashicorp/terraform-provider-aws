@@ -106,26 +106,26 @@ func ResourceCluster() *schema.Resource {
 			"client_authentication": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: false,
+				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"sasl": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: false,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"scram": {
 										Type:     schema.TypeBool,
 										Optional: true,
-										ForceNew: false,
+										ForceNew: true,
 									},
 									"iam": {
 										Type:     schema.TypeBool,
 										Optional: true,
-										ForceNew: false,
+										ForceNew: true,
 									},
 								},
 							},
@@ -640,25 +640,6 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
 		}
-	}
-	if d.HasChange("client_authentication") {
-		input := &kafka.UpdateSecurityInput{
-			ClusterArn:           aws.String(d.Id()),
-			CurrentVersion:       aws.String(d.Get("current_version").(string)),
-			ClientAuthentication: expandMskClusterClientAuthentication(d.Get("client_authentication").([]interface{})),
-		}
-		output, err := conn.UpdateSecurity(input)
-		if err != nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) security settings: %w", d.Id(), err)
-		}
-		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
-
-		_, err = waitClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
-
-		if err != nil {
-			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
-		}
-
 	}
 
 	if d.HasChange("tags_all") {
