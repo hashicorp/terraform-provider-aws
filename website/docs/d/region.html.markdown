@@ -1,7 +1,7 @@
 ---
+subcategory: "Meta Data Sources"
 layout: "aws"
 page_title: "AWS: aws_region"
-sidebar_current: "docs-aws-datasource-region"
 description: |-
     Provides details about a specific service region
 ---
@@ -20,7 +20,7 @@ configuration from its parent module.
 The following example shows how the resource might be used to obtain
 the name of the AWS region configured on the provider.
 
-```hcl
+```terraform
 data "aws_region" "current" {}
 ```
 
@@ -36,11 +36,10 @@ exported as attributes.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `name` - The name of the selected region.
 
-* `current` - `true` if the selected region is the one configured on the
-  provider, or `false` otherwise.
-
 * `endpoint` - The EC2 endpoint for the selected region.
+
+* `description` - The region's description in this format: "Location (Region name)".

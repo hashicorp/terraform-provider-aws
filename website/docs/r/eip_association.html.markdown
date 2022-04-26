@@ -1,33 +1,35 @@
 ---
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_eip_association"
-sidebar_current: "docs-aws-resource-eip-association"
 description: |-
   Provides an AWS EIP Association
 ---
 
-# aws_eip_association
+# Resource: aws_eip_association
 
 Provides an AWS EIP Association as a top level resource, to associate and
 disassociate Elastic IPs from AWS Instances and Network Interfaces.
+
+~> **NOTE:** Do not use this resource to associate an EIP to `aws_lb` or `aws_nat_gateway` resources. Instead use the `allocation_id` available in those resources to allow AWS to manage the association, otherwise you will see `AuthFailure` errors.
 
 ~> **NOTE:** `aws_eip_association` is useful in scenarios where EIPs are either
 pre-existing or distributed to customers or users and therefore cannot be changed.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_eip_association" "eip_assoc" {
-  instance_id   = "${aws_instance.web.id}"
-  allocation_id = "${aws_eip.example.id}"
+  instance_id   = aws_instance.web.id
+  allocation_id = aws_eip.example.id
 }
 
 resource "aws_instance" "web" {
   ami               = "ami-21f78e11"
   availability_zone = "us-west-2a"
-  instance_type     = "t1.micro"
+  instance_type     = "t2.micro"
 
-  tags {
+  tags = {
     Name = "HelloWorld"
   }
 }
@@ -59,6 +61,8 @@ address.
 
 ## Attributes Reference
 
+In addition to all arguments above, the following attributes are exported:
+
 * `association_id` - The ID that represents the association of the Elastic IP
 address with an instance.
 * `allocation_id` - As above
@@ -66,3 +70,11 @@ address with an instance.
 * `network_interface_id` - As above
 * `private_ip_address` - As above
 * `public_ip` - As above
+
+## Import
+
+EIP Assocations can be imported using their association ID.
+
+```
+$ terraform import aws_eip_association.test eipassoc-ab12c345
+```

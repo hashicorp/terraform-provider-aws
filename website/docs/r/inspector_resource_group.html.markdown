@@ -1,20 +1,20 @@
 ---
+subcategory: "Inspector"
 layout: "aws"
 page_title: "AWS: aws_inspector_resource_group"
-sidebar_current: "docs-aws-resource-inspector-resource-group"
 description: |-
-  Provides a Inspector resource group.
+  Provides an Amazon Inspector resource group resource.
 ---
 
-# aws_inspector_resource_group
+# Resource: aws_inspector_resource_group
 
-Provides a Inspector resource group
+Provides an Amazon Inspector resource group resource.
 
 ## Example Usage
 
-```hcl
-resource "aws_inspector_resource_group" "bar" {
-  tags {
+```terraform
+resource "aws_inspector_resource_group" "example" {
+  tags = {
     Name = "foo"
     Env  = "bar"
   }
@@ -25,10 +25,10 @@ resource "aws_inspector_resource_group" "bar" {
 
 The following arguments are supported:
 
-* `tags` - (Required) The tags on your EC2 Instance.
+* `tags` - (Required) Key-value map of tags that are used to select the EC2 instances to be included in an [Amazon Inspector assessment target](/docs/providers/aws/r/inspector_assessment_target.html).
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The resource group ARN.

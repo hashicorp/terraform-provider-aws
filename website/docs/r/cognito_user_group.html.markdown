@@ -1,24 +1,25 @@
 ---
+subcategory: "Cognito IDP (Identity Provider)"
 layout: "aws"
 page_title: "AWS: aws_cognito_user_group"
-side_bar_current: "docs-aws-resource-cognito-user-group"
 description: |-
   Provides a Cognito User Group resource.
 ---
 
-# aws_cognito_user_group
+# Resource: aws_cognito_user_group
 
 Provides a Cognito User Group resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_cognito_user_pool" "main" {
   name = "identity pool"
 }
 
 resource "aws_iam_role" "group_role" {
   name = "user-group-role"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -46,10 +47,10 @@ EOF
 
 resource "aws_cognito_user_group" "main" {
   name         = "user-group"
-  user_pool_id = "${aws_cognito_user_pool.main.id}"
+  user_pool_id = aws_cognito_user_pool.main.id
   description  = "Managed by Terraform"
   precedence   = 42
-  role_arn     = "${aws_iam_role.group_role.arn}"
+  role_arn     = aws_iam_role.group_role.arn
 }
 ```
 
@@ -63,9 +64,13 @@ The following arguments are supported:
 * `precedence` - (Optional) The precedence of the user group.
 * `role_arn` - (Optional) The ARN of the IAM role to be associated with the user group.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
-Cognito User Groups can be imported using the `user_pool_id`/`name` attributes concatenated, e.g.
+Cognito User Groups can be imported using the `user_pool_id`/`name` attributes concatenated, e.g.,
 
 ```
 $ terraform import aws_cognito_user_group.group us-east-1_vG78M4goG/user-group

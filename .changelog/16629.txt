@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_elasticache_user
+```
+
+```release-note:new-data-source
+aws_elasticache_user
+```

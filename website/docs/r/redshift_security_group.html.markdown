@@ -1,18 +1,18 @@
 ---
+subcategory: "Redshift"
 layout: "aws"
 page_title: "AWS: aws_redshift_security_group"
-sidebar_current: "docs-aws-resource-redshift-security-group"
 description: |-
   Provides a Redshift security group resource.
 ---
 
-# aws_redshift_security_group
+# Resource: aws_redshift_security_group
 
 Creates a new Amazon Redshift security group. You use security groups to control access to non-VPC clusters
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_redshift_security_group" "default" {
   name = "redshift-sg"
 
@@ -39,13 +39,13 @@ Ingress blocks support the following:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Redshift security group ID.
 
 ## Import
 
-Redshift security groups can be imported using the `name`, e.g.
+Redshift security groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_redshift_security_group.testgroup1 redshift_test_group

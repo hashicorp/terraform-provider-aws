@@ -1,19 +1,19 @@
 ---
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint_connection_notification"
-sidebar_current: "docs-aws-resource-vpc-endpoint-connection-notification"
 description: |-
   Provides a VPC Endpoint connection notification resource.
 ---
 
-# aws_vpc_endpoint_connection_notification
+# Resource: aws_vpc_endpoint_connection_notification
 
 Provides a VPC Endpoint connection notification resource.
 Connection notifications notify subscribers of VPC Endpoint events.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_sns_topic" "topic" {
   name = "vpce-notification-topic"
 
@@ -33,14 +33,14 @@ POLICY
 }
 
 resource "aws_vpc_endpoint_service" "foo" {
-  acceptance_required = false
-  network_load_balancer_arns = ["${aws_lb.test.arn}"]
+  acceptance_required        = false
+  network_load_balancer_arns = [aws_lb.test.arn]
 }
 
 resource "aws_vpc_endpoint_connection_notification" "foo" {
-  vpc_endpoint_service_id = "${aws_vpc_endpoint_service.foo.id}"
-  connection_notification_arn = "${aws_sns_topic.topic.arn}"
-  connection_events = ["Accept", "Reject"]
+  vpc_endpoint_service_id     = aws_vpc_endpoint_service.foo.id
+  connection_notification_arn = aws_sns_topic.topic.arn
+  connection_events           = ["Accept", "Reject"]
 }
 ```
 
@@ -57,7 +57,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the VPC connection notification.
 * `state` - The state of the notification.
@@ -65,7 +65,7 @@ The following attributes are exported:
 
 ## Import
 
-VPC Endpoint connection notifications can be imported using the `VPC endpoint connection notification id`, e.g.
+VPC Endpoint connection notifications can be imported using the `VPC endpoint connection notification id`, e.g.,
 
 ```
 $ terraform import aws_vpc_endpoint_connection_notification.foo vpce-nfn-09e6ed3b4efba2263

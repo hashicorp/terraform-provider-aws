@@ -1,9 +1,9 @@
 ---
+subcategory: "CloudFormation"
 layout: "aws"
 page_title: "AWS: aws_cloudformation_stack"
-sidebar_current: "docs-aws-datasource-cloudformation-stack"
 description: |-
-    Provides metadata of a CloudFormation stack (e.g. outputs)
+    Provides metadata of a CloudFormation stack (e.g., outputs)
 ---
 
 # Data Source: aws_cloudformation_stack
@@ -13,17 +13,17 @@ outputs and other useful data including the template body.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_cloudformation_stack" "network" {
   name = "my-network-stack"
 }
 
 resource "aws_instance" "web" {
   ami           = "ami-abb07bcb"
-  instance_type = "t1.micro"
-  subnet_id     = "${data.aws_cloudformation_stack.network.outputs["SubnetId"]}"
+  instance_type = "t2.micro"
+  subnet_id     = data.aws_cloudformation_stack.network.outputs["SubnetId"]
 
-  tags {
+  tags = {
     Name = "HelloWorld"
   }
 }
@@ -37,7 +37,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `capabilities` - A list of capabilities
 * `description` - Description of the stack

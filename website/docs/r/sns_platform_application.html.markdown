@@ -1,12 +1,12 @@
 ---
+subcategory: "SNS (Simple Notification)"
 layout: "aws"
-page_title: "AWS: sns_platform_application"
-sidebar_current: "docs-aws-resource-sns-platform-application"
+page_title: "AWS: aws_sns_platform_application"
 description: |-
   Provides an SNS platform application resource.
 ---
 
-# aws_sns_platform_application
+# Resource: aws_sns_platform_application
 
 Provides an SNS platform application resource
 
@@ -14,7 +14,7 @@ Provides an SNS platform application resource
 
 ### Apple Push Notification Service (APNS)
 
-```hcl
+```terraform
 resource "aws_sns_platform_application" "apns_application" {
   name                = "apns_application"
   platform            = "APNS"
@@ -25,7 +25,7 @@ resource "aws_sns_platform_application" "apns_application" {
 
 ### Google Cloud Messaging (GCM)
 
-```hcl
+```terraform
 resource "aws_sns_platform_application" "gcm_application" {
   name                = "gcm_application"
   platform            = "GCM"
@@ -43,7 +43,7 @@ The following arguments are supported:
 * `event_delivery_failure_topic_arn` - (Optional) SNS Topic triggered when a delivery to any of the platform endpoints associated with your platform application encounters a permanent failure.
 * `event_endpoint_created_topic_arn` - (Optional) SNS Topic triggered when a new platform endpoint is added to your platform application.
 * `event_endpoint_deleted_topic_arn` - (Optional) SNS Topic triggered when an existing platform endpoint is deleted from your platform application.
-* `event_endpoint_updated_topic` - (Optional) SNS Topic triggered when an existing platform endpoint is changed from your platform application.
+* `event_endpoint_updated_topic_arn` - (Optional) SNS Topic triggered when an existing platform endpoint is changed from your platform application.
 * `failure_feedback_role_arn` - (Optional) The IAM role permitted to receive failure feedback for this application.
 * `platform_principal` - (Optional) Application Platform principal. See [Principal][2] for type of principal required for platform. The value of this attribute when stored into the Terraform state is only a hash of the real value, so therefore it is not practical to use this as an attribute for other resources.
 * `success_feedback_role_arn` - (Optional) The IAM role permitted to receive success feedback for this application.
@@ -51,7 +51,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following additional attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ARN of the SNS platform application
 * `arn` - The ARN of the SNS platform application
@@ -61,7 +61,7 @@ The following additional attributes are exported:
 
 ## Import
 
-SNS platform applications can be imported using the ARN, e.g.
+SNS platform applications can be imported using the ARN, e.g.,
 
 ```
 $ terraform import aws_sns_platform_application.gcm_application arn:aws:sns:us-west-2:0123456789012:app/GCM/gcm_application

@@ -1,25 +1,25 @@
 ---
+subcategory: "Elasticsearch"
 layout: "aws"
 page_title: "AWS: aws_elasticsearch_domain"
-sidebar_current: "docs-aws-resource-elasticsearch-domain"
 description: |-
-  Provides an ElasticSearch Domain.
+  Provides an Elasticsearch Domain Policy.
 ---
 
-# aws_elasticsearch_domain_policy
+# Resource: aws_elasticsearch_domain_policy
 
-Allows setting policy to an ElasticSearch domain while referencing domain attributes (e.g. ARN)
+Allows setting policy to an Elasticsearch domain while referencing domain attributes (e.g., ARN)
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_elasticsearch_domain" "example" {
   domain_name           = "tf-test"
   elasticsearch_version = "2.3"
 }
 
 resource "aws_elasticsearch_domain_policy" "main" {
-  domain_name = "${aws_elasticsearch_domain.example.domain_name}"
+  domain_name = aws_elasticsearch_domain.example.domain_name
 
   access_policies = <<POLICIES
 {
@@ -32,7 +32,7 @@ resource "aws_elasticsearch_domain_policy" "main" {
             "Condition": {
                 "IpAddress": {"aws:SourceIp": "127.0.0.1/32"}
             },
-            "Resource": "${aws_elasticsearch_domain.example.arn}"
+            "Resource": "${aws_elasticsearch_domain.example.arn}/*"
         }
     ]
 }
@@ -46,3 +46,7 @@ The following arguments are supported:
 
 * `domain_name` - (Required) Name of the domain.
 * `access_policies` - (Optional) IAM policy document specifying the access policies for the domain
+
+## Attributes Reference
+
+No additional attributes are exported.

@@ -1,3 +1,7 @@
+variable "aws_region" {
+  default = "us-west-2"
+}
+
 variable "identifier" {
   default     = "mydb-rds"
   description = "Identifier for your DB"
@@ -17,8 +21,8 @@ variable "engine_version" {
   description = "Engine version"
 
   default = {
-    mysql    = "5.6.22"
-    postgres = "9.4.1"
+    mysql    = "5.7.21"
+    postgres = "9.6.8"
   }
 }
 

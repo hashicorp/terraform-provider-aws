@@ -1,8 +1,8 @@
 ---
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_network_interface"
-sidebar_current: "docs-aws-datasource-network-interface"
-description: |-  
+description: |-
   Get information on a Network Interface resource.
 ---
 
@@ -12,7 +12,7 @@ Use this data source to get information about a Network Interface.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_network_interface" "bar" {
   id = "eni-01234567"
 }
@@ -31,25 +31,37 @@ See the [Network Interface](/docs/providers/aws/r/network_interface.html) for de
 
 Additionally, the following attributes are exported:
 
+* `arn` - The ARN of the network interface.
 * `association` - The association information for an Elastic IP address (IPv4) associated with the network interface. See supported fields below.
 * `availability_zone` - The Availability Zone.
+* `description` - Description of the network interface.
 * `interface_type` - The type of interface.
 * `ipv6_addresses` - List of IPv6 addresses to assign to the ENI.
 * `mac_address` - The MAC address.
 * `owner_id` - The AWS account ID of the owner of the network interface.
+* `private_dns_name` - The private DNS name.
+* `private_ip` - The private IPv4 address of the network interface within the subnet.
+* `private_ips` - The private IPv4 addresses associated with the network interface.
 * `requester_id` - The ID of the entity that launched the instance on your behalf.
+* `security_groups` - The list of security groups for the network interface.
+* `subnet_id` - The ID of the subnet.
+* `outpost_arn` - The Amazon Resource Name (ARN) of the Outpost.
+* `tags` - Any tags assigned to the network interface.
+* `vpc_id` - The ID of the VPC.
 
 ### `association`
 
 * `allocation_id` - The allocation ID.
 * `association_id` - The association ID.
+* `carrier_ip` - The carrier IP address associated with the network interface. This attribute is only set when the network interface is in a subnet which is associated with a Wavelength Zone.
+* `customer_owned_ip` - The customer-owned IP address.
 * `ip_owner_id` - The ID of the Elastic IP address owner.
 * `public_dns_name` - The public DNS name.
 * `public_ip` - The address of the Elastic IP address bound to the network interface.
 
 ## Import
 
-Elastic Network Interfaces can be imported using the `id`, e.g.
+Elastic Network Interfaces can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_network_interface.test eni-12345

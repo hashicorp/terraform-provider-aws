@@ -1,26 +1,30 @@
 ---
+subcategory: "ECR (Elastic Container Registry)"
 layout: "aws"
 page_title: "AWS: aws_ecr_lifecycle_policy"
-sidebar_current: "docs-aws-resource-ecr-lifecycle-policy"
 description: |-
-  Provides an ECR Lifecycle Policy.
+  Manages an ECR repository lifecycle policy.
 ---
 
-# aws_ecr_lifecycle_policy
+# Resource: aws_ecr_lifecycle_policy
 
-Provides an ECR lifecycle policy.
+Manages an ECR repository lifecycle policy.
+
+~> **NOTE:** Only one `aws_ecr_lifecycle_policy` resource can be used with the same ECR repository. To apply multiple rules, they must be combined in the `policy` JSON.
+
+~> **NOTE:** The AWS ECR API seems to reorder rules based on `rulePriority`. If you define multiple rules that are not sorted in ascending `rulePriority` order in the Terraform code, the resource will be flagged for recreation every `terraform plan`.
 
 ## Example Usage
 
 ### Policy on untagged image
 
-```hcl
+```terraform
 resource "aws_ecr_repository" "foo" {
   name = "bar"
 }
 
 resource "aws_ecr_lifecycle_policy" "foopolicy" {
-  repository = "${aws_ecr_repository.foo.name}"
+  repository = aws_ecr_repository.foo.name
 
   policy = <<EOF
 {
@@ -46,13 +50,13 @@ EOF
 
 ### Policy on tagged image
 
-```hcl
+```terraform
 resource "aws_ecr_repository" "foo" {
   name = "bar"
 }
 
 resource "aws_ecr_lifecycle_policy" "foopolicy" {
-  repository = "${aws_ecr_repository.foo.name}"
+  repository = aws_ecr_repository.foo.name
 
   policy = <<EOF
 {
@@ -85,14 +89,14 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `repository` - The name of the repository.
 * `registry_id` - The registry ID where the repository was created.
 
 ## Import
 
-ECR Lifecycle Policy can be imported using the name of the repository, e.g.
+ECR Lifecycle Policy can be imported using the name of the repository, e.g.,
 
 ```
 $ terraform import aws_ecr_lifecycle_policy.example tf-example

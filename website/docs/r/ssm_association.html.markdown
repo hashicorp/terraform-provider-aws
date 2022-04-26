@@ -1,66 +1,57 @@
 ---
+subcategory: "SSM (Systems Manager)"
 layout: "aws"
 page_title: "AWS: aws_ssm_association"
-sidebar_current: "docs-aws-resource-ssm-association"
 description: |-
   Associates an SSM Document to an instance or EC2 tag.
 ---
 
-# aws_ssm_association
+# Resource: aws_ssm_association
 
 Associates an SSM Document to an instance or EC2 tag.
 
 ## Example Usage
 
-```hcl
-resource "aws_security_group" "tf_test_foo" {
-  name        = "tf_test_foo"
-  description = "foo"
+### Create an association for a specific instance
 
-  ingress {
-    protocol    = "icmp"
-    from_port   = -1
-    to_port     = -1
-    cidr_blocks = ["0.0.0.0/0"]
+```terraform
+resource "aws_ssm_association" "example" {
+  name = aws_ssm_document.example.name
+
+  targets {
+    key    = "InstanceIds"
+    values = [aws_instance.example.id]
   }
 }
+```
 
-resource "aws_instance" "foo" {
-  # eu-west-1
-  ami               = "ami-f77ac884"
-  availability_zone = "eu-west-1a"
-  instance_type     = "t2.small"
-  security_groups   = ["${aws_security_group.tf_test_foo.name}"]
-}
+### Create an association for all managed instances in an AWS account
 
-resource "aws_ssm_document" "foo_document" {
-  name          = "test_document_association-%s"
-  document_type = "Command"
+To target all managed instances in an AWS account, set the `key` as `"InstanceIds"` with `values` set as `["*"]`. This example also illustrates how to use an Amazon owned SSM document named `AmazonCloudWatch-ManageAgent`.
 
-  content = <<DOC
-  {
-    "schemaVersion": "1.2",
-    "description": "Check ip configuration of a Linux instance.",
-    "parameters": {
+```terraform
+resource "aws_ssm_association" "example" {
+  name = "AmazonCloudWatch-ManageAgent"
 
-    },
-    "runtimeConfig": {
-      "aws:runShellScript": {
-        "properties": [
-          {
-            "id": "0.aws:runShellScript",
-            "runCommand": ["ifconfig"]
-          }
-        ]
-      }
-    }
+  targets {
+    key    = "InstanceIds"
+    values = ["*"]
   }
-DOC
 }
+```
 
-resource "aws_ssm_association" "foo" {
-  name        = "test_document_association-%s"
-  instance_id = "${aws_instance.foo.id}"
+### Create an association for a specific tag
+
+This example shows how to target all managed instances that are assigned a tag key of `Environment` and value of `Development`.
+
+```terraform
+resource "aws_ssm_association" "example" {
+  name = "AmazonCloudWatch-ManageAgent"
+
+  targets {
+    key    = "tag:Environment"
+    values = ["Development"]
+  }
 }
 ```
 
@@ -69,28 +60,45 @@ resource "aws_ssm_association" "foo" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the SSM document to apply.
+* `apply_only_at_cron_interval` - (Optional) By default, when you create a new or update associations, the system runs it immediately and then according to the schedule you specified. Enable this option if you do not want an association to run immediately after you create or update it. This parameter is not supported for rate expressions. Default: `false`.
 * `association_name` - (Optional) The descriptive name for the association.
 * `document_version` - (Optional) The document version you want to associate with the target(s). Can be a specific version or the default version.
-* `instance_id` - (Optional) The instance ID to apply an SSM document to.
+* `instance_id` - (Optional) The instance ID to apply an SSM document to. Use `targets` with key `InstanceIds` for document schema versions 2.0 and above.
 * `output_location` - (Optional) An output location block. Output Location is documented below.
 * `parameters` - (Optional) A block of arbitrary string parameters to pass to the SSM document.
 * `schedule_expression` - (Optional) A cron expression when the association will be applied to the target(s).
 * `targets` - (Optional) A block containing the targets of the SSM association. Targets are documented below. AWS currently supports a maximum of 5 targets.
+* `compliance_severity` - (Optional) The compliance severity for the association. Can be one of the following: `UNSPECIFIED`, `LOW`, `MEDIUM`, `HIGH` or `CRITICAL`
+* `max_concurrency` - (Optional) The maximum number of targets allowed to run the association at the same time. You can specify a number, for example 10, or a percentage of the target set, for example 10%.
+* `max_errors` - (Optional) The number of errors that are allowed before the system stops sending requests to run the association on additional targets. You can specify a number, for example 10, or a percentage of the target set, for example 10%.
+* `automation_target_parameter_name` - (Optional) Specify the target for the association. This target is required for associations that use an `Automation` document and target resources by using rate controls. This should be set to the SSM document `parameter` that will define how your automation will branch out.
+* `wait_for_success_timeout_seconds` - (Optional) The number of seconds to wait for the association status to be `Success`. If `Success` status is not reached within the given time, create opration will fail.
 
 Output Location (`output_location`) is an S3 bucket where you want to store the results of this association:
 
 * `s3_bucket_name` - (Required) The S3 bucket name.
 * `s3_key_prefix` - (Optional) The S3 bucket prefix. Results stored in the root if not configured.
+* `s3_region` - (Optional) The S3 bucket region.
 
 Targets specify what instance IDs or tags to apply the document to and has these keys:
 
 * `key` - (Required) Either `InstanceIds` or `tag:Tag Name` to specify an EC2 tag.
-* `values` - (Required) A list of instance IDs or tag values. AWS currently limits this to 1 target value.
+* `values` - (Required) A list of instance IDs or tag values. AWS currently limits this list size to one value.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The ARN of the SSM association
+* `association_id` - The ID of the SSM association.
+* `instance_id` - The instance id that the SSM document was applied to.
 * `name` - The name of the SSM document to apply.
-* `instance_ids` - The instance id that the SSM document was applied to.
 * `parameters` - Additional parameters passed to the SSM document.
+
+## Import
+
+SSM associations can be imported using the `association_id`, e.g.,
+
+```
+$ terraform import aws_ssm_association.test-association 10abcdef-0abc-1234-5678-90abcdef123456
+```
