@@ -11,12 +11,6 @@ import (
 )
 
 const (
-	clusterCreateDefaultTimeout = 120 * time.Minute
-	clusterUpdateDefaultTimeout = 120 * time.Minute
-	clusterDeleteDefaultTimeout = 120 * time.Minute
-)
-
-const (
 	configurationDeletedTimeout = 5 * time.Minute
 )
 
