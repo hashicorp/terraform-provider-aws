@@ -57,9 +57,7 @@ issues of each type.
 
 ## Issue Lifecycle
 
-{% note %}
 **Note:** For detailed information on how issues are prioritized, see the [prioritization guide](./prioritization.md).
-{% endnote %} 
 
 1. The issue is reported.
 
