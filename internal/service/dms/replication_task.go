@@ -155,7 +155,7 @@ func resourceReplicationTaskCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if d.Get("start_replication_task").(bool) {
-		if err := startReplicationTask(d.Id(), conn, replicationTaskStatusReady); err != nil {
+		if err := startReplicationTask(d.Id(), conn); err != nil {
 			return err
 		}
 	}
@@ -223,7 +223,6 @@ func resourceReplicationTaskRead(d *schema.ResourceData, meta interface{}) error
 
 func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
-	status := d.Get("status").(string)
 
 	if d.HasChangesExcept("tags", "tags_all", "start_replication_task") {
 		input := &dms.ModifyReplicationTaskInput{
@@ -254,6 +253,7 @@ func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) err
 			input.TableMappings = aws.String(d.Get("table_mappings").(string))
 		}
 
+		status := d.Get("status").(string)
 		if status == replicationTaskStatusRunning {
 			log.Println("[DEBUG] stopping DMS replication task:", input)
 			if err := stopReplicationTask(d.Id(), conn); err != nil {
@@ -272,19 +272,18 @@ func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		if d.Get("start_replication_task").(bool) {
-			err := startReplicationTask(d.Id(), conn, replicationTaskStatusStopped)
+			err := startReplicationTask(d.Id(), conn)
 			if err != nil {
 				return err
-			} else {
-				status = replicationTaskStatusRunning
 			}
 		}
 	}
 
 	if d.HasChanges("start_replication_task") {
+		status := d.Get("status").(string)
 		if d.Get("start_replication_task").(bool) {
 			if status != replicationTaskStatusRunning {
-				if err := startReplicationTask(d.Id(), conn, status); err != nil {
+				if err := startReplicationTask(d.Id(), conn); err != nil {
 					return err
 				}
 			}
@@ -370,7 +369,7 @@ func dmsReplicationTaskRemoveReadOnlySettings(settings string) (*string, error) 
 	return &cleanedSettingsString, nil
 }
 
-func startReplicationTask(id string, conn *dms.DatabaseMigrationService, fromStatus string) error {
+func startReplicationTask(id string, conn *dms.DatabaseMigrationService) error {
 	log.Printf("[DEBUG] Starting DMS Replication Task: (%s)", id)
 
 	task, err := FindReplicationTaskByID(conn, id)
@@ -383,7 +382,7 @@ func startReplicationTask(id string, conn *dms.DatabaseMigrationService, fromSta
 	}
 
 	startReplicationTaskType := dms.StartReplicationTaskTypeValueStartReplication
-	if fromStatus != replicationTaskStatusReady {
+	if aws.StringValue(task.Status) != replicationTaskStatusReady {
 		startReplicationTaskType = dms.StartReplicationTaskTypeValueResumeProcessing
 	}
 
