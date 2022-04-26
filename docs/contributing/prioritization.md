@@ -53,4 +53,4 @@ We always include capacity for technical debt work in every iteration, but engin
 
 ### Adverse User Experience or Security Vulnerabilities
 
-Issues with the provider that provide a poor user experience (bugs, crashes), or involve a threat to security are always prioritized for inclusion. The severity of these will determine how soon they are included for release.i
+Issues with the provider that provide a poor user experience (bugs, crashes), or involve a threat to security are always prioritized for inclusion. The severity of these will determine how soon they are included for release.
