@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apprunner"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -146,6 +146,37 @@ func ResourceService() *schema.Resource {
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								// App Runner API always returns the amount in MB
 								return (old == "2048" && new == "2 GB") || (old == "3072" && new == "3 GB") || (old == "4096" && new == "4 GB")
+							},
+						},
+					},
+				},
+			},
+
+			"network_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"egress_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"egress_type": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.StringInSlice(apprunner.EgressType_Values(), false),
+									},
+									"vpc_connector_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
 							},
 						},
 					},
@@ -379,6 +410,10 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.InstanceConfiguration = expandAppRunnerServiceInstanceConfiguration(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("network_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.NetworkConfiguration = expandAppRunnerNetworkConfiguration(v.([]interface{}))
+	}
+
 	var output *apprunner.CreateServiceOutput
 
 	err := resource.RetryContext(ctx, tfiam.PropagationTimeout, func() *resource.RetryError {
@@ -477,6 +512,10 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(fmt.Errorf("error setting instance_configuration: %w", err))
 	}
 
+	if err := d.Set("network_configuration", flattenAppRunnerNetworkConfiguration(service.NetworkConfiguration)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting network_configuration: %w", err))
+	}
+
 	if err := d.Set("source_configuration", flattenAppRunnerServiceSourceConfiguration(service.SourceConfiguration)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting source_configuration: %w", err))
 	}
@@ -507,6 +546,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChanges(
 		"auto_scaling_configuration_arn",
 		"instance_configuration",
+		"network_configuration",
 		"source_configuration",
 	) {
 		input := &apprunner.UpdateServiceInput{
@@ -519,6 +559,10 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("instance_configuration") {
 			input.InstanceConfiguration = expandAppRunnerServiceInstanceConfiguration(d.Get("instance_configuration").([]interface{}))
+		}
+
+		if d.HasChange("network_configuration") {
+			input.NetworkConfiguration = expandAppRunnerNetworkConfiguration(d.Get("network_configuration").([]interface{}))
 		}
 
 		if d.HasChange("source_configuration") {
@@ -663,6 +707,26 @@ func expandAppRunnerServiceInstanceConfiguration(l []interface{}) *apprunner.Ins
 	return result
 }
 
+func expandAppRunnerNetworkConfiguration(l []interface{}) *apprunner.NetworkConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	result := &apprunner.NetworkConfiguration{}
+
+	if v, ok := tfMap["egress_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		result.EgressConfiguration = expandAppRunnerNetworkEgressConfiguration(v)
+	}
+
+	return result
+}
+
 func expandAppRunnerServiceSourceConfiguration(l []interface{}) *apprunner.SourceConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -714,6 +778,30 @@ func expandAppRunnerServiceAuthenticationConfiguration(l []interface{}) *apprunn
 
 	if v, ok := tfMap["connection_arn"].(string); ok && v != "" {
 		result.ConnectionArn = aws.String(v)
+	}
+
+	return result
+}
+
+func expandAppRunnerNetworkEgressConfiguration(l []interface{}) *apprunner.EgressConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	result := &apprunner.EgressConfiguration{}
+
+	if v, ok := tfMap["egress_type"].(string); ok {
+		result.EgressType = aws.String(v)
+	}
+
+	if v, ok := tfMap["vpc_connector_arn"].(string); ok && v != "" {
+		result.VpcConnectorArn = aws.String(v)
 	}
 
 	return result
@@ -925,6 +1013,31 @@ func flattenAppRunnerServiceInstanceConfiguration(config *apprunner.InstanceConf
 		"cpu":               aws.StringValue(config.Cpu),
 		"instance_role_arn": aws.StringValue(config.InstanceRoleArn),
 		"memory":            aws.StringValue(config.Memory),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenAppRunnerNetworkConfiguration(config *apprunner.NetworkConfiguration) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"egress_configuration": flattenAppRunnerNetworkEgressConfiguration(config.EgressConfiguration),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenAppRunnerNetworkEgressConfiguration(config *apprunner.EgressConfiguration) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"egress_type":       aws.StringValue(config.EgressType),
+		"vpc_connector_arn": aws.StringValue(config.VpcConnectorArn),
 	}
 
 	return []interface{}{m}

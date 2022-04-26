@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Map Reduce (EMR)"
+subcategory: "EMR"
 layout: "aws"
 page_title: "AWS: aws_emr_cluster"
 description: |-
@@ -312,8 +312,8 @@ resource "aws_emr_cluster" "cluster" {
 
   ec2_attributes {
     subnet_id                         = aws_subnet.main.id
-    emr_managed_master_security_group = aws_security_group.allow_all.id
-    emr_managed_slave_security_group  = aws_security_group.allow_all.id
+    emr_managed_master_security_group = aws_security_group.allow_access.id
+    emr_managed_slave_security_group  = aws_security_group.allow_access.id
     instance_profile                  = aws_iam_instance_profile.emr_profile.arn
   }
 
@@ -380,7 +380,7 @@ resource "aws_security_group" "allow_access" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = aws_vpc.main.cidr_block
+    cidr_blocks = [aws_vpc.main.cidr_block]
   }
 
   egress {
@@ -614,7 +614,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `additional_info` - (Optional) JSON string for selecting additional features such as adding proxy information. Note: Currently there is no API to retrieve the value of this argument after EMR cluster creation from provider, therefore Terraform cannot detect drift from the actual EMR cluster if its value is changed outside Terraform.
-* `applications` - (Optional) List of applications for the cluster. Valid values are: `Flink`, `Hadoop`, `Hive`, `Mahout`, `Pig`, `Spark`, and `JupyterHub` (as of EMR 5.14.0). Case insensitive.
+* `applications` - (Optional) A case-insensitive list of applications for Amazon EMR to install and configure when launching the cluster. For a list of applications available for each Amazon EMR release version, see the [Amazon EMR Release Guide](https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-release-components.html).
 * `autoscaling_role` - (Optional) IAM role for automatic scaling policies. The IAM role provides permissions that the automatic scaling feature requires to launch and terminate EC2 instances in an instance group.
 * `auto_termination_policy` - (Optional) An auto-termination policy for an Amazon EMR cluster. An auto-termination policy defines the amount of idle time in seconds after which a cluster automatically terminates. See [Auto Termination Policy](#auto_termination_policy) Below.
 * `bootstrap_action` - (Optional) Ordered list of bootstrap actions that will be run before Hadoop is started on the cluster nodes. See below.
@@ -653,7 +653,7 @@ EOF
 * `ec2_attributes` - (Optional) Attributes for the EC2 instances running the job flow. See below.
 * `keep_job_flow_alive_when_no_steps` - (Optional) Switch on/off run cluster with no steps or when all steps are complete (default is on)
 * `kerberos_attributes` - (Optional) Kerberos configuration for the cluster. See below.
-* `log_encryption_kms_key_id` - (Optional) AWS KMS customer master key (CMK) key ID or arn used for encrypting log files. This attribute is only available with EMR version 5.30.0 and later, excluding EMR 6.0.0.  
+* `log_encryption_kms_key_id` - (Optional) AWS KMS customer master key (CMK) key ID or arn used for encrypting log files. This attribute is only available with EMR version 5.30.0 and later, excluding EMR 6.0.0.
 * `log_uri` - (Optional) S3 bucket to write the log files of the job flow. If a value is not provided, logs are not created.
 * `master_instance_fleet` - (Optional) Configuration block to use an [Instance Fleet](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-fleet.html) for the master node type. Cannot be specified if any `master_instance_group` configuration blocks are set. Detailed below.
 * `master_instance_group` - (Optional) Configuration block to use an [Instance Group](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-groups) for the [master node type](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-master-core-task-nodes.html#emr-plan-master).
@@ -665,13 +665,13 @@ EOF
 * `termination_protection` - (Optional) Switch on/off termination protection (default is `false`, except when using multiple master nodes). Before attempting to destroy the resource when termination protection is enabled, this configuration must be applied with its value set to `false`.
 * `visible_to_all_users` - (Optional) Whether the job flow is visible to all IAM users of the AWS account associated with the job flow. Default value is `true`.
 
-### auto_termination_policy
+### bootstrap_action
 
 * `args` - (Optional) List of command line arguments to pass to the bootstrap action script.
 * `name` - (Required) Name of the bootstrap action.
 * `path` - (Required) Location of the script to run during a bootstrap action. Can be either a location in Amazon S3 or on a local file system.
 
-### bootstrap_action
+### auto_termination_policy
 
 * `idle_timeout` - (Optional) Specifies the amount of idle time in seconds after which the cluster automatically terminates. You can specify a minimum of `60` seconds and a maximum of `604800` seconds (seven days).
 
@@ -820,7 +820,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - ID of the cluster.
 * `log_uri` - Path to the Amazon S3 location where logs for this cluster are stored.
 * `master_instance_group.0.id` - Master node type Instance Group ID, if using Instance Group for this node type.
-* `master_public_dns` - Public DNS name of the master EC2 instance.
+* `master_public_dns` - The DNS name of the master node. If the cluster is on a private subnet, this is the private DNS name. On a public subnet, this is the public DNS name.
 * `name` - Name of the cluster.
 * `release_label` - Release label for the Amazon EMR release.
 * `service_role` - IAM role that will be assumed by the Amazon EMR service to access AWS resources on your behalf.

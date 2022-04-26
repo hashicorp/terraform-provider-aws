@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -214,6 +214,10 @@ func DataSourceTable() *schema.Resource {
 					},
 				},
 			},
+			"table_class": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -293,6 +297,12 @@ func dataSourceTableRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("replica", flattenDynamoDbReplicaDescriptions(table.Replicas)); err != nil {
 		return fmt.Errorf("error setting replica: %w", err)
+	}
+
+	if table.TableClassSummary != nil {
+		d.Set("table_class", table.TableClassSummary.TableClass)
+	} else {
+		d.Set("table_class", nil)
 	}
 
 	pitrOut, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{

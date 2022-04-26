@@ -43,6 +43,18 @@ func DataSourceFunction() *schema.Resource {
 					},
 				},
 			},
+			"ephemeral_storage": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"size": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"file_system_config": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -253,12 +265,12 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("description", function.Description)
 
-	if err := d.Set("environment", flattenLambdaEnvironment(function.Environment)); err != nil {
+	if err := d.Set("environment", flattenEnvironment(function.Environment)); err != nil {
 		return fmt.Errorf("error setting environment: %w", err)
 	}
 
 	d.Set("handler", function.Handler)
-	d.Set("invoke_arn", lambdaFunctionInvokeArn(aws.StringValue(function.FunctionArn), meta))
+	d.Set("invoke_arn", functionInvokeArn(aws.StringValue(function.FunctionArn), meta))
 	d.Set("kms_key_arn", function.KMSKeyArn)
 	d.Set("last_modified", function.LastModified)
 
@@ -317,7 +329,7 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting vpc_config: %w", err)
 	}
 
-	if err := d.Set("file_system_config", flattenLambdaFileSystemConfigs(function.FileSystemConfigs)); err != nil {
+	if err := d.Set("file_system_config", flattenFileSystemConfigs(function.FileSystemConfigs)); err != nil {
 		return fmt.Errorf("error setting file_system_config: %w", err)
 	}
 
@@ -354,6 +366,10 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("architectures", flex.FlattenStringList(function.Architectures)); err != nil {
 		return fmt.Errorf("Error setting architectures for Lambda Function (%s): %w", d.Id(), err)
+	}
+
+	if err := d.Set("ephemeral_storage", flattenEphemeralStorage(function.EphemeralStorage)); err != nil {
+		return fmt.Errorf("error setting ephemeral_storage: (%s): %w", d.Id(), err)
 	}
 
 	return nil

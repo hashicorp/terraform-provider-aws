@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -75,7 +75,7 @@ func resourceKeyGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	output, err := conn.GetKeyGroup(input)
 	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchResource, "") {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchResource) {
 			log.Printf("[WARN] No key group found: %s, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -124,7 +124,7 @@ func resourceKeyGroupDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.DeleteKeyGroup(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchResource, "") {
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchResource) {
 			return nil
 		}
 		return fmt.Errorf("error deleting CloudFront Key Group (%s): %w", d.Id(), err)

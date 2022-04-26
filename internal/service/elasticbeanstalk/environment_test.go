@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -514,7 +514,7 @@ func testAccCheckBeanstalkEnvDestroy(s *terraform.State) error {
 			}
 		}
 
-		if !tfawserr.ErrMessageContains(err, "InvalidBeanstalkEnvID.NotFound", "") {
+		if !tfawserr.ErrCodeEquals(err, "InvalidBeanstalkEnvID.NotFound") {
 			return err
 		}
 	}
@@ -1376,7 +1376,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = "python-v1.zip"
   source = "test-fixtures/python-v1.zip"
@@ -1385,7 +1385,7 @@ resource "aws_s3_bucket_object" "test" {
 resource "aws_elastic_beanstalk_application_version" "test" {
   application = aws_elastic_beanstalk_application.test.name
   bucket      = aws_s3_bucket.test.id
-  key         = aws_s3_bucket_object.test.id
+  key         = aws_s3_object.test.id
   name        = "%[1]s-1"
 }
 
@@ -1440,7 +1440,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = "python-v1.zip"
   source = "test-fixtures/python-v1.zip"
@@ -1449,7 +1449,7 @@ resource "aws_s3_bucket_object" "test" {
 resource "aws_elastic_beanstalk_application_version" "test" {
   application = aws_elastic_beanstalk_application.test.name
   bucket      = aws_s3_bucket.test.id
-  key         = aws_s3_bucket_object.test.id
+  key         = aws_s3_object.test.id
   name        = "%[1]s-2"
 }
 

@@ -142,8 +142,6 @@ The following arguments are required:
 * `time_of_day` - (Required) Time, in 24-hour format, e.g., `02:00`.
 * `time_zone` - (Required) Time zone in either the Country/City format or the UTC offset format, e.g., `CET`.
 
-~> **NOTE:** Amazon MQ currently does not support updating the maintenance window. Changes to the maintenance window start time will force a new broker to be created.
-
 ### user
 
 * `console_access` - (Optional) Whether to enable access to the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) for the user. Applies to `engine_type` of `ActiveMQ` only.

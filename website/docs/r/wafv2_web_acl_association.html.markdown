@@ -1,5 +1,5 @@
 ---
-subcategory: "WAFv2"
+subcategory: "WAF"
 layout: "aws"
 page_title: "AWS: aws_wafv2_web_acl_association"
 description: |-

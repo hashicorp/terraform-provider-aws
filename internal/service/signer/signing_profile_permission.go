@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/signer"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -91,7 +91,7 @@ func resourceSigningProfilePermissionCreate(d *schema.ResourceData, meta interfa
 	var revisionId string
 	getProfilePermissionsOutput, err := conn.ListProfilePermissions(listProfilePermissionsInput)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, signer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, signer.ErrCodeResourceNotFoundException) {
 			revisionId = ""
 		} else {
 			return err
@@ -119,7 +119,7 @@ func resourceSigningProfilePermissionCreate(d *schema.ResourceData, meta interfa
 	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.AddProfilePermission(addProfilePermissionInput)
 
-		if tfawserr.ErrMessageContains(err, signer.ErrCodeConflictException, "") || tfawserr.ErrMessageContains(err, signer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, signer.ErrCodeConflictException) || tfawserr.ErrCodeEquals(err, signer.ErrCodeResourceNotFoundException) {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -140,7 +140,7 @@ func resourceSigningProfilePermissionCreate(d *schema.ResourceData, meta interfa
 		// IAM is eventually consistent :/
 		err := resourceSigningProfilePermissionRead(d, meta)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, signer.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, signer.ErrCodeResourceNotFoundException) {
 				return resource.RetryableError(
 					fmt.Errorf("error reading newly created Signer signing profile permission for %s, retrying: %s",
 						*addProfilePermissionInput.ProfileName, err))
@@ -178,7 +178,7 @@ func resourceSigningProfilePermissionRead(d *schema.ResourceData, meta interface
 		var err error
 		listProfilePermissionsOutput, err = conn.ListProfilePermissions(listProfilePermissionsInput)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, signer.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, signer.ErrCodeResourceNotFoundException) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -190,7 +190,7 @@ func resourceSigningProfilePermissionRead(d *schema.ResourceData, meta interface
 		listProfilePermissionsOutput, err = conn.ListProfilePermissions(listProfilePermissionsInput)
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, signer.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, signer.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] No Signer Signing Profile Permissions found (%s), removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -252,7 +252,7 @@ func resourceSigningProfilePermissionDelete(d *schema.ResourceData, meta interfa
 
 	listProfilePermissionsOutput, err := conn.ListProfilePermissions(listProfilePermissionsInput)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, signer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, signer.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] No Signer signing profile permission found for: %v", listProfilePermissionsInput)
 			return nil
 		}
@@ -290,7 +290,7 @@ func resourceSigningProfilePermissionDelete(d *schema.ResourceData, meta interfa
 
 	resp, err := conn.ListProfilePermissions(params)
 
-	if tfawserr.ErrMessageContains(err, signer.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, signer.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 

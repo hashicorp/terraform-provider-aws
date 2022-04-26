@@ -1,5 +1,5 @@
 ---
-subcategory: "Managed Streaming for Kafka (MSK)"
+subcategory: "Managed Streaming for Kafka"
 layout: "aws"
 page_title: "AWS: aws_msk_cluster"
 description: |-
@@ -53,6 +53,10 @@ resource "aws_cloudwatch_log_group" "test" {
 
 resource "aws_s3_bucket" "bucket" {
   bucket = "msk-broker-logs-bucket"
+}
+
+resource "aws_s3_bucket_acl" "bucket_acl" {
+  bucket = aws_s3_bucket.bucket.id
   acl    = "private"
 }
 
@@ -112,10 +116,6 @@ resource "aws_msk_cluster" "example" {
     security_groups = [aws_security_group.sg.id]
   }
 
-  client_authentication {
-    unauthenticated = true
-  }
-
   encryption_info {
     encryption_at_rest_kms_key_arn = aws_kms_key.kms.arn
   }
@@ -172,7 +172,7 @@ The following arguments are supported:
 * `cluster_name` - (Required) Name of the MSK cluster.
 * `kafka_version` - (Required) Specify the desired Kafka software version.
 * `number_of_broker_nodes` - (Required) The desired total number of broker nodes in the kafka cluster.  It must be a multiple of the number of specified client subnets.
-* `client_authentication` - Configuration block for specifying a client authentication. See below.
+* `client_authentication` - (Optional) Configuration block for specifying a client authentication. See below.
 * `configuration_info` - (Optional) Configuration block for specifying a MSK Configuration to attach to Kafka brokers. See below.
 * `encryption_info` - (Optional) Configuration block for specifying encryption. See below.
 * `enhanced_monitoring` - (Optional) Specify the desired enhanced MSK CloudWatch monitoring level.  See [Monitoring Amazon MSK with Amazon CloudWatch](https://docs.aws.amazon.com/msk/latest/developerguide/monitoring.html)
@@ -190,9 +190,9 @@ The following arguments are supported:
 
 ### client_authentication Argument Reference
 
-* `sasl` - Configuration block for specifying SASL client authentication. See below.
-* `tls` - Configuration block for specifying TLS client authentication. See below.
-* `unauthenticated` - Enables unauthenticated access.
+* `sasl` - (Optional) Configuration block for specifying SASL client authentication. See below.
+* `tls` - (Optional) Configuration block for specifying TLS client authentication. See below.
+* `unauthenticated` - (Optional) Enables unauthenticated access.
 
 #### client_authentication sasl Argument Reference
 
@@ -268,8 +268,8 @@ In addition to all arguments above, the following attributes are exported:
 * `current_version` - Current version of the MSK Cluster used for updates, e.g., `K13V1IB3VIYZZH`
 * `encryption_info.0.encryption_at_rest_kms_key_arn` - The ARN of the KMS key used for encryption at rest of the broker data volumes.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
-* `zookeeper_connect_string` - A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster. The returned values are sorted alphbetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.
-* `zookeeper_connect_string_tls` - A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster via TLS. The returned values are sorted alphbetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.
+* `zookeeper_connect_string` - A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster. The returned values are sorted alphabetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.
+* `zookeeper_connect_string_tls` - A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster via TLS. The returned values are sorted alphabetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.
 
 ## Timeouts
 

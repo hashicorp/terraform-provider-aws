@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -71,15 +71,42 @@ func resourceOpenIDConnectProviderCreate(d *schema.ResourceData, meta interface{
 		Url:            aws.String(d.Get("url").(string)),
 		ClientIDList:   flex.ExpandStringList(d.Get("client_id_list").([]interface{})),
 		ThumbprintList: flex.ExpandStringList(d.Get("thumbprint_list").([]interface{})),
-		Tags:           Tags(tags.IgnoreAWS()),
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateOpenIDConnectProvider(input)
+
+	// Some partitions (i.e., ISO) may not support tag-on-create
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] failed creating IAM OIDC Provider with tags: %s. Trying create without tags.", err)
+		input.Tags = nil
+
+		out, err = conn.CreateOpenIDConnectProvider(input)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error creating IAM OIDC Provider: %w", err)
 	}
 
 	d.SetId(aws.StringValue(out.OpenIDConnectProviderArn))
+
+	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
+	if input.Tags == nil && len(tags) > 0 {
+		err := openIDConnectProviderUpdateTags(conn, d.Id(), nil, tags)
+
+		// If default tags only, log and continue. Otherwise, error.
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] failed adding tags after create for IAM OIDC Provider (%s): %s", d.Id(), err)
+			return resourceOpenIDConnectProviderRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed adding tags after create for IAM OIDC Provider (%s): %w", d.Id(), err)
+		}
+	}
 
 	return resourceOpenIDConnectProviderRead(d, meta)
 }
@@ -93,7 +120,7 @@ func resourceOpenIDConnectProviderRead(d *schema.ResourceData, meta interface{})
 		OpenIDConnectProviderArn: aws.String(d.Id()),
 	}
 	out, err := conn.GetOpenIDConnectProvider(input)
-	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		log.Printf("[WARN] IAM OIDC Provider (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -139,8 +166,16 @@ func resourceOpenIDConnectProviderUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := openIDConnectProviderUpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags for IAM OIDC Provider (%s): %w", d.Id(), err)
+		err := openIDConnectProviderUpdateTags(conn, d.Id(), o, n)
+
+		// Some partitions (i.e., ISO) may not support tagging, giving error
+		if verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] failed updating tags for IAM OIDC Provider (%s): %s", d.Id(), err)
+			return resourceOpenIDConnectProviderRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed updating tags for IAM OIDC Provider (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -154,7 +189,7 @@ func resourceOpenIDConnectProviderDelete(d *schema.ResourceData, meta interface{
 		OpenIDConnectProviderArn: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteOpenIDConnectProvider(input)
-	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		return nil
 	}
 	if err != nil {

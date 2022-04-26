@@ -1085,7 +1085,7 @@ resource "aws_s3_bucket" "test" {
   bucket = "tf-object-test-bucket-%[2]d"
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket       = aws_s3_bucket.test.bucket
   key          = "test.zip"
   source       = "test-fixtures/ssm-doc-acc-test.zip"
@@ -1098,7 +1098,7 @@ resource "aws_ssm_document" "test" {
 
   attachments_source {
     key    = "SourceUrl"
-    values = ["s3://${aws_s3_bucket_object.test.bucket}"]
+    values = ["s3://${aws_s3_object.test.bucket}"]
   }
 
   content = <<DOC
@@ -1118,7 +1118,7 @@ resource "aws_ssm_document" "test" {
     "amazon": {
       "_any": {
         "x86_64": {
-          "file": "${aws_s3_bucket_object.test.key}"
+          "file": "${aws_s3_object.test.key}"
         }
       }
     }

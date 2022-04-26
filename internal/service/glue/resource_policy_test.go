@@ -6,32 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	awspolicy "github.com/jen20/awspolicyequivalence"
 )
-
-func CreateTablePolicy(action string) string {
-	return fmt.Sprintf(`{
-  "Version" : "2012-10-17",
-  "Statement" : [
-    {
-      "Effect" : "Allow",
-      "Action" : [
-        "%s"
-      ],
-      "Principal" : {
-         "AWS": "*"
-       },
-      "Resource" : "arn:%s:glue:%s:%s:*"
-    }
-  ]
-}`, action, acctest.Partition(), acctest.Region(), acctest.AccountID())
-}
 
 func testAccResourcePolicy_basic(t *testing.T) {
 	resourceName := "aws_glue_resource_policy.test"
@@ -42,7 +24,7 @@ func testAccResourcePolicy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicy_Required("glue:CreateTable"),
+				Config: testAccResourcePolicyRequiredConfig("glue:CreateTable"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccResourcePolicy(resourceName, "glue:CreateTable"),
 				),
@@ -65,7 +47,7 @@ func testAccResourcePolicy_hybrid(t *testing.T) {
 		CheckDestroy: testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyHybrid("glue:CreateTable", "TRUE"),
+				Config: testAccResourcePolicyHybridConfig("glue:CreateTable", "TRUE"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "enable_hybrid", "TRUE"),
 				),
@@ -77,13 +59,13 @@ func testAccResourcePolicy_hybrid(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"enable_hybrid"},
 			},
 			{
-				Config: testAccResourcePolicyHybrid("glue:CreateTable", "FALSE"),
+				Config: testAccResourcePolicyHybridConfig("glue:CreateTable", "FALSE"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "enable_hybrid", "FALSE"),
 				),
 			},
 			{
-				Config: testAccResourcePolicyHybrid("glue:CreateTable", "TRUE"),
+				Config: testAccResourcePolicyHybridConfig("glue:CreateTable", "TRUE"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "enable_hybrid", "TRUE"),
 				),
@@ -100,7 +82,7 @@ func testAccResourcePolicy_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicy_Required("glue:CreateTable"),
+				Config: testAccResourcePolicyRequiredConfig("glue:CreateTable"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccResourcePolicy(resourceName, "glue:CreateTable"),
 					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceResourcePolicy(), resourceName),
@@ -112,57 +94,6 @@ func testAccResourcePolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccResourcePolicy_Required(action string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-data "aws_partition" "current" {}
-
-data "aws_region" "current" {}
-
-data "aws_iam_policy_document" "glue-example-policy" {
-  statement {
-    actions   = ["%s"]
-    resources = ["arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"]
-    principals {
-      identifiers = ["*"]
-      type        = "AWS"
-    }
-  }
-}
-
-resource "aws_glue_resource_policy" "test" {
-  policy = data.aws_iam_policy_document.glue-example-policy.json
-}
-`, action)
-}
-
-func testAccResourcePolicyHybrid(action, hybrid string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-data "aws_partition" "current" {}
-
-data "aws_region" "current" {}
-
-data "aws_iam_policy_document" "glue-example-policy" {
-  statement {
-    actions   = ["%[1]s"]
-    resources = ["arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"]
-    principals {
-      identifiers = ["*"]
-      type        = "AWS"
-    }
-  }
-}
-
-resource "aws_glue_resource_policy" "test" {
-  policy        = data.aws_iam_policy_document.glue-example-policy.json
-  enable_hybrid = %[2]q
-}
-`, action, hybrid)
-}
-
 func testAccResourcePolicy_update(t *testing.T) {
 	resourceName := "aws_glue_resource_policy.test"
 	resource.Test(t, resource.TestCase{
@@ -172,13 +103,13 @@ func testAccResourcePolicy_update(t *testing.T) {
 		CheckDestroy: testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicy_Required("glue:CreateTable"),
+				Config: testAccResourcePolicyRequiredConfig("glue:CreateTable"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccResourcePolicy(resourceName, "glue:CreateTable"),
 				),
 			},
 			{
-				Config: testAccResourcePolicy_Required("glue:DeleteTable"),
+				Config: testAccResourcePolicyRequiredConfig("glue:DeleteTable"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccResourcePolicy(resourceName, "glue:DeleteTable"),
 				),
@@ -187,6 +118,29 @@ func testAccResourcePolicy_update(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccResourcePolicy_ignoreEquivalent(t *testing.T) {
+	resourceName := "aws_glue_resource_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckResourcePolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourcePolicyEquivalentConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccResourcePolicy(resourceName, "glue:CreateTable"),
+				),
+			},
+			{
+				Config:   testAccResourcePolicyEquivalent2Config(),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -242,4 +196,125 @@ func testAccCheckResourcePolicyDestroy(s *terraform.State) error {
 		return fmt.Errorf("Aws glue resource policy still exists: %s", *policy.PolicyInJson)
 	}
 	return nil
+}
+
+func CreateTablePolicy(action string) string {
+	return fmt.Sprintf(`{
+  "Version" : "2012-10-17",
+  "Statement" : [
+    {
+      "Effect" : "Allow",
+      "Action" : [
+        "%s"
+      ],
+      "Principal" : {
+         "AWS": "*"
+       },
+      "Resource" : "arn:%s:glue:%s:%s:*"
+    }
+  ]
+}`, action, acctest.Partition(), acctest.Region(), acctest.AccountID())
+}
+
+func testAccResourcePolicyRequiredConfig(action string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+data "aws_iam_policy_document" "glue-example-policy" {
+  statement {
+    actions   = [%[1]q]
+    resources = ["arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"]
+    principals {
+      identifiers = ["*"]
+      type        = "AWS"
+    }
+  }
+}
+
+resource "aws_glue_resource_policy" "test" {
+  policy = data.aws_iam_policy_document.glue-example-policy.json
+}
+`, action)
+}
+
+func testAccResourcePolicyHybridConfig(action, hybrid string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+data "aws_iam_policy_document" "glue-example-policy" {
+  statement {
+    actions   = [%[1]q]
+    resources = ["arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"]
+    principals {
+      identifiers = ["*"]
+      type        = "AWS"
+    }
+  }
+}
+
+resource "aws_glue_resource_policy" "test" {
+  policy        = data.aws_iam_policy_document.glue-example-policy.json
+  enable_hybrid = %[2]q
+}
+`, action, hybrid)
+}
+
+func testAccResourcePolicyEquivalentConfig() string {
+	return `
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+resource "aws_glue_resource_policy" "test" {
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = {
+      Action = "glue:CreateTable"
+      Effect = "Allow"
+      Resource = [
+        "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+      ]
+      Principal = {
+        AWS = "*"
+      }
+    }
+  })
+}
+`
+}
+
+func testAccResourcePolicyEquivalent2Config() string {
+	return `
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+resource "aws_glue_resource_policy" "test" {
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = {
+      Effect = "Allow"
+      Action = [
+        "glue:CreateTable",
+      ]
+      Resource = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+      Principal = {
+        AWS = ["*"]
+      }
+    }
+  })
+}
+`
 }

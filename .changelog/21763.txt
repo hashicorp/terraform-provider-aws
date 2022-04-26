@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_imagebuilder_image_recipe: Add `user_data_base64` argument
+```
+```release-note:enhancement
+data-source/aws_imagebuilder_image_recipe: Add `user_data_base64` attribute
+```

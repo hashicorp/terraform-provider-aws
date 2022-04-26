@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -143,7 +143,7 @@ func resourceDataLakeSettingsCreate(d *schema.ResourceData, meta interface{}) er
 			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "Invalid principal") {
 				return resource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeConcurrentModificationException, "") {
+			if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeConcurrentModificationException) {
 				return resource.RetryableError(err)
 			}
 

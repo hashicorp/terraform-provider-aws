@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -120,7 +120,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 		subnetGroups = append(subnetGroups, resp.DBSubnetGroups...)
 		return !lastPage
 	}); err != nil {
-		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) {
 			log.Printf("[WARN] DocDB Subnet Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -209,7 +209,7 @@ func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.DeleteDBSubnetGroup(&delOpts)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) {
 			return nil
 		}
 		return fmt.Errorf("error deleting DocDB Subnet Group (%s): %s", d.Id(), err)
@@ -226,7 +226,7 @@ func WaitForSubnetGroupDeletion(conn *docdb.DocDB, name string) error {
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeDBSubnetGroups(params)
 
-		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) {
 			return nil
 		}
 
@@ -238,7 +238,7 @@ func WaitForSubnetGroupDeletion(conn *docdb.DocDB, name string) error {
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.DescribeDBSubnetGroups(params)
-		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) {
 			return nil
 		}
 	}

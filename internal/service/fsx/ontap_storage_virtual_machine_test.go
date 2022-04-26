@@ -261,6 +261,7 @@ func TestAccFSxOntapStorageVirtualMachine_activeDirectory(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.0.smb.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.smb.0.dns_name"),
+					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name", fmt.Sprintf("OU=computers,OU=%s", domainNetbiosName)),
 					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.password", domainPassword1),
 				),
 			},
@@ -291,7 +292,7 @@ func testAccCheckFsxOntapStorageVirtualMachineExists(resourceName string, svm *f
 		}
 
 		if storageVirtualMachine == nil {
-			return fmt.Errorf("FSx Ontap Storage Virtual Machine (%s) not found", rs.Primary.ID)
+			return fmt.Errorf("FSx ONTAP Storage Virtual Machine (%s) not found", rs.Primary.ID)
 		}
 
 		*svm = *storageVirtualMachine
@@ -314,7 +315,7 @@ func testAccCheckFsxOntapStorageVirtualMachineDestroy(s *terraform.State) error 
 		}
 
 		if storageVirtualMachine != nil {
-			return fmt.Errorf("FSx Ontap Storage Virtual Machine (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("FSx ONTAP Storage Virtual Machine (%s) still exists", rs.Primary.ID)
 		}
 	}
 	return nil
@@ -469,11 +470,11 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   active_directory_configuration {
     netbios_name = %[2]q
     self_managed_active_directory_configuration {
-      dns_ips                                 = aws_directory_service_directory.test.dns_ip_addresses
-      domain_name                             = %[3]q
-      password                                = %[4]q
-      username                                = "Admin"
-      organizational_unit_distinguidshed_name = "OU=computers,OU=%[5]s"
+      dns_ips                                = aws_directory_service_directory.test.dns_ip_addresses
+      domain_name                            = %[3]q
+      password                               = %[4]q
+      username                               = "Admin"
+      organizational_unit_distinguished_name = "OU=computers,OU=%[5]s"
     }
   }
 }

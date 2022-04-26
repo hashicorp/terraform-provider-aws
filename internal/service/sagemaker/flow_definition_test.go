@@ -250,8 +250,12 @@ resource "aws_sagemaker_human_task_ui" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_iam_role" "test" {

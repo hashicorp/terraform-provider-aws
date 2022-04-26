@@ -28,6 +28,7 @@ func TestAccSSMParametersByPathDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "types.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "values.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "with_decryption", "false"),
+					resource.TestCheckResourceAttr(resourceName, "recursive", "false"),
 				),
 			},
 		},
@@ -65,4 +66,53 @@ data "aws_ssm_parameters_by_path" "test" {
   ]
 }
 `, rName1, rName2, withDecryption)
+}
+
+func TestAccSSMParametersByPathDataSource_withRecursion(t *testing.T) {
+	resourceName := "data.aws_ssm_parameters_by_path.recursive"
+	pathPrefix := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ssm.EndpointsID),
+		Providers:  acctest.Providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckParametersByPathDataSourceConfigWithRecursion(pathPrefix),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "arns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "values.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "recursive", "true"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckParametersByPathDataSourceConfigWithRecursion(pathPrefix string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "top_level" {
+  name  = "/%[1]s/top_param"
+  type  = "String"
+  value = "TestValueA"
+}
+
+resource "aws_ssm_parameter" "nested" {
+  name  = "/%[1]s/nested/param"
+  type  = "String"
+  value = "TestValueB"
+}
+
+data "aws_ssm_parameters_by_path" "recursive" {
+  path      = "/%[1]s/"
+  recursive = true
+
+  depends_on = [
+    aws_ssm_parameter.top_level,
+    aws_ssm_parameter.nested,
+  ]
+}
+`, pathPrefix)
 }

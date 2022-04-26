@@ -84,6 +84,25 @@ func TestAccEMRReleaseLabels_full(t *testing.T) {
 	})
 }
 
+func TestAccEMRReleaseLabels_empty(t *testing.T) {
+	dataSourceResourceName := "data.aws_emr_release_labels.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReleaseLabelsDataSourceConfigEmpty(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceResourceName, "release_labels.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccReleaseLabelsDataSourceConfigBasic() string {
 	return `
 data "aws_emr_release_labels" "test" {}
@@ -116,6 +135,16 @@ data "aws_emr_release_labels" "test" {
   filters {
     application = "Spark@3.1.2"
     prefix      = "emr-6"
+  }
+}
+`
+}
+
+func testAccReleaseLabelsDataSourceConfigEmpty() string {
+	return `
+data "aws_emr_release_labels" "test" {
+  filters {
+    prefix = "emr-0"
   }
 }
 `

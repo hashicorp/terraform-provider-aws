@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -114,7 +114,7 @@ func resourceAPIDestinationRead(d *schema.ResourceData, meta interface{}) error 
 
 	log.Printf("[DEBUG] Reading EventBridge API Destination (%s)", d.Id())
 	output, err := conn.DescribeApiDestination(input)
-	if tfawserr.ErrMessageContains(err, eventbridge.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] EventBridge API Destination (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -178,7 +178,7 @@ func resourceAPIDestinationDelete(d *schema.ResourceData, meta interface{}) erro
 
 	_, err := conn.DeleteApiDestination(input)
 
-	if tfawserr.ErrMessageContains(err, eventbridge.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] EventBridge API Destination (%s) not found", d.Id())
 		return nil
 	}

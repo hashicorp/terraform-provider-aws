@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -241,6 +241,10 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.MaxUserDurationInSeconds = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk("stream_view"); ok {
+		input.StreamView = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("vpc_config"); ok {
 		input.VpcConfig = expandVpcConfig(v.([]interface{}))
 	}
@@ -271,19 +275,19 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(fmt.Errorf("error creating Appstream Fleet (%s): %w", d.Id(), err))
 	}
 
+	d.SetId(aws.StringValue(output.Fleet.Name))
+
 	// Start fleet workflow
 	_, err = conn.StartFleetWithContext(ctx, &appstream.StartFleetInput{
-		Name: output.Fleet.Name,
+		Name: aws.String(d.Id()),
 	})
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error starting Appstream Fleet (%s): %w", d.Id(), err))
 	}
 
-	if _, err = waitFleetStateRunning(ctx, conn, aws.StringValue(output.Fleet.Name)); err != nil {
+	if _, err = waitFleetStateRunning(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for Appstream Fleet (%s) to be running: %w", d.Id(), err))
 	}
-
-	d.SetId(aws.StringValue(output.Fleet.Name))
 
 	return resourceFleetRead(ctx, d, meta)
 }
@@ -488,6 +492,7 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).AppStreamConn
 
 	// Stop fleet workflow
+	log.Printf("[DEBUG] Stopping AppStream Fleet: (%s)", d.Id())
 	_, err := conn.StopFleetWithContext(ctx, &appstream.StopFleetInput{
 		Name: aws.String(d.Id()),
 	})
@@ -499,16 +504,19 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(fmt.Errorf("error waiting for Appstream Fleet (%s) to be stopped: %w", d.Id(), err))
 	}
 
+	log.Printf("[DEBUG] Deleting AppStream Fleet: (%s)", d.Id())
 	_, err = conn.DeleteFleetWithContext(ctx, &appstream.DeleteFleetInput{
 		Name: aws.String(d.Id()),
 	})
 
+	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-			return nil
-		}
 		return diag.FromErr(fmt.Errorf("error deleting Appstream Fleet (%s): %w", d.Id(), err))
 	}
+
 	return nil
 }
 

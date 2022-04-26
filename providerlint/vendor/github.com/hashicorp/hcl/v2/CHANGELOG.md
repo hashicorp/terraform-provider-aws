@@ -1,13 +1,56 @@
 # HCL Changelog
 
-## v2.8.2 (Unreleased)
+## v2.11.1 (Dec 1, 2021)
+
+### Bugs Fixed
+
+* hclsyntax: The type for an upgraded unknown value with a splat expression cannot be known ([#495](https://github.com/hashicorp/hcl/pull/495))
+
+
+## v2.11.0 (Dec 1, 2021)
+
+### Enhancements
+
+* hclsyntax: Various error messages related to unexpectedly reaching end of file while parsing a delimited subtree will now return specialized messages describing the opening tokens as "unclosed", instead of returning a generic diagnostic that just happens to refer to the empty source range at the end of the file. This gives better feedback when error messages are being presented alongside a source code snippet, as is common in HCL-based applications, because it shows which innermost container the parser was working on when it encountered the error. ([#492](https://github.com/hashicorp/hcl/pull/492))
+
+### Bugs Fixed
+
+* hclsyntax: Upgrading an unknown single value to a list using a splat expression must return unknown ([#493](https://github.com/hashicorp/hcl/pull/493))
+
+## v2.10.1 (July 21, 2021)
+
+* dynblock: Decode unknown dynamic blocks in order to obtain any diagnostics even though the decoded value is not used ([#476](https://github.com/hashicorp/hcl/pull/476))
+* hclsyntax: Calling functions is now more robust in the face of an incorrectly-implemented function which returns a `function.ArgError` whose argument index is out of range for the length of the arguments. Previously this would often lead to a panic, but now it'll return a less-precice error message instead. Functions that return out-of-bounds argument indices still ought to be fixed so that the resulting error diagnostics can be as precise as possible. ([#472](https://github.com/hashicorp/hcl/pull/472))
+* hclsyntax: Ensure marks on unknown values are maintained when processing string templates. ([#478](https://github.com/hashicorp/hcl/pull/478))
+* hcl: Improved error messages for various common error situtions in `hcl.Index` and `hcl.GetAttr`. These are part of the implementation of indexing and attribute lookup in the native syntax expression language too, so the new error messages will apply to problems using those operators. ([#474](https://github.com/hashicorp/hcl/pull/474))
+
+## v2.10.0 (April 20, 2021)
+
+### Enhancements
+
+* dynblock,hcldec: Using dynblock in conjunction with hcldec can now decode blocks with unknown dynamic for_each arguments as entirely unknown values ([#461](https://github.com/hashicorp/hcl/pull/461))
+* hclsyntax: Some syntax errors during parsing of the inside of `${` ... `}` template interpolation sequences will now produce an extra hint message about the need to escape as `$${` when trying to include interpolation syntax for other languages like shell scripting, AWS IAM policies, etc. ([#462](https://github.com/hashicorp/hcl/pull/462))
+
+## v2.9.1 (March 10, 2021)
+
+### Bugs Fixed
+
+* hclsyntax: Fix panic for marked index value. ([#451](https://github.com/hashicorp/hcl/pull/451))
+
+## v2.9.0 (February 23, 2021)
+
+### Enhancements
+
+* HCL's native syntax and JSON scanners -- and thus all of the other parsing components that build on top of them -- are now using Unicode 13 rules for text segmentation when counting text characters for the purpose of reporting source location columns. Previously HCL was using Unicode 12. Unicode 13 still uses the same algorithm but includes some additions to the character tables the algorithm is defined in terms of, to properly categorize new characters defined in Unicode 13.
+
+## v2.8.2 (January 6, 2021)
 
 ### Bugs Fixed
 
 * hclsyntax: Fix panic for marked collection splat. ([#436](https://github.com/hashicorp/hcl/pull/436))
 * hclsyntax: Fix panic for marked template loops. ([#437](https://github.com/hashicorp/hcl/pull/437))
-* hclsyntax: Fix `for` expression marked conditional.([#438](https://github.com/hashicorp/hcl/pull/438))
-* hclsyntax: Mark objects with keys that are sensitive ([#440](https://github.com/hashicorp/hcl/pull/440))
+* hclsyntax: Fix `for` expression marked conditional. ([#438](https://github.com/hashicorp/hcl/pull/438))
+* hclsyntax: Mark objects with keys that are sensitive. ([#440](https://github.com/hashicorp/hcl/pull/440))
 
 ## v2.8.1 (December 17, 2020)
  

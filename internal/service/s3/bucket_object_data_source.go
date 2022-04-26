@@ -1,10 +1,13 @@
 package s3
 
+// WARNING: This code is DEPRECATED and will be removed in a future release!!
+// DO NOT apply fixes or enhancements to the data source in this file.
+// INSTEAD, apply fixes and enhancements to the data source in "object_data_source.go".
+
 import (
 	"bytes"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
@@ -12,8 +15,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceBucketObject() *schema.Resource {
@@ -26,8 +29,9 @@ func DataSourceBucketObject() *schema.Resource {
 				Computed: true,
 			},
 			"bucket": {
-				Type:     schema.TypeString,
-				Required: true,
+				Deprecated: "Use the aws_s3_object data source instead",
+				Type:       schema.TypeString,
+				Required:   true,
 			},
 			"bucket_key_enabled": {
 				Type:     schema.TypeBool,
@@ -150,7 +154,7 @@ func dataSourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error 
 		uniqueId += "@" + v.(string)
 	}
 
-	log.Printf("[DEBUG] Reading S3 Bucket Object: %s", input)
+	log.Printf("[DEBUG] Reading S3 Object: %s", input)
 	out, err := conn.HeadObject(&input)
 	if err != nil {
 		return fmt.Errorf("failed getting S3 Bucket (%s) Object (%s): %w", bucket, key, err)
@@ -179,7 +183,7 @@ func dataSourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error 
 	} else {
 		d.Set("last_modified", "")
 	}
-	d.Set("metadata", verify.PointersMapToStringList(out.Metadata))
+	d.Set("metadata", flex.PointersMapToStringList(out.Metadata))
 	d.Set("object_lock_legal_hold_status", out.ObjectLockLegalHoldStatus)
 	d.Set("object_lock_mode", out.ObjectLockMode)
 	d.Set("object_lock_retain_until_date", flattenS3ObjectDate(out.ObjectLockRetainUntilDate))
@@ -240,26 +244,4 @@ func dataSourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	return nil
-}
-
-// This is to prevent potential issues w/ binary files
-// and generally unprintable characters
-// See https://github.com/hashicorp/terraform/pull/3858#issuecomment-156856738
-func isContentTypeAllowed(contentType *string) bool {
-	if contentType == nil {
-		return false
-	}
-
-	allowedContentTypes := []*regexp.Regexp{
-		regexp.MustCompile("^text/.+"),
-		regexp.MustCompile("^application/json$"),
-	}
-
-	for _, r := range allowedContentTypes {
-		if r.MatchString(*contentType) {
-			return true
-		}
-	}
-
-	return false
 }

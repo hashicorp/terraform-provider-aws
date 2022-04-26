@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/chime"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -82,7 +82,7 @@ func resourceVoiceConnectorGroupRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	resp, err := conn.GetVoiceConnectorGroupWithContext(ctx, getInput)
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 		log.Printf("[WARN] Chime Voice conector group %s not found", d.Id())
 		d.SetId("")
 		return nil
@@ -116,7 +116,7 @@ func resourceVoiceConnectorGroupUpdate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if _, err := conn.UpdateVoiceConnectorGroupWithContext(ctx, input); err != nil {
-		if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 			log.Printf("[WARN] Chime Voice conector group %s not found", d.Id())
 			d.SetId("")
 			return nil
@@ -141,7 +141,7 @@ func resourceVoiceConnectorGroupDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if _, err := conn.DeleteVoiceConnectorGroupWithContext(ctx, input); err != nil {
-		if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 			log.Printf("[WARN] Chime Voice conector group %s not found", d.Id())
 			return nil
 		}

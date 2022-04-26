@@ -6,9 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
@@ -42,6 +43,10 @@ func ResourceBusPolicy() *schema.Resource {
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 		},
 	}
@@ -51,7 +56,12 @@ func resourceBusPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EventsConn
 
 	eventBusName := d.Get("event_bus_name").(string)
-	policy := d.Get("policy").(string)
+
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+	}
 
 	input := eventbridge.PutPermissionInput{
 		EventBusName: aws.String(eventBusName),
@@ -59,7 +69,7 @@ func resourceBusPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating EventBridge policy: %s", input)
-	_, err := conn.PutPermission(&input)
+	_, err = conn.PutPermission(&input)
 	if err != nil {
 		return fmt.Errorf("Creating EventBridge policy failed: %w", err)
 	}
@@ -119,7 +129,13 @@ func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("event_bus_name", busName)
 
-	d.Set("policy", policy)
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(policy))
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("policy", policyToSet)
 
 	return nil
 }
@@ -140,14 +156,20 @@ func resourceBusPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	eventBusName := d.Id()
 
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+	}
+
 	input := eventbridge.PutPermissionInput{
 		EventBusName: aws.String(eventBusName),
-		Policy:       aws.String(d.Get("policy").(string)),
+		Policy:       aws.String(policy),
 	}
 
 	log.Printf("[DEBUG] Update EventBridge Bus policy: %s", input)
-	_, err := conn.PutPermission(&input)
-	if tfawserr.ErrMessageContains(err, eventbridge.ErrCodeResourceNotFoundException, "") {
+	_, err = conn.PutPermission(&input)
+	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] EventBridge Bus %q not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -172,7 +194,7 @@ func resourceBusPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Delete EventBridge Bus Policy: %s", input)
 	_, err := conn.RemovePermission(&input)
-	if tfawserr.ErrMessageContains(err, eventbridge.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 	if err != nil {

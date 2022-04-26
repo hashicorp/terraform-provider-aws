@@ -33,8 +33,9 @@ func DataSourcePolicyDocument() *schema.Resource {
 				Computed: true,
 			},
 			"override_json": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "Use the attribute \"override_policy_documents\" instead.",
 			},
 			"override_policy_documents": {
 				Type:     schema.TypeList,
@@ -46,8 +47,9 @@ func DataSourcePolicyDocument() *schema.Resource {
 				Optional: true,
 			},
 			"source_json": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "Use the attribute \"source_policy_documents\" instead.",
 			},
 			"source_policy_documents": {
 				Type:     schema.TypeList,

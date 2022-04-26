@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -625,8 +625,12 @@ func testAccConformancePackS3DeliveryConfig(rName, bucketName string) string {
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_config_conformance_pack" "test" {
@@ -653,11 +657,15 @@ func testAccConformancePackS3TemplateConfig(rName, bucketName string) string {
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_object" "test" {
   bucket  = aws_s3_bucket.test.id
   key     = %[1]q
   content = <<EOT
@@ -675,7 +683,7 @@ EOT
 resource "aws_config_conformance_pack" "test" {
   depends_on      = [aws_config_configuration_recorder.test]
   name            = %q
-  template_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_bucket_object.test.id}"
+  template_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.id}"
 }
 `, bucketName, rName))
 }
@@ -685,11 +693,15 @@ func testAccConformancePackS3TemplateAndTemplateBodyConfig(rName string) string 
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_object" "test" {
   bucket  = aws_s3_bucket.test.id
   key     = %[1]q
   content = <<EOT
@@ -717,7 +729,7 @@ Resources:
         SourceIdentifier: IAM_PASSWORD_POLICY
     Type: AWS::Config::ConfigRule
 EOT
-  template_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_bucket_object.test.id}"
+  template_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.id}"
 }
 `, rName))
 }

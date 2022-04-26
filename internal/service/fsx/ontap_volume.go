@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -328,7 +328,7 @@ func flattenFsxOntapVolumeTieringPolicy(rs *fsx.TieringPolicy) []interface{} {
 	minCoolingPeriod := 2
 
 	m := make(map[string]interface{})
-	if rs.CoolingPeriod != nil && *rs.CoolingPeriod >= int64(minCoolingPeriod) {
+	if aws.Int64Value(rs.CoolingPeriod) >= int64(minCoolingPeriod) {
 		m["cooling_period"] = aws.Int64Value(rs.CoolingPeriod)
 	}
 

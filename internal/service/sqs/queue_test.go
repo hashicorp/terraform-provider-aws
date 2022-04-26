@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/sqs"
+	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -15,8 +16,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	awspolicy "github.com/jen20/awspolicyequivalence"
 )
+
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(sqs.EndpointsID, testAccErrorCheckSkipSQS)
+}
+
+func testAccErrorCheckSkipSQS(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"Unknown Attribute RedriveAllowPolicy",
+	)
+}
 
 func TestAccSQSQueue_basic(t *testing.T) {
 	var queueAttributes map[string]string
@@ -48,6 +58,7 @@ func TestAccSQSQueue_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", strconv.Itoa(tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "redrive_policy", ""),
+					resource.TestCheckResourceAttr(resourceName, "redrive_allow_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "url", resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", strconv.Itoa(tfsqs.DefaultQueueVisibilityTimeout)),
@@ -308,10 +319,27 @@ func TestAccSQSQueue_update(t *testing.T) {
 	})
 }
 
-func TestAccSQSQueue_policy(t *testing.T) {
+func TestAccSQSQueue_Policy_basic(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	expectedPolicy := `
+{
+  "Version": "2012-10-17",
+  "Id": "sqspolicy",
+  "Statement":[{
+    "Sid": "Stmt1451501026839",
+    "Effect": "Allow",
+    "Principal":"*",
+    "Action":"sqs:SendMessage",
+    "Resource":"arn:%[1]s:sqs:%[2]s:%[3]s:%[4]s",
+    "Condition":{
+      "ArnEquals":{"aws:SourceArn":"arn:%[1]s:sns:%[2]s:%[3]s:%[4]s"}
+    }
+  }]
+}
+`
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -323,7 +351,7 @@ func TestAccSQSQueue_policy(t *testing.T) {
 				Config: testAccPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(resourceName, &queueAttributes),
-					testAccCheckQueuePolicyAttribute(&queueAttributes, rName),
+					testAccCheckQueuePolicyAttribute(&queueAttributes, rName, expectedPolicy),
 					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "90"),
 					resource.TestCheckResourceAttr(resourceName, "max_message_size", "2048"),
 					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", "86400"),
@@ -335,6 +363,58 @@ func TestAccSQSQueue_policy(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSQSQueue_Policy_ignoreEquivalent(t *testing.T) {
+	var queueAttributes map[string]string
+	resourceName := "aws_sqs_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	expectedPolicy := `
+{
+  "Version": "2012-10-17",
+  "Id": "sqspolicy",
+  "Statement":[{
+    "Sid": "SID1993561419",
+    "Effect": "Allow",
+    "Principal":"*",
+    "Action":[
+      "sqs:SendMessage",
+      "sqs:DeleteMessage",
+      "sqs:ListQueues"
+    ],
+    "Resource":"arn:%[1]s:sqs:%[2]s:%[3]s:%[4]s",
+    "Condition":{
+      "ArnEquals":{"aws:SourceArn":"arn:%[1]s:sns:%[2]s:%[3]s:%[4]s"}
+    }
+  }]
+}
+`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQueuePolicyEquivalentConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueueExists(resourceName, &queueAttributes),
+					testAccCheckQueuePolicyAttribute(&queueAttributes, rName, expectedPolicy),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "90"),
+					resource.TestCheckResourceAttr(resourceName, "max_message_size", "2048"),
+					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", "86400"),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", "10"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "60"),
+				),
+			},
+			{
+				Config:   testAccQueuePolicyNewEquivalentConfig(rName),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -386,6 +466,35 @@ func TestAccSQSQueue_redrivePolicy(t *testing.T) {
 					testAccCheckQueueExists(resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "redrive_policy"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "300"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSQSQueue_redriveAllowPolicy(t *testing.T) {
+	var queueAttributes map[string]string
+	resourceName := "aws_sqs_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRedriveAllowPolicyConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "0"),
+					//resource.TestCheckResourceAttrSet(resourceName, "redrive_allow_policy"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "300"),
 				),
 			},
@@ -559,6 +668,13 @@ func TestAccSQSQueue_encryption(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", "alias/aws/sqs"),
 				),
 			},
+			{
+				Config: testAccManagedEncryptionConfig(rName, "true"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", "true"),
+				),
+			},
 		},
 	})
 }
@@ -618,24 +734,9 @@ func TestAccSQSQueue_defaultKMSDataKeyReusePeriodSeconds(t *testing.T) {
 	})
 }
 
-func testAccCheckQueuePolicyAttribute(queueAttributes *map[string]string, rName string) resource.TestCheckFunc {
+func testAccCheckQueuePolicyAttribute(queueAttributes *map[string]string, rName, policyTemplate string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		expectedPolicyText := fmt.Sprintf(
-			`{
-"Version": "2012-10-17",
-"Id": "sqspolicy",
-"Statement":[{
-  "Sid": "Stmt1451501026839",
-  "Effect": "Allow",
-  "Principal":"*",
-  "Action":"sqs:SendMessage",
-  "Resource":"arn:%[1]s:sqs:%[2]s:%[3]s:%[4]s",
-  "Condition":{
-    "ArnEquals":{"aws:SourceArn":"arn:%[1]s:sns:%[2]s:%[3]s:%[5]s"}
-  }
-}]
-             }`,
-			acctest.Partition(), acctest.Region(), acctest.AccountID(), rName, rName)
+		expectedPolicy := fmt.Sprintf(policyTemplate, acctest.Partition(), acctest.Region(), acctest.AccountID(), rName)
 
 		var actualPolicyText string
 		for key, value := range *queueAttributes {
@@ -645,12 +746,12 @@ func testAccCheckQueuePolicyAttribute(queueAttributes *map[string]string, rName 
 			}
 		}
 
-		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicyText)
+		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicy)
 		if err != nil {
 			return fmt.Errorf("Error testing policy equivalence: %s", err)
 		}
 		if !equivalent {
-			return fmt.Errorf("Non-equivalent policy error:\n\nexpected: %s\n\n     got: %s\n", expectedPolicyText, actualPolicyText)
+			return fmt.Errorf("Non-equivalent policy error:\n\nexpected: %s\n\n     got: %s\n", expectedPolicy, actualPolicyText)
 		}
 
 		return nil
@@ -833,6 +934,106 @@ resource "aws_sns_topic_subscription" "test" {
 `, rName)
 }
 
+func testAccQueuePolicyEquivalentConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_sqs_queue" "test" {
+  name                       = %[1]q
+  delay_seconds              = 90
+  max_message_size           = 2048
+  message_retention_seconds  = 86400
+  receive_wait_time_seconds  = 10
+  visibility_timeout_seconds = 60
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "sqspolicy"
+    Statement = [{
+      Sid       = "SID1993561419"
+      Effect    = "Allow"
+      Principal = "*"
+      Action = [
+        "sqs:SendMessage",
+        "sqs:DeleteMessage",
+        "sqs:ListQueues",
+      ]
+      Resource = "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:%[1]s"
+      Condition = {
+        ArnEquals = {
+          "aws:SourceArn" = aws_sns_topic.test.arn
+        }
+      }
+    }]
+  })
+}
+
+resource "aws_sns_topic_subscription" "test" {
+  topic_arn = aws_sns_topic.test.arn
+  protocol  = "sqs"
+  endpoint  = aws_sqs_queue.test.arn
+}
+`, rName)
+}
+
+func testAccQueuePolicyNewEquivalentConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_sqs_queue" "test" {
+  name                       = %[1]q
+  delay_seconds              = 90
+  max_message_size           = 2048
+  message_retention_seconds  = 86400
+  receive_wait_time_seconds  = 10
+  visibility_timeout_seconds = 60
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "sqspolicy"
+    Statement = [{
+      Sid       = "SID1993561419"
+      Effect    = "Allow"
+      Principal = ["*"]
+      Action = [
+        "sqs:ListQueues",
+        "sqs:SendMessage",
+        "sqs:DeleteMessage",
+      ]
+      Resource = "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:%[1]s"
+      Condition = {
+        ArnEquals = {
+          "aws:SourceArn" = aws_sns_topic.test.arn
+        }
+      }
+    }]
+  })
+}
+
+resource "aws_sns_topic_subscription" "test" {
+  topic_arn = aws_sns_topic.test.arn
+  protocol  = "sqs"
+  endpoint  = aws_sqs_queue.test.arn
+}
+`, rName)
+}
+
 func testAccRedrivePolicyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "test" {
@@ -844,6 +1045,27 @@ resource "aws_sqs_queue" "test" {
 {
   "maxReceiveCount": 3,
   "deadLetterTargetArn": "${aws_sqs_queue.dlq.arn}"
+}
+EOF
+}
+
+resource "aws_sqs_queue" "dlq" {
+  name = "%[1]s-2"
+}
+`, rName)
+}
+
+func testAccRedriveAllowPolicyConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  name                       = "%[1]s-1"
+  delay_seconds              = 0
+  visibility_timeout_seconds = 300
+
+  redrive_allow_policy = <<EOF
+{
+  "redrivePermission": "byQueue",
+  "sourceQueueArns": ["${aws_sqs_queue.dlq.arn}"]
 }
 EOF
 }
@@ -910,6 +1132,15 @@ resource "aws_sqs_queue" "test" {
   kms_data_key_reuse_period_seconds = %[2]s
 }
 `, rName, kmsDataKeyReusePeriodSeconds)
+}
+
+func testAccManagedEncryptionConfig(rName, sqsManagedSseEnabled string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  name                    = %[1]q
+  sqs_managed_sse_enabled = %[2]s
+}
+`, rName, sqsManagedSseEnabled)
 }
 
 func testAccZeroVisibilityTimeoutSecondsConfig(rName string) string {

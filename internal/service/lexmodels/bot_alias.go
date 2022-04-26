@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -175,7 +175,7 @@ func resourceBotAliasRead(d *schema.ResourceData, meta interface{}) error {
 		BotName: aws.String(d.Get("bot_name").(string)),
 		Name:    aws.String(d.Get("name").(string)),
 	})
-	if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
 		log.Printf("[WARN] Bot alias (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -272,7 +272,7 @@ func resourceBotAliasDelete(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.DeleteBotAlias(input)
 
-		if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
+		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
 			return resource.RetryableError(fmt.Errorf("'%q': bot alias still deleting", d.Id()))
 		}
 		if err != nil {

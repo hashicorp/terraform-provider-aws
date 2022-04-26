@@ -19,9 +19,7 @@ import (
 
 func TestAccIAMRolePolicy_basic(t *testing.T) {
 	var rolePolicy1, rolePolicy2, rolePolicy3 iam.GetRolePolicyOutput
-	role := sdkacctest.RandString(10)
-	policy1 := sdkacctest.RandString(10)
-	policy2 := sdkacctest.RandString(10)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role_policy.test"
 	resourceName2 := "aws_iam_role_policy.test2"
 	roleName := "aws_iam_role.test"
@@ -33,7 +31,7 @@ func TestAccIAMRolePolicy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMRolePolicyConfig(role, policy1),
+				Config: testAccIAMRolePolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMRolePolicyExists(
 						roleName,
@@ -48,7 +46,7 @@ func TestAccIAMRolePolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIAMRolePolicyConfigUpdate(role, policy1, policy2),
+				Config: testAccIAMRolePolicyConfigUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMRolePolicyExists(
 						roleName,
@@ -70,9 +68,9 @@ func TestAccIAMRolePolicy_basic(t *testing.T) {
 
 func TestAccIAMRolePolicy_disappears(t *testing.T) {
 	var out iam.GetRolePolicyOutput
-	suffix := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
-	roleResourceName := fmt.Sprintf("aws_iam_role.role_%s", suffix)
-	rolePolicyResourceName := fmt.Sprintf("aws_iam_role_policy.test_%s", suffix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	roleResourceName := "aws_iam_role.test"
+	rolePolicyResourceName := "aws_iam_role_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -81,7 +79,7 @@ func TestAccIAMRolePolicy_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolePolicyConfig(suffix),
+				Config: testAccRolePolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMRolePolicyExists(
 						roleResourceName,
@@ -96,9 +94,9 @@ func TestAccIAMRolePolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccIAMRolePolicy_namePrefix(t *testing.T) {
-	var rolePolicy1, rolePolicy2 iam.GetRolePolicyOutput
-	role := sdkacctest.RandString(10)
+func TestAccIAMRolePolicy_policyOrder(t *testing.T) {
+	var rolePolicy1 iam.GetRolePolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role_policy.test"
 	roleName := "aws_iam_role.test"
 
@@ -109,7 +107,37 @@ func TestAccIAMRolePolicy_namePrefix(t *testing.T) {
 		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMRolePolicyConfig_namePrefix(role, "*"),
+				Config: testAccIAMRolePolicyOrderConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIAMRolePolicyExists(
+						roleName,
+						resourceName,
+						&rolePolicy1,
+					),
+				),
+			},
+			{
+				Config:   testAccIAMRolePolicyNewOrderConfig(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccIAMRolePolicy_namePrefix(t *testing.T) {
+	var rolePolicy1, rolePolicy2 iam.GetRolePolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role_policy.test"
+	roleName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIAMRolePolicyConfig_namePrefix(rName, "*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMRolePolicyExists(
 						roleName,
@@ -126,7 +154,7 @@ func TestAccIAMRolePolicy_namePrefix(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"name_prefix"},
 			},
 			{
-				Config: testAccIAMRolePolicyConfig_namePrefix(role, "ec2:*"),
+				Config: testAccIAMRolePolicyConfig_namePrefix(rName, "ec2:*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMRolePolicyExists(
 						roleName,
@@ -143,7 +171,7 @@ func TestAccIAMRolePolicy_namePrefix(t *testing.T) {
 
 func TestAccIAMRolePolicy_generatedName(t *testing.T) {
 	var rolePolicy1, rolePolicy2 iam.GetRolePolicyOutput
-	role := sdkacctest.RandString(10)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role_policy.test"
 	roleName := "aws_iam_role.test"
 
@@ -154,7 +182,7 @@ func TestAccIAMRolePolicy_generatedName(t *testing.T) {
 		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMRolePolicyConfig_generatedName(role, "*"),
+				Config: testAccIAMRolePolicyConfig_generatedName(rName, "*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMRolePolicyExists(
 						roleName,
@@ -170,7 +198,7 @@ func TestAccIAMRolePolicy_generatedName(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIAMRolePolicyConfig_generatedName(role, "ec2:*"),
+				Config: testAccIAMRolePolicyConfig_generatedName(rName, "ec2:*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMRolePolicyExists(
 						roleName,
@@ -186,7 +214,7 @@ func TestAccIAMRolePolicy_generatedName(t *testing.T) {
 }
 
 func TestAccIAMRolePolicy_invalidJSON(t *testing.T) {
-	role := sdkacctest.RandString(10)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -195,7 +223,7 @@ func TestAccIAMRolePolicy_invalidJSON(t *testing.T) {
 		CheckDestroy: testAccCheckIAMRolePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccIAMRolePolicyConfig_invalidJSON(role),
+				Config:      testAccIAMRolePolicyConfig_invalidJSON(rName),
 				ExpectError: regexp.MustCompile("invalid JSON"),
 			},
 		},
@@ -327,10 +355,10 @@ func testAccCheckRolePolicyNameMatches(i, j *iam.GetRolePolicyOutput) resource.T
 	}
 }
 
-func testAccRolePolicyConfig(suffix string) string {
+func testAccRolePolicyConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "role_%[1]s" {
-  name = "tf_test_role_test_%[1]s"
+resource "aws_iam_role" "test" {
+  name = %[1]q
   path = "/"
 
   assume_role_policy = <<EOF
@@ -350,9 +378,9 @@ resource "aws_iam_role" "role_%[1]s" {
 EOF
 }
 
-resource "aws_iam_role_policy" "test_%[1]s" {
-  name = "tf_test_policy_test_%[1]s"
-  role = "${aws_iam_role.role_%[1]s.name}"
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.name
 
   policy = <<EOF
 {
@@ -365,13 +393,13 @@ resource "aws_iam_role_policy" "test_%[1]s" {
 }
 EOF
 }
-`, suffix)
+`, rName)
 }
 
-func testAccIAMRolePolicyConfig(role, policy1 string) string {
+func testAccIAMRolePolicyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = "tf_test_role_%s"
+  name = %[1]q
   path = "/"
 
   assume_role_policy = <<EOF
@@ -392,7 +420,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = "tf_test_policy_%s"
+  name = %[1]q
   role = aws_iam_role.test.name
 
   policy = <<EOF
@@ -406,13 +434,13 @@ resource "aws_iam_role_policy" "test" {
 }
 EOF
 }
-`, role, policy1)
+`, rName)
 }
 
-func testAccIAMRolePolicyConfig_namePrefix(role, policyAction string) string {
+func testAccIAMRolePolicyConfig_namePrefix(rName, action string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = "tf_test_role_%s"
+  name = %[1]q
   path = "/"
 
   assume_role_policy = <<EOF
@@ -441,19 +469,19 @@ resource "aws_iam_role_policy" "test" {
   "Version": "2012-10-17",
   "Statement": {
     "Effect": "Allow",
-    "Action": "%s",
+    "Action": %[2]q,
     "Resource": "*"
   }
 }
 EOF
 }
-`, role, policyAction)
+`, rName, action)
 }
 
-func testAccIAMRolePolicyConfig_generatedName(role, policyAction string) string {
+func testAccIAMRolePolicyConfig_generatedName(rName, policyAction string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = "tf_test_role_%s"
+  name = %[1]q
   path = "/"
 
   assume_role_policy = <<EOF
@@ -481,19 +509,19 @@ resource "aws_iam_role_policy" "test" {
   "Version": "2012-10-17",
   "Statement": {
     "Effect": "Allow",
-    "Action": "%s",
+    "Action": %[2]q,
     "Resource": "*"
   }
 }
 EOF
 }
-`, role, policyAction)
+`, rName, policyAction)
 }
 
-func testAccIAMRolePolicyConfigUpdate(role, policy1, policy2 string) string {
+func testAccIAMRolePolicyConfigUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = "tf_test_role_%s"
+  name = %[1]q
   path = "/"
 
   assume_role_policy = <<EOF
@@ -514,7 +542,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = "tf_test_policy_%s"
+  name = %[1]q
   role = aws_iam_role.test.name
 
   policy = <<EOF
@@ -530,7 +558,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test2" {
-  name = "tf_test_policy_2_%s"
+  name = "%[1]s-2"
   role = aws_iam_role.test.name
 
   policy = <<EOF
@@ -544,13 +572,13 @@ resource "aws_iam_role_policy" "test2" {
 }
 EOF
 }
-`, role, policy1, policy2)
+`, rName)
 }
 
-func testAccIAMRolePolicyConfig_invalidJSON(role string) string {
+func testAccIAMRolePolicyConfig_invalidJSON(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = "tf_test_role_%s"
+  name = %[1]q
   path = "/"
 
   assume_role_policy = <<EOF
@@ -571,7 +599,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = "tf_test_policy_%s"
+  name = %[1]q
   role = aws_iam_role.test.name
 
   policy = <<EOF
@@ -584,7 +612,7 @@ resource "aws_iam_role_policy" "test" {
   }
   EOF
 }
-`, role, role)
+`, rName)
 }
 
 func testAccIAMRolePolicyConfig_Policy_InvalidResource(rName string) string {
@@ -621,6 +649,98 @@ resource "aws_iam_role_policy" "test" {
     }]
     Version = "2012-10-17"
   })
+}
+`, rName)
+}
+
+func testAccIAMRolePolicyOrderConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": [
+      "ec2:DescribeScheduledInstances",
+      "ec2:DescribeScheduledInstanceAvailability",
+      "ec2:DescribeFastSnapshotRestores",
+      "ec2:DescribeElasticGpus"
+    ],
+    "Resource": "*"
+  }
+}
+EOF
+}
+`, rName)
+}
+
+func testAccIAMRolePolicyNewOrderConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+	"Action": [
+      "ec2:DescribeFastSnapshotRestores",
+      "ec2:DescribeScheduledInstanceAvailability",
+      "ec2:DescribeScheduledInstances",
+      "ec2:DescribeElasticGpus"
+    ],
+    "Resource": "*"
+  }
+}
+EOF
 }
 `, rName)
 }

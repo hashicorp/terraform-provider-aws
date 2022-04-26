@@ -2,11 +2,12 @@ package tfresource
 
 import (
 	"context"
+	"errors"
 	"math/rand"
 	"sync"
 	"time"
 
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -23,9 +24,10 @@ func RetryWhenContext(ctx context.Context, timeout time.Duration, f func() (inte
 
 	err := resource.Retry(timeout, func() *resource.RetryError { // nosemgrep: helper-schema-resource-Retry-without-TimeoutError-check
 		var err error
+		var retry bool
 
 		output, err = f()
-		retry, err := retryable(err)
+		retry, err = retryable(err)
 
 		if retry {
 			return resource.RetryableError(err)
@@ -69,6 +71,44 @@ func RetryWhenAWSErrCodeEqualsContext(ctx context.Context, timeout time.Duration
 // RetryWhenAWSErrCodeEquals retries the specified function when it returns one of the specified AWS error code.
 func RetryWhenAWSErrCodeEquals(timeout time.Duration, f func() (interface{}, error), codes ...string) (interface{}, error) {
 	return RetryWhenAWSErrCodeEqualsContext(context.Background(), timeout, f, codes...)
+}
+
+// RetryWhenAWSErrMessageContainsContext retries the specified function when it returns an AWS error containing the specified message.
+func RetryWhenAWSErrMessageContainsContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error), code, message string) (interface{}, error) {
+	return RetryWhenContext(ctx, timeout, f, func(err error) (bool, error) {
+		if tfawserr.ErrMessageContains(err, code, message) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
+// RetryWhenAWSErrMessageContains retries the specified function when it returns an AWS error containing the specified message.
+func RetryWhenAWSErrMessageContains(timeout time.Duration, f func() (interface{}, error), code, message string) (interface{}, error) {
+	return RetryWhenAWSErrMessageContainsContext(context.Background(), timeout, f, code, message)
+}
+
+var resourceFoundError = errors.New(`found resource`)
+
+// RetryUntilNotFoundContext retries the specified function until it returns a resource.NotFoundError.
+func RetryUntilNotFoundContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
+	return RetryWhenContext(ctx, timeout, f, func(err error) (bool, error) {
+		if NotFound(err) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		return true, resourceFoundError
+	})
+}
+
+// RetryUntilNotFound retries the specified function until it returns a resource.NotFoundError.
+func RetryUntilNotFound(timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
+	return RetryUntilNotFoundContext(context.Background(), timeout, f)
 }
 
 // RetryWhenNotFoundContext retries the specified function when it returns a resource.NotFoundError.

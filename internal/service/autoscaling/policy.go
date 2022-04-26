@@ -87,6 +87,48 @@ func ResourcePolicy() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"customized_capacity_metric_specification": {
+										Type:          schema.TypeList,
+										Optional:      true,
+										MaxItems:      1,
+										ConflictsWith: []string{"predictive_scaling_configuration.0.metric_specification.0.predefined_load_metric_specification"},
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"metric_data_queries": func() *schema.Schema {
+													schema := customizedMetricDataQuerySchema()
+													return schema
+												}(),
+											},
+										},
+									},
+									"customized_load_metric_specification": {
+										Type:          schema.TypeList,
+										Optional:      true,
+										MaxItems:      1,
+										ConflictsWith: []string{"predictive_scaling_configuration.0.metric_specification.0.predefined_load_metric_specification"},
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"metric_data_queries": func() *schema.Schema {
+													schema := customizedMetricDataQuerySchema()
+													return schema
+												}(),
+											},
+										},
+									},
+									"customized_scaling_metric_specification": {
+										Type:          schema.TypeList,
+										Optional:      true,
+										MaxItems:      1,
+										ConflictsWith: []string{"predictive_scaling_configuration.0.metric_specification.0.predefined_scaling_metric_specification"},
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"metric_data_queries": func() *schema.Schema {
+													schema := customizedMetricDataQuerySchema()
+													return schema
+												}(),
+											},
+										},
+									},
 									"predefined_metric_pair_specification": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -94,14 +136,9 @@ func ResourcePolicy() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"predefined_metric_type": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														"ASGCPUUtilization",
-														"ASGNetworkIn",
-														"ASGNetworkOut",
-														"ALBRequestCount",
-													}, false),
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(autoscaling.PredefinedMetricPairType_Values(), false),
 												},
 												"resource_label": {
 													Type:     schema.TypeString,
@@ -111,20 +148,16 @@ func ResourcePolicy() *schema.Resource {
 										},
 									},
 									"predefined_scaling_metric_specification": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
+										Type:          schema.TypeList,
+										Optional:      true,
+										MaxItems:      1,
+										ConflictsWith: []string{"predictive_scaling_configuration.0.metric_specification.0.customized_scaling_metric_specification"},
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"predefined_metric_type": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														"ASGAverageCPUUtilization",
-														"ASGAverageNetworkIn",
-														"ASGAverageNetworkOut",
-														"ALBRequestCountPerTarget",
-													}, false),
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(autoscaling.PredefinedScalingMetricType_Values(), false),
 												},
 												"resource_label": {
 													Type:     schema.TypeString,
@@ -134,20 +167,16 @@ func ResourcePolicy() *schema.Resource {
 										},
 									},
 									"predefined_load_metric_specification": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
+										Type:          schema.TypeList,
+										Optional:      true,
+										MaxItems:      1,
+										ConflictsWith: []string{"predictive_scaling_configuration.0.metric_specification.0.customized_load_metric_specification"},
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"predefined_metric_type": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														"ASGTotalCPUUtilization",
-														"ASGTotalNetworkIn",
-														"ASGTotalNetworkOut",
-														"ALBTargetGroupRequestCount",
-													}, false),
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(autoscaling.PredefinedLoadMetricType_Values(), false),
 												},
 												"resource_label": {
 													Type:     schema.TypeString,
@@ -164,13 +193,10 @@ func ResourcePolicy() *schema.Resource {
 							},
 						},
 						"max_capacity_breach_behavior": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "HonorMaxCapacity",
-							ValidateFunc: validation.StringInSlice([]string{
-								"HonorMaxCapacity",
-								"IncreaseMaxCapacity",
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "HonorMaxCapacity",
+							ValidateFunc: validation.StringInSlice(autoscaling.PredictiveScalingMaxCapacityBreachBehavior_Values(), false),
 						},
 						"max_capacity_buffer": {
 							Type:         nullable.TypeNullableInt,
@@ -178,13 +204,10 @@ func ResourcePolicy() *schema.Resource {
 							ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 100),
 						},
 						"mode": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "ForecastOnly",
-							ValidateFunc: validation.StringInSlice([]string{
-								"ForecastOnly",
-								"ForecastAndScale",
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "ForecastOnly",
+							ValidateFunc: validation.StringInSlice(autoscaling.PredictiveScalingMode_Values(), false),
 						},
 						"scheduling_buffer_time": {
 							Type:         nullable.TypeNullableInt,
@@ -303,6 +326,90 @@ func ResourcePolicy() *schema.Resource {
 	}
 }
 
+// All predictive scaling customized metrics shares same metric data query schema
+func customizedMetricDataQuerySchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		MaxItems: 10,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"expression": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1023),
+				},
+				"id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"label": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 2047),
+				},
+				"metric_stat": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"metric": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"dimensions": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"name": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													"value": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+												},
+											},
+										},
+										"metric_name": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"namespace": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+							},
+							"stat": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 100),
+							},
+							"unit": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"return_data": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+			},
+		},
+	}
+}
+
 func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
@@ -329,7 +436,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if p == nil {
+	if p == nil && !d.IsNewResource() {
 		log.Printf("[WARN] Autoscaling Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -542,7 +649,6 @@ func getPolicy(d *schema.ResourceData, meta interface{}) (*autoscaling.ScalingPo
 			return resp.ScalingPolicies[idx], nil
 		}
 	}
-
 	// policy not found
 	return nil, nil
 }
@@ -637,10 +743,13 @@ func expandPredictiveScalingMetricSpecifications(metricSpecificationsSlice []int
 	}
 	metricSpecificationsFlat := metricSpecificationsSlice[0].(map[string]interface{})
 	metricSpecification := &autoscaling.PredictiveScalingMetricSpecification{
-		PredefinedLoadMetricSpecification:    expandPredefinedLoadMetricSpecification(metricSpecificationsFlat["predefined_load_metric_specification"].([]interface{})),
-		PredefinedMetricPairSpecification:    expandPredefinedMetricPairSpecification(metricSpecificationsFlat["predefined_metric_pair_specification"].([]interface{})),
-		PredefinedScalingMetricSpecification: expandPredefinedScalingMetricSpecification(metricSpecificationsFlat["predefined_scaling_metric_specification"].([]interface{})),
-		TargetValue:                          aws.Float64(float64(metricSpecificationsFlat["target_value"].(int))),
+		CustomizedCapacityMetricSpecification: expandCustomizedCapacityMetricSpecification(metricSpecificationsFlat["customized_capacity_metric_specification"].([]interface{})),
+		CustomizedLoadMetricSpecification:     expandCustomizedLoadMetricSpecification(metricSpecificationsFlat["customized_load_metric_specification"].([]interface{})),
+		CustomizedScalingMetricSpecification:  expandCustomizedScalingMetricSpecification(metricSpecificationsFlat["customized_scaling_metric_specification"].([]interface{})),
+		PredefinedLoadMetricSpecification:     expandPredefinedLoadMetricSpecification(metricSpecificationsFlat["predefined_load_metric_specification"].([]interface{})),
+		PredefinedMetricPairSpecification:     expandPredefinedMetricPairSpecification(metricSpecificationsFlat["predefined_metric_pair_specification"].([]interface{})),
+		PredefinedScalingMetricSpecification:  expandPredefinedScalingMetricSpecification(metricSpecificationsFlat["predefined_scaling_metric_specification"].([]interface{})),
+		TargetValue:                           aws.Float64(float64(metricSpecificationsFlat["target_value"].(int))),
 	}
 	return []*autoscaling.PredictiveScalingMetricSpecification{metricSpecification}
 }
@@ -679,6 +788,94 @@ func expandPredefinedScalingMetricSpecification(predefinedScalingMetricSpecifica
 		ResourceLabel:        aws.String(predefinedScalingMetricSpecificationFlat["resource_label"].(string)),
 	}
 	return predefinedScalingMetricSpecification
+}
+
+func expandCustomizedScalingMetricSpecification(customizedScalingMetricSpecificationSlice []interface{}) *autoscaling.PredictiveScalingCustomizedScalingMetric {
+	if customizedScalingMetricSpecificationSlice == nil || len(customizedScalingMetricSpecificationSlice) < 1 {
+		return nil
+	}
+	customizedScalingMetricSpecificationFlat := customizedScalingMetricSpecificationSlice[0].(map[string]interface{})
+	customizedScalingMetricSpecification := &autoscaling.PredictiveScalingCustomizedScalingMetric{
+		MetricDataQueries: expandMetricDataQueries(customizedScalingMetricSpecificationFlat["metric_data_queries"].([]interface{})),
+	}
+	return customizedScalingMetricSpecification
+}
+
+func expandCustomizedLoadMetricSpecification(customizedLoadMetricSpecificationSlice []interface{}) *autoscaling.PredictiveScalingCustomizedLoadMetric {
+	if customizedLoadMetricSpecificationSlice == nil || len(customizedLoadMetricSpecificationSlice) < 1 {
+		return nil
+	}
+	customizedLoadMetricSpecificationSliceFlat := customizedLoadMetricSpecificationSlice[0].(map[string]interface{})
+	customizedLoadMetricSpecification := &autoscaling.PredictiveScalingCustomizedLoadMetric{
+		MetricDataQueries: expandMetricDataQueries(customizedLoadMetricSpecificationSliceFlat["metric_data_queries"].([]interface{})),
+	}
+	return customizedLoadMetricSpecification
+}
+
+func expandCustomizedCapacityMetricSpecification(customizedCapacityMetricSlice []interface{}) *autoscaling.PredictiveScalingCustomizedCapacityMetric {
+	if customizedCapacityMetricSlice == nil || len(customizedCapacityMetricSlice) < 1 {
+		return nil
+	}
+	customizedCapacityMetricSliceFlat := customizedCapacityMetricSlice[0].(map[string]interface{})
+	customizedCapacityMetricSpecification := &autoscaling.PredictiveScalingCustomizedCapacityMetric{
+		MetricDataQueries: expandMetricDataQueries(customizedCapacityMetricSliceFlat["metric_data_queries"].([]interface{})),
+	}
+	return customizedCapacityMetricSpecification
+}
+
+func expandMetricDataQueries(metricDataQuerySlices []interface{}) []*autoscaling.MetricDataQuery {
+	if metricDataQuerySlices == nil || len(metricDataQuerySlices) < 1 {
+		return nil
+	}
+	metricDataQueries := make([]*autoscaling.MetricDataQuery, len(metricDataQuerySlices))
+
+	for i := range metricDataQueries {
+
+		metricDataQueryFlat := metricDataQuerySlices[i].(map[string]interface{})
+		metricDataQuery := &autoscaling.MetricDataQuery{
+			Id: aws.String(metricDataQueryFlat["id"].(string)),
+		}
+		if val, ok := metricDataQueryFlat["metric_stat"]; ok && len(val.([]interface{})) > 0 {
+			metricStatSpec := val.([]interface{})[0].(map[string]interface{})
+			metricSpec := metricStatSpec["metric"].([]interface{})[0].(map[string]interface{})
+			metric := &autoscaling.Metric{
+				MetricName: aws.String(metricSpec["metric_name"].(string)),
+				Namespace:  aws.String(metricSpec["namespace"].(string)),
+			}
+			if v, ok := metricSpec["dimensions"]; ok {
+				dims := v.(*schema.Set).List()
+				dimList := make([]*autoscaling.MetricDimension, len(dims))
+				for i := range dimList {
+					dim := dims[i].(map[string]interface{})
+					md := &autoscaling.MetricDimension{
+						Name:  aws.String(dim["name"].(string)),
+						Value: aws.String(dim["value"].(string)),
+					}
+					dimList[i] = md
+				}
+				metric.Dimensions = dimList
+			}
+			metricStat := &autoscaling.MetricStat{
+				Metric: metric,
+				Stat:   aws.String(metricStatSpec["stat"].(string)),
+			}
+			if v, ok := metricStatSpec["unit"]; ok && len(v.(string)) > 0 {
+				metricStat.Unit = aws.String(v.(string))
+			}
+			metricDataQuery.MetricStat = metricStat
+		}
+		if val, ok := metricDataQueryFlat["expression"]; ok && val.(string) != "" {
+			metricDataQuery.Expression = aws.String(val.(string))
+		}
+		if val, ok := metricDataQueryFlat["label"]; ok && val.(string) != "" {
+			metricDataQuery.Label = aws.String(val.(string))
+		}
+		if val, ok := metricDataQueryFlat["return_data"]; ok {
+			metricDataQuery.ReturnData = aws.Bool(val.(bool))
+		}
+		metricDataQueries[i] = metricDataQuery
+	}
+	return metricDataQueries
 }
 
 func flattenTargetTrackingConfiguration(config *autoscaling.TargetTrackingConfiguration) []interface{} {
@@ -752,6 +949,15 @@ func flattenPredictiveScalingMetricSpecifications(metricSpecification []*autosca
 	if metricSpecification[0].TargetValue != nil {
 		metricSpecificationFlat["target_value"] = aws.Float64Value(metricSpecification[0].TargetValue)
 	}
+	if metricSpecification[0].CustomizedCapacityMetricSpecification != nil {
+		metricSpecificationFlat["customized_capacity_metric_specification"] = flattenCustomizedCapacityMetricSpecification(metricSpecification[0].CustomizedCapacityMetricSpecification)
+	}
+	if metricSpecification[0].CustomizedLoadMetricSpecification != nil {
+		metricSpecificationFlat["customized_load_metric_specification"] = flattenCustomizedLoadMetricSpecification(metricSpecification[0].CustomizedLoadMetricSpecification)
+	}
+	if metricSpecification[0].CustomizedScalingMetricSpecification != nil {
+		metricSpecificationFlat["customized_scaling_metric_specification"] = flattenCustomizedScalingMetricSpecification(metricSpecification[0].CustomizedScalingMetricSpecification)
+	}
 	if metricSpecification[0].PredefinedLoadMetricSpecification != nil {
 		metricSpecificationFlat["predefined_load_metric_specification"] = flattenPredefinedLoadMetricSpecification(metricSpecification[0].PredefinedLoadMetricSpecification)
 	}
@@ -792,4 +998,82 @@ func flattenPredefinedMetricPairSpecification(predefinedMetricPairSpecification 
 	predefinedMetricPairSpecificationFlat["predefined_metric_type"] = aws.StringValue(predefinedMetricPairSpecification.PredefinedMetricType)
 	predefinedMetricPairSpecificationFlat["resource_label"] = aws.StringValue(predefinedMetricPairSpecification.ResourceLabel)
 	return []map[string]interface{}{predefinedMetricPairSpecificationFlat}
+}
+
+func flattenCustomizedScalingMetricSpecification(customizedScalingMetricSpecification *autoscaling.PredictiveScalingCustomizedScalingMetric) []map[string]interface{} {
+	customizedScalingMetricSpecificationFlat := map[string]interface{}{}
+	if customizedScalingMetricSpecification == nil {
+		return []map[string]interface{}{customizedScalingMetricSpecificationFlat}
+	}
+	customizedScalingMetricSpecificationFlat["metric_data_queries"] = flattenMetricDataQueries(customizedScalingMetricSpecification.MetricDataQueries)
+	return []map[string]interface{}{customizedScalingMetricSpecificationFlat}
+}
+
+func flattenCustomizedLoadMetricSpecification(customizedLoadMetricSpecification *autoscaling.PredictiveScalingCustomizedLoadMetric) []map[string]interface{} {
+	customizedLoadMetricSpecificationFlat := map[string]interface{}{}
+	if customizedLoadMetricSpecification == nil {
+		return []map[string]interface{}{customizedLoadMetricSpecificationFlat}
+	}
+	customizedLoadMetricSpecificationFlat["metric_data_queries"] = flattenMetricDataQueries(customizedLoadMetricSpecification.MetricDataQueries)
+	return []map[string]interface{}{customizedLoadMetricSpecificationFlat}
+}
+
+func flattenCustomizedCapacityMetricSpecification(customizedCapacityMetricSpecification *autoscaling.PredictiveScalingCustomizedCapacityMetric) []map[string]interface{} {
+	customizedCapacityMetricSpecificationFlat := map[string]interface{}{}
+	if customizedCapacityMetricSpecification == nil {
+		return []map[string]interface{}{customizedCapacityMetricSpecificationFlat}
+	}
+	customizedCapacityMetricSpecificationFlat["metric_data_queries"] = flattenMetricDataQueries(customizedCapacityMetricSpecification.MetricDataQueries)
+
+	return []map[string]interface{}{customizedCapacityMetricSpecificationFlat}
+}
+
+func flattenMetricDataQueries(metricDataQueries []*autoscaling.MetricDataQuery) []interface{} {
+	metricDataQueriesFlat := map[string]interface{}{}
+	if metricDataQueriesFlat == nil {
+		return []interface{}{}
+	}
+
+	metricDataQueriesSpec := make([]interface{}, len(metricDataQueries))
+	for i := range metricDataQueriesSpec {
+		metricDataQuery := map[string]interface{}{}
+		rawMetricDataQuery := metricDataQueries[i]
+		metricDataQuery["id"] = aws.StringValue(rawMetricDataQuery.Id)
+		if rawMetricDataQuery.Expression != nil {
+			metricDataQuery["expression"] = aws.StringValue(rawMetricDataQuery.Expression)
+		}
+		if rawMetricDataQuery.Label != nil {
+			metricDataQuery["label"] = aws.StringValue(rawMetricDataQuery.Label)
+		}
+		if rawMetricDataQuery.MetricStat != nil {
+			metricStatSpec := map[string]interface{}{}
+			rawMetricStat := rawMetricDataQuery.MetricStat
+			rawMetric := rawMetricStat.Metric
+			metricSpec := map[string]interface{}{}
+			if rawMetric.Dimensions != nil {
+				dimSpec := make([]interface{}, len(rawMetric.Dimensions))
+				for i := range dimSpec {
+					dim := map[string]interface{}{}
+					rawDim := rawMetric.Dimensions[i]
+					dim["name"] = aws.StringValue(rawDim.Name)
+					dim["value"] = aws.StringValue(rawDim.Value)
+					dimSpec[i] = dim
+				}
+				metricSpec["dimensions"] = dimSpec
+			}
+			metricSpec["metric_name"] = aws.StringValue(rawMetric.MetricName)
+			metricSpec["namespace"] = aws.StringValue(rawMetric.Namespace)
+			metricStatSpec["metric"] = []map[string]interface{}{metricSpec}
+			metricStatSpec["stat"] = aws.StringValue(rawMetricStat.Stat)
+			if rawMetricStat.Unit != nil {
+				metricStatSpec["unit"] = aws.StringValue(rawMetricStat.Unit)
+			}
+			metricDataQuery["metric_stat"] = []map[string]interface{}{metricStatSpec}
+		}
+		if rawMetricDataQuery.ReturnData != nil {
+			metricDataQuery["return_data"] = aws.BoolValue(rawMetricDataQuery.ReturnData)
+		}
+		metricDataQueriesSpec[i] = metricDataQuery
+	}
+	return metricDataQueriesSpec
 }

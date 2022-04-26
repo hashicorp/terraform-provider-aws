@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -102,7 +102,7 @@ func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetGroup(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "") {
+		if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
 			log.Printf("[WARN] Cognito User Group %s is already gone", d.Id())
 			d.SetId("")
 			return nil

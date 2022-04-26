@@ -9,9 +9,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -35,19 +34,24 @@ func ResourcePermission() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validPermissionAction,
+				ValidateFunc: validPermissionAction(),
 			},
 			"event_source_token": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validPermissionEventSourceToken,
+				ValidateFunc: validPermissionEventSourceToken(),
 			},
 			"function_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validFunctionName,
+				ValidateFunc: validFunctionName(),
+			},
+			"principal_org_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 			"principal": {
 				Type:     schema.TypeString,
@@ -58,7 +62,7 @@ func ResourcePermission() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validQualifier,
+				ValidateFunc: validQualifier(),
 			},
 			"source_account": {
 				Type:         schema.TypeString,
@@ -78,14 +82,14 @@ func ResourcePermission() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"statement_id_prefix"},
-				ValidateFunc:  validPolicyStatementID,
+				ValidateFunc:  validPolicyStatementID(),
 			},
 			"statement_id_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"statement_id"},
-				ValidateFunc:  validPolicyStatementID,
+				ValidateFunc:  validPolicyStatementID(),
 			},
 		},
 	}
@@ -130,6 +134,9 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("source_arn"); ok {
 		input.SourceArn = aws.String(v.(string))
 	}
+	if v, ok := d.GetOk("principal_org_id"); ok {
+		input.PrincipalOrgID = aws.String(v.(string))
+	}
 
 	log.Printf("[DEBUG] Adding new Lambda permission: %s", input)
 	var out *lambda.AddPermissionOutput
@@ -138,7 +145,7 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		out, err = conn.AddPermission(&input)
 
-		if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceConflictException, "") || tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceConflictException) || tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -209,15 +216,14 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		out, err = conn.GetPolicy(&input)
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "ResourceNotFoundException" {
-					return resource.RetryableError(err)
-				}
+
+			if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
+				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 
-		statement, err = getLambdaPolicyStatement(out, d.Id())
+		statement, err = getPolicyStatement(out, d.Id())
 		if err != nil {
 			return resource.RetryableError(err)
 		}
@@ -228,15 +234,13 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 
 		if err == nil {
 			var psErr error
-			statement, psErr = getLambdaPolicyStatement(out, d.Id())
+			statement, psErr = getPolicyStatement(out, d.Id())
 
 			// handle the resource not existing
-			if awsErr, ok := psErr.(awserr.Error); ok {
-				if awsErr.Code() == "ResourceNotFoundException" {
-					log.Printf("[WARN] No Lambda Permission Policy found: %v", input)
-					d.SetId("")
-					return nil
-				}
+			if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
+				log.Printf("[WARN] No Lambda Permission Policy found: %v", input)
+				d.SetId("")
+				return nil
 			}
 
 			if psErr != nil {
@@ -247,12 +251,10 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		// Missing whole policy or Lambda function (API error)
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "ResourceNotFoundException" {
-				log.Printf("[WARN] No Lambda Permission Policy found: %v", input)
-				d.SetId("")
-				return nil
-			}
+		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
+			log.Printf("[WARN] No Lambda Permission Policy found: %v", input)
+			d.SetId("")
+			return nil
 		}
 
 		// Missing permission inside valid policy
@@ -290,15 +292,20 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("action", statement.Action)
 	// Check if the principal is a cross-account IAM role
-	if _, ok := statement.Principal["AWS"]; ok {
-		d.Set("principal", statement.Principal["AWS"])
-	} else {
-		d.Set("principal", statement.Principal["Service"])
+	if v, ok := statement.Principal.(map[string]interface{}); ok {
+		if _, ok := v["AWS"]; ok {
+			d.Set("principal", v["AWS"])
+		} else {
+			d.Set("principal", v["Service"])
+		}
+	} else if v, ok := statement.Principal.(string); ok {
+		d.Set("principal", v)
 	}
 
 	if stringEquals, ok := statement.Condition["StringEquals"]; ok {
 		d.Set("source_account", stringEquals["AWS:SourceAccount"])
 		d.Set("event_source_token", stringEquals["lambda:EventSourceToken"])
+		d.Set("principal_org_id", stringEquals["aws:PrincipalOrgID"])
 	}
 
 	if arnLike, ok := statement.Condition["ArnLike"]; ok {
@@ -334,12 +341,11 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.RemovePermission(&input)
 	if err != nil {
 		// Missing whole policy or Lambda function (API error)
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "ResourceNotFoundException" {
-				log.Printf("[WARN] No Lambda Permission Policy found: %v", input)
-				return nil
-			}
+		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
+			log.Printf("[WARN] No Lambda Permission Policy found: %v", input)
+			return nil
 		}
+
 		return err
 	}
 
@@ -352,7 +358,7 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetPolicy(params)
 
-	if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "") {
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
@@ -364,7 +370,7 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	statement, err := getLambdaPolicyStatement(resp, d.Id())
+	statement, err := getPolicyStatement(resp, d.Id())
 
 	if tfresource.NotFound(err) {
 		return nil
@@ -382,7 +388,7 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 
 	return nil
 }
-func getLambdaPolicyStatement(out *lambda.GetPolicyOutput, statemendId string) (statement *PolicyStatement, err error) {
+func getPolicyStatement(out *lambda.GetPolicyOutput, statemendId string) (statement *PolicyStatement, err error) {
 	policyInBytes := []byte(*out.Policy)
 	policy := Policy{}
 	err = json.Unmarshal(policyInBytes, &policy)
@@ -474,6 +480,6 @@ type PolicyStatement struct {
 	Action    string
 	Resource  string
 	Effect    string
-	Principal map[string]string
+	Principal interface{}
 	Sid       string
 }

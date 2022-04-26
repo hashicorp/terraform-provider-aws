@@ -233,27 +233,17 @@ func resourcePoolUpdate(d *schema.ResourceData, meta interface{}) error {
 		IdentityPoolName:               aws.String(d.Get("identity_pool_name").(string)),
 	}
 
-	if v, ok := d.GetOk("developer_provider_name"); ok {
-		params.DeveloperProviderName = aws.String(v.(string))
+	if d.HasChanges(
+		"cognito_identity_providers",
+		"supported_login_providers",
+		"openid_connect_provider_arns",
+		"saml_provider_arns",
+	) {
+		params.CognitoIdentityProviders = expandIdentityProviders(d.Get("cognito_identity_providers").(*schema.Set))
+		params.SupportedLoginProviders = expandSupportedLoginProviders(d.Get("supported_login_providers").(map[string]interface{}))
+		params.OpenIdConnectProviderARNs = flex.ExpandStringSet(d.Get("openid_connect_provider_arns").(*schema.Set))
+		params.SamlProviderARNs = flex.ExpandStringList(d.Get("saml_provider_arns").([]interface{}))
 	}
-
-	if v, ok := d.GetOk("cognito_identity_providers"); ok {
-		params.CognitoIdentityProviders = expandIdentityProviders(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("supported_login_providers"); ok {
-		params.SupportedLoginProviders = expandSupportedLoginProviders(v.(map[string]interface{}))
-	}
-
-	if v, ok := d.GetOk("openid_connect_provider_arns"); ok {
-		params.OpenIdConnectProviderARNs = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("saml_provider_arns"); ok {
-		params.SamlProviderARNs = flex.ExpandStringList(v.([]interface{}))
-	}
-
-	log.Printf("[DEBUG] Updating Cognito Identity Pool: %s", params)
 
 	_, err := conn.UpdateIdentityPool(params)
 	if err != nil {

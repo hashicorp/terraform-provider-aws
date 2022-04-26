@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -292,7 +292,7 @@ func testAccCheckLayerVersionDestroy(s *terraform.State) error {
 			LayerName:     aws.String(layerName),
 			VersionNumber: aws.Int64(version),
 		})
-		if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 			continue
 		}
 		if err != nil {
@@ -349,7 +349,7 @@ resource "aws_s3_bucket" "lambda_bucket" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "lambda_code" {
+resource "aws_s3_object" "lambda_code" {
   bucket = aws_s3_bucket.lambda_bucket.id
   key    = "lambdatest.zip"
   source = "test-fixtures/lambdatest.zip"
@@ -357,7 +357,7 @@ resource "aws_s3_bucket_object" "lambda_code" {
 
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   s3_bucket  = aws_s3_bucket.lambda_bucket.id
-  s3_key     = aws_s3_bucket_object.lambda_code.id
+  s3_key     = aws_s3_object.lambda_code.id
   layer_name = %[1]q
 }
 `, rName)

@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -116,12 +116,14 @@ func ResourceCloudTrail() *schema.Resource {
 				Computed: true,
 			},
 			"cloud_watch_logs_group_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"cloud_watch_logs_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"enable_log_file_validation": {
 				Type:     schema.TypeBool,
@@ -216,17 +218,19 @@ func ResourceCloudTrail() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(3, 128),
 			},
 			"s3_bucket_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"s3_key_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 2000),
 			},
 			"sns_topic_name": {
 				Type:     schema.TypeString,
@@ -302,7 +306,7 @@ func resourceCloudTrailCreate(d *schema.ResourceData, meta interface{}) error {
 		t, err = conn.CreateTrail(&input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating CloudTrail: %s", err)
+		return fmt.Errorf("Error creating CloudTrail: %w", err)
 	}
 
 	log.Printf("[DEBUG] CloudTrail created: %s", t)
@@ -387,13 +391,14 @@ func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 	// https://github.com/hashicorp/terraform/pull/3928
 	d.Set("kms_key_id", trail.KmsKeyId)
 
-	d.Set("arn", trail.TrailARN)
+	arn := aws.StringValue(trail.TrailARN)
+	d.Set("arn", arn)
 	d.Set("home_region", trail.HomeRegion)
 
-	tags, err := ListTags(conn, *trail.TrailARN)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Cloudtrail (%s): %s", *trail.TrailARN, err)
+		return fmt.Errorf("error listing tags for Cloudtrail (%s): %w", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -421,26 +426,30 @@ func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("event_selector", flattenEventSelector(eventSelectorsOut.EventSelectors)); err != nil {
-		return err
-	}
+	if aws.BoolValue(trail.HasCustomEventSelectors) {
+		if err := d.Set("event_selector", flattenEventSelector(eventSelectorsOut.EventSelectors)); err != nil {
+			return err
+		}
 
-	if err := d.Set("advanced_event_selector", flattenAdvancedEventSelector(eventSelectorsOut.AdvancedEventSelectors)); err != nil {
-		return err
-	}
-
-	// Get InsightSelectors
-	insightSelectors, err := conn.GetInsightSelectors(&cloudtrail.GetInsightSelectorsInput{
-		TrailName: aws.String(d.Id()),
-	})
-	if err != nil {
-		if !tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeInsightNotEnabledException, "") {
-			return fmt.Errorf("error getting Cloud Trail (%s) Insight Selectors: %w", d.Id(), err)
+		if err := d.Set("advanced_event_selector", flattenAdvancedEventSelector(eventSelectorsOut.AdvancedEventSelectors)); err != nil {
+			return err
 		}
 	}
-	if insightSelectors != nil {
-		if err := d.Set("insight_selector", flattenInsightSelector(insightSelectors.InsightSelectors)); err != nil {
-			return err
+
+	if aws.BoolValue(trail.HasInsightSelectors) {
+		// Get InsightSelectors
+		insightSelectors, err := conn.GetInsightSelectors(&cloudtrail.GetInsightSelectorsInput{
+			TrailName: aws.String(d.Id()),
+		})
+		if err != nil {
+			if !tfawserr.ErrCodeEquals(err, cloudtrail.ErrCodeInsightNotEnabledException) {
+				return fmt.Errorf("error getting Cloud Trail (%s) Insight Selectors: %w", d.Id(), err)
+			}
+		}
+		if insightSelectors != nil {
+			if err := d.Set("insight_selector", flattenInsightSelector(insightSelectors.InsightSelectors)); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -450,62 +459,63 @@ func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 func resourceCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudTrailConn
 
-	input := cloudtrail.UpdateTrailInput{
-		Name: aws.String(d.Id()),
-	}
-
-	if d.HasChange("s3_bucket_name") {
-		input.S3BucketName = aws.String(d.Get("s3_bucket_name").(string))
-	}
-	if d.HasChange("s3_key_prefix") {
-		input.S3KeyPrefix = aws.String(d.Get("s3_key_prefix").(string))
-	}
-	if d.HasChanges("cloud_watch_logs_role_arn", "cloud_watch_logs_group_arn") {
-		// Both of these need to be provided together
-		// in the update call otherwise API complains
-		input.CloudWatchLogsRoleArn = aws.String(d.Get("cloud_watch_logs_role_arn").(string))
-		input.CloudWatchLogsLogGroupArn = aws.String(d.Get("cloud_watch_logs_group_arn").(string))
-	}
-	if d.HasChange("include_global_service_events") {
-		input.IncludeGlobalServiceEvents = aws.Bool(d.Get("include_global_service_events").(bool))
-	}
-	if d.HasChange("is_multi_region_trail") {
-		input.IsMultiRegionTrail = aws.Bool(d.Get("is_multi_region_trail").(bool))
-	}
-	if d.HasChange("is_organization_trail") {
-		input.IsOrganizationTrail = aws.Bool(d.Get("is_organization_trail").(bool))
-	}
-	if d.HasChange("enable_log_file_validation") {
-		input.EnableLogFileValidation = aws.Bool(d.Get("enable_log_file_validation").(bool))
-	}
-	if d.HasChange("kms_key_id") {
-		input.KmsKeyId = aws.String(d.Get("kms_key_id").(string))
-	}
-	if d.HasChange("sns_topic_name") {
-		input.SnsTopicName = aws.String(d.Get("sns_topic_name").(string))
-	}
-
-	log.Printf("[DEBUG] Updating CloudTrail: %s", input)
-	var t *cloudtrail.UpdateTrailOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
-		var err error
-		t, err = conn.UpdateTrail(&input)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeInvalidCloudWatchLogsRoleArnException, "Access denied.") {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeInvalidCloudWatchLogsLogGroupArnException, "Access denied.") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
+	if d.HasChangesExcept("tags", "tags_all", "insight_selector", "advanced_event_selector", "event_selector", "enable_logging") {
+		input := cloudtrail.UpdateTrailInput{
+			Name: aws.String(d.Id()),
 		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		t, err = conn.UpdateTrail(&input)
-	}
-	if err != nil {
-		return fmt.Errorf("Error updating CloudTrail: %s", err)
+
+		if d.HasChange("s3_bucket_name") {
+			input.S3BucketName = aws.String(d.Get("s3_bucket_name").(string))
+		}
+		if d.HasChange("s3_key_prefix") {
+			input.S3KeyPrefix = aws.String(d.Get("s3_key_prefix").(string))
+		}
+		if d.HasChanges("cloud_watch_logs_role_arn", "cloud_watch_logs_group_arn") {
+			// Both of these need to be provided together
+			// in the update call otherwise API complains
+			input.CloudWatchLogsRoleArn = aws.String(d.Get("cloud_watch_logs_role_arn").(string))
+			input.CloudWatchLogsLogGroupArn = aws.String(d.Get("cloud_watch_logs_group_arn").(string))
+		}
+		if d.HasChange("include_global_service_events") {
+			input.IncludeGlobalServiceEvents = aws.Bool(d.Get("include_global_service_events").(bool))
+		}
+		if d.HasChange("is_multi_region_trail") {
+			input.IsMultiRegionTrail = aws.Bool(d.Get("is_multi_region_trail").(bool))
+		}
+		if d.HasChange("is_organization_trail") {
+			input.IsOrganizationTrail = aws.Bool(d.Get("is_organization_trail").(bool))
+		}
+		if d.HasChange("enable_log_file_validation") {
+			input.EnableLogFileValidation = aws.Bool(d.Get("enable_log_file_validation").(bool))
+		}
+		if d.HasChange("kms_key_id") {
+			input.KmsKeyId = aws.String(d.Get("kms_key_id").(string))
+		}
+		if d.HasChange("sns_topic_name") {
+			input.SnsTopicName = aws.String(d.Get("sns_topic_name").(string))
+		}
+
+		log.Printf("[DEBUG] Updating CloudTrail: %s", input)
+		err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+			var err error
+			_, err = conn.UpdateTrail(&input)
+			if err != nil {
+				if tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeInvalidCloudWatchLogsRoleArnException, "Access denied.") {
+					return resource.RetryableError(err)
+				}
+				if tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeInvalidCloudWatchLogsLogGroupArnException, "Access denied.") {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+		if tfresource.TimedOut(err) {
+			_, err = conn.UpdateTrail(&input)
+		}
+		if err != nil {
+			return fmt.Errorf("Error updating CloudTrail: %w", err)
+		}
 	}
 
 	if d.HasChange("tags_all") {
@@ -517,35 +527,33 @@ func resourceCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("enable_logging") {
-		log.Printf("[DEBUG] Updating logging on CloudTrail: %s", input)
-		err := cloudTrailSetLogging(conn, d.Get("enable_logging").(bool), *input.Name)
+		log.Printf("[DEBUG] Updating logging on CloudTrail: %s", d.Id())
+		err := cloudTrailSetLogging(conn, d.Get("enable_logging").(bool), d.Id())
 		if err != nil {
 			return err
 		}
 	}
 
 	if !d.IsNewResource() && d.HasChange("event_selector") {
-		log.Printf("[DEBUG] Updating event selector on CloudTrail: %s", input)
+		log.Printf("[DEBUG] Updating event selector on CloudTrail: %s", d.Id())
 		if err := cloudTrailSetEventSelectors(conn, d); err != nil {
 			return err
 		}
 	}
 
 	if !d.IsNewResource() && d.HasChange("advanced_event_selector") {
-		log.Printf("[DEBUG] Updating advanced event selector on CloudTrail: %s", input)
+		log.Printf("[DEBUG] Updating advanced event selector on CloudTrail: %s", d.Id())
 		if err := cloudTrailSetAdvancedEventSelectors(conn, d); err != nil {
 			return err
 		}
 	}
 
 	if !d.IsNewResource() && d.HasChange("insight_selector") {
-		log.Printf("[DEBUG] Updating insight selector on CloudTrail: %s", input)
+		log.Printf("[DEBUG] Updating insight selector on CloudTrail: %s", d.Id())
 		if err := cloudTrailSetInsightSelectors(conn, d); err != nil {
 			return err
 		}
 	}
-
-	log.Printf("[DEBUG] CloudTrail updated: %s", t)
 
 	return resourceCloudTrailRead(d, meta)
 }
@@ -558,7 +566,15 @@ func resourceCloudTrailDelete(d *schema.ResourceData, meta interface{}) error {
 		Name: aws.String(d.Id()),
 	})
 
-	return err
+	if tfawserr.ErrCodeEquals(err, cloudtrail.ErrCodeTrailNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting CloudTrail (%s): %w", d.Id(), err)
+	}
+
+	return nil
 }
 
 func cloudTrailGetLoggingStatus(conn *cloudtrail.CloudTrail, id *string) (bool, error) {
@@ -567,36 +583,28 @@ func cloudTrailGetLoggingStatus(conn *cloudtrail.CloudTrail, id *string) (bool, 
 	}
 	resp, err := conn.GetTrailStatus(GetTrailStatusOpts)
 	if err != nil {
-		return false, fmt.Errorf("Error retrieving logging status of CloudTrail (%s): %s", *id, err)
+		return false, fmt.Errorf("Error retrieving logging status of CloudTrail (%s): %w", *id, err)
 	}
 
-	return *resp.IsLogging, err
+	return aws.BoolValue(resp.IsLogging), err
 }
 
 func cloudTrailSetLogging(conn *cloudtrail.CloudTrail, enabled bool, id string) error {
 	if enabled {
-		log.Printf(
-			"[DEBUG] Starting logging on CloudTrail (%s)",
-			id)
+		log.Printf("[DEBUG] Starting logging on CloudTrail (%s)", id)
 		StartLoggingOpts := &cloudtrail.StartLoggingInput{
 			Name: aws.String(id),
 		}
 		if _, err := conn.StartLogging(StartLoggingOpts); err != nil {
-			return fmt.Errorf(
-				"Error starting logging on CloudTrail (%s): %s",
-				id, err)
+			return fmt.Errorf("Error starting logging on CloudTrail (%s): %w", id, err)
 		}
 	} else {
-		log.Printf(
-			"[DEBUG] Stopping logging on CloudTrail (%s)",
-			id)
+		log.Printf("[DEBUG] Stopping logging on CloudTrail (%s)", id)
 		StopLoggingOpts := &cloudtrail.StopLoggingInput{
 			Name: aws.String(id),
 		}
 		if _, err := conn.StopLogging(StopLoggingOpts); err != nil {
-			return fmt.Errorf(
-				"Error stopping logging on CloudTrail (%s): %s",
-				id, err)
+			return fmt.Errorf("Error stopping logging on CloudTrail (%s): %w", id, err)
 		}
 	}
 
@@ -613,7 +621,7 @@ func cloudTrailSetEventSelectors(conn *cloudtrail.CloudTrail, d *schema.Resource
 	if len(eventSelectors) == 0 {
 		es := &cloudtrail.EventSelector{
 			IncludeManagementEvents: aws.Bool(true),
-			ReadWriteType:           aws.String("All"),
+			ReadWriteType:           aws.String(cloudtrail.ReadWriteTypeAll),
 			DataResources:           make([]*cloudtrail.DataResource, 0),
 		}
 		eventSelectors = append(eventSelectors, es)
@@ -661,15 +669,9 @@ func expandEventSelectorDataResource(configured []interface{}) []*cloudtrail.Dat
 	for _, raw := range configured {
 		data := raw.(map[string]interface{})
 
-		values := make([]*string, len(data["values"].([]interface{})))
-		for i, vv := range data["values"].([]interface{}) {
-			str := vv.(string)
-			values[i] = aws.String(str)
-		}
-
 		dataResource := &cloudtrail.DataResource{
 			Type:   aws.String(data["type"].(string)),
-			Values: values,
+			Values: flex.ExpandStringList(data["values"].([]interface{})),
 		}
 
 		dataResources = append(dataResources, dataResource)
@@ -682,7 +684,7 @@ func flattenEventSelector(configured []*cloudtrail.EventSelector) []map[string]i
 	eventSelectors := make([]map[string]interface{}, 0, len(configured))
 
 	// Prevent default configurations shows differences
-	if len(configured) == 1 && len(configured[0].DataResources) == 0 && aws.StringValue(configured[0].ReadWriteType) == "All" && len(configured[0].ExcludeManagementEventSources) == 0 {
+	if len(configured) == 1 && len(configured[0].DataResources) == 0 && aws.StringValue(configured[0].ReadWriteType) == cloudtrail.ReadWriteTypeAll && len(configured[0].ExcludeManagementEventSources) == 0 {
 		return eventSelectors
 	}
 
@@ -718,17 +720,15 @@ func cloudTrailSetAdvancedEventSelectors(conn *cloudtrail.CloudTrail, d *schema.
 		TrailName: aws.String(d.Id()),
 	}
 
-	advancedEventSelectors := expandAdvancedEventSelector(d.Get("advanced_event_selector").([]interface{}))
-
-	input.AdvancedEventSelectors = advancedEventSelectors
+	input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]interface{}))
 
 	if err := input.Validate(); err != nil {
-		return fmt.Errorf("Error validate CloudTrail (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error validate CloudTrail (%s): %w", d.Id(), err)
 	}
 
 	_, err := conn.PutEventSelectors(input)
 	if err != nil {
-		return fmt.Errorf("Error set advanced event selector on CloudTrail (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error set advanced event selector on CloudTrail (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -763,58 +763,28 @@ func expandAdvancedEventSelectorFieldSelector(configured *schema.Set) []*cloudtr
 			Field: aws.String(data["field"].(string)),
 		}
 
-		if v, ok := data["equals"]; ok && len(v.([]interface{})) > 0 {
-			equals := make([]*string, len(v.([]interface{})))
-			for i, vv := range v.([]interface{}) {
-				str := vv.(string)
-				equals[i] = aws.String(str)
-			}
-			fieldSelector.Equals = equals
+		if v, ok := data["equals"].([]interface{}); ok && len(v) > 0 {
+			fieldSelector.Equals = flex.ExpandStringList(v)
 		}
 
-		if v, ok := data["not_equals"]; ok && len(v.([]interface{})) > 0 {
-			notEquals := make([]*string, len(v.([]interface{})))
-			for i, vv := range v.([]interface{}) {
-				str := vv.(string)
-				notEquals[i] = aws.String(str)
-			}
-			fieldSelector.NotEquals = notEquals
+		if v, ok := data["not_equals"].([]interface{}); ok && len(v) > 0 {
+			fieldSelector.NotEquals = flex.ExpandStringList(v)
 		}
 
-		if v, ok := data["starts_with"]; ok && len(v.([]interface{})) > 0 {
-			startsWith := make([]*string, len(v.([]interface{})))
-			for i, vv := range v.([]interface{}) {
-				str := vv.(string)
-				startsWith[i] = aws.String(str)
-			}
-			fieldSelector.StartsWith = startsWith
+		if v, ok := data["starts_with"].([]interface{}); ok && len(v) > 0 {
+			fieldSelector.StartsWith = flex.ExpandStringList(v)
 		}
 
-		if v, ok := data["not_starts_with"]; ok && len(v.([]interface{})) > 0 {
-			notStartsWith := make([]*string, len(v.([]interface{})))
-			for i, vv := range v.([]interface{}) {
-				str := vv.(string)
-				notStartsWith[i] = aws.String(str)
-			}
-			fieldSelector.NotStartsWith = notStartsWith
+		if v, ok := data["not_starts_with"].([]interface{}); ok && len(v) > 0 {
+			fieldSelector.NotStartsWith = flex.ExpandStringList(v)
 		}
 
-		if v, ok := data["ends_with"]; ok && len(v.([]interface{})) > 0 {
-			endsWith := make([]*string, len(v.([]interface{})))
-			for i, vv := range v.([]interface{}) {
-				str := vv.(string)
-				endsWith[i] = aws.String(str)
-			}
-			fieldSelector.EndsWith = endsWith
+		if v, ok := data["ends_with"].([]interface{}); ok && len(v) > 0 {
+			fieldSelector.EndsWith = flex.ExpandStringList(v)
 		}
 
-		if v, ok := data["not_ends_with"]; ok && len(v.([]interface{})) > 0 {
-			notEndsWith := make([]*string, len(v.([]interface{})))
-			for i, vv := range v.([]interface{}) {
-				str := vv.(string)
-				notEndsWith[i] = aws.String(str)
-			}
-			fieldSelector.NotEndsWith = notEndsWith
+		if v, ok := data["not_ends_with"].([]interface{}); ok && len(v) > 0 {
+			fieldSelector.NotEndsWith = flex.ExpandStringList(v)
 		}
 
 		fieldSelectors = append(fieldSelectors, fieldSelector)
@@ -877,12 +847,12 @@ func cloudTrailSetInsightSelectors(conn *cloudtrail.CloudTrail, d *schema.Resour
 	input.InsightSelectors = insightSelector
 
 	if err := input.Validate(); err != nil {
-		return fmt.Errorf("Error validate CloudTrail (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error validate CloudTrail (%s): %w", d.Id(), err)
 	}
 
 	_, err := conn.PutInsightSelectors(input)
 	if err != nil {
-		return fmt.Errorf("Error set insight selector on CloudTrail (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error set insight selector on CloudTrail (%s): %w", d.Id(), err)
 	}
 
 	return nil

@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -83,7 +83,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 		ParameterGroupNames: []*string{aws.String(d.Id())},
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, dax.ErrCodeParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, dax.ErrCodeParameterGroupNotFoundFault) {
 			log.Printf("[WARN] DAX ParameterGroup %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -103,7 +103,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 		ParameterGroupName: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, dax.ErrCodeParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, dax.ErrCodeParameterGroupNotFoundFault) {
 			log.Printf("[WARN] DAX ParameterGroup %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -152,7 +152,7 @@ func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) erro
 
 	_, err := conn.DeleteParameterGroup(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, dax.ErrCodeParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, dax.ErrCodeParameterGroupNotFoundFault) {
 			return nil
 		}
 		return err

@@ -11,7 +11,12 @@ import (
 )
 
 func TestAccElasticsearchDomainDataSource_Data_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rInt := sdkacctest.RandInt()
+	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	datasourceName := "data.aws_elasticsearch_domain.test"
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -21,10 +26,14 @@ func TestAccElasticsearchDomainDataSource_Data_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainWithDataSourceConfig(rInt),
+				Config: testAccDomainWithDataSourceConfig(rInt, autoTuneStartAtTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "processing", "false"),
 					resource.TestCheckResourceAttrPair(datasourceName, "elasticsearch_version", resourceName, "elasticsearch_version"),
+					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.#", resourceName, "auto_tune_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.0.desired_state", resourceName, "auto_tune_options.0.desired_state"),
+					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.0.maintenance_schedule", resourceName, "auto_tune_options.0.maintenance_schedule"),
+					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.0.rollback_on_disable", resourceName, "auto_tune_options.0.rollback_on_disable"),
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.#", resourceName, "cluster_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.instance_type", resourceName, "cluster_config.0.instance_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.instance_count", resourceName, "cluster_config.0.instance_count"),
@@ -44,7 +53,12 @@ func TestAccElasticsearchDomainDataSource_Data_basic(t *testing.T) {
 }
 
 func TestAccElasticsearchDomainDataSource_Data_advanced(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rInt := sdkacctest.RandInt()
+	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	datasourceName := "data.aws_elasticsearch_domain.test"
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -54,9 +68,13 @@ func TestAccElasticsearchDomainDataSource_Data_advanced(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainAdvancedWithDataSourceConfig(rInt),
+				Config: testAccDomainAdvancedWithDataSourceConfig(rInt, autoTuneStartAtTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "elasticsearch_version", resourceName, "elasticsearch_version"),
+					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.#", resourceName, "auto_tune_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.0.desired_state", resourceName, "auto_tune_options.0.desired_state"),
+					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.0.maintenance_schedule", resourceName, "auto_tune_options.0.maintenance_schedule"),
+					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.0.rollback_on_disable", resourceName, "auto_tune_options.0.rollback_on_disable"),
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.#", resourceName, "cluster_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.instance_type", resourceName, "cluster_config.0.instance_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.instance_count", resourceName, "cluster_config.0.instance_count"),
@@ -78,7 +96,7 @@ func TestAccElasticsearchDomainDataSource_Data_advanced(t *testing.T) {
 	})
 }
 
-func testAccDomainWithDataSourceConfig(rInt int) string {
+func testAccDomainWithDataSourceConfig(rInt int, autoTuneStartAtTime string) string {
 	return fmt.Sprintf(`
 locals {
   random_name = "test-es-%d"
@@ -92,7 +110,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_elasticsearch_domain" "test" {
   domain_name           = local.random_name
-  elasticsearch_version = "1.5"
+  elasticsearch_version = "6.7"
 
   access_policies = <<POLICY
 {
@@ -114,6 +132,22 @@ resource "aws_elasticsearch_domain" "test" {
   ]
 }
 POLICY
+
+  auto_tune_options {
+    desired_state = "ENABLED"
+
+    maintenance_schedule {
+      start_at = "%s"
+      duration {
+        value = "2"
+        unit  = "HOURS"
+      }
+      cron_expression_for_recurrence = "cron(0 0 ? * 1 *)"
+    }
+
+    rollback_on_disable = "NO_ROLLBACK"
+
+  }
 
   cluster_config {
     instance_type            = "t2.small.elasticsearch"
@@ -141,10 +175,10 @@ POLICY
 data "aws_elasticsearch_domain" "test" {
   domain_name = aws_elasticsearch_domain.test.domain_name
 }
-		`, rInt)
+		`, rInt, autoTuneStartAtTime)
 }
 
-func testAccDomainAdvancedWithDataSourceConfig(rInt int) string {
+func testAccDomainAdvancedWithDataSourceConfig(rInt int, autoTuneStartAtTime string) string {
 	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -217,7 +251,7 @@ resource "aws_security_group_rule" "test" {
 
 resource "aws_elasticsearch_domain" "test" {
   domain_name           = local.random_name
-  elasticsearch_version = "1.5"
+  elasticsearch_version = "6.7"
 
   access_policies = <<POLICY
 {
@@ -232,6 +266,22 @@ resource "aws_elasticsearch_domain" "test" {
   ]
 }
 POLICY
+
+  auto_tune_options {
+    desired_state = "ENABLED"
+
+    maintenance_schedule {
+      start_at = "%s"
+      duration {
+        value = "2"
+        unit  = "HOURS"
+      }
+      cron_expression_for_recurrence = "cron(0 0 ? * 1 *)"
+    }
+
+    rollback_on_disable = "NO_ROLLBACK"
+
+  }
 
   cluster_config {
     instance_type            = "t2.small.elasticsearch"
@@ -283,5 +333,5 @@ POLICY
 data "aws_elasticsearch_domain" "test" {
   domain_name = aws_elasticsearch_domain.test.domain_name
 }
-`, rInt)
+`, rInt, autoTuneStartAtTime)
 }

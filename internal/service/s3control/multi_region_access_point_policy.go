@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -56,6 +57,10 @@ func ResourceMultiRegionAccessPointPolicy() *schema.Resource {
 							Required:         true,
 							ValidateFunc:     validation.StringIsJSON,
 							DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+							StateFunc: func(v interface{}) string {
+								json, _ := structure.NormalizeJsonString(v)
+								return json
+							},
 						},
 					},
 				},
@@ -139,7 +144,12 @@ func resourceMultiRegionAccessPointPolicyRead(d *schema.ResourceData, meta inter
 
 	d.Set("account_id", accountID)
 	if policyDocument != nil {
-		if err := d.Set("details", []interface{}{flattenMultiRegionAccessPointPolicyDocument(name, policyDocument)}); err != nil {
+		var oldDetails map[string]interface{}
+		if v, ok := d.GetOk("details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			oldDetails = v.([]interface{})[0].(map[string]interface{})
+		}
+
+		if err := d.Set("details", []interface{}{flattenMultiRegionAccessPointPolicyDocument(name, policyDocument, oldDetails)}); err != nil {
 			return fmt.Errorf("error setting details: %w", err)
 		}
 	} else {
@@ -208,13 +218,19 @@ func expandPutMultiRegionAccessPointPolicyInput_(tfMap map[string]interface{}) *
 	}
 
 	if v, ok := tfMap["policy"].(string); ok {
-		apiObject.Policy = aws.String(v)
+		policy, err := structure.NormalizeJsonString(v)
+
+		if err != nil {
+			policy = v
+		}
+
+		apiObject.Policy = aws.String(policy)
 	}
 
 	return apiObject
 }
 
-func flattenMultiRegionAccessPointPolicyDocument(name string, apiObject *s3control.MultiRegionAccessPointPolicyDocument) map[string]interface{} {
+func flattenMultiRegionAccessPointPolicyDocument(name string, apiObject *s3control.MultiRegionAccessPointPolicyDocument, old map[string]interface{}) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -225,7 +241,18 @@ func flattenMultiRegionAccessPointPolicyDocument(name string, apiObject *s3contr
 
 	if v := apiObject.Proposed; v != nil {
 		if v := v.Policy; v != nil {
-			tfMap["policy"] = aws.StringValue(v)
+			policyToSet := aws.StringValue(v)
+			if old != nil {
+				if w, ok := old["policy"].(string); ok {
+					var err error
+					policyToSet, err = verify.PolicyToSet(w, aws.StringValue(v))
+
+					if err != nil {
+						policyToSet = aws.StringValue(v)
+					}
+				}
+			}
+			tfMap["policy"] = policyToSet
 		}
 	}
 

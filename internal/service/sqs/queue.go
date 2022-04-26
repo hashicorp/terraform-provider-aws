@@ -7,14 +7,13 @@ import (
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -23,72 +22,63 @@ import (
 )
 
 var (
-	sqsQueueSchema = map[string]*schema.Schema{
+	queueSchema = map[string]*schema.Schema{
 		"arn": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-
 		"content_based_deduplication": {
 			Type:     schema.TypeBool,
 			Default:  false,
 			Optional: true,
 		},
-
 		"deduplication_scope": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Computed:     true,
 			ValidateFunc: validation.StringInSlice(DeduplicationScope_Values(), false),
 		},
-
 		"delay_seconds": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      DefaultQueueDelaySeconds,
 			ValidateFunc: validation.IntBetween(0, 900),
 		},
-
 		"fifo_queue": {
 			Type:     schema.TypeBool,
 			Default:  false,
 			ForceNew: true,
 			Optional: true,
 		},
-
 		"fifo_throughput_limit": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Computed:     true,
 			ValidateFunc: validation.StringInSlice(FIFOThroughputLimit_Values(), false),
 		},
-
 		"kms_data_key_reuse_period_seconds": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Computed:     true,
 			ValidateFunc: validation.IntBetween(60, 86_400),
 		},
-
 		"kms_master_key_id": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:          schema.TypeString,
+			Optional:      true,
+			ConflictsWith: []string{"sqs_managed_sse_enabled"},
 		},
-
 		"max_message_size": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      DefaultQueueMaximumMessageSize,
 			ValidateFunc: validation.IntBetween(1024, 262_144),
 		},
-
 		"message_retention_seconds": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      DefaultQueueMessageRetentionPeriod,
 			ValidateFunc: validation.IntBetween(60, 1_209_600),
 		},
-
 		"name": {
 			Type:          schema.TypeString,
 			Optional:      true,
@@ -96,7 +86,6 @@ var (
 			ForceNew:      true,
 			ConflictsWith: []string{"name_prefix"},
 		},
-
 		"name_prefix": {
 			Type:          schema.TypeString,
 			Optional:      true,
@@ -104,21 +93,31 @@ var (
 			ForceNew:      true,
 			ConflictsWith: []string{"name"},
 		},
-
 		"policy": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Computed:         true,
 			ValidateFunc:     validation.StringIsJSON,
 			DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+			StateFunc: func(v interface{}) string {
+				json, _ := structure.NormalizeJsonString(v)
+				return json
+			},
 		},
-
 		"receive_wait_time_seconds": {
 			Type:     schema.TypeInt,
 			Optional: true,
 			Default:  DefaultQueueReceiveMessageWaitTimeSeconds,
 		},
-
+		"redrive_allow_policy": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: validation.StringIsJSON,
+			StateFunc: func(v interface{}) string {
+				json, _ := structure.NormalizeJsonString(v)
+				return json
+			},
+		},
 		"redrive_policy": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -128,44 +127,45 @@ var (
 				return json
 			},
 		},
-
+		"sqs_managed_sse_enabled": {
+			Type:          schema.TypeBool,
+			Optional:      true,
+			ConflictsWith: []string{"kms_master_key_id"},
+		},
+		"tags":     tftags.TagsSchema(),
+		"tags_all": tftags.TagsSchemaComputed(),
 		"url": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-
 		"visibility_timeout_seconds": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      DefaultQueueVisibilityTimeout,
 			ValidateFunc: validation.IntBetween(0, 43_200),
 		},
-
-		"tags":     tftags.TagsSchema(),
-		"tags_all": tftags.TagsSchemaComputed(),
 	}
 
-	sqsQueueAttributeMap = create.AttrMap(map[string]string{
+	sqsQueueAttributeMap = attrmap.New(map[string]string{
+		"arn":                               sqs.QueueAttributeNameQueueArn,
+		"content_based_deduplication":       sqs.QueueAttributeNameContentBasedDeduplication,
+		"deduplication_scope":               sqs.QueueAttributeNameDeduplicationScope,
 		"delay_seconds":                     sqs.QueueAttributeNameDelaySeconds,
+		"fifo_queue":                        sqs.QueueAttributeNameFifoQueue,
+		"fifo_throughput_limit":             sqs.QueueAttributeNameFifoThroughputLimit,
+		"kms_data_key_reuse_period_seconds": sqs.QueueAttributeNameKmsDataKeyReusePeriodSeconds,
+		"kms_master_key_id":                 sqs.QueueAttributeNameKmsMasterKeyId,
 		"max_message_size":                  sqs.QueueAttributeNameMaximumMessageSize,
 		"message_retention_seconds":         sqs.QueueAttributeNameMessageRetentionPeriod,
-		"receive_wait_time_seconds":         sqs.QueueAttributeNameReceiveMessageWaitTimeSeconds,
-		"visibility_timeout_seconds":        sqs.QueueAttributeNameVisibilityTimeout,
 		"policy":                            sqs.QueueAttributeNamePolicy,
+		"receive_wait_time_seconds":         sqs.QueueAttributeNameReceiveMessageWaitTimeSeconds,
+		"redrive_allow_policy":              sqs.QueueAttributeNameRedriveAllowPolicy,
 		"redrive_policy":                    sqs.QueueAttributeNameRedrivePolicy,
-		"arn":                               sqs.QueueAttributeNameQueueArn,
-		"fifo_queue":                        sqs.QueueAttributeNameFifoQueue,
-		"content_based_deduplication":       sqs.QueueAttributeNameContentBasedDeduplication,
-		"kms_master_key_id":                 sqs.QueueAttributeNameKmsMasterKeyId,
-		"kms_data_key_reuse_period_seconds": sqs.QueueAttributeNameKmsDataKeyReusePeriodSeconds,
-		"deduplication_scope":               sqs.QueueAttributeNameDeduplicationScope,
-		"fifo_throughput_limit":             sqs.QueueAttributeNameFifoThroughputLimit,
-	}, sqsQueueSchema)
+		"sqs_managed_sse_enabled":           sqs.QueueAttributeNameSqsManagedSseEnabled,
+		"visibility_timeout_seconds":        sqs.QueueAttributeNameVisibilityTimeout,
+	}, queueSchema).WithIAMPolicyAttribute("policy")
 )
 
-// A number of these are marked as computed because if you don't
-// provide a value, SQS will provide you with defaults (which are the
-// default values specified below)
 func ResourceQueue() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceQueueCreate,
@@ -180,7 +180,7 @@ func ResourceQueue() *schema.Resource {
 			verify.SetTagsDiff,
 		),
 
-		Schema: sqsQueueSchema,
+		Schema: queueSchema,
 	}
 }
 
@@ -191,7 +191,6 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 
 	var name string
 	fifoQueue := d.Get("fifo_queue").(bool)
-
 	if fifoQueue {
 		name = create.NameWithSuffix(d.Get("name").(string), d.Get("name_prefix").(string), FIFOQueueNameSuffix)
 	} else {
@@ -210,38 +209,30 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input.Attributes = aws.StringMap(attributes)
 
-	// Tag-on-create is currently only supported in AWS Commercial
-	if len(tags) > 0 && meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
+	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating SQS Queue: %s", input)
-	var output *sqs.CreateQueueOutput
-	err = resource.Retry(queueCreatedTimeout, func() *resource.RetryError {
-		var err error
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(queueCreatedTimeout, func() (interface{}, error) {
+		return conn.CreateQueue(input)
+	}, sqs.ErrCodeQueueDeletedRecently)
 
-		output, err = conn.CreateQueue(input)
+	// Some partitions may not support tag-on-create
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] failed creating SQS Queue (%s) with tags: %s. Trying create without tags.", name, err)
 
-		if tfawserr.ErrCodeEquals(err, sqs.ErrCodeQueueDeletedRecently) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateQueue(input)
+		input.Tags = nil
+		outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(queueCreatedTimeout, func() (interface{}, error) {
+			return conn.CreateQueue(input)
+		}, sqs.ErrCodeQueueDeletedRecently)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating SQS Queue (%s): %w", name, err)
+		return fmt.Errorf("failed creating SQS Queue (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.QueueUrl))
+	d.SetId(aws.StringValue(outputRaw.(*sqs.CreateQueueOutput).QueueUrl))
 
 	err = waitQueueAttributesPropagated(conn, d.Id(), attributes)
 
@@ -249,10 +240,18 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error waiting for SQS Queue (%s) attributes to create: %w", d.Id(), err)
 	}
 
-	// Tag-on-create is currently only supported in AWS Commercial
-	if len(tags) > 0 && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
-		if err := UpdateTags(conn, d.Id(), nil, tags); err != nil {
-			return fmt.Errorf("error updating SQS Queue (%s) tags: %w", d.Id(), err)
+	// Only post-create tagging supported in some partitions
+	if input.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(conn, d.Id(), nil, tags)
+
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
+			log.Printf("[WARN] failed adding tags after create for SQS Queue (%s): %s", d.Id(), err)
+			return resourceQueueRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed adding tags after create for SQS Queue (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -264,7 +263,9 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := FindQueueAttributesByURL(conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNotFound(queueReadTimeout, func() (interface{}, error) {
+		return FindQueueAttributesByURL(conn, d.Id())
+	})
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SQS Queue (%s) not found, removing from state", d.Id())
@@ -281,6 +282,8 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
+
+	output := outputRaw.(map[string]string)
 
 	err = sqsQueueAttributeMap.ApiAttributesToResourceData(output, d)
 
@@ -301,18 +304,21 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("url", d.Id())
 
-	tags, err := ListTags(conn, d.Id())
+	outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(queueTagsTimeout, func() (interface{}, error) {
+		return ListTags(conn, d.Id())
+	}, sqs.ErrCodeQueueDoesNotExist)
 
-	if err != nil {
-		// Non-standard partitions (e.g. US Gov) and some local development
-		// solutions do not yet support this API call. Depending on the
-		// implementation it may return InvalidAction or AWS.SimpleQueueService.UnsupportedOperation
-		if !tfawserr.ErrCodeEquals(err, ErrCodeInvalidAction) && !tfawserr.ErrCodeEquals(err, sqs.ErrCodeUnsupportedOperation) {
-			return fmt.Errorf("error listing tags for SQS Queue (%s): %w", d.Id(), err)
-		}
+	if verify.CheckISOErrorTagsUnsupported(err) {
+		// Some partitions may not support tagging, giving error
+		log.Printf("[WARN] failed listing tags for SQS Queue (%s): %s", d.Id(), err)
+		return nil
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	if err != nil {
+		return fmt.Errorf("failed listing tags for SQS Queue (%s): %w", d.Id(), err)
+	}
+
+	tags := outputRaw.(tftags.KeyValueTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -357,8 +363,16 @@ func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating SQS Queue (%s) tags: %w", d.Id(), err)
+		err := UpdateTags(conn, d.Id(), o, n)
+
+		if verify.CheckISOErrorTagsUnsupported(err) {
+			// Some partitions may not support tagging, giving error
+			log.Printf("[WARN] failed updating tags for SQS Queue (%s): %s", d.Id(), err)
+			return resourceQueueRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed updating tags for SQS Queue (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -416,7 +430,6 @@ func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 		if !re.MatchString(name) {
 			return fmt.Errorf("invalid queue name: %s", name)
 		}
-
 	}
 
 	if !fifoQueue && contentBasedDeduplication {

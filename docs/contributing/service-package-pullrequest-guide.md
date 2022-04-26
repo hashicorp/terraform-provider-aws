@@ -127,6 +127,14 @@ with the pull request author.
      func wait{FunctionName}()
    ```
 
+1. If a file has a package declaration of `package aws`, you will need to change
+   it to the new package location. For example, if you moved a file to `internal/service/ecs`,
+   the declaration will now be `package ecs`.
+
+   Any file that imports `"github.com/hashicorp/terraform-provider-aws/internal/acctest"` _must_
+   be in the `<package>_test` package. For example, `internal/service/ecs/account_setting_default_test.go`
+   does import the `acctest` package and must have a package declaration of `package ecs_test`.
+
 1. If you have made any changes to `aws/provider.go`, you will have to manually
    re-enact those changes on the new `internal/provider/provider.go` file.
 
@@ -147,6 +155,21 @@ with the pull request author.
      "{aws_terraform_data_source_type}":   dataSourceAws{ServiceName}{ResourceName}(), =>
      "{aws_terraform_data_source_type}":   {serviceName}.DataSource{ResourceName}(),
    ```
+
+1. Some functions, constants, and variables have been moved, removed, or renamed.
+   This table shows some of the common changes you may need to make to fix compile errors.
+
+   | Before | Now |
+   | --- | --- |
+   | `isAWSErr(α, β, "<message>")` | `tfawserr.ErrMessageContains(α, β, "<message>")` |
+   | `isAWSErr(α, β, "")` | `tfawserr.ErrCodeEquals(α, β)` |
+   | `isResourceNotFoundError(α)` | `tfresource.NotFound(α)` |
+   | `isResourceTimeoutError(α)` | `tfresource.TimedOut(α)` |
+   | `testSweepSkipResourceError(α)` | `tfawserr.ErrCodeContains(α, "AccessDenied")` |
+   | `testAccPreCheck(t)` | `acctest.PreCheck(t)` |
+   | `testAccProviders` | `acctest.Providers` |
+   | `acctest.RandomWithPrefix("tf-acc-test")` | `sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)` |
+   | `composeConfig(α)` | `acctest.ConfigCompose(α)` |
 
 1. Use `git status` to report the state of the merge. Review any merge
    conflicts -- being sure to adopt the new naming conventions described in the

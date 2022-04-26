@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -35,7 +35,7 @@ func TestAccCodeStarConnectionsHost_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("host/.+")),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("host/.+")),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "provider_endpoint", "https://test.com"),
+					resource.TestCheckResourceAttr(resourceName, "provider_endpoint", "https://example.com"),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", codestarconnections.ProviderTypeGitHubEnterpriseServer),
 				),
 			},
@@ -89,7 +89,7 @@ func TestAccCodeStarConnectionsHost_vpc(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("host/.+")),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("host/.+")),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "provider_endpoint", "https://test.com"),
+					resource.TestCheckResourceAttr(resourceName, "provider_endpoint", "https://example.com"),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", codestarconnections.ProviderTypeGitHubEnterpriseServer),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.security_group_ids.#", "1"),
@@ -143,7 +143,7 @@ func testAccCheckHostDestroy(s *terraform.State) error {
 				HostArn: aws.String(rs.Primary.ID),
 			})
 
-			if err != nil && !tfawserr.ErrMessageContains(err, codestarconnections.ErrCodeResourceNotFoundException, "") {
+			if err != nil && !tfawserr.ErrCodeEquals(err, codestarconnections.ErrCodeResourceNotFoundException) {
 				return err
 			}
 		}
@@ -206,7 +206,7 @@ func testAccHostBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_host" "test" {
   name              = %[1]q
-  provider_endpoint = "https://test.com"
+  provider_endpoint = "https://example.com"
   provider_type     = "GitHubEnterpriseServer"
 }
 `, rName)
@@ -218,7 +218,7 @@ func testAccHostVPCConfig(rName string) string {
 		fmt.Sprintf(`
 resource "aws_codestarconnections_host" "test" {
   name              = %[1]q
-  provider_endpoint = "https://test.com"
+  provider_endpoint = "https://example.com"
   provider_type     = "GitHubEnterpriseServer"
   vpc_configuration {
     security_group_ids = [aws_security_group.test.id]
