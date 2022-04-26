@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func StatusAvailabilityZoneOptInStatus(conn *ec2.EC2, groupName string) resource.StateRefreshFunc {
+func StatusAvailabilityZoneGroupOptInStatus(conn *ec2.EC2, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindAvailabilityZoneByGroupName(conn, groupName)
+		output, err := FindAvailabilityZoneGroupByName(conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

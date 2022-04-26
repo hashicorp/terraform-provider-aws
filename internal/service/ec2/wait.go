@@ -30,15 +30,15 @@ const (
 )
 
 const (
-	AvailabilityZoneOptInStatusTimeout = 10 * time.Minute
+	AvailabilityZoneGroupOptInStatusTimeout = 10 * time.Minute
 )
 
-func WaitAvailabilityZoneOptedIn(conn *ec2.EC2, groupName string) (*ec2.AvailabilityZone, error) {
+func WaitAvailabilityZoneGroupOptedIn(conn *ec2.EC2, name string) (*ec2.AvailabilityZone, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.AvailabilityZoneOptInStatusNotOptedIn},
 		Target:  []string{ec2.AvailabilityZoneOptInStatusOptedIn},
-		Refresh: StatusAvailabilityZoneOptInStatus(conn, groupName),
-		Timeout: AvailabilityZoneOptInStatusTimeout,
+		Refresh: StatusAvailabilityZoneGroupOptInStatus(conn, name),
+		Timeout: AvailabilityZoneGroupOptInStatusTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -50,12 +50,12 @@ func WaitAvailabilityZoneOptedIn(conn *ec2.EC2, groupName string) (*ec2.Availabi
 	return nil, err
 }
 
-func WaitAvailabilityZoneNotOptedIn(conn *ec2.EC2, groupName string) (*ec2.AvailabilityZone, error) {
+func WaitAvailabilityZoneGroupNotOptedIn(conn *ec2.EC2, name string) (*ec2.AvailabilityZone, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.AvailabilityZoneOptInStatusOptedIn},
 		Target:  []string{ec2.AvailabilityZoneOptInStatusNotOptedIn},
-		Refresh: StatusAvailabilityZoneOptInStatus(conn, groupName),
-		Timeout: AvailabilityZoneOptInStatusTimeout,
+		Refresh: StatusAvailabilityZoneGroupOptInStatus(conn, name),
+		Timeout: AvailabilityZoneGroupOptInStatusTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

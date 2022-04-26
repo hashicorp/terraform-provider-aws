@@ -45,27 +45,34 @@ func FindAvailabilityZone(conn *ec2.EC2, input *ec2.DescribeAvailabilityZonesInp
 	return output[0], nil
 }
 
-func FindAvailabilityZoneByGroupName(conn *ec2.EC2, name string) (*ec2.AvailabilityZone, error) {
+func FindAvailabilityZoneGroupByName(conn *ec2.EC2, name string) (*ec2.AvailabilityZone, error) {
 	input := &ec2.DescribeAvailabilityZonesInput{
 		Filters: BuildAttributeFilterList(map[string]string{
 			"group-name": name,
 		}),
 	}
 
-	output, err := FindAvailabilityZone(conn, input)
+	output, err := FindAvailabilityZones(conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	// An AZ group may contain more than one AZ.
+	availabilityZone := output[0]
+
 	// Eventual consistency check.
-	if aws.StringValue(output.GroupName) != name {
+	if aws.StringValue(availabilityZone.GroupName) != name {
 		return nil, &resource.NotFoundError{
 			LastRequest: input,
 		}
 	}
 
-	return output, nil
+	return availabilityZone, nil
 }
 
 func FindCapacityReservation(conn *ec2.EC2, input *ec2.DescribeCapacityReservationsInput) (*ec2.CapacityReservation, error) {
