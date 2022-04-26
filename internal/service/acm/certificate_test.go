@@ -41,6 +41,7 @@ func TestAccACMCertificate_emailValidation(t *testing.T) {
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "validation_emails.#", "0"),
 					resource.TestMatchResourceAttr(resourceName, "validation_emails.0", regexp.MustCompile(`^[^@]+@.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodEmail),
+					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "0"),
 				),
 			},
 			{
@@ -80,6 +81,7 @@ func TestAccACMCertificate_dnsValidation(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domain),
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodDns),
+					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "0"),
 				),
 			},
 			{
@@ -118,12 +120,51 @@ func TestAccACMCertificate_root(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", rootDomain),
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodDns),
+					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "0"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccACMCertificate_validationOptions(t *testing.T) {
+	resourceName := "aws_acm_certificate.test"
+	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
+	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
+	var v acm.CertificateDetail
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAcmCertificateValidationOptionsConfig(rootDomain, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAcmCertificateExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusPendingValidation),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domain),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "validation_emails.#", "0"),
+					resource.TestMatchResourceAttr(resourceName, "validation_emails.0", regexp.MustCompile(`^[^@]+@.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodEmail),
+					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"validation_option"},
 			},
 		},
 	})
@@ -154,6 +195,7 @@ func TestAccACMCertificate_privateCert(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", certificateDomainName),
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", certificateAuthorityResourceName, "arn"),
 				),
 			},
@@ -750,10 +792,24 @@ func testAccCheckAcmCertificateDestroy(s *terraform.State) error {
 func testAccAcmCertificateConfig(domainName, validationMethod string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
-  domain_name       = "%s"
-  validation_method = "%s"
+  domain_name       = %[1]q
+  validation_method = %[2]q
 }
 `, domainName, validationMethod)
+}
+
+func testAccAcmCertificateValidationOptionsConfig(rootDomainName, domainName string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  domain_name       = %[2]q
+  validation_method = "EMAIL"
+
+  validation_option {
+    domain_name       = %[2]q
+    validation_domain = %[1]q
+  }
+}
+`, rootDomainName, domainName)
 }
 
 func testAccAcmCertificatePrivateCertConfig(commonName, certificateDomainName string) string {

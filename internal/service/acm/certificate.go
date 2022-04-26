@@ -177,6 +177,26 @@ func ResourceCertificate() *schema.Resource {
 				ValidateFunc:  validation.StringInSlice(append(acm.ValidationMethod_Values(), certificateValidationMethodNone), false),
 				ConflictsWith: []string{"certificate_authority_arn", "certificate_body", "certificate_chain", "private_key"},
 			},
+			"validation_option": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"domain_name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"validation_domain": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
+				ConflictsWith: []string{"certificate_body", "certificate_chain", "private_key"},
+			},
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -269,6 +289,10 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if v, ok := d.GetOk("validation_method"); ok {
 			input.ValidationMethod = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("validation_option"); ok && v.(*schema.Set).Len() > 0 {
+			input.DomainValidationOptions = expandDomainValidationOptions(v.(*schema.Set).List())
 		}
 
 		if len(tags) > 0 {
@@ -484,6 +508,50 @@ func flattenCertificateOptions(apiObject *acm.CertificateOptions) map[string]int
 	}
 
 	return tfMap
+}
+
+func expandDomainValidationOption(tfMap map[string]interface{}) *acm.DomainValidationOption {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &acm.DomainValidationOption{}
+
+	if v, ok := tfMap["domain_name"].(string); ok && v != "" {
+		apiObject.DomainName = aws.String(v)
+	}
+
+	if v, ok := tfMap["validation_domain"].(string); ok && v != "" {
+		apiObject.ValidationDomain = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandDomainValidationOptions(tfList []interface{}) []*acm.DomainValidationOption {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*acm.DomainValidationOption
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandDomainValidationOption(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
 }
 
 func flattenDomainValidation(apiObject *acm.DomainValidation) (map[string]interface{}, []string) {
