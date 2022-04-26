@@ -51,6 +51,24 @@ const (
 )
 
 const (
+	EngineAurora           = "aurora"
+	EngineAuroraMySQL      = "aurora-mysql"
+	EngineAuroraPostgreSQL = "aurora-postgresql"
+	EngineMySQL            = "mysql"
+	EnginePostgres         = "postgres"
+)
+
+func Engine_Values() []string {
+	return []string{
+		EngineAurora,
+		EngineAuroraMySQL,
+		EngineAuroraPostgreSQL,
+		EngineMySQL,
+		EnginePostgres,
+	}
+}
+
+const (
 	EngineModeGlobal        = "global"
 	EngineModeMultiMaster   = "multimaster"
 	EngineModeParallelQuery = "parallelquery"
@@ -82,7 +100,17 @@ const (
 	ExportableLogTypeUpgrade    = "upgrade"
 )
 
-func ExportableLogType_Values() []string {
+func ClusterExportableLogType_Values() []string {
+	return []string{
+		ExportableLogTypeAudit,
+		ExportableLogTypeError,
+		ExportableLogTypeGeneral,
+		ExportableLogTypePostgreSQL,
+		ExportableLogTypeSlowQuery,
+	}
+}
+
+func InstanceExportableLogType_Values() []string {
 	return []string{
 		ExportableLogTypeAgent,
 		ExportableLogTypeAlert,
@@ -95,5 +123,29 @@ func ExportableLogType_Values() []string {
 		ExportableLogTypeSlowQuery,
 		ExportableLogTypeTrace,
 		ExportableLogTypeUpgrade,
+	}
+}
+
+const (
+	RestoreTypeCopyOnWrite = "copy-on-write"
+	RestoreTypeFullCopy    = "full-copy"
+)
+
+func RestoreType_Values() []string {
+	return []string{
+		RestoreTypeCopyOnWrite,
+		RestoreTypeFullCopy,
+	}
+}
+
+const (
+	TimeoutActionForceApplyCapacityChange = "ForceApplyCapacityChange"
+	TimeoutActionRollbackCapacityChange   = "RollbackCapacityChange"
+)
+
+func TimeoutAction_Values() []string {
+	return []string{
+		TimeoutActionForceApplyCapacityChange,
+		TimeoutActionRollbackCapacityChange,
 	}
 }

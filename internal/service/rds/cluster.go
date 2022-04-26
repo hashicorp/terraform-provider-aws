@@ -153,14 +153,8 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						"audit",
-						"error",
-						"general",
-						"slowquery",
-						"postgresql",
-					}, false),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(ClusterExportableLogType_Values(), false),
 				},
 			},
 			"enable_http_endpoint": {
@@ -176,7 +170,7 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      "aurora",
+				Default:      EngineAurora,
 				ValidateFunc: validEngine(),
 			},
 			"engine_mode": {
@@ -299,13 +293,10 @@ func ResourceCluster() *schema.Resource {
 							ConflictsWith: []string{"restore_to_point_in_time.0.use_latest_restorable_time"},
 						},
 						"restore_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"full-copy",
-								"copy-on-write",
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(RestoreType_Values(), false),
 						},
 						"source_cluster_identifier": {
 							Type:     schema.TypeString,
@@ -396,13 +387,10 @@ func ResourceCluster() *schema.Resource {
 							ValidateFunc: validation.IntBetween(300, 86400),
 						},
 						"timeout_action": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "RollbackCapacityChange",
-							ValidateFunc: validation.StringInSlice([]string{
-								"ForceApplyCapacityChange",
-								"RollbackCapacityChange",
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      TimeoutActionRollbackCapacityChange,
+							ValidateFunc: validation.StringInSlice(TimeoutAction_Values(), false),
 						},
 					},
 				},
