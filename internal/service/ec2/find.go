@@ -47,6 +47,7 @@ func FindAvailabilityZone(conn *ec2.EC2, input *ec2.DescribeAvailabilityZonesInp
 
 func FindAvailabilityZoneGroupByName(conn *ec2.EC2, name string) (*ec2.AvailabilityZone, error) {
 	input := &ec2.DescribeAvailabilityZonesInput{
+		AllAvailabilityZones: aws.Bool(true),
 		Filters: BuildAttributeFilterList(map[string]string{
 			"group-name": name,
 		}),
