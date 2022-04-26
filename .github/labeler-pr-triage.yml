@@ -212,17 +212,8 @@ service/cloudtrail:
 service/cloudwatch:
   - 'internal/service/cloudwatch/**/*'
   - 'website/**/cloudwatch_dashboard*'
-  - 'website/**/cloudwatch_metric_alarm*'
-service/cloudwatchevidently:
-  - 'internal/service/cloudwatchevidently/**/*'
-  - 'website/**/cloudwatchevidently_*'
-service/cloudwatchlogs:
-  - 'internal/service/logs/**/*'
-  - 'website/**/cloudwatch_log_*'
-  - 'website/**/cloudwatch_query_definition*'
-service/cloudwatchrum:
-  - 'internal/service/cloudwatchrum/**/*'
-  - 'website/**/cloudwatchrum_*'
+  - 'website/**/cloudwatch_metric_*'
+  - 'website/**/cloudwatch_composite_*'
 service/codeartifact:
   - 'internal/service/codeartifact/**/*'
   - 'website/**/codeartifact_*'
@@ -232,9 +223,12 @@ service/codebuild:
 service/codecommit:
   - 'internal/service/codecommit/**/*'
   - 'website/**/codecommit_*'
-service/codedeploy:
-  - 'internal/service/deploy/**/*'
-  - 'website/**/codedeploy_*'
+service/codeguruprofiler:
+  - 'internal/service/codeguruprofiler/**/*'
+  - 'website/**/codeguruprofiler_*'
+service/codegurureviewer:
+  - 'internal/service/codegurureviewer/**/*'
+  - 'website/**/codegurureviewer_*'
 service/codepipeline:
   - 'internal/service/codepipeline/**/*'
   - 'website/**/codepipeline*'
