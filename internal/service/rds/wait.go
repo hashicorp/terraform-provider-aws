@@ -1,6 +1,9 @@
 package rds
 
 import (
+	"context"
+	"fmt"
+	"log"
 	"strconv"
 	"time"
 
@@ -11,6 +14,9 @@ import (
 const (
 	dbClusterRoleAssociationCreatedTimeout = 5 * time.Minute
 	dbClusterRoleAssociationDeletedTimeout = 5 * time.Minute
+
+	dbClusterActivityStreamStartedTimeout = 30 * time.Minute
+	dbClusterActivityStreamStoppedTimeout = 30 * time.Minute
 )
 
 func waitEventSubscriptionCreated(conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
@@ -201,6 +207,46 @@ func waitDBClusterInstanceDeleted(conn *rds.RDS, id string, timeout time.Duratio
 	return nil, err
 }
 
+// waitActivityStreamStarted waits for Aurora Cluster Activity Stream to be started
+func waitActivityStreamStarted(ctx context.Context, conn *rds.RDS, dbClusterArn string) error {
+	log.Printf("[DEBUG] Waiting for RDS Cluster Activity Stream %s to become started...", dbClusterArn)
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{rds.ActivityStreamStatusStarting},
+		Target:     []string{rds.ActivityStreamStatusStarted},
+		Refresh:    statusDBClusterActivityStream(conn, dbClusterArn),
+		Timeout:    dbClusterActivityStreamStartedTimeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+	if err != nil {
+		return fmt.Errorf("error waiting for RDS Cluster Activity Stream (%s) to be started: %v", dbClusterArn, err)
+	}
+	return nil
+}
+
+// waitActivityStreamStarted waits for Aurora Cluster Activity Stream to be stopped
+func waitActivityStreamStopped(ctx context.Context, conn *rds.RDS, dbClusterArn string) error {
+	log.Printf("[DEBUG] Waiting for RDS Cluster Activity Stream %s to become stopped...", dbClusterArn)
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{rds.ActivityStreamStatusStopping},
+		Target:     []string{},
+		Refresh:    statusDBClusterActivityStream(conn, dbClusterArn),
+		Timeout:    dbClusterActivityStreamStoppedTimeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+	if err != nil {
+		return fmt.Errorf("error waiting for RDS Cluster Activity Stream (%s) to be stopped: %v", dbClusterArn, err)
+	}
+	return nil
+}
+
 func waitDBInstanceAutomatedBackupCreated(conn *rds.RDS, arn string, timeout time.Duration) (*rds.DBInstanceAutomatedBackup, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{InstanceAutomatedBackupStatusPending},
@@ -231,6 +277,57 @@ func waitDBInstanceAutomatedBackupDeleted(conn *rds.RDS, dbInstanceID, dbInstanc
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*rds.DBInstance); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDBProxyCreated(conn *rds.RDS, name string, timeout time.Duration) (*rds.DBProxy, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{rds.DBProxyStatusCreating},
+		Target:  []string{rds.DBProxyStatusAvailable},
+		Refresh: statusDBProxy(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*rds.DBProxy); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDBProxyDeleted(conn *rds.RDS, name string, timeout time.Duration) (*rds.DBProxy, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{rds.DBProxyStatusDeleting},
+		Target:  []string{},
+		Refresh: statusDBProxy(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*rds.DBProxy); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDBProxyUpdated(conn *rds.RDS, name string, timeout time.Duration) (*rds.DBProxy, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{rds.DBProxyStatusModifying},
+		Target:  []string{rds.DBProxyStatusAvailable},
+		Refresh: statusDBProxy(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*rds.DBProxy); ok {
 		return output, err
 	}
 

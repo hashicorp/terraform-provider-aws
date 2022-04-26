@@ -217,11 +217,11 @@ func testAccCheckAppImageDestroyConfig(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Sagemaker App Image Config (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("error reading SageMaker App Image Config (%s): %w", rs.Primary.ID, err)
 		}
 
 		if aws.StringValue(config.AppImageConfigName) == rs.Primary.ID {
-			return fmt.Errorf("Sagemaker App Image Config %q still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker App Image Config %q still exists", rs.Primary.ID)
 		}
 	}
 

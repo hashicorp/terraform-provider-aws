@@ -1,5 +1,5 @@
 ---
-subcategory: "WAF"
+subcategory: "WAF Classic"
 layout: "aws"
 page_title: "AWS: aws_waf_xss_match_set"
 description: |-

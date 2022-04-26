@@ -278,7 +278,7 @@ func resourceUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("user_settings"); ok {
-		input.UserSettings = expandSagemakerDomainDefaultUserSettings(v.([]interface{}))
+		input.UserSettings = expandDomainDefaultUserSettings(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("single_sign_on_user_identifier"); ok {
@@ -300,7 +300,7 @@ func resourceUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	userProfileArn := aws.StringValue(output.UserProfileArn)
-	domainID, userProfileName, err := decodeSagemakerUserProfileName(userProfileArn)
+	domainID, userProfileName, err := decodeUserProfileName(userProfileArn)
 	if err != nil {
 		return err
 	}
@@ -319,7 +319,7 @@ func resourceUserProfileRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	domainID, userProfileName, err := decodeSagemakerUserProfileName(d.Id())
+	domainID, userProfileName, err := decodeUserProfileName(d.Id())
 	if err != nil {
 		return err
 	}
@@ -342,7 +342,7 @@ func resourceUserProfileRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	d.Set("home_efs_file_system_uid", UserProfile.HomeEfsFileSystemUid)
 
-	if err := d.Set("user_settings", flattenSagemakerDomainDefaultUserSettings(UserProfile.UserSettings)); err != nil {
+	if err := d.Set("user_settings", flattenDomainDefaultUserSettings(UserProfile.UserSettings)); err != nil {
 		return fmt.Errorf("error setting user_settings for SageMaker User Profile (%s): %w", d.Id(), err)
 	}
 
@@ -376,7 +376,7 @@ func resourceUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
 		input := &sagemaker.UpdateUserProfileInput{
 			UserProfileName: aws.String(userProfileName),
 			DomainId:        aws.String(domainID),
-			UserSettings:    expandSagemakerDomainDefaultUserSettings(d.Get("user_settings").([]interface{})),
+			UserSettings:    expandDomainDefaultUserSettings(d.Get("user_settings").([]interface{})),
 		}
 
 		log.Printf("[DEBUG] SageMaker User Profile update config: %#v", *input)
@@ -427,7 +427,7 @@ func resourceUserProfileDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func decodeSagemakerUserProfileName(id string) (string, string, error) {
+func decodeUserProfileName(id string) (string, string, error) {
 	userProfileARN, err := arn.Parse(id)
 	if err != nil {
 		return "", "", err

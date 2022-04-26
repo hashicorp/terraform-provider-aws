@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_eips"
 description: |-

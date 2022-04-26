@@ -1109,7 +1109,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		ClusterId: cluster.Id,
 	})
 	if err != nil {
-		return fmt.Errorf("error listing bootstrap actions: %w", err)
+		return fmt.Errorf("error listing EMR Cluster (%s) bootstrap actions: %w", d.Id(), err)
 	}
 
 	if err := d.Set("bootstrap_action", flattenBootstrapArguments(respBootstraps.BootstrapActions)); err != nil {
@@ -1117,19 +1117,22 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var stepSummaries []*emr.StepSummary
-	listStepsInput := &emr.ListStepsInput{
+
+	err = conn.ListStepsPages(&emr.ListStepsInput{
 		ClusterId: aws.String(d.Id()),
-	}
-	err = conn.ListStepsPages(listStepsInput, func(page *emr.ListStepsOutput, lastPage bool) bool {
+	}, func(page *emr.ListStepsOutput, lastPage bool) bool {
 		// ListSteps returns steps in reverse order (newest first)
 		for _, step := range page.Steps {
 			stepSummaries = append([]*emr.StepSummary{step}, stepSummaries...)
 		}
+
 		return !lastPage
 	})
+
 	if err != nil {
-		return fmt.Errorf("error listing steps: %w", err)
+		return fmt.Errorf("error listing EMR Cluster (%s) steps: %w", d.Id(), err)
 	}
+
 	if err := d.Set("step", flattenEmrStepSummaries(stepSummaries)); err != nil {
 		return fmt.Errorf("error setting step: %w", err)
 	}
@@ -1143,15 +1146,19 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("additional_info", info)
 	}
 
-	termPolInput := &emr.GetAutoTerminationPolicyInput{
+	atpOut, err := conn.GetAutoTerminationPolicy(&emr.GetAutoTerminationPolicyInput{
 		ClusterId: aws.String(d.Id()),
+	})
+
+	if err != nil {
+		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Auto-termination is not available for this account when using this release of EMR") ||
+			tfawserr.ErrMessageContains(err, ErrCodeUnknownOperationException, "Could not find operation GetAutoTerminationPolicy") {
+			err = nil
+		}
 	}
 
-	atpOut, err := conn.GetAutoTerminationPolicy(termPolInput)
 	if err != nil {
-		if !tfawserr.ErrMessageContains(err, "ValidationException", "Auto-termination is not available for this account when using this release of EMR") {
-			return fmt.Errorf("error getting auto termination policy: %w", err)
-		}
+		return fmt.Errorf("error reading EMR Cluster (%s) auto-termination policy: %w", d.Id(), err)
 	}
 
 	if err := d.Set("auto_termination_policy", flattenAutoTerminationPolicy(atpOut.AutoTerminationPolicy)); err != nil {

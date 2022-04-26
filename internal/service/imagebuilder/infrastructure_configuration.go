@@ -46,6 +46,25 @@ func ResourceInfrastructureConfiguration() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
+			"instance_metadata_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"http_put_response_hop_limit": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(1, 64),
+						},
+						"http_tokens": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"required", "optional"}, false),
+						},
+					},
+				},
+			},
 			"instance_profile_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -138,6 +157,10 @@ func resourceInfrastructureConfigurationCreate(d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("instance_metadata_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.InstanceMetadataOptions = expandInstanceMetadataOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("instance_profile_name"); ok {
@@ -245,6 +268,15 @@ func resourceInfrastructureConfigurationRead(d *schema.ResourceData, meta interf
 	d.Set("date_created", infrastructureConfiguration.DateCreated)
 	d.Set("date_updated", infrastructureConfiguration.DateUpdated)
 	d.Set("description", infrastructureConfiguration.Description)
+
+	if infrastructureConfiguration.InstanceMetadataOptions != nil {
+		d.Set("instance_metadata_options", []interface{}{
+			flattenInstanceMetadataOptions(infrastructureConfiguration.InstanceMetadataOptions),
+		})
+	} else {
+		d.Set("instance_metadata_options", nil)
+	}
+
 	d.Set("instance_profile_name", infrastructureConfiguration.InstanceProfileName)
 	d.Set("instance_types", aws.StringValueSlice(infrastructureConfiguration.InstanceTypes))
 	d.Set("key_pair", infrastructureConfiguration.KeyPair)
@@ -278,6 +310,7 @@ func resourceInfrastructureConfigurationUpdate(d *schema.ResourceData, meta inte
 
 	if d.HasChanges(
 		"description",
+		"instance_metadata_options",
 		"instance_profile_name",
 		"instance_types",
 		"key_pair",
@@ -295,6 +328,10 @@ func resourceInfrastructureConfigurationUpdate(d *schema.ResourceData, meta inte
 
 		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("instance_metadata_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.InstanceMetadataOptions = expandInstanceMetadataOptions(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk("instance_profile_name"); ok {
@@ -383,6 +420,24 @@ func resourceInfrastructureConfigurationDelete(d *schema.ResourceData, meta inte
 	return nil
 }
 
+func expandInstanceMetadataOptions(tfMap map[string]interface{}) *imagebuilder.InstanceMetadataOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &imagebuilder.InstanceMetadataOptions{}
+
+	if v, ok := tfMap["http_put_response_hop_limit"].(int); ok && v != 0 {
+		apiObject.HttpPutResponseHopLimit = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["http_tokens"].(string); ok && v != "" {
+		apiObject.HttpTokens = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func expandLogging(tfMap map[string]interface{}) *imagebuilder.Logging {
 	if tfMap == nil {
 		return nil
@@ -413,6 +468,24 @@ func expandS3Logs(tfMap map[string]interface{}) *imagebuilder.S3Logs {
 	}
 
 	return apiObject
+}
+
+func flattenInstanceMetadataOptions(apiObject *imagebuilder.InstanceMetadataOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.HttpPutResponseHopLimit; v != nil {
+		tfMap["http_put_response_hop_limit"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.HttpTokens; v != nil {
+		tfMap["http_tokens"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 func flattenLogging(apiObject *imagebuilder.Logging) map[string]interface{} {

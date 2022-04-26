@@ -196,7 +196,7 @@ func ResourceOntapFileSystem() *schema.Resource {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
-				MinItems: 2,
+				MinItems: 1,
 				MaxItems: 2,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},

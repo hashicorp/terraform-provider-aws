@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_config_config_rule: Add `source.custom_policy_details` argument.
+```
+
+```release-note:enhancement
+resource/aws_config_config_rule: Add plan time validation for `source.source_detail.event_source` and `source.source_detail.message_type`.
+```
+
+```release-note:enhancement
+resource/aws_config_config_rule: Make `source.source_identifier` optional.
+```

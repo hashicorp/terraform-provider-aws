@@ -26,7 +26,7 @@
         - [Per Attribute Acceptance Tests](#per-attribute-acceptance-tests)
         - [Cross-Account Acceptance Tests](#cross-account-acceptance-tests)
         - [Cross-Region Acceptance Tests](#cross-region-acceptance-tests)
-        - [Service-Specific Region Acceptance Tests](#service-specific-region-acceptance-tests)
+        - [Service-Specific Region Acceptance Tests](#service-specific-region-acceptance-testing)
         - [Acceptance Test Concurrency](#acceptance-test-concurrency)
     - [Data Source Acceptance Testing](#data-source-acceptance-testing)
 - [Acceptance Test Sweepers](#acceptance-test-sweepers)
@@ -1100,7 +1100,7 @@ When encountering these types of components, the acceptance testing can be setup
 
 To convert to serialized (one test at a time) acceptance testing:
 
-- Convert all existing capital `T` test functions with the limited component to begin with a lowercase `t`, e.g., `TestAccSagemakerDomain_basic` becomes `testAccSagemakerDomain_basic`. This will prevent the test framework from executing these tests directly as the prefix `Test` is required.
+- Convert all existing capital `T` test functions with the limited component to begin with a lowercase `t`, e.g., `TestAccSageMakerDomain_basic` becomes `testAccSageMakerDomain_basic`. This will prevent the test framework from executing these tests directly as the prefix `Test` is required.
     - In each of these test functions, convert `resource.ParallelTest` to `resource.Test`
 - Create a capital `T` `TestAcc{Service}{Thing}_serial` test function that then references all the lowercase `t` test functions. If multiple test files are referenced, this new test be created in a new shared file such as `internal/service/{SERVICE}/{SERVICE}_test.go`. The contents of this test can be setup like the following:
 
@@ -1214,6 +1214,11 @@ To run sweepers with an assumed role, use the following additional environment v
 * `TF_AWS_ASSUME_ROLE_EXTERNAL_ID` - Optional.
 * `TF_AWS_ASSUME_ROLE_SESSION_NAME` - Optional.
 
+### Sweeper Checklists
+
+- [ ] __Add Service To Sweeper List__: To allow sweeping for a given service, it needs to be registered in the list of services to be sweeped, at `internal/sweep/sweep_test.go`.
+- [ ] __Add Resource Sweeper Implementation__: See [Writing Test Sweepers](#writing-test-sweepers).
+
 ### Writing Test Sweepers
 
 The first step is to initialize the resource into the test sweeper framework:
@@ -1235,14 +1240,14 @@ Then add the actual implementation. Preferably, if a paginated SDK call is avail
 
 ```go
 func sweepThings(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+  client, err := sweep.SharedRegionalSweepClient(region)
 
   if err != nil {
     return fmt.Errorf("error getting client: %w", err)
   }
 
   conn := client.(*conns.AWSClient).ExampleConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+  sweepResources := make([]*sweep.SweepResource, 0)
   var errs *multierror.Error
 
   input := &example.ListThingsInput{}
@@ -1274,7 +1279,7 @@ func sweepThings(region string) error {
         continue
       }
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+      sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
     }
 
     return !lastPage
@@ -1284,11 +1289,11 @@ func sweepThings(region string) error {
     errs = multierror.Append(errs, fmt.Errorf("error listing Example Thing for %s: %w", region, err))
   }
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+  if err := sweep.SweepOrchestrator(sweepResources); err != nil {
     errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
   }
 
-	if sweep.SkipSweepError(err) {
+  if sweep.SkipSweepError(err) {
     log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
     return nil
   }
@@ -1301,14 +1306,14 @@ Otherwise, if no paginated SDK call is available:
 
 ```go
 func sweepThings(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+  client, err := sweep.SharedRegionalSweepClient(region)
 
   if err != nil {
     return fmt.Errorf("error getting client: %w", err)
   }
 
   conn := client.(*conns.AWSClient).ExampleConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+  sweepResources := make([]*sweep.SweepResource, 0)
   var errs *multierror.Error
 
   input := &example.ListThingsInput{}
@@ -1338,7 +1343,7 @@ func sweepThings(region string) error {
         continue
       }
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+      sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
     }
 
     if aws.StringValue(output.NextToken) == "" {
@@ -1348,11 +1353,11 @@ func sweepThings(region string) error {
     input.NextToken = output.NextToken
   }
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+  if err := sweep.SweepOrchestrator(sweepResources); err != nil {
     errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
   }
 
-	if sweep.SkipSweepError(err) {
+  if sweep.SkipSweepError(err) {
     log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
     return nil
   }

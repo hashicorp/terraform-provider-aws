@@ -188,6 +188,33 @@ func ResourceServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"workflow_details": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"on_upload": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"execution_role": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"workflow_id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -280,6 +307,10 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		input.IdentityProviderDetails.Url = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("workflow_details"); ok && len(v.([]interface{})) > 0 {
+		input.WorkflowDetails = expandWorkflowDetails(v.([]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -397,6 +428,10 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("url", output.IdentityProviderDetails.Url)
 	} else {
 		d.Set("url", "")
+	}
+
+	if err := d.Set("workflow_details", flattenWorkflowDetails(output.WorkflowDetails)); err != nil {
+		return fmt.Errorf("error setting workflow_details: %w", err)
 	}
 
 	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -574,6 +609,10 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.SecurityPolicyName = aws.String(d.Get("security_policy_name").(string))
 		}
 
+		if d.HasChange("workflow_details") {
+			input.WorkflowDetails = expandWorkflowDetails(d.Get("workflow_details").([]interface{}))
+		}
+
 		if offlineUpdate {
 			if err := stopTransferServer(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return err
@@ -670,9 +709,13 @@ func resourceServerDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Deleting Transfer Server: (%s)", d.Id())
-	_, err := conn.DeleteServer(&transfer.DeleteServerInput{
-		ServerId: aws.String(d.Id()),
-	})
+	_, err := tfresource.RetryWhenAWSErrMessageContains(1*time.Minute,
+		func() (interface{}, error) {
+			return conn.DeleteServer(&transfer.DeleteServerInput{
+				ServerId: aws.String(d.Id()),
+			})
+		},
+		transfer.ErrCodeInvalidRequestException, "Unable to delete VPC endpoint")
 
 	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
 		return nil
@@ -751,6 +794,93 @@ func flattenTransferEndpointDetails(apiObject *transfer.EndpointDetails, securit
 	}
 
 	return tfMap
+}
+
+func expandWorkflowDetails(tfMap []interface{}) *transfer.WorkflowDetails {
+	if tfMap == nil {
+		return nil
+	}
+
+	tfMapRaw := tfMap[0].(map[string]interface{})
+
+	apiObject := &transfer.WorkflowDetails{}
+
+	if v, ok := tfMapRaw["on_upload"].([]interface{}); ok && len(v) > 0 {
+		apiObject.OnUpload = expandWorkflowDetail(v)
+	}
+
+	return apiObject
+}
+
+func flattenWorkflowDetails(apiObject *transfer.WorkflowDetails) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.OnUpload; v != nil {
+		tfMap["on_upload"] = flattenWorkflowDetail(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func expandWorkflowDetail(tfList []interface{}) []*transfer.WorkflowDetail {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*transfer.WorkflowDetail
+
+	for _, tfMapRaw := range tfList {
+		tfMap, _ := tfMapRaw.(map[string]interface{})
+
+		apiObject := &transfer.WorkflowDetail{}
+
+		if v, ok := tfMap["execution_role"].(string); ok && v != "" {
+			apiObject.ExecutionRole = aws.String(v)
+		}
+
+		if v, ok := tfMap["workflow_id"].(string); ok && v != "" {
+			apiObject.WorkflowId = aws.String(v)
+		}
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenWorkflowDetail(apiObjects []*transfer.WorkflowDetail) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		flattenedObject := map[string]interface{}{}
+		if v := apiObject.ExecutionRole; v != nil {
+			flattenedObject["execution_role"] = aws.StringValue(v)
+		}
+
+		if v := apiObject.WorkflowId; v != nil {
+			flattenedObject["workflow_id"] = aws.StringValue(v)
+		}
+
+		tfList = append(tfList, flattenedObject)
+	}
+
+	return tfList
 }
 
 func stopTransferServer(conn *transfer.Transfer, serverID string, timeout time.Duration) error {

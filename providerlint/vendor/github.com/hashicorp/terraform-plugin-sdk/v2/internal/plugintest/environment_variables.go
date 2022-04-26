@@ -2,9 +2,6 @@ package plugintest
 
 // Environment variables
 const (
-	// Disables checkpoint.hashicorp.com calls in Terraform CLI.
-	EnvCheckpointDisable = "CHECKPOINT_DISABLE"
-
 	// Environment variable with acceptance testing temporary directory for
 	// testing files and Terraform CLI installation, if installation is
 	// required. By default, the operating system temporary directory is used.
@@ -17,7 +14,18 @@ const (
 	// testing. This value sets TF_LOG_PATH in a safe manner when executing
 	// Terraform CLI commands, which would otherwise be ignored since it could
 	// interfere with how the underlying execution is performed.
+	//
+	// If TF_LOG_PATH_MASK is set, it takes precedence over this value.
 	EnvTfAccLogPath = "TF_ACC_LOG_PATH"
+
+	// Environment variable with path containing the string %s, which is
+	// replaced with the test name, to save separate Terraform logs during
+	// acceptance testing. This value sets TF_LOG_PATH in a safe manner when
+	// executing Terraform CLI commands, which would otherwise be ignored since
+	// it could interfere with how the underlying execution is performed.
+	//
+	// Takes precedence over TF_ACC_LOG_PATH.
+	EnvTfLogPathMask = "TF_LOG_PATH_MASK"
 
 	// Environment variable with acceptance testing Terraform CLI version to
 	// download from releases.hashicorp.com, checksum verify, and install. The

@@ -220,7 +220,7 @@ func testAccCheckAppDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Sagemaker App (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("error reading SageMaker App (%s): %w", rs.Primary.ID, err)
 		}
 
 		appArn := aws.StringValue(app.AppArn)
@@ -263,7 +263,7 @@ func testAccCheckAppExists(n string, app *sagemaker.DescribeAppOutput) resource.
 func testAccAppBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-  # Sagemaker compute resources are not available at usw2-az4.
+  # SageMaker compute resources are not available at usw2-az4.
   exclude_zone_ids = ["usw2-az4"]
   state            = "available"
 

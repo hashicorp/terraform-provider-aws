@@ -207,7 +207,7 @@ func testAccCheckBuildExists(n string, res *gamelift.Build) resource.TestCheckFu
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Gamelift Build ID is set")
+			return fmt.Errorf("No GameLift Build ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
@@ -218,7 +218,7 @@ func testAccCheckBuildExists(n string, res *gamelift.Build) resource.TestCheckFu
 		}
 
 		if aws.StringValue(build.BuildId) != rs.Primary.ID {
-			return fmt.Errorf("Gamelift Build not found")
+			return fmt.Errorf("GameLift Build not found")
 		}
 
 		*res = *build

@@ -154,7 +154,7 @@ func testAccCheckModelPackageGroupDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Sagemaker Model Package Group (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("error reading SageMaker Model Package Group (%s): %w", rs.Primary.ID, err)
 		}
 
 		if aws.StringValue(ModelPackageGroup.ModelPackageGroupName) == rs.Primary.ID {

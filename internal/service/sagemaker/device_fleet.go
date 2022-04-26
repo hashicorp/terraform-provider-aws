@@ -92,7 +92,7 @@ func resourceDeviceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("device_fleet_name").(string)
 	input := &sagemaker.CreateDeviceFleetInput{
 		DeviceFleetName:    aws.String(name),
-		OutputConfig:       expandSagemakerFeatureDeviceFleetOutputConfig(d.Get("output_config").([]interface{})),
+		OutputConfig:       expandFeatureDeviceFleetOutputConfig(d.Get("output_config").([]interface{})),
 		EnableIotRoleAlias: aws.Bool(d.Get("enable_iot_role_alias").(bool)),
 	}
 
@@ -146,8 +146,8 @@ func resourceDeviceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("iot_role_alias", iotAlias)
 	d.Set("enable_iot_role_alias", len(iotAlias) > 0)
 
-	if err := d.Set("output_config", flattenSagemakerFeatureDeviceFleetOutputConfig(deviceFleet.OutputConfig)); err != nil {
-		return fmt.Errorf("error setting output_config for Sagemaker Device Fleet (%s): %w", d.Id(), err)
+	if err := d.Set("output_config", flattenFeatureDeviceFleetOutputConfig(deviceFleet.OutputConfig)); err != nil {
+		return fmt.Errorf("error setting output_config for SageMaker Device Fleet (%s): %w", d.Id(), err)
 	}
 
 	tags, err := ListTags(conn, arn)
@@ -177,7 +177,7 @@ func resourceDeviceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 		input := &sagemaker.UpdateDeviceFleetInput{
 			DeviceFleetName:    aws.String(d.Id()),
 			EnableIotRoleAlias: aws.Bool(d.Get("enable_iot_role_alias").(bool)),
-			OutputConfig:       expandSagemakerFeatureDeviceFleetOutputConfig(d.Get("output_config").([]interface{})),
+			OutputConfig:       expandFeatureDeviceFleetOutputConfig(d.Get("output_config").([]interface{})),
 			RoleArn:            aws.String(d.Get("role_arn").(string)),
 		}
 
@@ -220,7 +220,7 @@ func resourceDeviceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandSagemakerFeatureDeviceFleetOutputConfig(l []interface{}) *sagemaker.EdgeOutputConfig {
+func expandFeatureDeviceFleetOutputConfig(l []interface{}) *sagemaker.EdgeOutputConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -238,7 +238,7 @@ func expandSagemakerFeatureDeviceFleetOutputConfig(l []interface{}) *sagemaker.E
 	return config
 }
 
-func flattenSagemakerFeatureDeviceFleetOutputConfig(config *sagemaker.EdgeOutputConfig) []map[string]interface{} {
+func flattenFeatureDeviceFleetOutputConfig(config *sagemaker.EdgeOutputConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
