@@ -246,12 +246,10 @@ func ResourceCluster() *schema.Resource {
 						"max_capacity": {
 							Type:     schema.TypeFloat,
 							Optional: true,
-							Default:  clusterScalingConfiguration_DefaultMaxCapacity,
 						},
 						"min_capacity": {
 							Type:     schema.TypeFloat,
 							Optional: true,
-							Default:  clusterScalingConfiguration_DefaultMinCapacity,
 						},
 					},
 				},
@@ -562,15 +560,14 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if _, ok := d.GetOk("snapshot_identifier"); ok {
 		opts := rds.RestoreDBClusterFromSnapshotInput{
-			CopyTagsToSnapshot:               aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
-			DBClusterIdentifier:              aws.String(identifier),
-			DeletionProtection:               aws.Bool(d.Get("deletion_protection").(bool)),
-			Engine:                           aws.String(d.Get("engine").(string)),
-			EngineMode:                       aws.String(d.Get("engine_mode").(string)),
-			ScalingConfiguration:             ExpandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
-			ServerlessV2ScalingConfiguration: ExpandClusterServerlessV2ScalingConfiguration(d.Get("serverlessv2_scaling_configuration").([]interface{})),
-			SnapshotIdentifier:               aws.String(d.Get("snapshot_identifier").(string)),
-			Tags:                             Tags(tags.IgnoreAWS()),
+			CopyTagsToSnapshot:   aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
+			DBClusterIdentifier:  aws.String(identifier),
+			DeletionProtection:   aws.Bool(d.Get("deletion_protection").(bool)),
+			Engine:               aws.String(d.Get("engine").(string)),
+			EngineMode:           aws.String(d.Get("engine_mode").(string)),
+			ScalingConfiguration: ExpandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
+			SnapshotIdentifier:   aws.String(d.Get("snapshot_identifier").(string)),
+			Tags:                 Tags(tags.IgnoreAWS()),
 		}
 
 		if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
@@ -631,6 +628,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		if attr, ok := d.GetOk("preferred_maintenance_window"); ok {
 			modifyDbClusterInput.PreferredMaintenanceWindow = aws.String(attr.(string))
 			requiresModifyDbCluster = true
+		}
+
+		if v, ok := d.GetOk("serverlessv2_scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			modifyDbClusterInput.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
@@ -854,7 +855,9 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 				case "scaling_configuration":
 					modifyDbClusterInput.ScalingConfiguration = ExpandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{}))
 				case "serverlessv2_scaling_configuration":
-					modifyDbClusterInput.ServerlessV2ScalingConfiguration = ExpandClusterServerlessV2ScalingConfiguration(d.Get("serverlessv2_scaling_configuration").([]interface{}))
+					if len(val.([]interface{})) > 0 && val.([]interface{})[0] != nil {
+						modifyDbClusterInput.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+					}
 				}
 			}
 		}
@@ -871,14 +874,13 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	} else {
 
 		createOpts := &rds.CreateDBClusterInput{
-			CopyTagsToSnapshot:               aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
-			DBClusterIdentifier:              aws.String(identifier),
-			DeletionProtection:               aws.Bool(d.Get("deletion_protection").(bool)),
-			Engine:                           aws.String(d.Get("engine").(string)),
-			EngineMode:                       aws.String(d.Get("engine_mode").(string)),
-			ScalingConfiguration:             ExpandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
-			ServerlessV2ScalingConfiguration: ExpandClusterServerlessV2ScalingConfiguration(d.Get("serverlessv2_scaling_configuration").([]interface{})),
-			Tags:                             Tags(tags.IgnoreAWS()),
+			CopyTagsToSnapshot:   aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
+			DBClusterIdentifier:  aws.String(identifier),
+			DeletionProtection:   aws.Bool(d.Get("deletion_protection").(bool)),
+			Engine:               aws.String(d.Get("engine").(string)),
+			EngineMode:           aws.String(d.Get("engine_mode").(string)),
+			ScalingConfiguration: ExpandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
+			Tags:                 Tags(tags.IgnoreAWS()),
 		}
 
 		// Note: Username and password credentials are required and valid
@@ -983,6 +985,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if attr, ok := d.GetOkExists("iops"); ok {
 			createOpts.Iops = aws.Int64(int64(attr.(int)))
+		}
+
+		if v, ok := d.GetOk("serverlessv2_scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			createOpts.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		if attr, ok := d.GetOkExists("storage_encrypted"); ok {
@@ -1171,6 +1177,14 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("iops", dbc.Iops)
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
 
+	if dbc.ServerlessV2ScalingConfiguration != nil {
+		if err := d.Set("serverlessv2_scaling_configuration", []interface{}{flattenServerlessV2ScalingConfigurationInfo(dbc.ServerlessV2ScalingConfiguration)}); err != nil {
+			return fmt.Errorf("error setting serverlessv2_scaling_configuration: %w", err)
+		}
+	} else {
+		d.Set("serverlessv2_scaling_configuration", nil)
+	}
+
 	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
 
 	var vpcg []string
@@ -1339,8 +1353,10 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("serverlessv2_scaling_configuration") {
-		req.ServerlessV2ScalingConfiguration = ExpandClusterServerlessV2ScalingConfiguration(d.Get("serverlessv2_scaling_configuration").([]interface{}))
-		requestUpdate = true
+		if v, ok := d.GetOk("serverlessv2_scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			req.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+			requestUpdate = true
+		}
 	}
 
 	if d.HasChange("enable_http_endpoint") {
