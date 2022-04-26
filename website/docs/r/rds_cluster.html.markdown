@@ -264,8 +264,8 @@ resource "aws_rds_cluster" "example" {
 }
 ```
 
-* `max_capacity` - (Optional) The maximum capacity for an Aurora DB cluster in `serverlessv2` DB engine mode. The maximum capacity must be greater than or equal to the minimum capacity. Valid capacity values are in a range of `0.5` up to `128` in steps of `0.5`.
-* `min_capacity` - (Optional) The minimum capacity for an Aurora DB cluster in `serverlessv2` DB engine mode. The minimum capacity must be lesser than or equal to the maximum capacity. Valid capacity values are in a range of `0.5` up to `128` in steps of `0.5`. Default: `1.0`.
+* `max_capacity` - (Required) The maximum capacity for an Aurora DB cluster in `serverlessv2` DB engine mode. The maximum capacity must be greater than or equal to the minimum capacity. Valid capacity values are in a range of `0.5` up to `128` in steps of `0.5`.
+* `min_capacity` - (Required) The minimum capacity for an Aurora DB cluster in `serverlessv2` DB engine mode. The minimum capacity must be lesser than or equal to the maximum capacity. Valid capacity values are in a range of `0.5` up to `128` in steps of `0.5`.
 
 ## Attributes Reference
 

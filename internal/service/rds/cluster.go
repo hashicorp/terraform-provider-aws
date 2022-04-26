@@ -238,12 +238,14 @@ func ResourceCluster() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"max_capacity": {
-							Type:     schema.TypeFloat,
-							Optional: true,
+							Type:         schema.TypeFloat,
+							Required:     true,
+							ValidateFunc: validation.FloatBetween(0.5, 128),
 						},
 						"min_capacity": {
-							Type:     schema.TypeFloat,
-							Optional: true,
+							Type:         schema.TypeFloat,
+							Required:     true,
+							ValidateFunc: validation.FloatBetween(0.5, 128),
 						},
 					},
 				},
