@@ -364,6 +364,7 @@ func expandDataCoreNetworkPolicySegmentActions(cfgSegmentActionsIntf []interface
 		sgmtAction := &CoreNetworkPolicySegmentAction{}
 		action := cfgSA["action"].(string)
 		sgmtAction.Action = action
+		var shareWith, shareWithExcept interface{}
 
 		if action == "share" {
 			if dest := cfgSA["destinations"].(*schema.Set).List(); len(dest) > 0 {
@@ -396,24 +397,25 @@ func expandDataCoreNetworkPolicySegmentActions(cfgSegmentActionsIntf []interface
 			}
 		}
 
+		if action == "create-route" {
+			if sW := cfgSA["share_with"].(*schema.Set).List(); len(sW) > 0 {
+				shareWith = CoreNetworkPolicyDecodeConfigStringList(sW)
+				sgmtAction.ShareWith = shareWith
+			}
+
+			if sWE := cfgSA["share_with_except"].(*schema.Set).List(); len(sWE) > 0 {
+				shareWithExcept = CoreNetworkPolicyDecodeConfigStringList(sWE)
+				sgmtAction.ShareWithExcept = shareWithExcept
+			}
+
+			if (shareWith != nil && shareWithExcept != nil) || (shareWith == nil && shareWithExcept == nil) {
+				return nil, fmt.Errorf("You must specify only 1 of \"share_with\" or \"share_with_except\".")
+			}
+
+		}
+
 		if sgmt, ok := cfgSA["segment"]; ok {
 			sgmtAction.Segment = sgmt.(string)
-		}
-
-		var shareWith, shareWithExcept interface{}
-
-		if sW := cfgSA["share_with"].(*schema.Set).List(); len(sW) > 0 {
-			shareWith = CoreNetworkPolicyDecodeConfigStringList(sW)
-			sgmtAction.ShareWith = shareWith
-		}
-
-		if sWE := cfgSA["share_with_except"].(*schema.Set).List(); len(sWE) > 0 {
-			shareWithExcept = CoreNetworkPolicyDecodeConfigStringList(sWE)
-			sgmtAction.ShareWithExcept = shareWithExcept
-		}
-
-		if (shareWith != nil && shareWithExcept != nil) || (shareWith == nil && shareWithExcept == nil) {
-			return nil, fmt.Errorf("You must specify only 1 of \"share_with\" or \"share_with_except\".")
 		}
 
 		sgmtActions[i] = sgmtAction
@@ -506,17 +508,17 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{
 			}
 		}
 		if t == "tag-value" {
-			if !k["key"] || !k["operator"] || !k["value"] {
+			if k["key"] == false || k["operator"] == false || k["value"] == false {
 				return nil, fmt.Errorf("You must set \"key\", \"operator\", and \"value\" if type = \"tag-value\".")
 			}
 		}
 		if t == "region" || t == "resource-id" || t == "account-id" {
-			if k["key"] || !k["operator"] || !k["value"] {
+			if k["key"] == true || k["operator"] == false || k["value"] == false {
 				return nil, fmt.Errorf("You must set \"value\" and \"operator\" and cannot set \"key\" if type = \"region\", \"resource-id\", or \"account-id\".")
 			}
 		}
 		if t == "attachment-type" {
-			if k["key"] || !k["value"] || cfgCond["operator"].(string) != "equals" {
+			if k["key"] == true || k["value"] == false || cfgCond["operator"].(string) != "equals" {
 				return nil, fmt.Errorf("You must set \"value\", cannot set \"key\" and \"operator\" must be \"equals\" if type = \"attachment-type\".")
 			}
 		}
