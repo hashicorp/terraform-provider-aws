@@ -1,19 +1,19 @@
 ---
 subcategory: "CE (Cost Explorer)"
 layout: "aws"
-page_title: "AWS: aws_costexplorer_tags"
+page_title: "AWS: aws_ce_tags"
 description: |-
-  Provides details about a specific CostExplorer Tags
+  Provides details about a specific CE Tags
 ---
 
-# Resource: aws_costexplorer_tags
+# Resource: aws_ce_tags
 
-Provides details about a specific CostExplorer Tags.
+Provides details about a specific CE Tags.
 
 ## Example Usage
 
 ```terraform
-data "aws_costexplorer_tags" "test" {
+data "aws_ce_tags" "test" {
   time_period {
     start = "2021-01-01"
     end   = "2022-12-01"

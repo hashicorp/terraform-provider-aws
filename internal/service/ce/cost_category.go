@@ -1,4 +1,4 @@
-package costexplorer
+package ce
 
 import (
 	"bytes"
@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func ResourceCostExplorerCostCategory() *schema.Resource {
+func ResourceCECostCategory() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCostExplorerCostCategoryCreate,
-		ReadContext:   resourceCostExplorerCostCategoryRead,
-		UpdateContext: resourceCostExplorerCostCategoryUpdate,
-		DeleteContext: resourceCostExplorerCostCategoryDelete,
+		CreateContext: resourceCECostCategoryCreate,
+		ReadContext:   resourceCECostCategoryRead,
+		UpdateContext: resourceCECostCategoryUpdate,
+		DeleteContext: resourceCECostCategoryDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -79,7 +79,7 @@ func ResourceCostExplorerCostCategory() *schema.Resource {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
-							Elem:     schemaCostExplorerCostCategoryRule(),
+							Elem:     schemaCECostCategoryRule(),
 						},
 						"type": {
 							Type:         schema.TypeString,
@@ -159,13 +159,13 @@ func ResourceCostExplorerCostCategory() *schema.Resource {
 	}
 }
 
-func schemaCostExplorerCostCategoryRule() *schema.Resource {
+func schemaCECostCategoryRule() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"and": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem:     schemaCostExplorerCostCategoryRuleExpression(),
+				Elem:     schemaCECostCategoryRuleExpression(),
 			},
 			"cost_category": {
 				Type:     schema.TypeList,
@@ -235,12 +235,12 @@ func schemaCostExplorerCostCategoryRule() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
-				Elem:     schemaCostExplorerCostCategoryRuleExpression(),
+				Elem:     schemaCECostCategoryRuleExpression(),
 			},
 			"or": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem:     schemaCostExplorerCostCategoryRuleExpression(),
+				Elem:     schemaCECostCategoryRuleExpression(),
 			},
 			"tags": {
 				Type:     schema.TypeList,
@@ -277,7 +277,7 @@ func schemaCostExplorerCostCategoryRule() *schema.Resource {
 	}
 }
 
-func schemaCostExplorerCostCategoryRuleExpression() *schema.Resource {
+func schemaCECostCategoryRuleExpression() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"cost_category": {
@@ -379,11 +379,11 @@ func schemaCostExplorerCostCategoryRuleExpression() *schema.Resource {
 	}
 }
 
-func resourceCostExplorerCostCategoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCECostCategoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn
 	input := &costexplorer.CreateCostCategoryDefinitionInput{
 		Name:        aws.String(d.Get("name").(string)),
-		Rules:       expandCostExplorerCostCategoryRules(d.Get("rule").(*schema.Set).List()),
+		Rules:       expandCECostCategoryRules(d.Get("rule").(*schema.Set).List()),
 		RuleVersion: aws.String(d.Get("rule_version").(string)),
 	}
 
@@ -392,7 +392,7 @@ func resourceCostExplorerCostCategoryCreate(ctx context.Context, d *schema.Resou
 	}
 
 	if v, ok := d.GetOk("split_charge_rule"); ok {
-		input.SplitChargeRules = expandCostExplorerCostCategorySplitChargeRules(v.(*schema.Set).List())
+		input.SplitChargeRules = expandCECostCategorySplitChargeRules(v.(*schema.Set).List())
 	}
 
 	var err error
@@ -415,26 +415,26 @@ func resourceCostExplorerCostCategoryCreate(ctx context.Context, d *schema.Resou
 	}
 
 	if err != nil {
-		return diag.Errorf("error creating CostExplorer Cost Category Definition (%s): %s", d.Id(), err)
+		return diag.Errorf("error creating CE Cost Category Definition (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(aws.StringValue(output.CostCategoryArn))
 
-	return resourceCostExplorerCostCategoryRead(ctx, d, meta)
+	return resourceCECostCategoryRead(ctx, d, meta)
 }
 
-func resourceCostExplorerCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCECostCategoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn
 
 	resp, err := conn.DescribeCostCategoryDefinitionWithContext(ctx, &costexplorer.DescribeCostCategoryDefinitionInput{CostCategoryArn: aws.String(d.Id())})
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] CostExplorer Cost Category Definition (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] CE Cost Category Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading CostExplorer Cost Category Definition (%s): %s", d.Id(), err)
+		return diag.Errorf("error reading CE Cost Category Definition (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", resp.CostCategory.CostCategoryArn)
@@ -442,23 +442,23 @@ func resourceCostExplorerCostCategoryRead(ctx context.Context, d *schema.Resourc
 	d.Set("effective_end", resp.CostCategory.EffectiveEnd)
 	d.Set("effective_start", resp.CostCategory.EffectiveStart)
 	d.Set("name", resp.CostCategory.Name)
-	if err = d.Set("rule", flattenCostExplorerCostCategoryRules(resp.CostCategory.Rules)); err != nil {
-		return diag.Errorf("error setting `%s` for CostExplorer Cost Category Definition (%s): %s", "rule", d.Id(), err)
+	if err = d.Set("rule", flattenCECostCategoryRules(resp.CostCategory.Rules)); err != nil {
+		return diag.Errorf("error setting `%s` for CE Cost Category Definition (%s): %s", "rule", d.Id(), err)
 	}
 	d.Set("rule_version", resp.CostCategory.RuleVersion)
-	if err = d.Set("split_charge_rule", flattenCostExplorerCostCategorySplitChargeRules(resp.CostCategory.SplitChargeRules)); err != nil {
-		return diag.Errorf("error setting `%s` for CostExplorer Cost Category Definition (%s): %s", "split_charge_rule", d.Id(), err)
+	if err = d.Set("split_charge_rule", flattenCECostCategorySplitChargeRules(resp.CostCategory.SplitChargeRules)); err != nil {
+		return diag.Errorf("error setting `%s` for CE Cost Category Definition (%s): %s", "split_charge_rule", d.Id(), err)
 	}
 
 	return nil
 }
 
-func resourceCostExplorerCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCECostCategoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn
 
 	input := &costexplorer.UpdateCostCategoryDefinitionInput{
 		CostCategoryArn: aws.String(d.Id()),
-		Rules:           expandCostExplorerCostCategoryRules(d.Get("rule").(*schema.Set).List()),
+		Rules:           expandCECostCategoryRules(d.Get("rule").(*schema.Set).List()),
 		RuleVersion:     aws.String(d.Get("rule_version").(string)),
 	}
 
@@ -467,19 +467,19 @@ func resourceCostExplorerCostCategoryUpdate(ctx context.Context, d *schema.Resou
 	}
 
 	if d.HasChange("split_charge_rule") {
-		input.SplitChargeRules = expandCostExplorerCostCategorySplitChargeRules(d.Get("split_charge_rule").(*schema.Set).List())
+		input.SplitChargeRules = expandCECostCategorySplitChargeRules(d.Get("split_charge_rule").(*schema.Set).List())
 	}
 
 	_, err := conn.UpdateCostCategoryDefinitionWithContext(ctx, input)
 
 	if err != nil {
-		diag.Errorf("error updating CostExplorer Cost Category Definition (%s): %s", d.Id(), err)
+		diag.Errorf("error updating CE Cost Category Definition (%s): %s", d.Id(), err)
 	}
 
-	return resourceCostExplorerCostCategoryRead(ctx, d, meta)
+	return resourceCECostCategoryRead(ctx, d, meta)
 }
 
-func resourceCostExplorerCostCategoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCECostCategoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn
 
 	_, err := conn.DeleteCostCategoryDefinitionWithContext(ctx, &costexplorer.DeleteCostCategoryDefinitionInput{
@@ -489,23 +489,23 @@ func resourceCostExplorerCostCategoryDelete(ctx context.Context, d *schema.Resou
 		if tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return diag.Errorf("error deleting CostExplorer Cost Category Definition (%s): %s", d.Id(), err)
+		return diag.Errorf("error deleting CE Cost Category Definition (%s): %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func expandCostExplorerCostCategoryRule(tfMap map[string]interface{}) *costexplorer.CostCategoryRule {
+func expandCECostCategoryRule(tfMap map[string]interface{}) *costexplorer.CostCategoryRule {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &costexplorer.CostCategoryRule{}
 	if v, ok := tfMap["inherited_value"]; ok {
-		apiObject.InheritedValue = expandCostExplorerCostCategoryInheritedValue(v.([]interface{}))
+		apiObject.InheritedValue = expandCECostCategoryInheritedValue(v.([]interface{}))
 	}
 	if v, ok := tfMap["rule"]; ok {
-		apiObject.Rule = expandCostExplorerCostExpressions(v.([]interface{}))[0]
+		apiObject.Rule = expandCECostExpressions(v.([]interface{}))[0]
 	}
 	if v, ok := tfMap["type"]; ok {
 		apiObject.Type = aws.String(v.(string))
@@ -517,7 +517,7 @@ func expandCostExplorerCostCategoryRule(tfMap map[string]interface{}) *costexplo
 	return apiObject
 }
 
-func expandCostExplorerCostCategoryInheritedValue(tfList []interface{}) *costexplorer.CostCategoryInheritedValueDimension {
+func expandCECostCategoryInheritedValue(tfList []interface{}) *costexplorer.CostCategoryInheritedValueDimension {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -535,35 +535,35 @@ func expandCostExplorerCostCategoryInheritedValue(tfList []interface{}) *costexp
 	return apiObject
 }
 
-func expandCostExplorerCostExpression(tfMap map[string]interface{}) *costexplorer.Expression {
+func expandCECostExpression(tfMap map[string]interface{}) *costexplorer.Expression {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &costexplorer.Expression{}
 	if v, ok := tfMap["and"]; ok {
-		apiObject.And = expandCostExplorerCostExpressions(v.(*schema.Set).List())
+		apiObject.And = expandCECostExpressions(v.(*schema.Set).List())
 	}
 	if v, ok := tfMap["cost_category"]; ok {
-		apiObject.CostCategories = expandCostExplorerCostExpressionCostCategory(v.([]interface{}))
+		apiObject.CostCategories = expandCECostExpressionCostCategory(v.([]interface{}))
 	}
 	if v, ok := tfMap["dimension"]; ok {
-		apiObject.Dimensions = expandCostExplorerCostExpressionDimension(v.([]interface{}))
+		apiObject.Dimensions = expandCECostExpressionDimension(v.([]interface{}))
 	}
 	if v, ok := tfMap["not"]; ok && len(v.([]interface{})) > 0 {
-		apiObject.Not = expandCostExplorerCostExpressions(v.([]interface{}))[0]
+		apiObject.Not = expandCECostExpressions(v.([]interface{}))[0]
 	}
 	if v, ok := tfMap["or"]; ok {
-		apiObject.Or = expandCostExplorerCostExpressions(v.(*schema.Set).List())
+		apiObject.Or = expandCECostExpressions(v.(*schema.Set).List())
 	}
 	if v, ok := tfMap["tags"]; ok {
-		apiObject.Tags = expandCostExplorerCostExpressionTag(v.([]interface{}))
+		apiObject.Tags = expandCECostExpressionTag(v.([]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandCostExplorerCostExpressionCostCategory(tfList []interface{}) *costexplorer.CostCategoryValues {
+func expandCECostExpressionCostCategory(tfList []interface{}) *costexplorer.CostCategoryValues {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -584,7 +584,7 @@ func expandCostExplorerCostExpressionCostCategory(tfList []interface{}) *costexp
 	return apiObject
 }
 
-func expandCostExplorerCostExpressionDimension(tfList []interface{}) *costexplorer.DimensionValues {
+func expandCECostExpressionDimension(tfList []interface{}) *costexplorer.DimensionValues {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -605,7 +605,7 @@ func expandCostExplorerCostExpressionDimension(tfList []interface{}) *costexplor
 	return apiObject
 }
 
-func expandCostExplorerCostExpressionTag(tfList []interface{}) *costexplorer.TagValues {
+func expandCECostExpressionTag(tfList []interface{}) *costexplorer.TagValues {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -626,7 +626,7 @@ func expandCostExplorerCostExpressionTag(tfList []interface{}) *costexplorer.Tag
 	return apiObject
 }
 
-func expandCostExplorerCostExpressions(tfList []interface{}) []*costexplorer.Expression {
+func expandCECostExpressions(tfList []interface{}) []*costexplorer.Expression {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -640,7 +640,7 @@ func expandCostExplorerCostExpressions(tfList []interface{}) []*costexplorer.Exp
 			continue
 		}
 
-		apiObject := expandCostExplorerCostExpression(tfMap)
+		apiObject := expandCECostExpression(tfMap)
 
 		apiObjects = append(apiObjects, apiObject)
 	}
@@ -648,7 +648,7 @@ func expandCostExplorerCostExpressions(tfList []interface{}) []*costexplorer.Exp
 	return apiObjects
 }
 
-func expandCostExplorerCostCategoryRules(tfList []interface{}) []*costexplorer.CostCategoryRule {
+func expandCECostCategoryRules(tfList []interface{}) []*costexplorer.CostCategoryRule {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -662,7 +662,7 @@ func expandCostExplorerCostCategoryRules(tfList []interface{}) []*costexplorer.C
 			continue
 		}
 
-		apiObject := expandCostExplorerCostCategoryRule(tfMap)
+		apiObject := expandCECostCategoryRule(tfMap)
 
 		apiObjects = append(apiObjects, apiObject)
 	}
@@ -670,7 +670,7 @@ func expandCostExplorerCostCategoryRules(tfList []interface{}) []*costexplorer.C
 	return apiObjects
 }
 
-func expandCostExplorerCostCategorySplitChargeRule(tfMap map[string]interface{}) *costexplorer.CostCategorySplitChargeRule {
+func expandCECostCategorySplitChargeRule(tfMap map[string]interface{}) *costexplorer.CostCategorySplitChargeRule {
 	if tfMap == nil {
 		return nil
 	}
@@ -681,13 +681,13 @@ func expandCostExplorerCostCategorySplitChargeRule(tfMap map[string]interface{})
 		Targets: flex.ExpandStringSet(tfMap["targets"].(*schema.Set)),
 	}
 	if v, ok := tfMap["parameter"]; ok {
-		apiObject.Parameters = expandCostExplorerCostCategorySplitChargeRuleParameters(v.(*schema.Set).List())
+		apiObject.Parameters = expandCECostCategorySplitChargeRuleParameters(v.(*schema.Set).List())
 	}
 
 	return apiObject
 }
 
-func expandCostExplorerCostCategorySplitChargeRuleParameter(tfMap map[string]interface{}) *costexplorer.CostCategorySplitChargeRuleParameter {
+func expandCECostCategorySplitChargeRuleParameter(tfMap map[string]interface{}) *costexplorer.CostCategorySplitChargeRuleParameter {
 	if tfMap == nil {
 		return nil
 	}
@@ -700,7 +700,7 @@ func expandCostExplorerCostCategorySplitChargeRuleParameter(tfMap map[string]int
 	return apiObject
 }
 
-func expandCostExplorerCostCategorySplitChargeRuleParameters(tfList []interface{}) []*costexplorer.CostCategorySplitChargeRuleParameter {
+func expandCECostCategorySplitChargeRuleParameters(tfList []interface{}) []*costexplorer.CostCategorySplitChargeRuleParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -714,7 +714,7 @@ func expandCostExplorerCostCategorySplitChargeRuleParameters(tfList []interface{
 			continue
 		}
 
-		apiObject := expandCostExplorerCostCategorySplitChargeRuleParameter(tfMap)
+		apiObject := expandCECostCategorySplitChargeRuleParameter(tfMap)
 
 		apiObjects = append(apiObjects, apiObject)
 	}
@@ -722,7 +722,7 @@ func expandCostExplorerCostCategorySplitChargeRuleParameters(tfList []interface{
 	return apiObjects
 }
 
-func expandCostExplorerCostCategorySplitChargeRules(tfList []interface{}) []*costexplorer.CostCategorySplitChargeRule {
+func expandCECostCategorySplitChargeRules(tfList []interface{}) []*costexplorer.CostCategorySplitChargeRule {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -736,7 +736,7 @@ func expandCostExplorerCostCategorySplitChargeRules(tfList []interface{}) []*cos
 			continue
 		}
 
-		apiObject := expandCostExplorerCostCategorySplitChargeRule(tfMap)
+		apiObject := expandCECostCategorySplitChargeRule(tfMap)
 
 		apiObjects = append(apiObjects, apiObject)
 	}
@@ -744,7 +744,7 @@ func expandCostExplorerCostCategorySplitChargeRules(tfList []interface{}) []*cos
 	return apiObjects
 }
 
-func flattenCostExplorerCostCategoryRule(apiObject *costexplorer.CostCategoryRule) map[string]interface{} {
+func flattenCECostCategoryRule(apiObject *costexplorer.CostCategoryRule) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -754,15 +754,15 @@ func flattenCostExplorerCostCategoryRule(apiObject *costexplorer.CostCategoryRul
 	var expressions []*costexplorer.Expression
 	expressions = append(expressions, apiObject.Rule)
 
-	tfMap["inherited_value"] = flattenCostExplorerCostCategoryRuleInheritedValue(apiObject.InheritedValue)
-	tfMap["rule"] = flattenCostExplorerCostCategoryRuleExpressions(expressions)
+	tfMap["inherited_value"] = flattenCECostCategoryRuleInheritedValue(apiObject.InheritedValue)
+	tfMap["rule"] = flattenCECostCategoryRuleExpressions(expressions)
 	tfMap["type"] = aws.StringValue(apiObject.Type)
 	tfMap["value"] = aws.StringValue(apiObject.Value)
 
 	return tfMap
 }
 
-func flattenCostExplorerCostCategoryRuleInheritedValue(apiObject *costexplorer.CostCategoryInheritedValueDimension) []map[string]interface{} {
+func flattenCECostCategoryRuleInheritedValue(apiObject *costexplorer.CostCategoryInheritedValueDimension) []map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -778,23 +778,23 @@ func flattenCostExplorerCostCategoryRuleInheritedValue(apiObject *costexplorer.C
 	return tfList
 }
 
-func flattenCostExplorerCostCategoryRuleExpression(apiObject *costexplorer.Expression) map[string]interface{} {
+func flattenCECostCategoryRuleExpression(apiObject *costexplorer.Expression) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	tfMap["and"] = flattenCostExplorerCostCategoryRuleOperandExpressions(apiObject.And)
-	tfMap["cost_category"] = flattenCostExplorerCostCategoryRuleExpressionCostCategory(apiObject.CostCategories)
-	tfMap["dimension"] = flattenCostExplorerCostCategoryRuleExpressionDimension(apiObject.Dimensions)
-	tfMap["not"] = flattenCostExplorerCostCategoryRuleOperandExpressions([]*costexplorer.Expression{apiObject.Not})
-	tfMap["or"] = flattenCostExplorerCostCategoryRuleOperandExpressions(apiObject.Or)
-	tfMap["tags"] = flattenCostExplorerCostCategoryRuleExpressionTag(apiObject.Tags)
+	tfMap["and"] = flattenCECostCategoryRuleOperandExpressions(apiObject.And)
+	tfMap["cost_category"] = flattenCECostCategoryRuleExpressionCostCategory(apiObject.CostCategories)
+	tfMap["dimension"] = flattenCECostCategoryRuleExpressionDimension(apiObject.Dimensions)
+	tfMap["not"] = flattenCECostCategoryRuleOperandExpressions([]*costexplorer.Expression{apiObject.Not})
+	tfMap["or"] = flattenCECostCategoryRuleOperandExpressions(apiObject.Or)
+	tfMap["tags"] = flattenCECostCategoryRuleExpressionTag(apiObject.Tags)
 
 	return tfMap
 }
 
-func flattenCostExplorerCostCategoryRuleExpressionCostCategory(apiObject *costexplorer.CostCategoryValues) []map[string]interface{} {
+func flattenCECostCategoryRuleExpressionCostCategory(apiObject *costexplorer.CostCategoryValues) []map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -811,7 +811,7 @@ func flattenCostExplorerCostCategoryRuleExpressionCostCategory(apiObject *costex
 	return tfList
 }
 
-func flattenCostExplorerCostCategoryRuleExpressionDimension(apiObject *costexplorer.DimensionValues) []map[string]interface{} {
+func flattenCECostCategoryRuleExpressionDimension(apiObject *costexplorer.DimensionValues) []map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -828,7 +828,7 @@ func flattenCostExplorerCostCategoryRuleExpressionDimension(apiObject *costexplo
 	return tfList
 }
 
-func flattenCostExplorerCostCategoryRuleExpressionTag(apiObject *costexplorer.TagValues) []map[string]interface{} {
+func flattenCECostCategoryRuleExpressionTag(apiObject *costexplorer.TagValues) []map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -845,7 +845,7 @@ func flattenCostExplorerCostCategoryRuleExpressionTag(apiObject *costexplorer.Ta
 	return tfList
 }
 
-func flattenCostExplorerCostCategoryRuleExpressions(apiObjects []*costexplorer.Expression) []map[string]interface{} {
+func flattenCECostCategoryRuleExpressions(apiObjects []*costexplorer.Expression) []map[string]interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -857,26 +857,26 @@ func flattenCostExplorerCostCategoryRuleExpressions(apiObjects []*costexplorer.E
 			continue
 		}
 
-		tfList = append(tfList, flattenCostExplorerCostCategoryRuleExpression(apiObject))
+		tfList = append(tfList, flattenCECostCategoryRuleExpression(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenCostExplorerCostCategoryRuleOperandExpression(apiObject *costexplorer.Expression) map[string]interface{} {
+func flattenCECostCategoryRuleOperandExpression(apiObject *costexplorer.Expression) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	tfMap["cost_category"] = flattenCostExplorerCostCategoryRuleExpressionCostCategory(apiObject.CostCategories)
-	tfMap["dimension"] = flattenCostExplorerCostCategoryRuleExpressionDimension(apiObject.Dimensions)
-	tfMap["tags"] = flattenCostExplorerCostCategoryRuleExpressionTag(apiObject.Tags)
+	tfMap["cost_category"] = flattenCECostCategoryRuleExpressionCostCategory(apiObject.CostCategories)
+	tfMap["dimension"] = flattenCECostCategoryRuleExpressionDimension(apiObject.Dimensions)
+	tfMap["tags"] = flattenCECostCategoryRuleExpressionTag(apiObject.Tags)
 
 	return tfMap
 }
 
-func flattenCostExplorerCostCategoryRuleOperandExpressions(apiObjects []*costexplorer.Expression) []map[string]interface{} {
+func flattenCECostCategoryRuleOperandExpressions(apiObjects []*costexplorer.Expression) []map[string]interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -888,13 +888,13 @@ func flattenCostExplorerCostCategoryRuleOperandExpressions(apiObjects []*costexp
 			continue
 		}
 
-		tfList = append(tfList, flattenCostExplorerCostCategoryRuleOperandExpression(apiObject))
+		tfList = append(tfList, flattenCECostCategoryRuleOperandExpression(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenCostExplorerCostCategoryRules(apiObjects []*costexplorer.CostCategoryRule) []map[string]interface{} {
+func flattenCECostCategoryRules(apiObjects []*costexplorer.CostCategoryRule) []map[string]interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -906,27 +906,27 @@ func flattenCostExplorerCostCategoryRules(apiObjects []*costexplorer.CostCategor
 			continue
 		}
 
-		tfList = append(tfList, flattenCostExplorerCostCategoryRule(apiObject))
+		tfList = append(tfList, flattenCECostCategoryRule(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenCostExplorerCostCategorySplitChargeRule(apiObject *costexplorer.CostCategorySplitChargeRule) map[string]interface{} {
+func flattenCECostCategorySplitChargeRule(apiObject *costexplorer.CostCategorySplitChargeRule) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	tfMap["method"] = aws.StringValue(apiObject.Method)
-	tfMap["parameter"] = flattenCostExplorerCostCategorySplitChargeRuleParameters(apiObject.Parameters)
+	tfMap["parameter"] = flattenCECostCategorySplitChargeRuleParameters(apiObject.Parameters)
 	tfMap["source"] = aws.StringValue(apiObject.Source)
 	tfMap["targets"] = flex.FlattenStringList(apiObject.Targets)
 
 	return tfMap
 }
 
-func flattenCostExplorerCostCategorySplitChargeRuleParameter(apiObject *costexplorer.CostCategorySplitChargeRuleParameter) map[string]interface{} {
+func flattenCECostCategorySplitChargeRuleParameter(apiObject *costexplorer.CostCategorySplitChargeRuleParameter) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -938,7 +938,7 @@ func flattenCostExplorerCostCategorySplitChargeRuleParameter(apiObject *costexpl
 	return tfMap
 }
 
-func flattenCostExplorerCostCategorySplitChargeRuleParameters(apiObjects []*costexplorer.CostCategorySplitChargeRuleParameter) []map[string]interface{} {
+func flattenCECostCategorySplitChargeRuleParameters(apiObjects []*costexplorer.CostCategorySplitChargeRuleParameter) []map[string]interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -950,13 +950,13 @@ func flattenCostExplorerCostCategorySplitChargeRuleParameters(apiObjects []*cost
 			continue
 		}
 
-		tfList = append(tfList, flattenCostExplorerCostCategorySplitChargeRuleParameter(apiObject))
+		tfList = append(tfList, flattenCECostCategorySplitChargeRuleParameter(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenCostExplorerCostCategorySplitChargeRules(apiObjects []*costexplorer.CostCategorySplitChargeRule) []map[string]interface{} {
+func flattenCECostCategorySplitChargeRules(apiObjects []*costexplorer.CostCategorySplitChargeRule) []map[string]interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -968,7 +968,7 @@ func flattenCostExplorerCostCategorySplitChargeRules(apiObjects []*costexplorer.
 			continue
 		}
 
-		tfList = append(tfList, flattenCostExplorerCostCategorySplitChargeRule(apiObject))
+		tfList = append(tfList, flattenCECostCategorySplitChargeRule(apiObject))
 	}
 
 	return tfList

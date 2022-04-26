@@ -1,19 +1,19 @@
 ---
 subcategory: "CE (Cost Explorer)"
 layout: "aws"
-page_title: "AWS: aws_costexplorer_cost_category"
+page_title: "AWS: aws_ce_cost_category"
 description: |-
-  Provides a CostExplorer Cost Category Definition
+  Provides a CE Cost Category Definition
 ---
 
-# Resource: aws_costexplorer_cost_category
+# Resource: aws_ce_cost_category
 
-Provides a CostExplorer Cost Category.
+Provides a CE Cost Category.
 
 ## Example Usage
 
 ```terraform
-resource "aws_costexplorer_cost_category" "test" {
+resource "aws_ce_cost_category" "test" {
   name         = "NAME"
   rule_version = "CostCategoryExpression.v1"
   rule {
@@ -125,8 +125,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_costexplorer_cost_category` can be imported using the id, e.g.
+`aws_ce_cost_category` can be imported using the id, e.g.
 
 ```
-$ terraform import aws_costexplorer_cost_category.example costCategoryARN
+$ terraform import aws_ce_cost_category.example costCategoryARN
 ```

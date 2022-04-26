@@ -1,4 +1,4 @@
-package costexplorer_test
+package ce_test
 
 import (
 	"fmt"
@@ -11,10 +11,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccCostExplorerTagsDataSource_basic(t *testing.T) {
+func TestAccCETagsDataSource_basic(t *testing.T) {
 	var output costexplorer.CostCategory
-	resourceName := "aws_costexplorer_cost_category.test"
-	dataSourceName := "data.aws_costexplorer_tags.test"
+	resourceName := "aws_ce_cost_category.test"
+	dataSourceName := "data.aws_ce_tags.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	formatDate := "2006-01-02"
@@ -29,9 +29,9 @@ func TestAccCostExplorerTagsDataSource_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCostExplorerTagsSourceConfig(rName, startDate, endDate),
+				Config: testAccCETagsSourceConfig(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostExplorerCostCategoryExists(resourceName, &output),
+					testAccCheckCECostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.#", "4"),
 				),
 			},
@@ -39,10 +39,10 @@ func TestAccCostExplorerTagsDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccCostExplorerTagsDataSource_filter(t *testing.T) {
+func TestAccCETagsDataSource_filter(t *testing.T) {
 	var output costexplorer.CostCategory
-	resourceName := "aws_costexplorer_cost_category.test"
-	dataSourceName := "data.aws_costexplorer_tags.test"
+	resourceName := "aws_ce_cost_category.test"
+	dataSourceName := "data.aws_ce_tags.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	formatDate := "2006-01-02"
@@ -57,9 +57,9 @@ func TestAccCostExplorerTagsDataSource_filter(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCostExplorerTagsSourceFilterConfig(rName, startDate, endDate),
+				Config: testAccCETagsSourceFilterConfig(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostExplorerCostCategoryExists(resourceName, &output),
+					testAccCheckCECostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.#", "3"),
 				),
 			},
@@ -67,9 +67,9 @@ func TestAccCostExplorerTagsDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccCostExplorerTagsSourceConfig(name, start, end string) string {
-	return fmt.Sprintf(testAccCostExplorerCostCategoryConfig(name)+`
-data "aws_costexplorer_tags" "test" {
+func testAccCETagsSourceConfig(name, start, end string) string {
+	return fmt.Sprintf(testAccCECostCategoryConfig(name)+`
+data "aws_ce_tags" "test" {
   time_period {
     start = %[1]q
     end   = %[2]q
@@ -78,11 +78,11 @@ data "aws_costexplorer_tags" "test" {
 `, start, end)
 }
 
-func testAccCostExplorerTagsSourceFilterConfig(name, start, end string) string {
-	return fmt.Sprintf(testAccCostExplorerCostCategoryConfig(name)+`
+func testAccCETagsSourceFilterConfig(name, start, end string) string {
+	return fmt.Sprintf(testAccCECostCategoryConfig(name)+`
 data "aws_region" "current" {}
 
-data "aws_costexplorer_tags" "test" {
+data "aws_ce_tags" "test" {
   time_period {
     start = %[1]q
     end   = %[2]q

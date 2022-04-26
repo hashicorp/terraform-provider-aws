@@ -1,19 +1,19 @@
 ---
 subcategory: "CE (Cost Explorer)"
 layout: "aws"
-page_title: "AWS: aws_costexplorer_cost_category"
+page_title: "AWS: aws_ce_cost_category"
 description: |-
   Provides details about a specific CostExplorer Cost Category Definition
 ---
 
-# Resource: aws_costexplorer_cost_category
+# Resource: aws_ce_cost_category
 
 Provides details about a specific CostExplorer Cost Category.
 
 ## Example Usage
 
 ```terraform
-data "aws_costexplorer_cost_category" "example" {
+data "aws_ce_cost_category" "example" {
   cost_category_arn = "costCategoryARN"
 }
 ```

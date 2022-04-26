@@ -1,4 +1,4 @@
-package costexplorer
+package ce
 
 import (
 	"context"
@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func DataSourceCostExplorerCostCategory() *schema.Resource {
+func DataSourceCECostCategory() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceCostExplorerCostCategoryRead,
+		ReadContext: dataSourceCECostCategoryRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -58,7 +58,7 @@ func DataSourceCostExplorerCostCategory() *schema.Resource {
 						"rule": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem:     schemaCostExplorerCostCategoryRuleComputed(),
+							Elem:     schemaCECostCategoryRuleComputed(),
 						},
 						"type": {
 							Type:     schema.TypeString,
@@ -127,13 +127,13 @@ func DataSourceCostExplorerCostCategory() *schema.Resource {
 	}
 }
 
-func schemaCostExplorerCostCategoryRuleComputed() *schema.Resource {
+func schemaCECostCategoryRuleComputed() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"and": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				Elem:     schemaCostExplorerCostCategoryRuleExpressionComputed(),
+				Elem:     schemaCECostCategoryRuleExpressionComputed(),
 			},
 			"cost_category": {
 				Type:     schema.TypeList,
@@ -194,12 +194,12 @@ func schemaCostExplorerCostCategoryRuleComputed() *schema.Resource {
 			"not": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem:     schemaCostExplorerCostCategoryRuleExpressionComputed(),
+				Elem:     schemaCECostCategoryRuleExpressionComputed(),
 			},
 			"or": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				Elem:     schemaCostExplorerCostCategoryRuleExpressionComputed(),
+				Elem:     schemaCECostCategoryRuleExpressionComputed(),
 			},
 			"tags": {
 				Type:     schema.TypeList,
@@ -233,7 +233,7 @@ func schemaCostExplorerCostCategoryRuleComputed() *schema.Resource {
 	}
 }
 
-func schemaCostExplorerCostCategoryRuleExpressionComputed() *schema.Resource {
+func schemaCECostCategoryRuleExpressionComputed() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"cost_category": {
@@ -323,24 +323,24 @@ func schemaCostExplorerCostCategoryRuleExpressionComputed() *schema.Resource {
 	}
 }
 
-func dataSourceCostExplorerCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceCECostCategoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn
 
 	resp, err := conn.DescribeCostCategoryDefinitionWithContext(ctx, &costexplorer.DescribeCostCategoryDefinitionInput{CostCategoryArn: aws.String(d.Get("cost_category_arn").(string))})
 
 	if err != nil {
-		return diag.Errorf("error reading CostExplorer Cost Category Definition (%s): %s", d.Id(), err)
+		return diag.Errorf("error reading CE Cost Category Definition (%s): %s", d.Id(), err)
 	}
 
 	d.Set("effective_end", resp.CostCategory.EffectiveEnd)
 	d.Set("effective_start", resp.CostCategory.EffectiveStart)
 	d.Set("name", resp.CostCategory.Name)
-	if err = d.Set("rule", flattenCostExplorerCostCategoryRules(resp.CostCategory.Rules)); err != nil {
-		return diag.Errorf("error setting `%s` for CostExplorer Cost Category Definition (%s): %s", "rule", d.Id(), err)
+	if err = d.Set("rule", flattenCECostCategoryRules(resp.CostCategory.Rules)); err != nil {
+		return diag.Errorf("error setting `%s` for CE Cost Category Definition (%s): %s", "rule", d.Id(), err)
 	}
 	d.Set("rule_version", resp.CostCategory.RuleVersion)
-	if err = d.Set("split_charge_rule", flattenCostExplorerCostCategorySplitChargeRules(resp.CostCategory.SplitChargeRules)); err != nil {
-		return diag.Errorf("error setting `%s` for CostExplorer Cost Category Definition (%s): %s", "split_charge_rule", d.Id(), err)
+	if err = d.Set("split_charge_rule", flattenCECostCategorySplitChargeRules(resp.CostCategory.SplitChargeRules)); err != nil {
+		return diag.Errorf("error setting `%s` for CE Cost Category Definition (%s): %s", "split_charge_rule", d.Id(), err)
 	}
 
 	d.SetId(aws.StringValue(resp.CostCategory.CostCategoryArn))

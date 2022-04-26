@@ -33,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ce"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloud9"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
@@ -52,7 +53,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/costexplorer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
@@ -445,6 +445,9 @@ func Provider() *schema.Provider {
 			"aws_batch_job_queue":           batch.DataSourceJobQueue(),
 			"aws_batch_scheduling_policy":   batch.DataSourceSchedulingPolicy(),
 
+			"aws_ce_cost_category": ce.DataSourceCECostCategory(),
+			"aws_ce_tags":          ce.DataSourceCETags(),
+
 			"aws_cloudcontrolapi_resource": cloudcontrol.DataSourceResource(),
 
 			"aws_cloudformation_export": cloudformation.DataSourceExport(),
@@ -494,9 +497,6 @@ func Provider() *schema.Provider {
 			"aws_connect_prompt":                      connect.DataSourcePrompt(),
 			"aws_connect_queue":                       connect.DataSourceQueue(),
 			"aws_connect_quick_connect":               connect.DataSourceQuickConnect(),
-
-			"aws_costexplorer_cost_category": costexplorer.DataSourceCostExplorerCostCategory(),
-			"aws_costexplorer_tags":          costexplorer.DataSourceCostExplorerTags(),
 
 			"aws_cur_report_definition": cur.DataSourceReportDefinition(),
 
@@ -1011,6 +1011,8 @@ func Provider() *schema.Provider {
 			"aws_budgets_budget":        budgets.ResourceBudget(),
 			"aws_budgets_budget_action": budgets.ResourceBudgetAction(),
 
+			"aws_ce_cost_category": ce.ResourceCECostCategory(),
+
 			"aws_chime_voice_connector":                         chime.ResourceVoiceConnector(),
 			"aws_chime_voice_connector_group":                   chime.ResourceVoiceConnectorGroup(),
 			"aws_chime_voice_connector_logging":                 chime.ResourceVoiceConnectorLogging(),
@@ -1139,8 +1141,6 @@ func Provider() *schema.Provider {
 			"aws_connect_routing_profile":             connect.ResourceRoutingProfile(),
 			"aws_connect_security_profile":            connect.ResourceSecurityProfile(),
 			"aws_connect_user_hierarchy_structure":    connect.ResourceUserHierarchyStructure(),
-
-			"aws_costexplorer_cost_category": costexplorer.ResourceCostExplorerCostCategory(),
 
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
 
