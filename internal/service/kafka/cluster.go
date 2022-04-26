@@ -85,6 +85,11 @@ func ResourceCluster() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
+						"ebs_volume_size": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(1, 16384),
+						},
 						"instance_type": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -96,11 +101,6 @@ func ResourceCluster() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-						},
-						"ebs_volume_size": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 16384),
 						},
 					},
 				},
@@ -117,11 +117,11 @@ func ResourceCluster() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"scram": {
+									"iam": {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
-									"iam": {
+									"scram": {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
@@ -239,6 +239,83 @@ func ResourceCluster() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
+			"logging_info": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				MaxItems:         1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"broker_logs": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cloudwatch_logs": {
+										Type:             schema.TypeList,
+										Optional:         true,
+										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+										MaxItems:         1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enabled": {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+												"log_group": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"firehose": {
+										Type:             schema.TypeList,
+										Optional:         true,
+										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+										MaxItems:         1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"delivery_stream": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"enabled": {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+											},
+										},
+									},
+									"s3": {
+										Type:             schema.TypeList,
+										Optional:         true,
+										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+										MaxItems:         1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"bucket": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"enabled": {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+												"prefix": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"number_of_broker_nodes": {
 				Type:     schema.TypeInt,
 				Required: true,
@@ -280,83 +357,6 @@ func ResourceCluster() *schema.Resource {
 												"enabled_in_broker": {
 													Type:     schema.TypeBool,
 													Required: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"logging_info": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				MaxItems:         1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"broker_logs": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cloudwatch_logs": {
-										Type:             schema.TypeList,
-										Optional:         true,
-										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-										MaxItems:         1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"enabled": {
-													Type:     schema.TypeBool,
-													Required: true,
-												},
-												"log_group": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-											},
-										},
-									},
-									"firehose": {
-										Type:             schema.TypeList,
-										Optional:         true,
-										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-										MaxItems:         1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"enabled": {
-													Type:     schema.TypeBool,
-													Required: true,
-												},
-												"delivery_stream": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-											},
-										},
-									},
-									"s3": {
-										Type:             schema.TypeList,
-										Optional:         true,
-										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-										MaxItems:         1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"enabled": {
-													Type:     schema.TypeBool,
-													Required: true,
-												},
-												"bucket": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"prefix": {
-													Type:     schema.TypeString,
-													Optional: true,
 												},
 											},
 										},
