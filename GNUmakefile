@@ -25,6 +25,7 @@ gen:
 	rm -f names/*_gen.go
 	rm -f website/allowed-subcategories.txt
 	rm -f website/docs/guides/custom-service-endpoints.html.md
+	rm -f .github/labeler-pr-triage.yml
 	go generate ./...
 
 sweep:
