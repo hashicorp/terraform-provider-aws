@@ -1001,39 +1001,16 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &rds.DescribeDBClustersInput{
-		DBClusterIdentifier: aws.String(d.Id()),
-	}
+	dbc, err := FindDBClusterByID(conn, d.Id())
 
-	log.Printf("[DEBUG] Describing RDS Cluster: %s", input)
-	resp, err := conn.DescribeDBClusters(input)
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing RDS Cluster (%s): %s", d.Id(), err)
-	}
-
-	if resp == nil {
-		return fmt.Errorf("Error retrieving RDS cluster: empty response for: %s", input)
-	}
-
-	var dbc *rds.DBCluster
-	for _, c := range resp.DBClusters {
-		if aws.StringValue(c.DBClusterIdentifier) == d.Id() {
-			dbc = c
-			break
-		}
-	}
-
-	if dbc == nil {
-		log.Printf("[WARN] RDS Cluster (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return fmt.Errorf("error reading RDS Cluster (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones)); err != nil {
