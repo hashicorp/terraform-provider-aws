@@ -190,7 +190,7 @@ func testAccPreCheckLocalZoneAvailable(t *testing.T) {
 		}),
 	}
 
-	output, err := conn.DescribeAvailabilityZones(input)
+	output, err := tfec2.FindAvailabilityZones(conn, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -200,7 +200,7 @@ func testAccPreCheckLocalZoneAvailable(t *testing.T) {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 
-	if output == nil || len(output.AvailabilityZones) == 0 {
+	if len(output) == 0 {
 		t.Skip("skipping since no Local Zones are available")
 	}
 }

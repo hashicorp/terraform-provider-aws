@@ -1,14 +1,13 @@
 package ec2
 
 import (
-	"fmt"
-	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceAvailabilityZone() *schema.Resource {
@@ -75,48 +74,40 @@ func DataSourceAvailabilityZone() *schema.Resource {
 func dataSourceAvailabilityZoneRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	req := &ec2.DescribeAvailabilityZonesInput{}
+	input := &ec2.DescribeAvailabilityZonesInput{}
 
 	if v, ok := d.GetOk("all_availability_zones"); ok {
-		req.AllAvailabilityZones = aws.Bool(v.(bool))
+		input.AllAvailabilityZones = aws.Bool(v.(bool))
 	}
 
-	if v := d.Get("name").(string); v != "" {
-		req.ZoneNames = []*string{aws.String(v)}
+	if v, ok := d.GetOk("zone_id"); ok {
+		input.ZoneIds = aws.StringSlice([]string{v.(string)})
 	}
-	if v := d.Get("zone_id").(string); v != "" {
-		req.ZoneIds = []*string{aws.String(v)}
+
+	if v, ok := d.GetOk("name"); ok {
+		input.ZoneNames = aws.StringSlice([]string{v.(string)})
 	}
-	req.Filters = BuildAttributeFilterList(
+
+	input.Filters = BuildAttributeFilterList(
 		map[string]string{
 			"state": d.Get("state").(string),
 		},
 	)
 
-	if filters, filtersOk := d.GetOk("filter"); filtersOk {
-		req.Filters = append(req.Filters, BuildCustomFilterList(
-			filters.(*schema.Set),
-		)...)
-	}
+	input.Filters = append(input.Filters, BuildCustomFilterList(
+		d.Get("filter").(*schema.Set),
+	)...)
 
-	if len(req.Filters) == 0 {
+	if len(input.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
-		req.Filters = nil
+		input.Filters = nil
 	}
 
-	log.Printf("[DEBUG] Reading Availability Zone: %s", req)
-	resp, err := conn.DescribeAvailabilityZones(req)
+	az, err := FindAvailabilityZone(conn, input)
+
 	if err != nil {
-		return err
+		return tfresource.SingularDataSourceFindError("EC2 Availability Zone", err)
 	}
-	if resp == nil || len(resp.AvailabilityZones) == 0 {
-		return fmt.Errorf("no matching AZ found")
-	}
-	if len(resp.AvailabilityZones) > 1 {
-		return fmt.Errorf("multiple AZs matched; use additional constraints to reduce matches to a single AZ")
-	}
-
-	az := resp.AvailabilityZones[0]
 
 	// As a convenience when working with AZs generically, we expose
 	// the AZ suffix alone, without the region name.

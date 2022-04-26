@@ -30,6 +30,44 @@ const (
 )
 
 const (
+	AvailabilityZoneGroupOptInStatusTimeout = 10 * time.Minute
+)
+
+func WaitAvailabilityZoneGroupOptedIn(conn *ec2.EC2, name string) (*ec2.AvailabilityZone, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AvailabilityZoneOptInStatusNotOptedIn},
+		Target:  []string{ec2.AvailabilityZoneOptInStatusOptedIn},
+		Refresh: StatusAvailabilityZoneGroupOptInStatus(conn, name),
+		Timeout: AvailabilityZoneGroupOptInStatusTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.AvailabilityZone); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitAvailabilityZoneGroupNotOptedIn(conn *ec2.EC2, name string) (*ec2.AvailabilityZone, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AvailabilityZoneOptInStatusOptedIn},
+		Target:  []string{ec2.AvailabilityZoneOptInStatusNotOptedIn},
+		Refresh: StatusAvailabilityZoneGroupOptInStatus(conn, name),
+		Timeout: AvailabilityZoneGroupOptInStatusTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.AvailabilityZone); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
 	CapacityReservationActiveTimeout  = 2 * time.Minute
 	CapacityReservationDeletedTimeout = 2 * time.Minute
 )
