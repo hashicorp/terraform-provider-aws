@@ -922,6 +922,43 @@ func TestAccEC2Instance_sourceDestCheck(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_autoRecovery(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceAutoRecoveryConfig(rName, "default"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_options.0.auto_recovery", "default"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceAutoRecoveryConfig(rName, "disabled"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_options.0.auto_recovery", "disabled"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_disableAPITermination(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -5398,6 +5435,26 @@ resource "aws_instance" "test" {
   }
 }
 `, rName))
+}
+
+func testAccInstanceAutoRecoveryConfig(rName string, val string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		testAccInstanceVPCConfig(rName, false, 0),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+
+  maintenance_options {
+    auto_recovery = %[2]q
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, val))
 }
 
 func testAccInstanceConfigDisableAPITermination(rName string, val bool) string {

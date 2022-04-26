@@ -53,6 +53,7 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "key_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "latest_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "license_specification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "monitoring.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -433,6 +434,7 @@ func TestAccEC2LaunchTemplate_data(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "instance_type"),
 					resource.TestCheckResourceAttrSet(resourceName, "kernel_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_name"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "monitoring.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.security_groups.#", "1"),
@@ -1806,6 +1808,10 @@ resource "aws_launch_template" "test" {
 
   block_device_mappings {
     device_name = "test"
+  }
+
+  maintenance_options {
+    auto_recovery = "disabled"
   }
 
   disable_api_termination = true

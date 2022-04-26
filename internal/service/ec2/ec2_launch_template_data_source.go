@@ -300,6 +300,18 @@ func DataSourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
+			"maintenance_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auto_recovery": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"metadata_options": {
 				Type:     schema.TypeList,
 				Computed: true,

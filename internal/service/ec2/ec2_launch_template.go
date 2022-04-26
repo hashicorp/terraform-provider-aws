@@ -367,6 +367,20 @@ func ResourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
+			"maintenance_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auto_recovery": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(ec2.LaunchTemplateAutoRecoveryState_Values(), false),
+						},
+					},
+				},
+			},
 			"metadata_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -970,8 +984,12 @@ func expandRequestLaunchTemplateData(d *schema.ResourceData) *ec2.RequestLaunchT
 		apiObject.LicenseSpecifications = expandLaunchTemplateLicenseConfigurationRequests(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("maintenance_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.MaintenanceOptions = expandLaunchTemplateInstanceMaintenanceOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("metadata_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.MetadataOptions = expandLaunchTemplateInstanceMetadataOptions(v.([]interface{})[0].(map[string]interface{}))
+		apiObject.MetadataOptions = expandLaunchTemplateInstanceMetadataOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("monitoring"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -1335,7 +1353,7 @@ func expandLaunchTemplateLicenseConfigurationRequests(tfList []interface{}) []*e
 	return apiObjects
 }
 
-func expandLaunchTemplateInstanceMetadataOptions(tfMap map[string]interface{}) *ec2.LaunchTemplateInstanceMetadataOptionsRequest {
+func expandLaunchTemplateInstanceMetadataOptionsRequest(tfMap map[string]interface{}) *ec2.LaunchTemplateInstanceMetadataOptionsRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -1363,6 +1381,20 @@ func expandLaunchTemplateInstanceMetadataOptions(tfMap map[string]interface{}) *
 
 	if v, ok := tfMap["http_protocol_ipv6"].(string); ok && v != "" {
 		apiObject.HttpProtocolIpv6 = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandLaunchTemplateInstanceMaintenanceOptionsRequest(tfMap map[string]interface{}) *ec2.LaunchTemplateInstanceMaintenanceOptionsRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.LaunchTemplateInstanceMaintenanceOptionsRequest{}
+
+	if v, ok := tfMap["auto_recovery"].(string); ok && v != "" {
+		apiObject.AutoRecovery = aws.String(v)
 	}
 
 	return apiObject
@@ -1683,6 +1715,13 @@ func flattenResponseLaunchTemplateData(d *schema.ResourceData, apiObject *ec2.Re
 	d.Set("key_name", apiObject.KeyName)
 	if err := d.Set("license_specification", flattenLaunchTemplateLicenseConfigurations(apiObject.LicenseSpecifications)); err != nil {
 		return fmt.Errorf("error setting license_specification: %w", err)
+	}
+	if apiObject.MaintenanceOptions != nil {
+		if err := d.Set("maintenance_options", []interface{}{flattenLaunchTemplateInstanceMaintenanceOptions(apiObject.MaintenanceOptions)}); err != nil {
+			return fmt.Errorf("error setting maintenance_options: %w", err)
+		}
+	} else {
+		d.Set("maintenance_options", nil)
 	}
 	if apiObject.MetadataOptions != nil {
 		if err := d.Set("metadata_options", []interface{}{flattenLaunchTemplateInstanceMetadataOptions(apiObject.MetadataOptions)}); err != nil {
@@ -2026,6 +2065,20 @@ func flattenLaunchTemplateLicenseConfigurations(apiObjects []*ec2.LaunchTemplate
 	}
 
 	return tfList
+}
+
+func flattenLaunchTemplateInstanceMaintenanceOptions(apiObject *ec2.LaunchTemplateInstanceMaintenanceOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AutoRecovery; v != nil {
+		tfMap["auto_recovery"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 func flattenLaunchTemplateInstanceMetadataOptions(apiObject *ec2.LaunchTemplateInstanceMetadataOptions) map[string]interface{} {

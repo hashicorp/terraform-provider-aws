@@ -46,6 +46,7 @@ func TestAccEC2LaunchTemplateDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "key_name", dataSourceName, "key_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "latest_version", dataSourceName, "latest_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "license_specification.#", dataSourceName, "license_specification.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "maintenance_options.#", dataSourceName, "maintenance_options.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "metadata_options.#", dataSourceName, "metadata_options.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "monitoring.#", dataSourceName, "monitoring.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
@@ -169,6 +170,10 @@ resource "aws_launch_template" "test" {
 
   instance_market_options {
     market_type = "spot"
+  }
+
+  maintenance_options {
+    auto_recovery = "disabled"
   }
 
   disable_api_termination = true
