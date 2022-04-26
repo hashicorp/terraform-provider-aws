@@ -423,8 +423,8 @@ func TestAWSGoV1ClientName(t *testing.T) {
 			Error:    false,
 		},
 		{
-			TestName: CodeDeploy,
-			Input:    CodeDeploy,
+			TestName: Deploy,
+			Input:    Deploy,
 			Expected: "CodeDeploy",
 			Error:    false,
 		},
