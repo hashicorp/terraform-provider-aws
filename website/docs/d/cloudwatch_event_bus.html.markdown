@@ -1,5 +1,5 @@
 ---
-subcategory: "CloudWatch"
+subcategory: "EventBridge"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_bus"
 description: |-
