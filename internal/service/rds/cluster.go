@@ -34,6 +34,7 @@ func ResourceCluster() *schema.Resource {
 		Read:   resourceClusterRead,
 		Update: resourceClusterUpdate,
 		Delete: resourceClusterDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: resourceClusterImport,
 		},
@@ -45,131 +46,139 @@ func ResourceCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
+			"allocated_storage": {
+				Type:     schema.TypeInt,
+				Optional: true,
 				Computed: true,
 			},
-
 			"allow_major_version_upgrade": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
+			// apply_immediately is used to determine when the update modifications take place.
+			// See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
+			"apply_immediately": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"availability_zones": {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
-				Set:      schema.HashString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
+			"backup_retention_period": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      1,
+				ValidateFunc: validation.IntAtMost(35),
+			},
 			"backtrack_window": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 259200),
 			},
-
 			"cluster_identifier": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"cluster_identifier_prefix"},
 				ValidateFunc:  validIdentifier,
+				ConflictsWith: []string{"cluster_identifier_prefix"},
 			},
 			"cluster_identifier_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"cluster_identifier"},
 				ValidateFunc:  validIdentifierPrefix,
+				ConflictsWith: []string{"cluster_identifier"},
 			},
-
 			"cluster_members": {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
-				Set:      schema.HashString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
+			"cluster_resource_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"copy_tags_to_snapshot": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
 			"database_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-
+			"db_cluster_instance_class": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"db_cluster_parameter_group_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"db_instance_parameter_group_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"db_subnet_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
 			},
-
-			"db_cluster_parameter_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"db_instance_parameter_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
 			"deletion_protection": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
-			"endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"global_cluster_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
 			"enable_global_write_forwarding": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
-			"reader_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"hosted_zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"db_cluster_instance_class": {
-				Type:     schema.TypeString,
+			"enabled_cloudwatch_logs_exports": {
+				Type:     schema.TypeSet,
 				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						"audit",
+						"error",
+						"general",
+						"slowquery",
+						"postgresql",
+					}, false),
+				},
 			},
-
+			"enable_http_endpoint": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"engine": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "aurora",
 				ForceNew:     true,
+				Default:      "aurora",
 				ValidateFunc: validEngine(),
 			},
-
 			"engine_mode": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -177,18 +186,187 @@ func ResourceCluster() *schema.Resource {
 				Default:      EngineModeProvisioned,
 				ValidateFunc: validation.StringInSlice(EngineMode_Values(), false),
 			},
-
 			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"engine_version_actual": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"final_snapshot_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
+					value := v.(string)
+					if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
+						es = append(es, fmt.Errorf(
+							"only alphanumeric characters and hyphens allowed in %q", k))
+					}
+					if regexp.MustCompile(`--`).MatchString(value) {
+						es = append(es, fmt.Errorf("%q cannot contain two consecutive hyphens", k))
+					}
+					if regexp.MustCompile(`-$`).MatchString(value) {
+						es = append(es, fmt.Errorf("%q cannot end in a hyphen", k))
+					}
+					return
+				},
+			},
+			"global_cluster_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"hosted_zone_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"iam_database_authentication_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"iam_roles": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"iops": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"master_password": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+			},
+			"master_username": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
+				ForceNew: true,
+			},
+			"port": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"preferred_backup_window": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidOnceADayWindowFormat,
+			},
+			"preferred_maintenance_window": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				StateFunc: func(val interface{}) string {
+					if val == nil {
+						return ""
+					}
+					return strings.ToLower(val.(string))
+				},
+				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
+			},
+			"reader_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"replication_source_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"restore_to_point_in_time": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"restore_to_time": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ForceNew:      true,
+							ValidateFunc:  verify.ValidUTCTimestamp,
+							ConflictsWith: []string{"restore_to_point_in_time.0.use_latest_restorable_time"},
+						},
+						"restore_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"full-copy",
+								"copy-on-write",
+							}, false),
+						},
+						"source_cluster_identifier": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+							ValidateFunc: validation.Any(
+								verify.ValidARN,
+								validIdentifier,
+							),
+						},
+						"use_latest_restorable_time": {
+							Type:          schema.TypeBool,
+							Optional:      true,
+							ForceNew:      true,
+							ConflictsWith: []string{"restore_to_point_in_time.0.restore_to_time"},
+						},
+					},
+				},
+				ConflictsWith: []string{
+					"s3_import",
+					"snapshot_identifier",
+				},
+			},
+			"s3_import": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bucket_name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"bucket_prefix": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+						"ingestion_role": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"source_engine": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"source_engine_version": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
+				ConflictsWith: []string{
+					"snapshot_identifier",
+					"restore_to_point_in_time",
+				},
+			},
 			"scaling_configuration": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -229,7 +407,6 @@ func ResourceCluster() *schema.Resource {
 					},
 				},
 			},
-
 			"serverlessv2_scaling_configuration": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -250,271 +427,39 @@ func ResourceCluster() *schema.Resource {
 					},
 				},
 			},
-
-			"allocated_storage": {
-				Type:     schema.TypeInt,
+			"skip_final_snapshot": {
+				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 			},
-
-			"storage_type": {
+			"snapshot_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"source_region": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-
-			"iops": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-
-			"restore_to_point_in_time": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"s3_import",
-					"snapshot_identifier",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"source_cluster_identifier": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.Any(
-								verify.ValidARN,
-								validIdentifier,
-							),
-						},
-
-						"restore_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"full-copy",
-								"copy-on-write",
-							}, false),
-						},
-
-						"use_latest_restorable_time": {
-							Type:          schema.TypeBool,
-							Optional:      true,
-							ForceNew:      true,
-							ConflictsWith: []string{"restore_to_point_in_time.0.restore_to_time"},
-						},
-
-						"restore_to_time": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ForceNew:      true,
-							ValidateFunc:  verify.ValidUTCTimestamp,
-							ConflictsWith: []string{"restore_to_point_in_time.0.use_latest_restorable_time"},
-						},
-					},
-				},
-			},
-
-			"s3_import": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"snapshot_identifier",
-					"restore_to_point_in_time",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bucket_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"bucket_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"ingestion_role": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"source_engine": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"source_engine_version": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-					},
-				},
-			},
-
-			"final_snapshot_identifier": {
+			"storage_type": {
 				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-					value := v.(string)
-					if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
-						es = append(es, fmt.Errorf(
-							"only alphanumeric characters and hyphens allowed in %q", k))
-					}
-					if regexp.MustCompile(`--`).MatchString(value) {
-						es = append(es, fmt.Errorf("%q cannot contain two consecutive hyphens", k))
-					}
-					if regexp.MustCompile(`-$`).MatchString(value) {
-						es = append(es, fmt.Errorf("%q cannot end in a hyphen", k))
-					}
-					return
-				},
-			},
-
-			"skip_final_snapshot": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"master_username": {
-				Type:     schema.TypeString,
-				Computed: true,
 				Optional: true,
 				ForceNew: true,
 			},
-
-			"master_password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-			},
-
-			"snapshot_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"port": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-
-			// apply_immediately is used to determine when the update modifications
-			// take place.
-			// See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
-			"apply_immediately": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
-
-			"preferred_backup_window": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidOnceADayWindowFormat,
-			},
-
-			"preferred_maintenance_window": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				StateFunc: func(val interface{}) string {
-					if val == nil {
-						return ""
-					}
-					return strings.ToLower(val.(string))
-				},
-				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
-			},
-
-			"backup_retention_period": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      1,
-				ValidateFunc: validation.IntAtMost(35),
-			},
-
-			"kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-
-			"replication_source_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"iam_roles": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
-			"iam_database_authentication_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-
-			"cluster_resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"source_region": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-
-			"enabled_cloudwatch_logs_exports": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						"audit",
-						"error",
-						"general",
-						"slowquery",
-						"postgresql",
-					}, false),
-				},
-			},
-			"enable_http_endpoint": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
