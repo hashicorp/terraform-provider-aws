@@ -258,8 +258,8 @@ resource "aws_rds_cluster" "example" {
   # ... other configuration ...
 
   serverlessv2_scaling_configuration {
-    max_capacity             = 128.0
-    min_capacity             = 0.5
+    max_capacity = 128.0
+    min_capacity = 0.5
   }
 }
 ```
