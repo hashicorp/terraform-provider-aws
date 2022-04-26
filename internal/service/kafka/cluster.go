@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// DefaultPublicAccessType is the default connectivity info public access type setting.
-// The aws service package doesn't yet include the different options for this.
-const DefaultPublicAccessType = "DISABLED"
-
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceClusterCreate,
@@ -103,21 +99,6 @@ func ResourceCluster() *schema.Resource {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntBetween(1, 16384),
-						},
-						"public_access": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice([]string{DefaultPublicAccessType, "SERVICE_PROVIDED_EIPS"}, false),
-									},
-								},
-							},
 						},
 					},
 				},
@@ -567,28 +548,6 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("broker_node_group_info.0.public_access") {
-		input := &kafka.UpdateConnectivityInput{
-			ClusterArn:       aws.String(d.Id()),
-			CurrentVersion:   aws.String(d.Get("current_version").(string)),
-			ConnectivityInfo: expandConnectivityInfo(d.Get("broker_node_group_info.0").(map[string]interface{})),
-		}
-
-		output, err := conn.UpdateConnectivity(input)
-
-		if err != nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) broker connectivity: %w", d.Id(), err)
-		}
-
-		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
-
-		_, err = waitClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
-
-		if err != nil {
-			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
-		}
-	}
-
 	if d.HasChange("number_of_broker_nodes") {
 		input := &kafka.UpdateBrokerCountInput{
 			ClusterArn:                aws.String(d.Id()),
@@ -736,55 +695,9 @@ func expandClusterBrokerNodeGroupInfo(l []interface{}) *kafka.BrokerNodeGroupInf
 				VolumeSize: aws.Int64(int64(m["ebs_volume_size"].(int))),
 			},
 		},
-		ConnectivityInfo: expandConnectivityInfo(m),
 	}
 
 	return bngi
-}
-
-func expandConnectivityInfo(m map[string]interface{}) *kafka.ConnectivityInfo {
-	ci := &kafka.ConnectivityInfo{
-		PublicAccess: &kafka.PublicAccess{
-			Type: aws.String(DefaultPublicAccessType),
-		},
-	}
-
-	v, ok := m["public_access"].([]interface{})
-	if ok {
-		ci.PublicAccess = expandPublicAccess(v)
-	}
-
-	return ci
-}
-
-func expandPublicAccess(l []interface{}) *kafka.PublicAccess {
-	pa := &kafka.PublicAccess{
-		Type: aws.String(DefaultPublicAccessType),
-	}
-
-	if len(l) == 0 || l == nil {
-		return pa
-	}
-
-	v, ok := l[0].(map[string]interface{})
-	if ok {
-		pa.Type = expandPublicAccessType(v)
-	}
-
-	return pa
-}
-
-func expandPublicAccessType(m map[string]interface{}) *string {
-	if len(m) == 0 || m == nil {
-		return aws.String(DefaultPublicAccessType)
-	}
-
-	v, ok := m["type"]
-	if !ok {
-		return aws.String(DefaultPublicAccessType)
-	}
-
-	return aws.String(v.(string))
 }
 
 func expandClusterClientAuthentication(l []interface{}) *kafka.ClientAuthentication {
@@ -1047,13 +960,6 @@ func flattenBrokerNodeGroupInfo(b *kafka.BrokerNodeGroupInfo) []map[string]inter
 		if b.StorageInfo.EbsStorageInfo != nil {
 			m["ebs_volume_size"] = int(aws.Int64Value(b.StorageInfo.EbsStorageInfo.VolumeSize))
 		}
-	}
-	if b.ConnectivityInfo != nil {
-		ci := map[string]interface{}{}
-		if b.ConnectivityInfo.PublicAccess != nil {
-			ci["type"] = aws.StringValue(b.ConnectivityInfo.PublicAccess.Type)
-		}
-		m["public_access"] = []map[string]interface{}{ci}
 	}
 	return []map[string]interface{}{m}
 }
