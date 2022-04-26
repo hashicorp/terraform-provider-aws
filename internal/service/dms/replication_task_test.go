@@ -364,20 +364,20 @@ resource "aws_rds_cluster_parameter_group" "test" {
   description = "DMS cluster parameter group"
 
   parameter {
-    name  = "binlog_format"
-    value = "ROW"
+    name         = "binlog_format"
+    value        = "ROW"
     apply_method = "pending-reboot"
   }
 
   parameter {
-    name  = "binlog_row_image"
-    value = "Full"
+    name         = "binlog_row_image"
+    value        = "Full"
     apply_method = "pending-reboot"
   }
 
   parameter {
-    name  = "binlog_checksum"
-    value = "NONE"
+    name         = "binlog_checksum"
+    value        = "NONE"
     apply_method = "pending-reboot"
   }
 }
