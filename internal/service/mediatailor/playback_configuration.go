@@ -396,7 +396,7 @@ func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceDa
 		d.Set("hls_configuration", []interface{}{temp})
 	}
 
-	if res.LivePreRollConfiguration != nil {
+	if res.LivePreRollConfiguration.AdDecisionServerUrl != nil || res.LivePreRollConfiguration.MaxDurationSeconds != nil {
 		temp := map[string]interface{}{}
 		if res.LivePreRollConfiguration.AdDecisionServerUrl != nil {
 			temp["ad_decision_server_url"] = res.LivePreRollConfiguration.AdDecisionServerUrl
@@ -404,7 +404,7 @@ func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceDa
 		if res.LivePreRollConfiguration.MaxDurationSeconds != nil {
 			temp["max_duration_seconds"] = res.LivePreRollConfiguration.MaxDurationSeconds
 		}
-		d.Set("live_pre_roll_configuration", temp)
+		d.Set("live_pre_roll_configuration", []interface{}{temp})
 	}
 
 	if res.LogConfiguration != nil {
