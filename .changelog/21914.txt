@@ -1,7 +1,0 @@
-```release-note:enhancement
-resource/aws_msk: Add `public_access` block to `broker_node_group_info` block
-```
-
-```release-note:enhancement
-data-source/aws_msk: Add `bootstrap_brokers_public_sasl_iam`, `bootstrap_brokers_public_sasl_scram` and `bootstrap_brokers_public_tls` attributes
-```
