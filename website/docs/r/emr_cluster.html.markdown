@@ -312,8 +312,8 @@ resource "aws_emr_cluster" "cluster" {
 
   ec2_attributes {
     subnet_id                         = aws_subnet.main.id
-    emr_managed_master_security_group = aws_security_group.allow_all.id
-    emr_managed_slave_security_group  = aws_security_group.allow_all.id
+    emr_managed_master_security_group = aws_security_group.allow_access.id
+    emr_managed_slave_security_group  = aws_security_group.allow_access.id
     instance_profile                  = aws_iam_instance_profile.emr_profile.arn
   }
 
@@ -380,7 +380,7 @@ resource "aws_security_group" "allow_access" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = aws_vpc.main.cidr_block
+    cidr_blocks = [aws_vpc.main.cidr_block]
   }
 
   egress {

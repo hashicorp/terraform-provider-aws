@@ -492,7 +492,7 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_description = "test"
 
   engine         = "redis"
-  engine_version = "6.x"
+  engine_version = "6.2"
   node_type      = "cache.m5.large"
 
   parameter_group_name       = "default.redis6.x.cluster.on"

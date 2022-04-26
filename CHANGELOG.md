@@ -1,7 +1,33 @@
-## 4.11.0 (Unreleased)
+## 4.12.0 (Unreleased)
 
 FEATURES:
 
+* **New Data Source:** `aws_cloudfront_origin_access_identities` ([#24382](https://github.com/hashicorp/terraform-provider-aws/issues/24382))
+* **New Resource:** `aws_athena_data_catalog` ([#22968](https://github.com/hashicorp/terraform-provider-aws/issues/22968))
+* **New Resource:** `aws_docdb_event_subscription` ([#24379](https://github.com/hashicorp/terraform-provider-aws/issues/24379))
+
+ENHANCEMENTS:
+
+* data-source/aws_instance: Add `maintenance_options` attribute ([#24377](https://github.com/hashicorp/terraform-provider-aws/issues/24377))
+* data-source/aws_launch_template: Add `maintenance_options` attribute ([#24377](https://github.com/hashicorp/terraform-provider-aws/issues/24377))
+* resource/aws_acm_certificate_validation: Increase default resource Create (certificate issuance) timeout to 75 minutes ([#20073](https://github.com/hashicorp/terraform-provider-aws/issues/20073))
+* resource/aws_instance: Add `maintenance_options` argument ([#24377](https://github.com/hashicorp/terraform-provider-aws/issues/24377))
+* resource/aws_launch_template: Add `maintenance_options` argument ([#24377](https://github.com/hashicorp/terraform-provider-aws/issues/24377))
+* resource/aws_mq_broker: Make `maintenance_window_start_time` updateable without recreation. ([#24385](https://github.com/hashicorp/terraform-provider-aws/issues/24385))
+* resource/aws_spot_fleet_request: Add `terminate_instances_on_delete` argument ([#17268](https://github.com/hashicorp/terraform-provider-aws/issues/17268))
+
+BUG FIXES:
+
+* resource/aws_acm_certificate: Correctly handle SAN entries that match `domain_name` ([#20073](https://github.com/hashicorp/terraform-provider-aws/issues/20073))
+* resource/aws_elasticache_cluster: Update regex pattern to target specific Redis V6 versions through the `engine_version` attribute ([#23734](https://github.com/hashicorp/terraform-provider-aws/issues/23734))
+* resource/aws_elasticache_replication_group: Update regex pattern to target specific Redis V6 versions through the `engine_version` attribute ([#23734](https://github.com/hashicorp/terraform-provider-aws/issues/23734))
+* resource/aws_ses_receipt_filter: Allow period character (`.`) in `name` argument ([#24383](https://github.com/hashicorp/terraform-provider-aws/issues/24383))
+
+## 4.11.0 (April 22, 2022)
+
+FEATURES:
+
+* **New Data Source:** `aws_s3_bucket_policy` ([#17738](https://github.com/hashicorp/terraform-provider-aws/issues/17738))
 * **New Resource:** `aws_transfer_workflow` ([#24248](https://github.com/hashicorp/terraform-provider-aws/issues/24248))
 
 ENHANCEMENTS:
@@ -10,9 +36,13 @@ ENHANCEMENTS:
 * data-source/aws_opensearch_domain: Add `cold_storage_options` attribute to the `cluster_config` configuration block ([#24284](https://github.com/hashicorp/terraform-provider-aws/issues/24284))
 * resource/aws_db_proxy: Add `auth.username` argument ([#24264](https://github.com/hashicorp/terraform-provider-aws/issues/24264))
 * resource/aws_elasticache_user: Add plan-time validation of password argumnet length ([#24274](https://github.com/hashicorp/terraform-provider-aws/issues/24274))
+* resource/aws_elasticsearch_domain: For Elasticsearch versions 6.7+, allow in-place update of `node_to_node_encryption.0.enabled` and `encrypt_at_rest.0.enabled`. ([#24222](https://github.com/hashicorp/terraform-provider-aws/issues/24222))
 * resource/aws_fsx_ontap_file_system: Add support for `SINGLE_AZ_1` `deployment_type`. ([#24280](https://github.com/hashicorp/terraform-provider-aws/issues/24280))
 * resource/aws_imagebuilder_infrastructure_configuration: Add `instance_metadata_options` argument ([#24285](https://github.com/hashicorp/terraform-provider-aws/issues/24285))
+* resource/aws_instance: Add `capacity_reservation_specification.capacity_reservation_target.capacity_reservation_resource_group_arn` argument ([#24283](https://github.com/hashicorp/terraform-provider-aws/issues/24283))
+* resource/aws_instance: Add `network_interface.network_card_index` argument ([#24283](https://github.com/hashicorp/terraform-provider-aws/issues/24283))
 * resource/aws_opensearch_domain: Add `cold_storage_options` argument to the `cluster_config` configuration block ([#24284](https://github.com/hashicorp/terraform-provider-aws/issues/24284))
+* resource/aws_opensearch_domain: For Elasticsearch versions 6.7+, allow in-place update of `node_to_node_encryption.0.enabled` and `encrypt_at_rest.0.enabled`. ([#24222](https://github.com/hashicorp/terraform-provider-aws/issues/24222))
 * resource/aws_transfer_server: Add `workflow_details` argument ([#24248](https://github.com/hashicorp/terraform-provider-aws/issues/24248))
 * resource/aws_waf_byte_match_set: Additional supported values for `byte_match_tuples.field_to_match.type` argument ([#24286](https://github.com/hashicorp/terraform-provider-aws/issues/24286))
 * resource/aws_wafregional_web_acl: Additional supported values for `logging_configuration.redacted_fields.field_to_match.type` argument ([#24286](https://github.com/hashicorp/terraform-provider-aws/issues/24286))
@@ -23,6 +53,7 @@ BUG FIXES:
 * data-source/aws_db_instance: Prevent panic when setting instance connection endpoint values ([#24299](https://github.com/hashicorp/terraform-provider-aws/issues/24299))
 * data-source/aws_efs_file_system: Prevent panic when searching by tag returns 0 or multiple results ([#24298](https://github.com/hashicorp/terraform-provider-aws/issues/24298))
 * data-source/aws_elasticache_cluster: Gracefully handle additional tagging error type in non-standard AWS partitions (i.e., ISO) ([#24275](https://github.com/hashicorp/terraform-provider-aws/issues/24275))
+* resource/aws_appstream_user_stack_association: Prevent panic during resource read ([#24303](https://github.com/hashicorp/terraform-provider-aws/issues/24303))
 * resource/aws_cloudformation_stack_set: Prevent `Validation` errors when `operation_preferences.failure_tolerance_count` is zero ([#24250](https://github.com/hashicorp/terraform-provider-aws/issues/24250))
 * resource/aws_elastic_beanstalk_environment: Correctly set `cname_prefix` attribute ([#24278](https://github.com/hashicorp/terraform-provider-aws/issues/24278))
 * resource/aws_elasticache_cluster: Gracefully handle additional tagging error type in non-standard AWS partitions (i.e., ISO) ([#24275](https://github.com/hashicorp/terraform-provider-aws/issues/24275))
@@ -31,7 +62,11 @@ BUG FIXES:
 * resource/aws_elasticache_subnet_group: Gracefully handle additional tagging error type in non-standard AWS partitions (i.e., ISO) ([#24275](https://github.com/hashicorp/terraform-provider-aws/issues/24275))
 * resource/aws_elasticache_user: Gracefully handle additional tagging error type in non-standard AWS partitions (i.e., ISO) ([#24275](https://github.com/hashicorp/terraform-provider-aws/issues/24275))
 * resource/aws_elasticache_user_group: Gracefully handle additional tagging error type in non-standard AWS partitions (i.e., ISO) ([#24275](https://github.com/hashicorp/terraform-provider-aws/issues/24275))
+* resource/aws_instance: Fix issue with assuming Placement and disableApiTermination instance attributes exist when managing a Snowball Edge device ([#19256](https://github.com/hashicorp/terraform-provider-aws/issues/19256))
+* resource/aws_kinesis_firehose_delivery_stream: Increase the maximum length of the `processing_configuration.processors.parameters.parameter_value` argument's value to `5120` ([#24312](https://github.com/hashicorp/terraform-provider-aws/issues/24312))
+* resource/aws_macie2_member: Correct type for `invitation_disable_email_notification` parameter ([#24304](https://github.com/hashicorp/terraform-provider-aws/issues/24304))
 * resource/aws_s3_bucket_server_side_encryption_configuration: Retry on `ServerSideEncryptionConfigurationNotFoundError` errors due to eventual consistency ([#24266](https://github.com/hashicorp/terraform-provider-aws/issues/24266))
+* resource/aws_sfn_state_machine: Prevent panic during resource update ([#24302](https://github.com/hashicorp/terraform-provider-aws/issues/24302))
 * resource/aws_shield_protection_group: When updating resource tags, use the `protection_group_arn` parameter instead of `arn`. ([#24296](https://github.com/hashicorp/terraform-provider-aws/issues/24296))
 * resource/aws_ssm_association: Prevent panic when `wait_for_success_timeout_seconds` is configured ([#24300](https://github.com/hashicorp/terraform-provider-aws/issues/24300))
 

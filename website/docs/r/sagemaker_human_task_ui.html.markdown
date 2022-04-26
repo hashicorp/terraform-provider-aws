@@ -1,14 +1,14 @@
 ---
-subcategory: "Sagemaker"
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_human_task_ui"
 description: |-
-  Provides a Sagemaker Human Task UI resource.
+  Provides a SageMaker Human Task UI resource.
 ---
 
 # Resource: aws_sagemaker_human_task_ui
 
-Provides a Sagemaker Human Task UI resource.
+Provides a SageMaker Human Task UI resource.
 
 ## Example Usage
 
@@ -51,7 +51,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Human Task UIs can be imported using the `human_task_ui_name`, e.g.,
+SageMaker Human Task UIs can be imported using the `human_task_ui_name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_human_task_ui.example example

@@ -465,7 +465,7 @@ The following arguments are supported:
   Use the resource [`aws_s3_bucket_lifecycle_configuration`](s3_bucket_lifecycle_configuration.html) instead.
 * `logging` - (Optional, **Deprecated**) A configuration of [S3 bucket logging](https://docs.aws.amazon.com/AmazonS3/latest/UG/ManagingBucketLogging.html) parameters. See [Logging](#logging) below for details. Terraform will only perform drift detection if a configuration value is provided.
   Use the resource [`aws_s3_bucket_logging`](s3_bucket_logging.html.markdown) instead.
-* `object_lock_enabled` - (Optional, Default:`false`, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled.
+* `object_lock_enabled` - (Optional, Default:`false`, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled. Valid values are `true` or `false`.
 * `object_lock_configuration` - (Optional, **Deprecated**) A configuration of [S3 object locking](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html). See [Object Lock Configuration](#object-lock-configuration) below for details.
   Terraform wil only perform drift detection if a configuration value is provided.
   Use the `object_lock_enabled` parameter and the resource [`aws_s3_bucket_object_lock_configuration`](s3_bucket_object_lock_configuration.html.markdown) instead.

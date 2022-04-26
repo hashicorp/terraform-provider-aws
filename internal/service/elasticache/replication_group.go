@@ -136,7 +136,7 @@ func ResourceReplicationGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: ValidRedisVersionString,
+				ValidateFunc: validRedisVersionString,
 			},
 			"engine_version_actual": {
 				Type:     schema.TypeString,
@@ -389,7 +389,7 @@ func ResourceReplicationGroup() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			CustomizeDiffValidateReplicationGroupAutomaticFailover,
-			CustomizeDiffEngineVersion,
+			customizeDiffEngineVersionForceNewOnDowngrade,
 			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("number_cache_clusters") ||
 					diff.HasChange("num_cache_clusters") ||
@@ -589,7 +589,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		// to be fully added to the global replication group.
 		// API calls to the global replication group can be made in any region.
 		if _, err := WaitGlobalReplicationGroupAvailable(conn, v.(string), GlobalReplicationGroupDefaultCreatedTimeout); err != nil {
-			return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) availability: %w", v, err)
+			return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) to be available: %w", v, err)
 		}
 	}
 
