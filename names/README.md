@@ -34,7 +34,7 @@ The columns of `names_data.csv` are as follows:
 | 12 | **ResourcePrefixActual** | Code | Regular expression to match anomalous TF resource name prefixes (_e.g._, for the resource name `aws_config_config_rule`, `aws_config_` will match all resources); only use if **ResourcePrefixCorrect** is not suitable (_e.g._, `aws_codepipeline_` won't work as there is only one resource named `aws_codepipeline`); takes precedence over **ResourcePrefixCorrect** |
 | 13 | **ResourcePrefixCorrect** | Code | Regular expression to match what resource name prefixes _should be_ (_i.e._, `aws_` + **ProviderPackageCorrect** + `_`); used if **ResourcePrefixActual** is blank |
 | 14 | **FilePrefix** | Code | If multiple "services" live in one service, this is the prefix that files must have to be associated with this sub-service (_e.g._, VPC files in the EC2 service are prefixed with `vpc_`); see also **SplitPackageRealPackage** |
-| 15 | **DocPrefix** | Code | Documentation files in `website/docs/r` and `website/docs/d` must have this prefix |
+| 15 | **DocPrefix** | Code | _Semicolon_-separated list of prefixes for documentation files in `website/docs/r` and `website/docs/d` |
 | 16 | **HumanFriendly** | Code | [REQUIRED] Human-friendly name of service as used by AWS; documentation `subcategory` must exactly match this value; used in website navigation and error messages |
 | 17 | **Brand** | Code | Either `Amazon`, `AWS`, or blank (rare) as used by AWS; used in error messages |
 | 18 | **Exclude** | Code | Whether or not the service should be included; if included (blank), **ProviderPackageActual** or **ProviderPackageCorrect** must have a value |
