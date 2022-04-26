@@ -40,12 +40,12 @@ func TestAccIAMInstanceProfilesDataSource_basic(t *testing.T) {
 func testAccInstanceProfilesDataSourceConfig(roleName, profileName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name               = "%s"
+  name               = %[1]q
   assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
 }
 
 resource "aws_iam_instance_profile" "test" {
-  name = "%s"
+  name = %[2]q
   role = aws_iam_role.test.name
   path = "/testpath/"
 }
