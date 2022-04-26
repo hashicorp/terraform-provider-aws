@@ -19,7 +19,7 @@ The HashiCorp Terraform AWS provider team is :
 
 ### Why isn’t my PR merged yet?
 
-Unfortunately, due to the volume of issues and new pull requests we receive, we are unable to give each one the full attention that we would like. We always focus on the contributions that provide the greatest value to the most community members.
+Unfortunately, due to the volume of issues and new pull requests we receive, we are unable to give each one the full attention that we would like. We always focus on the contributions that provide the greatest value to the most community members. For more information on how we prioritize pull requests, see the [prioritization guide](./prioritization.md).
 
 ### How do you decide what gets merged for each release?
 
