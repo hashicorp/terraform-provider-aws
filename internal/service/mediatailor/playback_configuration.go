@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"regexp"
 	"strings"
-	"time"
 )
 
 func ResourcePlaybackConfiguration() *schema.Resource {
@@ -73,17 +72,6 @@ func ResourcePlaybackConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"configuration_aliases": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:     schema.TypeMap,
-					Optional: true,
-					Elem: &schema.Schema{
-						Type: schema.TypeString,
-					},
-				},
-			},
 			"dash_mpd_location": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -125,6 +113,7 @@ func ResourcePlaybackConfiguration() *schema.Resource {
 						"max_duration_seconds": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Default:  3600,
 						},
 					},
 				},
@@ -202,11 +191,6 @@ func ResourcePlaybackConfiguration() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 512),
 			},
-			"last_updated": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 		},
 		CustomizeDiff: customdiff.All(
 			customdiff.ForceNewIfChange("name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
@@ -247,6 +231,8 @@ func resourcePlaybackConfigurationPut(ctx context.Context, d *schema.ResourceDat
 		params.AdDecisionServerUrl = aws.String(v.(string))
 	}
 
+	params.AvailSuppression = &mediatailor.AvailSuppression{}
+
 	if v, ok := d.GetOk("avail_suppression_mode"); ok && v != nil {
 		params.AvailSuppression.Mode = aws.String(v.(string))
 	}
@@ -279,12 +265,7 @@ func resourcePlaybackConfigurationPut(ctx context.Context, d *schema.ResourceDat
 		params.CdnConfiguration = &temp
 	}
 
-	if v, ok := d.GetOk("configuration_aliases"); ok {
-		val := v.(map[string]map[string]*string)
-		params.ConfigurationAliases = val
-	} else {
-		params.ConfigurationAliases = map[string]map[string]*string{}
-	}
+	params.DashConfiguration = &mediatailor.DashConfigurationForPut{}
 
 	if v, ok := d.GetOk("dash_mpd_location"); ok && v != nil {
 		params.DashConfiguration.MpdLocation = aws.String(v.(string))
@@ -355,7 +336,6 @@ func resourcePlaybackConfigurationPut(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.SetId(*playbackConfiguration.PlaybackConfigurationArn)
-	d.Set("last_updated", time.Now().Format(time.RFC850))
 
 	return resourcePlaybackConfigurationRead(ctx, d, meta)
 }
@@ -404,7 +384,6 @@ func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceDa
 		d.Set("cdn_configuration", []interface{}{temp})
 	}
 
-	d.Set("configuration_aliases", res.ConfigurationAliases)
 	d.Set("dash_mpd_location", res.DashConfiguration.MpdLocation)
 	d.Set("dash_origin_manifest_type", res.DashConfiguration.OriginManifestType)
 	d.Set("dash_manifest_endpoint_prefix", res.DashConfiguration.ManifestEndpointPrefix)

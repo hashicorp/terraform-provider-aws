@@ -66,17 +66,6 @@ func DataSourcePlaybackConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"configuration_aliases": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type:     schema.TypeMap,
-					Computed: true,
-					Elem: &schema.Schema{
-						Type: schema.TypeString,
-					},
-				},
-			},
 			"dash_configuration": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -227,12 +216,6 @@ func dataSourcePlaybackConfigurationRead(_ context.Context, d *schema.ResourceDa
 
 	if err = d.Set("cdn_configuration", flattenCdnConfiguration(result.CdnConfiguration)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting cdn_configuration: %s", err))
-	}
-
-	if result.ConfigurationAliases != nil {
-		if err = d.Set("configuration_aliases", result.ConfigurationAliases); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting configuration_aliases: %s", err))
-		}
 	}
 
 	if err = d.Set("dash_configuration", flattenDashConfiguration(result.DashConfiguration)); err != nil {
