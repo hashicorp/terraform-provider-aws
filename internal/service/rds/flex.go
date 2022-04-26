@@ -54,11 +54,11 @@ func expandServerlessV2ScalingConfiguration(tfMap map[string]interface{}) *rds.S
 	apiObject := &rds.ServerlessV2ScalingConfiguration{}
 
 	if v, ok := tfMap["max_capacity"].(float64); ok && v != 0.0 {
-		apiObject.MaxCapacity = aws.Float64(float64(v))
+		apiObject.MaxCapacity = aws.Float64(v)
 	}
 
 	if v, ok := tfMap["min_capacity"].(float64); ok && v != 0.0 {
-		apiObject.MinCapacity = aws.Float64(float64(v))
+		apiObject.MinCapacity = aws.Float64(v)
 	}
 
 	return apiObject
