@@ -103,14 +103,7 @@ func TestAccDMSReplicationTask_startReplicationTask(t *testing.T) {
 		CheckDestroy: testAccCheckReplicationTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsReplicationTaskConfigStartReplicationTask(rName, true, "testrule"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationTaskExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "status", "running"),
-				),
-			},
-			{
-				Config: dmsReplicationTaskConfigStartReplicationTask(rName, true, "changedtestrule"),
+				Config: testAccReplicationTaskConfigStartReplicationTask(rName, true, "testrule"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status", "running"),
@@ -123,7 +116,14 @@ func TestAccDMSReplicationTask_startReplicationTask(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"start_replication_task"},
 			},
 			{
-				Config: dmsReplicationTaskConfigStartReplicationTask(rName, false, "changedtestrule"),
+				Config: testAccReplicationTaskConfigStartReplicationTask(rName, true, "changedtestrule"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationTaskExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "status", "running"),
+				),
+			},
+			{
+				Config: testAccReplicationTaskConfigStartReplicationTask(rName, false, "changedtestrule"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status", "stopped"),
@@ -295,7 +295,7 @@ resource "aws_dms_replication_task" "test" {
 `, cdcStartPosition, rName))
 }
 
-func dmsReplicationTaskConfigStartReplicationTask(rName string, startTask bool, ruleName string) string {
+func testAccReplicationTaskConfigStartReplicationTask(rName string, startTask bool, ruleName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
