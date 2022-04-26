@@ -171,17 +171,11 @@ func ResourceCluster() *schema.Resource {
 			},
 
 			"engine_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "provisioned",
-				ValidateFunc: validation.StringInSlice([]string{
-					"global",
-					"multimaster",
-					"parallelquery",
-					"provisioned",
-					"serverless",
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      EngineModeProvisioned,
+				ValidateFunc: validation.StringInSlice(EngineMode_Values(), false),
 			},
 
 			"engine_version": {

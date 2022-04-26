@@ -51,6 +51,24 @@ const (
 )
 
 const (
+	EngineModeGlobal        = "global"
+	EngineModeMultiMaster   = "multimaster"
+	EngineModeParallelQuery = "parallelquery"
+	EngineModeProvisioned   = "provisioned"
+	EngineModeServerless    = "serverless"
+)
+
+func EngineMode_Values() []string {
+	return []string{
+		EngineModeGlobal,
+		EngineModeMultiMaster,
+		EngineModeParallelQuery,
+		EngineModeProvisioned,
+		EngineModeServerless,
+	}
+}
+
+const (
 	ExportableLogTypeAgent      = "agent"
 	ExportableLogTypeAlert      = "alert"
 	ExportableLogTypeAudit      = "audit"
