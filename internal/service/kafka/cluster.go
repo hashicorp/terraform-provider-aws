@@ -38,11 +38,12 @@ func ResourceCluster() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIfChange("kafka_version", func(_ context.Context, old, new, meta interface{}) bool {
-				return new.(string) < old.(string)
+				return new.(string) < old.(string) // TODO: Use gversion; "10" < "2"
 			}),
 			customizeDiffValidateClientAuthentication,
 			verify.SetTagsDiff,
 		),
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -143,18 +144,12 @@ func ResourceCluster() *schema.Resource {
 											ValidateFunc: verify.ValidARN,
 										},
 									},
-									"enabled": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
 								},
 							},
 						},
 						"unauthenticated": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  false,
 						},
 					},
 				},
@@ -389,17 +384,38 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	name := d.Get("cluster_name").(string)
 	input := &kafka.CreateClusterInput{
-		BrokerNodeGroupInfo:  expandClusterBrokerNodeGroupInfo(d.Get("broker_node_group_info").([]interface{})),
-		ClientAuthentication: expandClusterClientAuthentication(d.Get("client_authentication").([]interface{})),
-		ClusterName:          aws.String(name),
-		ConfigurationInfo:    expandClusterConfigurationInfo(d.Get("configuration_info").([]interface{})),
-		EncryptionInfo:       expandClusterEncryptionInfo(d.Get("encryption_info").([]interface{})),
-		EnhancedMonitoring:   aws.String(d.Get("enhanced_monitoring").(string)),
-		KafkaVersion:         aws.String(d.Get("kafka_version").(string)),
-		NumberOfBrokerNodes:  aws.Int64(int64(d.Get("number_of_broker_nodes").(int))),
-		OpenMonitoring:       expandOpenMonitoring(d.Get("open_monitoring").([]interface{})),
-		LoggingInfo:          expandLoggingInfo(d.Get("logging_info").([]interface{})),
-		Tags:                 Tags(tags.IgnoreAWS()),
+		ClusterName:         aws.String(name),
+		KafkaVersion:        aws.String(d.Get("kafka_version").(string)),
+		NumberOfBrokerNodes: aws.Int64(int64(d.Get("number_of_broker_nodes").(int))),
+		Tags:                Tags(tags.IgnoreAWS()),
+	}
+
+	if v, ok := d.GetOk("broker_node_group_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.BrokerNodeGroupInfo = expandBrokerNodeGroupInfo(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("client_authentication"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ClientAuthentication = expandClientAuthentication(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("configuration_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ConfigurationInfo = expandConfigurationInfo(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("encryption_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.EncryptionInfo = expandEncryptionInfo(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("enhanced_monitoring"); ok {
+		input.EnhancedMonitoring = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("logging_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.LoggingInfo = expandLoggingInfo(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("open_monitoring"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.OpenMonitoring = expandOpenMonitoringInfo(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	output, err := conn.CreateCluster(input)
@@ -574,13 +590,19 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChanges("enhanced_monitoring", "open_monitoring", "logging_info") {
+	if d.HasChanges("enhanced_monitoring", "logging_info", "open_monitoring") {
 		input := &kafka.UpdateMonitoringInput{
 			ClusterArn:         aws.String(d.Id()),
 			CurrentVersion:     aws.String(d.Get("current_version").(string)),
 			EnhancedMonitoring: aws.String(d.Get("enhanced_monitoring").(string)),
-			OpenMonitoring:     expandOpenMonitoring(d.Get("open_monitoring").([]interface{})),
-			LoggingInfo:        expandLoggingInfo(d.Get("logging_info").([]interface{})),
+		}
+
+		if v, ok := d.GetOk("logging_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.LoggingInfo = expandLoggingInfo(v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		if v, ok := d.GetOk("open_monitoring"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.OpenMonitoring = expandOpenMonitoringInfo(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		output, err := conn.UpdateMonitoring(input)
@@ -600,9 +622,12 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("configuration_info") && !d.HasChange("kafka_version") {
 		input := &kafka.UpdateClusterConfigurationInput{
-			ClusterArn:        aws.String(d.Id()),
-			ConfigurationInfo: expandClusterConfigurationInfo(d.Get("configuration_info").([]interface{})),
-			CurrentVersion:    aws.String(d.Get("current_version").(string)),
+			ClusterArn:     aws.String(d.Id()),
+			CurrentVersion: aws.String(d.Get("current_version").(string)),
+		}
+
+		if v, ok := d.GetOk("configuration_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.ConfigurationInfo = expandConfigurationInfo(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		output, err := conn.UpdateClusterConfiguration(input)
@@ -628,7 +653,9 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("configuration_info") {
-			input.ConfigurationInfo = expandClusterConfigurationInfo(d.Get("configuration_info").([]interface{}))
+			if v, ok := d.GetOk("configuration_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.ConfigurationInfo = expandConfigurationInfo(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
 
 		output, err := conn.UpdateClusterKafkaVersion(input)
@@ -647,28 +674,27 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChanges("encryption_info", "client_authentication") {
-
 		input := &kafka.UpdateSecurityInput{
 			ClusterArn:     aws.String(d.Id()),
 			CurrentVersion: aws.String(d.Get("current_version").(string)),
 		}
 
 		if d.HasChange("client_authentication") {
-			input.ClientAuthentication = expandClusterClientAuthentication(d.Get("client_authentication").([]interface{}))
+			if v, ok := d.GetOk("client_authentication"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.ClientAuthentication = expandClientAuthentication(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
 
 		if d.HasChange("encryption_info") {
-			input.EncryptionInfo = expandClusterEncryptionInfo(d.Get("encryption_info").([]interface{}))
+			if v, ok := d.GetOk("encryption_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.EncryptionInfo = expandEncryptionInfo(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
 
 		output, err := conn.UpdateSecurity(input)
 
 		if err != nil {
 			return fmt.Errorf("error updating MSK Cluster (%s) security: %w", d.Id(), err)
-		}
-
-		if output == nil {
-			return fmt.Errorf("error updating security for MSK Cluster (%s) kafka security: empty response", d.Id())
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
@@ -679,6 +705,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
 		}
 	}
+
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
@@ -758,277 +785,6 @@ func customizeDiffValidateClientAuthentication(_ context.Context, diff *schema.R
 		}
 	}
 	return nil
-}
-func expandClusterBrokerNodeGroupInfo(l []interface{}) *kafka.BrokerNodeGroupInfo {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	bngi := &kafka.BrokerNodeGroupInfo{
-		BrokerAZDistribution: aws.String(m["az_distribution"].(string)),
-		ClientSubnets:        flex.ExpandStringSet(m["client_subnets"].(*schema.Set)),
-		InstanceType:         aws.String(m["instance_type"].(string)),
-		SecurityGroups:       flex.ExpandStringSet(m["security_groups"].(*schema.Set)),
-		StorageInfo: &kafka.StorageInfo{
-			EbsStorageInfo: &kafka.EBSStorageInfo{
-				VolumeSize: aws.Int64(int64(m["ebs_volume_size"].(int))),
-			},
-		},
-	}
-
-	return bngi
-}
-
-func expandClusterClientAuthentication(l []interface{}) *kafka.ClientAuthentication {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	ca := &kafka.ClientAuthentication{}
-
-	if v, ok := m["sasl"].([]interface{}); ok {
-		ca.Sasl = expandClusterSasl(v)
-	}
-
-	if v, ok := m["tls"].([]interface{}); ok {
-		ca.Tls = expandClusterTls(v)
-	}
-
-	if v, ok := m["unauthenticated"].(bool); ok {
-		ca.Unauthenticated = &kafka.Unauthenticated{
-			Enabled: aws.Bool(v),
-		}
-	}
-	return ca
-}
-
-func expandClusterConfigurationInfo(l []interface{}) *kafka.ConfigurationInfo {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	ci := &kafka.ConfigurationInfo{
-		Arn:      aws.String(m["arn"].(string)),
-		Revision: aws.Int64(int64(m["revision"].(int))),
-	}
-
-	return ci
-}
-
-func expandClusterEncryptionInfo(l []interface{}) *kafka.EncryptionInfo {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	ei := &kafka.EncryptionInfo{
-		EncryptionInTransit: expandClusterEncryptionInTransit(m["encryption_in_transit"].([]interface{})),
-	}
-
-	if v, ok := m["encryption_at_rest_kms_key_arn"]; ok && v.(string) != "" {
-		ei.EncryptionAtRest = &kafka.EncryptionAtRest{
-			DataVolumeKMSKeyId: aws.String(v.(string)),
-		}
-	}
-
-	return ei
-}
-
-func expandClusterEncryptionInTransit(l []interface{}) *kafka.EncryptionInTransit {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	eit := &kafka.EncryptionInTransit{
-		ClientBroker: aws.String(m["client_broker"].(string)),
-		InCluster:    aws.Bool(m["in_cluster"].(bool)),
-	}
-
-	return eit
-}
-
-func expandClusterSasl(l []interface{}) *kafka.Sasl {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	tfMap, ok := l[0].(map[string]interface{})
-	if !ok {
-		return nil
-	}
-
-	sasl := &kafka.Sasl{}
-
-	if v, ok := tfMap["scram"].(bool); ok {
-		sasl.Scram = &kafka.Scram{
-			Enabled: aws.Bool(v),
-		}
-	}
-
-	if v, ok := tfMap["iam"].(bool); ok {
-		sasl.Iam = &kafka.Iam{
-			Enabled: aws.Bool(v),
-		}
-	}
-
-	return sasl
-}
-
-func expandClusterTls(l []interface{}) *kafka.Tls {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	tls := &kafka.Tls{
-		CertificateAuthorityArnList: flex.ExpandStringSet(m["certificate_authority_arns"].(*schema.Set)),
-		Enabled:                     aws.Bool(m["enabled"].(bool)),
-	}
-
-	return tls
-}
-
-func expandOpenMonitoring(l []interface{}) *kafka.OpenMonitoringInfo {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	openMonitoring := &kafka.OpenMonitoringInfo{
-		Prometheus: expandOpenMonitoringPrometheus(m["prometheus"].([]interface{})),
-	}
-
-	return openMonitoring
-}
-
-func expandOpenMonitoringPrometheus(l []interface{}) *kafka.PrometheusInfo {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	prometheus := &kafka.PrometheusInfo{
-		JmxExporter:  expandOpenMonitoringPrometheusJmxExporter(m["jmx_exporter"].([]interface{})),
-		NodeExporter: expandOpenMonitoringPrometheusNodeExporter(m["node_exporter"].([]interface{})),
-	}
-
-	return prometheus
-}
-
-func expandOpenMonitoringPrometheusJmxExporter(l []interface{}) *kafka.JmxExporterInfo {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	jmxExporter := &kafka.JmxExporterInfo{
-		EnabledInBroker: aws.Bool(m["enabled_in_broker"].(bool)),
-	}
-
-	return jmxExporter
-}
-
-func expandOpenMonitoringPrometheusNodeExporter(l []interface{}) *kafka.NodeExporterInfo {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	nodeExporter := &kafka.NodeExporterInfo{
-		EnabledInBroker: aws.Bool(m["enabled_in_broker"].(bool)),
-	}
-
-	return nodeExporter
-}
-
-func expandLoggingInfo(l []interface{}) *kafka.LoggingInfo {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	loggingInfo := &kafka.LoggingInfo{
-		BrokerLogs: expandLoggingInfoBrokerLogs(m["broker_logs"].([]interface{})),
-	}
-
-	return loggingInfo
-}
-
-func expandLoggingInfoBrokerLogs(l []interface{}) *kafka.BrokerLogs {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	brokerLogs := &kafka.BrokerLogs{
-		CloudWatchLogs: expandLoggingInfoBrokerLogsCloudWatchLogs(m["cloudwatch_logs"].([]interface{})),
-		Firehose:       expandLoggingInfoBrokerLogsFirehose(m["firehose"].([]interface{})),
-		S3:             expandLoggingInfoBrokerLogsS3(m["s3"].([]interface{})),
-	}
-
-	return brokerLogs
-}
-
-func expandLoggingInfoBrokerLogsCloudWatchLogs(l []interface{}) *kafka.CloudWatchLogs {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	cloudWatchLogs := &kafka.CloudWatchLogs{
-		Enabled:  aws.Bool(m["enabled"].(bool)),
-		LogGroup: aws.String(m["log_group"].(string)),
-	}
-
-	return cloudWatchLogs
-}
-
-func expandLoggingInfoBrokerLogsFirehose(l []interface{}) *kafka.Firehose {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	firehose := &kafka.Firehose{
-		Enabled:        aws.Bool(m["enabled"].(bool)),
-		DeliveryStream: aws.String(m["delivery_stream"].(string)),
-	}
-
-	return firehose
-}
-
-func expandLoggingInfoBrokerLogsS3(l []interface{}) *kafka.S3 {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	s3 := &kafka.S3{
-		Enabled: aws.Bool(m["enabled"].(bool)),
-		Bucket:  aws.String(m["bucket"].(string)),
-		Prefix:  aws.String(m["prefix"].(string)),
-	}
-
-	return s3
 }
 
 func flattenBrokerNodeGroupInfo(b *kafka.BrokerNodeGroupInfo) []map[string]interface{} {
@@ -1266,4 +1022,308 @@ func flattenLoggingInfoBrokerLogsS3(e *kafka.S3) []map[string]interface{} {
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func expandBrokerNodeGroupInfo(tfMap map[string]interface{}) *kafka.BrokerNodeGroupInfo {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.BrokerNodeGroupInfo{}
+
+	if v, ok := tfMap["az_distribution"].(string); ok && v != "" {
+		apiObject.BrokerAZDistribution = aws.String(v)
+	}
+
+	if v, ok := tfMap["client_subnets"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.ClientSubnets = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["instance_type"].(string); ok && v != "" {
+		apiObject.InstanceType = aws.String(v)
+	}
+
+	if v, ok := tfMap["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SecurityGroups = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["ebs_volume_size"].(int); ok && v != 0 {
+		apiObject.StorageInfo = &kafka.StorageInfo{
+			EbsStorageInfo: &kafka.EBSStorageInfo{
+				VolumeSize: aws.Int64(int64(v)),
+			},
+		}
+	}
+
+	return apiObject
+}
+
+func expandClientAuthentication(tfMap map[string]interface{}) *kafka.ClientAuthentication {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.ClientAuthentication{}
+
+	if v, ok := tfMap["sasl"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Sasl = expandSasl(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["tls"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Tls = expandTls(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["unauthenticated"].(bool); ok {
+		apiObject.Unauthenticated = &kafka.Unauthenticated{
+			Enabled: aws.Bool(v),
+		}
+	}
+
+	return apiObject
+}
+
+func expandSasl(tfMap map[string]interface{}) *kafka.Sasl {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.Sasl{}
+
+	if v, ok := tfMap["iam"].(bool); ok {
+		apiObject.Iam = &kafka.Iam{
+			Enabled: aws.Bool(v),
+		}
+	}
+
+	if v, ok := tfMap["scram"].(bool); ok {
+		apiObject.Scram = &kafka.Scram{
+			Enabled: aws.Bool(v),
+		}
+	}
+
+	return apiObject
+}
+
+func expandTls(tfMap map[string]interface{}) *kafka.Tls {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.Tls{}
+
+	if v, ok := tfMap["certificate_authority_arns"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.CertificateAuthorityArnList = flex.ExpandStringSet(v)
+	}
+
+	return apiObject
+}
+
+func expandConfigurationInfo(tfMap map[string]interface{}) *kafka.ConfigurationInfo {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.ConfigurationInfo{}
+
+	if v, ok := tfMap["arn"].(string); ok && v != "" {
+		apiObject.Arn = aws.String(v)
+	}
+
+	if v, ok := tfMap["revision"].(int); ok && v != 0 {
+		apiObject.Revision = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandEncryptionInfo(tfMap map[string]interface{}) *kafka.EncryptionInfo {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.EncryptionInfo{}
+
+	if v, ok := tfMap["encryption_in_transit"].([]interface{}); ok && len(v) > 0 {
+		apiObject.EncryptionInTransit = expandEncryptionInTransit(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["encryption_at_rest_kms_key_arn"].(string); ok && v != "" {
+		apiObject.EncryptionAtRest = &kafka.EncryptionAtRest{
+			DataVolumeKMSKeyId: aws.String(v),
+		}
+	}
+
+	return apiObject
+}
+
+func expandEncryptionInTransit(tfMap map[string]interface{}) *kafka.EncryptionInTransit {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.EncryptionInTransit{}
+
+	if v, ok := tfMap["client_broker"].(string); ok && v != "" {
+		apiObject.ClientBroker = aws.String(v)
+	}
+
+	if v, ok := tfMap["in_cluster"].(bool); ok {
+		apiObject.InCluster = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func expandLoggingInfo(tfMap map[string]interface{}) *kafka.LoggingInfo {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.LoggingInfo{}
+
+	if v, ok := tfMap["broker_logs"].([]interface{}); ok && len(v) > 0 {
+		apiObject.BrokerLogs = expandBrokerLogs(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandBrokerLogs(tfMap map[string]interface{}) *kafka.BrokerLogs {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.BrokerLogs{}
+
+	if v, ok := tfMap["broker_logs"].([]interface{}); ok && len(v) > 0 {
+		apiObject.CloudWatchLogs = expandCloudWatchLogs(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["firehose"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Firehose = expandFirehose(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
+		apiObject.S3 = expandS3(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandCloudWatchLogs(tfMap map[string]interface{}) *kafka.CloudWatchLogs {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.CloudWatchLogs{}
+
+	if v, ok := tfMap["enabled"].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["log_group"].(string); ok && v != "" {
+		apiObject.LogGroup = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandFirehose(tfMap map[string]interface{}) *kafka.Firehose {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.Firehose{}
+
+	if v, ok := tfMap["delivery_stream"].(string); ok && v != "" {
+		apiObject.DeliveryStream = aws.String(v)
+	}
+
+	if v, ok := tfMap["enabled"].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func expandS3(tfMap map[string]interface{}) *kafka.S3 {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.S3{}
+
+	if v, ok := tfMap["bucket"].(string); ok && v != "" {
+		apiObject.Bucket = aws.String(v)
+	}
+
+	if v, ok := tfMap["enabled"].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+		apiObject.Prefix = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandOpenMonitoringInfo(tfMap map[string]interface{}) *kafka.OpenMonitoringInfo {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.OpenMonitoringInfo{}
+
+	if v, ok := tfMap["prometheus"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Prometheus = expandPrometheusInfo(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandPrometheusInfo(tfMap map[string]interface{}) *kafka.PrometheusInfo {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.PrometheusInfo{}
+
+	if v, ok := tfMap["jmx_exporter"].([]interface{}); ok && len(v) > 0 {
+		apiObject.JmxExporter = expandJmxExporterInfo(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["node_exporter"].([]interface{}); ok && len(v) > 0 {
+		apiObject.NodeExporter = expandNodeExporterInfo(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandJmxExporterInfo(tfMap map[string]interface{}) *kafka.JmxExporterInfo {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.JmxExporterInfo{}
+
+	if v, ok := tfMap["enabled_in_broker"].(bool); ok {
+		apiObject.EnabledInBroker = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func expandNodeExporterInfo(tfMap map[string]interface{}) *kafka.NodeExporterInfo {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.NodeExporterInfo{}
+
+	if v, ok := tfMap["enabled_in_broker"].(bool); ok {
+		apiObject.EnabledInBroker = aws.Bool(v)
+	}
+
+	return apiObject
 }

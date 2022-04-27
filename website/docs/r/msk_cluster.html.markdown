@@ -201,8 +201,7 @@ The following arguments are supported:
 
 #### client_authentication tls Argument Reference
 
-* `certificate_authority_arns` - (Optional) List of ACM Certificate Authority Amazon Resource Names (ARNs) if set the enabled attribute must be set to `true`.
-* `enabled` - (Optional) Enables TLS authentication option. If set to `true` then `certificate_authority_arns` must contain at least one ARN. Defaults to `false`.
+* `certificate_authority_arns` - (Optional) List of ACM Certificate Authority Amazon Resource Names (ARNs).
 
 ### configuration_info Argument Reference
 
