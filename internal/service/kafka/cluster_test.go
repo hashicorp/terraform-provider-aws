@@ -201,7 +201,10 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_scram(t *testing.T) {
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "true"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "false"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", mskClusterBoostrapBrokersSaslScramRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
@@ -223,7 +226,10 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_scram(t *testing.T) {
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "false"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "false"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
@@ -260,6 +266,9 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_iam(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "true"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "false"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "false"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", mskClusterBoostrapBrokersSaslIamRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
@@ -282,6 +291,9 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_iam(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "false"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "false"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "false"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
@@ -327,9 +339,12 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_certificateAuthorityARNs(t *tes
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.*", acmCAResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "false"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
 				),
 			},
 			{
@@ -353,10 +368,9 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_certificateAuthorityARNs(t *tes
 }
 
 func TestAccKafkaCluster_Info_revision(t *testing.T) {
-
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	configurationResourceName := "aws_msk_configuration.test"
+	configurationResourceName := "aws_msk_configuration.test1"
 	configurationResourceName2 := "aws_msk_configuration.test2"
 	resourceName := "aws_msk_cluster.test"
 
@@ -1170,7 +1184,7 @@ resource "aws_msk_cluster" "test" {
 
 func testAccClusterConfigurationInfoRevision1Config(rName string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_configuration" "test" {
+resource "aws_msk_configuration" "test1" {
   kafka_versions = ["2.7.1"]
   name           = "%[1]s-1"
 
@@ -1192,8 +1206,8 @@ resource "aws_msk_cluster" "test" {
   }
 
   configuration_info {
-    arn      = aws_msk_configuration.test.arn
-    revision = aws_msk_configuration.test.latest_revision
+    arn      = aws_msk_configuration.test1.arn
+    revision = aws_msk_configuration.test1.latest_revision
   }
 }
 `, rName))
@@ -1201,7 +1215,7 @@ resource "aws_msk_cluster" "test" {
 
 func testAccClusterConfigurationInfoRevision2Config(rName string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_configuration" "test" {
+resource "aws_msk_configuration" "test1" {
   kafka_versions = ["2.7.1"]
   name           = "%[1]s-1"
 
