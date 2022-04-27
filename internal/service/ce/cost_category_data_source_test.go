@@ -1,7 +1,6 @@
 package ce_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/costexplorer"
@@ -22,9 +21,9 @@ func TestAccCECostCategoryDataSource_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCECostCategoryDataSourceConfig(rName),
+				Config: testAccCostCategoryDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCECostCategoryExists(resourceName, &output),
+					testAccCheckCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cost_category_arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "rule_version", resourceName, "rule_version"),
@@ -35,8 +34,10 @@ func TestAccCECostCategoryDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCECostCategoryDataSourceConfig(name string) string {
-	return fmt.Sprintf(testAccCECostCategoryConfig(name) + `
+func testAccCostCategoryDataSourceConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccCostCategoryConfig(rName),
+		`
 data "aws_ce_cost_category" "test" {
   cost_category_arn = aws_ce_cost_category.test.arn
 }

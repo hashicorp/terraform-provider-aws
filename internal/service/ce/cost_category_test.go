@@ -1,6 +1,7 @@
 package ce_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfce "github.com/hashicorp/terraform-provider-aws/internal/service/ce"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCECostCategory_basic(t *testing.T) {
@@ -23,13 +25,13 @@ func TestAccCECostCategory_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCECostCategoryDestroy,
+		CheckDestroy:      testAccCheckCostCategoryDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCECostCategoryConfig(rName),
+				Config: testAccCostCategoryConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCECostCategoryExists(resourceName, &output),
+					testAccCheckCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -50,20 +52,20 @@ func TestAccCECostCategory_complete(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCECostCategoryDestroy,
+		CheckDestroy:      testAccCheckCostCategoryDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCECostCategoryConfig(rName),
+				Config: testAccCostCategoryConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCECostCategoryExists(resourceName, &output),
+					testAccCheckCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
-				Config: testAccCECostCategoryOperandAndConfig(rName),
+				Config: testAccCostCategoryOperandAndConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCECostCategoryExists(resourceName, &output),
+					testAccCheckCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -84,20 +86,20 @@ func TestAccCECostCategory_splitCharge(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCECostCategoryDestroy,
+		CheckDestroy:      testAccCheckCostCategoryDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCECostCategorySplitChargesConfig(rName, "PROPORTIONAL"),
+				Config: testAccCostCategorySplitChargesConfig(rName, "PROPORTIONAL"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCECostCategoryExists(resourceName, &output),
+					testAccCheckCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
-				Config: testAccCECostCategorySplitChargesConfig(rName, "EVEN"),
+				Config: testAccCostCategorySplitChargesConfig(rName, "EVEN"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCECostCategoryExists(resourceName, &output),
+					testAccCheckCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -118,14 +120,14 @@ func TestAccCECostCategory_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCECostCategoryDestroy,
+		CheckDestroy:      testAccCheckCostCategoryDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCECostCategoryConfig(rName),
+				Config: testAccCostCategoryConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCECostCategoryExists(resourceName, &output),
-					acctest.CheckResourceDisappears(acctest.Provider, tfce.ResourceCECostCategory(), resourceName),
+					testAccCheckCostCategoryExists(resourceName, &output),
+					acctest.CheckResourceDisappears(acctest.Provider, tfce.ResourceCostCategory(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -133,22 +135,22 @@ func TestAccCECostCategory_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckCECostCategoryExists(resourceName string, output *costexplorer.CostCategory) resource.TestCheckFunc {
+func testAccCheckCostCategoryExists(resourceName string, output *costexplorer.CostCategory) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
+			return names.Error(names.CE, names.ErrActionCheckingExistence, tfce.ResCostCategory, resourceName, errors.New("not found in state"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn
 		resp, err := conn.DescribeCostCategoryDefinition(&costexplorer.DescribeCostCategoryDefinitionInput{CostCategoryArn: aws.String(rs.Primary.ID)})
 
 		if err != nil {
-			return fmt.Errorf("problem checking for CE Cost Category  existence: %w", err)
+			return names.Error(names.CE, names.ErrActionCheckingExistence, tfce.ResCostCategory, rs.Primary.ID, err)
 		}
 
 		if resp == nil {
-			return fmt.Errorf("CE Cost Category  %q does not exist", rs.Primary.ID)
+			return names.Error(names.CE, names.ErrActionCheckingExistence, tfce.ResCostCategory, rs.Primary.ID, errors.New("not found"))
 		}
 
 		*output = *resp.CostCategory
@@ -157,7 +159,7 @@ func testAccCheckCECostCategoryExists(resourceName string, output *costexplorer.
 	}
 }
 
-func testAccCheckCECostCategoryDestroy(s *terraform.State) error {
+func testAccCheckCostCategoryDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -172,11 +174,11 @@ func testAccCheckCECostCategoryDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("problem while checking CE Cost Category  was destroyed: %w", err)
+			return names.Error(names.CE, names.ErrActionCheckingDestroyed, tfce.ResCostCategory, rs.Primary.ID, err)
 		}
 
 		if resp != nil && resp.CostCategory != nil {
-			return fmt.Errorf("CE Cost Category  %q still exists", rs.Primary.ID)
+			return names.Error(names.CE, names.ErrActionCheckingDestroyed, tfce.ResCostCategory, rs.Primary.ID, errors.New("still exists"))
 		}
 	}
 
@@ -184,7 +186,7 @@ func testAccCheckCECostCategoryDestroy(s *terraform.State) error {
 
 }
 
-func testAccCECostCategoryConfig(name string) string {
+func testAccCostCategoryConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_cost_category" "test" {
   name         = %[1]q
@@ -223,10 +225,10 @@ resource "aws_ce_cost_category" "test" {
     type = "REGULAR"
   }
 }
-`, name)
+`, rName)
 }
 
-func testAccCECostCategoryOperandAndConfig(name string) string {
+func testAccCostCategoryOperandAndConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_cost_category" "test" {
   name         = %[1]q
@@ -259,16 +261,18 @@ resource "aws_ce_cost_category" "test" {
     type = "REGULAR"
   }
 }
-`, name)
+`, rName)
 }
 
-func testAccCECostCategorySplitChargesConfig(name, method string) string {
+func testAccCostCategorySplitChargesConfig(rName, method string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_cost_category" "test1" {
   name         = "%[1]s-1"
   rule_version = "CostCategoryExpression.v1"
+
   rule {
     value = "production"
+
     rule {
       dimension {
         key           = "LINKED_ACCOUNT_NAME"
@@ -276,10 +280,13 @@ resource "aws_ce_cost_category" "test1" {
         match_options = ["ENDS_WITH"]
       }
     }
+
     type = "REGULAR"
   }
+
   rule {
     value = "staging"
+
     rule {
       dimension {
         key           = "LINKED_ACCOUNT_NAME"
@@ -287,10 +294,13 @@ resource "aws_ce_cost_category" "test1" {
         match_options = ["ENDS_WITH"]
       }
     }
+
     type = "REGULAR"
   }
+
   rule {
     value = "testing"
+
     rule {
       dimension {
         key           = "LINKED_ACCOUNT_NAME"
@@ -298,6 +308,7 @@ resource "aws_ce_cost_category" "test1" {
         match_options = ["ENDS_WITH"]
       }
     }
+
     type = "REGULAR"
   }
 }
@@ -305,8 +316,10 @@ resource "aws_ce_cost_category" "test1" {
 resource "aws_ce_cost_category" "test2" {
   name         = "%[1]s-2"
   rule_version = "CostCategoryExpression.v1"
+
   rule {
     value = "production"
+
     rule {
       and {
         dimension {
@@ -315,6 +328,7 @@ resource "aws_ce_cost_category" "test2" {
           match_options = ["ENDS_WITH"]
         }
       }
+
       and {
         dimension {
           key           = "LINKED_ACCOUNT_NAME"
@@ -322,6 +336,7 @@ resource "aws_ce_cost_category" "test2" {
           match_options = ["ENDS_WITH"]
         }
       }
+
       and {
         dimension {
           key           = "LINKED_ACCOUNT_NAME"
@@ -330,6 +345,7 @@ resource "aws_ce_cost_category" "test2" {
         }
       }
     }
+
     type = "REGULAR"
   }
 }
@@ -337,6 +353,7 @@ resource "aws_ce_cost_category" "test2" {
 resource "aws_ce_cost_category" "test" {
   name         = %[1]q
   rule_version = "CostCategoryExpression.v1"
+
   rule {
     value = "production"
     rule {
@@ -346,13 +363,15 @@ resource "aws_ce_cost_category" "test" {
         match_options = ["ENDS_WITH"]
       }
     }
+
     type = "REGULAR"
   }
+
   split_charge_rule {
     method  = %[2]q
     source  = aws_ce_cost_category.test1.id
     targets = [aws_ce_cost_category.test2.id]
   }
 }
-`, name, method)
+`, rName, method)
 }

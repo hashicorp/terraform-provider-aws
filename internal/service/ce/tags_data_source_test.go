@@ -29,9 +29,9 @@ func TestAccCETagsDataSource_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCETagsSourceConfig(rName, startDate, endDate),
+				Config: testAccTagsSourceConfig(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCECostCategoryExists(resourceName, &output),
+					testAccCheckCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.#", "4"),
 				),
 			},
@@ -57,9 +57,9 @@ func TestAccCETagsDataSource_filter(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCETagsSourceFilterConfig(rName, startDate, endDate),
+				Config: testAccTagsSourceFilterConfig(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCECostCategoryExists(resourceName, &output),
+					testAccCheckCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.#", "3"),
 				),
 			},
@@ -67,19 +67,23 @@ func TestAccCETagsDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccCETagsSourceConfig(name, start, end string) string {
-	return fmt.Sprintf(testAccCECostCategoryConfig(name)+`
+func testAccTagsSourceConfig(rName, start, end string) string {
+	return acctest.ConfigCompose(
+		testAccCostCategoryConfig(rName),
+		fmt.Sprintf(`
 data "aws_ce_tags" "test" {
   time_period {
     start = %[1]q
     end   = %[2]q
   }
 }
-`, start, end)
+`, start, end))
 }
 
-func testAccCETagsSourceFilterConfig(name, start, end string) string {
-	return fmt.Sprintf(testAccCECostCategoryConfig(name)+`
+func testAccTagsSourceFilterConfig(rName, start, end string) string {
+	return acctest.ConfigCompose(
+		testAccCostCategoryConfig(rName),
+		fmt.Sprintf(`
 data "aws_region" "current" {}
 
 data "aws_ce_tags" "test" {
@@ -95,5 +99,5 @@ data "aws_ce_tags" "test" {
     }
   }
 }
-`, start, end)
+`, start, end))
 }

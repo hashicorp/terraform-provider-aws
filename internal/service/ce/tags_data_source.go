@@ -10,11 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceCETags() *schema.Resource {
+func DataSourceTags() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceCETagsRead,
+		ReadContext: dataSourceTagsRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -23,7 +24,7 @@ func DataSourceCETags() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
-				Elem:     schemaCECostCategoryRule(),
+				Elem:     schemaCostCategoryRule(),
 			},
 			"search_string": {
 				Type:          schema.TypeString,
@@ -85,15 +86,15 @@ func DataSourceCETags() *schema.Resource {
 	}
 }
 
-func dataSourceCETagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn
 
 	input := &costexplorer.GetTagsInput{
-		TimePeriod: expandCETagsTimePeriod(d.Get("time_period").([]interface{})[0].(map[string]interface{})),
+		TimePeriod: expandTagsTimePeriod(d.Get("time_period").([]interface{})[0].(map[string]interface{})),
 	}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filter = expandCECostExpressions(v.([]interface{}))[0]
+		input.Filter = expandCostExpressions(v.([]interface{}))[0]
 	}
 
 	if v, ok := d.GetOk("search_string"); ok {
@@ -101,7 +102,7 @@ func dataSourceCETagsRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("sort_by"); ok {
-		input.SortBy = expandCETagsSortBys(v.([]interface{}))
+		input.SortBy = expandTagsSortBys(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("tag_key"); ok {
@@ -111,7 +112,7 @@ func dataSourceCETagsRead(ctx context.Context, d *schema.ResourceData, meta inte
 	resp, err := conn.GetTagsWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error reading CE Tags (%s): %s", d.Id(), err)
+		return names.DiagError(names.CE, names.ErrActionReading, ResTags, d.Id(), err)
 	}
 
 	d.Set("tags", flex.FlattenStringList(resp.Tags))
@@ -121,7 +122,7 @@ func dataSourceCETagsRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return nil
 }
 
-func expandCETagsSortBys(tfList []interface{}) []*costexplorer.SortDefinition {
+func expandTagsSortBys(tfList []interface{}) []*costexplorer.SortDefinition {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -135,7 +136,7 @@ func expandCETagsSortBys(tfList []interface{}) []*costexplorer.SortDefinition {
 			continue
 		}
 
-		apiObject := expandCETagsSortBy(tfMap)
+		apiObject := expandTagsSortBy(tfMap)
 
 		apiObjects = append(apiObjects, apiObject)
 	}
@@ -143,7 +144,7 @@ func expandCETagsSortBys(tfList []interface{}) []*costexplorer.SortDefinition {
 	return apiObjects
 }
 
-func expandCETagsSortBy(tfMap map[string]interface{}) *costexplorer.SortDefinition {
+func expandTagsSortBy(tfMap map[string]interface{}) *costexplorer.SortDefinition {
 	if tfMap == nil {
 		return nil
 	}
@@ -157,7 +158,7 @@ func expandCETagsSortBy(tfMap map[string]interface{}) *costexplorer.SortDefiniti
 	return apiObject
 }
 
-func expandCETagsTimePeriod(tfMap map[string]interface{}) *costexplorer.DateInterval {
+func expandTagsTimePeriod(tfMap map[string]interface{}) *costexplorer.DateInterval {
 	if tfMap == nil {
 		return nil
 	}

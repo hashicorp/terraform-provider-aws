@@ -9,11 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceCECostCategory() *schema.Resource {
+func DataSourceCostCategory() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceCECostCategoryRead,
+		ReadContext: dataSourceCostCategoryDefinitionRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -58,7 +59,7 @@ func DataSourceCECostCategory() *schema.Resource {
 						"rule": {
 							Type:     schema.TypeList,
 							Computed: true,
-							Elem:     schemaCECostCategoryRuleComputed(),
+							Elem:     schemaCostCategoryRuleComputed(),
 						},
 						"type": {
 							Type:     schema.TypeString,
@@ -127,13 +128,13 @@ func DataSourceCECostCategory() *schema.Resource {
 	}
 }
 
-func schemaCECostCategoryRuleComputed() *schema.Resource {
+func schemaCostCategoryRuleComputed() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"and": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				Elem:     schemaCECostCategoryRuleExpressionComputed(),
+				Elem:     schemaCostCategoryRuleExpressionComputed(),
 			},
 			"cost_category": {
 				Type:     schema.TypeList,
@@ -194,12 +195,12 @@ func schemaCECostCategoryRuleComputed() *schema.Resource {
 			"not": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem:     schemaCECostCategoryRuleExpressionComputed(),
+				Elem:     schemaCostCategoryRuleExpressionComputed(),
 			},
 			"or": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				Elem:     schemaCECostCategoryRuleExpressionComputed(),
+				Elem:     schemaCostCategoryRuleExpressionComputed(),
 			},
 			"tags": {
 				Type:     schema.TypeList,
@@ -233,7 +234,7 @@ func schemaCECostCategoryRuleComputed() *schema.Resource {
 	}
 }
 
-func schemaCECostCategoryRuleExpressionComputed() *schema.Resource {
+func schemaCostCategoryRuleExpressionComputed() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"cost_category": {
@@ -323,24 +324,24 @@ func schemaCECostCategoryRuleExpressionComputed() *schema.Resource {
 	}
 }
 
-func dataSourceCECostCategoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceCostCategoryDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn
 
 	resp, err := conn.DescribeCostCategoryDefinitionWithContext(ctx, &costexplorer.DescribeCostCategoryDefinitionInput{CostCategoryArn: aws.String(d.Get("cost_category_arn").(string))})
 
 	if err != nil {
-		return diag.Errorf("error reading CE Cost Category Definition (%s): %s", d.Id(), err)
+		return names.DiagError(names.CE, names.ErrActionReading, ResCostCategory, d.Id(), err)
 	}
 
 	d.Set("effective_end", resp.CostCategory.EffectiveEnd)
 	d.Set("effective_start", resp.CostCategory.EffectiveStart)
 	d.Set("name", resp.CostCategory.Name)
-	if err = d.Set("rule", flattenCECostCategoryRules(resp.CostCategory.Rules)); err != nil {
-		return diag.Errorf("error setting `%s` for CE Cost Category Definition (%s): %s", "rule", d.Id(), err)
+	if err = d.Set("rule", flattenCostCategoryRules(resp.CostCategory.Rules)); err != nil {
+		return names.DiagError(names.CE, "setting rule", ResCostCategory, d.Id(), err)
 	}
 	d.Set("rule_version", resp.CostCategory.RuleVersion)
-	if err = d.Set("split_charge_rule", flattenCECostCategorySplitChargeRules(resp.CostCategory.SplitChargeRules)); err != nil {
-		return diag.Errorf("error setting `%s` for CE Cost Category Definition (%s): %s", "split_charge_rule", d.Id(), err)
+	if err = d.Set("split_charge_rule", flattenCostCategorySplitChargeRules(resp.CostCategory.SplitChargeRules)); err != nil {
+		return names.DiagError(names.CE, "setting split_charge_rule", ResCostCategory, d.Id(), err)
 	}
 
 	d.SetId(aws.StringValue(resp.CostCategory.CostCategoryArn))

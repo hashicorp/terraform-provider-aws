@@ -445,8 +445,8 @@ func Provider() *schema.Provider {
 			"aws_batch_job_queue":           batch.DataSourceJobQueue(),
 			"aws_batch_scheduling_policy":   batch.DataSourceSchedulingPolicy(),
 
-			"aws_ce_cost_category": ce.DataSourceCECostCategory(),
-			"aws_ce_tags":          ce.DataSourceCETags(),
+			"aws_ce_cost_category": ce.DataSourceCostCategory(),
+			"aws_ce_tags":          ce.DataSourceTags(),
 
 			"aws_cloudcontrolapi_resource": cloudcontrol.DataSourceResource(),
 
@@ -1011,7 +1011,7 @@ func Provider() *schema.Provider {
 			"aws_budgets_budget":        budgets.ResourceBudget(),
 			"aws_budgets_budget_action": budgets.ResourceBudgetAction(),
 
-			"aws_ce_cost_category": ce.ResourceCECostCategory(),
+			"aws_ce_cost_category": ce.ResourceCostCategory(),
 
 			"aws_chime_voice_connector":                         chime.ResourceVoiceConnector(),
 			"aws_chime_voice_connector_group":                   chime.ResourceVoiceConnectorGroup(),
