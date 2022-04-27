@@ -26,8 +26,9 @@ func ResourcePlaybackConfiguration() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"ad_decision_server_url": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 25000),
 			},
 			"avail_suppression_mode": {
 				Type:         schema.TypeString,
