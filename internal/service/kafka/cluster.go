@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"context"
-	"errors"
 	"log"
 	"time"
 
@@ -41,7 +40,6 @@ func ResourceCluster() *schema.Resource {
 			customdiff.ForceNewIfChange("kafka_version", func(_ context.Context, old, new, meta interface{}) bool {
 				return new.(string) < old.(string) // TODO: Use gversion; "10" < "2"
 			}),
-			customizeDiffValidateClientAuthentication,
 			verify.SetTagsDiff,
 		),
 
@@ -110,7 +108,7 @@ func ResourceCluster() *schema.Resource {
 			},
 			"client_authentication": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -764,51 +762,6 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("waiting for MSK Cluster (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
-}
-
-func customizeDiffValidateClientAuthentication(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	iam := diff.Get("client_authentication.0.sasl.0.iam").(bool)
-	scram := diff.Get("client_authentication.0.sasl.0.scram").(bool)
-	mtls := diff.Get("client_authentication.0.tls.0.enabled").(bool)
-	unauth := diff.Get("client_authentication.0.unauthenticated").(bool)
-
-	// at least one authentication option should be enabled
-	if !iam && !scram && !mtls && !unauth {
-		return errors.New(`at least one client-authentication option must be enabled`)
-	}
-
-	arns := diff.Get("client_authentication.0.tls.0.certificate_authority_arns").(*schema.Set)
-
-	// mutual tls requires certificate authority arns to be set
-	if mtls {
-		if arns == nil || arns.Len() == 0 {
-			return errors.New(`certificate authority ARNs must be specified to enable client authentication using TLS`)
-		}
-	}
-
-	// tls must be enabled if certificate arns are provided
-	if !mtls && arns != nil && arns.Len() > 0 {
-		return errors.New(`certificate authority ARNs must be empty to disable client authentication using TLS`)
-	}
-
-	cbe := diff.Get("encryption_info.0.encryption_in_transit.0.client_broker").(string)
-	ice := diff.Get("encryption_info.0.encryption_in_transit.0.in_cluster").(bool)
-
-	// if plaintext authentication is enabled then unauthenticated access must be enabled
-	if cbe == kafka.ClientBrokerTlsPlaintext && !unauth {
-		return errors.New(`unauthenticated access must be set to use PLAINTEXT client-broker encryption options`)
-	}
-
-	// scram/iam & mtls all require in-cluster encryption and TLS encryption to be enabled
-	if iam || scram || mtls {
-		if !ice {
-			return errors.New(`sasl/scram sasl/iam and mTLS authentication requires in-cluster encryption to be enabled`)
-		}
-		if cbe != kafka.ClientBrokerTls && cbe != kafka.ClientBrokerTlsPlaintext {
-			return errors.New(`sasl/scram sasl/iam and mTLS requires TLS or TLS_PLAINTEXT client-broker encryption options`)
-		}
-	}
 	return nil
 }
 
