@@ -199,7 +199,8 @@ func Provider() *schema.Provider {
 				ConflictsWith: []string{"forbidden_account_ids"},
 				Set:           schema.HashString,
 			},
-			"assume_role": assumeRoleSchema(),
+			"assume_role":                   assumeRoleSchema(),
+			"assume_role_with_web_identity": assumeRoleWithWebIdentitySchema(),
 			"custom_ca_bundle": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -2067,6 +2068,11 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q)", config.AssumeRole.RoleARN, config.AssumeRole.SessionName, config.AssumeRole.ExternalID)
 	}
 
+	if l, ok := d.Get("assume_role_with_web_identity").([]interface{}); ok && len(l) > 0 && l[0] != nil {
+		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(l[0].(map[string]interface{}))
+		log.Printf("[INFO] assume_role_with_web_identity configuration set: (ARN: %q, SessionID: %q)", config.AssumeRoleWithWebIdentity.RoleARN, config.AssumeRoleWithWebIdentity.SessionName)
+	}
+
 	endpointsSet := d.Get("endpoints").(*schema.Set)
 	if err := expandEndpoints(endpointsSet.List(), config.Endpoints); err != nil {
 		return nil, diag.FromErr(err)
@@ -2106,13 +2112,13 @@ func assumeRoleSchema() *schema.Schema {
 					Type:          schema.TypeString,
 					Optional:      true,
 					Description:   "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
-					ValidateFunc:  ValidAssumeRoleDuration,
+					ValidateFunc:  validAssumeRoleDuration,
 					ConflictsWith: []string{"assume_role.0.duration_seconds"},
 				},
 				"duration_seconds": {
 					Type:          schema.TypeInt,
 					Optional:      true,
-					Deprecated:    "Use assume_role.0.duration instead",
+					Deprecated:    "Use assume_role.duration instead",
 					Description:   "The duration, in seconds, of the role session.",
 					ValidateFunc:  validation.IntBetween(900, 43200),
 					ConflictsWith: []string{"assume_role.0.duration"},
@@ -2144,17 +2150,14 @@ func assumeRoleSchema() *schema.Schema {
 				"role_arn": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					Description:  "Amazon Resource Name of an IAM Role to assume prior to making API calls.",
+					Description:  "Amazon Resource Name (ARN) of an IAM Role to assume prior to making API calls.",
 					ValidateFunc: verify.ValidARN,
 				},
 				"session_name": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "An identifier for the assumed role session.",
-					ValidateFunc: validation.All(
-						validation.StringLenBetween(2, 64),
-						validation.StringMatch(regexp.MustCompile(`[\w+=,.@\-]*`), ""),
-					),
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "An identifier for the assumed role session.",
+					ValidateFunc: validAssumeRoleSessionName,
 				},
 				"tags": {
 					Type:        schema.TypeMap,
@@ -2167,6 +2170,62 @@ func assumeRoleSchema() *schema.Schema {
 					Optional:    true,
 					Description: "Assume role session tag keys to pass to any subsequent sessions.",
 					Elem:        &schema.Schema{Type: schema.TypeString},
+				},
+			},
+		},
+	}
+}
+
+func assumeRoleWithWebIdentitySchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"duration": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
+					ValidateFunc: validAssumeRoleDuration,
+				},
+				"policy": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.",
+					ValidateFunc: validation.StringIsJSON,
+				},
+				"policy_arns": {
+					Type:        schema.TypeSet,
+					Optional:    true,
+					Description: "Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.",
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				"role_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Amazon Resource Name (ARN) of an IAM Role to assume prior to making API calls.",
+					ValidateFunc: verify.ValidARN,
+				},
+				"session_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "An identifier for the assumed role session.",
+					ValidateFunc: validAssumeRoleSessionName,
+				},
+				"web_identity_token": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(4, 20000),
+					ExactlyOneOf: []string{"assume_role_with_web_identity.0.web_identity_token", "assume_role_with_web_identity.0.web_identity_token_file"},
+				},
+				"web_identity_token_file": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{"assume_role_with_web_identity.0.web_identity_token", "assume_role_with_web_identity.0.web_identity_token_file"},
 				},
 			},
 		},
@@ -2258,6 +2317,53 @@ func expandAssumeRole(m map[string]interface{}) *awsbase.AssumeRole {
 
 			assumeRole.TransitiveTagKeys = append(assumeRole.TransitiveTagKeys, transitiveTagKey)
 		}
+	}
+
+	return &assumeRole
+}
+
+func expandAssumeRoleWithWebIdentity(m map[string]interface{}) *awsbase.AssumeRoleWithWebIdentity {
+	assumeRole := awsbase.AssumeRoleWithWebIdentity{}
+
+	if v, ok := m["duration"].(string); ok && v != "" {
+		duration, _ := time.ParseDuration(v)
+		assumeRole.Duration = duration
+	}
+
+	if v, ok := m["duration_seconds"].(int); ok && v != 0 {
+		assumeRole.Duration = time.Duration(v) * time.Second
+	}
+
+	if v, ok := m["policy"].(string); ok && v != "" {
+		assumeRole.Policy = v
+	}
+
+	if policyARNSet, ok := m["policy_arns"].(*schema.Set); ok && policyARNSet.Len() > 0 {
+		for _, policyARNRaw := range policyARNSet.List() {
+			policyARN, ok := policyARNRaw.(string)
+
+			if !ok {
+				continue
+			}
+
+			assumeRole.PolicyARNs = append(assumeRole.PolicyARNs, policyARN)
+		}
+	}
+
+	if v, ok := m["role_arn"].(string); ok && v != "" {
+		assumeRole.RoleARN = v
+	}
+
+	if v, ok := m["session_name"].(string); ok && v != "" {
+		assumeRole.SessionName = v
+	}
+
+	if v, ok := m["web_identity_token"].(string); ok && v != "" {
+		assumeRole.WebIdentityToken = v
+	}
+
+	if v, ok := m["web_identity_token_file"].(string); ok && v != "" {
+		assumeRole.WebIdentityTokenFile = v
 	}
 
 	return &assumeRole

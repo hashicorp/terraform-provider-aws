@@ -46,6 +46,7 @@ type Config struct {
 	AccessKey                      string
 	AllowedAccountIds              []string
 	AssumeRole                     *awsbase.AssumeRole
+	AssumeRoleWithWebIdentity      *awsbase.AssumeRoleWithWebIdentity
 	CustomCABundle                 string
 	DefaultTagsConfig              *tftags.DefaultConfig
 	EC2MetadataServiceEnableState  imds.ClientEnableState
