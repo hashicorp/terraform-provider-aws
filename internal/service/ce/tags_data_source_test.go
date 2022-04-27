@@ -116,8 +116,8 @@ resource "aws_ce_cost_category" "test" {
 
 data "aws_ce_tags" "test" {
   time_period {
-    start = %[1]q
-    end   = %[2]q
+    start = %[2]q
+    end   = %[3]q
   }
   filter {
     dimension {
@@ -128,5 +128,5 @@ data "aws_ce_tags" "test" {
   }
   tag_key = %[1]q
 }
-`, start, end)
+`, rName, start, end)
 }
