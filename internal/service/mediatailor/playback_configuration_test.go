@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -76,6 +77,120 @@ func TestAccPlaybackConfigurationResource_recreate(t *testing.T) {
 	})
 }
 
+func TestAccPlaybackConfigurationResource_validateAdDecisionServerURL(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, mediatailor.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPlaybackConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccResourceConfig_AdDecisionServerURL(rName, "https://www.example.com/"+strings.Repeat("abcde12345", 2500)), // generate a string longer than 25000 characters
+				ExpectError: regexp.MustCompile(regexp.QuoteMeta("expected length of ad_decision_server_url to be in the range (1 - 25000)")),
+			},
+		},
+	})
+}
+
+func TestAccPlaybackConfigurationResource_validateAvailSuppressionMode(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, mediatailor.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPlaybackConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccResourceConfig_AvailSuppression(rName, "ON", "20:20:20"),
+				ExpectError: regexp.MustCompile(regexp.QuoteMeta("expected avail_suppression_mode to be one of [OFF BEHIND_LIVE_EDGE]")),
+			},
+			{
+				Config:      testAccResourceConfig_AvailSuppression(rName, "OFF", "202020"),
+				ExpectError: regexp.MustCompile(regexp.QuoteMeta("invalid value for avail_suppression_value (must be valid HH:MM:SS string)")),
+			},
+		},
+	})
+}
+
+func TestAccPlaybackConfigurationResource_validateDashConfiguration(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, mediatailor.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPlaybackConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccResourceConfig_DashConfiguration(rName, "ENABLED", "EMT_DEFAULT"),
+				ExpectError: regexp.MustCompile(regexp.QuoteMeta("expected dash_mpd_location to be one of [DISABLED EMT_DEFAULT]")),
+			},
+			{
+				Config:      testAccResourceConfig_DashConfiguration(rName, "DISABLED", "UNEXPECTED"),
+				ExpectError: regexp.MustCompile(regexp.QuoteMeta("expected dash_origin_manifest_type to be one of [SINGLE_PERIOD MULTI_PERIOD]")),
+			},
+		},
+	})
+}
+
+func TestAccPlaybackConfigurationResource_validateLivePreRollConfiguration(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, mediatailor.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPlaybackConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccResourceConfig_LivePreRollConfiguration(rName, "https://www.example.com/"+strings.Repeat("abcde12345", 2500), 1),
+				ExpectError: regexp.MustCompile(regexp.QuoteMeta("expected length of live_pre_roll_configuration.0.ad_decision_server_url to be in the range (1 - 25000)")),
+			},
+			{
+				Config:      testAccResourceConfig_LivePreRollConfiguration(rName, "https://www.example.com/ads", 0),
+				ExpectError: regexp.MustCompile(regexp.QuoteMeta("expected live_pre_roll_configuration.0.max_duration_seconds to be at least (1)")),
+			},
+		},
+	})
+}
+
+func TestAccPlaybackConfigurationResource_validatePersonalizationThresholdSeconds(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, mediatailor.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPlaybackConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccResourceConfig_PersonalizationThresholdSeconds(rName, 0),
+				ExpectError: regexp.MustCompile(regexp.QuoteMeta("expected personalization_threshold_seconds to be at least (1)")),
+			},
+		},
+	})
+}
+
+func TestAccPlaybackConfigurationResource_validateVideoContentSourceURL(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, mediatailor.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPlaybackConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccResourceConfig_VideoContentSourceURL(rName, "https://www.example.com/"+strings.Repeat("abcde12345", 52)), // generate a string longer than 512 characters
+				ExpectError: regexp.MustCompile(regexp.QuoteMeta("expected length of video_content_source_url to be in the range (1 - 512)")),
+			},
+		},
+	})
+}
+
 func testAccCheckPlaybackConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaTailorConn
 
@@ -113,4 +228,73 @@ resource "aws_media_tailor_playback_configuration" "test"{
   video_content_source_url = "https://www.example.com/source"
 }
 `, rName)
+}
+
+func testAccResourceConfig_AdDecisionServerURL(rName, adDecisionServerURL string) string {
+	return fmt.Sprintf(`
+resource "aws_media_tailor_playback_configuration" "test"{
+  ad_decision_server_url = %[2]q
+  name=%[1]q
+  video_content_source_url = "https://www.example.com/source"
+}
+`, rName, adDecisionServerURL)
+}
+
+func testAccResourceConfig_AvailSuppression(rName, mode, value string) string {
+	return fmt.Sprintf(`
+resource "aws_media_tailor_playback_configuration" "test"{
+  ad_decision_server_url = "https://www.example.com/ads"
+  avail_suppression_mode = %[2]q
+  avail_suppression_value = %[3]q
+  name=%[1]q
+  video_content_source_url = "https://www.example.com/source"
+}
+`, rName, mode, value)
+}
+
+func testAccResourceConfig_DashConfiguration(rName, mpdLocation, originManifestType string) string {
+	return fmt.Sprintf(`
+resource "aws_media_tailor_playback_configuration" "test"{
+  ad_decision_server_url = "https://www.example.com/ads"
+  dash_mpd_location = %[2]q
+  dash_origin_manifest_type = %[3]q
+  name=%[1]q
+  video_content_source_url = "https://www.example.com/source"
+}
+`, rName, mpdLocation, originManifestType)
+}
+
+func testAccResourceConfig_LivePreRollConfiguration(rName, adDecisionServerUrl string, maxDurationSeconds int) string {
+	return fmt.Sprintf(`
+resource "aws_media_tailor_playback_configuration" "test"{
+  ad_decision_server_url = "https://www.example.com/ads"
+  live_pre_roll_configuration {
+    ad_decision_server_url=%[2]q
+	max_duration_seconds=%[3]v
+  }
+  name=%[1]q
+  video_content_source_url = "https://www.example.com/source"
+}
+`, rName, adDecisionServerUrl, maxDurationSeconds)
+}
+
+func testAccResourceConfig_PersonalizationThresholdSeconds(rName string, seconds int) string {
+	return fmt.Sprintf(`
+resource "aws_media_tailor_playback_configuration" "test"{
+  ad_decision_server_url = "https://www.example.com/ads"
+  personalization_threshold_seconds = %[2]v
+  name=%[1]q
+  video_content_source_url = "https://www.example.com/source"
+}
+`, rName, seconds)
+}
+
+func testAccResourceConfig_VideoContentSourceURL(rName, videoContentSourceURL string) string {
+	return fmt.Sprintf(`
+resource "aws_media_tailor_playback_configuration" "test"{
+  ad_decision_server_url = "https://www.example.com/ads"
+  name=%[1]q
+  video_content_source_url = %[2]q
+}
+`, rName, videoContentSourceURL)
 }
