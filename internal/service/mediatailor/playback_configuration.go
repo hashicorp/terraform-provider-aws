@@ -112,9 +112,10 @@ func ResourcePlaybackConfiguration() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(1, 25000),
 						},
 						"max_duration_seconds": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  3600,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      3600,
+							ValidateFunc: validation.IntAtLeast(1),
 						},
 					},
 				},
