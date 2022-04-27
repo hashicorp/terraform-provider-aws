@@ -16,14 +16,17 @@ ENHANCEMENTS:
 * resource/aws_instance: Add `maintenance_options` argument ([#24377](https://github.com/hashicorp/terraform-provider-aws/issues/24377))
 * resource/aws_launch_template: Add `maintenance_options` argument ([#24377](https://github.com/hashicorp/terraform-provider-aws/issues/24377))
 * resource/aws_mq_broker: Make `maintenance_window_start_time` updateable without recreation. ([#24385](https://github.com/hashicorp/terraform-provider-aws/issues/24385))
+* resource/aws_rds_cluster: Add `serverlessv2_scaling_configuration` argument to support [Aurora Serverless v2](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2.html) ([#24363](https://github.com/hashicorp/terraform-provider-aws/issues/24363))
 * resource/aws_spot_fleet_request: Add `terminate_instances_on_delete` argument ([#17268](https://github.com/hashicorp/terraform-provider-aws/issues/17268))
 
 BUG FIXES:
 
 * resource/aws_acm_certificate: Correctly handle SAN entries that match `domain_name` ([#20073](https://github.com/hashicorp/terraform-provider-aws/issues/20073))
+* resource/aws_dms_replication_task: Fix to stop the task before updating, if required ([#24047](https://github.com/hashicorp/terraform-provider-aws/issues/24047))
 * resource/aws_ec2_availability_zone_group: Don't crash if `group_name` is not found ([#24422](https://github.com/hashicorp/terraform-provider-aws/issues/24422))
 * resource/aws_elasticache_cluster: Update regex pattern to target specific Redis V6 versions through the `engine_version` attribute ([#23734](https://github.com/hashicorp/terraform-provider-aws/issues/23734))
 * resource/aws_elasticache_replication_group: Update regex pattern to target specific Redis V6 versions through the `engine_version` attribute ([#23734](https://github.com/hashicorp/terraform-provider-aws/issues/23734))
+* resource/aws_lb: Fix bug causing an error on update if tags unsupported in ISO region ([#24334](https://github.com/hashicorp/terraform-provider-aws/issues/24334))
 * resource/aws_ses_receipt_filter: Allow period character (`.`) in `name` argument ([#24383](https://github.com/hashicorp/terraform-provider-aws/issues/24383))
 
 ## 4.11.0 (April 22, 2022)
