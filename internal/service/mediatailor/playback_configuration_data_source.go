@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourcePlaybackConfiguration() *schema.Resource {
@@ -63,17 +64,6 @@ func DataSourcePlaybackConfiguration() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-					},
-				},
-			},
-			"configuration_aliases": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type:     schema.TypeMap,
-					Computed: true,
-					Elem: &schema.Schema{
-						Type: schema.TypeString,
 					},
 				},
 			},
@@ -181,13 +171,7 @@ func DataSourcePlaybackConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
+			"tags": tftags.TagsSchemaComputed(),
 			"transcode_profile_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -227,12 +211,6 @@ func dataSourcePlaybackConfigurationRead(_ context.Context, d *schema.ResourceDa
 
 	if err = d.Set("cdn_configuration", flattenCdnConfiguration(result.CdnConfiguration)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting cdn_configuration: %s", err))
-	}
-
-	if result.ConfigurationAliases != nil {
-		if err = d.Set("configuration_aliases", result.ConfigurationAliases); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting configuration_aliases: %s", err))
-		}
 	}
 
 	if err = d.Set("dash_configuration", flattenDashConfiguration(result.DashConfiguration)); err != nil {

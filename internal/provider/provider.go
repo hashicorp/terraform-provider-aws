@@ -1613,6 +1613,8 @@ func Provider() *schema.Provider {
 			"aws_media_store_container":        mediastore.ResourceContainer(),
 			"aws_media_store_container_policy": mediastore.ResourceContainerPolicy(),
 
+			"aws_media_tailor_playback_configuration": mediatailor.ResourcePlaybackConfiguration(),
+
 			"aws_memorydb_acl":             memorydb.ResourceACL(),
 			"aws_memorydb_cluster":         memorydb.ResourceCluster(),
 			"aws_memorydb_parameter_group": memorydb.ResourceParameterGroup(),
