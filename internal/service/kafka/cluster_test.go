@@ -1236,7 +1236,7 @@ resource "aws_msk_cluster" "test" {
       scram = %[2]t
     }
 
-	unauthenticated = %[3]t
+    unauthenticated = %[3]t
   }
 }
 `, rName, scramEnabled, !scramEnabled))
@@ -1261,7 +1261,7 @@ resource "aws_msk_cluster" "test" {
       iam = %[2]t
     }
 
-	unauthenticated = %[3]t
+    unauthenticated = %[3]t
   }
 }
 `, rName, saslEnabled, !saslEnabled))
