@@ -14,7 +14,7 @@ import (
 
 func DataSourceCostCategory() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceCostCategoryDefinitionRead,
+		ReadContext: dataSourceCostCategoryRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -324,7 +324,7 @@ func schemaCostCategoryRuleExpressionComputed() *schema.Resource {
 	}
 }
 
-func dataSourceCostCategoryDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn
 
 	resp, err := conn.DescribeCostCategoryDefinitionWithContext(ctx, &costexplorer.DescribeCostCategoryDefinitionInput{CostCategoryArn: aws.String(d.Get("cost_category_arn").(string))})
