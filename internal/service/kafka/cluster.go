@@ -184,11 +184,9 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			"encryption_info": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				ForceNew:         true,
-				MaxItems:         1,
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"encryption_at_rest_kms_key_arn": {
@@ -199,10 +197,9 @@ func ResourceCluster() *schema.Resource {
 							ValidateFunc: verify.ValidARN,
 						},
 						"encryption_in_transit": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-							MaxItems:         1,
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"client_broker": {
@@ -219,9 +216,11 @@ func ResourceCluster() *schema.Resource {
 									},
 								},
 							},
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 						},
 					},
 				},
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
 			"enhanced_monitoring": {
 				Type:         schema.TypeString,
