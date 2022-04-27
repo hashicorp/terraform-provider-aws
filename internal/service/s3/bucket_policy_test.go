@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 )
 
 func TestAccS3BucketPolicy_basic(t *testing.T) {
@@ -54,6 +55,91 @@ func TestAccS3BucketPolicy_basic(t *testing.T) {
 				ResourceName:      "aws_s3_bucket_policy.bucket",
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketPolicy_disappears(t *testing.T) {
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	partition := acctest.Partition()
+	bucketResourceName := "aws_s3_bucket.bucket"
+	resourceName := "aws_s3_bucket_policy.bucket"
+
+	expectedPolicyText := fmt.Sprintf(`{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "s3:*",
+      "Resource": [
+        "arn:%s:s3:::%s/*",
+        "arn:%s:s3:::%s"
+      ]
+    }
+  ]
+}`, partition, name, partition, name)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketPolicyConfig(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(bucketResourceName),
+					testAccCheckBucketHasPolicy(bucketResourceName, expectedPolicyText),
+					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucketPolicy(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketPolicy_disappears_bucket(t *testing.T) {
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	partition := acctest.Partition()
+	bucketResourceName := "aws_s3_bucket.bucket"
+
+	expectedPolicyText := fmt.Sprintf(`{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "s3:*",
+      "Resource": [
+        "arn:%s:s3:::%s/*",
+        "arn:%s:s3:::%s"
+      ]
+    }
+  ]
+}`, partition, name, partition, name)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketPolicyConfig(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(bucketResourceName),
+					testAccCheckBucketHasPolicy(bucketResourceName, expectedPolicyText),
+					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucket(), bucketResourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
