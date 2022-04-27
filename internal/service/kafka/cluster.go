@@ -3,13 +3,13 @@ package kafka
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,10 +22,11 @@ import (
 
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceClusterCreate,
-		Read:   resourceClusterRead,
-		Update: resourceClusterUpdate,
-		Delete: resourceClusterDelete,
+		CreateWithoutTimeout: resourceClusterCreate,
+		ReadWithoutTimeout:   resourceClusterRead,
+		UpdateWithoutTimeout: resourceClusterUpdate,
+		DeleteWithoutTimeout: resourceClusterDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -377,7 +378,7 @@ func ResourceCluster() *schema.Resource {
 	}
 }
 
-func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KafkaConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -418,10 +419,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		input.OpenMonitoring = expandOpenMonitoringInfo(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	output, err := conn.CreateCluster(input)
+	output, err := conn.CreateClusterWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating MSK Cluster (%s): %w", name, err)
+		return diag.Errorf("creating MSK Cluster (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.ClusterArn))
@@ -429,13 +430,13 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	_, err = waitClusterCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for MSK Cluster (%s) create: %w", d.Id(), err)
+		return diag.Errorf("waiting for MSK Cluster (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceClusterRead(d, meta)
+	return resourceClusterRead(ctx, d, meta)
 }
 
-func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KafkaConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -449,7 +450,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading MSK Cluster (%s): %w", d.Id(), err)
+		return diag.Errorf("reading MSK Cluster (%s): %s", d.Id(), err)
 	}
 
 	output, err := conn.GetBootstrapBrokers(&kafka.GetBootstrapBrokersInput{
@@ -457,7 +458,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading MSK Cluster (%s) bootstrap brokers: %w", d.Id(), err)
+		return diag.Errorf("reading MSK Cluster (%s) bootstrap brokers: %s", d.Id(), err)
 	}
 
 	d.Set("arn", cluster.ClusterArn)
@@ -468,7 +469,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	if cluster.BrokerNodeGroupInfo != nil {
 		if err := d.Set("broker_node_group_info", []interface{}{flattenBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)}); err != nil {
-			return fmt.Errorf("error setting broker_node_group_info: %w", err)
+			return diag.Errorf("setting broker_node_group_info: %s", err)
 		}
 	} else {
 		d.Set("broker_node_group_info", nil)
@@ -476,7 +477,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	if cluster.ClientAuthentication != nil {
 		if err := d.Set("client_authentication", []interface{}{flattenClientAuthentication(cluster.ClientAuthentication)}); err != nil {
-			return fmt.Errorf("error setting client_authentication: %w", err)
+			return diag.Errorf("setting client_authentication: %s", err)
 		}
 	} else {
 		d.Set("client_authentication", nil)
@@ -486,7 +487,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	if cluster.CurrentBrokerSoftwareInfo != nil {
 		if err := d.Set("configuration_info", []interface{}{flattenBrokerSoftwareInfo(cluster.CurrentBrokerSoftwareInfo)}); err != nil {
-			return fmt.Errorf("error setting configuration_info: %w", err)
+			return diag.Errorf("setting configuration_info: %s", err)
 		}
 	} else {
 		d.Set("configuration_info", nil)
@@ -497,7 +498,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	if cluster.EncryptionInfo != nil {
 		if err := d.Set("encryption_info", []interface{}{flattenEncryptionInfo(cluster.EncryptionInfo)}); err != nil {
-			return fmt.Errorf("error setting encryption_info: %w", err)
+			return diag.Errorf("setting encryption_info: %s", err)
 		}
 	} else {
 		d.Set("encryption_info", nil)
@@ -507,7 +508,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	if cluster.LoggingInfo != nil {
 		if err := d.Set("logging_info", []interface{}{flattenLoggingInfo(cluster.LoggingInfo)}); err != nil {
-			return fmt.Errorf("error setting logging_info: %w", err)
+			return diag.Errorf("setting logging_info: %s", err)
 		}
 	} else {
 		d.Set("logging_info", nil)
@@ -517,7 +518,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	if cluster.OpenMonitoring != nil {
 		if err := d.Set("open_monitoring", []interface{}{flattenOpenMonitoring(cluster.OpenMonitoring)}); err != nil {
-			return fmt.Errorf("error setting open_monitoring: %w", err)
+			return diag.Errorf("setting open_monitoring: %s", err)
 		}
 	} else {
 		d.Set("open_monitoring", nil)
@@ -530,17 +531,17 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KafkaConn
 
 	if d.HasChange("broker_node_group_info.0.ebs_volume_size") {
@@ -558,7 +559,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		output, err := conn.UpdateBrokerStorage(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) broker storage: %w", d.Id(), err)
+			return diag.Errorf("updating MSK Cluster (%s) broker storage: %s", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
@@ -566,7 +567,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err = waitClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
-			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
+			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
 		}
 	}
 
@@ -580,7 +581,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		output, err := conn.UpdateBrokerType(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) broker type: %w", d.Id(), err)
+			return diag.Errorf("updating MSK Cluster (%s) broker type: %s", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
@@ -588,7 +589,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err = waitClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
-			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
+			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
 		}
 	}
 
@@ -602,7 +603,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		output, err := conn.UpdateBrokerCount(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) broker count: %w", d.Id(), err)
+			return diag.Errorf("updating MSK Cluster (%s) broker count: %s", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
@@ -610,7 +611,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err = waitClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
-			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
+			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
 		}
 	}
 
@@ -632,7 +633,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		output, err := conn.UpdateMonitoring(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) monitoring: %w", d.Id(), err)
+			return diag.Errorf("updating MSK Cluster (%s) monitoring: %s", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
@@ -640,7 +641,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err = waitClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
-			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
+			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
 		}
 	}
 
@@ -657,7 +658,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		output, err := conn.UpdateClusterConfiguration(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) configuration: %w", d.Id(), err)
+			return diag.Errorf("updating MSK Cluster (%s) configuration: %s", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
@@ -665,7 +666,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err = waitClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
-			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
+			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
 		}
 	}
 
@@ -685,7 +686,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		output, err := conn.UpdateClusterKafkaVersion(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) kafka version: %w", d.Id(), err)
+			return diag.Errorf("updating MSK Cluster (%s) Kafka version: %s", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
@@ -693,7 +694,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err = waitClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
-			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
+			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
 		}
 	}
 
@@ -718,7 +719,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		output, err := conn.UpdateSecurity(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) security: %w", d.Id(), err)
+			return diag.Errorf("updating MSK Cluster (%s) security: %s", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
@@ -726,7 +727,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err = waitClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
-			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
+			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
 		}
 	}
 
@@ -734,18 +735,18 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) tags: %w", d.Id(), err)
+			return diag.Errorf("updating MSK Cluster (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceClusterRead(d, meta)
+	return resourceClusterRead(ctx, d, meta)
 }
 
-func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KafkaConn
 
 	log.Printf("[DEBUG] Deleting MSK Cluster: %s", d.Id())
-	_, err := conn.DeleteCluster(&kafka.DeleteClusterInput{
+	_, err := conn.DeleteClusterWithContext(ctx, &kafka.DeleteClusterInput{
 		ClusterArn: aws.String(d.Id()),
 	})
 
@@ -754,13 +755,13 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting MSK Cluster (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting MSK Cluster (%s): %s", d.Id(), err)
 	}
 
 	_, err = waitClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for MSK Cluster (%s) delete: %w", d.Id(), err)
+		return diag.Errorf("waiting for MSK Cluster (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
