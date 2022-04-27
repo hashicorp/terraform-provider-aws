@@ -733,7 +733,8 @@ func Provider() *schema.Provider {
 			"aws_memorydb_subnet_group":    memorydb.DataSourceSubnetGroup(),
 			"aws_memorydb_user":            memorydb.DataSourceUser(),
 
-			"aws_mq_broker": mq.DataSourceBroker(),
+			"aws_mq_broker":                         mq.DataSourceBroker(),
+			"aws_mq_broker_instance_type_offerings": mq.DataSourceBrokerInstanceTypeOfferings(),
 
 			"aws_neptune_engine_version":        neptune.DataSourceEngineVersion(),
 			"aws_neptune_orderable_db_instance": neptune.DataSourceOrderableDBInstance(),

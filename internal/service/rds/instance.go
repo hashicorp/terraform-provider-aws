@@ -176,7 +176,7 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(ExportableLogType_Values(), false),
+					ValidateFunc: validation.StringInSlice(InstanceExportableLogType_Values(), false),
 				},
 			},
 			"endpoint": {
