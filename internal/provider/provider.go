@@ -8,11 +8,13 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
@@ -361,9 +363,9 @@ func Provider() *schema.Provider {
 					"Used by users that don't have ec2:DescribeAccountAttributes permissions.",
 			},
 			"skip_metadata_api_check": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:         nullable.TypeNullableBool,
+				Optional:     true,
+				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 				Description: "Skip the AWS Metadata API check. " +
 					"Used for AWS API implementations that do not have a metadata api endpoint.",
 			},
@@ -2032,7 +2034,6 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		SecretKey:                      d.Get("secret_key").(string),
 		SkipCredsValidation:            d.Get("skip_credentials_validation").(bool),
 		SkipGetEC2Platforms:            d.Get("skip_get_ec2_platforms").(bool),
-		SkipMetadataApiCheck:           d.Get("skip_metadata_api_check").(bool),
 		SkipRegionValidation:           d.Get("skip_region_validation").(bool),
 		SkipRequestingAccountId:        d.Get("skip_requesting_account_id").(bool),
 		STSRegion:                      d.Get("sts_region").(string),
@@ -2080,6 +2081,14 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 	if v, ok := d.GetOk("forbidden_account_ids"); ok {
 		for _, accountIDRaw := range v.(*schema.Set).List() {
 			config.ForbiddenAccountIds = append(config.ForbiddenAccountIds, accountIDRaw.(string))
+		}
+	}
+
+	if v, null, _ := nullable.Bool(d.Get("skip_metadata_api_check").(string)).Value(); !null {
+		if v {
+			config.EC2MetadataServiceEnableState = imds.ClientDisabled
+		} else {
+			config.EC2MetadataServiceEnableState = imds.ClientEnabled
 		}
 	}
 

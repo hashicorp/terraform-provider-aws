@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -47,6 +48,7 @@ type Config struct {
 	AssumeRole                     *awsbase.AssumeRole
 	CustomCABundle                 string
 	DefaultTagsConfig              *tftags.DefaultConfig
+	EC2MetadataServiceEnableState  imds.ClientEnableState
 	EC2MetadataServiceEndpoint     string
 	EC2MetadataServiceEndpointMode string
 	Endpoints                      map[string]string
@@ -63,7 +65,6 @@ type Config struct {
 	SharedCredentialsFiles         []string
 	SkipCredsValidation            bool
 	SkipGetEC2Platforms            bool
-	SkipMetadataApiCheck           bool
 	SkipRegionValidation           bool
 	SkipRequestingAccountId        bool
 	STSRegion                      string
@@ -77,25 +78,25 @@ type Config struct {
 // Client configures and returns a fully initialized AWSClient
 func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	awsbaseConfig := awsbase.Config{
-		AccessKey:               c.AccessKey,
-		APNInfo:                 StdUserAgentProducts(c.TerraformVersion),
-		CallerDocumentationURL:  "https://registry.terraform.io/providers/hashicorp/aws",
-		CallerName:              "Terraform AWS Provider",
-		IamEndpoint:             c.Endpoints[names.IAM],
-		Insecure:                c.Insecure,
-		HTTPProxy:               c.HTTPProxy,
-		MaxRetries:              c.MaxRetries,
-		Profile:                 c.Profile,
-		Region:                  c.Region,
-		SecretKey:               c.SecretKey,
-		SkipCredsValidation:     c.SkipCredsValidation,
-		SkipEC2MetadataApiCheck: c.SkipMetadataApiCheck,
-		SkipRequestingAccountId: c.SkipRequestingAccountId,
-		StsEndpoint:             c.Endpoints[names.STS],
-		SuppressDebugLog:        c.SuppressDebugLog,
-		Token:                   c.Token,
-		UseDualStackEndpoint:    c.UseDualStackEndpoint,
-		UseFIPSEndpoint:         c.UseFIPSEndpoint,
+		AccessKey:                     c.AccessKey,
+		APNInfo:                       StdUserAgentProducts(c.TerraformVersion),
+		CallerDocumentationURL:        "https://registry.terraform.io/providers/hashicorp/aws",
+		CallerName:                    "Terraform AWS Provider",
+		EC2MetadataServiceEnableState: c.EC2MetadataServiceEnableState,
+		IamEndpoint:                   c.Endpoints[names.IAM],
+		Insecure:                      c.Insecure,
+		HTTPProxy:                     c.HTTPProxy,
+		MaxRetries:                    c.MaxRetries,
+		Profile:                       c.Profile,
+		Region:                        c.Region,
+		SecretKey:                     c.SecretKey,
+		SkipCredsValidation:           c.SkipCredsValidation,
+		SkipRequestingAccountId:       c.SkipRequestingAccountId,
+		StsEndpoint:                   c.Endpoints[names.STS],
+		SuppressDebugLog:              c.SuppressDebugLog,
+		Token:                         c.Token,
+		UseDualStackEndpoint:          c.UseDualStackEndpoint,
+		UseFIPSEndpoint:               c.UseFIPSEndpoint,
 	}
 
 	if c.AssumeRole != nil && c.AssumeRole.RoleARN != "" {
