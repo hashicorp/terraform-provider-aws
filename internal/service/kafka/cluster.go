@@ -466,37 +466,61 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("bootstrap_brokers_sasl_scram", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringSaslScram)))
 	d.Set("bootstrap_brokers_tls", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringTls)))
 
-	if err := d.Set("broker_node_group_info", flattenBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)); err != nil {
-		return fmt.Errorf("error setting broker_node_group_info: %w", err)
+	if cluster.BrokerNodeGroupInfo != nil {
+		if err := d.Set("broker_node_group_info", []interface{}{flattenBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)}); err != nil {
+			return fmt.Errorf("error setting broker_node_group_info: %w", err)
+		}
+	} else {
+		d.Set("broker_node_group_info", nil)
 	}
 
-	if err := d.Set("client_authentication", flattenClientAuthentication(cluster.ClientAuthentication)); err != nil {
-		return fmt.Errorf("error setting configuration_info: %w", err)
+	if cluster.ClientAuthentication != nil {
+		if err := d.Set("client_authentication", []interface{}{flattenClientAuthentication(cluster.ClientAuthentication)}); err != nil {
+			return fmt.Errorf("error setting client_authentication: %w", err)
+		}
+	} else {
+		d.Set("client_authentication", nil)
 	}
 
 	d.Set("cluster_name", cluster.ClusterName)
 
-	if err := d.Set("configuration_info", flattenConfigurationInfo(cluster.CurrentBrokerSoftwareInfo)); err != nil {
-		return fmt.Errorf("error setting configuration_info: %w", err)
+	if cluster.CurrentBrokerSoftwareInfo != nil {
+		if err := d.Set("configuration_info", []interface{}{flattenBrokerSoftwareInfo(cluster.CurrentBrokerSoftwareInfo)}); err != nil {
+			return fmt.Errorf("error setting configuration_info: %w", err)
+		}
+	} else {
+		d.Set("configuration_info", nil)
 	}
 
 	d.Set("current_version", cluster.CurrentVersion)
 	d.Set("enhanced_monitoring", cluster.EnhancedMonitoring)
 
-	if err := d.Set("encryption_info", flattenEncryptionInfo(cluster.EncryptionInfo)); err != nil {
-		return fmt.Errorf("error setting encryption_info: %w", err)
+	if cluster.EncryptionInfo != nil {
+		if err := d.Set("encryption_info", []interface{}{flattenEncryptionInfo(cluster.EncryptionInfo)}); err != nil {
+			return fmt.Errorf("error setting encryption_info: %w", err)
+		}
+	} else {
+		d.Set("encryption_info", nil)
 	}
 
 	d.Set("kafka_version", cluster.CurrentBrokerSoftwareInfo.KafkaVersion)
 
-	if err := d.Set("logging_info", flattenLoggingInfo(cluster.LoggingInfo)); err != nil {
-		return fmt.Errorf("error setting logging_info: %w", err)
+	if cluster.LoggingInfo != nil {
+		if err := d.Set("logging_info", []interface{}{flattenLoggingInfo(cluster.LoggingInfo)}); err != nil {
+			return fmt.Errorf("error setting logging_info: %w", err)
+		}
+	} else {
+		d.Set("logging_info", nil)
 	}
 
 	d.Set("number_of_broker_nodes", cluster.NumberOfBrokerNodes)
 
-	if err := d.Set("open_monitoring", flattenOpenMonitoring(cluster.OpenMonitoring)); err != nil {
-		return fmt.Errorf("error setting open_monitoring: %w", err)
+	if cluster.OpenMonitoring != nil {
+		if err := d.Set("open_monitoring", []interface{}{flattenOpenMonitoring(cluster.OpenMonitoring)}); err != nil {
+			return fmt.Errorf("error setting open_monitoring: %w", err)
+		}
+	} else {
+		d.Set("open_monitoring", nil)
 	}
 
 	d.Set("zookeeper_connect_string", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectString)))
@@ -785,243 +809,6 @@ func customizeDiffValidateClientAuthentication(_ context.Context, diff *schema.R
 		}
 	}
 	return nil
-}
-
-func flattenBrokerNodeGroupInfo(b *kafka.BrokerNodeGroupInfo) []map[string]interface{} {
-
-	if b == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"az_distribution": aws.StringValue(b.BrokerAZDistribution),
-		"client_subnets":  aws.StringValueSlice(b.ClientSubnets),
-		"instance_type":   aws.StringValue(b.InstanceType),
-		"security_groups": aws.StringValueSlice(b.SecurityGroups),
-	}
-	if b.StorageInfo != nil {
-		if b.StorageInfo.EbsStorageInfo != nil {
-			m["ebs_volume_size"] = int(aws.Int64Value(b.StorageInfo.EbsStorageInfo.VolumeSize))
-		}
-	}
-	return []map[string]interface{}{m}
-}
-
-func flattenClientAuthentication(ca *kafka.ClientAuthentication) []map[string]interface{} {
-	if ca == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"sasl":            flattenSasl(ca.Sasl),
-		"tls":             flattenTls(ca.Tls),
-		"unauthenticated": flattenUnauthenticated(ca.Unauthenticated),
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenConfigurationInfo(bsi *kafka.BrokerSoftwareInfo) []map[string]interface{} {
-	if bsi == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"arn":      aws.StringValue(bsi.ConfigurationArn),
-		"revision": aws.Int64Value(bsi.ConfigurationRevision),
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenEncryptionInfo(e *kafka.EncryptionInfo) []map[string]interface{} {
-	if e == nil || e.EncryptionAtRest == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"encryption_at_rest_kms_key_arn": aws.StringValue(e.EncryptionAtRest.DataVolumeKMSKeyId),
-		"encryption_in_transit":          flattenEncryptionInTransit(e.EncryptionInTransit),
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenEncryptionInTransit(eit *kafka.EncryptionInTransit) []map[string]interface{} {
-	if eit == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"client_broker": aws.StringValue(eit.ClientBroker),
-		"in_cluster":    aws.BoolValue(eit.InCluster),
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenSasl(sasl *kafka.Sasl) []map[string]interface{} {
-	if sasl == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"scram": flattenSaslScram(sasl.Scram),
-		"iam":   flattenSaslIam(sasl.Iam),
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenSaslScram(scram *kafka.Scram) bool {
-	if scram == nil {
-		return false
-	}
-
-	return aws.BoolValue(scram.Enabled)
-}
-
-func flattenSaslIam(iam *kafka.Iam) bool {
-	if iam == nil {
-		return false
-	}
-
-	return aws.BoolValue(iam.Enabled)
-}
-
-func flattenTls(tls *kafka.Tls) []map[string]interface{} {
-	if tls == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"certificate_authority_arns": aws.StringValueSlice(tls.CertificateAuthorityArnList),
-		"enabled":                    aws.BoolValue(tls.Enabled),
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenUnauthenticated(uauth *kafka.Unauthenticated) bool {
-	if uauth == nil {
-		return false
-	}
-
-	return aws.BoolValue(uauth.Enabled)
-}
-func flattenOpenMonitoring(e *kafka.OpenMonitoring) []map[string]interface{} {
-	if e == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"prometheus": flattenOpenMonitoringPrometheus(e.Prometheus),
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenOpenMonitoringPrometheus(e *kafka.Prometheus) []map[string]interface{} {
-	if e == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"jmx_exporter":  flattenOpenMonitoringPrometheusJmxExporter(e.JmxExporter),
-		"node_exporter": flattenOpenMonitoringPrometheusNodeExporter(e.NodeExporter),
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenOpenMonitoringPrometheusJmxExporter(e *kafka.JmxExporter) []map[string]interface{} {
-	if e == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"enabled_in_broker": aws.BoolValue(e.EnabledInBroker),
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenOpenMonitoringPrometheusNodeExporter(e *kafka.NodeExporter) []map[string]interface{} {
-	if e == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"enabled_in_broker": aws.BoolValue(e.EnabledInBroker),
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenLoggingInfo(e *kafka.LoggingInfo) []map[string]interface{} {
-	if e == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"broker_logs": flattenLoggingInfoBrokerLogs(e.BrokerLogs),
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenLoggingInfoBrokerLogs(e *kafka.BrokerLogs) []map[string]interface{} {
-	if e == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"cloudwatch_logs": flattenLoggingInfoBrokerLogsCloudWatchLogs(e.CloudWatchLogs),
-		"firehose":        flattenLoggingInfoBrokerLogsFirehose(e.Firehose),
-		"s3":              flattenLoggingInfoBrokerLogsS3(e.S3),
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenLoggingInfoBrokerLogsCloudWatchLogs(e *kafka.CloudWatchLogs) []map[string]interface{} {
-	if e == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"enabled":   aws.BoolValue(e.Enabled),
-		"log_group": aws.StringValue(e.LogGroup),
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenLoggingInfoBrokerLogsFirehose(e *kafka.Firehose) []map[string]interface{} {
-	if e == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"enabled":         aws.BoolValue(e.Enabled),
-		"delivery_stream": aws.StringValue(e.DeliveryStream),
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenLoggingInfoBrokerLogsS3(e *kafka.S3) []map[string]interface{} {
-	if e == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"enabled": aws.BoolValue(e.Enabled),
-		"bucket":  aws.StringValue(e.Bucket),
-		"prefix":  aws.StringValue(e.Prefix),
-	}
-
-	return []map[string]interface{}{m}
 }
 
 func expandBrokerNodeGroupInfo(tfMap map[string]interface{}) *kafka.BrokerNodeGroupInfo {
@@ -1326,4 +1113,308 @@ func expandNodeExporterInfo(tfMap map[string]interface{}) *kafka.NodeExporterInf
 	}
 
 	return apiObject
+}
+
+func flattenBrokerNodeGroupInfo(apiObject *kafka.BrokerNodeGroupInfo) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.BrokerAZDistribution; v != nil {
+		tfMap["az_distribution"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.ClientSubnets; v != nil {
+		tfMap["client_subnets"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.InstanceType; v != nil {
+		tfMap["instance_type"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SecurityGroups; v != nil {
+		tfMap["security_groups"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.StorageInfo; v != nil {
+		if v := v.EbsStorageInfo; v != nil {
+			if v := v.VolumeSize; v != nil {
+				tfMap["ebs_volume_size"] = aws.Int64Value(v)
+			}
+		}
+	}
+
+	return tfMap
+}
+
+func flattenClientAuthentication(apiObject *kafka.ClientAuthentication) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Sasl; v != nil {
+		tfMap["sasl"] = []interface{}{flattenSasl(v)}
+	}
+
+	if v := apiObject.Tls; v != nil {
+		tfMap["tls"] = []interface{}{flattenTls(v)}
+	}
+
+	if v := apiObject.Unauthenticated; v != nil {
+		if v := v.Enabled; v != nil {
+			tfMap["unauthenticated"] = aws.BoolValue(v)
+		}
+	}
+
+	return tfMap
+}
+
+func flattenSasl(apiObject *kafka.Sasl) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Iam; v != nil {
+		if v := v.Enabled; v != nil {
+			tfMap["iam"] = aws.BoolValue(v)
+		}
+	}
+
+	if v := apiObject.Scram; v != nil {
+		if v := v.Enabled; v != nil {
+			tfMap["scram"] = aws.BoolValue(v)
+		}
+	}
+
+	return tfMap
+}
+
+func flattenTls(apiObject *kafka.Tls) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CertificateAuthorityArnList; v != nil {
+		tfMap["certificate_authority_arns"] = aws.StringValueSlice(v)
+	}
+
+	return tfMap
+}
+
+func flattenBrokerSoftwareInfo(apiObject *kafka.BrokerSoftwareInfo) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ConfigurationArn; v != nil {
+		tfMap["arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.ConfigurationRevision; v != nil {
+		tfMap["revision"] = aws.Int64Value(v)
+	}
+
+	return tfMap
+}
+
+func flattenEncryptionInfo(apiObject *kafka.EncryptionInfo) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.EncryptionAtRest; v != nil {
+		if v := v.DataVolumeKMSKeyId; v != nil {
+			tfMap["encryption_at_rest_kms_key_arn"] = aws.StringValue(v)
+		}
+	}
+
+	if v := apiObject.EncryptionInTransit; v != nil {
+		tfMap["encryption_in_transit"] = []interface{}{flattenEncryptionInTransit(v)}
+	}
+
+	return tfMap
+}
+
+func flattenEncryptionInTransit(apiObject *kafka.EncryptionInTransit) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ClientBroker; v != nil {
+		tfMap["client_broker"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.InCluster; v != nil {
+		tfMap["in_cluster"] = aws.BoolValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenLoggingInfo(apiObject *kafka.LoggingInfo) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.BrokerLogs; v != nil {
+		tfMap["broker_logs"] = []interface{}{flattenBrokerLogs(v)}
+	}
+
+	return tfMap
+}
+
+func flattenBrokerLogs(apiObject *kafka.BrokerLogs) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CloudWatchLogs; v != nil {
+		tfMap["cloudwatch_logs"] = []interface{}{flattenCloudWatchLogs(v)}
+	}
+
+	if v := apiObject.Firehose; v != nil {
+		tfMap["firehose"] = []interface{}{flattenFirehose(v)}
+	}
+
+	if v := apiObject.S3; v != nil {
+		tfMap["s3"] = []interface{}{flattenS3(v)}
+	}
+
+	return tfMap
+}
+
+func flattenCloudWatchLogs(apiObject *kafka.CloudWatchLogs) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap["enabled"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.LogGroup; v != nil {
+		tfMap["log_group"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenFirehose(apiObject *kafka.Firehose) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DeliveryStream; v != nil {
+		tfMap["delivery_stream"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap["enabled"] = aws.BoolValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenS3(apiObject *kafka.S3) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Bucket; v != nil {
+		tfMap["bucket"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap["enabled"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.Prefix; v != nil {
+		tfMap["prefix"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenOpenMonitoring(apiObject *kafka.OpenMonitoring) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Prometheus; v != nil {
+		tfMap["prometheus"] = []interface{}{flattenPrometheus(v)}
+	}
+
+	return tfMap
+}
+
+func flattenPrometheus(apiObject *kafka.Prometheus) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.JmxExporter; v != nil {
+		tfMap["jmx_exporter"] = []interface{}{flattenJmxExporter(v)}
+	}
+
+	if v := apiObject.NodeExporter; v != nil {
+		tfMap["node_exporter"] = []interface{}{flattenNodeExporter(v)}
+	}
+
+	return tfMap
+}
+
+func flattenJmxExporter(apiObject *kafka.JmxExporter) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.EnabledInBroker; v != nil {
+		tfMap["enabled_in_broker"] = aws.BoolValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenNodeExporter(apiObject *kafka.NodeExporter) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.EnabledInBroker; v != nil {
+		tfMap["enabled_in_broker"] = aws.BoolValue(v)
+	}
+
+	return tfMap
 }
