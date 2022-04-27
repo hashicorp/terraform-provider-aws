@@ -177,13 +177,6 @@ func ResourcePlaybackConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
 			"transcode_profile_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -202,30 +195,6 @@ func ResourcePlaybackConfiguration() *schema.Resource {
 
 func resourcePlaybackConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).MediaTailorConn
-
-	if d.HasChange("tags") {
-		oldValue, newValue := d.GetChange("tags")
-		var removedTags []string
-		for k := range oldValue.(map[string]interface{}) {
-			if _, ok := (newValue.(map[string]interface{}))[k]; !ok {
-				removedTags = append(removedTags, k)
-			}
-		}
-		if len(removedTags) > 0 {
-			var removedValuesPointers []*string
-			for i := range removedTags {
-				removedValuesPointers = append(removedValuesPointers, &removedTags[i])
-			}
-
-			resourceArn := d.Get("playback_configuration_arn")
-
-			untagInput := mediatailor.UntagResourceInput{ResourceArn: aws.String(resourceArn.(string)), TagKeys: removedValuesPointers}
-			_, err := conn.UntagResource(&untagInput)
-			if err != nil {
-				return diag.FromErr(fmt.Errorf("error while removing tags: %v", err))
-			}
-		}
-	}
 
 	var params mediatailor.PutPlaybackConfigurationInput
 
@@ -435,7 +404,6 @@ func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("playback_endpoint_prefix", res.PlaybackEndpointPrefix)
 	d.Set("session_initialization_endpoint_prefix", res.SessionInitializationEndpointPrefix)
 	d.Set("slate_ad_url", res.SlateAdUrl)
-	d.Set("tags", res.Tags)
 	d.Set("transcode_profile_name", res.TranscodeProfileName)
 	d.Set("video_content_source_url", res.VideoContentSourceUrl)
 
