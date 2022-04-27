@@ -68,7 +68,7 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.instance_type", "kafka.m5.large"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.security_groups.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.security_groups.*", "aws_security_group.example_sg", "id"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
@@ -196,13 +196,12 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_scram(t *testing.T) {
 		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterClientAuthenticationSaslScramConfig(rName, true, false),
+				Config: testAccClusterClientAuthenticationSaslScramConfig(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "true"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "false"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", mskClusterBoostrapBrokersSaslScramRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
@@ -218,14 +217,13 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_scram(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterClientAuthenticationSaslScramConfig(rName, false, true),
+				Config: testAccClusterClientAuthenticationSaslScramConfig(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "false"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "true"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
@@ -256,13 +254,12 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_iam(t *testing.T) {
 		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterClientAuthenticationSaslIamConfig(rName, true, false),
+				Config: testAccClusterClientAuthenticationSaslIamConfig(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "true"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "false"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", mskClusterBoostrapBrokersSaslIamRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
@@ -278,14 +275,13 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_iam(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterClientAuthenticationSaslIamConfig(rName, false, true),
+				Config: testAccClusterClientAuthenticationSaslIamConfig(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "false"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "true"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
@@ -1038,11 +1034,6 @@ resource "aws_msk_cluster" "test" {
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
   }
-
-  client_authentication {
-    unauthenticated = true
-  }
-
 }
 `, rName))
 }
@@ -1119,7 +1110,6 @@ resource "aws_msk_cluster" "test" {
   client_authentication {
     tls {
       certificate_authority_arns = [aws_acmpca_certificate_authority.test.arn]
-      enabled                    = true
     }
   }
 
@@ -1132,7 +1122,7 @@ resource "aws_msk_cluster" "test" {
 `, rName, commonName))
 }
 
-func testAccClusterClientAuthenticationSaslScramConfig(rName string, scramEnabled bool, unauthenticated bool) string {
+func testAccClusterClientAuthenticationSaslScramConfig(rName string, scramEnabled bool) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
@@ -1150,13 +1140,12 @@ resource "aws_msk_cluster" "test" {
     sasl {
       scram = %[2]t
     }
-    unauthenticated = %[3]t
   }
 }
-`, rName, scramEnabled, unauthenticated))
+`, rName, scramEnabled))
 }
 
-func testAccClusterClientAuthenticationSaslIamConfig(rName string, saslEnabled bool, unauthenticated bool) string {
+func testAccClusterClientAuthenticationSaslIamConfig(rName string, saslEnabled bool) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
@@ -1174,10 +1163,9 @@ resource "aws_msk_cluster" "test" {
     sasl {
       iam = %[2]t
     }
-    unauthenticated = %[3]t
   }
 }
-`, rName, saslEnabled, unauthenticated))
+`, rName, saslEnabled))
 }
 
 func testAccClusterConfigurationInfoRevision1Config(rName string) string {
@@ -1201,10 +1189,6 @@ resource "aws_msk_cluster" "test" {
     ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
-  }
-
-  client_authentication {
-    unauthenticated = true
   }
 
   configuration_info {
@@ -1247,10 +1231,6 @@ resource "aws_msk_cluster" "test" {
     security_groups = [aws_security_group.example_sg.id]
   }
 
-  client_authentication {
-    unauthenticated = true
-  }
-
   configuration_info {
     arn      = aws_msk_configuration.test2.arn
     revision = aws_msk_configuration.test2.latest_revision
@@ -1281,10 +1261,6 @@ resource "aws_msk_cluster" "test" {
     security_groups = [aws_security_group.example_sg.id]
   }
 
-  client_authentication {
-    unauthenticated = true
-  }
-
   encryption_info {
     encryption_at_rest_kms_key_arn = aws_kms_key.example_key.arn
   }
@@ -1305,10 +1281,6 @@ resource "aws_msk_cluster" "test" {
     ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
-  }
-
-  client_authentication {
-    unauthenticated = true
   }
 
   encryption_info {
@@ -1334,10 +1306,6 @@ resource "aws_msk_cluster" "test" {
     security_groups = [aws_security_group.example_sg.id]
   }
 
-  client_authentication {
-    unauthenticated = true
-  }
-
   encryption_info {
     encryption_in_transit {
       in_cluster = %[2]t
@@ -1361,10 +1329,6 @@ resource "aws_msk_cluster" "test" {
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
   }
-
-  client_authentication {
-    unauthenticated = true
-  }
 }
 `, rName, enhancedMonitoring))
 
@@ -1383,10 +1347,6 @@ resource "aws_msk_cluster" "test" {
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
   }
-
-  client_authentication {
-    unauthenticated = true
-  }
 }
 `, rName, brokerCount))
 
@@ -1404,10 +1364,6 @@ resource "aws_msk_cluster" "test" {
     ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
-  }
-
-  client_authentication {
-    unauthenticated = true
   }
 
   open_monitoring {
@@ -1544,10 +1500,6 @@ resource "aws_msk_cluster" "test" {
     }
   }
 
-  client_authentication {
-    unauthenticated = true
-  }
-
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
     ebs_volume_size = 10
@@ -1587,10 +1539,6 @@ resource "aws_msk_cluster" "test" {
     }
   }
 
-  client_authentication {
-    unauthenticated = true
-  }
-
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
     ebs_volume_size = 10
@@ -1620,10 +1568,6 @@ resource "aws_msk_cluster" "test" {
     security_groups = [aws_security_group.example_sg.id]
   }
 
-  client_authentication {
-    unauthenticated = true
-  }
-
   tags = {
     %[2]q = %[3]q
   }
@@ -1643,10 +1587,6 @@ resource "aws_msk_cluster" "test" {
     ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
-  }
-
-  client_authentication {
-    unauthenticated = true
   }
 
   tags = {
