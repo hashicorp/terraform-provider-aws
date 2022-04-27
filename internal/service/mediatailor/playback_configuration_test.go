@@ -191,6 +191,64 @@ func TestAccPlaybackConfigurationResource_validateVideoContentSourceURL(t *testi
 	})
 }
 
+func TestAccPlaybackConfigurationResource_Update(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_media_tailor_playback_configuration.test"
+	exampleURL := "https://www.example.com"
+	updatedExampleURL := "https://www.updated.com"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, mediatailor.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPlaybackConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceConfig_completeResource(rName, exampleURL),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "ad_decision_server_url", exampleURL),
+					resource.TestCheckResourceAttr(resourceName, "avail_suppression_mode", "OFF"),
+					resource.TestCheckResourceAttr(resourceName, "avail_suppression_value", "10:10:10"),
+					resource.TestCheckResourceAttr(resourceName, "bumper.0.end_url", exampleURL),
+					resource.TestCheckResourceAttr(resourceName, "bumper.0.start_url", exampleURL),
+					resource.TestCheckResourceAttr(resourceName, "cdn_configuration.0.ad_segment_url_prefix", exampleURL),
+					resource.TestCheckResourceAttr(resourceName, "cdn_configuration.0.content_segment_url_prefix", exampleURL),
+					resource.TestCheckResourceAttr(resourceName, "dash_mpd_location", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "dash_origin_manifest_type", "SINGLE_PERIOD"),
+					resource.TestCheckResourceAttr(resourceName, "live_pre_roll_configuration.0.ad_decision_server_url", exampleURL),
+					resource.TestCheckResourceAttr(resourceName, "live_pre_roll_configuration.0.max_duration_seconds", "1"),
+					resource.TestCheckResourceAttr(resourceName, "manifest_processing_rules.0.ad_marker_passthrough.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "personalization_threshold_seconds", "1"),
+					resource.TestCheckResourceAttr(resourceName, "slate_ad_url", exampleURL),
+					resource.TestCheckResourceAttr(resourceName, "video_content_source_url", exampleURL),
+				),
+			},
+			{
+				Config: testAccResourceConfig_updatedCompleteResource(rName, updatedExampleURL),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "ad_decision_server_url", updatedExampleURL),
+					resource.TestCheckResourceAttr(resourceName, "avail_suppression_mode", "BEHIND_LIVE_EDGE"),
+					resource.TestCheckResourceAttr(resourceName, "avail_suppression_value", "20:20:20"),
+					resource.TestCheckResourceAttr(resourceName, "bumper.0.end_url", updatedExampleURL),
+					resource.TestCheckResourceAttr(resourceName, "bumper.0.start_url", updatedExampleURL),
+					resource.TestCheckResourceAttr(resourceName, "cdn_configuration.0.ad_segment_url_prefix", updatedExampleURL),
+					resource.TestCheckResourceAttr(resourceName, "cdn_configuration.0.content_segment_url_prefix", updatedExampleURL),
+					resource.TestCheckResourceAttr(resourceName, "dash_mpd_location", "EMT_DEFAULT"),
+					resource.TestCheckResourceAttr(resourceName, "dash_origin_manifest_type", "MULTI_PERIOD"),
+					resource.TestCheckResourceAttr(resourceName, "live_pre_roll_configuration.0.ad_decision_server_url", updatedExampleURL),
+					resource.TestCheckResourceAttr(resourceName, "live_pre_roll_configuration.0.max_duration_seconds", "2"),
+					resource.TestCheckResourceAttr(resourceName, "manifest_processing_rules.0.ad_marker_passthrough.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "personalization_threshold_seconds", "2"),
+					resource.TestCheckResourceAttr(resourceName, "slate_ad_url", updatedExampleURL),
+					resource.TestCheckResourceAttr(resourceName, "video_content_source_url", updatedExampleURL),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckPlaybackConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaTailorConn
 
@@ -297,4 +355,70 @@ resource "aws_media_tailor_playback_configuration" "test"{
   video_content_source_url = %[2]q
 }
 `, rName, videoContentSourceURL)
+}
+
+func testAccResourceConfig_completeResource(rName, url string) string {
+	return fmt.Sprintf(`
+resource "aws_media_tailor_playback_configuration" "test"{
+  ad_decision_server_url = %[2]q
+  avail_suppression_mode = "OFF"
+  avail_suppression_value = "10:10:10"
+  bumper {
+	end_url = %[2]q
+	start_url = %[2]q
+  }
+  cdn_configuration {
+    ad_segment_url_prefix = %[2]q
+	content_segment_url_prefix = %[2]q
+  }
+  dash_mpd_location = "DISABLED"
+  dash_origin_manifest_type = "SINGLE_PERIOD"
+  live_pre_roll_configuration {
+	ad_decision_server_url = %[2]q
+	max_duration_seconds = 1
+  }
+  manifest_processing_rules {
+	ad_marker_passthrough {
+	  enabled = true
+	}
+  }
+  name=%[1]q
+  personalization_threshold_seconds = 1
+  slate_ad_url = %[2]q
+  video_content_source_url = %[2]q
+}
+`, rName, url)
+}
+
+func testAccResourceConfig_updatedCompleteResource(rName, url string) string {
+	return fmt.Sprintf(`
+resource "aws_media_tailor_playback_configuration" "test"{
+  ad_decision_server_url = %[2]q
+  avail_suppression_mode = "BEHIND_LIVE_EDGE"
+  avail_suppression_value = "20:20:20"
+  bumper {
+	end_url = %[2]q
+	start_url = %[2]q
+  }
+  cdn_configuration {
+    ad_segment_url_prefix = %[2]q
+	content_segment_url_prefix = %[2]q
+  }
+  dash_mpd_location = "EMT_DEFAULT"
+  dash_origin_manifest_type = "MULTI_PERIOD"
+  live_pre_roll_configuration {
+	ad_decision_server_url = %[2]q
+	max_duration_seconds = 2
+  }
+  manifest_processing_rules {
+	ad_marker_passthrough {
+	  enabled = false
+	}
+  }
+  name=%[1]q
+  personalization_threshold_seconds = 2
+  slate_ad_url = %[2]q
+  video_content_source_url = %[2]q
+}
+`, rName, url)
 }
