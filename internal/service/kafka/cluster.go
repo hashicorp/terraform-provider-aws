@@ -38,7 +38,7 @@ func ResourceCluster() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIfChange("kafka_version", func(_ context.Context, old, new, meta interface{}) bool {
-				return new.(string) < old.(string) // TODO: Use gversion; "10" < "2"
+				return verify.SemVerLessThan(new.(string), old.(string))
 			}),
 			verify.SetTagsDiff,
 		),
