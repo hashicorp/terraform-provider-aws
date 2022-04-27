@@ -93,7 +93,7 @@ func resourceBucketPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		Bucket: aws.String(d.Id()),
 	})
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeNoSuchBucketPolicy, s3.ErrCodeNoSuchBucket) {
 		log.Printf("[WARN] S3 Bucket Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
