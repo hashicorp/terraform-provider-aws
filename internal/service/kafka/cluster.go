@@ -453,7 +453,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("reading MSK Cluster (%s): %s", d.Id(), err)
 	}
 
-	output, err := conn.GetBootstrapBrokers(&kafka.GetBootstrapBrokersInput{
+	output, err := conn.GetBootstrapBrokersWithContext(ctx, &kafka.GetBootstrapBrokersInput{
 		ClusterArn: aws.String(d.Id()),
 	})
 
@@ -556,7 +556,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			},
 		}
 
-		output, err := conn.UpdateBrokerStorage(input)
+		output, err := conn.UpdateBrokerStorageWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating MSK Cluster (%s) broker storage: %s", d.Id(), err)
@@ -578,7 +578,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			TargetInstanceType: aws.String(d.Get("broker_node_group_info.0.instance_type").(string)),
 		}
 
-		output, err := conn.UpdateBrokerType(input)
+		output, err := conn.UpdateBrokerTypeWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating MSK Cluster (%s) broker type: %s", d.Id(), err)
@@ -600,7 +600,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			TargetNumberOfBrokerNodes: aws.Int64(int64(d.Get("number_of_broker_nodes").(int))),
 		}
 
-		output, err := conn.UpdateBrokerCount(input)
+		output, err := conn.UpdateBrokerCountWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating MSK Cluster (%s) broker count: %s", d.Id(), err)
@@ -630,7 +630,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.OpenMonitoring = expandOpenMonitoringInfo(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		output, err := conn.UpdateMonitoring(input)
+		output, err := conn.UpdateMonitoringWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating MSK Cluster (%s) monitoring: %s", d.Id(), err)
@@ -655,7 +655,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.ConfigurationInfo = expandConfigurationInfo(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		output, err := conn.UpdateClusterConfiguration(input)
+		output, err := conn.UpdateClusterConfigurationWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating MSK Cluster (%s) configuration: %s", d.Id(), err)
@@ -683,7 +683,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		output, err := conn.UpdateClusterKafkaVersion(input)
+		output, err := conn.UpdateClusterKafkaVersionWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating MSK Cluster (%s) Kafka version: %s", d.Id(), err)
@@ -716,7 +716,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		output, err := conn.UpdateSecurity(input)
+		output, err := conn.UpdateSecurityWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating MSK Cluster (%s) security: %s", d.Id(), err)
