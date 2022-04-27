@@ -381,6 +381,20 @@ func expandDataCoreNetworkPolicySegmentActions(cfgSegmentActionsIntf []interface
 			if sgmt, ok := cfgSA["segment"]; ok {
 				sgmtAction.Segment = sgmt.(string)
 			}
+
+			if sW := cfgSA["share_with"].(*schema.Set).List(); len(sW) > 0 {
+				shareWith = CoreNetworkPolicyDecodeConfigStringList(sW)
+				sgmtAction.ShareWith = shareWith
+			}
+
+			if sWE := cfgSA["share_with_except"].(*schema.Set).List(); len(sWE) > 0 {
+				shareWithExcept = CoreNetworkPolicyDecodeConfigStringList(sWE)
+				sgmtAction.ShareWithExcept = shareWithExcept
+			}
+
+			if (shareWith != nil && shareWithExcept != nil) || (shareWith == nil && shareWithExcept == nil) {
+				return nil, fmt.Errorf("You must specify only 1 of \"share_with\" or \"share_with_except\".")
+			}
 		}
 
 		if action == "create-route" {
@@ -395,23 +409,6 @@ func expandDataCoreNetworkPolicySegmentActions(cfgSegmentActionsIntf []interface
 			if destCidrB := cfgSA["destination_cidr_blocks"].(*schema.Set).List(); len(destCidrB) > 0 {
 				sgmtAction.DestinationCidrBlocks = CoreNetworkPolicyDecodeConfigStringList(destCidrB)
 			}
-		}
-
-		if action == "create-route" {
-			if sW := cfgSA["share_with"].(*schema.Set).List(); len(sW) > 0 {
-				shareWith = CoreNetworkPolicyDecodeConfigStringList(sW)
-				sgmtAction.ShareWith = shareWith
-			}
-
-			if sWE := cfgSA["share_with_except"].(*schema.Set).List(); len(sWE) > 0 {
-				shareWithExcept = CoreNetworkPolicyDecodeConfigStringList(sWE)
-				sgmtAction.ShareWithExcept = shareWithExcept
-			}
-
-			if (shareWith != nil && shareWithExcept != nil) || (shareWith == nil && shareWithExcept == nil) {
-				return nil, fmt.Errorf("You must specify only 1 of \"share_with\" or \"share_with_except\".")
-			}
-
 		}
 
 		if sgmt, ok := cfgSA["segment"]; ok {
@@ -503,8 +500,8 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{
 			}
 		}
 		if t == "tag-exists" {
-			if k["key"] == true || k["operator"] == true || k["value"] == false {
-				return nil, fmt.Errorf("You must set \"value\" and cannot set \"operator\", or \"key\" if type = \"tag-exists\".")
+			if k["key"] == false || k["operator"] == true || k["value"] == true {
+				return nil, fmt.Errorf("You must set \"key\" and cannot set \"operator\", or \"value\" if type = \"tag-exists\".")
 			}
 		}
 		if t == "tag-value" {

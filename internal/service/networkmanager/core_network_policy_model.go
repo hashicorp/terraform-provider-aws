@@ -77,9 +77,10 @@ func (c *CoreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
 	type Alias CoreNetworkPolicySegmentAction
 
 	var share interface{}
-	sWIntf := c.ShareWith.([]string)
 
 	if c.ShareWith != nil {
+		sWIntf := c.ShareWith.([]string)
+
 		if sWIntf[0] == "*" {
 			share = sWIntf[0]
 		} else {
