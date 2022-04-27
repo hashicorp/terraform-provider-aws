@@ -76,7 +76,7 @@ resource "aws_ce_cost_category" "test" {
     value = "production"
     rule {
       tags {
-        key = %[1]q
+        key    = %[1]q
         values = ["abc", "123"]
       }
     }
@@ -106,7 +106,7 @@ resource "aws_ce_cost_category" "test" {
     value = "production"
     rule {
       tags {
-        key = %[1]q
+        key    = %[1]q
         values = ["abc", "123"]
       }
     }
