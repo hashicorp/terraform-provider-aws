@@ -987,6 +987,7 @@ func TestAccRDSCluster_engineMode(t *testing.T) {
 					testAccCheckClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "serverless"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "0"),
 				),
 			},
 			{
@@ -996,6 +997,7 @@ func TestAccRDSCluster_engineMode(t *testing.T) {
 					testAccCheckClusterRecreated(&dbCluster1, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "provisioned"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "0"),
 				),
 			},
 		},
@@ -1451,6 +1453,44 @@ func TestAccRDSCluster_scaling(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", "8"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_until_auto_pause", "86400"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.timeout_action", "ForceApplyCapacityChange"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster rds.DBCluster
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterServerlessV2ScalingConfigurationConfig(rName, 64.0, 0.5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "64"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "0.5"),
+				),
+			},
+			{
+				Config: testAccClusterServerlessV2ScalingConfigurationConfig(rName, 128.0, 8.5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "128"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "8.5"),
 				),
 			},
 		},
@@ -3795,6 +3835,29 @@ resource "aws_rds_cluster" "test" {
   }
 }
 `, rName, autoPause, maxCapacity, minCapacity, secondsUntilAutoPause, timeoutAction)
+}
+
+func testAccClusterServerlessV2ScalingConfigurationConfig(rName string, maxCapacity, minCapacity float64) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "test" {
+  engine             = "aurora-postgresql"
+  preferred_versions = ["13.6"]
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
+  engine              = data.aws_rds_engine_version.test.engine
+  engine_version      = data.aws_rds_engine_version.test.version
+
+  serverlessv2_scaling_configuration {
+    max_capacity = %[2]f
+    min_capacity = %[3]f
+  }
+}
+`, rName, maxCapacity, minCapacity)
 }
 
 func testAccClusterConfig_ScalingConfiguration_DefaultMinCapacity(rName string, autoPause bool, maxCapacity, secondsUntilAutoPause int, timeoutAction string) string {

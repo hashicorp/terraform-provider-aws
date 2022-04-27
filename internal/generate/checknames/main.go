@@ -4,10 +4,14 @@
 package main
 
 import (
+	"bufio"
 	"encoding/csv"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,15 +19,14 @@ import (
 
 const namesDataFile = "../../../names/names_data.csv"
 
-/*
 // DocPrefix tests/column needs to be reworked for compatibility with tfproviderdocs
 type DocPrefix struct {
 	HumanFriendly  string
-	DocPrefixRegex string
+	DocPrefixRegex []string
+	ResourceRegex  string
 }
-*/
 
-//var allDocs int // currently skipping this test
+var allDocs int // currently skipping this test
 var allChecks int
 
 func main() {
@@ -43,7 +46,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// docPrefixes := []DocPrefix{} // test to be reworked
+	docPrefixes := []DocPrefix{} // test to be reworked
 
 	for i, l := range data {
 		if i < 1 { // no header
@@ -169,31 +172,34 @@ func main() {
 			continue
 		}
 
-		// doc prefix tests to be reworked
-		/*
-			docPrefixes = append(docPrefixes, DocPrefix{
-				HumanFriendly:  l[names.ColHumanFriendly],
-				DocPrefixRegex: l[names.ColDocPrefix],
-			})
-		*/
+		rre := l[names.ColResourcePrefixActual]
+
+		if rre == "" {
+			rre = l[names.ColResourcePrefixCorrect]
+		}
+
+		docPrefixes = append(docPrefixes, DocPrefix{
+			HumanFriendly:  l[names.ColHumanFriendly],
+			DocPrefixRegex: strings.Split(l[names.ColDocPrefix], ";"),
+			ResourceRegex:  rre,
+		})
+
 		allChecks++
 	}
 	fmt.Printf("  Performed %d checks on names_data.csv, 0 errors.\n", (allChecks * 36))
 
 	// DocPrefix needs to be reworked for compatibility with tfproviderdocs, in the meantime skip
-	/*
-		err = checkDocDir("../../../website/docs/r/", docPrefixes)
-		if err != nil {
-			log.Fatalf("while checking resource doc dir: %s", err)
-		}
+	err = checkDocDir("../../../website/docs/r/", docPrefixes)
+	if err != nil {
+		log.Fatalf("while checking resource doc dir: %s", err)
+	}
 
-		err = checkDocDir("../../../website/docs/d/", docPrefixes)
-		if err != nil {
-			log.Fatalf("while checking data source doc dir: %s", err)
-		}
+	err = checkDocDir("../../../website/docs/d/", docPrefixes)
+	if err != nil {
+		log.Fatalf("while checking data source doc dir: %s", err)
+	}
 
-		fmt.Printf("  Checked %d documentation files for matching prefix and subcategory, 0 errors.\n", allDocs)
-	*/
+	fmt.Printf("  Checked %d documentation files to ensure filename prefix, resource name, label regex, and subcategory match, 0 errors.\n", allDocs)
 }
 
 func checkAllLowercase(service, name, value string) {
@@ -208,7 +214,6 @@ func checkNotAllLowercase(service, name, value string) {
 	}
 }
 
-/*
 func checkDocDir(dir string, prefixes []DocPrefix) error {
 	fs, err := ioutil.ReadDir(dir)
 	if err != nil {
@@ -234,6 +239,7 @@ func checkDocDir(dir string, prefixes []DocPrefix) error {
 
 		scanner := bufio.NewScanner(f)
 		var line int
+		var rregex string
 		for scanner.Scan() {
 			switch line {
 			case 0:
@@ -241,15 +247,31 @@ func checkDocDir(dir string, prefixes []DocPrefix) error {
 					return fmt.Errorf("file (%s) doesn't start like doc file", fh.Name())
 				}
 			case 1:
-				hf, err := findHumanFriendly(fh.Name(), prefixes)
+				hf, rr, err := findHumanFriendly(fh.Name(), prefixes)
 				if err != nil {
 					return fmt.Errorf("checking file (%s): %w", fh.Name(), err)
 				}
 
+				rregex = rr
+
 				sc := scanner.Text()
 				sc = strings.TrimSuffix(strings.TrimPrefix(sc, "subcategory: \""), "\"")
 				if hf != sc {
-					return fmt.Errorf("file (%s) subcategory (%s) doesn't match file name prefix", fh.Name(), sc)
+					return fmt.Errorf("file (%s) subcategory (%s) doesn't match file name prefix, expecting %s", fh.Name(), sc, hf)
+				}
+			case 2:
+				continue
+			case 3:
+				rn := scanner.Text()
+				rn = strings.TrimSuffix(strings.TrimPrefix(rn, `page_title: "AWS: `), `"`)
+
+				re, err := regexp.Compile(fmt.Sprintf(`^%s`, rregex))
+				if err != nil {
+					return fmt.Errorf("unable to compile resource regular expression pattern (%s): %s", rregex, err)
+				}
+
+				if !re.MatchString(rn) {
+					return fmt.Errorf("resource regular expression (%s) does not match resource name (%s)", rregex, rn)
 				}
 			default:
 				break
@@ -264,18 +286,19 @@ func checkDocDir(dir string, prefixes []DocPrefix) error {
 	return nil
 }
 
-func findHumanFriendly(filename string, prefixes []DocPrefix) (string, error) {
+func findHumanFriendly(filename string, prefixes []DocPrefix) (string, string, error) {
 	for _, v := range prefixes {
-		re, err := regexp.Compile(fmt.Sprintf(`^%s`, v.DocPrefixRegex))
-		if err != nil {
-			return "", fmt.Errorf("unable to compile regular expression pattern %s: %s", v.DocPrefixRegex, err)
-		}
+		for _, pf := range v.DocPrefixRegex {
+			re, err := regexp.Compile(fmt.Sprintf(`^%s`, pf))
+			if err != nil {
+				return "", "", fmt.Errorf("unable to compile regular expression pattern %s: %s", pf, err)
+			}
 
-		if re.MatchString(filename) {
-			return v.HumanFriendly, nil
+			if re.MatchString(filename) {
+				return v.HumanFriendly, v.ResourceRegex, nil
+			}
 		}
 	}
 
-	return "", fmt.Errorf("could not find prefix in %v for file (%s)", prefixes, filename)
+	return "", "", fmt.Errorf("could not find prefix in %v for file (%s)", prefixes, filename)
 }
-*/

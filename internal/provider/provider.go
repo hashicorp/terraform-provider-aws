@@ -42,11 +42,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudsearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codecommit"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/codedeploy"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarnotifications"
@@ -59,6 +57,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dax"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/detective"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
@@ -108,6 +107,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
@@ -454,6 +454,7 @@ func Provider() *schema.Provider {
 			"aws_cloudfront_distribution":                   cloudfront.DataSourceDistribution(),
 			"aws_cloudfront_function":                       cloudfront.DataSourceFunction(),
 			"aws_cloudfront_log_delivery_canonical_user_id": cloudfront.DataSourceLogDeliveryCanonicalUserID(),
+			"aws_cloudfront_origin_access_identities":       cloudfront.DataSourceOriginAccessIdentities(),
 			"aws_cloudfront_origin_access_identity":         cloudfront.DataSourceOriginAccessIdentity(),
 			"aws_cloudfront_origin_request_policy":          cloudfront.DataSourceOriginRequestPolicy(),
 			"aws_cloudfront_realtime_log_config":            cloudfront.DataSourceRealtimeLogConfig(),
@@ -467,8 +468,8 @@ func Provider() *schema.Provider {
 			"aws_cloudwatch_event_connection": events.DataSourceConnection(),
 			"aws_cloudwatch_event_source":     events.DataSourceSource(),
 
-			"aws_cloudwatch_log_group":  cloudwatchlogs.DataSourceGroup(),
-			"aws_cloudwatch_log_groups": cloudwatchlogs.DataSourceGroups(),
+			"aws_cloudwatch_log_group":  logs.DataSourceGroup(),
+			"aws_cloudwatch_log_groups": logs.DataSourceGroups(),
 
 			"aws_codeartifact_authorization_token": codeartifact.DataSourceAuthorizationToken(),
 			"aws_codeartifact_repository_endpoint": codeartifact.DataSourceRepositoryEndpoint(),
@@ -729,7 +730,8 @@ func Provider() *schema.Provider {
 			"aws_memorydb_subnet_group":    memorydb.DataSourceSubnetGroup(),
 			"aws_memorydb_user":            memorydb.DataSourceUser(),
 
-			"aws_mq_broker": mq.DataSourceBroker(),
+			"aws_mq_broker":                         mq.DataSourceBroker(),
+			"aws_mq_broker_instance_type_offerings": mq.DataSourceBrokerInstanceTypeOfferings(),
 
 			"aws_neptune_engine_version":        neptune.DataSourceEngineVersion(),
 			"aws_neptune_orderable_db_instance": neptune.DataSourceOrderableDBInstance(),
@@ -1060,14 +1062,14 @@ func Provider() *schema.Provider {
 			"aws_cloudwatch_event_rule":            events.ResourceRule(),
 			"aws_cloudwatch_event_target":          events.ResourceTarget(),
 
-			"aws_cloudwatch_log_destination":         cloudwatchlogs.ResourceDestination(),
-			"aws_cloudwatch_log_destination_policy":  cloudwatchlogs.ResourceDestinationPolicy(),
-			"aws_cloudwatch_log_group":               cloudwatchlogs.ResourceGroup(),
-			"aws_cloudwatch_log_metric_filter":       cloudwatchlogs.ResourceMetricFilter(),
-			"aws_cloudwatch_log_resource_policy":     cloudwatchlogs.ResourceResourcePolicy(),
-			"aws_cloudwatch_log_stream":              cloudwatchlogs.ResourceStream(),
-			"aws_cloudwatch_log_subscription_filter": cloudwatchlogs.ResourceSubscriptionFilter(),
-			"aws_cloudwatch_query_definition":        cloudwatchlogs.ResourceQueryDefinition(),
+			"aws_cloudwatch_log_destination":         logs.ResourceDestination(),
+			"aws_cloudwatch_log_destination_policy":  logs.ResourceDestinationPolicy(),
+			"aws_cloudwatch_log_group":               logs.ResourceGroup(),
+			"aws_cloudwatch_log_metric_filter":       logs.ResourceMetricFilter(),
+			"aws_cloudwatch_log_resource_policy":     logs.ResourceResourcePolicy(),
+			"aws_cloudwatch_log_stream":              logs.ResourceStream(),
+			"aws_cloudwatch_log_subscription_filter": logs.ResourceSubscriptionFilter(),
+			"aws_cloudwatch_query_definition":        logs.ResourceQueryDefinition(),
 
 			"aws_codeartifact_domain":                        codeartifact.ResourceDomain(),
 			"aws_codeartifact_domain_permissions_policy":     codeartifact.ResourceDomainPermissionsPolicy(),
@@ -1085,9 +1087,9 @@ func Provider() *schema.Provider {
 			"aws_codecommit_repository":                         codecommit.ResourceRepository(),
 			"aws_codecommit_trigger":                            codecommit.ResourceTrigger(),
 
-			"aws_codedeploy_app":               codedeploy.ResourceApp(),
-			"aws_codedeploy_deployment_config": codedeploy.ResourceDeploymentConfig(),
-			"aws_codedeploy_deployment_group":  codedeploy.ResourceDeploymentGroup(),
+			"aws_codedeploy_app":               deploy.ResourceApp(),
+			"aws_codedeploy_deployment_config": deploy.ResourceDeploymentConfig(),
+			"aws_codedeploy_deployment_group":  deploy.ResourceDeploymentGroup(),
 
 			"aws_codepipeline":         codepipeline.ResourceCodePipeline(),
 			"aws_codepipeline_webhook": codepipeline.ResourceWebhook(),
@@ -1201,6 +1203,7 @@ func Provider() *schema.Provider {
 			"aws_docdb_cluster_instance":        docdb.ResourceClusterInstance(),
 			"aws_docdb_cluster_parameter_group": docdb.ResourceClusterParameterGroup(),
 			"aws_docdb_cluster_snapshot":        docdb.ResourceClusterSnapshot(),
+			"aws_docdb_event_subscription":      docdb.ResourceEventSubscription(),
 			"aws_docdb_global_cluster":          docdb.ResourceGlobalCluster(),
 			"aws_docdb_subnet_group":            docdb.ResourceSubnetGroup(),
 

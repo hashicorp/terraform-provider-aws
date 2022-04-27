@@ -30,6 +30,44 @@ const (
 )
 
 const (
+	AvailabilityZoneGroupOptInStatusTimeout = 10 * time.Minute
+)
+
+func WaitAvailabilityZoneGroupOptedIn(conn *ec2.EC2, name string) (*ec2.AvailabilityZone, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AvailabilityZoneOptInStatusNotOptedIn},
+		Target:  []string{ec2.AvailabilityZoneOptInStatusOptedIn},
+		Refresh: StatusAvailabilityZoneGroupOptInStatus(conn, name),
+		Timeout: AvailabilityZoneGroupOptInStatusTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.AvailabilityZone); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitAvailabilityZoneGroupNotOptedIn(conn *ec2.EC2, name string) (*ec2.AvailabilityZone, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AvailabilityZoneOptInStatusOptedIn},
+		Target:  []string{ec2.AvailabilityZoneOptInStatusNotOptedIn},
+		Refresh: StatusAvailabilityZoneGroupOptInStatus(conn, name),
+		Timeout: AvailabilityZoneGroupOptInStatusTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.AvailabilityZone); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
 	CapacityReservationActiveTimeout  = 2 * time.Minute
 	CapacityReservationDeletedTimeout = 2 * time.Minute
 )
@@ -487,6 +525,24 @@ func WaitInstanceCapacityReservationSpecificationUpdated(conn *ec2.EC2, instance
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.Instance); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitInstanceMaintenanceOptionsAutoRecoveryUpdated(conn *ec2.EC2, id, expectedValue string, timeout time.Duration) (*ec2.InstanceMaintenanceOptions, error) {
+	stateConf := &resource.StateChangeConf{
+		Target:     []string{expectedValue},
+		Refresh:    StatusInstanceMaintenanceOptionsAutoRecovery(conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.InstanceMaintenanceOptions); ok {
 		return output, err
 	}
 
@@ -1939,6 +1995,63 @@ func WaitPlacementGroupDeleted(conn *ec2.EC2, name string) (*ec2.PlacementGroup,
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.PlacementGroup); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitSpotFleetRequestCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.SpotFleetRequestConfig, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.BatchStateSubmitted},
+		Target:     []string{ec2.BatchStateActive},
+		Refresh:    StatusSpotFleetRequestState(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.SpotFleetRequestConfig); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitSpotFleetRequestFulfilled(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.SpotFleetRequestConfig, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.ActivityStatusPendingFulfillment},
+		Target:     []string{ec2.ActivityStatusFulfilled},
+		Refresh:    StatusSpotFleetActivityStatus(conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.SpotFleetRequestConfig); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitSpotFleetRequestUpdated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.SpotFleetRequestConfig, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.BatchStateModifying},
+		Target:     []string{ec2.BatchStateActive},
+		Refresh:    StatusSpotFleetRequestState(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.SpotFleetRequestConfig); ok {
 		return output, err
 	}
 

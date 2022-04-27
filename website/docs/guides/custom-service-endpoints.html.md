@@ -118,11 +118,9 @@ provider "aws" {
   <li><code>cloudsearchdomain</code></li>
   <li><code>cloudtrail</code></li>
   <li><code>cloudwatch</code></li>
-  <li><code>cloudwatchlogs</code></li>
   <li><code>codeartifact</code></li>
   <li><code>codebuild</code></li>
   <li><code>codecommit</code></li>
-  <li><code>codedeploy</code> (or <code>deploy</code>)</li>
   <li><code>codeguruprofiler</code></li>
   <li><code>codegurureviewer</code></li>
   <li><code>codepipeline</code></li>
@@ -146,6 +144,7 @@ provider "aws" {
   <li><code>datapipeline</code></li>
   <li><code>datasync</code></li>
   <li><code>dax</code></li>
+  <li><code>deploy</code> (or <code>codedeploy</code>)</li>
   <li><code>detective</code></li>
   <li><code>devicefarm</code></li>
   <li><code>devopsguru</code></li>
@@ -240,6 +239,7 @@ provider "aws" {
   <li><code>licensemanager</code></li>
   <li><code>lightsail</code></li>
   <li><code>location</code> (or <code>locationservice</code>)</li>
+  <li><code>logs</code> (or <code>cloudwatchlogs</code>)</li>
   <li><code>lookoutequipment</code></li>
   <li><code>lookoutmetrics</code></li>
   <li><code>lookoutvision</code> (or <code>lookoutforvision</code>)</li>

@@ -632,7 +632,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 				return fmt.Errorf("error waiting for Load Balancer (%s) to be active: %w", d.Get("name").(string), err)
 			}
 
-			return resourceListenerRead(d, meta)
+			return resourceLoadBalancerRead(d, meta)
 		}
 
 		if err != nil {
