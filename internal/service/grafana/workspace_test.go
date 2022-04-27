@@ -92,6 +92,7 @@ func testAccGrafanaWorkspace_saml(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "saml_configuration_status", managedgrafana.SamlConfigurationStatusNotConfigured),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -138,6 +139,7 @@ func testAccGrafanaWorkspace_sso(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "saml_configuration_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -211,10 +213,7 @@ func testAccGrafanaWorkspace_tags(t *testing.T) {
 	resourceName := "aws_grafana_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
-		},
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 		CheckDestroy: testAccCheckWorkspaceDestroy,
 		Providers:    acctest.Providers,
