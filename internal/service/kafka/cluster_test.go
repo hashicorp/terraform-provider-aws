@@ -229,7 +229,7 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_scram(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "false"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "true"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
@@ -293,7 +293,7 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_iam(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "false"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "true"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
@@ -1154,9 +1154,11 @@ resource "aws_msk_cluster" "test" {
     sasl {
       scram = %[2]t
     }
+
+	unauthenticated = %[3]t
   }
 }
-`, rName, scramEnabled))
+`, rName, scramEnabled, !scramEnabled))
 }
 
 func testAccClusterClientAuthenticationSaslIamConfig(rName string, saslEnabled bool) string {
@@ -1177,9 +1179,11 @@ resource "aws_msk_cluster" "test" {
     sasl {
       iam = %[2]t
     }
+
+	unauthenticated = %[3]t
   }
 }
-`, rName, saslEnabled))
+`, rName, saslEnabled, !saslEnabled))
 }
 
 func testAccClusterConfigurationInfoRevision1Config(rName string) string {
