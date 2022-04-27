@@ -186,6 +186,7 @@ func ResourceCluster() *schema.Resource {
 			"encryption_info": {
 				Type:     schema.TypeList,
 				Optional: true,
+				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -211,7 +212,6 @@ func ResourceCluster() *schema.Resource {
 									"in_cluster": {
 										Type:     schema.TypeBool,
 										Optional: true,
-										ForceNew: true,
 										Default:  true,
 									},
 								},
@@ -853,6 +853,9 @@ func expandTls(tfMap map[string]interface{}) *kafka.Tls {
 
 	if v, ok := tfMap["certificate_authority_arns"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.CertificateAuthorityArnList = flex.ExpandStringSet(v)
+		apiObject.Enabled = aws.Bool(true)
+	} else {
+		apiObject.Enabled = aws.Bool(false)
 	}
 
 	return apiObject
@@ -1155,7 +1158,7 @@ func flattenTls(apiObject *kafka.Tls) map[string]interface{} {
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.CertificateAuthorityArnList; v != nil {
+	if v := apiObject.CertificateAuthorityArnList; v != nil && aws.BoolValue(apiObject.Enabled) {
 		tfMap["certificate_authority_arns"] = aws.StringValueSlice(v)
 	}
 

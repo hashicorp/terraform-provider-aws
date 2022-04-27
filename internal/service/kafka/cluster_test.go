@@ -313,7 +313,7 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_iam(t *testing.T) {
 }
 
 func TestAccKafkaCluster_ClientAuthenticationTLS_certificateAuthorityARNs(t *testing.T) {
-	var cluster1 kafka.ClusterInfo
+	var cluster1, cluster2, cluster3 kafka.ClusterInfo
 	var ca acmpca.CertificateAuthority
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
@@ -339,12 +339,17 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_certificateAuthorityARNs(t *tes
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "true"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.sasl", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.*", acmCAResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "false"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.client_broker", "TLS"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.in_cluster", "true"),
 				),
 			},
 			{
@@ -354,6 +359,40 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_certificateAuthorityARNs(t *tes
 				ImportStateVerifyIgnore: []string{
 					"current_version",
 				},
+			},
+			{
+				Config: testAccClusterRootCAClientAuthenticationUnauthenticatedConfig(rName, commonName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster2),
+					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "true"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.client_broker", "PLAINTEXT"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.in_cluster", "false"),
+				),
+			},
+			{
+				Config: testAccClusterClientAuthenticationTlsCertificateAuthorityArnsConfig(rName, commonName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster3),
+					testAccCheckClusterNotRecreated(&cluster2, &cluster3),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "true"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.sasl", "false"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.*", acmCAResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "false"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.client_broker", "TLS"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.in_cluster", "true"),
+				),
 			},
 			{
 				Config: testAccClusterClientAuthenticationTlsCertificateAuthorityArnsConfig(rName, commonName),
@@ -1122,6 +1161,10 @@ resource "aws_msk_cluster" "test" {
   }
 
   client_authentication {
+    sasl {
+      iam = true
+    }
+
     tls {
       certificate_authority_arns = [aws_acmpca_certificate_authority.test.arn]
     }
@@ -1130,6 +1173,38 @@ resource "aws_msk_cluster" "test" {
   encryption_info {
     encryption_in_transit {
       client_broker = "TLS"
+      in_cluster    = true
+    }
+  }
+}
+`, rName, commonName))
+}
+
+func testAccClusterRootCAClientAuthenticationUnauthenticatedConfig(rName, commonName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterBaseConfig(rName),
+		testAccClusterRootCAConfig(commonName),
+		fmt.Sprintf(`
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "2.7.1"
+  number_of_broker_nodes = 3
+
+  broker_node_group_info {
+    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    ebs_volume_size = 10
+    instance_type   = "kafka.m5.large"
+    security_groups = [aws_security_group.example_sg.id]
+  }
+
+  client_authentication {
+    unauthenticated = true
+  }
+
+  encryption_info {
+    encryption_in_transit {
+      client_broker = "PLAINTEXT"
+      in_cluster    = false
     }
   }
 }
