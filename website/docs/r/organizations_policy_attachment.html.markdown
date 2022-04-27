@@ -52,7 +52,7 @@ No additional attributes are exported.
 
 ## Import
 
-`aws_organizations_policy_attachment` can be imported by using the target ID and policy ID, e.g. with an account target
+`aws_organizations_policy_attachment` can be imported by using the target ID and policy ID, e.g., with an account target
 
 ```
 $ terraform import aws_organizations_policy_attachment.account 123456789012:p-12345678

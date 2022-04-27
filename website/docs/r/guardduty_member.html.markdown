@@ -61,7 +61,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-GuardDuty members can be imported using the the primary GuardDuty detector ID and member AWS account ID, e.g.
+GuardDuty members can be imported using the the primary GuardDuty detector ID and member AWS account ID, e.g.,
 
 ```
 $ terraform import aws_guardduty_member.MyMember 00b00fd5aecc0ab60a708659477e9617:123456789012

@@ -1,5 +1,5 @@
 ---
-subcategory: "Database Migration Service (DMS)"
+subcategory: "DMS (Database Migration)"
 layout: "aws"
 page_title: "AWS: aws_dms_replication_task"
 description: |-
@@ -35,7 +35,8 @@ resource "aws_dms_replication_task" "test" {
 
 The following arguments are supported:
 
-* `cdc_start_time` - (Optional) The Unix timestamp integer for the start of the Change Data Capture (CDC) operation.
+* `cdc_start_position` - (Optional, Conflicts with `cdc_start_time`) Indicates when you want a change data capture (CDC) operation to start. The value can be in date, checkpoint, or LSN/SCN format depending on the source engine. For more information, see [Determining a CDC native start point](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Task.CDC.html#CHAP_Task.CDC.StartPoint.Native).
+* `cdc_start_time` - (Optional, Conflicts with `cdc_start_position`) The Unix timestamp integer for the start of the Change Data Capture (CDC) operation.
 * `migration_type` - (Required) The migration type. Can be one of `full-load | cdc | full-load-and-cdc`.
 * `replication_instance_arn` - (Required) The Amazon Resource Name (ARN) of the replication instance.
 * `replication_task_id` - (Required) The replication task identifier.
@@ -47,6 +48,8 @@ The following arguments are supported:
 
 * `replication_task_settings` - (Optional) An escaped JSON string that contains the task settings. For a complete list of task settings, see [Task Settings for AWS Database Migration Service Tasks](http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TaskSettings.html).
 * `source_endpoint_arn` - (Required) The Amazon Resource Name (ARN) string that uniquely identifies the source endpoint.
+* `start_replication_task` - (Optional) Whether to run or stop the replication task.
+* `status` - Replication Task status.
 * `table_mappings` - (Required) An escaped JSON string that contains the table mappings. For information on table mapping see [Using Table Mapping with an AWS Database Migration Service Task to Select and Filter Data](http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TableMapping.html)
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `target_endpoint_arn` - (Required) The Amazon Resource Name (ARN) string that uniquely identifies the target endpoint.
@@ -60,7 +63,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Replication tasks can be imported using the `replication_task_id`, e.g.
+Replication tasks can be imported using the `replication_task_id`, e.g.,
 
 ```
 $ terraform import aws_dms_replication_task.test test-dms-replication-task-tf

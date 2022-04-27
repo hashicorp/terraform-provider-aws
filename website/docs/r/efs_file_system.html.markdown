@@ -1,5 +1,5 @@
 ---
-subcategory: "EFS"
+subcategory: "EFS (Elastic File System)"
 layout: "aws"
 page_title: "AWS: aws_efs_file_system"
 description: |-
@@ -56,7 +56,8 @@ user guide for more information.
 ### Lifecycle Policy Arguments
 For **lifecycle_policy** the following attributes are supported:
 
-* `transition_to_ia` - (Required) Indicates how long it takes to transition files to the IA storage class. Valid values: `AFTER_7_DAYS`, `AFTER_14_DAYS`, `AFTER_30_DAYS`, `AFTER_60_DAYS`, or `AFTER_90_DAYS`.
+* `transition_to_ia` - (Optional) Indicates how long it takes to transition files to the IA storage class. Valid values: `AFTER_7_DAYS`, `AFTER_14_DAYS`, `AFTER_30_DAYS`, `AFTER_60_DAYS`, or `AFTER_90_DAYS`.
+* `transition_to_primary_storage_class` - (Optional) Describes the policy used to transition a file from infequent access storage to primary storage. Valid values: `AFTER_1_ACCESS`.
 
 ## Attributes Reference
 
@@ -64,7 +65,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name of the file system.
 * `availability_zone_id` - The identifier of the Availability Zone in which the file system's One Zone storage classes exist.
-* `id` - The ID that identifies the file system (e.g. fs-ccfc0d65).
+* `id` - The ID that identifies the file system (e.g., fs-ccfc0d65).
 * `dns_name` - The DNS name for the filesystem per [documented convention](http://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-dns-name.html).
 * `owner_id` - The AWS account that created the file system. If the file system was createdby an IAM user, the parent account to which the user belongs is the owner.
 * `number_of_mount_targets` - The current number of mount targets that the file system has.
@@ -79,7 +80,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The EFS file systems can be imported using the `id`, e.g.
+The EFS file systems can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_efs_file_system.foo fs-6fa144c6

@@ -2,23 +2,27 @@ on:
   - pull_request_target
 
 name: Pull Request Target (All types)
+
+env:
+  IN_MAINTAINER_LIST: ${{ contains(secrets.MAINTAINER_LIST, github.actor) }}
+
 jobs:
   Labeler:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Apply Labels
-      uses: actions/labeler@v3
+      uses: actions/labeler@v4
       with:
         configuration-path: .github/labeler-pr-triage.yml
         repo-token: ${{ secrets.GITHUB_TOKEN }}
   NeedsTriageLabeler:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Apply needs-triage Label
-      uses: actions/labeler@v3
-      if: github.event.action == 'opened' && !contains(fromJSON('["anGie44", "bflad", "bill-rich","breathingdust", "dependabot[bot]", "DrFaust92", "ewbankkit", "gdavison", "maryelizbeth", "YakDriver", "zhelding"]'), github.actor)
+      uses: actions/labeler@v4
+      if: github.event.action == 'opened' && env.IN_MAINTAINER_LIST == 'false'
       with:
         configuration-path: .github/labeler-pr-needs-triage.yml
         repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -50,8 +54,8 @@ jobs:
           pr-message: |-
             Welcome @${{github.actor}} :wave:
             
-            It looks like this is your first Pull Request submission to the [Terraform AWS Provider](https://github.com/terraform-providers/terraform-provider-aws)! If you haven’t already done so please make sure you have checked out our [CONTRIBUTING](https://github.com/terraform-providers/terraform-provider-aws/blob/main/docs/CONTRIBUTING.md) guide and [FAQ](https://github.com/terraform-providers/terraform-provider-aws/blob/main/docs/FAQ.md) to make sure your contribution is adhering to best practice and has all the necessary elements in place for a successful approval.
+            It looks like this is your first Pull Request submission to the [Terraform AWS Provider](https://github.com/hashicorp/terraform-provider-aws)! If you haven’t already done so please make sure you have checked out our [CONTRIBUTING](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing) guide and [FAQ](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/faq.md) to make sure your contribution is adhering to best practice and has all the necessary elements in place for a successful approval.
 
-            Also take a look at our [FAQ](https://github.com/terraform-providers/terraform-provider-aws/blob/main/docs/FAQ.md) which details how we prioritize Pull Requests for inclusion.
+            Also take a look at our [FAQ](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/faq.md) which details how we prioritize Pull Requests for inclusion.
             
             Thanks again, and welcome to the community! :smiley:         

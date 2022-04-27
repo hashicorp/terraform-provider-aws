@@ -55,7 +55,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Elastic Beanstalk Applications can be imported using the `name`, e.g.
+Elastic Beanstalk Applications can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_elastic_beanstalk_application.tf_test tf-test-name

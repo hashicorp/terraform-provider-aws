@@ -1,5 +1,5 @@
 ---
-subcategory: "WAFv2"
+subcategory: "WAF"
 layout: "aws"
 page_title: "AWS: aws_wafv2_regex_pattern_set"
 description: |-
@@ -57,7 +57,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WAFv2 Regex Pattern Sets can be imported using `ID/name/scope` e.g.
+WAFv2 Regex Pattern Sets can be imported using `ID/name/scope` e.g.,
 
 ```
 $ terraform import aws_wafv2_regex_pattern_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL

@@ -1,5 +1,5 @@
 ---
-subcategory: "XRay"
+subcategory: "X-Ray"
 layout: "aws"
 page_title: "AWS: aws_xray_encryption_config"
 description: |-
@@ -65,7 +65,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-XRay Encryption Config can be imported using the region name, e.g.
+XRay Encryption Config can be imported using the region name, e.g.,
 
 ```
 $ terraform import aws_xray_encryption_config.example us-west-2

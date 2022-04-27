@@ -55,11 +55,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id`- The id of the Glue User Defined Function.
 * `arn`- The ARN of the Glue User Defined Function.
-* `create_date`- The time at which the function was created.
+* `create_time`- The time at which the function was created.
 
 ## Import
 
-Glue User Defined Functions can be imported using the `catalog_id:database_name:function_name`. If you have not set a Catalog ID specify the AWS Account ID that the database is in, e.g.
+Glue User Defined Functions can be imported using the `catalog_id:database_name:function_name`. If you have not set a Catalog ID specify the AWS Account ID that the database is in, e.g.,
 
 ```
 $ terraform import aws_glue_user_defined_function.func 123456789012:my_database:my_func

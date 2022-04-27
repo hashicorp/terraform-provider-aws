@@ -56,7 +56,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Signer signing profiles can be imported using the `name`, e.g.
+Signer signing profiles can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_signer_signing_profile.test_signer_signing_profile test_sp_DdW3Mk1foYL88fajut4mTVFGpuwfd4ACO6ANL0D1uIj7lrn8adK

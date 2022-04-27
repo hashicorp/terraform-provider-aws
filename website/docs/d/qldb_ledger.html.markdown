@@ -1,5 +1,5 @@
 ---
-subcategory: "Quantum Ledger Database (QLDB)"
+subcategory: "QLDB (Quantum Ledger Database)"
 layout: "aws"
 page_title: "AWS: aws_qldb_ledger"
 description: |-

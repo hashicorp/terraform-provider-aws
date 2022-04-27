@@ -2,23 +2,47 @@
 # https://github.com/DavidAnson/markdownlint#configuration
 
 default: true
-MD007:
+
+# MD007
+ul-indent:
   indent: 4
-MD010:
+
+# MD010
+no-hard-tabs:
   code_blocks: false
 
 # Disabled Rules
 # https://github.com/DavidAnson/markdownlint/blob/master/doc/Rules.md
 
-MD001: false
-MD004: false
-MD006: false
-MD012: false
-MD013: false
-MD014: false
-MD022: false
-MD024: false
-MD034: false
-MD038: false
-MD040: false
-MD047: false
+# MD001
+heading-increment: false
+
+# MD004
+ul-style: false
+
+# MD012
+no-multiple-blanks: false
+
+# MD013
+line-length: false
+
+# MD014
+commands-show-output: false
+
+# MD022
+blanks-around-headings: false
+
+# MD024
+no-duplicate-heading: false
+
+# MD034
+no-bare-urls: false
+
+# MD038
+no-space-in-code: false
+
+# MD040
+fenced-code-language: false
+
+# MD047
+single-trailing-newline: false

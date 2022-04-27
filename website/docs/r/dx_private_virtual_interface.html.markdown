@@ -62,7 +62,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Direct Connect private virtual interfaces can be imported using the `vif id`, e.g.
+Direct Connect private virtual interfaces can be imported using the `vif id`, e.g.,
 
 ```
 $ terraform import aws_dx_private_virtual_interface.test dxvif-33cc44dd

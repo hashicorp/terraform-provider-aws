@@ -33,12 +33,12 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Volume Amazon Resource Name (ARN), e.g. `aws_storagegateway_tape_pool.example arn:aws:storagegateway:us-east-1:123456789012:tapepool/pool-12345678`.
+* `arn` - Volume Amazon Resource Name (ARN), e.g., `aws_storagegateway_tape_pool.example arn:aws:storagegateway:us-east-1:123456789012:tapepool/pool-12345678`.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-`aws_storagegateway_tape_pool` can be imported by using the volume Amazon Resource Name (ARN), e.g.
+`aws_storagegateway_tape_pool` can be imported by using the volume Amazon Resource Name (ARN), e.g.,
 
 ```
 $ terraform import aws_storagegateway_tape_pool.example arn:aws:storagegateway:us-east-1:123456789012:tapepool/pool-12345678

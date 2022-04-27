@@ -67,7 +67,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-OpsWorks static web server Layers can be imported using the `id`, e.g.
+OpsWorks static web server Layers can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_opsworks_static_web_layer.bar 00000000-0000-0000-0000-000000000000

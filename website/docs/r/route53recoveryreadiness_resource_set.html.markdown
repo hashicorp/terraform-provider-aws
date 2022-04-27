@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53 Recovery Readiness"
+subcategory: "Route 53 Recovery Readiness"
 layout: "aws"
 page_title: "AWS: aws_route53recoveryreadiness_resource_set"
 description: |-
@@ -73,7 +73,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route53 Recovery Readiness resource set name can be imported via the resource set name, e.g.
+Route53 Recovery Readiness resource set name can be imported via the resource set name, e.g.,
 
 ```
 $ terraform import aws_route53recoveryreadiness_resource_set.my-cw-alarm-set

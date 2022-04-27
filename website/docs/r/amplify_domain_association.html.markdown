@@ -1,5 +1,5 @@
 ---
-subcategory: "Amplify Console"
+subcategory: "Amplify"
 layout: "aws"
 page_title: "AWS: aws_amplify_domain_association"
 description: |-
@@ -75,7 +75,7 @@ The `sub_domain` configuration block exports the following attributes:
 
 ## Import
 
-Amplify domain association can be imported using `app_id` and `domain_name`, e.g.
+Amplify domain association can be imported using `app_id` and `domain_name`, e.g.,
 
 ```
 $ terraform import aws_amplify_domain_association.app d2ypk4k47z8u6/example.com

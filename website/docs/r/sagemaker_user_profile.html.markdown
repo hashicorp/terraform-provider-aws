@@ -1,14 +1,14 @@
 ---
-subcategory: "Sagemaker"
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_user_profile"
 description: |-
-  Provides a Sagemaker User Profile resource.
+  Provides a SageMaker User Profile resource.
 ---
 
 # Resource: aws_sagemaker_user_profile
 
-Provides a Sagemaker User Profile resource.
+Provides a SageMaker User Profile resource.
 
 ## Example Usage
 
@@ -39,7 +39,7 @@ The following arguments are supported:
 * `sharing_settings` - (Optional) The sharing settings. See [Sharing Settings](#sharing-settings) below.
 * `tensor_board_app_settings` - (Optional) The TensorBoard app settings. See [TensorBoard App Settings](#tensorboard-app-settings) below.
 * `jupyter_server_app_settings` - (Optional) The Jupyter server's app settings. See [Jupyter Server App Settings](#jupyter-server-app-settings) below.
-* `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [Kernel Gateway App Settings](#kernal-gateway-app-settings) below.
+* `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [Kernel Gateway App Settings](#kernel-gateway-app-settings) below.
 
 #### Sharing Settings
 
@@ -55,15 +55,19 @@ The following arguments are supported:
 
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
 * `custom_image` - (Optional) A list of custom SageMaker images that are configured to run as a KernelGateway app. see [Custom Image](#custom-image) below.
+* `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
 #### Jupyter Server App Settings
 
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
+* `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
 ##### Default Resource Spec
 
 * `instance_type` - (Optional) The instance type.
+* `lifecycle_config_arn` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configuration attached to the Resource.
 * `sagemaker_image_arn` - (Optional) The Amazon Resource Name (ARN) of the SageMaker image created on the instance.
+* `sagemaker_image_version_arn` - (Optional) The ARN of the image version created on the instance.
 
 ##### Custom Image
 
@@ -82,7 +86,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Code User Profiles can be imported using the `arn`, e.g.
+SageMaker Code User Profiles can be imported using the `arn`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_user_profile.test_user_profile arn:aws:sagemaker:us-west-2:123456789012:user-profile/domain-id/profile-name

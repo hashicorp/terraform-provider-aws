@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cloudwatch_event_rule: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO)
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_event_bus: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO)
+```

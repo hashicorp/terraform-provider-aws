@@ -1,5 +1,5 @@
 ---
-subcategory: "RAM"
+subcategory: "RAM (Resource Access Manager)"
 layout: "aws"
 page_title: "AWS: aws_ram_resource_share_accepter"
 description: |-
@@ -71,7 +71,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Resource share accepters can be imported using the resource share ARN, e.g.
+Resource share accepters can be imported using the resource share ARN, e.g.,
 
 ```
 $ terraform import aws_ram_resource_share_accepter.example arn:aws:ram:us-east-1:123456789012:resource-share/c4b56393-e8d9-89d9-6dc9-883752de4767

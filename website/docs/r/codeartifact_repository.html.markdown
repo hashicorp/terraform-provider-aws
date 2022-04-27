@@ -88,14 +88,14 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Name of the repository.
+* `id` - The ARN of the repository.
 * `arn` - The ARN of the repository.
 * `administrator_account` - The account number of the AWS account that manages the repository.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-CodeArtifact Repository can be imported using the CodeArtifact Repository ARN, e.g.
+CodeArtifact Repository can be imported using the CodeArtifact Repository ARN, e.g.,
 
 ```
 $ terraform import aws_codeartifact_repository.example arn:aws:codeartifact:us-west-2:012345678912:repository/tf-acc-test-6968272603913957763/tf-acc-test-6968272603913957763

@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53"
+subcategory: "Route 53"
 layout: "aws"
 page_title: "AWS: aws_route53_hosted_zone_dnssec"
 description: |-
@@ -9,6 +9,8 @@ description: |-
 # Resource: aws_route53_hosted_zone_dnssec
 
 Manages Route 53 Hosted Zone Domain Name System Security Extensions (DNSSEC). For more information about managing DNSSEC in Route 53, see the [Route 53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-configuring-dnssec.html).
+
+!> **WARNING:** If you disable DNSSEC signing for your hosted zone before the DNS changes have propagated, your domain could become unavailable on the internet. When you remove the DS records, you must wait until the longest TTL for the DS records that you remove has expired before you complete the step to disable DNSSEC signing. Please refer to the [Route 53 Developer Guide - Disable DNSSEC](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-configuring-dnssec-disable.html) for a detailed breakdown on the steps required to disable DNSSEC safely for a hosted zone.
 
 ## Example Usage
 
@@ -100,7 +102,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_route53_hosted_zone_dnssec` resources can be imported by using the Route 53 Hosted Zone identifier, e.g.
+`aws_route53_hosted_zone_dnssec` resources can be imported by using the Route 53 Hosted Zone identifier, e.g.,
 
 ```
 $ terraform import aws_route53_hosted_zone_dnssec.example Z1D633PJN98FT9

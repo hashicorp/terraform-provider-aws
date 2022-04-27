@@ -1,4 +1,4 @@
-<!--- See what makes a good Pull Request at : https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/CONTRIBUTING.md --->
+<!--- See what makes a good Pull Request at : https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing --->
 
 <!--- Please keep this note for the community --->
 
@@ -17,10 +17,12 @@ Output from acceptance testing:
 <!--
 Replace TestAccXXX with a pattern that matches the tests affected by this PR.
 
+Replace ec2 with the service package corresponding to your tests.
+
 For more information on the `-run` flag, see the `go test` documentation at https://tip.golang.org/cmd/go/#hdr-Testing_flags.
 -->
 ```
-$ make testacc TESTARGS='-run=TestAccXXX'
+$ make testacc TESTS=TestAccXXX PKG=ec2
 
 ...
 ```

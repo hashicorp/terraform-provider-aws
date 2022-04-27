@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_nat_gateway"
 description: |-
@@ -61,7 +61,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-NAT Gateways can be imported using the `id`, e.g.
+NAT Gateways can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_nat_gateway.private_gw nat-05dba92075d71c408

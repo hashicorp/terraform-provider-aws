@@ -1,5 +1,5 @@
 ---
-subcategory: "Service Discovery"
+subcategory: "Cloud Map"
 layout: "aws"
 page_title: "AWS: aws_service_discovery_http_namespace"
 description: |-
@@ -36,7 +36,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Service Discovery HTTP Namespace can be imported using the namespace ID, e.g.
+Service Discovery HTTP Namespace can be imported using the namespace ID, e.g.,
 
 ```
 $ terraform import aws_service_discovery_http_namespace.example ns-1234567890

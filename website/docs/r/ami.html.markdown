@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_ami"
 description: |-
@@ -41,6 +41,7 @@ resource "aws_ami" "example" {
 The following arguments are supported:
 
 * `name` - (Required) A region-unique name for the AMI.
+* `boot_mode` - (Optional) The boot mode of the AMI. For more information, see [Boot modes](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-boot.html) in the Amazon Elastic Compute Cloud User Guide.
 * `description` - (Optional) A longer, human-readable description for the AMI.
 * `ena_support` - (Optional) Specifies whether enhanced networking with ENA is enabled. Defaults to `false`.
 * `root_device_name` - (Optional) The name of the root device (for example, `/dev/sda1`, or `/dev/xvda`).
@@ -56,7 +57,7 @@ The following arguments are supported:
 
 When `virtualization_type` is "paravirtual" the following additional arguments apply:
 
-* `image_location` - (Required) Path to an S3 object containing an image manifest, e.g. created
+* `image_location` - (Required) Path to an S3 object containing an image manifest, e.g., created
   by the `ec2-upload-bundle` command in the EC2 command line tools.
 * `kernel_id` - (Required) The id of the kernel image (AKI) that will be used as the paravirtual
   kernel in created instances.
@@ -87,6 +88,7 @@ Nested `ebs_block_device` blocks have the following structure:
 * `kms_key_id` - (Optional) The full ARN of the AWS Key Management Service (AWS KMS) CMK to use when encrypting the snapshots of
 an image during a copy operation. This parameter is only required if you want to use a non-default CMK;
 if this parameter is not specified, the default CMK for EBS is used
+* `outpost_arn` - (Optional) The ARN of the Outpost on which the snapshot is stored.
 
 ~> **Note:** You can specify `encrypted` or `snapshot_id` but not both.
 
@@ -124,7 +126,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_ami` can be imported using the ID of the AMI, e.g.
+`aws_ami` can be imported using the ID of the AMI, e.g.,
 
 ```
 $ terraform import aws_ami.example ami-12345678

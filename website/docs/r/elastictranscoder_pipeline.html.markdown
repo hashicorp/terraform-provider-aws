@@ -103,7 +103,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Elastic Transcoder pipelines can be imported using the `id`, e.g.
+Elastic Transcoder pipelines can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_elastictranscoder_pipeline.basic_pipeline 1407981661351-cttk8b
