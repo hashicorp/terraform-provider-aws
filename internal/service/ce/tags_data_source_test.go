@@ -32,7 +32,7 @@ func TestAccCETagsDataSource_basic(t *testing.T) {
 				Config: testAccTagsSourceConfig(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(resourceName, &output),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.#", "4"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.#", "1"),
 				),
 			},
 		},
@@ -60,7 +60,7 @@ func TestAccCETagsDataSource_filter(t *testing.T) {
 				Config: testAccTagsSourceFilterConfig(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(resourceName, &output),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.#", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.#", "1"),
 				),
 			},
 		},
@@ -68,23 +68,51 @@ func TestAccCETagsDataSource_filter(t *testing.T) {
 }
 
 func testAccTagsSourceConfig(rName, start, end string) string {
-	return acctest.ConfigCompose(
-		testAccCostCategoryConfig(rName),
-		fmt.Sprintf(`
-data "aws_ce_tags" "test" {
-  time_period {
-    start = %[1]q
-    end   = %[2]q
+	return fmt.Sprintf(`
+resource "aws_ce_cost_category" "test" {
+  name         = %[1]q
+  rule_version = "CostCategoryExpression.v1"
+  rule {
+    value = "production"
+    rule {
+      tags {
+        key = %[1]q
+        values = ["abc", "123"]
+      }
+    }
+    type = "REGULAR"
   }
 }
-`, start, end))
+
+data "aws_ce_tags" "test" {
+  time_period {
+    start = %[2]q
+    end   = %[3]q
+  }
+  tag_key = %[1]q
+}
+`, rName, start, end)
 }
 
 func testAccTagsSourceFilterConfig(rName, start, end string) string {
-	return acctest.ConfigCompose(
-		testAccCostCategoryConfig(rName),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 data "aws_region" "current" {}
+
+
+resource "aws_ce_cost_category" "test" {
+  name         = %[1]q
+  rule_version = "CostCategoryExpression.v1"
+  rule {
+    value = "production"
+    rule {
+      tags {
+        key = %[1]q
+        values = ["abc", "123"]
+      }
+    }
+    type = "REGULAR"
+  }
+}
 
 data "aws_ce_tags" "test" {
   time_period {
@@ -98,6 +126,7 @@ data "aws_ce_tags" "test" {
       match_options = ["EQUALS"]
     }
   }
+  tag_key = %[1]q
 }
-`, start, end))
+`, start, end)
 }
