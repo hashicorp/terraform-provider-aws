@@ -367,13 +367,6 @@ func expandDataCoreNetworkPolicySegmentActions(cfgSegmentActionsIntf []interface
 		var shareWith, shareWithExcept interface{}
 
 		if action == "share" {
-			if dest := cfgSA["destinations"].(*schema.Set).List(); len(dest) > 0 {
-				return nil, fmt.Errorf("Cannot specify \"destinations\" if action = \"share\".")
-			}
-			if destCidrB := cfgSA["destination_cidr_blocks"].(*schema.Set).List(); len(destCidrB) > 0 {
-				return nil, fmt.Errorf("Cannot specify \"destination_cidr_blocks\" if action = \"share\".")
-			}
-
 			if mode, ok := cfgSA["mode"]; ok {
 				sgmtAction.Mode = mode.(string)
 			}

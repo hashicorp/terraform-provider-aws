@@ -93,10 +93,12 @@ func (c *CoreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(&Alias{
-		Action:    c.Action,
-		Mode:      c.Mode,
-		Segment:   c.Segment,
-		ShareWith: share,
+		Action:                c.Action,
+		Mode:                  c.Mode,
+		Destinations:          c.Destinations,
+		DestinationCidrBlocks: c.DestinationCidrBlocks,
+		Segment:               c.Segment,
+		ShareWith:             share,
 	})
 }
 
