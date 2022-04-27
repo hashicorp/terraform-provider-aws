@@ -187,6 +187,15 @@ The following arguments are supported:
 * `instance_type` - (Required) Specify the instance type to use for the kafka brokersE.g., kafka.m5.large. ([Pricing info](https://aws.amazon.com/msk/pricing/))
 * `security_groups` - (Required) A list of the security groups to associate with the elastic network interfaces to control who can communicate with the cluster.
 * `az_distribution` - (Optional) The distribution of broker nodes across availability zones ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-brokerazdistribution)). Currently the only valid value is `DEFAULT`.
+* `connectivity_info` - (Optional) Information about the cluster access configuration. See below.
+
+### broker_node_group_info connectivity_info Argument Reference
+
+* `public_access` - (Optional) Access control settings for brokers. See below.
+
+### connectivity_info public_access Argument Reference
+
+* `type` - (Optional) Public access type. Valida values: `DISABLED`, `SERVICE_PROVIDED_EIPS`.
 
 ### client_authentication Argument Reference
 

@@ -86,6 +86,32 @@ func ResourceCluster() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
+						"connectivity_info": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"public_access": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.StringInSlice(PublicAccessType_Values(), false),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"ebs_volume_size": {
 							Type:         schema.TypeInt,
 							Required:     true,
@@ -568,6 +594,31 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
+	if d.HasChange("broker_node_group_info.0.connectivity_info") {
+		input := &kafka.UpdateConnectivityInput{
+			ClusterArn:     aws.String(d.Id()),
+			CurrentVersion: aws.String(d.Get("current_version").(string)),
+		}
+
+		if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.ConnectivityInfo = expandConnectivityInfo(v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		output, err := conn.UpdateConnectivityWithContext(ctx, input)
+
+		if err != nil {
+			return diag.Errorf("updating MSK Cluster (%s) broker connectivity: %s", d.Id(), err)
+		}
+
+		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
+
+		_, err = waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+
+		if err != nil {
+			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		}
+	}
+
 	if d.HasChange("broker_node_group_info.0.instance_type") {
 		input := &kafka.UpdateBrokerTypeInput{
 			ClusterArn:         aws.String(d.Id()),
@@ -779,6 +830,10 @@ func expandBrokerNodeGroupInfo(tfMap map[string]interface{}) *kafka.BrokerNodeGr
 		apiObject.ClientSubnets = flex.ExpandStringSet(v)
 	}
 
+	if v, ok := tfMap["connectivity_info"].([]interface{}); ok && len(v) > 0 {
+		apiObject.ConnectivityInfo = expandConnectivityInfo(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["instance_type"].(string); ok && v != "" {
 		apiObject.InstanceType = aws.String(v)
 	}
@@ -793,6 +848,34 @@ func expandBrokerNodeGroupInfo(tfMap map[string]interface{}) *kafka.BrokerNodeGr
 				VolumeSize: aws.Int64(int64(v)),
 			},
 		}
+	}
+
+	return apiObject
+}
+
+func expandConnectivityInfo(tfMap map[string]interface{}) *kafka.ConnectivityInfo {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.ConnectivityInfo{}
+
+	if v, ok := tfMap["public_access"].([]interface{}); ok && len(v) > 0 {
+		apiObject.PublicAccess = expandPublicAccess(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandPublicAccess(tfMap map[string]interface{}) *kafka.PublicAccess {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.PublicAccess{}
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		apiObject.Type = aws.String(v)
 	}
 
 	return apiObject
@@ -1086,6 +1169,10 @@ func flattenBrokerNodeGroupInfo(apiObject *kafka.BrokerNodeGroupInfo) map[string
 		tfMap["client_subnets"] = aws.StringValueSlice(v)
 	}
 
+	if v := apiObject.ConnectivityInfo; v != nil {
+		tfMap["connectivity_info"] = []interface{}{flattenConnectivityInfo(v)}
+	}
+
 	if v := apiObject.InstanceType; v != nil {
 		tfMap["instance_type"] = aws.StringValue(v)
 	}
@@ -1100,6 +1187,34 @@ func flattenBrokerNodeGroupInfo(apiObject *kafka.BrokerNodeGroupInfo) map[string
 				tfMap["ebs_volume_size"] = aws.Int64Value(v)
 			}
 		}
+	}
+
+	return tfMap
+}
+
+func flattenConnectivityInfo(apiObject *kafka.ConnectivityInfo) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.PublicAccess; v != nil {
+		tfMap["public_access"] = []interface{}{flattenPublicAccess(v)}
+	}
+
+	return tfMap
+}
+
+func flattenPublicAccess(apiObject *kafka.PublicAccess) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Type; v != nil {
+		tfMap["type"] = aws.StringValue(v)
 	}
 
 	return tfMap
