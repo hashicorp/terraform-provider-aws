@@ -16,10 +16,10 @@ import (
 )
 
 func TestAccPlaybackConfigurationResource_basic(t *testing.T) {
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_media_tailor_playback_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, mediatailor.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -29,6 +29,47 @@ func TestAccPlaybackConfigurationResource_basic(t *testing.T) {
 				Config: testAccResourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "ad_decision_server_url", "https://www.example.com/ads"),
+					resource.TestCheckResourceAttrSet(resourceName, "playback_configuration_arn"),
+					resource.TestCheckResourceAttr(resourceName, "video_content_source_url", "https://www.example.com/source"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateVerify: true,
+				ImportState:       true,
+			},
+		},
+	})
+}
+
+func TestAccPlaybackConfigurationResource_recreate(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_media_tailor_playback_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, mediatailor.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPlaybackConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "ad_decision_server_url", "https://www.example.com/ads"),
+					resource.TestCheckResourceAttrSet(resourceName, "playback_configuration_arn"),
+					resource.TestCheckResourceAttr(resourceName, "video_content_source_url", "https://www.example.com/source"),
+				),
+			},
+			{
+				Taint:  []string{resourceName},
+				Config: testAccResourceConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "ad_decision_server_url", "https://www.example.com/ads"),
+					resource.TestCheckResourceAttrSet(resourceName, "playback_configuration_arn"),
+					resource.TestCheckResourceAttr(resourceName, "video_content_source_url", "https://www.example.com/source"),
 				),
 			},
 		},
@@ -67,7 +108,7 @@ func testAccCheckPlaybackConfigurationDestroy(s *terraform.State) error {
 func testAccResourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_media_tailor_playback_configuration" "test"{
-  ad_decision_server_url = "https://www.emample.com/ads"
+  ad_decision_server_url = "https://www.example.com/ads"
   name=%[1]q
   video_content_source_url = "https://www.example.com/source"
 }
