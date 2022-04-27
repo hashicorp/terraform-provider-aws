@@ -257,15 +257,21 @@ func testAccCheckPlaybackConfigurationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resourceArn, err := arn.Parse(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("error parsing resource arn: %s", err)
+		var resourceName string
+
+		if arn.IsARN(rs.Primary.ID) {
+			resourceArn, err := arn.Parse(rs.Primary.ID)
+			if err != nil {
+				return fmt.Errorf("error parsing resource arn: %s.\n%s", err, rs.Primary.ID)
+			}
+			arnSections := strings.Split(resourceArn.Resource, "/")
+			resourceName = arnSections[len(arnSections)-1]
+		} else {
+			resourceName = rs.Primary.ID
 		}
-		arnSections := strings.Split(resourceArn.Resource, "/")
-		resourceName := arnSections[len(arnSections)-1]
 
 		input := &mediatailor.GetPlaybackConfigurationInput{Name: aws.String(resourceName)}
-		_, err = conn.GetPlaybackConfiguration(input)
+		_, err := conn.GetPlaybackConfiguration(input)
 
 		if tfawserr.ErrCodeContains(err, "NotFound") {
 			continue
