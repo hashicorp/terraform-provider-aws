@@ -12,9 +12,6 @@ import (
 
 func TestAccKafkaConnectWorkerConfigurationDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	propertiesFileContent := "key.converter=hello\nvalue.converter=world"
-
 	resourceName := "aws_mskconnect_worker_configuration.test"
 	dataSourceName := "data.aws_mskconnect_worker_configuration.test"
 
@@ -25,7 +22,7 @@ func TestAccKafkaConnectWorkerConfigurationDataSource_basic(t *testing.T) {
 		Providers:    acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkerConfigurationDataSourceConfigBasic(rName, propertiesFileContent),
+				Config: testAccWorkerConfigurationDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
@@ -38,15 +35,19 @@ func TestAccKafkaConnectWorkerConfigurationDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccWorkerConfigurationDataSourceConfigBasic(name, content string) string {
+func testAccWorkerConfigurationDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mskconnect_worker_configuration" "test" {
-  name                    = %[1]q
-  properties_file_content = %[2]q
+  name = %[1]q
+
+  properties_file_content = <<EOF
+key.converter=org.apache.kafka.connect.storage.StringConverter
+value.converter=org.apache.kafka.connect.storage.StringConverter
+EOF
 }
 
 data "aws_mskconnect_worker_configuration" "test" {
   name = aws_mskconnect_worker_configuration.test.name
 }
-`, name, content)
+`, rName)
 }

@@ -101,10 +101,10 @@ func sweepObjects(region string) error {
 		}
 
 		// Delete everything including locked objects. Ignore any object errors.
-		err = DeleteAllObjectVersions(conn, bucketName, "", objectLockEnabled, true)
+		_, err = DeleteAllObjectVersions(conn, bucketName, "", objectLockEnabled, true)
 
 		if err != nil {
-			return fmt.Errorf("error listing S3 Bucket (%s) Objects: %s", bucketName, err)
+			return fmt.Errorf("error deleting S3 Bucket (%s) Objects: %s", bucketName, err)
 		}
 	}
 

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -307,6 +308,47 @@ func expandCloudformationLoggingConfig(tfMap map[string]interface{}) *cloudforma
 
 	if v, ok := tfMap["log_role_arn"].(string); ok && v != "" {
 		apiObject.LogRoleArn = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandCloudFormationOperationPreferences(tfMap map[string]interface{}) *cloudformation.StackSetOperationPreferences {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &cloudformation.StackSetOperationPreferences{}
+
+	if v, ok := tfMap["failure_tolerance_count"].(int); ok {
+		apiObject.FailureToleranceCount = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["failure_tolerance_percentage"].(int); ok {
+		apiObject.FailureTolerancePercentage = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["max_concurrent_count"].(int); ok {
+		apiObject.MaxConcurrentCount = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["max_concurrent_percentage"].(int); ok {
+		apiObject.MaxConcurrentPercentage = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["region_concurrency_type"].(string); ok && v != "" {
+		apiObject.RegionConcurrencyType = aws.String(v)
+	}
+	if v, ok := tfMap["region_order"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.RegionOrder = flex.ExpandStringSet(v)
+	}
+
+	if ftc, ftp := aws.Int64Value(apiObject.FailureToleranceCount), aws.Int64Value(apiObject.FailureTolerancePercentage); ftp == 0 {
+		apiObject.FailureTolerancePercentage = nil
+	} else if ftc == 0 {
+		apiObject.FailureToleranceCount = nil
+	}
+
+	if mcc, mcp := aws.Int64Value(apiObject.MaxConcurrentCount), aws.Int64Value(apiObject.MaxConcurrentPercentage); mcp == 0 {
+		apiObject.MaxConcurrentPercentage = nil
+	} else if mcc == 0 {
+		apiObject.MaxConcurrentCount = nil
 	}
 
 	return apiObject

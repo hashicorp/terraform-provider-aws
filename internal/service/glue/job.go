@@ -132,9 +132,10 @@ func ResourceJob() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"timeout": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  2880,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"security_configuration": {
 				Type:     schema.TypeString,
@@ -172,7 +173,10 @@ func resourceJobCreate(d *schema.ResourceData, meta interface{}) error {
 		Name:    aws.String(name),
 		Role:    aws.String(d.Get("role_arn").(string)),
 		Tags:    Tags(tags.IgnoreAWS()),
-		Timeout: aws.Int64(int64(d.Get("timeout").(int))),
+	}
+
+	if v, ok := d.GetOk("timeout"); ok {
+		input.Timeout = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("max_capacity"); ok {
@@ -334,7 +338,10 @@ func resourceJobUpdate(d *schema.ResourceData, meta interface{}) error {
 		jobUpdate := &glue.JobUpdate{
 			Command: expandGlueJobCommand(d.Get("command").([]interface{})),
 			Role:    aws.String(d.Get("role_arn").(string)),
-			Timeout: aws.Int64(int64(d.Get("timeout").(int))),
+		}
+
+		if v, ok := d.GetOk("timeout"); ok {
+			jobUpdate.Timeout = aws.Int64(int64(v.(int)))
 		}
 
 		if v, ok := d.GetOk("number_of_workers"); ok {

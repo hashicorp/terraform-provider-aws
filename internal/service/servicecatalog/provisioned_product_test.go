@@ -138,7 +138,7 @@ func testAccCheckProvisionedProductDestroy(s *terraform.State) error {
 			continue
 		}
 
-		err := tfservicecatalog.WaitProvisionedProductTerminated(conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "")
+		err := tfservicecatalog.WaitProvisionedProductTerminated(conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "", tfservicecatalog.ProvisionedProductDeleteTimeout)
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 			continue
@@ -162,7 +162,7 @@ func testAccCheckProvisionedProductExists(resourceName string) resource.TestChec
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
-		_, err := tfservicecatalog.WaitProvisionedProductReady(conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "")
+		_, err := tfservicecatalog.WaitProvisionedProductReady(conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "", tfservicecatalog.ProvisionedProductReadyTimeout)
 
 		if err != nil {
 			return fmt.Errorf("error describing Service Catalog Provisioned Product (%s): %w", rs.Primary.ID, err)

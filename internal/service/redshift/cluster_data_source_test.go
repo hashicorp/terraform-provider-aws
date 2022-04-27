@@ -12,6 +12,7 @@ import (
 
 func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_redshift_cluster.test"
+	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -40,6 +41,7 @@ func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "port"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "preferred_maintenance_window"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "publicly_accessible"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone_relocation_enabled", resourceName, "availability_zone_relocation_enabled"),
 				),
 			},
 		},
@@ -85,6 +87,26 @@ func TestAccRedshiftClusterDataSource_logging(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "enable_logging", "true"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bucket_name", bucketResourceName, "bucket"),
 					resource.TestCheckResourceAttr(dataSourceName, "s3_key_prefix", "cluster-logging/"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRedshiftClusterDataSource_availabilityZoneRelocationEnabled(t *testing.T) {
+	dataSourceName := "data.aws_redshift_cluster.test"
+	resourceName := "aws_redshift_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, redshift.EndpointsID),
+		Providers:  acctest.Providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterDataSourceConfig_availabilityZoneRelocationEnabled(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone_relocation_enabled", resourceName, "availability_zone_relocation_enabled"),
 				),
 			},
 		},
@@ -227,6 +249,28 @@ resource "aws_redshift_cluster" "test" {
     enable        = true
     s3_key_prefix = "cluster-logging/"
   }
+}
+
+data "aws_redshift_cluster" "test" {
+  cluster_identifier = aws_redshift_cluster.test.cluster_identifier
+}
+`, rName)
+}
+
+func testAccClusterDataSourceConfig_availabilityZoneRelocationEnabled(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier = %[1]q
+
+  database_name       = "testdb"
+  master_username     = "foo"
+  master_password     = "Password1"
+  node_type           = "ra3.xlplus"
+  cluster_type        = "single-node"
+  skip_final_snapshot = true
+  publicly_accessible = false
+
+  availability_zone_relocation_enabled = true
 }
 
 data "aws_redshift_cluster" "test" {

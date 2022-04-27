@@ -36,7 +36,8 @@ func TestAccS3BucketLifecycleConfiguration_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      "1",
 						"expiration.0.days": "365",
-						"filter.#":          "0",
+						"filter.#":          "1",
+						"filter.0.prefix":   "",
 						"id":                rName,
 						"status":            tfs3.LifecycleRuleStatusEnabled,
 					}),
@@ -116,6 +117,151 @@ func TestAccS3BucketLifecycleConfiguration_filterWithPrefix(t *testing.T) {
 						"filter.0.prefix":   "tmp/",
 						"id":                rName,
 						"status":            tfs3.LifecycleRuleStatusEnabled,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeGreaterThan(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+	currTime := time.Now()
+	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfiguration_filterWithObjectSizeGreaterThanConfig(rName, date, 100),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"expiration.#":                      "1",
+						"expiration.0.date":                 date,
+						"filter.#":                          "1",
+						"filter.0.object_size_greater_than": "100",
+						"id":                                rName,
+						"status":                            tfs3.LifecycleRuleStatusEnabled,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeLessThan(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+	currTime := time.Now()
+	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfiguration_filterWithObjectSizeLessThanConfig(rName, date, 500),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"expiration.#":                   "1",
+						"expiration.0.date":              date,
+						"filter.#":                       "1",
+						"filter.0.object_size_less_than": "500",
+						"id":                             rName,
+						"status":                         tfs3.LifecycleRuleStatusEnabled,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRange(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+	currTime := time.Now()
+	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfiguration_filterWithObjectSizeRangeConfig(rName, date, 500, 64000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"expiration.#":      "1",
+						"expiration.0.date": date,
+						"filter.#":          "1",
+						"filter.0.and.#":    "1",
+						"filter.0.and.0.object_size_greater_than": "500",
+						"filter.0.and.0.object_size_less_than":    "64000",
+						"id":                                      rName,
+						"status":                                  tfs3.LifecycleRuleStatusEnabled,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRangeAndPrefix(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+	currTime := time.Now()
+	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfiguration_filterWithObjectSizeRangeAndPrefixConfig(rName, date, 500, 64000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"expiration.#":      "1",
+						"expiration.0.date": date,
+						"filter.#":          "1",
+						"filter.0.and.#":    "1",
+						"filter.0.and.0.object_size_greater_than": "500",
+						"filter.0.and.0.object_size_less_than":    "64000",
+						"filter.0.and.0.prefix":                   rName,
+						"id":                                      rName,
+						"status":                                  tfs3.LifecycleRuleStatusEnabled,
 					}),
 				),
 			},
@@ -215,6 +361,37 @@ func TestAccS3BucketLifecycleConfiguration_multipleRules(t *testing.T) {
 						"filter.0.prefix":   "tmp/",
 						"status":            tfs3.LifecycleRuleStatusEnabled,
 					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23730
+func TestAccS3BucketLifecycleConfiguration_multipleRules_noFilterOrPrefix(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfiguration_MultipleRules_noFilterOrPrefixConfig(rName, s3.ReplicationRuleStatusEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "rule.1.filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.1.filter.0.prefix", ""),
 				),
 			},
 			{
@@ -665,6 +842,125 @@ func TestAccS3BucketLifecycleConfiguration_EmptyFilter_NonCurrentVersions(t *tes
 		},
 	})
 }
+func TestAccS3BucketLifecycleConfiguration_migrate_noChange(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+	bucketResourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketLifecycleConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withLifecycleExpireMarker(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(bucketResourceName),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.id", "id1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.enabled", "true"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.prefix", "path1/"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.days", "0"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.date", ""),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.expired_object_delete_marker", "true"),
+				),
+			},
+			{
+				Config: testAccBucketLifecycleConfiguration_Migrate_NoChangeConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.id", "id1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.status", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.prefix", "path1/"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.date", ""),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.expired_object_delete_marker", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLifecycleConfiguration_migrate_withChange(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+	bucketResourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketLifecycleConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withLifecycleExpireMarker(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(bucketResourceName),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.id", "id1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.enabled", "true"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.prefix", "path1/"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.days", "0"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.date", ""),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.expired_object_delete_marker", "true"),
+				),
+			},
+			{
+				Config: testAccBucketLifecycleConfiguration_Migrate_WithChangeConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.id", "id1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.status", "Disabled"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.prefix", "path1/"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.date", ""),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.expired_object_delete_marker", "false"),
+				),
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23884
+func TestAccS3BucketLifecycleConfiguration_Update_filterWithAndToFilterWithPrefix(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfiguration_Filter_ObjectSizeGreaterThanAndPrefixConfig(rName, "prefix1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.0.object_size_greater_than", "300"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.0.prefix", "prefix1"),
+				),
+			},
+			{
+				Config: testAccBucketLifecycleConfiguration_Filter_PrefixConfig(rName, "prefix2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.prefix", "prefix2"),
+				),
+			},
+		},
+	})
+}
 
 func testAccCheckBucketLifecycleConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
@@ -772,6 +1068,41 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
   }
 }
 `, rName)
+}
+
+func testAccBucketLifecycleConfiguration_MultipleRules_noFilterOrPrefixConfig(rName, status string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  rule {
+    id     = "%[1]s-1"
+    status = %[2]q
+
+    expiration {
+      days = 365
+    }
+  }
+
+  rule {
+    id     = "%[1]s-2"
+    status = %[2]q
+
+    expiration {
+      expired_object_delete_marker = true
+    }
+  }
+}
+`, rName, status)
 }
 
 func testAccBucketLifecycleConfiguration_Basic_statusConfig(rName, status string) string {
@@ -1237,6 +1568,254 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
     }
 
     status = "Enabled"
+  }
+}
+`, rName)
+}
+
+func testAccBucketLifecycleConfiguration_filterWithObjectSizeGreaterThanConfig(rName, date string, sizeGreaterThan int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  rule {
+    id = %[1]q
+
+    expiration {
+      date = %[2]q
+    }
+
+    filter {
+      object_size_greater_than = %[3]d
+    }
+
+    status = "Enabled"
+  }
+}
+`, rName, date, sizeGreaterThan)
+}
+
+func testAccBucketLifecycleConfiguration_filterWithObjectSizeLessThanConfig(rName, date string, sizeLessThan int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  rule {
+    id = %[1]q
+
+    expiration {
+      date = %[2]q
+    }
+
+    filter {
+      object_size_less_than = %[3]d
+    }
+
+    status = "Enabled"
+  }
+}
+`, rName, date, sizeLessThan)
+}
+
+func testAccBucketLifecycleConfiguration_filterWithObjectSizeRangeConfig(rName, date string, sizeGreaterThan, sizeLessThan int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  rule {
+    id = %[1]q
+
+    expiration {
+      date = %[2]q
+    }
+
+    filter {
+      and {
+        object_size_greater_than = %[3]d
+        object_size_less_than    = %[4]d
+      }
+    }
+
+    status = "Enabled"
+  }
+}
+`, rName, date, sizeGreaterThan, sizeLessThan)
+}
+
+func testAccBucketLifecycleConfiguration_filterWithObjectSizeRangeAndPrefixConfig(rName, date string, sizeGreaterThan, sizeLessThan int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  rule {
+    id = %[1]q
+
+    expiration {
+      date = %[2]q
+    }
+
+    filter {
+      and {
+        object_size_greater_than = %[3]d
+        object_size_less_than    = %[4]d
+        prefix                   = %[1]q
+      }
+    }
+
+    status = "Enabled"
+  }
+}
+`, rName, date, sizeGreaterThan, sizeLessThan)
+}
+
+func testAccBucketLifecycleConfiguration_Filter_ObjectSizeGreaterThanAndPrefixConfig(rName, prefix string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  rule {
+    id = %[1]q
+
+    expiration {
+      days = 90
+    }
+
+    filter {
+      and {
+        object_size_greater_than = 300
+        prefix                   = %[2]q
+      }
+    }
+
+    status = "Enabled"
+  }
+}`, rName, prefix)
+}
+
+func testAccBucketLifecycleConfiguration_Filter_PrefixConfig(rName, prefix string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  rule {
+    id = %[1]q
+
+    expiration {
+      days = 90
+    }
+
+    filter {
+      prefix = %[2]q
+    }
+
+    status = "Enabled"
+  }
+}`, rName, prefix)
+}
+
+func testAccBucketLifecycleConfiguration_Migrate_NoChangeConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  rule {
+    id     = "id1"
+    prefix = "path1/"
+    status = "Enabled"
+
+    expiration {
+      expired_object_delete_marker = true
+    }
+  }
+}
+`, rName)
+}
+
+func testAccBucketLifecycleConfiguration_Migrate_WithChangeConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  rule {
+    id     = "id1"
+    prefix = "path1/"
+    status = "Disabled"
+
+    expiration {
+      expired_object_delete_marker = false
+    }
   }
 }
 `, rName)

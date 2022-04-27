@@ -150,7 +150,7 @@ func testAccCheckDeviceDestroy(s *terraform.State) error {
 		}
 
 		if aws.StringValue(device.DeviceName) == deviceName && aws.StringValue(device.DeviceFleetName) == deviceFleetName {
-			return fmt.Errorf("Sagemaker Device %q still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker Device %q still exists", rs.Primary.ID)
 		}
 	}
 

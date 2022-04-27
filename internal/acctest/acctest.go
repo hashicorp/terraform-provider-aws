@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -33,6 +32,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const (
@@ -59,7 +59,7 @@ const (
 
 const RFC3339RegexPattern = `^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?([Zz]|([+-]([01][0-9]|2[0-3]):[0-5][0-9]))$`
 const awsRegionRegexp = `[a-z]{2}(-[a-z]+)+-\d`
-const awsAccountIDRegexp = `(aws|\d{12})`
+const awsAccountIDRegexp = `(aws|aws-managed|\d{12})`
 
 // Skip implements a wrapper for (*testing.T).Skip() to prevent unused linting reports
 //
@@ -232,6 +232,11 @@ func providerAccountID(provo *schema.Provider) string {
 		return ""
 	}
 	return client.AccountID
+}
+
+// CheckDestroyNoop is a TestCheckFunc to be used as a TestCase's CheckDestroy when no such check can be made.
+func CheckDestroyNoop(_ *terraform.State) error {
+	return nil
 }
 
 // CheckResourceAttrAccountID ensures the Terraform state exactly matches the account ID
@@ -648,47 +653,57 @@ func PreCheckMultipleRegion(t *testing.T, regions int) {
 
 // PreCheckRegion checks that the test region is the specified region.
 func PreCheckRegion(t *testing.T, region string) {
-	if Region() != region {
-		t.Skipf("skipping tests; %s (%s) does not equal %s", conns.EnvVarDefaultRegion, Region(), region)
+	if curr := Region(); curr != region {
+		t.Skipf("skipping tests; %s (%s) does not equal %s", conns.EnvVarDefaultRegion, curr, region)
 	}
 }
 
 // PreCheckRegionNot checks that the test region is not one of the specified regions.
 func PreCheckRegionNot(t *testing.T, regions ...string) {
 	for _, region := range regions {
-		if Region() == region {
-			t.Skipf("skipping tests; %s (%s) not supported", conns.EnvVarDefaultRegion, region)
+		if curr := Region(); curr == region {
+			t.Skipf("skipping tests; %s (%s) not supported", conns.EnvVarDefaultRegion, curr)
 		}
 	}
 }
 
 // PreCheckPartition checks that the test partition is the specified partition.
-func PreCheckPartition(partition string, t *testing.T) {
-	if Partition() != partition {
-		t.Skipf("skipping tests; current partition (%s) does not equal %s", Partition(), partition)
+func PreCheckPartition(t *testing.T, partition string) {
+	if curr := Partition(); curr != partition {
+		t.Skipf("skipping tests; current partition (%s) does not equal %s", curr, partition)
+	}
+}
+
+// PreCheckPartitionNot checks that the test partition is not one of the specified partitions.
+func PreCheckPartitionNot(t *testing.T, partitions ...string) {
+	for _, partition := range partitions {
+		if curr := Partition(); curr == partition {
+			t.Skipf("skipping tests; current partition (%s) not supported", curr)
+		}
 	}
 }
 
 func PreCheckOrganizationsAccount(t *testing.T) {
-	conn := Provider.Meta().(*conns.AWSClient).OrganizationsConn
-	input := &organizations.DescribeOrganizationInput{}
-	_, err := conn.DescribeOrganization(input)
-	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
+	_, err := tforganizations.FindOrganization(Provider.Meta().(*conns.AWSClient).OrganizationsConn)
+
+	if tfresource.NotFound(err) {
 		return
 	}
+
 	if err != nil {
 		t.Fatalf("error describing AWS Organization: %s", err)
 	}
+
 	t.Skip("skipping tests; this AWS account must not be an existing member of an AWS Organization")
 }
 
 func PreCheckOrganizationsEnabled(t *testing.T) {
-	conn := Provider.Meta().(*conns.AWSClient).OrganizationsConn
-	input := &organizations.DescribeOrganizationInput{}
-	_, err := conn.DescribeOrganization(input)
-	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
+	_, err := tforganizations.FindOrganization(Provider.Meta().(*conns.AWSClient).OrganizationsConn)
+
+	if tfresource.NotFound(err) {
 		t.Skip("this AWS account must be an existing member of an AWS Organization")
 	}
+
 	if err != nil {
 		t.Fatalf("error describing AWS Organization: %s", err)
 	}

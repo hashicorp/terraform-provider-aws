@@ -1,5 +1,5 @@
 ---
-subcategory: "DataPipeline"
+subcategory: "Data Pipeline"
 layout: "aws"
 page_title: "AWS: aws_datapipeline_pipeline"
 description: |-

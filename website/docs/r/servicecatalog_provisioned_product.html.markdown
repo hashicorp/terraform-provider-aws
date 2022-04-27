@@ -112,6 +112,16 @@ valid results. Wait for an `AVAILABLE` status before performing operations.
 * `ERROR` - An unexpected error occurred. The provisioned product exists but the stack is not running. For example, CloudFormation received a parameter value that was not valid and could not launch the stack.
 * `PLAN_IN_PROGRESS` - Transitive state. The plan operations were performed to provision a new product, but resources have not yet been created. After reviewing the list of resources to be created, execute the plan. Wait for an `AVAILABLE` status before performing operations.
 
+## Timeouts
+
+`aws_servicecatalog_provisioned_product` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `30 minutes`)
+- `read` - (Default `10 minutes`)
+- `update` - (Default `30 minutes`)
+- `delete` - (Default `30 minutes`)
+
 ## Import
 
 `aws_servicecatalog_provisioned_product` can be imported using the provisioned product ID, e.g.,

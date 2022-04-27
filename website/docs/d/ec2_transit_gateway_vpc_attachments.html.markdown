@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Transit Gateway"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_vpc_attachments"
 description: |-
@@ -45,5 +45,5 @@ In addition to all arguments above, the following attributes are exported:
 
 * `ids` A list of all attachments ids matching filter, you can retrieve more information about the attachment using the data [aws_ec2_transit_gateway_vpc_attachment][2] getting it by identifier
 
-[1]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-transit-gateway-attachments.html
+[1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGatewayVpcAttachments.html
 [2]: https://www.terraform.io/docs/providers/aws/d/ec2_transit_gateway_vpc_attachment.html

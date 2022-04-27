@@ -19,6 +19,10 @@ import (
 )
 
 func TestAccElastiCacheGlobalReplicationGroup_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var globalReplicationGroup elasticache.GlobalReplicationGroup
 	var primaryReplicationGroup elasticache.ReplicationGroup
 
@@ -63,6 +67,10 @@ func TestAccElastiCacheGlobalReplicationGroup_basic(t *testing.T) {
 }
 
 func TestAccElastiCacheGlobalReplicationGroup_description(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var globalReplicationGroup elasticache.GlobalReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	primaryReplicationGroupId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -100,6 +108,10 @@ func TestAccElastiCacheGlobalReplicationGroup_description(t *testing.T) {
 }
 
 func TestAccElastiCacheGlobalReplicationGroup_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var globalReplicationGroup elasticache.GlobalReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	primaryReplicationGroupId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -124,6 +136,10 @@ func TestAccElastiCacheGlobalReplicationGroup_disappears(t *testing.T) {
 }
 
 func TestAccElastiCacheGlobalReplicationGroup_multipleSecondaries(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var providers []*schema.Provider
 	var globalReplcationGroup elasticache.GlobalReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -149,6 +165,10 @@ func TestAccElastiCacheGlobalReplicationGroup_multipleSecondaries(t *testing.T) 
 }
 
 func TestAccElastiCacheGlobalReplicationGroup_ReplaceSecondary_differentRegion(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var providers []*schema.Provider
 	var globalReplcationGroup elasticache.GlobalReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -180,6 +200,10 @@ func TestAccElastiCacheGlobalReplicationGroup_ReplaceSecondary_differentRegion(t
 }
 
 func TestAccElastiCacheGlobalReplicationGroup_clusterMode(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var globalReplicationGroup elasticache.GlobalReplicationGroup
 	var primaryReplicationGroup elasticache.ReplicationGroup
 
@@ -318,9 +342,9 @@ resource "aws_elasticache_replication_group" "test" {
 func testAccGlobalReplicationGroupConfig_MultipleSecondaries(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
-		testAccElasticacheVpcBaseWithProvider(rName, "primary", acctest.ProviderName, 1),
-		testAccElasticacheVpcBaseWithProvider(rName, "alternate", acctest.ProviderNameAlternate, 1),
-		testAccElasticacheVpcBaseWithProvider(rName, "third", acctest.ProviderNameThird, 1),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderName, 1),
+		testAccVPCBaseWithProvider(rName, "alternate", acctest.ProviderNameAlternate, 1),
+		testAccVPCBaseWithProvider(rName, "third", acctest.ProviderNameThird, 1),
 		fmt.Sprintf(`
 resource "aws_elasticache_global_replication_group" "test" {
   provider = aws
@@ -373,9 +397,9 @@ resource "aws_elasticache_replication_group" "third" {
 func testAccReplicationGroupConfig_ReplaceSecondary_DifferentRegion_Setup(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
-		testAccElasticacheVpcBaseWithProvider(rName, "primary", acctest.ProviderName, 1),
-		testAccElasticacheVpcBaseWithProvider(rName, "secondary", acctest.ProviderNameAlternate, 1),
-		testAccElasticacheVpcBaseWithProvider(rName, "third", acctest.ProviderNameThird, 1),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderName, 1),
+		testAccVPCBaseWithProvider(rName, "secondary", acctest.ProviderNameAlternate, 1),
+		testAccVPCBaseWithProvider(rName, "third", acctest.ProviderNameThird, 1),
 		fmt.Sprintf(`
 resource "aws_elasticache_global_replication_group" "test" {
   provider = aws
@@ -416,9 +440,9 @@ resource "aws_elasticache_replication_group" "secondary" {
 func testAccReplicationGroupConfig_ReplaceSecondary_DifferentRegion_Move(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
-		testAccElasticacheVpcBaseWithProvider(rName, "primary", acctest.ProviderName, 1),
-		testAccElasticacheVpcBaseWithProvider(rName, "secondary", acctest.ProviderNameAlternate, 1),
-		testAccElasticacheVpcBaseWithProvider(rName, "third", acctest.ProviderNameThird, 1),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderName, 1),
+		testAccVPCBaseWithProvider(rName, "secondary", acctest.ProviderNameAlternate, 1),
+		testAccVPCBaseWithProvider(rName, "third", acctest.ProviderNameThird, 1),
 		fmt.Sprintf(`
 resource "aws_elasticache_global_replication_group" "test" {
   provider = aws
@@ -468,7 +492,7 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_description = "test"
 
   engine         = "redis"
-  engine_version = "6.x"
+  engine_version = "6.2"
   node_type      = "cache.m5.large"
 
   parameter_group_name       = "default.redis6.x.cluster.on"
@@ -481,7 +505,7 @@ resource "aws_elasticache_replication_group" "test" {
 `, rName)
 }
 
-func testAccElasticacheVpcBaseWithProvider(rName, name, provider string, subnetCount int) string {
+func testAccVPCBaseWithProvider(rName, name, provider string, subnetCount int) string {
 	return acctest.ConfigCompose(
 		testAccAvailableAZsNoOptInConfigWithProvider(name, provider),
 		fmt.Sprintf(`

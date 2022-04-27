@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -91,7 +92,12 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 						"filter": {
 							Type:     schema.TypeList,
 							Optional: true,
-							MaxItems: 1,
+							// If neither the filter block nor the prefix parameter in the rule are specified,
+							// we apply the Default behavior from v3.x of the provider (Filter with empty string Prefix),
+							// which will thus return a Filter in the GetBucketLifecycleConfiguration request and
+							// require diff suppression.
+							DiffSuppressFunc: suppressMissingFilterConfigurationBlock,
+							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"and": {
@@ -164,9 +170,9 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"newer_noncurrent_versions": {
-										Type:         schema.TypeInt,
+										Type:         nullable.TypeNullableInt,
 										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
+										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(1),
 									},
 									"noncurrent_days": {
 										Type:         schema.TypeInt,
@@ -182,9 +188,9 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"newer_noncurrent_versions": {
-										Type:         schema.TypeInt,
+										Type:         nullable.TypeNullableInt,
 										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
+										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(1),
 									},
 									"noncurrent_days": {
 										Type:         schema.TypeInt,
@@ -414,4 +420,27 @@ func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.R
 	}
 
 	return nil
+}
+
+// suppressMissingFilterConfigurationBlock suppresses the diff that results from an omitted
+// filter configuration block and one returned from the S3 API.
+// To work around the issue, https://github.com/hashicorp/terraform-plugin-sdk/issues/743,
+// this method only looks for changes in the "filter.#" value and not its nested fields
+// which are incorrectly suppressed when using the verify.SuppressMissingOptionalConfigurationBlock method.
+func suppressMissingFilterConfigurationBlock(k, old, new string, d *schema.ResourceData) bool {
+	if strings.HasSuffix(k, "filter.#") {
+		o, n := d.GetChange(k)
+		oVal, nVal := o.(int), n.(int)
+
+		if oVal == 1 && nVal == 0 {
+			return true
+		}
+
+		if oVal == 1 && nVal == 1 {
+			return old == "1" && new == "0"
+		}
+
+		return false
+	}
+	return false
 }

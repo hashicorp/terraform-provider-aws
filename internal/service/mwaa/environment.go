@@ -199,6 +199,11 @@ func ResourceEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"schedulers": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"service_role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -292,6 +297,10 @@ func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 		input.RequirementsS3Path = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("schedulers"); ok {
+		input.Schedulers = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("webserver_access_mode"); ok {
 		input.WebserverAccessMode = aws.String(v.(string))
 	}
@@ -366,6 +375,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("plugins_s3_path", environment.PluginsS3Path)
 	d.Set("requirements_s3_object_version", environment.RequirementsS3ObjectVersion)
 	d.Set("requirements_s3_path", environment.RequirementsS3Path)
+	d.Set("schedulers", environment.Schedulers)
 	d.Set("service_role_arn", environment.ServiceRoleArn)
 	d.Set("source_bucket_arn", environment.SourceBucketArn)
 	d.Set("status", environment.Status)
@@ -450,6 +460,10 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChange("requirements_s3_path") {
 			input.RequirementsS3Path = aws.String(d.Get("requirements_s3_path").(string))
+		}
+
+		if d.HasChange("schedulers") {
+			input.Schedulers = aws.Int64(int64(d.Get("schedulers").(int)))
 		}
 
 		if d.HasChange("source_bucket_arn") {

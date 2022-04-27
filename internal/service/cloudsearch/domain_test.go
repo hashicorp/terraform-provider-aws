@@ -314,6 +314,7 @@ resource "aws_cloudsearch_domain" "test" {
     type            = "text"
     analysis_scheme = "_en_default_"
     highlight       = true
+    search          = true
   }
 }
 `, rName)
@@ -367,6 +368,7 @@ resource "aws_cloudsearch_domain" "test" {
     name            = "text_array_test"
     type            = "text-array"
     return          = true
+    search          = true
     analysis_scheme = "_fr_default_"
   }
 }

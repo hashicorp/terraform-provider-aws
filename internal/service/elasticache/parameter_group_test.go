@@ -566,7 +566,7 @@ resource "aws_elasticache_parameter_group" "test" {
 `, family, rName, tagName1, tagValue1, tagName2, tagValue2)
 }
 
-func TestFlattenElasticacheParameters(t *testing.T) {
+func TestFlattenParameters(t *testing.T) {
 	cases := []struct {
 		Input  []*elasticache.Parameter
 		Output []map[string]interface{}
@@ -595,7 +595,7 @@ func TestFlattenElasticacheParameters(t *testing.T) {
 	}
 }
 
-func TestExpandElasticacheParameters(t *testing.T) {
+func TestExpandParameters(t *testing.T) {
 	expanded := []interface{}{
 		map[string]interface{}{
 			"name":         "activerehashing",
@@ -618,7 +618,7 @@ func TestExpandElasticacheParameters(t *testing.T) {
 	}
 }
 
-func TestElastiCacheParameterChanges(t *testing.T) {
+func TestParameterChanges(t *testing.T) {
 	cases := []struct {
 		Name                string
 		Old                 *schema.Set

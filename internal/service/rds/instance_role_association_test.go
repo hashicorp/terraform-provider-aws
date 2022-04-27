@@ -16,6 +16,10 @@ import (
 )
 
 func TestAccRDSInstanceRoleAssociation_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstanceRole1 rds.DBInstanceRole
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbInstanceResourceName := "aws_db_instance.test"
@@ -47,6 +51,10 @@ func TestAccRDSInstanceRoleAssociation_basic(t *testing.T) {
 }
 
 func TestAccRDSInstanceRoleAssociation_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dbInstance1 rds.DBInstance
 	var dbInstanceRole1 rds.DBInstanceRole
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

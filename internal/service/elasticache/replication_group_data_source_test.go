@@ -12,6 +12,10 @@ import (
 )
 
 func TestAccElastiCacheReplicationGroupDataSource_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 	dataSourceName := "data.aws_elasticache_replication_group.test"
@@ -46,6 +50,10 @@ func TestAccElastiCacheReplicationGroupDataSource_basic(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroupDataSource_clusterMode(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 	dataSourceName := "data.aws_elasticache_replication_group.test"
@@ -75,6 +83,10 @@ func TestAccElastiCacheReplicationGroupDataSource_clusterMode(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroupDataSource_multiAZ(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 	dataSourceName := "data.aws_elasticache_replication_group.test"
@@ -105,6 +117,36 @@ func TestAccElastiCacheReplicationGroupDataSource_nonExistent(t *testing.T) {
 			{
 				Config:      testAccReplicationGroupDataSourceConfig_NonExistent,
 				ExpectError: regexp.MustCompile(`couldn't find resource`),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroupDataSource_Engine_Redis_LogDeliveryConfigurations(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:  acctest.Providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations(rName, false, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.destination", rName),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.destination_type", "cloudwatch-logs"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.log_format", "text"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.log_type", "slow-log"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.1.destination", rName),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.1.destination_type", "kinesis-firehose"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.1.log_format", "json"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.1.log_type", "engine-log"),
+				),
 			},
 		},
 	})

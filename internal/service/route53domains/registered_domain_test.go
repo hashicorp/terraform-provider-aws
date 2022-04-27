@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRoute53Domains_serial(t *testing.T) {
@@ -39,7 +40,7 @@ func TestAccRoute53Domains_serial(t *testing.T) {
 }
 
 func testAccPreCheckRoute53Domains(t *testing.T) {
-	acctest.PreCheckPartitionHasService(conns.Route53DomainsEndpointID, t)
+	acctest.PreCheckPartitionHasService(names.Route53DomainsEndpointID, t)
 
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53DomainsConn
 
@@ -67,7 +68,7 @@ func testAccRoute53DomainsRegisteredDomain_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRoute53Domains(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, conns.Route53DomainsEndpointID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRegisteredDomainDestroy,
 		Steps: []resource.TestStep{
@@ -108,7 +109,7 @@ func testAccRoute53DomainsRegisteredDomain_autoRenew(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRoute53Domains(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, conns.Route53DomainsEndpointID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRegisteredDomainDestroy,
 		Steps: []resource.TestStep{
@@ -139,7 +140,7 @@ func testAccRoute53DomainsRegisteredDomain_contacts(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRoute53Domains(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, conns.Route53DomainsEndpointID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRegisteredDomainDestroy,
 		Steps: []resource.TestStep{
@@ -242,7 +243,7 @@ func testAccRoute53DomainsRegisteredDomain_contactPrivacy(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRoute53Domains(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, conns.Route53DomainsEndpointID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRegisteredDomainDestroy,
 		Steps: []resource.TestStep{
@@ -277,7 +278,7 @@ func testAccRoute53DomainsRegisteredDomain_nameservers(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRoute53Domains(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, conns.Route53DomainsEndpointID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRegisteredDomainDestroy,
 		Steps: []resource.TestStep{
@@ -321,7 +322,7 @@ func testAccRoute53DomainsRegisteredDomain_transferLock(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRoute53Domains(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, conns.Route53DomainsEndpointID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRegisteredDomainDestroy,
 		Steps: []resource.TestStep{

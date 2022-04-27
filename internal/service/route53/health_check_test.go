@@ -161,7 +161,7 @@ func TestAccRoute53HealthCheck_withHealthCheckRegions(t *testing.T) {
 	var check route53.HealthCheck
 	resourceName := "aws_route53_health_check.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartition("aws", t) }, // GovCloud has 2 regions, test requires 3
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) }, // GovCloud has 2 regions, test requires 3
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53HealthCheckDestroy,

@@ -146,6 +146,22 @@ func ResourceFunction() *schema.Resource {
 					},
 				},
 			},
+			"ephemeral_storage": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"size": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(512, 10240),
+						},
+					},
+				},
+			},
 			"file_system_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -381,7 +397,8 @@ func hasConfigChanges(d verify.ResourceDiffer) bool {
 		d.HasChange("vpc_config.0.security_group_ids") ||
 		d.HasChange("vpc_config.0.subnet_ids") ||
 		d.HasChange("runtime") ||
-		d.HasChange("environment")
+		d.HasChange("environment") ||
+		d.HasChange("ephemeral_storage")
 }
 
 // resourceAwsLambdaFunction maps to:
@@ -481,6 +498,14 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if v, ok := d.GetOk("ephemeral_storage"); ok && len(v.([]interface{})) > 0 {
+		ephemeralStorage := v.([]interface{})
+		configMap := ephemeralStorage[0].(map[string]interface{})
+		params.EphemeralStorage = &lambda.EphemeralStorage{
+			Size: aws.Int64(int64(configMap["size"].(int))),
+		}
+	}
+
 	if v, ok := d.GetOk("file_system_config"); ok && len(v.([]interface{})) > 0 {
 		params.FileSystemConfigs = expandFileSystemConfigs(v.([]interface{}))
 	}
@@ -549,6 +574,11 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
+			log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
+			return resource.RetryableError(err)
+		}
+
+		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceConflictException) {
 			log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
 			return resource.RetryableError(err)
 		}
@@ -792,6 +822,12 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[ERR] Error setting environment for Lambda Function (%s): %s", d.Id(), err)
 	}
 
+	ephemeralStorage := flattenEphemeralStorage(function.EphemeralStorage)
+	log.Printf("[INFO] Setting Lambda %s ephemeralStorage %#v from API", d.Id(), ephemeralStorage)
+	if err := d.Set("ephemeral_storage", ephemeralStorage); err != nil {
+		return fmt.Errorf("error setting ephemeral_storage for Lambda Function (%s): %w", d.Id(), err)
+	}
+
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
 		d.Set("dead_letter_config", []interface{}{
 			map[string]interface{}{
@@ -983,7 +1019,15 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("description") {
 		configReq.Description = aws.String(d.Get("description").(string))
 	}
-
+	if d.HasChange("ephemeral_storage") {
+		ephemeralStorage := d.Get("ephemeral_storage").([]interface{})
+		if len(ephemeralStorage) == 1 {
+			configMap := ephemeralStorage[0].(map[string]interface{})
+			configReq.EphemeralStorage = &lambda.EphemeralStorage{
+				Size: aws.Int64(int64(configMap["size"].(int))),
+			}
+		}
+	}
 	if d.HasChange("handler") {
 		configReq.Handler = aws.String(d.Get("handler").(string))
 	}
@@ -1093,6 +1137,11 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
+				log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
+				return resource.RetryableError(err)
+			}
+
+			if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceConflictException) {
 				log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
 				return resource.RetryableError(err)
 			}
@@ -1443,4 +1492,15 @@ func expandImageConfigs(imageConfigMaps []interface{}) *lambda.ImageConfig {
 		imageConfig.WorkingDirectory = aws.String(config["working_directory"].(string))
 	}
 	return imageConfig
+}
+
+func flattenEphemeralStorage(response *lambda.EphemeralStorage) []map[string]interface{} {
+	if response == nil {
+		return nil
+	}
+
+	m := make(map[string]interface{})
+	m["size"] = aws.Int64Value(response.Size)
+
+	return []map[string]interface{}{m}
 }

@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Transit Gateway"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_connect_peer"
 description: |-
@@ -47,6 +47,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - EC2 Transit Gateway Connect Peer ARN
 * `bgp_asn` - The BGP ASN number assigned customer device
 * `inside_cidr_blocks` - The CIDR blocks that will be used for addressing within the tunnel.
 * `peer_address` - The IP addressed assigned to customer device, which is used as tunnel endpoint

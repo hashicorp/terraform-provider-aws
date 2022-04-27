@@ -41,7 +41,6 @@ func ResourceApplication() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: false,
 			},
 			"appversion_lifecycle": {
 				Type:     schema.TypeList,
