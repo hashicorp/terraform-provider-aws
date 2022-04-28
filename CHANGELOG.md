@@ -28,12 +28,14 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_kms_alias: Fix `name` plan time validation ([#13000](https://github.com/hashicorp/terraform-provider-aws/issues/13000))
 * provider: Setting `skip_metadata_api_check = false` now overrides `AWS_EC2_METADATA_DISABLED` environment variable. ([#24441](https://github.com/hashicorp/terraform-provider-aws/issues/24441))
 * resource/aws_acm_certificate: Correctly handle SAN entries that match `domain_name` ([#20073](https://github.com/hashicorp/terraform-provider-aws/issues/20073))
 * resource/aws_dms_replication_task: Fix to stop the task before updating, if required ([#24047](https://github.com/hashicorp/terraform-provider-aws/issues/24047))
 * resource/aws_ec2_availability_zone_group: Don't crash if `group_name` is not found ([#24422](https://github.com/hashicorp/terraform-provider-aws/issues/24422))
 * resource/aws_elasticache_cluster: Update regex pattern to target specific Redis V6 versions through the `engine_version` attribute ([#23734](https://github.com/hashicorp/terraform-provider-aws/issues/23734))
 * resource/aws_elasticache_replication_group: Update regex pattern to target specific Redis V6 versions through the `engine_version` attribute ([#23734](https://github.com/hashicorp/terraform-provider-aws/issues/23734))
+* resource/aws_kms_alias: Fix `name` and `name_prefix` plan time validation ([#13000](https://github.com/hashicorp/terraform-provider-aws/issues/13000))
 * resource/aws_lb: Fix bug causing an error on update if tags unsupported in ISO region ([#24334](https://github.com/hashicorp/terraform-provider-aws/issues/24334))
 * resource/aws_s3_bucket_policy: Let resource be removed from tfstate if bucket deleted outside Terraform ([#23510](https://github.com/hashicorp/terraform-provider-aws/issues/23510))
 * resource/aws_s3_bucket_versioning: Let resource be removed from tfstate if bucket deleted outside Terraform ([#23510](https://github.com/hashicorp/terraform-provider-aws/issues/23510))
