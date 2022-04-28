@@ -13,7 +13,6 @@ func TestAccEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceResourceName := "data.aws_emrcontainers_virtual_cluster.test"
 	resourceName := "aws_emrcontainers_virtual_cluster.test"
-
 	testExternalProviders := map[string]resource.ExternalProvider{
 		"kubernetes": {
 			Source:            "hashicorp/kubernetes",

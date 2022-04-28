@@ -1,6 +1,7 @@
 package emrcontainers_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -18,13 +19,13 @@ func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
 	var v emrcontainers.VirtualCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emrcontainers_virtual_cluster.test"
-
 	testExternalProviders := map[string]resource.ExternalProvider{
 		"kubernetes": {
 			Source:            "hashicorp/kubernetes",
 			VersionConstraint: "~> 2.3",
 		},
 	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, emrcontainers.EndpointsID),
@@ -60,12 +61,19 @@ func TestAccEMRContainersVirtualCluster_disappears(t *testing.T) {
 	var v emrcontainers.VirtualCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emrcontainers_virtual_cluster.test"
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"kubernetes": {
+			Source:            "hashicorp/kubernetes",
+			VersionConstraint: "~> 2.3",
+		},
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emrcontainers.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVirtualClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emrcontainers.EndpointsID),
+		Providers:         acctest.Providers,
+		ExternalProviders: testExternalProviders,
+		CheckDestroy:      testAccCheckVirtualClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualClusterBasicConfig(rName),
@@ -91,7 +99,7 @@ func testAccCheckVirtualClusterExists(n string, v *emrcontainers.VirtualCluster)
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersConn
 
-		output, err := tfemrcontainers.FindVirtualClusterByID(conn, rs.Primary.ID)
+		output, err := tfemrcontainers.FindVirtualClusterByID(context.TODO(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -111,7 +119,7 @@ func testAccCheckVirtualClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfemrcontainers.FindVirtualClusterByID(conn, rs.Primary.ID)
+		_, err := tfemrcontainers.FindVirtualClusterByID(context.TODO(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

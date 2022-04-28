@@ -1,16 +1,17 @@
 package emrcontainers
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func DataSourceVirtualCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEMRContainersVirtualClusterRead,
+		ReadWithoutTimeout: dataSourceVirtualClusterRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -75,7 +76,7 @@ func DataSourceVirtualCluster() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEMRContainersVirtualClusterRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EMRContainersConn
 
 	var id string
@@ -83,16 +84,16 @@ func dataSourceAwsEMRContainersVirtualClusterRead(d *schema.ResourceData, meta i
 		id = cid.(string)
 	}
 
-	vc, err := FindVirtualClusterByID(conn, id)
+	vc, err := FindVirtualClusterByID(ctx, conn, id)
 
 	if err != nil {
-		return fmt.Errorf("error reading EMR Containers Virtual Cluster (%s): %w", id, err)
+		return diag.Errorf("reading EMR Containers Virtual Cluster (%s): %s", id, err)
 	}
 
 	d.SetId(aws.StringValue(vc.Id))
 	d.Set("arn", vc.Arn)
 	if err := d.Set("container_provider", flattenEMRContainersContainerProvider(vc.ContainerProvider)); err != nil {
-		return fmt.Errorf("error reading EMR containers virtual cluster (%s): %w", d.Id(), err)
+		return diag.Errorf("setting container_provider: %s", err)
 	}
 	d.Set("created_at", aws.TimeValue(vc.CreatedAt).String())
 	d.Set("name", vc.Name)
