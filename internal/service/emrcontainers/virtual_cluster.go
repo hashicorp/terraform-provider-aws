@@ -102,18 +102,21 @@ func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, m
 
 	name := d.Get("name").(string)
 	input := &emrcontainers.CreateVirtualClusterInput{
-		ContainerProvider: expandEMRContainersContainerProvider(d.Get("container_provider").([]interface{})),
-		Name:              aws.String(name),
+		Name: aws.String(name),
+	}
+
+	if v, ok := d.GetOk("attribute_name"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ContainerProvider = expandContainerProvider(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	log.Printf("[INFO] Creating EMR Containers Virtual Cluster: %s", input)
-	out, err := conn.CreateVirtualClusterWithContext(ctx, input)
+	output, err := conn.CreateVirtualClusterWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating EMR Containers Virtual Cluster (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(out.Id))
+	d.SetId(aws.StringValue(output.Id))
 
 	return resourceVirtualClusterRead(ctx, d, meta)
 }
@@ -134,8 +137,12 @@ func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("arn", vc.Arn)
-	if err := d.Set("container_provider", flattenEMRContainersContainerProvider(vc.ContainerProvider)); err != nil {
-		return diag.Errorf("setting container_provider: %s", err)
+	if vc.ContainerProvider != nil {
+		if err := d.Set("container_provider", []interface{}{flattenContainerProvider(vc.ContainerProvider)}); err != nil {
+			return diag.Errorf("setting container_provider: %s", err)
+		}
+	} else {
+		d.Set("container_provider", nil)
 	}
 	d.Set("name", vc.Name)
 
@@ -165,100 +172,104 @@ func resourceVirtualClusterDelete(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func expandEMRContainersContainerProvider(l []interface{}) *emrcontainers.ContainerProvider {
-	if len(l) == 0 || l[0] == nil {
+func expandContainerProvider(tfMap map[string]interface{}) *emrcontainers.ContainerProvider {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	apiObject := &emrcontainers.ContainerProvider{}
 
-	input := emrcontainers.ContainerProvider{
-		Id:   aws.String(m["id"].(string)),
-		Type: aws.String(m["type"].(string)),
+	if v, ok := tfMap["id"].(string); ok && v != "" {
+		apiObject.Id = aws.String(v)
 	}
 
-	if v, ok := m["info"]; ok {
-		input.Info = expandEMRContainersContainerInfo(v.([]interface{}))
+	if v, ok := tfMap["info"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Info = expandContainerInfo(v[0].(map[string]interface{}))
 	}
 
-	return &input
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		apiObject.Type = aws.String(v)
+	}
+
+	return apiObject
 }
 
-func expandEMRContainersContainerInfo(l []interface{}) *emrcontainers.ContainerInfo {
-	if len(l) == 0 || l[0] == nil {
+func expandContainerInfo(tfMap map[string]interface{}) *emrcontainers.ContainerInfo {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	apiObject := &emrcontainers.ContainerInfo{}
 
-	input := emrcontainers.ContainerInfo{}
-
-	if v, ok := m["eks_info"]; ok {
-		input.EksInfo = expandEMRContainersEksInfo(v.([]interface{}))
+	if v, ok := tfMap["eks_info"].([]interface{}); ok && len(v) > 0 {
+		apiObject.EksInfo = expandEksInfo(v[0].(map[string]interface{}))
 	}
 
-	return &input
+	return apiObject
 }
 
-func expandEMRContainersEksInfo(l []interface{}) *emrcontainers.EksInfo {
-	if len(l) == 0 || l[0] == nil {
+func expandEksInfo(tfMap map[string]interface{}) *emrcontainers.EksInfo {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	apiObject := &emrcontainers.EksInfo{}
 
-	input := emrcontainers.EksInfo{}
-
-	if v, ok := m["namespace"]; ok {
-		input.Namespace = aws.String(v.(string))
+	if v, ok := tfMap["namespace"].(string); ok && v != "" {
+		apiObject.Namespace = aws.String(v)
 	}
 
-	return &input
+	return apiObject
 }
 
-func flattenEMRContainersContainerProvider(cp *emrcontainers.ContainerProvider) []interface{} {
-	if cp == nil {
-		return []interface{}{}
+func flattenContainerProvider(apiObject *emrcontainers.ContainerProvider) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]interface{}{}
 
-	m["id"] = cp.Id
-	m["type"] = cp.Type
-
-	if cp.Info != nil {
-		m["info"] = flattenEMRContainersContainerInfo(cp.Info)
+	if v := apiObject.Id; v != nil {
+		tfMap["id"] = aws.StringValue(v)
 	}
 
-	return []interface{}{m}
+	if v := apiObject.Info; v != nil {
+		tfMap["info"] = []interface{}{flattenContainerInfo(v)}
+	}
+
+	if v := apiObject.Type; v != nil {
+		tfMap["type"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
-func flattenEMRContainersContainerInfo(ci *emrcontainers.ContainerInfo) []interface{} {
-	if ci == nil {
-		return []interface{}{}
+func flattenContainerInfo(apiObject *emrcontainers.ContainerInfo) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]interface{}{}
 
-	if ci.EksInfo != nil {
-		m["eks_info"] = flattenEMRContainersEksInfo(ci.EksInfo)
+	if v := apiObject.EksInfo; v != nil {
+		tfMap["eks_info"] = []interface{}{flattenEksInfo(v)}
 	}
 
-	return []interface{}{m}
+	return tfMap
 }
 
-func flattenEMRContainersEksInfo(ei *emrcontainers.EksInfo) []interface{} {
-	if ei == nil {
-		return []interface{}{}
+func flattenEksInfo(apiObject *emrcontainers.EksInfo) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]interface{}{}
 
-	if ei.Namespace != nil {
-		m["namespace"] = ei.Namespace
+	if v := apiObject.Namespace; v != nil {
+		tfMap["namespace"] = aws.StringValue(v)
 	}
 
-	return []interface{}{m}
+	return tfMap
 }
 
 func findVirtualCluster(ctx context.Context, conn *emrcontainers.EMRContainers, input *emrcontainers.DescribeVirtualClusterInput) (*emrcontainers.VirtualCluster, error) {

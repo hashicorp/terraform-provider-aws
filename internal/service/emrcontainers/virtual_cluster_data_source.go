@@ -27,8 +27,6 @@ func DataSourceVirtualCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						// According to https://docs.aws.amazon.com/emr-on-eks/latest/APIReference/API_ContainerProvider.html
-						// The info and the eks_info are optional but the API raises ValidationException without the fields
 						"info": {
 							Type:     schema.TypeList,
 							Computed: true,
@@ -88,8 +86,12 @@ func dataSourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.StringValue(vc.Id))
 	d.Set("arn", vc.Arn)
-	if err := d.Set("container_provider", flattenEMRContainersContainerProvider(vc.ContainerProvider)); err != nil {
-		return diag.Errorf("setting container_provider: %s", err)
+	if vc.ContainerProvider != nil {
+		if err := d.Set("container_provider", []interface{}{flattenContainerProvider(vc.ContainerProvider)}); err != nil {
+			return diag.Errorf("setting container_provider: %s", err)
+		}
+	} else {
+		d.Set("container_provider", nil)
 	}
 	d.Set("created_at", aws.TimeValue(vc.CreatedAt).String())
 	d.Set("name", vc.Name)
