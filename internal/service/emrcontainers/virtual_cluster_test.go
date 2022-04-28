@@ -37,7 +37,7 @@ func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckVirtualClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVirtualClusterBasicConfig(rName),
+				Config: testAccVirtualClusterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "container_provider.#", "1"),
@@ -47,6 +47,7 @@ func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "container_provider.0.info.0.eks_info.0.namespace", "default"),
 					resource.TestCheckResourceAttr(resourceName, "container_provider.0.type", "EKS"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			//
@@ -91,10 +92,60 @@ func TestAccEMRContainersVirtualCluster_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckVirtualClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVirtualClusterBasicConfig(rName),
+				Config: testAccVirtualClusterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualClusterExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfemrcontainers.ResourceVirtualCluster(), resourceName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEMRContainersVirtualCluster_tags(t *testing.T) {
+	var v emrcontainers.VirtualCluster
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_emrcontainers_virtual_cluster.test"
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"kubernetes": {
+			Source:            "hashicorp/kubernetes",
+			VersionConstraint: "~> 2.3",
+		},
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/emr-containers.amazonaws.com")
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, emrcontainers.EndpointsID),
+		Providers:         acctest.Providers,
+		ExternalProviders: testExternalProviders,
+		CheckDestroy:      testAccCheckVirtualClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVirtualClusterConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVirtualClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccVirtualClusterConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVirtualClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccVirtualClusterConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVirtualClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -416,7 +467,7 @@ EOF
 `, rName))
 }
 
-func testAccVirtualClusterBasicConfig(rName string) string {
+func testAccVirtualClusterConfig(rName string) string {
 	return acctest.ConfigCompose(testAccVirtualClusterBase(rName), fmt.Sprintf(`
 resource "aws_emrcontainers_virtual_cluster" "test" {
   container_provider {
@@ -435,4 +486,55 @@ resource "aws_emrcontainers_virtual_cluster" "test" {
   depends_on = [kubernetes_config_map.aws_auth]
 }
 `, rName))
+}
+
+func testAccVirtualClusterConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccVirtualClusterBase(rName), fmt.Sprintf(`
+resource "aws_emrcontainers_virtual_cluster" "test" {
+  container_provider {
+    id   = aws_eks_cluster.test.name
+    type = "EKS"
+
+    info {
+      eks_info {
+        namespace = "default"
+      }
+    }
+  }
+
+  name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
+
+  depends_on = [kubernetes_config_map.aws_auth]
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccVirtualClusterConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccVirtualClusterBase(rName), fmt.Sprintf(`
+resource "aws_emrcontainers_virtual_cluster" "test" {
+  container_provider {
+    id   = aws_eks_cluster.test.name
+    type = "EKS"
+
+    info {
+      eks_info {
+        namespace = "default"
+      }
+    }
+  }
+
+  name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+
+  depends_on = [kubernetes_config_map.aws_auth]
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
