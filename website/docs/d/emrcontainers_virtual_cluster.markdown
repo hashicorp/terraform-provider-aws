@@ -14,7 +14,7 @@ Retrieve information about an EMR Containers (EMR on EKS) Virtual Cluster.
 
 ```terraform
 data "aws_emrcontainers_virtual_cluster" "example" {
-  id = "example id"
+  virtual_cluster_id = "example id"
 }
 
 output "name" {
@@ -28,7 +28,7 @@ output "arn" {
 
 ## Argument Reference
 
-* `id` - (Required) The ID of the cluster.
+* `virtual_cluster_id` - (Required) The ID of the cluster.
 
 ## Attributes Reference
 

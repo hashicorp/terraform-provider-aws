@@ -60,10 +60,6 @@ func DataSourceVirtualCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -72,6 +68,10 @@ func DataSourceVirtualCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"virtual_cluster_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 		},
 	}
 }
@@ -79,11 +79,7 @@ func DataSourceVirtualCluster() *schema.Resource {
 func dataSourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EMRContainersConn
 
-	var id string
-	if cid, ok := d.GetOk("id"); ok {
-		id = cid.(string)
-	}
-
+	id := d.Get("virtual_cluster_id").(string)
 	vc, err := FindVirtualClusterByID(ctx, conn, id)
 
 	if err != nil {
@@ -98,6 +94,7 @@ func dataSourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("created_at", aws.TimeValue(vc.CreatedAt).String())
 	d.Set("name", vc.Name)
 	d.Set("state", vc.State)
+	d.Set("virtual_cluster_id", vc.Id)
 
 	return nil
 }

@@ -50,7 +50,7 @@ func TestAccEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
 func testAccVirtualClusterDataSourceConfig_Basic(rName string) string {
 	return acctest.ConfigCompose(testAccVirtualClusterBasicConfig(rName), `
 data "aws_emrcontainers_virtual_cluster" "test" {
-  id = aws_emrcontainers_virtual_cluster.test.id
+  virtual_cluster_id = aws_emrcontainers_virtual_cluster.test.id
 }
 `)
 }
