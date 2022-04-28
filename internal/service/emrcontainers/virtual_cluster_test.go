@@ -97,6 +97,7 @@ func TestAccEMRContainersVirtualCluster_disappears(t *testing.T) {
 					testAccCheckVirtualClusterExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfemrcontainers.ResourceVirtualCluster(), resourceName),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
