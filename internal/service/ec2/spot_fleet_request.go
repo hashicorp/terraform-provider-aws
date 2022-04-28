@@ -360,6 +360,52 @@ func ResourceSpotFleetRequest() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"instance_requirements": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"vcpu_count": {
+													Type:     schema.TypeList,
+													Required: true,
+													ForceNew: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"min": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																ForceNew: true,
+															},
+															"max": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																ForceNew: true,
+															},
+														},
+													},
+												},
+												"memory_mib": {
+													Type:     schema.TypeList,
+													Required: true,
+													ForceNew: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"min": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																ForceNew: true,
+															},
+															"max": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																ForceNew: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 									"availability_zone": {
 										Type:     schema.TypeString,
 										Optional: true,
@@ -860,9 +906,32 @@ func buildLaunchTemplateConfigs(d *schema.ResourceData) []*ec2.LaunchTemplateCon
 				if v, ok := ors["availability_zone"].(string); ok && v != "" {
 					lto.AvailabilityZone = aws.String(v)
 				}
+				if v, ok := ors["instance_requirements"]; ok {
+					vL := v.([]interface{})
+					irs := &ec2.InstanceRequirements{}
+
+					for _, v := range vL {
+						ir := v.(map[string]interface{})
+						if v, ok := ir["vcpu_count"]; ok {
+							irL := v.([]interface{})
+							vals := irL[0].(map[string]interface{})
+							irs.VCpuCount = &ec2.VCpuCountRange{Min: aws.Int64(int64(vals["min"].(int))), Max: aws.Int64(int64(vals["max"].(int)))}
+						}
+						if v, ok := ir["memory_mib"]; ok {
+							irL := v.([]interface{})
+							vals := irL[0].(map[string]interface{})
+							irs.MemoryMiB = &ec2.MemoryMiB{Min: aws.Int64(int64(vals["min"].(int))), Max: aws.Int64(int64(vals["max"].(int)))}
+						}
+					}
+					lto.InstanceRequirements = irs
+				}
 
 				if v, ok := ors["instance_type"].(string); ok && v != "" {
 					lto.InstanceType = aws.String(v)
+				}
+
+				if v, ok := ors["priority"].(float64); ok && v > 0 {
+					lto.Priority = aws.Float64(v)
 				}
 
 				if v, ok := ors["spot_price"].(string); ok && v != "" {
@@ -875,10 +944,6 @@ func buildLaunchTemplateConfigs(d *schema.ResourceData) []*ec2.LaunchTemplateCon
 
 				if v, ok := ors["weighted_capacity"].(float64); ok && v > 0 {
 					lto.WeightedCapacity = aws.Float64(v)
-				}
-
-				if v, ok := ors["priority"].(float64); ok {
-					lto.Priority = aws.Float64(v)
 				}
 
 				overrides = append(overrides, lto)
@@ -1375,8 +1440,65 @@ func flattenSpotFleetRequestLaunchTemplateOverrides(override *ec2.LaunchTemplate
 	if override.Priority != nil {
 		m["priority"] = aws.Float64Value(override.Priority)
 	}
+	if v := override.InstanceRequirements; v != nil {
+		m["instance_requirements"] = []interface{}{flattenInstanceRequirements(v)}
+	}
 
 	return m
+}
+
+func flattenInstanceRequirements(apiObject *ec2.InstanceRequirements) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	irMap := map[string]interface{}{}
+
+	if v := apiObject.VCpuCount; v != nil {
+		irMap["vcpu_count"] = []interface{}{flattenInstanceRequirementsCpu(v)}
+
+	}
+	if v := apiObject.MemoryMiB; v != nil {
+		irMap["memory_mib"] = []interface{}{flattenInstanceRequirementsMemory(v)}
+	}
+
+	return irMap
+}
+
+func flattenInstanceRequirementsCpu(apiObject *ec2.VCpuCountRange) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	rMap := map[string]interface{}{}
+
+	if v := apiObject.Min; v != nil {
+		rMap["min"] = aws.Int64Value(v)
+
+	}
+	if v := apiObject.Max; v != nil {
+		rMap["max"] = aws.Int64Value(v)
+
+	}
+	return rMap
+}
+
+func flattenInstanceRequirementsMemory(apiObject *ec2.MemoryMiB) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	rMap := map[string]interface{}{}
+
+	if v := apiObject.Min; v != nil {
+		rMap["min"] = aws.Int64Value(v)
+
+	}
+	if v := apiObject.Max; v != nil {
+		rMap["max"] = aws.Int64Value(v)
+
+	}
+	return rMap
 }
 
 func launchSpecsToSet(launchSpecs []*ec2.SpotFleetLaunchSpecification, conn *ec2.EC2) (*schema.Set, error) {
@@ -1772,7 +1894,21 @@ func hashLaunchTemplateOverrides(v interface{}) int {
 	if m["priority"] != nil {
 		buf.WriteString(fmt.Sprintf("%f-", m["priority"].(float64)))
 	}
-
+	if d, ok := m["instance_requirement"]; ok {
+		if len(d.(map[string]interface{})) > 0 {
+			ir := d.(map[string]interface{})
+			if a, ok := ir["vcpu_count"]; ok {
+				r := a.(map[string]interface{})
+				buf.WriteString(fmt.Sprintf("%d-", r["min"].(int64)))
+				buf.WriteString(fmt.Sprintf("%d-", r["max"].(int64)))
+			}
+			if a, ok := ir["memory_mib"]; ok {
+				r := a.(map[string]interface{})
+				buf.WriteString(fmt.Sprintf("%d-", r["min"].(int64)))
+				buf.WriteString(fmt.Sprintf("%d-", r["max"].(int64)))
+			}
+		}
+	}
 	return create.StringHashcode(buf.String())
 }
 
