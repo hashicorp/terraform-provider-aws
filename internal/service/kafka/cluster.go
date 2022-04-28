@@ -776,6 +776,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if d.HasChange("encryption_info") {
 			if v, ok := d.GetOk("encryption_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.EncryptionInfo = expandEncryptionInfo(v.([]interface{})[0].(map[string]interface{}))
+				input.EncryptionInfo.EncryptionAtRest = nil // "Updating encryption-at-rest settings on your cluster is not currently supported."
 			}
 		}
 
