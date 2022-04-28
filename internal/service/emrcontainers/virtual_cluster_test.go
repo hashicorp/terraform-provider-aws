@@ -49,11 +49,22 @@ func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+			//
+			// virtual_cluster_test.go:29: Step 2/2 error running import: exit status 1
+			//
+			//   Error: Invalid provider configuration
+			//
+			//     on /var/folders/lx/48ng4y950gv10_x6x1jwk05w0000gq/T/plugintest806912737/work384085989/terraform_plugin_test.tf line 180:
+			//    180: provider "kubernetes" {
+			//
+			//   The configuration for provider["registry.terraform.io/hashicorp/kubernetes"]
+			//   depends on values that cannot be determined until apply.
+			//
+			// {
+			// 	ResourceName:      resourceName,
+			// 	ImportState:       true,
+			// 	ImportStateVerify: true,
+			// },
 		},
 	})
 }
