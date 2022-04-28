@@ -3,7 +3,7 @@ resource/aws_msk_cluster: Add `client_authentication.unauthenticated` argument
 ```
 
 ```release-note:enhancement
-resource/aws_msk_cluster: Allow in-place update of `client_authentication` and `encryption_info.encryption_in_transit`
+resource/aws_msk_cluster: Allow in-place update of `client_authentication` and `encryption_info.encryption_in_transit.client_broker`
 ```
 
 ```release-note:enhancement

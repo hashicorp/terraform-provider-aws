@@ -250,6 +250,7 @@ func ResourceCluster() *schema.Resource {
 									"in_cluster": {
 										Type:     schema.TypeBool,
 										Optional: true,
+										ForceNew: true,
 										Default:  true,
 									},
 								},
@@ -776,7 +777,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if d.HasChange("encryption_info") {
 			if v, ok := d.GetOk("encryption_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.EncryptionInfo = expandEncryptionInfo(v.([]interface{})[0].(map[string]interface{}))
-				input.EncryptionInfo.EncryptionAtRest = nil // "Updating encryption-at-rest settings on your cluster is not currently supported."
+				if input.EncryptionInfo != nil {
+					input.EncryptionInfo.EncryptionAtRest = nil // "Updating encryption-at-rest settings on your cluster is not currently supported."
+					if input.EncryptionInfo.EncryptionInTransit != nil {
+						input.EncryptionInfo.EncryptionInTransit.InCluster = nil // "Updating the inter-broker encryption setting on your cluster is not currently supported."
+					}
+				}
 			}
 		}
 

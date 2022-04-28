@@ -1210,7 +1210,7 @@ resource "aws_msk_cluster" "test" {
   encryption_info {
     encryption_in_transit {
       client_broker = "PLAINTEXT"
-      in_cluster    = false
+      in_cluster    = true
     }
   }
 }
