@@ -202,6 +202,7 @@ func testAccCheckVirtualClusterDestroy(s *terraform.State) error {
 }
 
 func testAccVirtualClusterBase(rName string) string {
+	//lintignore:AWSAT004
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
