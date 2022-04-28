@@ -8,8 +8,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/acm"
-	"github.com/hashicorp/go-multierror"
+	"github.com/aws/aws-sdk-go/service/emrcontainers"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -23,11 +22,11 @@ func init() {
 }
 
 func sweepVirtualClusters(region string) error {
-	client, err := sweep.SharedRegionalSweeperClient(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).emrcontainersconn
+	conn := client.(*conns.AWSClient).EMRContainersConn
 	input := &emrcontainers.ListVirtualClustersInput{}
 	sweepResources := make([]*sweep.SweepResource, 0)
 
