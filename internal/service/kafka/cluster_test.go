@@ -1368,6 +1368,7 @@ func testAccConfigurationAllowEveryoneNoAclFoundFalse(rName string) string {
 resource "aws_msk_configuration" "test" {
   kafka_versions = ["2.7.1"]
   name           = %[1]q
+
   server_properties = <<-PROPERTIES
     allow.everyone.if.no.acl.found = false
   PROPERTIES
