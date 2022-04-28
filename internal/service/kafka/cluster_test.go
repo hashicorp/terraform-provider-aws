@@ -319,7 +319,7 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_iam(t *testing.T) {
 }
 
 func TestAccKafkaCluster_ClientAuthenticationTLS_certificateAuthorityARNs(t *testing.T) {
-	var cluster1, cluster2, cluster3 kafka.ClusterInfo
+	var cluster1 kafka.ClusterInfo
 	var ca acmpca.CertificateAuthority
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
@@ -367,25 +367,63 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_certificateAuthorityARNs(t *tes
 				},
 			},
 			{
-				Config: testAccClusterRootCAClientAuthenticationUnauthenticatedConfig(rName, commonName),
+				Config: testAccClusterClientAuthenticationTlsCertificateAuthorityArnsConfig(rName, commonName),
+				Check: resource.ComposeTestCheckFunc(
+					// CA must be DISABLED for deletion.
+					acctest.CheckACMPCACertificateAuthorityDisableCA(&ca),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccKafkaCluster_ClientAuthenticationTLS_initiallyNoAuthentication(t *testing.T) {
+	var cluster1, cluster2 kafka.ClusterInfo
+	var ca acmpca.CertificateAuthority
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_msk_cluster.test"
+	acmCAResourceName := "aws_acmpca_certificate_authority.test"
+	commonName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			// We need to create and activate the CA before creating the MSK cluster.
+			{
+				Config: testAccClusterRootCAConfig(commonName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(acmCAResourceName, &ca),
+					acctest.CheckACMPCACertificateAuthorityActivateRootCA(&ca),
+				),
+			},
+			{
+				Config: testAccClusterRootCANoClientAuthenticationConfig(rName, commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster2),
-					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "true"),
+					testAccCheckClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.client_broker", "PLAINTEXT"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.in_cluster", "false"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.in_cluster", "true"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
 			},
 			{
 				Config: testAccClusterClientAuthenticationTlsCertificateAuthorityArnsConfig(rName, commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster3),
-					testAccCheckClusterNotRecreated(&cluster2, &cluster3),
+					testAccCheckClusterExists(resourceName, &cluster2),
+					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "true"),
@@ -1186,7 +1224,7 @@ resource "aws_msk_cluster" "test" {
 `, rName, commonName))
 }
 
-func testAccClusterRootCAClientAuthenticationUnauthenticatedConfig(rName, commonName string) string {
+func testAccClusterRootCANoClientAuthenticationConfig(rName, commonName string) string {
 	return acctest.ConfigCompose(
 		testAccClusterBaseConfig(rName),
 		testAccClusterRootCAConfig(commonName),
@@ -1201,10 +1239,6 @@ resource "aws_msk_cluster" "test" {
     ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
-  }
-
-  client_authentication {
-    unauthenticated = true
   }
 
   encryption_info {
