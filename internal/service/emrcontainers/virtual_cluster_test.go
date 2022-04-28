@@ -27,7 +27,10 @@ func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/emr-containers.amazonaws.com")
+		},
 		ErrorCheck:        acctest.ErrorCheck(t, emrcontainers.EndpointsID),
 		Providers:         acctest.Providers,
 		ExternalProviders: testExternalProviders,
@@ -43,9 +46,7 @@ func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "container_provider.0.info.0.eks_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container_provider.0.info.0.eks_info.0.namespace", "default"),
 					resource.TestCheckResourceAttr(resourceName, "container_provider.0.type", "EKS"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "state", "RUNNING"),
 				),
 			},
 			{
@@ -69,7 +70,10 @@ func TestAccEMRContainersVirtualCluster_disappears(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/emr-containers.amazonaws.com")
+		},
 		ErrorCheck:        acctest.ErrorCheck(t, emrcontainers.EndpointsID),
 		Providers:         acctest.Providers,
 		ExternalProviders: testExternalProviders,
@@ -136,16 +140,7 @@ func testAccCheckVirtualClusterDestroy(s *terraform.State) error {
 }
 
 func testAccVirtualClusterBase(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_caller_identity" "current" {}
@@ -209,13 +204,17 @@ resource "aws_vpc" "test" {
   enable_dns_support   = true
 
   tags = {
-    Name                          = "tf-acc-test-eks-node-group"
+    Name                          = %[1]q
     "kubernetes.io/cluster/%[1]s" = "shared"
   }
 }
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table" "test" {
@@ -224,6 +223,10 @@ resource "aws_route_table" "test" {
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -249,6 +252,10 @@ resource "aws_security_group" "test" {
     protocol    = -1
     to_port     = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -260,7 +267,7 @@ resource "aws_subnet" "test" {
   vpc_id                  = aws_vpc.test.id
 
   tags = {
-    Name                          = "tf-acc-test-eks-node-group"
+    Name                          = %[1]q
     "kubernetes.io/cluster/%[1]s" = "shared"
   }
 }
@@ -303,18 +310,10 @@ data "aws_eks_cluster_auth" "cluster" {
   name = aws_eks_cluster.test.id
 }
 
-resource "aws_iam_service_linked_role" "emrcontainers" {
-  aws_service_name = "emr-containers.amazonaws.com"
-}
-
 provider "kubernetes" {
   host                   = aws_eks_cluster.test.endpoint
   cluster_ca_certificate = base64decode(aws_eks_cluster.test.certificate_authority[0].data)
-  exec {
-    api_version = "client.authentication.k8s.io/v1alpha1"
-    args        = ["eks", "get-token", "--cluster-name", aws_eks_cluster.test.id]
-    command     = "aws"
-  }
+  token                  = data.aws_eks_cluster_auth.cluster.token
 }
 
 resource "kubernetes_role" "emrcontainers_role" {
@@ -377,6 +376,7 @@ resource "kubernetes_role_binding" "emrcontainers_rolemapping" {
     kind      = "Role"
     name      = kubernetes_role.emrcontainers_role.metadata[0].name
   }
+
   subject {
     kind      = "User"
     name      = "emr-containers"
@@ -402,11 +402,11 @@ resource "kubernetes_config_map" "aws_auth" {
 EOF
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccVirtualClusterBasicConfig(rName string) string {
-	return testAccVirtualClusterBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccVirtualClusterBase(rName), fmt.Sprintf(`
 resource "aws_emrcontainers_virtual_cluster" "test" {
   container_provider {
     id   = aws_eks_cluster.test.name
@@ -421,10 +421,7 @@ resource "aws_emrcontainers_virtual_cluster" "test" {
 
   name = %[1]q
 
-  depends_on = [
-    kubernetes_config_map.aws_auth,
-    aws_iam_service_linked_role.emrcontainers
-  ]
+  depends_on = [kubernetes_config_map.aws_auth]
 }
-`, rName)
+`, rName))
 }

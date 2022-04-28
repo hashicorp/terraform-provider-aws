@@ -21,7 +21,10 @@ func TestAccEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/emr-containers.amazonaws.com")
+		},
 		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
 		Providers:         acctest.Providers,
 		ExternalProviders: testExternalProviders,
