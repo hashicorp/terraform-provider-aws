@@ -200,6 +200,36 @@ func testAccAccount_Tags(t *testing.T) {
 	})
 }
 
+func testAccAccount_govCloud(t *testing.T) {
+	key := "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN"
+	orgsEmailDomain := os.Getenv(key)
+	if orgsEmailDomain == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	var v organizations.Account
+	resourceName := "aws_organizations_account.test"
+	rInt := sdkacctest.RandInt()
+	name := fmt.Sprintf("tf_acctest_%d", rInt)
+	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsEnabled(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckAccountDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountGovCloudConfig(name, email),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccountExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "govcloud_id"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAccountDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
 
@@ -346,4 +376,14 @@ resource "aws_organizations_account" "test" {
   }
 }
 `, name, email, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAccountGovCloudConfig(name, email string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_account" "test" {
+  name            = %[1]q
+  email           = %[2]q
+  create_govcloud = true
+}
+`, name, email)
 }
