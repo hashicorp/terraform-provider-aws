@@ -330,6 +330,14 @@ func ResourceCluster() *schema.Resource {
 					},
 				},
 			},
+			"list_steps_states": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(emr.StepState_Values(), false),
+				},
+			},
 			"log_encryption_kms_key_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -1121,8 +1129,12 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		ClusterId: aws.String(d.Id()),
 	}
 
+	if v, ok := d.GetOk("list_steps_states"); ok && v.(*schema.Set).Len() > 0 {
+		input.StepStates = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
 	err = conn.ListStepsPages(input, func(page *emr.ListStepsOutput, lastPage bool) bool {
-		// ListSteps returns steps in reverse order (newest first)
+		// ListSteps returns steps in reverse order (newest first).
 		for _, step := range page.Steps {
 			stepSummaries = append([]*emr.StepSummary{step}, stepSummaries...)
 		}
