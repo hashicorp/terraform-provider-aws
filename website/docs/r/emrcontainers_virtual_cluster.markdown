@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Map Reduce Containers"
+subcategory: "EMR Containers"
 layout: "aws"
 page_title: "AWS: aws_emrcontainers_virtual_cluster"
 description: |-
