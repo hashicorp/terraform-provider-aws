@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -58,7 +58,7 @@ func resourceWebACLAssociationCreate(d *schema.ResourceData, meta interface{}) e
 	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
 		_, err = conn.AssociateWebACL(params)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFUnavailableEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFUnavailableEntityException) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -89,7 +89,7 @@ func resourceWebACLAssociationRead(d *schema.ResourceData, meta interface{}) err
 
 	output, err := conn.GetWebACLForResource(input)
 
-	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 		log.Printf("[WARN] WAF Regional Web ACL for resource (%s) not found, removing from state", resourceArn)
 		d.SetId("")
 		return nil

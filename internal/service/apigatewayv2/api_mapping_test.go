@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -191,7 +191,7 @@ func testAccCheckAPIMappingDestroy(s *terraform.State) error {
 			ApiMappingId: aws.String(rs.Primary.ID),
 			DomainName:   aws.String(rs.Primary.Attributes["domain_name"]),
 		})
-		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 			continue
 		}
 		if err != nil {

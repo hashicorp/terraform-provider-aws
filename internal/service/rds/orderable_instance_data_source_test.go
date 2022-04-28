@@ -13,9 +13,7 @@ import (
 
 func TestAccRDSOrderableInstanceDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
-	class := "db.t2.small"
 	engine := "mysql"
-	engineVersion := "5.7.22"
 	licenseModel := "general-public-license"
 	storageType := "standard"
 
@@ -26,13 +24,13 @@ func TestAccRDSOrderableInstanceDataSource_basic(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrderableInstanceDataSourceConfig_basic(class, engine, engineVersion, licenseModel, storageType),
+				Config: testAccOrderableInstanceDataSourceConfig_basic(engine, licenseModel, storageType),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "instance_class", class),
 					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
-					resource.TestCheckResourceAttr(dataSourceName, "engine_version", engineVersion),
 					resource.TestCheckResourceAttr(dataSourceName, "license_model", licenseModel),
 					resource.TestCheckResourceAttr(dataSourceName, "storage_type", storageType),
+					resource.TestCheckResourceAttrPair(dataSourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "instance_class", "data.aws_rds_orderable_db_instance.dynamic", "instance_class"),
 				),
 			},
 		},
@@ -40,8 +38,12 @@ func TestAccRDSOrderableInstanceDataSource_basic(t *testing.T) {
 }
 
 func TestAccRDSOrderableInstanceDataSource_preferredClass(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
-	preferredClass := "db.t2.micro"
+	preferredClass := "db.t3.micro"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
@@ -60,8 +62,11 @@ func TestAccRDSOrderableInstanceDataSource_preferredClass(t *testing.T) {
 }
 
 func TestAccRDSOrderableInstanceDataSource_preferredVersion(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
-	preferredVersion := "5.7.22"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
@@ -70,9 +75,9 @@ func TestAccRDSOrderableInstanceDataSource_preferredVersion(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrderableInstanceDataSourceConfig_preferredVersion(preferredVersion),
+				Config: testAccOrderableInstanceDataSourceConfig_preferredVersion(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine_version", preferredVersion),
+					resource.TestCheckResourceAttrPair(dataSourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
 				),
 			},
 		},
@@ -80,9 +85,11 @@ func TestAccRDSOrderableInstanceDataSource_preferredVersion(t *testing.T) {
 }
 
 func TestAccRDSOrderableInstanceDataSource_preferredClassAndVersion(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
-	preferredClass := "db.m3.medium"
-	preferredVersion := "5.7.22"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
@@ -91,10 +98,10 @@ func TestAccRDSOrderableInstanceDataSource_preferredClassAndVersion(t *testing.T
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrderableInstanceDataSourceConfig_preferredClassAndVersion(preferredClass, preferredVersion),
+				Config: testAccOrderableInstanceDataSourceConfig_preferredClassAndVersion(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "instance_class", preferredClass),
-					resource.TestCheckResourceAttr(dataSourceName, "engine_version", preferredVersion),
+					resource.TestCheckResourceAttrPair(dataSourceName, "instance_class", "data.aws_rds_orderable_db_instance.dynamic", "instance_class"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
 				),
 			},
 		},
@@ -102,6 +109,10 @@ func TestAccRDSOrderableInstanceDataSource_preferredClassAndVersion(t *testing.T
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsEnhancedMonitoring(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -121,6 +132,10 @@ func TestAccRDSOrderableInstanceDataSource_supportsEnhancedMonitoring(t *testing
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsIAMDatabaseAuthentication(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -140,6 +155,10 @@ func TestAccRDSOrderableInstanceDataSource_supportsIAMDatabaseAuthentication(t *
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsIops(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -159,6 +178,10 @@ func TestAccRDSOrderableInstanceDataSource_supportsIops(t *testing.T) {
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsKerberosAuthentication(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -178,6 +201,10 @@ func TestAccRDSOrderableInstanceDataSource_supportsKerberosAuthentication(t *tes
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsPerformanceInsights(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -201,6 +228,10 @@ func TestAccRDSOrderableInstanceDataSource_supportsPerformanceInsights(t *testin
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsStorageAutoScaling(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -220,6 +251,10 @@ func TestAccRDSOrderableInstanceDataSource_supportsStorageAutoScaling(t *testing
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsStorageEncryption(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -258,161 +293,217 @@ func testAccOrderableInstancePreCheck(t *testing.T) {
 	}
 }
 
-func testAccOrderableInstanceDataSourceConfig_basic(class, engine, version, license, storage string) string {
+func testAccOrderableInstanceDataSourceConfig_basic(engine, license, storage string) string {
 	return fmt.Sprintf(`
-data "aws_rds_orderable_db_instance" "test" {
-  instance_class = %q
-  engine         = %q
-  engine_version = %q
-  license_model  = %q
-  storage_type   = %q
+data "aws_rds_engine_version" "default" {
+  engine = %[1]q
 }
-`, class, engine, version, license, storage)
+
+data "aws_rds_orderable_db_instance" "dynamic" {
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  preferred_instance_classes = [%[2]s]
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  instance_class = data.aws_rds_orderable_db_instance.dynamic.instance_class
+  engine         = data.aws_rds_engine_version.default.engine
+  engine_version = data.aws_rds_engine_version.default.version
+  license_model  = %[3]q
+  storage_type   = %[4]q
+}
+`, engine, mySQLPreferredInstanceClasses, license, storage)
 }
 
 func testAccOrderableInstanceDataSourceConfig_preferredClass(preferredClass string) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
 data "aws_rds_orderable_db_instance" "test" {
-  engine         = "mysql"
-  engine_version = "5.7.22"
+  engine         = data.aws_rds_engine_version.default.engine
+  engine_version = data.aws_rds_engine_version.default.version
   license_model  = "general-public-license"
 
   preferred_instance_classes = [
     "db.xyz.xlarge",
-    %q,
+    %[1]q,
     "db.t3.small",
   ]
 }
 `, preferredClass)
 }
 
-func testAccOrderableInstanceDataSourceConfig_preferredVersion(preferredVersion string) string {
-	return fmt.Sprintf(`
+func testAccOrderableInstanceDataSourceConfig_preferredVersion() string {
+	return `
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
 data "aws_rds_orderable_db_instance" "test" {
-  engine        = "mysql"
+  engine        = data.aws_rds_engine_version.default.engine
   license_model = "general-public-license"
   storage_type  = "standard"
 
   preferred_engine_versions = [
     "18.42.32",
-    %q,
+    data.aws_rds_engine_version.default.version,
     "not.a.version",
   ]
 }
-`, preferredVersion)
+`
 }
 
-func testAccOrderableInstanceDataSourceConfig_preferredClassAndVersion(preferredClass, preferredVersion string) string {
+func testAccOrderableInstanceDataSourceConfig_preferredClassAndVersion() string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
+data "aws_rds_orderable_db_instance" "dynamic" {
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  preferred_instance_classes = [%[1]s]
+}
+
 data "aws_rds_orderable_db_instance" "test" {
-  engine        = "mysql"
+  engine        = data.aws_rds_engine_version.default.engine
   license_model = "general-public-license"
 
   preferred_instance_classes = [
     "db.xyz.xlarge",
-    %q,
+    data.aws_rds_orderable_db_instance.dynamic.instance_class,
     "db.t3.small",
   ]
   preferred_engine_versions = [
     "18.42.32",
-    %q,
+    data.aws_rds_engine_version.default.version,
     "not.a.version",
   ]
 }
-`, preferredClass, preferredVersion)
+`, mySQLPreferredInstanceClasses)
 }
 
 func testAccOrderableInstanceDataSourceConfig_supportsEnhancedMonitoring() string {
-	return `
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
 data "aws_rds_orderable_db_instance" "test" {
-  engine                       = "mysql"
+  engine                       = data.aws_rds_engine_version.default.engine
   license_model                = "general-public-license"
   storage_type                 = "standard"
   supports_enhanced_monitoring = true
 
-  preferred_engine_versions  = ["5.6.35", "5.6.41", "5.6.44"]
-  preferred_instance_classes = ["db.t2.small", "db.t3.medium", "db.t3.large"]
+  preferred_engine_versions  = ["8.0.25", "8.0.26", data.aws_rds_engine_version.default.version]
+  preferred_instance_classes = [%[1]s]
 }
-`
+`, mySQLPreferredInstanceClasses)
 }
 
 func testAccOrderableInstanceDataSourceConfig_supportsIAMDatabaseAuthentication() string {
-	return `
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
 data "aws_rds_orderable_db_instance" "test" {
-  engine                               = "mysql"
+  engine                               = data.aws_rds_engine_version.default.engine
   license_model                        = "general-public-license"
   storage_type                         = "standard"
   supports_iam_database_authentication = true
 
-  preferred_engine_versions  = ["5.6.35", "5.6.41", "5.6.44"]
-  preferred_instance_classes = ["db.t2.small", "db.t3.medium", "db.t3.large"]
+  preferred_engine_versions  = ["8.0.25", "8.0.26", data.aws_rds_engine_version.default.version]
+  preferred_instance_classes = [%[1]s]
 }
-`
+`, mySQLPreferredInstanceClasses)
 }
 
 func testAccOrderableInstanceDataSourceConfig_supportsIops() string {
-	return `
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
 data "aws_rds_orderable_db_instance" "test" {
-  engine        = "mysql"
+  engine        = data.aws_rds_engine_version.default.engine
   license_model = "general-public-license"
   supports_iops = true
 
-  preferred_engine_versions  = ["8.0.20", "8.0.19", "8.0.17"]
-  preferred_instance_classes = ["db.t3.small", "db.t2.xlarge", "db.t2.small"]
+  preferred_engine_versions  = ["8.0.20", "8.0.19", data.aws_rds_engine_version.default.version]
+  preferred_instance_classes = [%[1]s]
 }
-`
+`, mySQLPreferredInstanceClasses)
 }
 
 func testAccOrderableInstanceDataSourceConfig_supportsKerberosAuthentication() string {
-	return `
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "postgres"
+}
+
 data "aws_rds_orderable_db_instance" "test" {
-  engine                           = "postgres"
+  engine                           = data.aws_rds_engine_version.default.engine
   license_model                    = "postgresql-license"
   storage_type                     = "standard"
   supports_kerberos_authentication = true
 
-  preferred_engine_versions  = ["12.3", "11.1", "10.13"]
-  preferred_instance_classes = ["db.m5.xlarge", "db.r5.large", "db.t3.large"]
+  preferred_engine_versions  = ["14.1", "13.5", data.aws_rds_engine_version.default.version]
+  preferred_instance_classes = [%[1]s]
 }
-`
+`, postgresPreferredInstanceClasses)
 }
 
 func testAccOrderableInstanceDataSourceConfig_supportsPerformanceInsights() string {
-	return `
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
 data "aws_rds_orderable_db_instance" "test" {
-  engine                        = "mysql"
+  engine                        = data.aws_rds_engine_version.default.engine
   license_model                 = "general-public-license"
   supports_performance_insights = true
 
-  preferred_engine_versions  = ["5.6.35", "5.6.41", "5.6.44"]
-  preferred_instance_classes = ["db.t2.small", "db.t3.medium", "db.t3.large"]
+  preferred_engine_versions  = ["8.0.25", "8.0.26", data.aws_rds_engine_version.default.version]
+  preferred_instance_classes = [%[1]s]
 }
-`
+`, mySQLPreferredInstanceClasses)
 }
 
 func testAccOrderableInstanceDataSourceConfig_supportsStorageAutoScaling() string {
-	return `
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
 data "aws_rds_orderable_db_instance" "test" {
-  engine                       = "mysql"
+  engine                       = data.aws_rds_engine_version.default.engine
   license_model                = "general-public-license"
   supports_storage_autoscaling = true
 
-  preferred_engine_versions  = ["8.0.20", "8.0.19", "5.7.30"]
-  preferred_instance_classes = ["db.t3.medium", "db.t2.large", "db.t3.xlarge"]
+  preferred_engine_versions  = ["8.0.20", "8.0.19", data.aws_rds_engine_version.default.version]
+  preferred_instance_classes = [%[1]s]
 }
-`
+`, mySQLPreferredInstanceClasses)
 }
 
 func testAccOrderableInstanceDataSourceConfig_supportsStorageEncryption() string {
-	return `
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
 data "aws_rds_orderable_db_instance" "test" {
-  engine                      = "mysql"
+  engine                      = data.aws_rds_engine_version.default.engine
   license_model               = "general-public-license"
   storage_type                = "standard"
   supports_storage_encryption = true
 
-  preferred_engine_versions  = ["5.6.35", "5.6.41", "5.6.44"]
-  preferred_instance_classes = ["db.t2.small", "db.t3.medium", "db.t3.large"]
+  preferred_engine_versions  = ["8.0.25", "8.0.26", data.aws_rds_engine_version.default.version]
+  preferred_instance_classes = [%[1]s]
 }
-`
+`, mySQLPreferredInstanceClasses)
 }

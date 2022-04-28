@@ -52,7 +52,7 @@ func prettyPrintJsonLines(b []byte) string {
 	for i, p := range parts {
 		if b := []byte(p); json.Valid(b) {
 			var out bytes.Buffer
-			json.Indent(&out, b, "", " ")
+			_ = json.Indent(&out, b, "", " ") // already checked for validity
 			parts[i] = out.String()
 		}
 	}

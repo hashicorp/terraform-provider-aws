@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -184,7 +184,7 @@ func testAccCheckConnectionDestroy(s *terraform.State) error {
 				ConnectionArn: aws.String(rs.Primary.ID),
 			})
 
-			if err != nil && !tfawserr.ErrMessageContains(err, codestarconnections.ErrCodeResourceNotFoundException, "") {
+			if err != nil && !tfawserr.ErrCodeEquals(err, codestarconnections.ErrCodeResourceNotFoundException) {
 				return err
 			}
 		}
@@ -206,7 +206,7 @@ func testAccConnectionHostARNConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_host" "test" {
   name              = %[1]q
-  provider_endpoint = "https://test.com"
+  provider_endpoint = "https://example.com"
   provider_type     = "GitHubEnterpriseServer"
 }
 

@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/fsx"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -150,7 +152,11 @@ func ResourceLustreFileSystem() *schema.Resource {
 					40,
 					50,
 					100,
+					125,
 					200,
+					250,
+					500,
+					1000,
 				}),
 			},
 			"automatic_backup_retention_days": {
@@ -198,6 +204,41 @@ func ResourceLustreFileSystem() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(fsx.DataCompressionType_Values(), false),
 				Default:      fsx.DataCompressionTypeNone,
+			},
+			"file_system_type_version": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Computed: true,
+				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 20),
+					validation.StringMatch(regexp.MustCompile(`^[0-9].[0-9]+$`), "must be in format x.y"),
+				),
+			},
+			"log_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"destination": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: verify.ValidARN,
+							StateFunc:    logStateFunc,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return strings.HasPrefix(old, fmt.Sprintf("%s:", new))
+							},
+						},
+						"level": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(fsx.LustreAccessAuditLogLevel_Values(), false),
+						},
+					},
+				},
 			},
 		},
 
@@ -247,7 +288,7 @@ func resourceLustreFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 		},
 	}
 
-	//Applicable only for TypePersistent1
+	//Applicable only for TypePersistent1 and TypePersistent2
 	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
 		backupInput.KmsKeyId = aws.String(v.(string))
@@ -318,6 +359,16 @@ func resourceLustreFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 		backupInput.LustreConfiguration.DataCompressionType = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("file_system_type_version"); ok {
+		input.FileSystemTypeVersion = aws.String(v.(string))
+		backupInput.FileSystemTypeVersion = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("log_configuration"); ok && len(v.([]interface{})) > 0 {
+		input.LustreConfiguration.LogConfiguration = expandFsxLustreLogCreateConfiguration(v.([]interface{}))
+		backupInput.LustreConfiguration.LogConfiguration = expandFsxLustreLogCreateConfiguration(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("backup_id"); ok {
 		backupInput.BackupId = aws.String(v.(string))
 
@@ -359,6 +410,7 @@ func resourceLustreFileSystemUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if d.HasChangesExcept("tags_all", "tags") {
+		var waitAdminAction = false
 		input := &fsx.UpdateFileSystemInput{
 			ClientRequestToken:  aws.String(resource.UniqueId()),
 			FileSystemId:        aws.String(d.Id()),
@@ -389,6 +441,11 @@ func resourceLustreFileSystemUpdate(d *schema.ResourceData, meta interface{}) er
 			input.LustreConfiguration.DataCompressionType = aws.String(v.(string))
 		}
 
+		if d.HasChange("log_configuration") {
+			input.LustreConfiguration.LogConfiguration = expandFsxLustreLogCreateConfiguration(d.Get("log_configuration").([]interface{}))
+			waitAdminAction = true
+		}
+
 		_, err := conn.UpdateFileSystem(input)
 		if err != nil {
 			return fmt.Errorf("error updating FSX Lustre File System (%s): %w", d.Id(), err)
@@ -396,6 +453,12 @@ func resourceLustreFileSystemUpdate(d *schema.ResourceData, meta interface{}) er
 
 		if _, err := waitFileSystemUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for FSx Lustre File System (%s) update: %w", d.Id(), err)
+		}
+
+		if waitAdminAction {
+			if _, err := waitAdministrativeActionCompleted(conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return fmt.Errorf("error waiting for FSx Lustre File System (%s) Log Configuratio to be updated: %w", d.Id(), err)
+			}
 		}
 	}
 
@@ -464,6 +527,10 @@ func resourceLustreFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error setting subnet_ids: %w", err)
 	}
 
+	if err := d.Set("log_configuration", flattenFsxLustreLogConfiguration(lustreConfig.LogConfiguration)); err != nil {
+		return fmt.Errorf("error setting log_configuration: %w", err)
+	}
+
 	tags := KeyValueTags(filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
@@ -481,6 +548,7 @@ func resourceLustreFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("daily_automatic_backup_start_time", lustreConfig.DailyAutomaticBackupStartTime)
 	d.Set("copy_tags_to_backups", lustreConfig.CopyTagsToBackups)
 	d.Set("data_compression_type", lustreConfig.DataCompressionType)
+	d.Set("file_system_type_version", filesystem.FileSystemTypeVersion)
 
 	return nil
 }
@@ -508,4 +576,52 @@ func resourceLustreFileSystemDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	return nil
+}
+
+func expandFsxLustreLogCreateConfiguration(l []interface{}) *fsx.LustreLogCreateConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	data := l[0].(map[string]interface{})
+	req := &fsx.LustreLogCreateConfiguration{
+		Level: aws.String(data["level"].(string)),
+	}
+
+	if v, ok := data["destination"].(string); ok && v != "" {
+		req.Destination = aws.String(logStateFunc(v))
+	}
+
+	return req
+}
+
+func flattenFsxLustreLogConfiguration(adopts *fsx.LustreLogConfiguration) []map[string]interface{} {
+	if adopts == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"level": aws.StringValue(adopts.Level),
+	}
+
+	if adopts.Destination != nil {
+		m["destination"] = aws.StringValue(adopts.Destination)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func logStateFunc(v interface{}) string {
+	value := v.(string)
+	// API returns the specific log stream arn instead of provided log group
+	logArn, _ := arn.Parse(value)
+	if logArn.Service == "logs" {
+		parts := strings.SplitN(logArn.Resource, ":", 3)
+		if len(parts) == 3 {
+			return strings.TrimSuffix(value, fmt.Sprintf(":%s", parts[2]))
+		} else {
+			return value
+		}
+	}
+	return value
 }

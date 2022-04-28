@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -134,18 +134,17 @@ func resourceControlPanelUpdate(d *schema.ResourceData, meta interface{}) error 
 func resourceControlPanelDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
-	input := &r53rcc.DeleteControlPanelInput{
+	log.Printf("[INFO] Deleting Route53 Recovery Control Config Control Panel: %s", d.Id())
+	_, err := conn.DeleteControlPanel(&r53rcc.DeleteControlPanelInput{
 		ControlPanelArn: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteControlPanel(input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Route53 Recovery Control Config Control Panel: %s", err)
+		return fmt.Errorf("error deleting Route53 Recovery Control Config Control Panel: %w", err)
 	}
 
 	_, err = waitRoute53RecoveryControlConfigControlPanelDeleted(conn, d.Id())

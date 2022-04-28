@@ -70,13 +70,23 @@ const (
 	sageMakerRepositoryTensorFlowInferenceEIA = "tensorflow-inference-eia"
 	// SageMaker Repo TensorFlow Training
 	sageMakerRepositoryTensorFlowTraining = "tensorflow-training"
+	// SageMaker Repo HuggingFace TensorFlow Training
+	sageMakerRepositoryHuggingFaceTensorFlowTraining = "huggingface-tensorflow-training"
+	// SageMaker Repo HuggingFace TensorFlow Inference
+	sageMakerRepositoryHuggingFaceTensorFlowInference = "huggingface-tensorflow-inference"
+	// SageMaker Repo HuggingFace PyTorch Training
+	sageMakerRepositoryHuggingFacePyTorchTraining = "huggingface-pytorch-training"
+	// SageMaker Repo HuggingFace PyTorch Inference
+	sageMakerRepositoryHuggingFacePyTorchInference = "huggingface-pytorch-inference"
 )
 
 // https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html
 var sageMakerPrebuiltECRImageIDByRegion_Blazing = map[string]string{
+	endpoints.AfSouth1RegionID:     "455444449433",
 	endpoints.ApEast1RegionID:      "286214385809",
 	endpoints.ApNortheast1RegionID: "501404015308",
 	endpoints.ApNortheast2RegionID: "306986355934",
+	endpoints.ApNortheast3RegionID: "867004704886",
 	endpoints.ApSouth1RegionID:     "991648021394",
 	endpoints.ApSoutheast1RegionID: "475088953585",
 	endpoints.ApSoutheast2RegionID: "544295431143",
@@ -85,6 +95,7 @@ var sageMakerPrebuiltECRImageIDByRegion_Blazing = map[string]string{
 	endpoints.CnNorthwest1RegionID: "387376663083",
 	endpoints.EuCentral1RegionID:   "813361260812",
 	endpoints.EuNorth1RegionID:     "669576153137",
+	endpoints.EuSouth1RegionID:     "257386234256",
 	endpoints.EuWest1RegionID:      "685385470294",
 	endpoints.EuWest2RegionID:      "644912444149",
 	endpoints.EuWest3RegionID:      "749696950732",
@@ -99,6 +110,7 @@ var sageMakerPrebuiltECRImageIDByRegion_Blazing = map[string]string{
 
 // https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html
 var sageMakerPrebuiltECRImageIDByRegion_DeepAR = map[string]string{
+	endpoints.AfSouth1RegionID:     "455444449433",
 	endpoints.ApEast1RegionID:      "286214385809",
 	endpoints.ApNortheast1RegionID: "633353088612",
 	endpoints.ApNortheast2RegionID: "204372634319",
@@ -110,6 +122,7 @@ var sageMakerPrebuiltECRImageIDByRegion_DeepAR = map[string]string{
 	endpoints.CnNorthwest1RegionID: "387376663083",
 	endpoints.EuCentral1RegionID:   "495149712605",
 	endpoints.EuNorth1RegionID:     "669576153137",
+	endpoints.EuSouth1RegionID:     "257386234256",
 	endpoints.EuWest1RegionID:      "224300973850",
 	endpoints.EuWest2RegionID:      "644912444149",
 	endpoints.EuWest3RegionID:      "749696950732",
@@ -124,9 +137,11 @@ var sageMakerPrebuiltECRImageIDByRegion_DeepAR = map[string]string{
 
 // https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html
 var PrebuiltECRImageIDByRegion_FactorMachines = map[string]string{
+	endpoints.AfSouth1RegionID:     "455444449433",
 	endpoints.ApEast1RegionID:      "286214385809",
 	endpoints.ApNortheast1RegionID: "351501993468",
 	endpoints.ApNortheast2RegionID: "835164637446",
+	endpoints.ApNortheast3RegionID: "867004704886",
 	endpoints.ApSouth1RegionID:     "991648021394",
 	endpoints.ApSoutheast1RegionID: "475088953585",
 	endpoints.ApSoutheast2RegionID: "712309505854",
@@ -135,6 +150,7 @@ var PrebuiltECRImageIDByRegion_FactorMachines = map[string]string{
 	endpoints.CnNorthwest1RegionID: "387376663083",
 	endpoints.EuCentral1RegionID:   "664544806723",
 	endpoints.EuNorth1RegionID:     "669576153137",
+	endpoints.EuSouth1RegionID:     "257386234256",
 	endpoints.EuWest1RegionID:      "438346466558",
 	endpoints.EuWest2RegionID:      "644912444149",
 	endpoints.EuWest3RegionID:      "749696950732",
@@ -167,9 +183,11 @@ var sageMakerPrebuiltECRImageIDByRegion_LDA = map[string]string{
 
 // https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html
 var sageMakerPrebuiltECRImageIDByRegion_XGBoost = map[string]string{
+	endpoints.AfSouth1RegionID:     "510948584623",
 	endpoints.ApEast1RegionID:      "651117190479",
 	endpoints.ApNortheast1RegionID: "354813040037",
 	endpoints.ApNortheast2RegionID: "366743142698",
+	endpoints.ApNortheast3RegionID: "867004704886",
 	endpoints.ApSouth1RegionID:     "720646828776",
 	endpoints.ApSoutheast1RegionID: "121021644041",
 	endpoints.ApSoutheast2RegionID: "783357654285",
@@ -178,6 +196,7 @@ var sageMakerPrebuiltECRImageIDByRegion_XGBoost = map[string]string{
 	endpoints.CnNorthwest1RegionID: "451049120500",
 	endpoints.EuCentral1RegionID:   "492215442770",
 	endpoints.EuNorth1RegionID:     "662702820516",
+	endpoints.EuSouth1RegionID:     "978288397137",
 	endpoints.EuWest1RegionID:      "141502667606",
 	endpoints.EuWest2RegionID:      "764974769150",
 	endpoints.EuWest3RegionID:      "659782779980",
@@ -190,17 +209,27 @@ var sageMakerPrebuiltECRImageIDByRegion_XGBoost = map[string]string{
 	endpoints.UsWest2RegionID:      "246618743249",
 }
 
+// https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html
 // https://docs.aws.amazon.com/sagemaker/latest/dg/pre-built-docker-containers-scikit-learn-spark.html
 var PrebuiltECRImageIDByRegion_SparkML = map[string]string{
+	endpoints.AfSouth1RegionID:     "510948584623",
+	endpoints.ApEast1RegionID:      "651117190479",
 	endpoints.ApNortheast1RegionID: "354813040037",
 	endpoints.ApNortheast2RegionID: "366743142698",
 	endpoints.ApSouth1RegionID:     "720646828776",
 	endpoints.ApSoutheast1RegionID: "121021644041",
 	endpoints.ApSoutheast2RegionID: "783357654285",
 	endpoints.CaCentral1RegionID:   "341280168497",
+	endpoints.CnNorth1RegionID:     "450853457545",
+	endpoints.CnNorthwest1RegionID: "451049120500",
 	endpoints.EuCentral1RegionID:   "492215442770",
+	endpoints.EuNorth1RegionID:     "662702820516",
+	endpoints.EuSouth1RegionID:     "978288397137",
 	endpoints.EuWest1RegionID:      "141502667606",
 	endpoints.EuWest2RegionID:      "764974769150",
+	endpoints.EuWest3RegionID:      "659782779980",
+	endpoints.MeSouth1RegionID:     "801668240914",
+	endpoints.SaEast1RegionID:      "737474898029",
 	endpoints.UsEast1RegionID:      "683313688378",
 	endpoints.UsEast2RegionID:      "257758044811",
 	endpoints.UsGovWest1RegionID:   "414596584902",
@@ -295,6 +324,10 @@ func DataSourcePrebuiltECRImage() *schema.Resource {
 					sageMakerRepositoryTensorFlowServing,
 					sageMakerRepositoryTensorFlowServingEIA,
 					sageMakerRepositoryTensorFlowTraining,
+					sageMakerRepositoryHuggingFaceTensorFlowTraining,
+					sageMakerRepositoryHuggingFaceTensorFlowInference,
+					sageMakerRepositoryHuggingFacePyTorchTraining,
+					sageMakerRepositoryHuggingFacePyTorchInference,
 					sageMakerRepositoryXGBoost,
 				}, false),
 			},
@@ -367,7 +400,11 @@ func dataSourcePrebuiltECRImageRead(d *schema.ResourceData, meta interface{}) er
 		sageMakerRepositoryPyTorchTraining,
 		sageMakerRepositoryTensorFlowInference,
 		sageMakerRepositoryTensorFlowInferenceEIA,
-		sageMakerRepositoryTensorFlowTraining:
+		sageMakerRepositoryTensorFlowTraining,
+		sageMakerRepositoryHuggingFaceTensorFlowTraining,
+		sageMakerRepositoryHuggingFaceTensorFlowInference,
+		sageMakerRepositoryHuggingFacePyTorchTraining,
+		sageMakerRepositoryHuggingFacePyTorchInference:
 		id = sageMakerPrebuiltECRImageIDByRegion_DeepLearning[region]
 	default:
 		id = PrebuiltECRImageIDByRegion_FactorMachines[region]

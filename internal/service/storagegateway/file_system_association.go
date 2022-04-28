@@ -97,9 +97,10 @@ func resourceFileSystemAssociationCreate(d *schema.ResourceData, meta interface{
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	gatewayARN := d.Get("gateway_arn").(string)
 	input := &storagegateway.AssociateFileSystemInput{
 		ClientToken: aws.String(resource.UniqueId()),
-		GatewayARN:  aws.String(d.Get("gateway_arn").(string)),
+		GatewayARN:  aws.String(gatewayARN),
 		LocationARN: aws.String(d.Get("location_arn").(string)),
 		Password:    aws.String(d.Get("password").(string)),
 		Tags:        Tags(tags.IgnoreAWS()),
@@ -114,17 +115,17 @@ func resourceFileSystemAssociationCreate(d *schema.ResourceData, meta interface{
 		input.CacheAttributes = expandStorageGatewayFileSystemAssociationCacheAttributes(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Associating File System to Storage Gateway: %s", input)
+	log.Printf("[DEBUG] Creating Storage Gateway File System Association: %s", input)
 	output, err := conn.AssociateFileSystem(input)
+
 	if err != nil {
-		return fmt.Errorf("Error associating file system to storage gateway (%s): %w", d.Get("gateway_arn").(string), err)
+		return fmt.Errorf("error creating Storage Gateway (%s) File System Association: %w", gatewayARN, err)
 	}
 
 	d.SetId(aws.StringValue(output.FileSystemAssociationARN))
-	log.Printf("[INFO] Storage Gateway File System Association ID: %s", d.Id())
 
 	if _, err = waitFileSystemAssociationAvailable(conn, d.Id(), fileSystemAssociationCreateTimeout); err != nil {
-		return fmt.Errorf("error waiting for Storage Gateway File System Association (%s) to be Available: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for Storage Gateway File System Association (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceFileSystemAssociationRead(d, meta)
@@ -137,18 +138,17 @@ func resourceFileSystemAssociationRead(d *schema.ResourceData, meta interface{})
 
 	filesystem, err := FindFileSystemAssociationByARN(conn, d.Id())
 
-	if err != nil {
-		return err
-	}
-
-	if !d.IsNewResource() && filesystem == nil {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Storage Gateway File System Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	d.Set("arn", filesystem.FileSystemAssociationARN)
+	if err != nil {
+		return fmt.Errorf("error reading Storage Gateway File System Association (%s): %w", d.Id(), err)
+	}
 
+	d.Set("arn", filesystem.FileSystemAssociationARN)
 	d.Set("audit_destination_arn", filesystem.AuditDestinationARN)
 	d.Set("gateway_arn", filesystem.GatewayARN)
 	d.Set("location_arn", filesystem.LocationARN)
@@ -182,7 +182,6 @@ func resourceFileSystemAssociationUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if d.HasChangesExcept("tags_all") {
-
 		input := &storagegateway.UpdateFileSystemAssociationInput{
 			AuditDestinationARN:      aws.String(d.Get("audit_destination_arn").(string)),
 			Password:                 aws.String(d.Get("password").(string)),
@@ -196,12 +195,13 @@ func resourceFileSystemAssociationUpdate(d *schema.ResourceData, meta interface{
 
 		log.Printf("[DEBUG] Updating Storage Gateway File System Association: %s", input)
 		_, err := conn.UpdateFileSystemAssociation(input)
+
 		if err != nil {
 			return fmt.Errorf("error updating Storage Gateway File System Association (%s): %w", d.Id(), err)
 		}
 
 		if _, err = waitFileSystemAssociationAvailable(conn, d.Id(), fileSystemAssociationUpdateTimeout); err != nil {
-			return fmt.Errorf("error waiting for Storage Gateway File System Association (%s) to be Available: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for Storage Gateway File System Association (%s) update: %w", d.Id(), err)
 		}
 	}
 
@@ -217,17 +217,17 @@ func resourceFileSystemAssociationDelete(d *schema.ResourceData, meta interface{
 
 	log.Printf("[DEBUG] Deleting Storage Gateway File System Association: %s", input)
 	_, err := conn.DisassociateFileSystem(input)
+
+	if operationErrorCode(err) == operationErrCodeFileSystemAssociationNotFound {
+		return nil
+	}
+
 	if err != nil {
-		if invalidGatewayRequestErrCodeEquals(err, fileSystemAssociationNotFound) {
-			return nil
-		}
+		return fmt.Errorf("error deleting Storage Gateway File System Association (%s): %w", d.Id(), err)
 	}
 
 	if _, err = waitFileSystemAssociationDeleted(conn, d.Id(), fileSystemAssociationDeleteTimeout); err != nil {
-		if tfresource.NotFound(err) {
-			return nil
-		}
-		return fmt.Errorf("error waiting for Storage Gateway File System Association (%s) to be deleted: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for Storage Gateway File System Association (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil

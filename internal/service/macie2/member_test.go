@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -83,6 +83,47 @@ func testAccMember_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(acctest.Provider, tfmacie2.ResourceMember(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccMember_invitationDisableEmailNotification(t *testing.T) {
+	var macie2Output macie2.GetMemberOutput
+	var providers []*schema.Provider
+	resourceName := "aws_macie2_member.member"
+	email := conns.SkipIfEnvVarEmpty(t, EnvVarMacie2AlternateEmail, EnvVarMacie2AlternateEmailMessageError)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckInvitationAccepterDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMacieMemberInviteConfig_withInvitationDisableEmailNotification(email, "true", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMemberExists(resourceName, &macie2Output),
+				),
+			},
+			{
+				Config: testAccMacieMemberInviteConfig_withInvitationDisableEmailNotification(email, "false", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMemberExists(resourceName, &macie2Output),
+				),
+			},
+			{
+				Config:            testAccMacieMemberInviteConfig_withInvitationDisableEmailNotification(email, "false", false),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"invitation_disable_email_notification",
+					"invitation_message",
+				},
 			},
 		},
 	})
@@ -406,6 +447,33 @@ resource "aws_macie2_member" "member" {
   depends_on         = [aws_macie2_account.admin]
 }
 `, email, invite)
+}
+
+func testAccMacieMemberInviteConfig_withInvitationDisableEmailNotification(email, disable string, invite bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountProvider(),
+		fmt.Sprintf(`
+data "aws_caller_identity" "member" {
+  provider = "awsalternate"
+}
+
+data "aws_caller_identity" "admin" {}
+
+resource "aws_macie2_account" "admin" {}
+
+resource "aws_macie2_account" "member" {
+  provider = "awsalternate"
+}
+
+resource "aws_macie2_member" "member" {
+  account_id                            = data.aws_caller_identity.member.account_id
+  email                                 = %[1]q
+  invitation_disable_email_notification = %[2]q
+  invitation_message                    = "This is a message of the invitation"
+  invite                                = %[3]t
+  depends_on                            = [aws_macie2_account.admin]
+}
+`, email, disable, invite))
 }
 
 func testAccMacieMemberStatusConfig(email, memberStatus string, invite bool) string {

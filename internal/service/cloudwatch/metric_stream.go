@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -131,7 +131,10 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 		FirehoseArn:  aws.String(d.Get("firehose_arn").(string)),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
 		OutputFormat: aws.String(d.Get("output_format").(string)),
-		Tags:         Tags(tags.IgnoreAWS()),
+	}
+
+	if len(tags) > 0 {
+		params.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("include_filter"); ok && v.(*schema.Set).Len() > 0 {
@@ -142,13 +145,38 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 		params.ExcludeFilters = expandCloudWatchMetricStreamFilters(v.(*schema.Set))
 	}
 
-	log.Printf("[DEBUG] Putting CloudWatch MetricStream: %#v", params)
-	_, err := conn.PutMetricStreamWithContext(ctx, &params)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("putting metric_stream failed: %s", err))
+	log.Printf("[DEBUG] Putting CloudWatch Metric Stream: %#v", params)
+	output, err := conn.PutMetricStreamWithContext(ctx, &params)
+
+	// Some partitions (i.e., ISO) may not support tag-on-create
+	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] failed creating CloudWatch Metric Stream (%s) with tags: %s. Trying create without tags.", name, err)
+		params.Tags = nil
+
+		output, err = conn.PutMetricStreamWithContext(ctx, &params)
 	}
+
+	if err != nil {
+		return diag.Errorf("failed creating CloudWatch Metric Stream (%s): %s", name, err)
+	}
+
 	d.SetId(name)
-	log.Println("[INFO] CloudWatch MetricStream put finished")
+	log.Println("[INFO] CloudWatch Metric Stream put finished")
+
+	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
+	if params.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(conn, aws.StringValue(output.Arn), nil, tags)
+
+		// If default tags only, log and continue. Otherwise, error.
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+			log.Printf("[WARN] failed adding tags after create for CloudWatch Metric Stream (%s): %s", d.Id(), err)
+			return resourceMetricStreamRead(ctx, d, meta)
+		}
+
+		if err != nil {
+			return diag.Errorf("failed adding tags after create for CloudWatch Metric Stream (%s): %s", d.Id(), err)
+		}
+	}
 
 	return resourceMetricStreamRead(ctx, d, meta)
 }
@@ -198,8 +226,14 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	tags, err := ListTags(conn, aws.StringValue(output.Arn))
 
+	// Some partitions (i.e., ISO) may not support tagging, giving error
+	if verify.CheckISOErrorTagsUnsupported(err) {
+		log.Printf("[WARN] failed listing tags for CloudWatch Metric Stream (%s): %s", d.Id(), err)
+		return nil
+	}
+
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing tags for CloudWatch Metric Stream (%s): %w", d.Id(), err))
+		return diag.Errorf("failed listing tags for CloudWatch Metric Stream (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -217,21 +251,21 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[INFO] Deleting CloudWatch MetricStream %s", d.Id())
+	log.Printf("[INFO] Deleting CloudWatch Metric Stream %s", d.Id())
 	conn := meta.(*conns.AWSClient).CloudWatchConn
 	params := cloudwatch.DeleteMetricStreamInput{
 		Name: aws.String(d.Id()),
 	}
 
 	if _, err := conn.DeleteMetricStreamWithContext(ctx, &params); err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting CloudWatch MetricStream: %s", err))
+		return diag.FromErr(fmt.Errorf("error deleting CloudWatch Metric Stream: %s", err))
 	}
 
 	if _, err := WaitMetricStreamDeleted(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error while waiting for CloudWatch Metric Stream (%s) to become deleted: %w", d.Id(), err))
 	}
 
-	log.Printf("[INFO] CloudWatch MetricStream %s deleted", d.Id())
+	log.Printf("[INFO] CloudWatch Metric Stream %s deleted", d.Id())
 
 	return nil
 }

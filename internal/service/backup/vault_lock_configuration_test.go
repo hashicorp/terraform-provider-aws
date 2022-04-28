@@ -123,10 +123,10 @@ resource "aws_backup_vault" "test" {
 }
 
 resource "aws_backup_vault_lock_configuration" "test" {
-	backup_vault_name   = aws_backup_vault.test.name
-	changeable_for_days = 3
-	max_retention_days  = 1200
-	min_retention_days  = 7
+  backup_vault_name   = aws_backup_vault.test.name
+  changeable_for_days = 3
+  max_retention_days  = 1200
+  min_retention_days  = 7
 }
 `, rName)
 }

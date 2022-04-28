@@ -8,8 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -86,10 +87,7 @@ func ResourceRuleGroup() *schema.Resource {
 															"definition": {
 																Type:     schema.TypeSet,
 																Required: true,
-																Elem: &schema.Schema{
-																	Type:         schema.TypeString,
-																	ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
-																},
+																Elem:     &schema.Schema{Type: schema.TypeString},
 															},
 														},
 													},
@@ -187,10 +185,6 @@ func ResourceRuleGroup() *schema.Resource {
 															"destination": {
 																Type:     schema.TypeString,
 																Required: true,
-																ValidateFunc: validation.Any(
-																	verify.ValidIPv4CIDRNetworkAddress,
-																	validation.StringInSlice([]string{networkfirewall.StatefulRuleDirectionAny}, false),
-																),
 															},
 															"destination_port": {
 																Type:     schema.TypeString,
@@ -209,10 +203,6 @@ func ResourceRuleGroup() *schema.Resource {
 															"source": {
 																Type:     schema.TypeString,
 																Required: true,
-																ValidateFunc: validation.Any(
-																	verify.ValidIPv4CIDRNetworkAddress,
-																	validation.StringInSlice([]string{networkfirewall.StatefulRuleDirectionAny}, false),
-																),
 															},
 															"source_port": {
 																Type:     schema.TypeString,
@@ -376,6 +366,20 @@ func ResourceRuleGroup() *schema.Resource {
 								},
 							},
 						},
+						"stateful_rule_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"rule_order": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(networkfirewall.RuleOrder_Values(), false),
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -396,7 +400,14 @@ func ResourceRuleGroup() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			// The stateful rule_order default action can be explicitly or implicitly set,
+			// so ignore spurious diffs if toggling between the two.
+			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+				return forceNewIfNotRuleOrderDefault("rule_group.0.stateful_rule_options.0.rule_order", d)
+			},
+			verify.SetTagsDiff,
+		),
 	}
 }
 
@@ -726,6 +737,16 @@ func expandNetworkFirewallRuleGroup(l []interface{}) *networkfirewall.RuleGroup 
 			ruleGroup.RulesSource = rulesSource
 		}
 	}
+	if tfList, ok := tfMap["stateful_rule_options"].([]interface{}); ok && len(tfList) > 0 && tfList[0] != nil {
+		statefulRuleOptions := &networkfirewall.StatefulRuleOptions{}
+		sroMap, ok := tfList[0].(map[string]interface{})
+		if ok {
+			if v, ok := sroMap["rule_order"].(string); ok && v != "" {
+				statefulRuleOptions.RuleOrder = aws.String(v)
+			}
+		}
+		ruleGroup.StatefulRuleOptions = statefulRuleOptions
+	}
 
 	return ruleGroup
 }
@@ -952,8 +973,9 @@ func flattenNetworkFirewallRuleGroup(r *networkfirewall.RuleGroup) []interface{}
 	}
 
 	m := map[string]interface{}{
-		"rule_variables": flattenNetworkFirewallRuleVariables(r.RuleVariables),
-		"rules_source":   flattenNetworkFirewallRulesSource(r.RulesSource),
+		"rule_variables":        flattenNetworkFirewallRuleVariables(r.RuleVariables),
+		"rules_source":          flattenNetworkFirewallRulesSource(r.RulesSource),
+		"stateful_rule_options": flattenNetworkFirewallStatefulRulesOptions(r.StatefulRuleOptions),
 	}
 
 	return []interface{}{m}
@@ -1211,4 +1233,16 @@ func flattenNetworkFirewallTCPFlags(t []*networkfirewall.TCPFlagField) []interfa
 	}
 
 	return flagFields
+}
+
+func flattenNetworkFirewallStatefulRulesOptions(sro *networkfirewall.StatefulRuleOptions) []interface{} {
+	if sro == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"rule_order": aws.StringValue(sro.RuleOrder),
+	}
+
+	return []interface{}{m}
 }

@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -249,7 +249,7 @@ func resourceMeshDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.DeleteMesh(&appmesh.DeleteMeshInput{
 		MeshName: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {

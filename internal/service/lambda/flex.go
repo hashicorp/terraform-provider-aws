@@ -34,7 +34,7 @@ func flattenVPCConfigResponse(s *lambda.VpcConfigResponse) []map[string]interfac
 	}
 
 	var emptyVpc bool
-	if s.VpcId == nil || *s.VpcId == "" {
+	if aws.StringValue(s.VpcId) == "" {
 		emptyVpc = true
 	}
 	if len(s.SubnetIds) == 0 && len(s.SecurityGroupIds) == 0 && emptyVpc {

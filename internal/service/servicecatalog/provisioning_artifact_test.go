@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -244,11 +244,15 @@ func testAccProvisioningArtifactTemplateURLBaseConfig(rName, domain string) stri
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
-  acl           = "private"
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = "%[1]s.json"
 
@@ -289,7 +293,7 @@ resource "aws_servicecatalog_product" "test" {
     description                 = "artefaktbeskrivning"
     disable_template_validation = true
     name                        = %[1]q
-    template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
+    template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
     type                        = "CLOUD_FORMATION_TEMPLATE"
   }
 
@@ -310,7 +314,7 @@ resource "aws_servicecatalog_provisioning_artifact" "test" {
   guidance                    = "DEFAULT"
   name                        = "%[1]s-2"
   product_id                  = aws_servicecatalog_product.test.id
-  template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
+  template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
   type                        = "CLOUD_FORMATION_TEMPLATE"
 }
 `, rName))
@@ -326,7 +330,7 @@ resource "aws_servicecatalog_provisioning_artifact" "test" {
   guidance                    = "DEPRECATED"
   name                        = "%[1]s-3"
   product_id                  = aws_servicecatalog_product.test.id
-  template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
+  template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
   type                        = "CLOUD_FORMATION_TEMPLATE"
 }
 `, rName))

@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -192,7 +192,7 @@ func resourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Getting Route53 Hosted Zone: %s", input)
 	output, err := conn.GetHostedZone(input)
 
-	if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchHostedZone, "") {
+	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
 		log.Printf("[WARN] Route53 Hosted Zone (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -353,7 +353,7 @@ func resourceZoneDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deleting Route53 Hosted Zone: %s", input)
 	_, err := conn.DeleteHostedZone(input)
 
-	if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchHostedZone, "") {
+	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
 		return nil
 	}
 

@@ -1,5 +1,5 @@
 ---
-subcategory: "Sagemaker"
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_feature_group"
 description: |-

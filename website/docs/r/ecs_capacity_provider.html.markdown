@@ -1,5 +1,5 @@
 ---
-subcategory: "ECS"
+subcategory: "ECS (Elastic Container)"
 layout: "aws"
 page_title: "AWS: aws_ecs_capacity_provider"
 description: |-
@@ -20,7 +20,7 @@ resource "aws_autoscaling_group" "test" {
 
   tag {
     key                 = "AmazonECSManaged"
-    value               = ""
+    value               = true
     propagate_at_launch = true
   }
 }

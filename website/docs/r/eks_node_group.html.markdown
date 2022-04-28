@@ -1,5 +1,5 @@
 ---
-subcategory: "EKS"
+subcategory: "EKS (Elastic Kubernetes)"
 layout: "aws"
 page_title: "AWS: aws_eks_node_group"
 description: |-
@@ -126,11 +126,11 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `ami_type` - (Optional) Type of Amazon Machine Image (AMI) associated with the EKS Node Group. Defaults to `AL2_x86_64`. Valid values: `AL2_x86_64`, `AL2_x86_64_GPU`, `AL2_ARM_64`, `CUSTOM`. Terraform will only perform drift detection if a configuration value is provided.
+* `ami_type` - (Optional) Type of Amazon Machine Image (AMI) associated with the EKS Node Group. See the [AWS documentation](https://docs.aws.amazon.com/eks/latest/APIReference/API_Nodegroup.html#AmazonEKS-Type-Nodegroup-amiType) for valid values. Terraform will only perform drift detection if a configuration value is provided.
 * `capacity_type` - (Optional) Type of capacity associated with the EKS Node Group. Valid values: `ON_DEMAND`, `SPOT`. Terraform will only perform drift detection if a configuration value is provided.
 * `disk_size` - (Optional) Disk size in GiB for worker nodes. Defaults to `20`. Terraform will only perform drift detection if a configuration value is provided.
 * `force_update_version` - (Optional) Force version update if existing pods are unable to be drained due to a pod disruption budget issue.
-* `instance_types` - (Optional) Set of instance types associated with the EKS Node Group. Defaults to `["t3.medium"]`. Terraform will only perform drift detection if a configuration value is provided.
+* `instance_types` - (Optional) List of instance types associated with the EKS Node Group. Defaults to `["t3.medium"]`. Terraform will only perform drift detection if a configuration value is provided.
 * `labels` - (Optional) Key-value map of Kubernetes labels. Only labels that are applied with the EKS API are managed by this argument. Other Kubernetes labels applied to the EKS Node Group will not be managed.
 * `launch_template` - (Optional) Configuration block with Launch Template settings. Detailed below.
 * `node_group_name` – (Optional) Name of the EKS Node Group. If omitted, Terraform will assign a random, unique name. Conflicts with `node_group_name_prefix`.

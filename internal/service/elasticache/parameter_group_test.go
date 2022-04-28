@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -566,7 +566,7 @@ resource "aws_elasticache_parameter_group" "test" {
 `, family, rName, tagName1, tagValue1, tagName2, tagValue2)
 }
 
-func TestFlattenElasticacheParameters(t *testing.T) {
+func TestFlattenParameters(t *testing.T) {
 	cases := []struct {
 		Input  []*elasticache.Parameter
 		Output []map[string]interface{}
@@ -595,7 +595,7 @@ func TestFlattenElasticacheParameters(t *testing.T) {
 	}
 }
 
-func TestExpandElasticacheParameters(t *testing.T) {
+func TestExpandParameters(t *testing.T) {
 	expanded := []interface{}{
 		map[string]interface{}{
 			"name":         "activerehashing",
@@ -618,7 +618,7 @@ func TestExpandElasticacheParameters(t *testing.T) {
 	}
 }
 
-func TestElastiCacheParameterChanges(t *testing.T) {
+func TestParameterChanges(t *testing.T) {
 	cases := []struct {
 		Name                string
 		Old                 *schema.Set

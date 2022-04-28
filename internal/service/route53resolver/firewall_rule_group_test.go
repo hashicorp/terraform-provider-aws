@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -29,6 +29,7 @@ func TestAccRoute53ResolverFirewallRuleGroup_basic(t *testing.T) {
 				Config: testAccRoute53ResolverFirewallRuleGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallRuleGroupExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
@@ -82,6 +83,7 @@ func TestAccRoute53ResolverFirewallRuleGroup_tags(t *testing.T) {
 				Config: testAccRoute53ResolverFirewallRuleGroupConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallRuleGroupExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
@@ -98,6 +100,7 @@ func TestAccRoute53ResolverFirewallRuleGroup_tags(t *testing.T) {
 				Config: testAccRoute53ResolverFirewallRuleGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallRuleGroupExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
@@ -110,6 +113,7 @@ func TestAccRoute53ResolverFirewallRuleGroup_tags(t *testing.T) {
 				Config: testAccRoute53ResolverFirewallRuleGroupConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverFirewallRuleGroupExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
@@ -132,7 +136,7 @@ func testAccCheckRoute53ResolverFirewallRuleGroupDestroy(s *terraform.State) err
 		// Try to find the resource
 		_, err := tfroute53resolver.FindFirewallRuleGroupByID(conn, rs.Primary.ID)
 		// Verify the error is what we want
-		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 			continue
 		}
 		if err != nil {

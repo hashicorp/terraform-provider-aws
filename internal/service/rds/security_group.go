@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -271,7 +271,7 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 	_, err := conn.DeleteDBSecurityGroup(&opts)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidDBSecurityGroup.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidDBSecurityGroup.NotFound") {
 			return nil
 		}
 		return err

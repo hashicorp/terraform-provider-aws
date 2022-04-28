@@ -1,5 +1,5 @@
 ---
-subcategory: "DocumentDB"
+subcategory: "DocDB (DocumentDB)"
 layout: "aws"
 page_title: "AWS: aws_docdb"
 description: |-
@@ -60,10 +60,11 @@ The following arguments are supported:
 * `final_snapshot_identifier` - (Optional) The name of your final DB snapshot
     when this DB cluster is deleted. If omitted, no final snapshot will be
     made.
+* `global_cluster_identifier` - (Optional) The global cluster identifier specified on [`aws_docdb_global_cluster`](/docs/providers/aws/r/docdb_global_cluster.html).
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_id`, `storage_encrypted` needs to be set to true.
-* `master_password` - (Required unless a `snapshot_identifier` is provided) Password for the master DB user. Note that this may
+* `master_password` - (Required unless a `snapshot_identifier` or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may
     show up in logs, and it will be stored in the state file. Please refer to the DocDB Naming Constraints.
-* `master_username` - (Required unless a `snapshot_identifier` is provided) Username for the master DB user.
+* `master_username` - (Required unless a `snapshot_identifier` or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Username for the master DB user.
 * `port` - (Optional) The port on which the DB accepts connections
 * `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC
 Default: A 30-minute window selected at random from an 8-hour block of time per regionE.g., 04:00-09:00

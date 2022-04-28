@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -281,7 +281,7 @@ func resourceAPIRead(d *schema.ResourceData, meta interface{}) error {
 	resp, err := conn.GetApi(&apigatewayv2.GetApiInput{
 		ApiId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
 		log.Printf("[WARN] API Gateway v2 API (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -409,7 +409,7 @@ func resourceAPIDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.DeleteApi(&apigatewayv2.DeleteApiInput{
 		ApiId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {

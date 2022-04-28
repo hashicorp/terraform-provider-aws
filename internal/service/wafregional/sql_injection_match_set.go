@@ -9,10 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
 func ResourceSQLInjectionMatchSet() *schema.Resource {
@@ -101,7 +102,7 @@ func resourceSQLInjectionMatchSetRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	resp, err := conn.GetSqlInjectionMatchSet(params)
-	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 		log.Printf("[WARN] Regional WAF SQL Injection Match Set (%s) not found, error code (404)", d.Id())
 		d.SetId("")
 		return nil
@@ -125,7 +126,7 @@ func resourceSQLInjectionMatchSetUpdate(d *schema.ResourceData, meta interface{}
 		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
 
 		err := updateSqlInjectionMatchSetResourceWR(d.Id(), oldT, newT, conn, region)
-		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			log.Printf("[WARN] Regional WAF SQL Injection Match Set (%s) not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
@@ -147,7 +148,7 @@ func resourceSQLInjectionMatchSetDelete(d *schema.ResourceData, meta interface{}
 	if len(oldTuples) > 0 {
 		noTuples := []interface{}{}
 		err := updateSqlInjectionMatchSetResourceWR(d.Id(), oldTuples, noTuples, conn, region)
-		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			return nil
 		}
 		if err != nil {
@@ -164,7 +165,7 @@ func resourceSQLInjectionMatchSetDelete(d *schema.ResourceData, meta interface{}
 
 		return conn.DeleteSqlInjectionMatchSet(req)
 	})
-	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 		return nil
 	}
 	if err != nil {
@@ -206,7 +207,7 @@ func diffWafSqlInjectionMatchTuplesWR(oldT, newT []interface{}) []*waf.SqlInject
 		updates = append(updates, &waf.SqlInjectionMatchSetUpdate{
 			Action: aws.String(waf.ChangeActionDelete),
 			SqlInjectionMatchTuple: &waf.SqlInjectionMatchTuple{
-				FieldToMatch:       expandFieldToMatch(ftm[0].(map[string]interface{})),
+				FieldToMatch:       tfwaf.ExpandFieldToMatch(ftm[0].(map[string]interface{})),
 				TextTransformation: aws.String(tuple["text_transformation"].(string)),
 			},
 		})
@@ -219,7 +220,7 @@ func diffWafSqlInjectionMatchTuplesWR(oldT, newT []interface{}) []*waf.SqlInject
 		updates = append(updates, &waf.SqlInjectionMatchSetUpdate{
 			Action: aws.String(waf.ChangeActionInsert),
 			SqlInjectionMatchTuple: &waf.SqlInjectionMatchTuple{
-				FieldToMatch:       expandFieldToMatch(ftm[0].(map[string]interface{})),
+				FieldToMatch:       tfwaf.ExpandFieldToMatch(ftm[0].(map[string]interface{})),
 				TextTransformation: aws.String(tuple["text_transformation"].(string)),
 			},
 		})
@@ -249,7 +250,7 @@ func flattenSQLInjectionMatchTuples(ts []*waf.SqlInjectionMatchTuple) []interfac
 	for i, t := range ts {
 		m := make(map[string]interface{})
 		m["text_transformation"] = aws.StringValue(t.TextTransformation)
-		m["field_to_match"] = FlattenFieldToMatch(t.FieldToMatch)
+		m["field_to_match"] = tfwaf.FlattenFieldToMatch(t.FieldToMatch)
 		out[i] = m
 	}
 

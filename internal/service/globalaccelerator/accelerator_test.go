@@ -123,6 +123,10 @@ func TestAccGlobalAcceleratorAccelerator_update(t *testing.T) {
 }
 
 func TestAccGlobalAcceleratorAccelerator_attributes(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resourceName := "aws_globalaccelerator_accelerator.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -310,9 +314,13 @@ resource "aws_globalaccelerator_accelerator" "test" {
 func testAccGlobalAcceleratorAcceleratorConfigAttributes(rName string, flowLogsEnabled bool, flowLogsPrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  acl           = "private"
   bucket        = %[1]q
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_globalaccelerator_accelerator" "test" {

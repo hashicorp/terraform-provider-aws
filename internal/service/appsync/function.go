@@ -8,10 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceFunction() *schema.Resource {
@@ -35,16 +36,15 @@ func ResourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"max_batch_size": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(0, 2000),
+			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					if !regexp.MustCompile(`[_A-Za-z][_0-9A-Za-z]*`).MatchString(value) {
-						errors = append(errors, fmt.Errorf("%q must match [_A-Za-z][_0-9A-Za-z]*", k))
-					}
-					return
-				},
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[_A-Za-z][_0-9A-Za-z]*`), "must match [_A-Za-z][_0-9A-Za-z]*"),
 			},
 			"request_mapping_template": {
 				Type:     schema.TypeString,
@@ -69,6 +69,39 @@ func ResourceFunction() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"sync_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"conflict_detection": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(appsync.ConflictDetectionType_Values(), false),
+						},
+						"conflict_handler": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(appsync.ConflictHandlerType_Values(), false),
+						},
+						"lambda_conflict_handler_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"lambda_conflict_handler_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"function_id": {
 				Type:     schema.TypeString,
@@ -99,9 +132,17 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		input.ResponseMappingTemplate = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOkExists("max_batch_size"); ok {
+		input.MaxBatchSize = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("sync_config"); ok && len(v.([]interface{})) > 0 {
+		input.SyncConfig = expandAppsyncSyncConfig(v.([]interface{}))
+	}
+
 	resp, err := conn.CreateFunction(input)
 	if err != nil {
-		return fmt.Errorf("Error creating AppSync Function: %s", err)
+		return fmt.Errorf("Error creating AppSync Function: %w", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s-%s", apiID, aws.StringValue(resp.FunctionConfiguration.FunctionId)))
@@ -123,24 +164,30 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	resp, err := conn.GetFunction(input)
-	if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
-		log.Printf("[WARN] No such entity found for Appsync Function (%s)", d.Id())
+	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) && !d.IsNewResource() {
+		log.Printf("[WARN] AppSync Function (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error getting AppSync Function %s: %s", d.Id(), err)
+		return fmt.Errorf("Error getting AppSync Function %s: %w", d.Id(), err)
 	}
 
+	function := resp.FunctionConfiguration
 	d.Set("api_id", apiID)
 	d.Set("function_id", functionID)
-	d.Set("data_source", resp.FunctionConfiguration.DataSourceName)
-	d.Set("description", resp.FunctionConfiguration.Description)
-	d.Set("arn", resp.FunctionConfiguration.FunctionArn)
-	d.Set("function_version", resp.FunctionConfiguration.FunctionVersion)
-	d.Set("name", resp.FunctionConfiguration.Name)
-	d.Set("request_mapping_template", resp.FunctionConfiguration.RequestMappingTemplate)
-	d.Set("response_mapping_template", resp.FunctionConfiguration.ResponseMappingTemplate)
+	d.Set("data_source", function.DataSourceName)
+	d.Set("description", function.Description)
+	d.Set("arn", function.FunctionArn)
+	d.Set("function_version", function.FunctionVersion)
+	d.Set("name", function.Name)
+	d.Set("request_mapping_template", function.RequestMappingTemplate)
+	d.Set("response_mapping_template", function.ResponseMappingTemplate)
+	d.Set("max_batch_size", function.MaxBatchSize)
+
+	if err := d.Set("sync_config", flattenAppsyncSyncConfig(function.SyncConfig)); err != nil {
+		return fmt.Errorf("error setting sync_config: %w", err)
+	}
 
 	return nil
 }
@@ -170,14 +217,17 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.ResponseMappingTemplate = aws.String(v.(string))
 	}
 
-	_, err = conn.UpdateFunction(input)
-	if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
-		log.Printf("[WARN] No such entity found for Appsync Function (%s)", d.Id())
-		d.SetId("")
-		return nil
+	if v, ok := d.GetOk("max_batch_size"); ok {
+		input.MaxBatchSize = aws.Int64(int64(v.(int)))
 	}
+
+	if v, ok := d.GetOk("sync_config"); ok && len(v.([]interface{})) > 0 {
+		input.SyncConfig = expandAppsyncSyncConfig(v.([]interface{}))
+	}
+
+	_, err = conn.UpdateFunction(input)
 	if err != nil {
-		return fmt.Errorf("Error updating AppSync Function %s: %s", d.Id(), err)
+		return fmt.Errorf("Error updating AppSync Function %s: %w", d.Id(), err)
 	}
 
 	return resourceFunctionRead(d, meta)
@@ -197,11 +247,11 @@ func resourceFunctionDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	_, err = conn.DeleteFunction(input)
-	if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting AppSync Function %s: %s", d.Id(), err)
+		return fmt.Errorf("Error deleting AppSync Function %s: %w", d.Id(), err)
 	}
 
 	return nil
@@ -213,4 +263,70 @@ func DecodeFunctionID(id string) (string, string, error) {
 		return "", "", fmt.Errorf("expected ID in format ApiID-FunctionID, received: %s", id)
 	}
 	return idParts[0], idParts[1], nil
+}
+
+func expandAppsyncSyncConfig(l []interface{}) *appsync.SyncConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	configured := l[0].(map[string]interface{})
+
+	result := &appsync.SyncConfig{}
+
+	if v, ok := configured["conflict_detection"].(string); ok {
+		result.ConflictDetection = aws.String(v)
+	}
+
+	if v, ok := configured["conflict_handler"].(string); ok {
+		result.ConflictHandler = aws.String(v)
+	}
+
+	if v, ok := configured["lambda_conflict_handler_config"].([]interface{}); ok && len(v) > 0 {
+		result.LambdaConflictHandlerConfig = expandAppsyncLambdaConflictHandlerConfig(v)
+	}
+
+	return result
+}
+
+func flattenAppsyncSyncConfig(config *appsync.SyncConfig) []map[string]interface{} {
+	if config == nil {
+		return nil
+	}
+
+	result := map[string]interface{}{
+		"conflict_detection":             aws.StringValue(config.ConflictDetection),
+		"conflict_handler":               aws.StringValue(config.ConflictHandler),
+		"lambda_conflict_handler_config": flattenAppsyncLambdaConflictHandlerConfig(config.LambdaConflictHandlerConfig),
+	}
+
+	return []map[string]interface{}{result}
+}
+
+func expandAppsyncLambdaConflictHandlerConfig(l []interface{}) *appsync.LambdaConflictHandlerConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	configured := l[0].(map[string]interface{})
+
+	result := &appsync.LambdaConflictHandlerConfig{}
+
+	if v, ok := configured["lambda_conflict_handler_arn"].(string); ok {
+		result.LambdaConflictHandlerArn = aws.String(v)
+	}
+
+	return result
+}
+
+func flattenAppsyncLambdaConflictHandlerConfig(config *appsync.LambdaConflictHandlerConfig) []map[string]interface{} {
+	if config == nil {
+		return nil
+	}
+
+	result := map[string]interface{}{
+		"lambda_conflict_handler_arn": aws.StringValue(config.LambdaConflictHandlerArn),
+	}
+
+	return []map[string]interface{}{result}
 }

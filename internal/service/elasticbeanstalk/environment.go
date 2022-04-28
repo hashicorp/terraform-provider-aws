@@ -1,6 +1,6 @@
 package elasticbeanstalk
 
-import (
+import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"fmt"
 	"log"
 	"regexp"
@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -571,7 +571,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if env.CNAME != nil {
-		beanstalkCnamePrefixRegexp := regexp.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d)?.(elasticbeanstalk.com|eb.amazonaws.com.cn)$`)
+		beanstalkCnamePrefixRegexp := regexp.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d)?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`)
 		var cnamePrefix string
 		cnamePrefixMatch := beanstalkCnamePrefixRegexp.FindStringSubmatch(*env.CNAME)
 
@@ -768,7 +768,7 @@ func DeleteEnvironment(conn *elasticbeanstalk.ElasticBeanstalk, id string, timeo
 
 	_, err := conn.TerminateEnvironment(&opts)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidConfiguration.NotFound", "") || tfawserr.ErrMessageContains(err, "ValidationError", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidConfiguration.NotFound") || tfawserr.ErrCodeEquals(err, "ValidationError") {
 			log.Printf("[DEBUG] Elastic Beanstalk Environment %q not found", id)
 			return nil
 		}

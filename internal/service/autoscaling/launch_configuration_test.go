@@ -10,13 +10,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -568,22 +569,17 @@ func testAccCheckLaunchConfigurationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		describe, err := conn.DescribeLaunchConfigurations(
-			&autoscaling.DescribeLaunchConfigurationsInput{
-				LaunchConfigurationNames: []*string{aws.String(rs.Primary.ID)},
-			})
+		_, err := tfautoscaling.FindLaunchConfigurationByName(conn, rs.Primary.ID)
 
-		if err == nil {
-			if len(describe.LaunchConfigurations) != 0 &&
-				*describe.LaunchConfigurations[0].LaunchConfigurationName == rs.Primary.ID {
-				return fmt.Errorf("Launch Configuration still exists")
-			}
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		// Verify the error
-		if !tfawserr.ErrMessageContains(err, "InvalidLaunchConfiguration.NotFound", "") {
+		if err != nil {
 			return err
 		}
+
+		return fmt.Errorf("Autoscaling Launch Configuration %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -629,7 +625,7 @@ func testAccCheckLaunchConfigurationAttributes(conf *autoscaling.LaunchConfigura
 	}
 }
 
-func testAccCheckLaunchConfigurationExists(n string, res *autoscaling.LaunchConfiguration) resource.TestCheckFunc {
+func testAccCheckLaunchConfigurationExists(n string, v *autoscaling.LaunchConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -637,33 +633,47 @@ func testAccCheckLaunchConfigurationExists(n string, res *autoscaling.LaunchConf
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Launch Configuration ID is set")
+			return fmt.Errorf("No Autoscaling Launch Configuration ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
-		describeOpts := autoscaling.DescribeLaunchConfigurationsInput{
-			LaunchConfigurationNames: []*string{aws.String(rs.Primary.ID)},
-		}
-		describe, err := conn.DescribeLaunchConfigurations(&describeOpts)
+		output, err := tfautoscaling.FindLaunchConfigurationByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if len(describe.LaunchConfigurations) != 1 ||
-			*describe.LaunchConfigurations[0].LaunchConfigurationName != rs.Primary.ID {
-			return fmt.Errorf("Launch Configuration Group not found")
-		}
-
-		*res = *describe.LaunchConfigurations[0]
+		*v = *output
 
 		return nil
 	}
 }
 
+// configLatestAmazonLinuxPvInstanceStoreAmi returns the configuration for a data source that
+// describes the latest Amazon Linux AMI using PV virtualization and an instance store root device.
+// The data source is named 'amzn-ami-minimal-pv-ebs'.
+func testAccLatestAmazonLinuxPVInstanceStoreAMIConfig() string {
+	return `
+data "aws_ami" "amzn-ami-minimal-pv-instance-store" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-pv-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["instance-store"]
+  }
+}
+`
+}
+
 func testAccLaunchConfigurationWithInstanceStoreAMIConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxPvInstanceStoreAmi(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLatestAmazonLinuxPVInstanceStoreAMIConfig(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name     = %[1]q
   image_id = data.aws_ami.amzn-ami-minimal-pv-instance-store.id
@@ -1016,7 +1026,7 @@ func testAccCheckAmiExists(n string, ami *ec2.Image) resource.TestCheckFunc {
 			resp, err = conn.DescribeImages(opts)
 			if err != nil {
 				// This can be just eventual consistency
-				if tfawserr.ErrMessageContains(err, "InvalidAMIID.NotFound", "") {
+				if tfawserr.ErrCodeEquals(err, "InvalidAMIID.NotFound") {
 					return resource.RetryableError(err)
 				}
 

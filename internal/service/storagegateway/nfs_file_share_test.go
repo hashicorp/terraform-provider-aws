@@ -5,15 +5,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccStorageGatewayNFSFileShare_basic(t *testing.T) {
@@ -32,12 +31,15 @@ func TestAccStorageGatewayNFSFileShare_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNFSFileShareConfig_Required(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNFSFileShareExists(resourceName, &nfsFileShare),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`share/share-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "bucket_region", ""),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "client_list.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "client_list.*", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "default_storage_class", "S3_STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "file_share_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "fileshare_id", regexp.MustCompile(`^share-`)),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "guess_mime_type_enabled", "true"),
@@ -45,22 +47,57 @@ func TestAccStorageGatewayNFSFileShare_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "location_arn", bucketResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "nfs_file_share_defaults.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "notification_policy", "{}"),
 					resource.TestCheckResourceAttr(resourceName, "object_acl", storagegateway.ObjectACLPrivate),
 					resource.TestMatchResourceAttr(resourceName, "path", regexp.MustCompile(`^/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "read_only", "false"),
 					resource.TestCheckResourceAttr(resourceName, "requester_pays", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "squash", "RootSquash"),
-					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "file_share_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "notification_policy", "{}"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_dns_name", ""),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccStorageGatewayNFSFileShare_audit(t *testing.T) {
+	var nfsFileShare storagegateway.NFSFileShareInfo
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_storagegateway_nfs_file_share.test"
+	logResourceName := "aws_cloudwatch_log_group.test"
+	logResourceNameSecond := "aws_cloudwatch_log_group.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckNFSFileShareDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNFSFileShareAuditConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNFSFileShareExists(resourceName, &nfsFileShare),
+					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", logResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccNFSFileShareAuditUpdatedConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNFSFileShareExists(resourceName, &nfsFileShare),
+					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", logResourceNameSecond, "arn"),
+				),
 			},
 		},
 	})
@@ -616,6 +653,7 @@ func TestAccStorageGatewayNFSFileShare_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(resourceName, &nfsFileShare),
 					acctest.CheckResourceDisappears(acctest.Provider, tfstoragegateway.ResourceNFSFileShare(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfstoragegateway.ResourceNFSFileShare(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -631,22 +669,17 @@ func testAccCheckNFSFileShareDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &storagegateway.DescribeNFSFileSharesInput{
-			FileShareARNList: []*string{aws.String(rs.Primary.ID)},
+		_, err := tfstoragegateway.FindNFSFileShareByARN(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		output, err := conn.DescribeNFSFileShares(input)
-
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
-				continue
-			}
 			return err
 		}
 
-		if output != nil && len(output.NFSFileShareInfoList) > 0 && output.NFSFileShareInfoList[0] != nil {
-			return fmt.Errorf("Storage Gateway NFS File Share %q still exists", rs.Primary.ID)
-		}
+		return fmt.Errorf("Storage Gateway NFS File Share %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -661,21 +694,14 @@ func testAccCheckNFSFileShareExists(resourceName string, nfsFileShare *storagega
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
-		input := &storagegateway.DescribeNFSFileSharesInput{
-			FileShareARNList: []*string{aws.String(rs.Primary.ID)},
-		}
 
-		output, err := conn.DescribeNFSFileShares(input)
+		output, err := tfstoragegateway.FindNFSFileShareByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil || len(output.NFSFileShareInfoList) == 0 || output.NFSFileShareInfoList[0] == nil {
-			return fmt.Errorf("Storage Gateway NFS File Share %q does not exist", rs.Primary.ID)
-		}
-
-		*nfsFileShare = *output.NFSFileShareInfoList[0]
+		*nfsFileShare = *output
 
 		return nil
 	}
@@ -993,4 +1019,40 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   notification_policy = "{\"Upload\": {\"SettlingTimeInSeconds\": 60}}"
 }
 `
+}
+
+func testAccNFSFileShareAuditConfig(rName string) string {
+	return testAcc_S3FileShareBase(rName) + fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_storagegateway_nfs_file_share" "test" {
+  client_list           = ["0.0.0.0/0"]
+  gateway_arn           = aws_storagegateway_gateway.test.arn
+  location_arn          = aws_s3_bucket.test.arn
+  role_arn              = aws_iam_role.test.arn
+  audit_destination_arn = aws_cloudwatch_log_group.test.arn
+}
+`, rName)
+}
+
+func testAccNFSFileShareAuditUpdatedConfig(rName string) string {
+	return testAcc_S3FileShareBase(rName) + fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_log_group" "test2" {
+  name = "%[1]s-updated"
+}
+
+resource "aws_storagegateway_nfs_file_share" "test" {
+  client_list           = ["0.0.0.0/0"]
+  gateway_arn           = aws_storagegateway_gateway.test.arn
+  location_arn          = aws_s3_bucket.test.arn
+  role_arn              = aws_iam_role.test.arn
+  audit_destination_arn = aws_cloudwatch_log_group.test2.arn
+}
+`, rName)
 }

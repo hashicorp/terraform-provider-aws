@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -36,9 +36,11 @@ func TestAccCloudFormationStackSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "administration_role_arn", iamRoleResourceName, "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudformation", regexp.MustCompile(`stackset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "call_as", "SELF"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "execution_role_name", "AWSCloudFormationStackSetExecutionRole"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "permission_model", "SELF_MANAGED"),
 					resource.TestMatchResourceAttr(resourceName, "stack_set_id", regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
@@ -52,6 +54,7 @@ func TestAccCloudFormationStackSet_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -107,6 +110,7 @@ func TestAccCloudFormationStackSet_administrationRoleARN(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -145,6 +149,7 @@ func TestAccCloudFormationStackSet_description(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -183,6 +188,7 @@ func TestAccCloudFormationStackSet_executionRoleName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -238,6 +244,7 @@ func TestAccCloudFormationStackSet_name(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -247,6 +254,103 @@ func TestAccCloudFormationStackSet_name(t *testing.T) {
 					testAccCheckCloudFormationStackSetExists(resourceName, &stackSet2),
 					testAccCheckCloudFormationStackSetRecreated(&stackSet1, &stackSet2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFormationStackSet_operationPreferences(t *testing.T) {
+	var stackSet cloudformation.StackSet
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckStackSet(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckStackSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetOperationPreferencesConfig(rName, 1, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackSetExists(resourceName, &stackSet),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "10"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"call_as",
+					"template_url",
+					"operation_preferences",
+				},
+			},
+			{
+				Config: testAccStackSetOperationPreferencesConfig(rName, 3, 12),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackSetExists(resourceName, &stackSet),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "12"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
+				),
+			},
+			{
+				Config: testAccStackSetOperationPreferencesUpdatedConfig(rName, 15, 75),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackSetExists(resourceName, &stackSet),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "15"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "75"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
+				),
+			},
+			{
+				Config: testAccStackSetOperationPreferencesConfig(rName, 2, 8),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackSetExists(resourceName, &stackSet),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "8"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
+				),
+			},
+			{
+				Config: testAccStackSetOperationPreferencesConfig(rName, 0, 3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackSetExists(resourceName, &stackSet),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
+				),
+			},
+			{
+				Config: testAccStackSetOperationPreferencesUpdatedConfig(rName, 0, 95),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackSetExists(resourceName, &stackSet),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "95"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
 				),
 			},
 		},
@@ -277,6 +381,7 @@ func TestAccCloudFormationStackSet_parameters(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -337,6 +442,7 @@ func TestAccCloudFormationStackSet_Parameters_default(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -389,6 +495,7 @@ func TestAccCloudFormationStackSet_Parameters_noEcho(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -439,6 +546,7 @@ func TestAccCloudFormationStackSet_PermissionModel_serviceManaged(t *testing.T) 
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -470,6 +578,7 @@ func TestAccCloudFormationStackSet_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -525,6 +634,7 @@ func TestAccCloudFormationStackSet_templateBody(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -564,6 +674,7 @@ func TestAccCloudFormationStackSet_templateURL(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"call_as",
 					"template_url",
 				},
 			},
@@ -587,9 +698,11 @@ func testAccCheckCloudFormationStackSetExists(resourceName string, v *cloudforma
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
+		callAs := rs.Primary.Attributes["call_as"]
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 
-		output, err := tfcloudformation.FindStackSetByName(conn, rs.Primary.ID)
+		output, err := tfcloudformation.FindStackSetByName(conn, rs.Primary.ID, callAs)
 
 		if err != nil {
 			return err
@@ -609,7 +722,9 @@ func testAccCheckStackSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfcloudformation.FindStackSetByName(conn, rs.Primary.ID)
+		callAs := rs.Primary.Attributes["call_as"]
+
+		_, err := tfcloudformation.FindStackSetByName(conn, rs.Primary.ID, callAs)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -1344,11 +1459,15 @@ EOF
 }
 
 resource "aws_s3_bucket" "test" {
-  acl    = "public-read"
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "public-read"
+}
+
+resource "aws_s3_object" "test" {
   acl    = "public-read"
   bucket = aws_s3_bucket.test.bucket
 
@@ -1362,7 +1481,7 @@ CONTENT
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
-  template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
+  template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
 }
 `, rName, testAccStackSetTemplateBodyVPC(rName+"1"))
 }
@@ -1393,11 +1512,15 @@ EOF
 }
 
 resource "aws_s3_bucket" "test" {
-  acl    = "public-read"
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "public-read"
+}
+
+resource "aws_s3_object" "test" {
   acl    = "public-read"
   bucket = aws_s3_bucket.test.bucket
 
@@ -1411,7 +1534,7 @@ CONTENT
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
-  template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
+  template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
 }
 `, rName, testAccStackSetTemplateBodyVPC(rName+"2"))
 }
@@ -1432,4 +1555,86 @@ resource "aws_cloudformation_stack_set" "test" {
 TEMPLATE
 }
 `, rName, testAccStackSetTemplateBodyVPC(rName))
+}
+
+func testAccStackSetOperationPreferencesConfig(rName string, failureToleranceCount, maxConcurrentCount int) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
+}
+
+resource "aws_cloudformation_stack_set" "test" {
+  administration_role_arn = aws_iam_role.test.arn
+  name                    = %[1]q
+
+  operation_preferences {
+    failure_tolerance_count = %[2]d
+    max_concurrent_count    = %[3]d
+  }
+
+  template_body = <<TEMPLATE
+%[4]s
+TEMPLATE
+}
+`, rName, failureToleranceCount, maxConcurrentCount, testAccStackSetTemplateBodyVPC(rName))
+}
+
+func testAccStackSetOperationPreferencesUpdatedConfig(rName string, failureTolerancePercentage, maxConcurrentPercentage int) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
+}
+
+resource "aws_cloudformation_stack_set" "test" {
+  administration_role_arn = aws_iam_role.test.arn
+  name                    = %[1]q
+
+  operation_preferences {
+    failure_tolerance_percentage = %[2]d
+    max_concurrent_percentage    = %[3]d
+  }
+
+  template_body = <<TEMPLATE
+%[4]s
+TEMPLATE
+}
+`, rName, failureTolerancePercentage, maxConcurrentPercentage, testAccStackSetTemplateBodyVPC(rName))
 }

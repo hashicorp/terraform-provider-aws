@@ -1,6 +1,6 @@
 package transfer
 
-import (
+import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"context"
 	"fmt"
 	"log"
@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/transfer"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -50,18 +50,15 @@ func ResourceServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"certificate": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"directory_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"domain": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -69,12 +66,10 @@ func ResourceServer() *schema.Resource {
 				Default:      transfer.DomainS3,
 				ValidateFunc: validation.StringInSlice(transfer.Domain_Values(), false),
 			},
-
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"endpoint_details": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -115,32 +110,32 @@ func ResourceServer() *schema.Resource {
 					},
 				},
 			},
-
 			"endpoint_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      transfer.EndpointTypePublic,
 				ValidateFunc: validation.StringInSlice(transfer.EndpointType_Values(), false),
 			},
-
 			"force_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
+			"function": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"host_key": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(0, 4096),
 			},
-
 			"host_key_fingerprint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"identity_provider_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -148,19 +143,28 @@ func ResourceServer() *schema.Resource {
 				Default:      transfer.IdentityProviderTypeServiceManaged,
 				ValidateFunc: validation.StringInSlice(transfer.IdentityProviderType_Values(), false),
 			},
-
 			"invocation_role": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"logging_role": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
+			"post_authentication_login_banner": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				ValidateFunc: validation.StringLenBetween(0, 512),
+			},
+			"pre_authentication_login_banner": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				ValidateFunc: validation.StringLenBetween(0, 512),
+			},
 			"protocols": {
 				Type:     schema.TypeSet,
 				MinItems: 1,
@@ -172,20 +176,44 @@ func ResourceServer() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(transfer.Protocol_Values(), false),
 				},
 			},
-
 			"security_policy_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      SecurityPolicyName2018_11,
 				ValidateFunc: validation.StringInSlice(SecurityPolicyName_Values(), false),
 			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-
 			"url": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"workflow_details": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"on_upload": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"execution_role": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"workflow_id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -229,6 +257,14 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 		input.EndpointType = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("function"); ok {
+		if input.IdentityProviderDetails == nil {
+			input.IdentityProviderDetails = &transfer.IdentityProviderDetails{}
+		}
+
+		input.IdentityProviderDetails.Function = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("host_key"); ok {
 		input.HostKey = aws.String(v.(string))
 	}
@@ -249,6 +285,14 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 		input.LoggingRole = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("post_authentication_login_banner"); ok {
+		input.PostAuthenticationLoginBanner = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("pre_authentication_login_banner"); ok {
+		input.PreAuthenticationLoginBanner = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("protocols"); ok && v.(*schema.Set).Len() > 0 {
 		input.Protocols = flex.ExpandStringSet(v.(*schema.Set))
 	}
@@ -263,6 +307,10 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		input.IdentityProviderDetails.Url = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("workflow_details"); ok && len(v.([]interface{})) > 0 {
+		input.WorkflowDetails = expandWorkflowDetails(v.([]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -359,6 +407,11 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("endpoint_details", nil)
 	}
 	d.Set("endpoint_type", output.EndpointType)
+	if output.IdentityProviderDetails != nil {
+		d.Set("function", output.IdentityProviderDetails.Function)
+	} else {
+		d.Set("function", "")
+	}
 	d.Set("host_key_fingerprint", output.HostKeyFingerprint)
 	d.Set("identity_provider_type", output.IdentityProviderType)
 	if output.IdentityProviderDetails != nil {
@@ -367,12 +420,18 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("invocation_role", "")
 	}
 	d.Set("logging_role", output.LoggingRole)
+	d.Set("post_authentication_login_banner", output.PostAuthenticationLoginBanner)
+	d.Set("pre_authentication_login_banner", output.PreAuthenticationLoginBanner)
 	d.Set("protocols", aws.StringValueSlice(output.Protocols))
 	d.Set("security_policy_name", output.SecurityPolicyName)
 	if output.IdentityProviderDetails != nil {
 		d.Set("url", output.IdentityProviderDetails.Url)
 	} else {
 		d.Set("url", "")
+	}
+
+	if err := d.Set("workflow_details", flattenWorkflowDetails(output.WorkflowDetails)); err != nil {
+		return fmt.Errorf("error setting workflow_details: %w", err)
 	}
 
 	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -508,11 +567,15 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		if d.HasChanges("directory_id", "invocation_role", "url") {
+		if d.HasChanges("directory_id", "function", "invocation_role", "url") {
 			identityProviderDetails := &transfer.IdentityProviderDetails{}
 
 			if attr, ok := d.GetOk("directory_id"); ok {
 				identityProviderDetails.DirectoryId = aws.String(attr.(string))
+			}
+
+			if attr, ok := d.GetOk("function"); ok {
+				identityProviderDetails.Function = aws.String(attr.(string))
 			}
 
 			if attr, ok := d.GetOk("invocation_role"); ok {
@@ -530,12 +593,24 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.LoggingRole = aws.String(d.Get("logging_role").(string))
 		}
 
+		if d.HasChange("post_authentication_login_banner") {
+			input.PostAuthenticationLoginBanner = aws.String(d.Get("post_authentication_login_banner").(string))
+		}
+
+		if d.HasChange("pre_authentication_login_banner") {
+			input.PreAuthenticationLoginBanner = aws.String(d.Get("pre_authentication_login_banner").(string))
+		}
+
 		if d.HasChange("protocols") {
 			input.Protocols = flex.ExpandStringSet(d.Get("protocols").(*schema.Set))
 		}
 
 		if d.HasChange("security_policy_name") {
 			input.SecurityPolicyName = aws.String(d.Get("security_policy_name").(string))
+		}
+
+		if d.HasChange("workflow_details") {
+			input.WorkflowDetails = expandWorkflowDetails(d.Get("workflow_details").([]interface{}))
 		}
 
 		if offlineUpdate {
@@ -634,9 +709,13 @@ func resourceServerDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Deleting Transfer Server: (%s)", d.Id())
-	_, err := conn.DeleteServer(&transfer.DeleteServerInput{
-		ServerId: aws.String(d.Id()),
-	})
+	_, err := tfresource.RetryWhenAWSErrMessageContains(1*time.Minute,
+		func() (interface{}, error) {
+			return conn.DeleteServer(&transfer.DeleteServerInput{
+				ServerId: aws.String(d.Id()),
+			})
+		},
+		transfer.ErrCodeInvalidRequestException, "Unable to delete VPC endpoint")
 
 	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
 		return nil
@@ -715,6 +794,93 @@ func flattenTransferEndpointDetails(apiObject *transfer.EndpointDetails, securit
 	}
 
 	return tfMap
+}
+
+func expandWorkflowDetails(tfMap []interface{}) *transfer.WorkflowDetails {
+	if tfMap == nil {
+		return nil
+	}
+
+	tfMapRaw := tfMap[0].(map[string]interface{})
+
+	apiObject := &transfer.WorkflowDetails{}
+
+	if v, ok := tfMapRaw["on_upload"].([]interface{}); ok && len(v) > 0 {
+		apiObject.OnUpload = expandWorkflowDetail(v)
+	}
+
+	return apiObject
+}
+
+func flattenWorkflowDetails(apiObject *transfer.WorkflowDetails) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.OnUpload; v != nil {
+		tfMap["on_upload"] = flattenWorkflowDetail(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func expandWorkflowDetail(tfList []interface{}) []*transfer.WorkflowDetail {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*transfer.WorkflowDetail
+
+	for _, tfMapRaw := range tfList {
+		tfMap, _ := tfMapRaw.(map[string]interface{})
+
+		apiObject := &transfer.WorkflowDetail{}
+
+		if v, ok := tfMap["execution_role"].(string); ok && v != "" {
+			apiObject.ExecutionRole = aws.String(v)
+		}
+
+		if v, ok := tfMap["workflow_id"].(string); ok && v != "" {
+			apiObject.WorkflowId = aws.String(v)
+		}
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenWorkflowDetail(apiObjects []*transfer.WorkflowDetail) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		flattenedObject := map[string]interface{}{}
+		if v := apiObject.ExecutionRole; v != nil {
+			flattenedObject["execution_role"] = aws.StringValue(v)
+		}
+
+		if v := apiObject.WorkflowId; v != nil {
+			flattenedObject["workflow_id"] = aws.StringValue(v)
+		}
+
+		tfList = append(tfList, flattenedObject)
+	}
+
+	return tfList
 }
 
 func stopTransferServer(conn *transfer.Transfer, serverID string, timeout time.Duration) error {

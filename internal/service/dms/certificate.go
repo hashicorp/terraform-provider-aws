@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -202,7 +202,7 @@ func resourceCertificateSetState(d *schema.ResourceData, cert *dms.Certificate) 
 	d.Set("certificate_id", cert.CertificateIdentifier)
 	d.Set("certificate_arn", cert.CertificateArn)
 
-	if cert.CertificatePem != nil && *cert.CertificatePem != "" {
+	if aws.StringValue(cert.CertificatePem) != "" {
 		d.Set("certificate_pem", cert.CertificatePem)
 	}
 	if cert.CertificateWallet != nil && len(cert.CertificateWallet) != 0 {

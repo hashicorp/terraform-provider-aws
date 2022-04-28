@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/appconfig"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -65,6 +65,13 @@ func ResourceConfigurationProfile() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      ConfigurationProfileTypeAWSFreeform,
+				ValidateFunc: validation.StringInSlice(ConfigurationProfileType_Values(), false),
+			},
 			"validator": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -115,6 +122,10 @@ func resourceConfigurationProfileCreate(d *schema.ResourceData, meta interface{}
 
 	if v, ok := d.GetOk("retrieval_role_arn"); ok {
 		input.RetrievalRoleArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("type"); ok {
+		input.Type = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("validator"); ok && v.(*schema.Set).Len() > 0 {
@@ -173,8 +184,8 @@ func resourceConfigurationProfileRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("description", output.Description)
 	d.Set("location_uri", output.LocationUri)
 	d.Set("name", output.Name)
-
 	d.Set("retrieval_role_arn", output.RetrievalRoleArn)
+	d.Set("type", output.Type)
 
 	if err := d.Set("validator", flattenValidators(output.Validators)); err != nil {
 		return fmt.Errorf("error setting validator: %w", err)
@@ -187,7 +198,6 @@ func resourceConfigurationProfileRead(d *schema.ResourceData, meta interface{}) 
 		Resource:  fmt.Sprintf("application/%s/configurationprofile/%s", appID, confProfID),
 		Service:   "appconfig",
 	}.String()
-
 	d.Set("arn", arn)
 
 	tags, err := ListTags(conn, arn)

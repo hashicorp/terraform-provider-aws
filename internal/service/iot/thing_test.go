@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccIoTThing_basic(t *testing.T) {
@@ -111,7 +111,7 @@ func TestAccIoTThing_full(t *testing.T) {
 	})
 }
 
-func testAccCheckIotThingExists(n string, thing *iot.DescribeThingOutput) resource.TestCheckFunc {
+func testAccCheckIotThingExists(n string, v *iot.DescribeThingOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -123,15 +123,14 @@ func testAccCheckIotThingExists(n string, thing *iot.DescribeThingOutput) resour
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
-		params := &iot.DescribeThingInput{
-			ThingName: aws.String(rs.Primary.ID),
-		}
-		resp, err := conn.DescribeThing(params)
+
+		output, err := tfiot.FindThingByName(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*thing = *resp
+		*v = *output
 
 		return nil
 	}
@@ -145,19 +144,17 @@ func testAccCheckThingDestroy(s *terraform.State) error {
 			continue
 		}
 
-		params := &iot.DescribeThingInput{
-			ThingName: aws.String(rs.Primary.ID),
+		_, err := tfiot.FindThingByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		_, err := conn.DescribeThing(params)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
-				return nil
-			}
 			return err
 		}
-		return fmt.Errorf("Expected IoT Thing to be destroyed, %s found", rs.Primary.ID)
 
+		return fmt.Errorf("IoT Thing %s still exists", rs.Primary.ID)
 	}
 
 	return nil

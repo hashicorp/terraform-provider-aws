@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -75,7 +75,7 @@ func resourceOriginAccessIdentityRead(d *schema.ResourceData, meta interface{}) 
 
 	resp, err := conn.GetCloudFrontOriginAccessIdentity(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchCloudFrontOriginAccessIdentity, "") {
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchCloudFrontOriginAccessIdentity) {
 			log.Printf("[WARN] CloudFront Origin Access Identity (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

@@ -182,6 +182,31 @@ func TestAccEC2VPCEndpoint_gatewayPolicy(t *testing.T) {
 	})
 }
 
+func TestAccEC2VPCEndpoint_ignoreEquivalent(t *testing.T) {
+	var endpoint ec2.VpcEndpoint
+	resourceName := "aws_vpc_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckVpcEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcEndpointOrderPolicyConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcEndpointExists(resourceName, &endpoint),
+				),
+			},
+			{
+				Config:   testAccVpcEndpointNewOrderPolicyConfig(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func TestAccEC2VPCEndpoint_interfaceBasic(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
@@ -711,21 +736,12 @@ resource "aws_vpc" "test" {
   }
 }
 
-data "aws_security_group" "test" {
-  vpc_id = aws_vpc.test.id
-  name   = "default"
-}
-
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
   service_name      = "com.amazonaws.${data.aws_region.current.name}.ec2"
   vpc_endpoint_type = "Interface"
-
-  security_group_ids = [
-    data.aws_security_group.test.id,
-  ]
 }
 `, rName)
 }
@@ -1006,4 +1022,82 @@ resource "aws_vpc_endpoint" "test" {
   }
 }
 `, rName))
+}
+
+func testAccVpcEndpointOrderPolicyConfig(rName string) string {
+	return fmt.Sprintf(`
+data "aws_vpc_endpoint_service" "test" {
+  service = "dynamodb"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid       = "ReadOnly"
+      Principal = "*"
+      Action = [
+        "dynamodb:DescribeTable",
+        "dynamodb:ListTables",
+        "dynamodb:ListTagsOfResource",
+      ]
+      Effect   = "Allow"
+      Resource = "*"
+    }]
+  })
+  service_name = data.aws_vpc_endpoint_service.test.service_name
+  vpc_id       = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccVpcEndpointNewOrderPolicyConfig(rName string) string {
+	return fmt.Sprintf(`
+data "aws_vpc_endpoint_service" "test" {
+  service = "dynamodb"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid       = "ReadOnly"
+      Principal = "*"
+      Action = [
+        "dynamodb:ListTables",
+        "dynamodb:ListTagsOfResource",
+        "dynamodb:DescribeTable",
+      ]
+      Effect   = "Allow"
+      Resource = "*"
+    }]
+  })
+  service_name = data.aws_vpc_endpoint_service.test.service_name
+  vpc_id       = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
 }

@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -180,7 +180,7 @@ func FindGlobalReplicationGroupMemberByID(conn *elasticache.ElastiCache, globalR
 	}
 }
 
-func FindElastiCacheUserByID(conn *elasticache.ElastiCache, userID string) (*elasticache.User, error) {
+func FindUserByID(conn *elasticache.ElastiCache, userID string) (*elasticache.User, error) {
 	input := &elasticache.DescribeUsersInput{
 		UserId: aws.String(userID),
 	}
@@ -204,7 +204,7 @@ func FindElastiCacheUserByID(conn *elasticache.ElastiCache, userID string) (*ela
 	}
 }
 
-func FindElastiCacheUserGroupByID(conn *elasticache.ElastiCache, groupID string) (*elasticache.UserGroup, error) {
+func FindUserGroupByID(conn *elasticache.ElastiCache, groupID string) (*elasticache.UserGroup, error) {
 	input := &elasticache.DescribeUserGroupsInput{
 		UserGroupId: aws.String(groupID),
 	}

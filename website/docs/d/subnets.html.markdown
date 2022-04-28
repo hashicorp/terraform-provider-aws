@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_subnets"
 description: |-
@@ -23,7 +23,7 @@ data "aws_subnets" "example" {
 }
 
 data "aws_subnet" "example" {
-  for_each = data.aws_subnets.example.ids
+  for_each = toset(data.aws_subnets.example.ids)
   id       = each.value
 }
 
@@ -49,7 +49,7 @@ data "aws_subnets" "private" {
 }
 
 resource "aws_instance" "app" {
-  for_each      = data.aws_subnets.example.ids
+  for_each      = toset(data.aws_subnets.example.ids)
   ami           = var.ami
   instance_type = "t2.micro"
   subnet_id     = each.value

@@ -69,6 +69,10 @@ func DataSourceCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"ip_family": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"service_ipv4_cidr": {
 							Type:     schema.TypeString,
 							Computed: true,

@@ -1,6 +1,6 @@
 package autoscaling
 
-import (
+import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"bytes"
 	"context"
 	"fmt"
@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -392,6 +392,7 @@ func ResourceGroup() *schema.Resource {
 			"initial_lifecycle_hook": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -428,8 +429,9 @@ func ResourceGroup() *schema.Resource {
 			},
 
 			"tag": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ConflictsWith: []string{"tags"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"key": {
@@ -468,6 +470,7 @@ func ResourceGroup() *schema.Resource {
 					Elem: &schema.Schema{Type: schema.TypeString},
 				},
 				ConflictsWith: []string{"tag"},
+				Deprecated:    "Use tag instead",
 				// Terraform 0.11 and earlier can provide incorrect type
 				// information during difference handling, in which boolean
 				// values are represented as "0" and "1". This Set function
@@ -528,6 +531,18 @@ func ResourceGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"checkpoint_delay": {
+										Type:         nullable.TypeNullableInt,
+										Optional:     true,
+										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
+									},
+									"checkpoint_percentages": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeInt,
+										},
+									},
 									"instance_warmup": {
 										Type:         nullable.TypeNullableInt,
 										Optional:     true,
@@ -576,6 +591,20 @@ func ResourceGroup() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  -1,
+						},
+						"instance_reuse_policy": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"reuse_on_scale_in": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -825,7 +854,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	if g == nil {
+	if g == nil && !d.IsNewResource() {
 		log.Printf("[WARN] Auto Scaling Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -1399,7 +1428,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteAutoScalingGroup(&deleteopts)
-		if tfawserr.ErrMessageContains(err, "InvalidGroup.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidGroup.NotFound") {
 			return nil
 		}
 	}
@@ -1640,6 +1669,18 @@ func resourceGroupDrain(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting capacity to zero to drain: %s", err)
 	}
 
+	// Next, ensure that instances are not prevented from scaling in.
+	//
+	// The ASG's own scale-in protection setting doesn't make a difference here,
+	// as it only affects new instances, which won't be launched now that the
+	// desired capacity is set to 0. There is also the possibility that this ASG
+	// no longer applies scale-in protection to new instances, but there's still
+	// old ones that have it.
+	log.Printf("[DEBUG] Disabling scale-in protection for all instances in the group")
+	if err := disableASGScaleInProtections(d, conn); err != nil {
+		return fmt.Errorf("Error disabling scale-in protection for all instances: %s", err)
+	}
+
 	// Next, wait for the Auto Scaling Group to drain
 	log.Printf("[DEBUG] Waiting for group to have zero instances")
 	var g *autoscaling.Group
@@ -1649,8 +1690,6 @@ func resourceGroupDrain(d *schema.ResourceData, meta interface{}) error {
 			return resource.NonRetryableError(err)
 		}
 		if g == nil {
-			log.Printf("[WARN] Auto Scaling Group (%s) not found, removing from state", d.Id())
-			d.SetId("")
 			return nil
 		}
 
@@ -2075,6 +2114,22 @@ func FlattenWarmPoolConfiguration(warmPoolConfiguration *autoscaling.WarmPoolCon
 		"max_group_prepared_capacity": maxGroupPreparedCapacity,
 	}
 
+	if warmPoolConfiguration.InstanceReusePolicy != nil {
+		m["instance_reuse_policy"] = flattenWarmPoolInstanceReusePolicy(warmPoolConfiguration.InstanceReusePolicy)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWarmPoolInstanceReusePolicy(instanceReusePolicy *autoscaling.InstanceReusePolicy) []interface{} {
+	if instanceReusePolicy == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"reuse_on_scale_in": aws.BoolValue(instanceReusePolicy.ReuseOnScaleIn),
+	}
+
 	return []interface{}{m}
 }
 
@@ -2173,6 +2228,10 @@ func CreatePutWarmPoolInput(asgName string, l []interface{}) *autoscaling.PutWar
 		input.MaxGroupPreparedCapacity = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := m["instance_reuse_policy"]; ok && len(v.([]interface{})) > 0 {
+		input.InstanceReusePolicy = expandWarmPoolInstanceReusePolicy(v.([]interface{}))
+	}
+
 	return &input
 }
 
@@ -2199,6 +2258,20 @@ func expandAutoScalingGroupInstanceRefreshPreferences(l []interface{}) *autoscal
 
 	refreshPreferences := &autoscaling.RefreshPreferences{}
 
+	if v, ok := m["checkpoint_delay"]; ok {
+		if v, null, _ := nullable.Int(v.(string)).Value(); !null {
+			refreshPreferences.CheckpointDelay = aws.Int64(v)
+		}
+	}
+
+	if l, ok := m["checkpoint_percentages"].([]interface{}); ok && len(l) > 0 {
+		p := make([]*int64, len(l))
+		for i, v := range l {
+			p[i] = aws.Int64(int64(v.(int)))
+		}
+		refreshPreferences.CheckpointPercentages = p
+	}
+
 	if v, ok := m["instance_warmup"]; ok {
 		if v, null, _ := nullable.Int(v.(string)).Value(); !null {
 			refreshPreferences.InstanceWarmup = aws.Int64(v)
@@ -2210,6 +2283,22 @@ func expandAutoScalingGroupInstanceRefreshPreferences(l []interface{}) *autoscal
 	}
 
 	return refreshPreferences
+}
+
+func expandWarmPoolInstanceReusePolicy(l []interface{}) *autoscaling.InstanceReusePolicy {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	instanceReusePolicy := &autoscaling.InstanceReusePolicy{}
+
+	if v, ok := m["reuse_on_scale_in"]; ok {
+		instanceReusePolicy.ReuseOnScaleIn = aws.Bool(v.(bool))
+	}
+
+	return instanceReusePolicy
 }
 
 func autoScalingGroupRefreshInstances(conn *autoscaling.AutoScaling, asgName string, refreshConfig []interface{}) error {
@@ -2338,4 +2427,41 @@ func flattenLaunchTemplateSpecification(lt *autoscaling.LaunchTemplateSpecificat
 	result = append(result, attrs)
 
 	return result
+}
+
+// disableASGScaleInProtections disables scale-in protection for all instances
+// in the given Auto-Scaling Group.
+func disableASGScaleInProtections(d *schema.ResourceData, conn *autoscaling.AutoScaling) error {
+	g, err := getGroup(d.Id(), conn)
+	if err != nil {
+		return fmt.Errorf("Error getting group %s: %s", d.Id(), err)
+	}
+
+	var instanceIds []string
+	for _, instance := range g.Instances {
+		if aws.BoolValue(instance.ProtectedFromScaleIn) {
+			instanceIds = append(instanceIds, aws.StringValue(instance.InstanceId))
+		}
+	}
+
+	const chunkSize = 50 // API limit
+
+	for i := 0; i < len(instanceIds); i += chunkSize {
+		j := i + chunkSize
+		if j > len(instanceIds) {
+			j = len(instanceIds)
+		}
+
+		input := autoscaling.SetInstanceProtectionInput{
+			AutoScalingGroupName: aws.String(d.Id()),
+			InstanceIds:          aws.StringSlice(instanceIds[i:j]),
+			ProtectedFromScaleIn: aws.Bool(false),
+		}
+
+		if _, err := conn.SetInstanceProtection(&input); err != nil {
+			return fmt.Errorf("Error disabling scale-in protections: %s", err)
+		}
+	}
+
+	return nil
 }

@@ -154,6 +154,8 @@ func TestAccBatchComputeEnvironment_createEC2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.desired_vcpus", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_type", "ECS_AL2"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_key_pair", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, "arn"),
@@ -953,6 +955,68 @@ func TestAccBatchComputeEnvironment_ComputeResources_maxVCPUs(t *testing.T) {
 	})
 }
 
+func TestAccBatchComputeEnvironment_ec2Configuration(t *testing.T) {
+	var ce batch.ComputeEnvironmentDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_compute_environment.test"
+	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
+	securityGroupResourceName := "aws_security_group.test"
+	serviceRoleResourceName := "aws_iam_role.batch_service"
+	spotFleetRoleResourceName := "aws_iam_role.ec2_spot_fleet"
+	subnetResourceName := "aws_subnet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccComputeEnvironmentEC2Configuration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(resourceName, &ce),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.desired_vcpus", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_key_pair", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "optimal"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "compute_resources.0.ec2_configuration.0.image_id_override"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_type", "ECS_AL2"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "16"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "compute_resources.0.security_group_ids.*", securityGroupResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.spot_iam_fleet_role", spotFleetRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.subnets.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "compute_resources.0.subnets.*", subnetResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.type", "SPOT"),
+					resource.TestCheckResourceAttrSet(resourceName, "ecs_cluster_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role", serviceRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
+					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttrSet(resourceName, "status_reason"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "MANAGED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccBatchComputeEnvironment_launchTemplate(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1260,10 +1324,7 @@ func TestAccBatchComputeEnvironment_tags(t *testing.T) {
 }
 
 func TestAccBatchComputeEnvironment_createUnmanagedWithComputeResources(t *testing.T) {
-	var ce batch.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_batch_compute_environment.test"
-	serviceRoleResourceName := "aws_iam_role.batch_service"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -1272,23 +1333,9 @@ func TestAccBatchComputeEnvironment_createUnmanagedWithComputeResources(t *testi
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComputeEnvironmentUnmanagedWithComputeResourcesConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckComputeEnvironmentExists(resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "ecs_cluster_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role", serviceRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
-					resource.TestCheckResourceAttrSet(resourceName, "status"),
-					resource.TestCheckResourceAttrSet(resourceName, "status_reason"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "UNMANAGED"),
-				),
+				Config:      testAccComputeEnvironmentUnmanagedWithComputeResourcesConfig(rName),
+				ExpectError: regexp.MustCompile("no `compute_resources` can be specified when `type` is \"UNMANAGED\""),
 			},
-			// Can't import in this scenario.
 		},
 	})
 }
@@ -2079,4 +2126,40 @@ resource "aws_batch_compute_environment" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccComputeEnvironmentEC2Configuration(rName string) string {
+	return acctest.ConfigCompose(
+		testAccComputeEnvironmentBaseConfig(rName),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  compute_environment_name = %[1]q
+
+  compute_resources {
+    instance_role = aws_iam_instance_profile.ecs_instance.arn
+    instance_type = ["optimal"]
+    ec2_configuration {
+      image_id_override = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+      image_type        = "ECS_AL2"
+    }
+
+    max_vcpus = 16
+    min_vcpus = 0
+
+    security_group_ids = [
+      aws_security_group.test.id
+    ]
+    spot_iam_fleet_role = aws_iam_role.ec2_spot_fleet.arn
+    subnets = [
+      aws_subnet.test.id
+    ]
+    type = "SPOT"
+  }
+
+  service_role = aws_iam_role.batch_service.arn
+  type         = "MANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.batch_service]
+}
+`, rName))
 }
