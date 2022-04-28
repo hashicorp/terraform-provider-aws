@@ -20,6 +20,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"CloseOnDeletion": testAccAccount_CloseOnDeletion,
 			"ParentId":        testAccAccount_ParentID,
 			"Tags":            testAccAccount_Tags,
+			"GovCloud":        testAccAccount_govCloud,
 		},
 		"OrganizationalUnit": {
 			"basic":      testAccOrganizationalUnit_basic,
