@@ -30,9 +30,9 @@ func sweepVirtualClusters(region string) error {
 	input := &emrcontainers.ListVirtualClustersInput{}
 	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = conn.ListVirtualClustersPages(input, func(page *emrcontainers.ListVirtualClustersOutput, isLast bool) bool {
+	err = conn.ListVirtualClustersPages(input, func(page *emrcontainers.ListVirtualClustersOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, v := range page.VirtualClusters {
@@ -47,7 +47,7 @@ func sweepVirtualClusters(region string) error {
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		return !isLast
+		return !lastPage
 	})
 
 	if sweep.SkipSweepError(err) {
