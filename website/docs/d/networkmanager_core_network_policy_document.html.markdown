@@ -8,80 +8,77 @@ description: |-
 
 # Data Source: aws_networkmanager_core_network_policy_document
 
-# TODO this whole section
-
-Generates a Core Network policy document in JSON format for use with resources that expect core network policy documents such as `awscc_networkmanager_core_network_policy`. It follows the API defintion from the [core-network-policy documentation](https://docs.aws.amazon.com/vpc/latest/cloudwan/cloudwan-policies-json.html)
+Generates a Core Network policy document in JSON format for use with resources that expect core network policy documents such as `awscc_networkmanager_core_network_policy`. It follows the API defintion from the [core-network-policy documentation](https://docs.aws.amazon.com/vpc/latest/cloudwan/cloudwan-policies-json.html).
 
 Using this data source to generate policy documents is *optional*. It is also valid to use literal JSON strings in your configuration or to use the `file` interpolation function to read a raw JSON policy document from a file.
 
-# TODO: refer to new guide
--> For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
+-> For more information about building AWS Core Network policy documents with Terraform, see the [Using AWS & AWSCC Provider Together Guide](https://learn.hashicorp.com/terraform/aws/<changeme>).
 
 ## Example Usage
 
 ### Basic Example
 
 ```terraform
-data "aws_networkmanager_core_network_policy_document" test {
+data "aws_networkmanager_core_network_policy_document" "test" {
   core_network_configuration {
-      vpn_ecmp_support = false
-      asn_ranges = ["64512-64555"]
-      edge_locations {
-          location = "us-east-1"
-          asn = 64512
-      }
-      edge_locations {
-          location = "eu-central-1"
-          asn = 64513
-      }
+    vpn_ecmp_support = false
+    asn_ranges       = ["64512-64555"]
+    edge_locations {
+      location = "us-east-1"
+      asn      = 64512
+    }
+    edge_locations {
+      location = "eu-central-1"
+      asn      = 64513
+    }
   }
 
   segments {
-    name = "shared"
-    description = "Segment for shared services"
+    name                          = "shared"
+    description                   = "Segment for shared services"
     require_attachment_acceptance = true
   }
   segments {
-    name = "prod"
-    description = "Segment for prod services"
+    name                          = "prod"
+    description                   = "Segment for prod services"
     require_attachment_acceptance = true
   }
 
   segment_actions {
-    action = "share"
-    mode =  "attachment-route"
-    segment = "shared"
+    action     = "share"
+    mode       = "attachment-route"
+    segment    = "shared"
     share_with = ["*"]
   }
 
   attachment_policies {
-    rule_number = 100
+    rule_number     = 100
     condition_logic = "or"
 
     conditions {
-      type = "tag-value"
+      type     = "tag-value"
       operator = "equals"
-      key = "segment"
-      value = "shared"
+      key      = "segment"
+      value    = "shared"
     }
     action {
       association_method = "constant"
-      segment = "shared"
+      segment            = "shared"
     }
   }
   attachment_policies {
-    rule_number = 200
+    rule_number     = 200
     condition_logic = "or"
 
     conditions {
-      type = "tag-value"
+      type     = "tag-value"
       operator = "equals"
-      key = "segment"
-      value = "prod"
+      key      = "segment"
+      value    = "prod"
     }
     action {
       association_method = "constant"
-      segment = "prod"
+      segment            = "prod"
     }
   }
 }
