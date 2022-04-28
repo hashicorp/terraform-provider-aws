@@ -1395,41 +1395,13 @@ func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("deleting AppFlow Flow (%s): %s", d.Id(), err)
 	}
 
-	// TIP: 4. Use a waiter to wait for delete to complete
 	if err := FlowDeleted(ctx, conn, d.Id()); err != nil {
 		return diag.Errorf("waiting for AppFlow Flow (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	// TIP: 5. Return nil
 	return nil
 }
 
-// TIP: Flatteners and expanders ("flex" functions) help handle complex data
-// types. Flatteners take an API data type and return something you can use in
-// a d.Set() call. In other words, flatteners translate from AWS -> Terraform.
-//
-// On the other hand, expanders take a Terraform data structure and return
-// something that you can send to the AWS API. In other words, expanders
-// translate from Terraform -> AWS.
-//
-// See more:
-// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md
-
-// TIP: Often the AWS API will return a slice of structures in response to a
-// request for information. Sometimes you will have set criteria (e.g., the ID)
-// that means you'll get back a one-length slice. This plural function works
-// brilliantly for that situation too.
-
-// TIP: Remember, as mentioned above, expanders take a Terraform data structure
-// and return something that you can send to the AWS API. In other words,
-// expanders translate from Terraform -> AWS.
-//
-// See more:
-// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md
-
-// TIP: Even when you have a list with max length of 1, this plural function
-// works brilliantly. However, if the AWS API takes a structure rather than a
-// slice of structures, you will not need it.
 func expandErrorHandlingConfig(tfMap map[string]interface{}) *appflow.ErrorHandlingConfig {
 	if tfMap == nil {
 		return nil
