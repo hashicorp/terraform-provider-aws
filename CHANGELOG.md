@@ -2,17 +2,22 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_ce_cost_category` ([#24402](https://github.com/hashicorp/terraform-provider-aws/issues/24402))
+* **New Data Source:** `aws_ce_tags` ([#24402](https://github.com/hashicorp/terraform-provider-aws/issues/24402))
 * **New Data Source:** `aws_cloudfront_origin_access_identities` ([#24382](https://github.com/hashicorp/terraform-provider-aws/issues/24382))
 * **New Data Source:** `aws_mq_broker_instance_type_offerings` ([#24394](https://github.com/hashicorp/terraform-provider-aws/issues/24394))
 * **New Resource:** `aws_athena_data_catalog` ([#22968](https://github.com/hashicorp/terraform-provider-aws/issues/22968))
+* **New Resource:** `aws_ce_cost_category` ([#24402](https://github.com/hashicorp/terraform-provider-aws/issues/24402))
 * **New Resource:** `aws_docdb_event_subscription` ([#24379](https://github.com/hashicorp/terraform-provider-aws/issues/24379))
 
 ENHANCEMENTS:
 
+* data-source/aws_grafana_workspace: Add `tags` attribute ([#24358](https://github.com/hashicorp/terraform-provider-aws/issues/24358))
 * data-source/aws_instance: Add `maintenance_options` attribute ([#24377](https://github.com/hashicorp/terraform-provider-aws/issues/24377))
 * data-source/aws_launch_template: Add `maintenance_options` attribute ([#24377](https://github.com/hashicorp/terraform-provider-aws/issues/24377))
 * resource/aws_acm_certificate: Add `validation_option` argument ([#3853](https://github.com/hashicorp/terraform-provider-aws/issues/3853))
 * resource/aws_acm_certificate_validation: Increase default resource Create (certificate issuance) timeout to 75 minutes ([#20073](https://github.com/hashicorp/terraform-provider-aws/issues/20073))
+* resource/aws_grafana_workspace: Add `tags` argument ([#24358](https://github.com/hashicorp/terraform-provider-aws/issues/24358))
 * resource/aws_instance: Add `maintenance_options` argument ([#24377](https://github.com/hashicorp/terraform-provider-aws/issues/24377))
 * resource/aws_launch_template: Add `maintenance_options` argument ([#24377](https://github.com/hashicorp/terraform-provider-aws/issues/24377))
 * resource/aws_mq_broker: Make `maintenance_window_start_time` updateable without recreation. ([#24385](https://github.com/hashicorp/terraform-provider-aws/issues/24385))
@@ -27,6 +32,8 @@ BUG FIXES:
 * resource/aws_elasticache_cluster: Update regex pattern to target specific Redis V6 versions through the `engine_version` attribute ([#23734](https://github.com/hashicorp/terraform-provider-aws/issues/23734))
 * resource/aws_elasticache_replication_group: Update regex pattern to target specific Redis V6 versions through the `engine_version` attribute ([#23734](https://github.com/hashicorp/terraform-provider-aws/issues/23734))
 * resource/aws_lb: Fix bug causing an error on update if tags unsupported in ISO region ([#24334](https://github.com/hashicorp/terraform-provider-aws/issues/24334))
+* resource/aws_s3_bucket_policy: Let resource be removed from tfstate if bucket deleted outside Terraform ([#23510](https://github.com/hashicorp/terraform-provider-aws/issues/23510))
+* resource/aws_s3_bucket_versioning: Let resource be removed from tfstate if bucket deleted outside Terraform ([#23510](https://github.com/hashicorp/terraform-provider-aws/issues/23510))
 * resource/aws_ses_receipt_filter: Allow period character (`.`) in `name` argument ([#24383](https://github.com/hashicorp/terraform-provider-aws/issues/24383))
 
 ## 4.11.0 (April 22, 2022)
