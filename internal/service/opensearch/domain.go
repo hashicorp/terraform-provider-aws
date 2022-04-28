@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
+	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -63,6 +64,22 @@ func ResourceDomain() *schema.Resource {
 					}
 				}
 				return true
+			}),
+			customdiff.ForceNewIf("encrypt_at_rest.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				o, n := d.GetChange("encrypt_at_rest.0.enabled")
+				if o.(bool) && !n.(bool) {
+					return true
+				}
+
+				return !inPlaceEncryptionEnableVersion(d.Get("engine_version").(string))
+			}),
+			customdiff.ForceNewIf("node_to_node_encryption.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				o, n := d.GetChange("node_to_node_encryption.0.enabled")
+				if o.(bool) && !n.(bool) {
+					return true
+				}
+
+				return !inPlaceEncryptionEnableVersion(d.Get("engine_version").(string))
 			}),
 			verify.SetTagsDiff,
 		),
@@ -196,6 +213,21 @@ func ResourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"cold_storage_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
 						"dedicated_master_count": {
 							Type:             schema.TypeInt,
 							Optional:         true,
@@ -265,7 +297,6 @@ func ResourceDomain() *schema.Resource {
 			"cognito_options": {
 				Type:             schema.TypeList,
 				Optional:         true,
-				ForceNew:         false,
 				MaxItems:         1,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
@@ -378,7 +409,6 @@ func ResourceDomain() *schema.Resource {
 						"enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
-							ForceNew: true,
 						},
 						"kms_key_id": {
 							Type:             schema.TypeString,
@@ -436,7 +466,6 @@ func ResourceDomain() *schema.Resource {
 						"enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
-							ForceNew: true,
 						},
 					},
 				},
@@ -895,9 +924,51 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 				if len(config) == 1 {
 					m := config[0].(map[string]interface{})
 					input.ClusterConfig = expandClusterConfig(m)
+
+					// Work around "ValidationException: Your domain's Elasticsearch version does not support cold storage options. Upgrade to Elasticsearch 7.9 or later.".
+					if engineType, version, err := ParseEngineVersion(d.Get("engine_version").(string)); err == nil {
+						switch engineType {
+						case opensearchservice.EngineTypeElasticsearch:
+							if want, err := gversion.NewVersion("7.9"); err == nil {
+								if got, err := gversion.NewVersion(version); err == nil {
+									if got.LessThan(want) {
+										input.ClusterConfig.ColdStorageOptions = nil
+									}
+								}
+							}
+						case opensearchservice.EngineTypeOpenSearch:
+							// All OpenSearch versions support cold storage options.
+						default:
+							log.Printf("[WARN] unknown engine type: %s", engineType)
+						}
+					} else {
+						log.Printf("[WARN] %s", err)
+					}
 				}
 			}
+		}
 
+		if d.HasChange("encrypt_at_rest") {
+			input.EncryptionAtRestOptions = nil
+			if v, ok := d.GetOk("encrypt_at_rest"); ok {
+				options := v.([]interface{})
+				if options[0] == nil {
+					return fmt.Errorf("at least one field is expected inside encrypt_at_rest")
+				}
+
+				s := options[0].(map[string]interface{})
+				input.EncryptionAtRestOptions = expandEncryptAtRestOptions(s)
+			}
+		}
+
+		if d.HasChange("node_to_node_encryption") {
+			input.NodeToNodeEncryptionOptions = nil
+			if v, ok := d.GetOk("node_to_node_encryption"); ok {
+				options := v.([]interface{})
+
+				s := options[0].(map[string]interface{})
+				input.NodeToNodeEncryptionOptions = expandNodeToNodeEncryptionOptions(s)
+			}
 		}
 
 		if d.HasChange("snapshot_options") {
@@ -989,6 +1060,27 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+// inPlaceEncryptionEnableVersion returns true if, based on version, encryption
+// can be enabled in place (without ForceNew)
+func inPlaceEncryptionEnableVersion(version string) bool {
+	if strings.HasPrefix(strings.ToLower(version), "opensearch") {
+		return true
+	}
+
+	version = strings.TrimPrefix(strings.ToLower(version), "elasticsearch_")
+	var want, got *gversion.Version
+	var err error
+	if want, err = gversion.NewVersion("6.7"); err != nil {
+		return false
+	}
+
+	if got, err = gversion.NewVersion(version); err != nil || got.LessThan(want) {
+		return false
+	}
+
+	return true
+}
+
 func suppressEquivalentKmsKeyIds(k, old, new string, d *schema.ResourceData) bool {
 	// The OpenSearch API accepts a short KMS key id but always returns the ARN of the key.
 	// The ARN is of the format 'arn:aws:kms:REGION:ACCOUNT_ID:key/KMS_KEY_ID'.
@@ -1075,6 +1167,10 @@ func expandClusterConfig(m map[string]interface{}) *opensearchservice.ClusterCon
 		}
 	}
 
+	if v, ok := m["cold_storage_options"]; ok {
+		config.ColdStorageOptions = expandColdStorageOptions(v.([]interface{}))
+	}
+
 	if v, ok := m["warm_enabled"]; ok {
 		isEnabled := v.(bool)
 		config.WarmEnabled = aws.Bool(isEnabled)
@@ -1109,12 +1205,31 @@ func expandZoneAwarenessConfig(l []interface{}) *opensearchservice.ZoneAwareness
 	return zoneAwarenessConfig
 }
 
+func expandColdStorageOptions(l []interface{}) *opensearchservice.ColdStorageOptions {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	ColdStorageOptions := &opensearchservice.ColdStorageOptions{}
+
+	if v, ok := m["enabled"]; ok {
+		ColdStorageOptions.Enabled = aws.Bool(v.(bool))
+	}
+
+	return ColdStorageOptions
+}
+
 func flattenClusterConfig(c *opensearchservice.ClusterConfig) []map[string]interface{} {
 	m := map[string]interface{}{
 		"zone_awareness_config":  flattenZoneAwarenessConfig(c.ZoneAwarenessConfig),
 		"zone_awareness_enabled": aws.BoolValue(c.ZoneAwarenessEnabled),
 	}
 
+	if c.ColdStorageOptions != nil {
+		m["cold_storage_options"] = flattenColdStorageOptions(c.ColdStorageOptions)
+	}
 	if c.DedicatedMasterCount != nil {
 		m["dedicated_master_count"] = aws.Int64Value(c.DedicatedMasterCount)
 	}
@@ -1155,6 +1270,18 @@ func flattenZoneAwarenessConfig(zoneAwarenessConfig *opensearchservice.ZoneAware
 	return []interface{}{m}
 }
 
+func flattenColdStorageOptions(coldStorageOptions *opensearchservice.ColdStorageOptions) []interface{} {
+	if coldStorageOptions == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"enabled": aws.BoolValue(coldStorageOptions.Enabled),
+	}
+
+	return []interface{}{m}
+}
+
 // advancedOptionsIgnoreDefault checks for defaults in the n map and, if
 // they don't exist in the o map, it deletes them. AWS returns default advanced
 // options that cause perpetual diffs.
@@ -1173,4 +1300,16 @@ func advancedOptionsIgnoreDefault(o map[string]interface{}, n map[string]interfa
 	}
 
 	return n
+}
+
+// ParseEngineVersion parses a domain's engine version string into engine type and semver string.
+// engine_version is a string of format Elasticsearch_X.Y or OpenSearch_X.Y.
+func ParseEngineVersion(engineVersion string) (string, string, error) {
+	parts := strings.Split(engineVersion, "_")
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format for engine version (%s)", engineVersion)
+	}
+
+	return parts[0], parts[1], nil
 }

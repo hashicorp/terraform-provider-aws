@@ -24,8 +24,8 @@ jobs:
         with:
           fetch-depth: 0
       - name: Generate Release Notes
-        run: sed -n -e "1{/# /d;}" -e "2{/^$/d;}" -e "/# \[$(git describe --abbrev=0 --exclude="$(git describe --abbrev=0 --match='v*.*.*' --tags)" --match='v*.*.*' --tags | tr -d v)/q;p" CHANGELOG.md > release-notes.txt
-      - uses: actions/upload-artifact@v2
+        run: sed -n -e "1{/# /d;}" -e "2{/^$/d;}" -e "/# $(git describe --abbrev=0 --exclude="$(git describe --abbrev=0 --match='v*.*.*' --tags)" --match='v*.*.*' --tags | tr -d v)/q;p" CHANGELOG.md > release-notes.txt
+      - uses: actions/upload-artifact@v3
         with:
           name: release-notes
           path: release-notes.txt
@@ -49,18 +49,38 @@ jobs:
       hc-releases-aws-role-duration-seconds: 7200
       release-notes: true
       setup-go-version: '${{ needs.go-version.outputs.version }}'
+  highest-version-tag:
+    needs: [ terraform-provider-release ]
+    runs-on: macos-latest
+    outputs:
+      tag: ${{ steps.highest-version-tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Allow tag to be fetched when ref is a commit
+          fetch-depth: 0
+      - name: Output highest version tag
+        id: highest-version-tag
+        run: |
+          HIGHEST=$(git tag | sort -V | tail -1)
+          echo ::set-output name=tag::$HIGHEST
   changelog-newversion:
-      needs: [terraform-provider-release]
+      needs: [terraform-provider-release, highest-version-tag]
+      # write new changelog header only if release tag is the $HIGHEST i.e. exists on main
+      # and not a backport release branch (e.g. release/3.x). This results in
+      # manually updating the CHANGELOG header if releasing from the non-default branch.
+      # TODO: find a more deterministic way to determine release branch from tag commit
+      if: github.ref_name == needs.highest-version-tag.outputs.tag
       runs-on: macos-latest
       steps:
         - uses: actions/checkout@v3
           with:
             fetch-depth: 0
+            ref: main
         - name: Update Changelog Header
-          id: changelog
           run: |
             CHANGELOG_FILE_NAME="CHANGELOG.md"
-            PREVIOUS_RELEASE_TAG=$(git describe --abbrev=0 --match='v*.*.*' --tags)
+            PREVIOUS_RELEASE_TAG=${{ github.ref_name }}
            
             # Add Release Date
             RELEASE_DATE=`date +%B' '%e', '%Y`
@@ -78,11 +98,20 @@ jobs:
             echo New minor version is: v$NEW_RELEASE_LINE
             
             echo -e "## $NEW_RELEASE_LINE (Unreleased)\n$(cat $CHANGELOG_FILE_NAME)" > $CHANGELOG_FILE_NAME
-            
-            echo ::set-output name=prev_release_tag::$PREVIOUS_RELEASE_TAG
         - run: |
               git config --local user.email changelogbot@hashicorp.com
               git config --local user.name changelogbot
               git add CHANGELOG.md
-              git commit -m "Update CHANGELOG.md after ${{ steps.changelog.outputs.prev_release_tag }}" 
+              git commit -m "Update CHANGELOG.md after ${{ github.ref_name }}" 
               git push
+  upload-tag-before-post-publish:
+    needs: [ terraform-provider-release ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Save Release Tag
+        run: echo ${{ github.ref_name }} > release-tag.data
+      - uses: actions/upload-artifact@v2
+        with:
+          name: release-tag
+          path: release-tag.data
+          retention-days: 1

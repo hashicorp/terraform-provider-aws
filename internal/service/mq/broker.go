@@ -237,7 +237,6 @@ func ResourceBroker() *schema.Resource {
 				MaxItems: 1,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"day_of_week": {
@@ -568,6 +567,19 @@ func resourceBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if err != nil {
 			return fmt.Errorf("error updating MQ Broker (%s) auto minor version upgrade: %w", d.Id(), err)
+		}
+
+		requiresReboot = true
+	}
+
+	if d.HasChange("maintenance_window_start_time") {
+		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
+			BrokerId:                   aws.String(d.Id()),
+			MaintenanceWindowStartTime: expandWeeklyStartTime(d.Get("maintenance_window_start_time").([]interface{})),
+		})
+
+		if err != nil {
+			return fmt.Errorf("error updating MQ Broker (%s) maintenance window start time: %w", d.Id(), err)
 		}
 
 		requiresReboot = true

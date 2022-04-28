@@ -27,7 +27,7 @@ func TestAccEKSAddonDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAddonDataSourceConfig_Basic(rName, addonName),
+				Config: testAccAddonDataSourceConfig(rName, addonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, dataSourceResourceName, &addon),
 					acctest.MatchResourceAttrRegionalARN(dataSourceResourceName, "arn", "eks", regexp.MustCompile(fmt.Sprintf("addon/%s/%s/.+$", rName, addonName))),
@@ -43,8 +43,8 @@ func TestAccEKSAddonDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAddonDataSourceConfig_Basic(rName, addonName string) string {
-	return acctest.ConfigCompose(testAccAddonConfig_Base(rName), fmt.Sprintf(`
+func testAccAddonDataSourceConfig(rName, addonName string) string {
+	return acctest.ConfigCompose(testAccAddonBaseConfig(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   addon_name   = %[2]q
   cluster_name = aws_eks_cluster.test.name

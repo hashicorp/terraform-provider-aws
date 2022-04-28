@@ -1,5 +1,5 @@
 ---
-subcategory: "Data Lifecycle Manager (DLM)"
+subcategory: "DLM (Data Lifecycle Manager)"
 layout: "aws"
 page_title: "AWS: aws_dlm_lifecycle_policy"
 description: |-
@@ -247,7 +247,7 @@ The following arguments are supported:
 
 #### Action arguments
 
-* `cross_region_copy` - (Optional) The rule for copying shared snapshots across Regions. See the [`cross_region_copy` configuration](#acion-cross-region-copy-arguments) block.
+* `cross_region_copy` - (Optional) The rule for copying shared snapshots across Regions. See the [`cross_region_copy` configuration](#action-cross-region-copy-rule-arguments) block.
 * `name` - (Optional) A descriptive name for the action.
 
 ##### Action Cross Region Copy Rule arguments

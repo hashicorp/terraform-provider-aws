@@ -18,7 +18,7 @@ jobs:
         slack_token: ${{ secrets.SLACK_BOT_TOKEN }}
         slack_channel: ${{ secrets.SLACK_CHANNEL }}
     - name: UploadArtifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: firewatch
         path: firewatch.data

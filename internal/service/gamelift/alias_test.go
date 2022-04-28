@@ -126,6 +126,10 @@ func TestAccGameLiftAlias_tags(t *testing.T) {
 }
 
 func TestAccGameLiftAlias_fleetRouting(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf gamelift.Alias
 
 	rString := sdkacctest.RandString(8)
@@ -238,7 +242,7 @@ func testAccCheckAliasExists(n string, res *gamelift.Alias) resource.TestCheckFu
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Gamelift Alias ID is set")
+			return fmt.Errorf("No GameLift Alias ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
@@ -252,7 +256,7 @@ func testAccCheckAliasExists(n string, res *gamelift.Alias) resource.TestCheckFu
 		a := out.Alias
 
 		if *a.AliasId != rs.Primary.ID {
-			return fmt.Errorf("Gamelift Alias not found")
+			return fmt.Errorf("GameLift Alias not found")
 		}
 
 		*res = *a
@@ -273,7 +277,7 @@ func testAccCheckAliasDestroy(s *terraform.State) error {
 			AliasId: aws.String(rs.Primary.ID),
 		})
 		if err == nil {
-			return fmt.Errorf("Gamelift Alias still exists")
+			return fmt.Errorf("GameLift Alias still exists")
 		}
 
 		if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {

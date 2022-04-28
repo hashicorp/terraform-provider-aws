@@ -1,5 +1,5 @@
 ---
-subcategory: "Access Analyzer"
+subcategory: "IAM Access Analyzer"
 layout: "aws"
 page_title: "AWS: aws_accessanalyzer_analyzer"
 description: |-

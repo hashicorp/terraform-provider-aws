@@ -62,7 +62,6 @@ func ResourceInstanceGroup() *schema.Resource {
 			"configurations_json": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ForceNew:         false,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 				StateFunc: func(v interface{}) string {

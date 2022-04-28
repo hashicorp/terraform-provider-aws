@@ -258,3 +258,29 @@ func waitDynamoDBSSEUpdated(conn *dynamodb.DynamoDB, tableName string) (*dynamod
 
 	return nil, err
 }
+
+func waitContributorInsightsCreated(ctx context.Context, conn *dynamodb.DynamoDB, tableName, indexName string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{dynamodb.ContributorInsightsStatusEnabling},
+		Target:  []string{dynamodb.ContributorInsightsStatusEnabled},
+		Timeout: timeout,
+		Refresh: statusContributorInsights(ctx, conn, tableName, indexName),
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func waitContributorInsightsDeleted(ctx context.Context, conn *dynamodb.DynamoDB, tableName, indexName string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{dynamodb.ContributorInsightsStatusDisabling},
+		Target:  []string{},
+		Timeout: timeout,
+		Refresh: statusContributorInsights(ctx, conn, tableName, indexName),
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}

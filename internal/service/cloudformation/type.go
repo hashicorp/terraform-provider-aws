@@ -339,6 +339,18 @@ func expandCloudFormationOperationPreferences(tfMap map[string]interface{}) *clo
 		apiObject.RegionOrder = flex.ExpandStringSet(v)
 	}
 
+	if ftc, ftp := aws.Int64Value(apiObject.FailureToleranceCount), aws.Int64Value(apiObject.FailureTolerancePercentage); ftp == 0 {
+		apiObject.FailureTolerancePercentage = nil
+	} else if ftc == 0 {
+		apiObject.FailureToleranceCount = nil
+	}
+
+	if mcc, mcp := aws.Int64Value(apiObject.MaxConcurrentCount), aws.Int64Value(apiObject.MaxConcurrentPercentage); mcp == 0 {
+		apiObject.MaxConcurrentPercentage = nil
+	} else if mcc == 0 {
+		apiObject.MaxConcurrentCount = nil
+	}
+
 	return apiObject
 }
 

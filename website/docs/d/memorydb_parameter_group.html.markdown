@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB"
+subcategory: "MemoryDB for Redis"
 layout: "aws"
 page_title: "AWS: aws_memorydb_parameter_group"
 description: |-

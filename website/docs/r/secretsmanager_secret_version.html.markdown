@@ -45,6 +45,8 @@ resource "aws_secretsmanager_secret_version" "example" {
 }
 ```
 
+-> **Note:** In Terraform 0.14 and later, use `sensitive = true` to protect the values of the variable from being printed in logs and console output (see [Protect Sensitive Input Variables](https://learn.hashicorp.com/tutorials/terraform/sensitive-variables)).
+
 Reading key-value pairs from JSON back into a native Terraform map can be accomplished in Terraform 0.12 and later with the [`jsondecode()` function](https://www.terraform.io/docs/configuration/functions/jsondecode.html):
 
 ```terraform
