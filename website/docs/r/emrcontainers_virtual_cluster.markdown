@@ -28,7 +28,6 @@ resource "aws_emrcontainers_virtual_cluster" "example" {
   }
 
   name = "example"
-
 }
 ```
 
@@ -36,8 +35,8 @@ resource "aws_emrcontainers_virtual_cluster" "example" {
 
 The following arguments are required:
 
-* `name` – (Required) Name of the cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
 * `container_provider` - (Required) Configuration block for the container provider associated with your cluster.
+* `name` – (Required) Name of the virtual cluster.
 
 ### container_provider Arguments
 
@@ -51,10 +50,8 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the cluster.
 * `arn` - ARN of the cluster.
-* `created_at` - The Unix epoch time stamp in seconds for when the cluster was created.
-* `state` - The status of the EKS cluster. One of `RUNNING`, `TERMINATING`, `TERMINATED`, `ARRESTED`.
+* `id` - The ID of the cluster.
 
 ## Import
 

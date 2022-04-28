@@ -84,23 +84,14 @@ func ResourceVirtualCluster() *schema.Resource {
 					},
 				},
 			},
-			"created_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[.\-_/#A-Za-z0-9]+`), ""),
-			},
-			"state": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexp.MustCompile(`[.\-_/#A-Za-z0-9]+`), "must contain only alphanumeric, hyphen, underscore, dot and # characters"),
+				),
 			},
 		},
 	}
@@ -146,9 +137,7 @@ func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, met
 	if err := d.Set("container_provider", flattenEMRContainersContainerProvider(vc.ContainerProvider)); err != nil {
 		return diag.Errorf("setting container_provider: %s", err)
 	}
-	d.Set("created_at", aws.TimeValue(vc.CreatedAt).String())
 	d.Set("name", vc.Name)
-	d.Set("state", vc.State)
 
 	return nil
 }
