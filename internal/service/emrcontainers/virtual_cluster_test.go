@@ -4,20 +4,18 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emrcontainers"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfemrcontainers "github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
-	var vc emrcontainers.DescribeVirtualClusterOutput
-
+	var v emrcontainers.VirtualCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emrcontainers_virtual_cluster.test"
 
@@ -37,7 +35,7 @@ func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
 			{
 				Config: testAccVirtualClusterBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualClusterExists(resourceName, &vc),
+					testAccCheckVirtualClusterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "container_provider.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container_provider.0.id", rName),
 					resource.TestCheckResourceAttr(resourceName, "container_provider.0.info.#", "1"),
@@ -59,8 +57,7 @@ func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
 }
 
 func TestAccEMRContainersVirtualCluster_disappears(t *testing.T) {
-	var vc emrcontainers.DescribeVirtualClusterOutput
-
+	var v emrcontainers.VirtualCluster
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emrcontainers_virtual_cluster.test"
 
@@ -73,7 +70,7 @@ func TestAccEMRContainersVirtualCluster_disappears(t *testing.T) {
 			{
 				Config: testAccVirtualClusterBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualClusterExists(resourceName, &vc),
+					testAccCheckVirtualClusterExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfemrcontainers.ResourceVirtualCluster(), resourceName),
 				),
 			},
@@ -81,27 +78,26 @@ func TestAccEMRContainersVirtualCluster_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckVirtualClusterExists(resourceName string, vc *emrcontainers.DescribeVirtualClusterOutput) resource.TestCheckFunc {
+func testAccCheckVirtualClusterExists(n string, v *emrcontainers.VirtualCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EMR containers virtual cluster ID is set")
+			return fmt.Errorf("No EMR Containers Virtual Cluster ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersConn
-		resp, err := conn.DescribeVirtualCluster(&emrcontainers.DescribeVirtualClusterInput{
-			Id: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfemrcontainers.FindVirtualClusterByID(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("Error getting EMR containers virtual cluster: %s", err.Error())
+			return err
 		}
 
-		*vc = *resp
+		*v = *output
 
 		return nil
 	}
@@ -115,21 +111,17 @@ func testAccCheckVirtualClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		output, err := conn.DescribeVirtualCluster(&emrcontainers.DescribeVirtualClusterInput{
-			Id: aws.String(rs.Primary.ID),
-		})
+		_, err := tfemrcontainers.FindVirtualClusterByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, emrcontainers.ErrCodeResourceNotFoundException, "") {
-				return nil
-			}
 			return err
 		}
 
-		virtualClusterState := aws.StringValue(output.VirtualCluster.State)
-		if virtualClusterState != emrcontainers.VirtualClusterStateTerminated {
-			return fmt.Errorf("Expected EMR containers virtual cluster to be destroyed, %s found with state %s", rs.Primary.ID, virtualClusterState)
-		}
+		return fmt.Errorf("EMR Containers Virtual Cluster %s still exists", rs.Primary.ID)
 	}
 
 	return nil

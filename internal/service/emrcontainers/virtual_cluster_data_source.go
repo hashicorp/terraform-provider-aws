@@ -83,13 +83,10 @@ func dataSourceAwsEMRContainersVirtualClusterRead(d *schema.ResourceData, meta i
 		id = cid.(string)
 	}
 
-	vc, err := findVirtualClusterById(conn, id)
+	vc, err := FindVirtualClusterByID(conn, id)
 
 	if err != nil {
-		return fmt.Errorf("error reading EMR containers virtual cluster (%s): %w", d.Id(), err)
-	}
-	if vc == nil {
-		return fmt.Errorf("no matching EMR containers virtual cluster found")
+		return fmt.Errorf("error reading EMR Containers Virtual Cluster (%s): %w", id, err)
 	}
 
 	d.SetId(aws.StringValue(vc.Id))
