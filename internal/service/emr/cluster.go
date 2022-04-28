@@ -1117,10 +1117,11 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var stepSummaries []*emr.StepSummary
-
-	err = conn.ListStepsPages(&emr.ListStepsInput{
+	input := &emr.ListStepsInput{
 		ClusterId: aws.String(d.Id()),
-	}, func(page *emr.ListStepsOutput, lastPage bool) bool {
+	}
+
+	err = conn.ListStepsPages(input, func(page *emr.ListStepsOutput, lastPage bool) bool {
 		// ListSteps returns steps in reverse order (newest first)
 		for _, step := range page.Steps {
 			stepSummaries = append([]*emr.StepSummary{step}, stepSummaries...)
