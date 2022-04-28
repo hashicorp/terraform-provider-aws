@@ -18,42 +18,52 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_emrcontainers_virtual_cluster", &resource.Sweeper{
 		Name: "aws_emrcontainers_virtual_cluster",
-		F:    sweepVirtualCluster,
+		F:    sweepVirtualClusters,
 	})
 }
 
-func sweepVirtualCluster(region string) error {
+func sweepVirtualClusters(region string) error {
 	client, err := sweep.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).emrcontainersconn
-
 	input := &emrcontainers.ListVirtualClustersInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
 	err = conn.ListVirtualClustersPages(input, func(page *emrcontainers.ListVirtualClustersOutput, isLast bool) bool {
 		if page == nil {
 			return !isLast
 		}
 
-		for _, vc := range page.VirtualClusters {
-			log.Printf("[INFO] EMR containers virtual cluster: %s", aws.StringValue(vc.Id))
-			_, err = conn.DeleteVirtualCluster(&emrcontainers.DeleteVirtualClusterInput{
-				Id: vc.Id,
-			})
-
-			if err != nil {
-				log.Printf("[ERROR] Error deleting containers virtual cluster (%s): %s", aws.StringValue(vc.Id), err)
+		for _, v := range page.VirtualClusters {
+			if aws.StringValue(v.State) == emrcontainers.VirtualClusterStateTerminated {
+				continue
 			}
+
+			r := ResourceVirtualCluster()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.Id))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !isLast
 	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EMR Containers Virtual Cluster sweep for %s: %s", region, err)
+		return nil
+	}
+
 	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EMR containers virtual cluster sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving EMR containers virtual cluster: %s", err)
+		return fmt.Errorf("error listing EMR Containers Virtual Clusters (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EMR Containers Virtual Clusters (%s): %w", region, err)
 	}
 
 	return nil
