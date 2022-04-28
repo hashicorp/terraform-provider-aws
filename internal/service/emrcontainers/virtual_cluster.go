@@ -105,7 +105,7 @@ func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, m
 		Name: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("attribute_name"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("container_provider"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.ContainerProvider = expandContainerProvider(v.([]interface{})[0].(map[string]interface{}))
 	}
 
