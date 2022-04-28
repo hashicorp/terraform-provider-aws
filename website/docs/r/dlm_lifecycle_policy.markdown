@@ -106,6 +106,8 @@ resource "aws_dlm_lifecycle_policy" "example" {
 
 ```terraform
 # ...other configuration...
+data "aws_caller_identity" "current" {}
+
 resource "aws_kms_key" "dlm_cross_region_copy_cmk" {
   provider = aws.alternate
 
@@ -120,7 +122,7 @@ resource "aws_kms_key" "dlm_cross_region_copy_cmk" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"

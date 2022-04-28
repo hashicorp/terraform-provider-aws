@@ -23,6 +23,8 @@ resource "aws_xray_encryption_config" "example" {
 ## Example Usage with KMS Key
 
 ```terraform
+data "aws_caller_identity" "current" {}
+
 resource "aws_kms_key" "example" {
   description             = "Some Key"
   deletion_window_in_days = 7
@@ -36,7 +38,7 @@ resource "aws_kms_key" "example" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
