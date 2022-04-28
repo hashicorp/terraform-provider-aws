@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emrcontainers"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -270,4 +272,99 @@ func flattenEMRContainersEksInfo(ei *emrcontainers.EksInfo) []interface{} {
 	}
 
 	return []interface{}{m}
+}
+
+// findVirtualClusterById returns the EMR containers virtual cluster corresponding to the specified Id.
+// Returns nil if no environment is found.
+func findVirtualClusterById(conn *emrcontainers.EMRContainers, id string) (*emrcontainers.VirtualCluster, error) {
+	input := &emrcontainers.DescribeVirtualClusterInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.DescribeVirtualCluster(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	return output.VirtualCluster, nil
+}
+
+const (
+	statusVirtualClusterNotFound = "NotFound"
+	statusVirtualClusterUnknown  = "Unknown"
+)
+
+// statusVirtualCluster fetches the virtual cluster and its status
+func statusVirtualCluster(conn *emrcontainers.EMRContainers, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		vc, err := findVirtualClusterById(conn, id)
+
+		if tfawserr.ErrCodeEquals(err, emrcontainers.ErrCodeResourceNotFoundException) {
+			return nil, statusVirtualClusterNotFound, nil
+		}
+
+		if err != nil {
+			return nil, statusVirtualClusterUnknown, err
+		}
+
+		if vc == nil {
+			return nil, statusVirtualClusterNotFound, nil
+		}
+
+		return vc, aws.StringValue(vc.State), nil
+	}
+}
+
+const (
+	// Maximum amount of time to wait for a virtual cluster creation
+	VirtualClusterCreatedTimeout = 90 * time.Minute
+	// Amount of delay to check a virtual cluster
+	VirtualClusterCreatedDelay = 1 * time.Minute
+
+	// Maximum amount of time to wait for a virtual cluster deletion
+	VirtualClusterDeletedTimeout = 90 * time.Minute
+	// Amount of delay to check a virtual cluster status
+	VirtualClusterDeletedDelay = 1 * time.Minute
+)
+
+// waitVirtualClusterCreated waits for a virtual cluster to return running
+func waitVirtualClusterCreated(conn *emrcontainers.EMRContainers, id string) (*emrcontainers.VirtualCluster, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{},
+		Target:  []string{emrcontainers.VirtualClusterStateRunning},
+		Refresh: statusVirtualCluster(conn, id),
+		Timeout: VirtualClusterCreatedTimeout,
+		Delay:   VirtualClusterCreatedDelay,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*emrcontainers.VirtualCluster); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+// waitVirtualClusterDeleted waits for a virtual cluster to be deleted
+func waitVirtualClusterDeleted(conn *emrcontainers.EMRContainers, id string) (*emrcontainers.VirtualCluster, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{emrcontainers.VirtualClusterStateTerminating},
+		Target:  []string{emrcontainers.VirtualClusterStateTerminated},
+		Refresh: statusVirtualCluster(conn, id),
+		Timeout: VirtualClusterDeletedTimeout,
+		Delay:   VirtualClusterDeletedDelay,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*emrcontainers.VirtualCluster); ok {
+		return v, err
+	}
+
+	return nil, err
 }
