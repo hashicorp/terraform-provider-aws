@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceVirtualCluster() *schema.Resource {
@@ -66,6 +67,7 @@ func DataSourceVirtualCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tftags.TagsSchemaComputed(),
 			"virtual_cluster_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -76,6 +78,7 @@ func DataSourceVirtualCluster() *schema.Resource {
 
 func dataSourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EMRContainersConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("virtual_cluster_id").(string)
 	vc, err := FindVirtualClusterByID(ctx, conn, id)
@@ -97,6 +100,10 @@ func dataSourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("name", vc.Name)
 	d.Set("state", vc.State)
 	d.Set("virtual_cluster_id", vc.Id)
+
+	if err := d.Set("tags", KeyValueTags(vc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return diag.Errorf("setting tags: %s", err)
+	}
 
 	return nil
 }

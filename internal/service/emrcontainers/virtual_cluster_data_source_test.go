@@ -44,6 +44,7 @@ func TestAccEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "created_at", dataSourceResourceName, "created_at"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceResourceName, "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "state", dataSourceResourceName, "state"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceResourceName, "tags.%"),
 				),
 			},
 		},

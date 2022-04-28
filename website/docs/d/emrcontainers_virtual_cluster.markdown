@@ -43,3 +43,4 @@ output "arn" {
     * `type` - The type of the container provider
 * `created_at` - The Unix epoch time stamp in seconds for when the cluster was created.
 * `state` - The status of the EKS cluster. One of `RUNNING`, `TERMINATING`, `TERMINATED`, `ARRESTED`.
+* `tags` - Key-value mapping of resource tags.
