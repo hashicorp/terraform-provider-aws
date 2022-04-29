@@ -280,7 +280,12 @@ rules:
         - internal/service/d[a-df-z]*
         - internal/service/devicefarm
         - internal/service/i*
-        - internal/service/[k-r]*
+        - internal/service/[k-q]*
+        - internal/service/ram
+        - internal/service/rds
+        - internal/service/resourcegroups
+        - internal/service/route53
+        - internal/service/route53resolver
         - internal/service/s[a-df-rt]*
         - internal/service/se[d-z]*
         - internal/service/sec[a-t]*
@@ -692,7 +697,6 @@ rules:
         - internal/service/quicksight/group.go
         - internal/service/quicksight/user.go
         - internal/service/ram/resource_share.go
-        - internal/service/redshift/snapshot_schedule.go
     patterns:
       - pattern: |
           func $FUNC(...) {
