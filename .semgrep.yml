@@ -299,7 +299,7 @@ rules:
         - internal/service
       exclude:
         - internal/service/**/*_data_source.go
-        - internal/service/[b-ce-g]*
+        - internal/service/[be-g]*
         - internal/service/d[a-df-z]*
         - internal/service/devicefarm
         - internal/service/i*
