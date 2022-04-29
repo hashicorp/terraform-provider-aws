@@ -5,10 +5,9 @@ import (
 	"flag"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5/tf5server"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
 	"github.com/hashicorp/terraform-plugin-mux/tf6to5server"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
@@ -21,12 +20,7 @@ func main() {
 
 	ctx := context.Background()
 
-	downgradedProvider, err := tf6to5server.DowngradeServer(
-		ctx,
-		func() tfprotov6.ProviderServer {
-			return tfsdk.NewProtocol6Server(tf6provider.New())
-		},
-	)
+	downgradedProvider, err := tf6to5server.DowngradeServer(ctx, providerserver.NewProtocol6(tf6provider.New()))
 
 	if err != nil {
 		log.Fatal(err)
