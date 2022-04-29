@@ -1043,7 +1043,7 @@ func expandBrokerLogs(tfMap map[string]interface{}) *kafka.BrokerLogs {
 
 	apiObject := &kafka.BrokerLogs{}
 
-	if v, ok := tfMap["broker_logs"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 {
 		apiObject.CloudWatchLogs = expandCloudWatchLogs(v[0].(map[string]interface{}))
 	}
 
