@@ -59,7 +59,6 @@ rules:
         - internal/service/redshift
         - internal/service/route53
         - internal/service/s3
-        - internal/service/servicediscovery
         - internal/service/ssm
     patterns:
       - pattern: '$LHS = *$RHS'
