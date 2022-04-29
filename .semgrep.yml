@@ -281,7 +281,7 @@ rules:
         - internal/service/devicefarm
         - internal/service/i*
         - internal/service/[k-r]*
-        - internal/service/s[a-df-rt3]*
+        - internal/service/s[a-df-rt]*
         - internal/service/se[d-z]*
         - internal/service/sec[a-t]*
         - internal/service/securityhub
@@ -693,7 +693,6 @@ rules:
         - internal/service/quicksight/user.go
         - internal/service/ram/resource_share.go
         - internal/service/redshift/snapshot_schedule.go
-        - internal/service/s3/bucket_public_access_block.go
     patterns:
       - pattern: |
           func $FUNC(...) {
