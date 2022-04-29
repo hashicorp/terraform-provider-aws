@@ -111,6 +111,20 @@ func resourceCertificateValidationRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("reading ACM Certificate (%s): %w", arn, err)
 	}
 
+	if certificate == nil {
+		return fmt.Errorf("error describing ACM Certificate (%s): empty response", arn)
+	}
+
+	if status := aws.StringValue(certificate.Status); status != acm.CertificateStatusIssued {
+		if d.IsNewResource() {
+			return fmt.Errorf("ACM Certificate (%s) status not issued: %s", arn, status)
+		}
+
+		log.Printf("[WARN] ACM Certificate (%s) status not issued (%s), removing from state", arn, status)
+		d.SetId("")
+		return nil
+	}
+
 	d.Set("certificate_arn", certificate.CertificateArn)
 	d.SetId(aws.TimeValue(certificate.IssuedAt).String())
 
