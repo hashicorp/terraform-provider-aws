@@ -7,6 +7,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_acm_certificate_validation: Restore certificate issuance timestamp as the resource `id` value, fixing error on existing resource Read ([#24453](https://github.com/hashicorp/terraform-provider-aws/issues/24453))
+* resource/aws_kms_alias: Fix reserved prefix used in `name` and `name_prefix` plan time validation ([#24469](https://github.com/hashicorp/terraform-provider-aws/issues/24469))
 
 ## 4.12.0 (April 28, 2022)
 
