@@ -325,6 +325,7 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 					},
 				},
 				NestingMode: tfsdk.BlockNestingModeList,
+				MaxItems:    1,
 			},
 			"assume_role_with_web_identity": {
 				Attributes: map[string]tfsdk.Attribute{
@@ -363,6 +364,7 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 					},
 				},
 				NestingMode: tfsdk.BlockNestingModeList,
+				MaxItems:    1,
 			},
 			"default_tags": {
 				Attributes: map[string]tfsdk.Attribute{
@@ -373,6 +375,7 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 					},
 				},
 				NestingMode: tfsdk.BlockNestingModeList,
+				MaxItems:    1,
 				Description: "Configuration block with settings to default resource tags across all resources.",
 			},
 			"endpoints": endpointsBlock(),
@@ -390,6 +393,7 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 					},
 				},
 				NestingMode: tfsdk.BlockNestingModeList,
+				MaxItems:    1,
 				Description: "Configuration block with settings to ignore resource tags across all resources.",
 			},
 		},
