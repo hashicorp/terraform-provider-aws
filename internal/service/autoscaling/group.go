@@ -2562,6 +2562,7 @@ func flattenLaunchTemplateOverrides(launchTemplateOverrides []*autoscaling.Launc
 			continue
 		}
 		m := map[string]interface{}{
+			"instance_requirements":         []interface{}{flattenInstanceRequirements(launchTemplateOverride.InstanceRequirements)},
 			"instance_type":                 aws.StringValue(launchTemplateOverride.InstanceType),
 			"launch_template_specification": flattenLaunchTemplateSpecification(launchTemplateOverride.LaunchTemplateSpecification),
 			"weighted_capacity":             aws.StringValue(launchTemplateOverride.WeightedCapacity),
@@ -2570,6 +2571,244 @@ func flattenLaunchTemplateOverrides(launchTemplateOverrides []*autoscaling.Launc
 	}
 
 	return l
+}
+
+func flattenInstanceRequirements(apiObject *autoscaling.InstanceRequirements) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AcceleratorCount; v != nil {
+		tfMap["accelerator_count"] = []interface{}{flattenAcceleratorCount(v)}
+	}
+
+	if v := apiObject.AcceleratorManufacturers; v != nil {
+		tfMap["accelerator_manufacturers"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.AcceleratorNames; v != nil {
+		tfMap["accelerator_names"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.AcceleratorTotalMemoryMiB; v != nil {
+		tfMap["accelerator_total_memory_mib"] = []interface{}{flattenAcceleratorTotalMemoryMiB(v)}
+	}
+
+	if v := apiObject.AcceleratorTypes; v != nil {
+		tfMap["accelerator_types"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.BareMetal; v != nil {
+		tfMap["bare_metal"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.BaselineEbsBandwidthMbps; v != nil {
+		tfMap["baseline_ebs_bandwidth_mbps"] = []interface{}{flattenBaselineEbsBandwidthMbps(v)}
+	}
+
+	if v := apiObject.BurstablePerformance; v != nil {
+		tfMap["burstable_performance"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.CpuManufacturers; v != nil {
+		tfMap["cpu_manufacturers"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.ExcludedInstanceTypes; v != nil {
+		tfMap["excluded_instance_types"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.InstanceGenerations; v != nil {
+		tfMap["instance_generations"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.LocalStorage; v != nil {
+		tfMap["local_storage"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.LocalStorageTypes; v != nil {
+		tfMap["local_storage_types"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.MemoryGiBPerVCpu; v != nil {
+		tfMap["memory_gib_per_vcpu"] = []interface{}{flattenMemoryGiBPerVCpu(v)}
+	}
+
+	if v := apiObject.MemoryMiB; v != nil {
+		tfMap["memory_mib"] = []interface{}{flattenMemoryMiB(v)}
+	}
+
+	if v := apiObject.NetworkInterfaceCount; v != nil {
+		tfMap["network_interface_count"] = []interface{}{flattenNetworkInterfaceCount(v)}
+	}
+
+	if v := apiObject.OnDemandMaxPricePercentageOverLowestPrice; v != nil {
+		tfMap["on_demand_max_price_percentage_over_lowest_price"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.RequireHibernateSupport; v != nil {
+		tfMap["require_hibernate_support"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.SpotMaxPricePercentageOverLowestPrice; v != nil {
+		tfMap["spot_max_price_percentage_over_lowest_price"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.TotalLocalStorageGB; v != nil {
+		tfMap["total_local_storage_gb"] = []interface{}{flattentTotalLocalStorageGB(v)}
+	}
+
+	if v := apiObject.VCpuCount; v != nil {
+		tfMap["vcpu_count"] = []interface{}{flattenVCpuCount(v)}
+	}
+
+	return tfMap
+}
+
+func flattenAcceleratorCount(apiObject *autoscaling.AcceleratorCountRequest) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Max; v != nil {
+		tfMap["max"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.Min; v != nil {
+		tfMap["min"] = aws.Int64Value(v)
+	}
+
+	return tfMap
+}
+
+func flattenAcceleratorTotalMemoryMiB(apiObject *autoscaling.AcceleratorTotalMemoryMiBRequest) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Max; v != nil {
+		tfMap["max"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.Min; v != nil {
+		tfMap["min"] = aws.Int64Value(v)
+	}
+
+	return tfMap
+}
+
+func flattenBaselineEbsBandwidthMbps(apiObject *autoscaling.BaselineEbsBandwidthMbpsRequest) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Max; v != nil {
+		tfMap["max"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.Min; v != nil {
+		tfMap["min"] = aws.Int64Value(v)
+	}
+
+	return tfMap
+}
+
+func flattenMemoryGiBPerVCpu(apiObject *autoscaling.MemoryGiBPerVCpuRequest) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Max; v != nil {
+		tfMap["max"] = aws.Float64Value(v)
+	}
+
+	if v := apiObject.Min; v != nil {
+		tfMap["min"] = aws.Float64Value(v)
+	}
+
+	return tfMap
+}
+
+func flattenMemoryMiB(apiObject *autoscaling.MemoryMiBRequest) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Max; v != nil {
+		tfMap["max"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.Min; v != nil {
+		tfMap["min"] = aws.Int64Value(v)
+	}
+
+	return tfMap
+}
+
+func flattenNetworkInterfaceCount(apiObject *autoscaling.NetworkInterfaceCountRequest) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Max; v != nil {
+		tfMap["max"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.Min; v != nil {
+		tfMap["min"] = aws.Int64Value(v)
+	}
+
+	return tfMap
+}
+
+func flattentTotalLocalStorageGB(apiObject *autoscaling.TotalLocalStorageGBRequest) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Max; v != nil {
+		tfMap["max"] = aws.Float64Value(v)
+	}
+
+	if v := apiObject.Min; v != nil {
+		tfMap["min"] = aws.Float64Value(v)
+	}
+
+	return tfMap
+}
+
+func flattenVCpuCount(apiObject *autoscaling.VCpuCountRequest) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Max; v != nil {
+		tfMap["max"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.Min; v != nil {
+		tfMap["min"] = aws.Int64Value(v)
+	}
+
+	return tfMap
 }
 
 func flattenLaunchTemplateSpecification(launchTemplateSpecification *autoscaling.LaunchTemplateSpecification) []interface{} {
