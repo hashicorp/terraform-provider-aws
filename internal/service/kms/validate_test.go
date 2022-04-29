@@ -45,6 +45,10 @@ func TestValidNameForDataSource(t *testing.T) {
 			ErrCount: 0,
 		},
 		{
+			Value:    "alias/aws-service-test",
+			ErrCount: 0,
+		},
+		{
 			Value:    "alias/hashicorp",
 			ErrCount: 0,
 		},
@@ -77,6 +81,10 @@ func TestValidNameForResource(t *testing.T) {
 	}{
 		{
 			Value:    "alias/hashicorp",
+			ErrCount: 0,
+		},
+		{
+			Value:    "alias/aws-service-test",
 			ErrCount: 0,
 		},
 		{
