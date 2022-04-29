@@ -281,10 +281,12 @@ rules:
         - internal/service/devicefarm
         - internal/service/i*
         - internal/service/[k-r]*
-        - internal/service/s[a-df-z3]*
+        - internal/service/s[a-df-rt3]*
         - internal/service/se[d-z]*
         - internal/service/sec[a-t]*
         - internal/service/securityhub
+        - internal/service/ssoadmin
+        - internal/service/swf
         - internal/service/[t-v]*
         - internal/service/waf
         - internal/service/wafv2
@@ -692,8 +694,6 @@ rules:
         - internal/service/ram/resource_share.go
         - internal/service/redshift/snapshot_schedule.go
         - internal/service/s3/bucket_public_access_block.go
-        - internal/service/ssm/maintenance_window.go
-        - internal/service/ssm/maintenance_window_task.go
     patterns:
       - pattern: |
           func $FUNC(...) {
