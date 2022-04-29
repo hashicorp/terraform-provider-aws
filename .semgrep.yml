@@ -270,7 +270,7 @@ rules:
 
   - id: helper-schema-ResourceData-SetId-empty-without-IsNewResource-check
     languages: [go]
-    message: Calling `d.SetId("")` should ensure `!d.IsNewResource()` is also checked
+    message: Calling `d.SetId("")` should ensure `!d.IsNewResource()` is also checked. See https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/error-handling.md#disnewresource-checks
     paths:
       include:
         - internal/service
@@ -285,7 +285,11 @@ rules:
         - internal/service/se[d-z]*
         - internal/service/sec[a-t]*
         - internal/service/securityhub
-        - internal/service/[t-x]*
+        - internal/service/[t-v]*
+        - internal/service/waf
+        - internal/service/wafv2
+        - internal/service/workspaces
+        - internal/service/xray
     patterns:
       - pattern-either:
         - pattern: |
@@ -662,6 +666,43 @@ rules:
       - metavariable-regex:
           metavariable: "$FUNC"
           regex: "^resource\\w*(Create|Put|Set|Upsert|Enable)$"
+    severity: WARNING
+
+  - id: calling-SetId-with-empty-string-in-resource-update
+    languages: [go]
+    message: Do not call `d.SetId("")` inside a resource update function
+    paths:
+      include:
+        - internal/service/
+      exclude:
+        - internal/service/chime/voice_connector.go
+        - internal/service/chime/voice_connector_group.go
+        - internal/service/chime/voice_connector_logging.go 
+        - internal/service/chime/voice_connector_streaming.go
+        - internal/service/docdb/cluster_parameter_group.go
+        - internal/service/elb/proxy_protocol_policy.go
+        - internal/service/events/bus_policy.go
+        - internal/service/events/permission.go
+        - internal/service/iam/user.go
+        - internal/service/iam/user_ssh_key.go
+        - internal/service/kinesisvideo/stream.go
+        - internal/service/mediaconvert/queue.go
+        - internal/service/quicksight/group.go
+        - internal/service/quicksight/user.go
+        - internal/service/ram/resource_share.go
+        - internal/service/redshift/snapshot_schedule.go
+        - internal/service/s3/bucket_public_access_block.go
+        - internal/service/ssm/maintenance_window.go
+        - internal/service/ssm/maintenance_window_task.go
+    patterns:
+      - pattern: |
+          func $FUNC(...) {
+            ...
+            d.SetId("")
+          }
+      - metavariable-regex:
+          metavariable: "$FUNC"
+          regex: "^resource\\w*(Update)$|^update\\w*$" # Put and Upsert variants are handled in calling-SetId-with-empty-string-in-resource-create above
     severity: WARNING
 
   - id: calling-SetId-in-resource-delete
