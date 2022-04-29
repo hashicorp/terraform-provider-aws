@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourcePublicKey() *schema.Resource {
@@ -93,13 +94,14 @@ func resourcePublicKeyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	output, err := conn.GetPublicKey(request)
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
+		log.Printf("[WARN] No PublicKey found: %s, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
-			log.Printf("[WARN] No PublicKey found: %s, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return names.Error(names.CloudFront, names.ErrActionReading, "Public Key", d.Id(), err)
 	}
 
 	if output == nil || output.PublicKey == nil || output.PublicKey.PublicKeyConfig == nil {
