@@ -18,13 +18,14 @@ import (
 )
 
 var (
+	dataSourceType  = flag.String("data-source", "", "Data Source type")
 	migrateProvider = flag.Bool("provider", false, "Migrate provider schema")
 	resourceType    = flag.String("resource", "", "Resource type")
 )
 
 func usage() {
 	fmt.Fprintf(os.Stderr, "Usage:\n")
-	fmt.Fprintf(os.Stderr, "\ttfsdk2fx [-provider|-resource <resource-type>] <generated-file>\n\n")
+	fmt.Fprintf(os.Stderr, "\ttfsdk2fx [-provider|-resource <resource-type>|-data-source <data-source-type>] <generated-file>\n\n")
 }
 
 func main() {
@@ -33,7 +34,7 @@ func main() {
 
 	args := flag.Args()
 
-	if len(args) < 1 || (*resourceType == "" && !*migrateProvider) {
+	if len(args) < 1 || (*dataSourceType == "" && !*migrateProvider && *resourceType == "") {
 		flag.Usage()
 		os.Exit(2)
 	}
@@ -53,6 +54,15 @@ func main() {
 
 	if *migrateProvider {
 		migrator.ProviderSchema = p.Schema
+	} else if v := *dataSourceType; v != "" {
+		resource, ok := p.DataSourcesMap[v]
+
+		if !ok {
+			ui.Error(fmt.Sprintf("data source type %s not found", v))
+			os.Exit(2)
+		}
+
+		migrator.Resource = resource
 	} else if v := *resourceType; v != "" {
 		resource, ok := p.ResourcesMap[v]
 
