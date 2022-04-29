@@ -517,11 +517,11 @@ func (e emitter) emitBlock(path []string, property *schema.Schema) error {
 		return unsupportedTypeError(path, v.String())
 	}
 
-	if maxItems := property.MaxItems; maxItems > 1 {
+	if maxItems := property.MaxItems; maxItems > 0 {
 		e.printf("MaxItems:%d,\n", maxItems)
 	}
 
-	if minItems := property.MinItems; minItems > 1 {
+	if minItems := property.MinItems; minItems > 0 {
 		e.printf("MinItems:%d,\n", minItems)
 	}
 
