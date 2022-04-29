@@ -47,6 +47,10 @@ func TestAccCloudFrontDistribution_disappears(t *testing.T) {
 // If you are testing manually and can't wait for deletion, set the
 // TF_TEST_CLOUDFRONT_RETAIN environment variable.
 func TestAccCloudFrontDistribution_s3Origin(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var distribution cloudfront.Distribution
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -77,6 +81,10 @@ func TestAccCloudFrontDistribution_s3Origin(t *testing.T) {
 }
 
 func TestAccCloudFrontDistribution_s3OriginWithTags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var distribution cloudfront.Distribution
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -122,6 +130,10 @@ func TestAccCloudFrontDistribution_s3OriginWithTags(t *testing.T) {
 // If you are testing manually and can't wait for deletion, set the
 // TF_TEST_CLOUDFRONT_RETAIN environment variable.
 func TestAccCloudFrontDistribution_customOrigin(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var distribution cloudfront.Distribution
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -151,6 +163,10 @@ func TestAccCloudFrontDistribution_customOrigin(t *testing.T) {
 }
 
 func TestAccCloudFrontDistribution_originPolicyDefault(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -179,6 +195,10 @@ func TestAccCloudFrontDistribution_originPolicyDefault(t *testing.T) {
 }
 
 func TestAccCloudFrontDistribution_originPolicyOrdered(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -212,6 +232,10 @@ func TestAccCloudFrontDistribution_originPolicyOrdered(t *testing.T) {
 // If you are testing manually and can't wait for deletion, set the
 // TF_TEST_CLOUDFRONT_RETAIN environment variable.
 func TestAccCloudFrontDistribution_multiOrigin(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var distribution cloudfront.Distribution
 	resourceName := "aws_cloudfront_distribution.multi_origin_distribution"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -251,6 +275,10 @@ func TestAccCloudFrontDistribution_multiOrigin(t *testing.T) {
 // If you are testing manually and can't wait for deletion, set the
 // TF_TEST_CLOUDFRONT_RETAIN environment variable.
 func TestAccCloudFrontDistribution_orderedCacheBehavior(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var distribution cloudfront.Distribution
 	resourceName := "aws_cloudfront_distribution.main"
 
@@ -285,6 +313,10 @@ func TestAccCloudFrontDistribution_orderedCacheBehavior(t *testing.T) {
 }
 
 func TestAccCloudFrontDistribution_orderedCacheBehaviorCachePolicy(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var distribution cloudfront.Distribution
 	resourceName := "aws_cloudfront_distribution.main"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -317,6 +349,10 @@ func TestAccCloudFrontDistribution_orderedCacheBehaviorCachePolicy(t *testing.T)
 }
 
 func TestAccCloudFrontDistribution_orderedCacheBehaviorResponseHeadersPolicy(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var distribution cloudfront.Distribution
 	resourceName := "aws_cloudfront_distribution.main"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -349,6 +385,10 @@ func TestAccCloudFrontDistribution_orderedCacheBehaviorResponseHeadersPolicy(t *
 }
 
 func TestAccCloudFrontDistribution_forwardedValuesToCachePolicy(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var distribution cloudfront.Distribution
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_distribution.main"
@@ -406,6 +446,10 @@ func TestAccCloudFrontDistribution_Origin_emptyOriginID(t *testing.T) {
 }
 
 func TestAccCloudFrontDistribution_Origin_connectionAttempts(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var distribution cloudfront.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -437,6 +481,10 @@ func TestAccCloudFrontDistribution_Origin_connectionAttempts(t *testing.T) {
 }
 
 func TestAccCloudFrontDistribution_Origin_connectionTimeout(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var distribution cloudfront.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -468,6 +516,10 @@ func TestAccCloudFrontDistribution_Origin_connectionTimeout(t *testing.T) {
 }
 
 func TestAccCloudFrontDistribution_Origin_originShield(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var distribution cloudfront.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -517,6 +569,10 @@ func TestAccCloudFrontDistribution_Origin_originShield(t *testing.T) {
 // If you are testing manually and can't wait for deletion, set the
 // TF_TEST_CLOUDFRONT_RETAIN environment variable.
 func TestAccCloudFrontDistribution_noOptionalItems(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var distribution cloudfront.Distribution
 	resourceName := "aws_cloudfront_distribution.no_optional_items"
 
@@ -602,6 +658,10 @@ func TestAccCloudFrontDistribution_noOptionalItems(t *testing.T) {
 // If you are testing manually and can't wait for deletion, set the
 // TF_TEST_CLOUDFRONT_RETAIN environment variable.
 func TestAccCloudFrontDistribution_http11(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var distribution cloudfront.Distribution
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -630,6 +690,10 @@ func TestAccCloudFrontDistribution_http11(t *testing.T) {
 }
 
 func TestAccCloudFrontDistribution_isIPV6Enabled(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var distribution cloudfront.Distribution
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -660,6 +724,10 @@ func TestAccCloudFrontDistribution_isIPV6Enabled(t *testing.T) {
 }
 
 func TestAccCloudFrontDistribution_noCustomErrorResponse(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var distribution cloudfront.Distribution
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -916,6 +984,10 @@ func TestAccCloudFrontDistribution_OrderedCacheBehavior_realtimeLogARN(t *testin
 }
 
 func TestAccCloudFrontDistribution_enabled(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var distribution cloudfront.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
 
@@ -958,6 +1030,10 @@ func TestAccCloudFrontDistribution_enabled(t *testing.T) {
 //  * Check it still exists and is disabled outside Terraform
 //  * Destroy for real outside Terraform
 func TestAccCloudFrontDistribution_retainOnDelete(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var distribution cloudfront.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
 
@@ -988,6 +1064,10 @@ func TestAccCloudFrontDistribution_retainOnDelete(t *testing.T) {
 }
 
 func TestAccCloudFrontDistribution_OrderedCacheBehaviorForwardedValuesCookies_whitelistedNames(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var distribution cloudfront.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
 	retainOnDelete := testAccDistributionRetainOnDeleteFromEnv()
@@ -1032,6 +1112,10 @@ func TestAccCloudFrontDistribution_OrderedCacheBehaviorForwardedValuesCookies_wh
 }
 
 func TestAccCloudFrontDistribution_OrderedCacheBehaviorForwardedValues_headers(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var distribution cloudfront.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
 	retainOnDelete := testAccDistributionRetainOnDeleteFromEnv()
@@ -1137,6 +1221,10 @@ func TestAccCloudFrontDistribution_ViewerCertificateACMCertificateARN_conflictsW
 }
 
 func TestAccCloudFrontDistribution_waitForDeployment(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var distribution cloudfront.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
 
@@ -1380,6 +1468,10 @@ func testAccDistributionRetainConfig() string {
 }
 
 func TestAccCloudFrontDistribution_originGroups(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var distribution cloudfront.Distribution
 	resourceName := "aws_cloudfront_distribution.failover_distribution"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
