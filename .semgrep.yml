@@ -76,7 +76,6 @@ rules:
         - internal/service/**/*_test.go
         - internal/service/dax
         - internal/service/docdb
-        - internal/service/ec2
         - internal/service/ecs
         - internal/service/elasticache
         - internal/service/elasticbeanstalk
