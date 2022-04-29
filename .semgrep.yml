@@ -73,7 +73,6 @@ rules:
       include:
         - internal/service
       exclude:
-        - internal/service/**/*_test.go
         - internal/service/docdb
         - internal/service/ec2
         - internal/service/ecs
