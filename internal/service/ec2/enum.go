@@ -183,3 +183,8 @@ const (
 const (
 	DefaultSecurityGroupName = "default"
 )
+
+const (
+	LaunchTemplateVersionDefault = "$Default"
+	LaunchTemplateVersionLatest  = "$Latest"
+)

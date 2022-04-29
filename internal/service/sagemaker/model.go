@@ -241,7 +241,7 @@ func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok {
-		createOpts.VpcConfig = expandSageMakerVpcConfigRequest(v.([]interface{}))
+		createOpts.VpcConfig = expandVpcConfigRequest(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("enable_network_isolation"); ok {
@@ -249,23 +249,23 @@ func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("inference_execution_config"); ok {
-		createOpts.InferenceExecutionConfig = expandSagemakerModelInferenceExecutionConfig(v.([]interface{}))
+		createOpts.InferenceExecutionConfig = expandModelInferenceExecutionConfig(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Sagemaker model create config: %#v", *createOpts)
+	log.Printf("[DEBUG] SageMaker model create config: %#v", *createOpts)
 	_, err := verify.RetryOnAWSCode("ValidationException", func() (interface{}, error) {
 		return conn.CreateModel(createOpts)
 	})
 
 	if err != nil {
-		return fmt.Errorf("error creating Sagemaker model: %w", err)
+		return fmt.Errorf("error creating SageMaker model: %w", err)
 	}
 	d.SetId(name)
 
 	return resourceModelRead(d, meta)
 }
 
-func expandSageMakerVpcConfigRequest(l []interface{}) *sagemaker.VpcConfig {
+func expandVpcConfigRequest(l []interface{}) *sagemaker.VpcConfig {
 	if len(l) == 0 {
 		return nil
 	}
@@ -294,7 +294,7 @@ func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading Sagemaker model %s: %w", d.Id(), err)
+		return fmt.Errorf("error reading SageMaker model %s: %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(model.ModelArn)
@@ -311,17 +311,17 @@ func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting container: %w", err)
 	}
 
-	if err := d.Set("vpc_config", flattenSageMakerVpcConfigResponse(model.VpcConfig)); err != nil {
+	if err := d.Set("vpc_config", flattenVpcConfigResponse(model.VpcConfig)); err != nil {
 		return fmt.Errorf("error setting vpc_config: %w", err)
 	}
 
-	if err := d.Set("inference_execution_config", flattenSagemakerModelInferenceExecutionConfig(model.InferenceExecutionConfig)); err != nil {
+	if err := d.Set("inference_execution_config", flattenModelInferenceExecutionConfig(model.InferenceExecutionConfig)); err != nil {
 		return fmt.Errorf("error setting inference_execution_config: %w", err)
 	}
 
 	tags, err := ListTags(conn, arn)
 	if err != nil {
-		return fmt.Errorf("error listing tags for Sagemaker Model (%s): %w", d.Id(), err)
+		return fmt.Errorf("error listing tags for SageMaker Model (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -338,7 +338,7 @@ func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func flattenSageMakerVpcConfigResponse(vpcConfig *sagemaker.VpcConfig) []map[string]interface{} {
+func flattenVpcConfigResponse(vpcConfig *sagemaker.VpcConfig) []map[string]interface{} {
 	if vpcConfig == nil {
 		return []map[string]interface{}{}
 	}
@@ -358,7 +358,7 @@ func resourceModelUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Sagemaker Model (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("error updating SageMaker Model (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -371,7 +371,7 @@ func resourceModelDelete(d *schema.ResourceData, meta interface{}) error {
 	deleteOpts := &sagemaker.DeleteModelInput{
 		ModelName: aws.String(d.Id()),
 	}
-	log.Printf("[INFO] Deleting Sagemaker model: %s", d.Id())
+	log.Printf("[INFO] Deleting SageMaker model: %s", d.Id())
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteModel(deleteOpts)
@@ -413,13 +413,13 @@ func expandContainer(m map[string]interface{}) *sagemaker.ContainerDefinition {
 	}
 
 	if v, ok := m["image_config"]; ok {
-		container.ImageConfig = expandSagemakerModelImageConfig(v.([]interface{}))
+		container.ImageConfig = expandModelImageConfig(v.([]interface{}))
 	}
 
 	return &container
 }
 
-func expandSagemakerModelImageConfig(l []interface{}) *sagemaker.ImageConfig {
+func expandModelImageConfig(l []interface{}) *sagemaker.ImageConfig {
 	if len(l) == 0 {
 		return nil
 	}
@@ -467,13 +467,13 @@ func flattenContainer(container *sagemaker.ContainerDefinition) []interface{} {
 	}
 
 	if container.ImageConfig != nil {
-		cfg["image_config"] = flattenSagemakerImageConfig(container.ImageConfig)
+		cfg["image_config"] = flattenImageConfig(container.ImageConfig)
 	}
 
 	return []interface{}{cfg}
 }
 
-func flattenSagemakerImageConfig(imageConfig *sagemaker.ImageConfig) []interface{} {
+func flattenImageConfig(imageConfig *sagemaker.ImageConfig) []interface{} {
 	if imageConfig == nil {
 		return []interface{}{}
 	}
@@ -493,7 +493,7 @@ func flattenContainers(containers []*sagemaker.ContainerDefinition) []interface{
 	return fContainers
 }
 
-func expandSagemakerModelInferenceExecutionConfig(l []interface{}) *sagemaker.InferenceExecutionConfig {
+func expandModelInferenceExecutionConfig(l []interface{}) *sagemaker.InferenceExecutionConfig {
 	if len(l) == 0 {
 		return nil
 	}
@@ -507,7 +507,7 @@ func expandSagemakerModelInferenceExecutionConfig(l []interface{}) *sagemaker.In
 	return config
 }
 
-func flattenSagemakerModelInferenceExecutionConfig(config *sagemaker.InferenceExecutionConfig) []interface{} {
+func flattenModelInferenceExecutionConfig(config *sagemaker.InferenceExecutionConfig) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}

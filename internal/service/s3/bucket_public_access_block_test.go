@@ -87,7 +87,7 @@ func TestAccS3BucketPublicAccessBlock_Disappears_bucket(t *testing.T) {
 				Config: testAccBucketPublicAccessBlockConfig(name, "false", "false", "false", "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPublicAccessBlockExists(resourceName, &config),
-					testAccCheckDestroyBucket(bucketResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucket(), bucketResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

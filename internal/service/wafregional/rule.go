@@ -55,7 +55,7 @@ func ResourceRule() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validPredicatesType(),
+							ValidateFunc: validation.StringInSlice(wafregional.PredicateType_Values(), false),
 						},
 					},
 				},

@@ -253,8 +253,15 @@ func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) err
 			input.TableMappings = aws.String(d.Get("table_mappings").(string))
 		}
 
-		log.Println("[DEBUG] DMS update replication task:", input)
+		status := d.Get("status").(string)
+		if status == replicationTaskStatusRunning {
+			log.Println("[DEBUG] stopping DMS replication task:", input)
+			if err := stopReplicationTask(d.Id(), conn); err != nil {
+				return err
+			}
+		}
 
+		log.Println("[DEBUG] updating DMS replication task:", input)
 		_, err := conn.ModifyReplicationTask(input)
 		if err != nil {
 			return fmt.Errorf("error updating DMS Replication Task (%s): %w", d.Id(), err)
@@ -265,7 +272,8 @@ func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		if d.Get("start_replication_task").(bool) {
-			if err := startReplicationTask(d.Id(), conn); err != nil {
+			err := startReplicationTask(d.Id(), conn)
+			if err != nil {
 				return err
 			}
 		}
@@ -373,9 +381,14 @@ func startReplicationTask(id string, conn *dms.DatabaseMigrationService) error {
 		return fmt.Errorf("error reading DMS Replication Task (%s): empty output", id)
 	}
 
+	startReplicationTaskType := dms.StartReplicationTaskTypeValueStartReplication
+	if aws.StringValue(task.Status) != replicationTaskStatusReady {
+		startReplicationTaskType = dms.StartReplicationTaskTypeValueResumeProcessing
+	}
+
 	_, err = conn.StartReplicationTask(&dms.StartReplicationTaskInput{
 		ReplicationTaskArn:       task.ReplicationTaskArn,
-		StartReplicationTaskType: aws.String(dms.StartReplicationTaskTypeValueStartReplication),
+		StartReplicationTaskType: aws.String(startReplicationTaskType),
 	})
 
 	if err != nil {
@@ -384,7 +397,7 @@ func startReplicationTask(id string, conn *dms.DatabaseMigrationService) error {
 
 	err = waitReplicationTaskRunning(conn, id)
 	if err != nil {
-		return fmt.Errorf("error wating for DMS Replication Task (%s) start: %w", id, err)
+		return fmt.Errorf("error waiting for DMS Replication Task (%s) start: %w", id, err)
 	}
 
 	return nil
@@ -412,7 +425,7 @@ func stopReplicationTask(id string, conn *dms.DatabaseMigrationService) error {
 
 	err = waitReplicationTaskStopped(conn, id)
 	if err != nil {
-		return fmt.Errorf("error wating for DMS Replication Task (%s) stop: %w", id, err)
+		return fmt.Errorf("error waiting for DMS Replication Task (%s) stop: %w", id, err)
 	}
 
 	return nil

@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_spot_fleet_request"
 description: |-
@@ -228,8 +228,11 @@ across different markets and instance types. Conflicts with `launch_template_con
 * `excess_capacity_termination_policy` - Indicates whether running Spot
   instances should be terminated if the target capacity of the Spot fleet
   request is decreased below the current size of the Spot fleet.
-* `terminate_instances_with_expiration` - Indicates whether running Spot
+* `terminate_instances_with_expiration` - (Optional) Indicates whether running Spot
   instances should be terminated when the Spot fleet request expires.
+* `terminate_instances_on_delete` - (Optional) Indicates whether running Spot
+  instances should be terminated when the resource is deleted (and the Spot fleet request cancelled).
+  If no value is specified, the value of the `terminate_instances_with_expiration` argument is used.
 * `instance_interruption_behaviour` - (Optional) Indicates whether a Spot
   instance stops or terminates when it is interrupted. Default is
   `terminate`.

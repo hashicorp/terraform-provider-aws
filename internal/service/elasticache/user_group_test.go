@@ -161,7 +161,7 @@ func testAccCheckUserGroupDestroyWithProvider(s *terraform.State, provider *sche
 			continue
 		}
 
-		_, err := tfelasticache.FindElastiCacheUserGroupByID(conn, rs.Primary.ID)
+		_, err := tfelasticache.FindUserGroupByID(conn, rs.Primary.ID)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserGroupNotFoundFault) {
 				return nil
@@ -191,7 +191,7 @@ func testAccCheckUserGroupExistsWithProvider(n string, v *elasticache.UserGroup,
 
 		provider := providerF()
 		conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn
-		resp, err := tfelasticache.FindElastiCacheUserGroupByID(conn, rs.Primary.ID)
+		resp, err := tfelasticache.FindUserGroupByID(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("ElastiCache User Group (%s) not found: %w", rs.Primary.ID, err)
 		}

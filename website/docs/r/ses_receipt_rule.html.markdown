@@ -1,5 +1,5 @@
 ---
-subcategory: "SES"
+subcategory: "SES (Simple Email)"
 layout: "aws"
 page_title: "AWS: aws_ses_receipt_rule"
 description: |-
@@ -91,7 +91,7 @@ SNS actions support the following:
 
 Stop actions support the following:
 
-* `scope` - (Required) The scope to apply
+* `scope` - (Required) The scope to apply. The only acceptable value is `RuleSet`.
 * `topic_arn` - (Optional) The ARN of an SNS topic to notify
 * `position` - (Required) The position of the action in the receipt rule
 

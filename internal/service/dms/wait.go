@@ -100,7 +100,7 @@ func waitReplicationTaskStopped(conn *dms.DatabaseMigrationService, id string) e
 		Refresh:    statusReplicationTask(conn, id),
 		Timeout:    replicationTaskRunningTimeout,
 		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
+		Delay:      60 * time.Second, // Wait 30 secs before starting
 	}
 
 	// Wait, catching any errors

@@ -1,5 +1,5 @@
 ---
-subcategory: "Synthetics"
+subcategory: "CloudWatch Synthetics"
 layout: "aws"
 page_title: "AWS: aws_synthetics_canary"
 description: |-

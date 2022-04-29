@@ -175,7 +175,7 @@ func TestAccProvider_endpoints(t *testing.T) {
 	var endpoints strings.Builder
 
 	// Initialize each endpoint configuration with matching name and value
-	for _, serviceKey := range names.ServiceKeys() {
+	for _, serviceKey := range names.ProviderPackages() {
 		endpoints.WriteString(fmt.Sprintf("%s = \"http://%s\"\n", serviceKey, serviceKey))
 	}
 
@@ -830,7 +830,7 @@ func testAccCheckEndpoints(providers *[]*schema.Provider) resource.TestCheckFunc
 			return func(name string) bool {
 				serviceUpper := ""
 				var err error
-				if serviceUpper, err = names.ServiceProviderNameUpper(key); err != nil {
+				if serviceUpper, err = names.ProviderNameUpper(key); err != nil {
 					return false
 				}
 
@@ -845,11 +845,15 @@ func testAccCheckEndpoints(providers *[]*schema.Provider) resource.TestCheckFunc
 
 			providerClient := provo.Meta().(*conns.AWSClient)
 
-			for _, serviceKey := range names.ServiceKeys() {
+			for _, serviceKey := range names.ProviderPackages() {
 				providerClientField := reflect.Indirect(reflect.ValueOf(providerClient)).FieldByNameFunc(endpointFieldNameF(serviceKey))
 
 				if !providerClientField.IsValid() {
 					return fmt.Errorf("unable to match conns.AWSClient struct field name for endpoint name: %s", serviceKey)
+				}
+
+				if !reflect.Indirect(providerClientField).FieldByName("Config").IsValid() {
+					continue // currently unknown how to do this check for v2 clients
 				}
 
 				actualEndpoint := reflect.Indirect(reflect.Indirect(providerClientField).FieldByName("Config").FieldByName("Endpoint")).String()
@@ -876,7 +880,7 @@ func testAccCheckUnusualEndpoints(providers *[]*schema.Provider, unusual1, unusu
 			return func(name string) bool {
 				serviceUpper := ""
 				var err error
-				if serviceUpper, err = names.ServiceProviderNameUpper(key); err != nil {
+				if serviceUpper, err = names.ProviderNameUpper(key); err != nil {
 					return false
 				}
 

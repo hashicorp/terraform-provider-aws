@@ -23,7 +23,13 @@ func statusAssociation(conn *ssm.SSM, id string) resource.StateRefreshFunc {
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status.Name), nil
+		// Use the Overview.Status field instead of the root-level Status as DescribeAssociation
+		// does not appear to return the root-level Status in the API response at this time.
+		if output.Overview == nil {
+			return nil, "", nil
+		}
+
+		return output, aws.StringValue(output.Overview.Status), nil
 	}
 }
 

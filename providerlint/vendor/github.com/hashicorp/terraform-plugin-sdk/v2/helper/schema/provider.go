@@ -266,7 +266,7 @@ func (p *Provider) Configure(ctx context.Context, c *terraform.ResourceConfig) d
 	}
 
 	if p.configured {
-		log.Printf("[WARN] Previously configured provider being re-configured. This can cause issues in concurrent testing if the configurations are not equal.")
+		logging.HelperSchemaWarn(ctx, "Previously configured provider being re-configured. This can cause issues in concurrent testing if the configurations are not equal.")
 	}
 
 	sm := schemaMap(p.Schema)

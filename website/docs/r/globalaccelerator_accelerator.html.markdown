@@ -71,7 +71,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Global Accelerator accelerators can be imported using the `id`, e.g.,
+Global Accelerator accelerators can be imported using the `arn`, e.g.,
 
 ```
 $ terraform import aws_globalaccelerator_accelerator.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
