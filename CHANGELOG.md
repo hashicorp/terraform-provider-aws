@@ -1,4 +1,13 @@
 ## 4.13.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_kms_key: Add support for HMAC_256 customer master key spec ([#24450](https://github.com/hashicorp/terraform-provider-aws/issues/24450))
+
+BUG FIXES:
+
+* resource/aws_acm_certificate_validation: Restore certificate issuance timestamp as the resource `id` value, fixing error on existing resource Read ([#24453](https://github.com/hashicorp/terraform-provider-aws/issues/24453))
+
 ## 4.12.0 (April 28, 2022)
 
 FEATURES:
