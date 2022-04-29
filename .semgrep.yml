@@ -77,7 +77,6 @@ rules:
         - internal/service/dax
         - internal/service/docdb
         - internal/service/ec2
-        - internal/service/ecs
         - internal/service/elasticache
         - internal/service/elasticbeanstalk
         - internal/service/elb
