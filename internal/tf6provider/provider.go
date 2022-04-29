@@ -14,36 +14,37 @@ func New() tfsdk.Provider {
 }
 
 type config struct {
-	AccessKey                      *string              `tfsdk:"access_key"`
-	AssumeRole                     *[]assumeRoleConfig  `tfsdk:"assume_role"`
-	AllowedAccountIDs              *[]string            `tfsdk:"allowed_account_ids"`
-	CustomCABundle                 *string              `tfsdk:"custom_ca_bundle"`
-	DefaultTags                    *[]defaultTagsConfig `tfsdk:"default_tags"`
-	EC2MetadataServiceEndpoint     *string              `tfsdk:"ec2_metadata_service_endpoint"`
-	EC2MetadataServiceEndpointMode *string              `tfsdk:"ec2_metadata_service_endpoint_mode"`
-	Endpoints                      types.Set            `tfsdk:"endpoints"`
-	ForbiddenAccountIDs            *[]string            `tfsdk:"forbidden_account_ids"`
-	HTTPProxy                      *string              `tfsdk:"http_proxy"`
-	IgnoreTags                     *[]ignoreTagsConfig  `tfsdk:"ignore_tags"`
-	Insecure                       *bool                `tfsdk:"insecure"`
-	MaxRetries                     *int64               `tfsdk:"max_retries"`
-	Profile                        *string              `tfsdk:"profile"`
-	Region                         *string              `tfsdk:"region"`
-	S3ForcePathStyle               *bool                `tfsdk:"s3_force_path_style"`
-	S3UsePathStyle                 *bool                `tfsdk:"s3_use_path_style"`
-	SecretKey                      *string              `tfsdk:"secret_key"`
-	SharedConfigFiles              *[]string            `tfsdk:"shared_config_files"`
-	SharedCredentialsFile          *string              `tfsdk:"shared_credentials_file"`
-	SharedCredentialsFiles         *[]string            `tfsdk:"shared_credentials_files"`
-	SkipCredentialsValidation      *bool                `tfsdk:"skip_credentials_validation"`
-	SkipGetEC2Platforms            *bool                `tfsdk:"skip_get_ec2_platforms"`
-	SkipMetadataAPICheck           *bool                `tfsdk:"skip_metadata_api_check"`
-	SkipRegionValidation           *bool                `tfsdk:"skip_region_validation"`
-	SkipRequestingAccountID        *bool                `tfsdk:"skip_requesting_account_id"`
-	STSRegion                      *string              `tfsdk:"sts_region"`
-	Token                          *string              `tfsdk:"token"`
-	UseDualStackEndpoint           *bool                `tfsdk:"use_dualstack_endpoint"`
-	UseFIPSEndpoint                *bool                `tfsdk:"use_fips_endpoint"`
+	AccessKey                      *string                        `tfsdk:"access_key"`
+	AssumeRole                     *[]assumeRoleConfig            `tfsdk:"assume_role"`
+	AssumeRoleWithWebIdentity      *[]assumeWithWebIdentityConfig `tfsdk:"assume_role_with_web_identity"`
+	AllowedAccountIDs              *[]string                      `tfsdk:"allowed_account_ids"`
+	CustomCABundle                 *string                        `tfsdk:"custom_ca_bundle"`
+	DefaultTags                    *[]defaultTagsConfig           `tfsdk:"default_tags"`
+	EC2MetadataServiceEndpoint     *string                        `tfsdk:"ec2_metadata_service_endpoint"`
+	EC2MetadataServiceEndpointMode *string                        `tfsdk:"ec2_metadata_service_endpoint_mode"`
+	Endpoints                      types.Set                      `tfsdk:"endpoints"`
+	ForbiddenAccountIDs            *[]string                      `tfsdk:"forbidden_account_ids"`
+	HTTPProxy                      *string                        `tfsdk:"http_proxy"`
+	IgnoreTags                     *[]ignoreTagsConfig            `tfsdk:"ignore_tags"`
+	Insecure                       *bool                          `tfsdk:"insecure"`
+	MaxRetries                     *int64                         `tfsdk:"max_retries"`
+	Profile                        *string                        `tfsdk:"profile"`
+	Region                         *string                        `tfsdk:"region"`
+	S3ForcePathStyle               *bool                          `tfsdk:"s3_force_path_style"`
+	S3UsePathStyle                 *bool                          `tfsdk:"s3_use_path_style"`
+	SecretKey                      *string                        `tfsdk:"secret_key"`
+	SharedConfigFiles              *[]string                      `tfsdk:"shared_config_files"`
+	SharedCredentialsFile          *string                        `tfsdk:"shared_credentials_file"`
+	SharedCredentialsFiles         *[]string                      `tfsdk:"shared_credentials_files"`
+	SkipCredentialsValidation      *bool                          `tfsdk:"skip_credentials_validation"`
+	SkipGetEC2Platforms            *bool                          `tfsdk:"skip_get_ec2_platforms"`
+	SkipMetadataAPICheck           *bool                          `tfsdk:"skip_metadata_api_check"`
+	SkipRegionValidation           *bool                          `tfsdk:"skip_region_validation"`
+	SkipRequestingAccountID        *bool                          `tfsdk:"skip_requesting_account_id"`
+	STSRegion                      *string                        `tfsdk:"sts_region"`
+	Token                          *string                        `tfsdk:"token"`
+	UseDualStackEndpoint           *bool                          `tfsdk:"use_dualstack_endpoint"`
+	UseFIPSEndpoint                *bool                          `tfsdk:"use_fips_endpoint"`
 
 	endpoints        map[string]string
 	terraformVersion string
@@ -59,6 +60,16 @@ type assumeRoleConfig struct {
 	SessionName       *string            `tfsdk:"session_name"`
 	Tags              *map[string]string `tfsdk:"tags"`
 	TransitiveTagKeys *[]string          `tfsdk:"transitive_tag_keys"`
+}
+
+type assumeWithWebIdentityConfig struct {
+	Duration             Duration  `tfsdk:"duration"`
+	Policy               *string   `tfsdk:"policy"`
+	PolicyARNs           *[]string `tfsdk:"policy_arns"`
+	RoleARN              *string   `tfsdk:"role_arn"`
+	SessionName          *string   `tfsdk:"session_name"`
+	WebIdentityToken     *string   `tfsdk:"web_identity_token"`
+	WebIdentityTokenFile *string   `tfsdk:"web_identity_token_file"`
 }
 
 type defaultTagsConfig struct {
@@ -139,8 +150,8 @@ func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceT
 func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	// This schema must match exactly the Terraform Protocol v5 provider's schema.
-	// It can be generated by tools/tfsdk2fx/main.go and then modified to use the generated "endpoints" block
-	// and add '// lintignore:AWSAT003' to the "sts_region" Description.
+	// It can be generated by tools/tfsdk2fx/main.go and then modified to use the generated "endpoints" block,
+	// add '// lintignore:AWSAT003' to the "sts_region" Description, and use DurationType where applicable.
 	schema := tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"access_key": {
@@ -278,7 +289,7 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 			"assume_role": {
 				Attributes: map[string]tfsdk.Attribute{
 					"duration": {
-						Type:        types.StringType,
+						Type:        DurationType,
 						Optional:    true,
 						Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
 					},
@@ -330,7 +341,7 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 			"assume_role_with_web_identity": {
 				Attributes: map[string]tfsdk.Attribute{
 					"duration": {
-						Type:        types.StringType,
+						Type:        DurationType,
 						Optional:    true,
 						Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
 					},
