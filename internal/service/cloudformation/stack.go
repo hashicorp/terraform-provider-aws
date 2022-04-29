@@ -218,7 +218,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 		StackName: aws.String(d.Id()),
 	}
 	resp, err := conn.DescribeStacks(input)
-	if tfawserr.ErrCodeEquals(err, "ValidationError") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "ValidationError") {
 		log.Printf("[WARN] CloudFormation stack (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -228,14 +228,14 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	stacks := resp.Stacks
-	if len(stacks) < 1 {
+	if !d.IsNewResource() && len(stacks) < 1 {
 		log.Printf("[WARN] CloudFormation stack (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	stack := stacks[0]
-	if aws.StringValue(stack.StackStatus) == cloudformation.StackStatusDeleteComplete {
+	if !d.IsNewResource() && aws.StringValue(stack.StackStatus) == cloudformation.StackStatusDeleteComplete {
 		log.Printf("[WARN] CloudFormation stack (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
