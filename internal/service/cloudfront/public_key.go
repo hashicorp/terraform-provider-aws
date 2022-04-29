@@ -1,6 +1,7 @@
 package cloudfront
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
@@ -104,13 +105,17 @@ func resourcePublicKeyRead(d *schema.ResourceData, meta interface{}) error {
 		return names.Error(names.CloudFront, names.ErrActionReading, "Public Key", d.Id(), err)
 	}
 
-	if output == nil || output.PublicKey == nil || output.PublicKey.PublicKeyConfig == nil {
+	if !d.IsNewResource() && (output == nil || output.PublicKey == nil || output.PublicKey.PublicKeyConfig == nil) {
 		log.Printf("[WARN] No PublicKey found: %s, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
-	publicKeyConfig := output.PublicKey.PublicKeyConfig
 
+	if d.IsNewResource() && (output == nil || output.PublicKey == nil || output.PublicKey.PublicKeyConfig == nil) {
+		return names.Error(names.CloudFront, names.ErrActionReading, "Public Key", d.Id(), errors.New("empty response after creation"))
+	}
+
+	publicKeyConfig := output.PublicKey.PublicKeyConfig
 	d.Set("encoded_key", publicKeyConfig.EncodedKey)
 	d.Set("name", publicKeyConfig.Name)
 	d.Set("comment", publicKeyConfig.Comment)
