@@ -177,7 +177,7 @@ func resourceSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	ruleType := d.Get("type").(string)
-	isVPC := sg.VpcId != nil && *sg.VpcId != ""
+	isVPC := aws.StringValue(sg.VpcId) != ""
 
 	var autherr error
 	switch ruleType {
@@ -409,10 +409,10 @@ func (b ByGroupPair) Len() int      { return len(b) }
 func (b ByGroupPair) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
 func (b ByGroupPair) Less(i, j int) bool {
 	if b[i].GroupId != nil && b[j].GroupId != nil {
-		return *b[i].GroupId < *b[j].GroupId
+		return aws.StringValue(b[i].GroupId) < aws.StringValue(b[j].GroupId)
 	}
 	if b[i].GroupName != nil && b[j].GroupName != nil {
-		return *b[i].GroupName < *b[j].GroupName
+		return aws.StringValue(b[i].GroupName) < aws.StringValue(b[j].GroupName)
 	}
 
 	//lintignore:R009
@@ -422,15 +422,15 @@ func (b ByGroupPair) Less(i, j int) bool {
 func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) *ec2.IpPermission {
 	var rule *ec2.IpPermission
 	for _, r := range rules {
-		if p.ToPort != nil && r.ToPort != nil && *p.ToPort != *r.ToPort {
+		if aws.Int64Value(p.ToPort) != aws.Int64Value(r.ToPort) {
 			continue
 		}
 
-		if p.FromPort != nil && r.FromPort != nil && *p.FromPort != *r.FromPort {
+		if aws.Int64Value(p.FromPort) != aws.Int64Value(r.FromPort) {
 			continue
 		}
 
-		if p.IpProtocol != nil && r.IpProtocol != nil && *p.IpProtocol != *r.IpProtocol {
+		if aws.StringValue(p.IpProtocol) != aws.StringValue(r.IpProtocol) {
 			continue
 		}
 
@@ -440,7 +440,7 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) *
 				if ip.CidrIp == nil || rip.CidrIp == nil {
 					continue
 				}
-				if *ip.CidrIp == *rip.CidrIp {
+				if aws.StringValue(ip.CidrIp) == aws.StringValue(rip.CidrIp) {
 					remaining--
 				}
 			}
@@ -456,7 +456,7 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) *
 				if ipv6.CidrIpv6 == nil || ipv6ip.CidrIpv6 == nil {
 					continue
 				}
-				if *ipv6.CidrIpv6 == *ipv6ip.CidrIpv6 {
+				if aws.StringValue(ipv6.CidrIpv6) == aws.StringValue(ipv6ip.CidrIpv6) {
 					remaining--
 				}
 			}
@@ -472,7 +472,7 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) *
 				if pl.PrefixListId == nil || rpl.PrefixListId == nil {
 					continue
 				}
-				if *pl.PrefixListId == *rpl.PrefixListId {
+				if aws.StringValue(pl.PrefixListId) == aws.StringValue(rpl.PrefixListId) {
 					remaining--
 				}
 			}
@@ -489,14 +489,14 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) *
 					if ip.GroupId == nil || rip.GroupId == nil {
 						continue
 					}
-					if *ip.GroupId == *rip.GroupId {
+					if aws.StringValue(ip.GroupId) == aws.StringValue(rip.GroupId) {
 						remaining--
 					}
 				} else {
 					if ip.GroupName == nil || rip.GroupName == nil {
 						continue
 					}
-					if *ip.GroupName == *rip.GroupName {
+					if aws.StringValue(ip.GroupName) == aws.StringValue(rip.GroupName) {
 						remaining--
 					}
 				}
@@ -515,10 +515,10 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) *
 func IPPermissionIDHash(sg_id, ruleType string, ip *ec2.IpPermission) string {
 	var buf bytes.Buffer
 	buf.WriteString(fmt.Sprintf("%s-", sg_id))
-	if ip.FromPort != nil && *ip.FromPort > 0 {
+	if aws.Int64Value(ip.FromPort) > 0 {
 		buf.WriteString(fmt.Sprintf("%d-", *ip.FromPort))
 	}
-	if ip.ToPort != nil && *ip.ToPort > 0 {
+	if aws.Int64Value(ip.ToPort) > 0 {
 		buf.WriteString(fmt.Sprintf("%d-", *ip.ToPort))
 	}
 	buf.WriteString(fmt.Sprintf("%s-", *ip.IpProtocol))
@@ -600,7 +600,7 @@ func expandIPPerm(d *schema.ResourceData, sg *ec2.SecurityGroup) (*ec2.IpPermiss
 	}
 
 	if _, ok := d.GetOk("self"); ok {
-		if sg.VpcId != nil && *sg.VpcId != "" {
+		if aws.StringValue(sg.VpcId) != "" {
 			groups[*sg.GroupId] = true
 		} else {
 			groups[*sg.GroupName] = true
@@ -628,7 +628,7 @@ func expandIPPerm(d *schema.ResourceData, sg *ec2.SecurityGroup) (*ec2.IpPermiss
 				UserId:  aws.String(ownerId),
 			}
 
-			if sg.VpcId == nil || *sg.VpcId == "" {
+			if aws.StringValue(sg.VpcId) == "" {
 				perm.UserIdGroupPairs[i].GroupId = nil
 				perm.UserIdGroupPairs[i].GroupName = aws.String(id)
 				perm.UserIdGroupPairs[i].UserId = nil
