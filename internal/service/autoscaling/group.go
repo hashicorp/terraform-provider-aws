@@ -191,6 +191,250 @@ func ResourceGroup() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"instance_requirements": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"accelerator_count": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"max": {
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			ValidateFunc: validation.IntAtLeast(0),
+																		},
+																		"min": {
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			ValidateFunc: validation.IntAtLeast(1),
+																		},
+																	},
+																},
+															},
+															"accelerator_manufacturers": {
+																Type:     schema.TypeSet,
+																Optional: true,
+																Elem: &schema.Schema{
+																	Type:         schema.TypeString,
+																	ValidateFunc: validation.StringInSlice(autoscaling.AcceleratorManufacturer_Values(), false),
+																},
+															},
+															"accelerator_names": {
+																Type:     schema.TypeSet,
+																Optional: true,
+																Elem: &schema.Schema{
+																	Type:         schema.TypeString,
+																	ValidateFunc: validation.StringInSlice(autoscaling.AcceleratorName_Values(), false),
+																},
+															},
+															"accelerator_total_memory_mib": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"max": {
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			ValidateFunc: validation.IntAtLeast(1),
+																		},
+																		"min": {
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			ValidateFunc: validation.IntAtLeast(1),
+																		},
+																	},
+																},
+															},
+															"accelerator_types": {
+																Type:     schema.TypeSet,
+																Optional: true,
+																Elem: &schema.Schema{
+																	Type:         schema.TypeString,
+																	ValidateFunc: validation.StringInSlice(autoscaling.AcceleratorType_Values(), false),
+																},
+															},
+															"bare_metal": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringInSlice(autoscaling.BareMetal_Values(), false),
+															},
+															"baseline_ebs_bandwidth_mbps": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"max": {
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			ValidateFunc: validation.IntAtLeast(1),
+																		},
+																		"min": {
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			ValidateFunc: validation.IntAtLeast(1),
+																		},
+																	},
+																},
+															},
+															"burstable_performance": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringInSlice(autoscaling.BurstablePerformance_Values(), false),
+															},
+															"cpu_manufacturers": {
+																Type:     schema.TypeSet,
+																Optional: true,
+																Elem: &schema.Schema{
+																	Type:         schema.TypeString,
+																	ValidateFunc: validation.StringInSlice(autoscaling.CpuManufacturer_Values(), false),
+																},
+															},
+															"excluded_instance_types": {
+																Type:     schema.TypeSet,
+																Optional: true,
+																MaxItems: 400,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+															},
+															"instance_generations": {
+																Type:     schema.TypeSet,
+																Optional: true,
+																Elem: &schema.Schema{
+																	Type:         schema.TypeString,
+																	ValidateFunc: validation.StringInSlice(autoscaling.InstanceGeneration_Values(), false),
+																},
+															},
+															"local_storage": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringInSlice(autoscaling.LocalStorage_Values(), false),
+															},
+															"local_storage_types": {
+																Type:     schema.TypeSet,
+																Optional: true,
+																Elem: &schema.Schema{
+																	Type:         schema.TypeString,
+																	ValidateFunc: validation.StringInSlice(autoscaling.LocalStorageType_Values(), false),
+																},
+															},
+															"memory_gib_per_vcpu": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"max": {
+																			Type:         schema.TypeFloat,
+																			Optional:     true,
+																			ValidateFunc: verify.FloatGreaterThan(0.0),
+																		},
+																		"min": {
+																			Type:         schema.TypeFloat,
+																			Optional:     true,
+																			ValidateFunc: verify.FloatGreaterThan(0.0),
+																		},
+																	},
+																},
+															},
+															"memory_mib": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"max": {
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			ValidateFunc: validation.IntAtLeast(1),
+																		},
+																		"min": {
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			ValidateFunc: validation.IntAtLeast(1),
+																		},
+																	},
+																},
+															},
+															"network_interface_count": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"max": {
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			ValidateFunc: validation.IntAtLeast(1),
+																		},
+																		"min": {
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			ValidateFunc: validation.IntAtLeast(1),
+																		},
+																	},
+																},
+															},
+															"on_demand_max_price_percentage_over_lowest_price": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+															"require_hibernate_support": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+															"spot_max_price_percentage_over_lowest_price": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+															"total_local_storage_gb": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"max": {
+																			Type:         schema.TypeFloat,
+																			Optional:     true,
+																			ValidateFunc: verify.FloatGreaterThan(0.0),
+																		},
+																		"min": {
+																			Type:         schema.TypeFloat,
+																			Optional:     true,
+																			ValidateFunc: verify.FloatGreaterThan(0.0),
+																		},
+																	},
+																},
+															},
+															"vcpu_count": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"max": {
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			ValidateFunc: validation.IntAtLeast(1),
+																		},
+																		"min": {
+																			Type:         schema.TypeInt,
+																			Optional:     true,
+																			ValidateFunc: validation.IntAtLeast(1),
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
 												"instance_type": {
 													Type:     schema.TypeString,
 													Optional: true,
