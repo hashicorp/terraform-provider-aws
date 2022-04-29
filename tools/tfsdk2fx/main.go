@@ -24,7 +24,7 @@ var (
 
 func usage() {
 	fmt.Fprintf(os.Stderr, "Usage:\n")
-	fmt.Fprintf(os.Stderr, "\ttfsdk2fx -provider -resource <resource-type> <generated-file>\n\n")
+	fmt.Fprintf(os.Stderr, "\ttfsdk2fx [-provider|-resource <resource-type>] <generated-file>\n\n")
 }
 
 func main() {
@@ -439,6 +439,36 @@ func (e emitter) emitAttribute(path []string, property *schema.Schema) error {
 		e.printf("// TODO ForceNew:true,\n")
 	}
 
+	if def := property.Default; def != nil {
+		switch v := def.(type) {
+		case bool:
+			if v {
+				e.printf("// TODO Default:%#v,\n", def)
+			} else {
+				e.warnf("Attribute %s has spurious Default: %#v", strings.Join(path, "/"), def)
+			}
+		case int:
+			if v != 0 {
+				e.printf("// TODO Default:%#v,\n", def)
+			} else {
+				e.warnf("Attribute %s has spurious Default: %#v", strings.Join(path, "/"), def)
+			}
+		case float64:
+			if v != 0 {
+				e.printf("// TODO Default:%#v,\n", def)
+			} else {
+				e.warnf("Attribute %s has spurious Default: %#v", strings.Join(path, "/"), def)
+			}
+		case string:
+			if v != "" {
+				e.printf("// TODO Default:%#v,\n", def)
+			} else {
+				e.warnf("Attribute %s has spurious Default: %#v", strings.Join(path, "/"), def)
+			}
+		default:
+		}
+	}
+
 	e.printf("}")
 
 	return nil
@@ -501,6 +531,10 @@ func (e emitter) emitBlock(path []string, property *schema.Schema) error {
 
 	if deprecationMessage := property.Deprecated; deprecationMessage != "" {
 		e.printf("DeprecationMessage:%q,\n", deprecationMessage)
+	}
+
+	if def := property.Default; def != nil {
+		e.warnf("Block %s has non-nil Default: %v", strings.Join(path, "/"), def)
 	}
 
 	e.printf("}")
