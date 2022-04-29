@@ -389,7 +389,7 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 func endpointsBlock() tfsdk.Block {
 	endpointsAttributes := make(map[string]tfsdk.Attribute)
 
-	for _, serviceKey := range names.HCLKeys() {
+	for _, serviceKey := range names.Aliases() {
 		endpointsAttributes[serviceKey] = tfsdk.Attribute{
 			Type:        types.StringType,
 			Optional:    true,
