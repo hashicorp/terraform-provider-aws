@@ -34,7 +34,7 @@ func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig(rName),
@@ -80,7 +80,7 @@ func TestAccElastiCacheReplicationGroup_basic_v5(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_v5(rName),
@@ -116,7 +116,7 @@ func TestAccElastiCacheReplicationGroup_uppercase(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_Uppercase(strings.ToUpper(rName)),
@@ -148,7 +148,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_EngineVersion(rName, "3.2.6"),
@@ -238,7 +238,7 @@ func TestAccElastiCacheReplicationGroup_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig(rName),
@@ -265,7 +265,7 @@ func TestAccElastiCacheReplicationGroup_updateDescription(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig(rName),
@@ -306,7 +306,7 @@ func TestAccElastiCacheReplicationGroup_updateMaintenanceWindow(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig(rName),
@@ -347,7 +347,7 @@ func TestAccElastiCacheReplicationGroup_updateUserGroups(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupUserGroup(rName, userGroup, 0),
@@ -388,7 +388,7 @@ func TestAccElastiCacheReplicationGroup_updateNodeSize(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig(rName),
@@ -432,7 +432,7 @@ func TestAccElastiCacheReplicationGroup_updateParameterGroup(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupParameterGroupNameConfig(rName, 0),
@@ -471,7 +471,7 @@ func TestAccElastiCacheReplicationGroup_updateAuthToken(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroup_EnableAuthTokenTransitEncryptionConfig(rName, sdkacctest.RandString(16)),
@@ -509,7 +509,7 @@ func TestAccElastiCacheReplicationGroup_vpc(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupInVPCConfig(rName),
@@ -542,7 +542,7 @@ func TestAccElastiCacheReplicationGroup_depecatedAvailabilityZones_vpc(t *testin
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupInVPCConfig_DeprecatedAvailabilityZones(rName),
@@ -575,7 +575,7 @@ func TestAccElastiCacheReplicationGroup_multiAzNotInVPC(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_MultiAZNotInVPC_PreferredCacheClusterAZs_notRepeated(rName),
@@ -613,7 +613,7 @@ func TestAccElastiCacheReplicationGroup_multiAzNotInVPC_repeated(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_MultiAZNotInVPC_PreferredCacheClusterAZs_repeated(rName),
@@ -653,7 +653,7 @@ func TestAccElastiCacheReplicationGroup_deprecatedAvailabilityZones_multiAzNotIn
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_MultiAZNotInVPC_Basic(rName),
@@ -707,7 +707,7 @@ func TestAccElastiCacheReplicationGroup_multiAzInVPC(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupMultiAZInVPCConfig(rName),
@@ -751,7 +751,7 @@ func TestAccElastiCacheReplicationGroup_deprecatedAvailabilityZones_multiAzInVPC
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupMultiAZInVPCConfig(rName),
@@ -789,7 +789,7 @@ func TestAccElastiCacheReplicationGroup_ValidationMultiAz_noAutomaticFailover(t 
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccReplicationGroupConfig_MultiAZ_NoAutomaticFailover(rName),
@@ -812,7 +812,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupNativeRedisClusterConfig(rName, 2, 1),
@@ -854,7 +854,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_nonClusteredParameterGroup(t
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupNativeRedisClusterConfig_NonClusteredParameterGroup(rName),
@@ -895,7 +895,7 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroups_scaleUp(t
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupNativeRedisClusterConfig(rName, 2, 1),
@@ -945,7 +945,7 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroups_scaleDown
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupNativeRedisClusterConfig(rName, 3, 1),
@@ -990,7 +990,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_updateReplicasPerNodeGroup(t
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupNativeRedisClusterConfig(rName, 2, 1),
@@ -1048,7 +1048,7 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroupsAndReplica
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupNativeRedisClusterConfig(rName, 2, 1),
@@ -1093,7 +1093,7 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroupsAndReplica
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupNativeRedisClusterConfig(rName, 3, 2),
@@ -1138,7 +1138,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_singleNode(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupNativeRedisClusterConfig_SingleNode(rName),
@@ -1172,7 +1172,7 @@ func TestAccElastiCacheReplicationGroup_clusteringAndCacheNodesCausesError(t *te
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccReplicationGroupNativeRedisClusterErrorConfig(rName),
@@ -1195,7 +1195,7 @@ func TestAccElastiCacheReplicationGroup_enableSnapshotting(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig(rName),
@@ -1234,7 +1234,7 @@ func TestAccElastiCacheReplicationGroup_enableAuthTokenTransitEncryption(t *test
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroup_EnableAuthTokenTransitEncryptionConfig(rName, sdkacctest.RandString(16)),
@@ -1266,7 +1266,7 @@ func TestAccElastiCacheReplicationGroup_enableAtRestEncryption(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroup_EnableAtRestEncryptionConfig(rName),
@@ -1297,7 +1297,7 @@ func TestAccElastiCacheReplicationGroup_useCMKKMSKeyID(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroup_UseCMKKMSKeyID(rName),
@@ -1324,7 +1324,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClusters_basic(t *testing.T) 
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_NumberCacheClusters(rName, 2),
@@ -1391,7 +1391,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_FailoverMultiAZ(rName, 3, autoFailoverEnabled, multiAZEnabled),
@@ -1448,7 +1448,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_FailoverMultiAZ(rName, 3, autoFailoverEnabled, multiAZEnabled),
@@ -1510,7 +1510,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClusters_multiAZEnabled(t *te
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_FailoverMultiAZ(rName, 3, autoFailoverEnabled, multiAZEnabled),
@@ -1569,7 +1569,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_NumberCacheClusters(rName, 3),
@@ -1619,7 +1619,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_NumberCacheClusters(rName, 3),
@@ -1669,7 +1669,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_NumberCacheClusters(rName, 3),
@@ -1719,7 +1719,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_NumberCacheClusters(rName, 4),
@@ -1770,7 +1770,7 @@ func TestAccElastiCacheReplicationGroup_tags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupTags1Config(rName, "key1", "value1"),
@@ -1824,7 +1824,7 @@ func TestAccElastiCacheReplicationGroup_tagWithOtherModification(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupVersionAndTagConfig(rName, "5.0.4", "key1", "value1"),
@@ -1863,7 +1863,7 @@ func TestAccElastiCacheReplicationGroup_finalSnapshot(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupFinalSnapshotConfig(rName),
@@ -1928,7 +1928,7 @@ func TestAccElastiCacheReplicationGroup_Validation_noNodeType(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2),
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccReplicationGroupConfig_Validation_NoNodeType(rName),
@@ -1953,7 +1953,7 @@ func TestAccElastiCacheReplicationGroup_Validation_globalReplicationGroupIdAndNo
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2),
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccReplicationGroupConfig_Validation_GlobalReplicationGroupIdAndNodeType(rName),
@@ -1981,7 +1981,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_basic(t *testin
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2),
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_GlobalReplicationGroupId_Basic(rName),
@@ -2028,7 +2028,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_full(t *testing
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2),
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_GlobalReplicationGroupId_Full(rName, initialNumCacheClusters),
@@ -2086,7 +2086,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basi
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2),
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_GlobalReplicationGroupId_ClusterMode(rName, 2, 1),
@@ -2140,7 +2140,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations(rName, false, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText),
@@ -2234,7 +2234,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations(rName, true, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText),
@@ -2342,7 +2342,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_disappears(t *t
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2),
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_GlobalReplicationGroupId_Basic(rName),
@@ -2371,7 +2371,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterModeValid
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2),
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccReplicationGroupConfig_GlobalReplicationGroupId_ClusterMode_NumNodeGroupsOnSecondary(rName),
@@ -2394,7 +2394,7 @@ func TestAccElastiCacheReplicationGroup_dataTiering(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationDestroy,
+		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfigDataTiering(rName),
@@ -2438,7 +2438,7 @@ func testAccCheckReplicationGroupExists(n string, v *elasticache.ReplicationGrou
 	}
 }
 
-func testAccCheckReplicationDestroy(s *terraform.State) error {
+func testAccCheckReplicationGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
 
 	for _, rs := range s.RootModule().Resources {
