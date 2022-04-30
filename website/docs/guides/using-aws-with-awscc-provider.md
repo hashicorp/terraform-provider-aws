@@ -1,14 +1,14 @@
 ---
 subcategory: ""
 layout: "aws"
-page_title: "Using Terraform awscc provider with aws provider"
+page_title: "Using the Terraform awscc provider with aws provider"
 description: |-
   Managing resource tags with the Terraform AWS Provider.
 ---
 
 # Using AWS & AWSCC Provider Together
 
-~> **NOTE**: Please note the AWSCC provider is currently in technical preview. This means some aspects of its design and implementation are not yet considered stable. We are actively looking for community feedback in order to solidify its form.
+~> **NOTE**: The `awscc` provider is currently in technical preview. This means some aspects of its design and implementation are not yet considered stable for production use. We are actively looking for community feedback in order to identify needed improvements.
 
 The [HashiCorp Terraform AWS Cloud Control Provider](https://registry.terraform.io/providers/hashicorp/awscc/latest) aims to bring Amazon Web Services (AWS) resources to Terraform users faster. The new provider is automatically generated, which means new features and services on AWS can be supported right away. The AWS Cloud Control provider supports hundreds of AWS resources, with more support being added as AWS service teams adopt the Cloud Control API standard.
 
@@ -29,13 +29,13 @@ For more information about the AWSCC provider, please see the provider documenta
 
 In this guide we will deploy [AWS Cloud WAN](https://aws.amazon.com/cloud-wan/) to demonstrate how both AWS & AWSCC can work togther. Cloud WAN is a wide area networking (WAN) service that helps you build, manage, and monitor a unified global network that manages traffic running between resources in your cloud and on-premises environments.
 
-With Cloud WAN, you define network policies that are used to create a global network that spans multiple locations and networks—eliminating the need to configure and manage different networks individually using different technologies. Your network policies can be used to specify which of your Amazon Virtual Private Clouds (VPCs) and on-premises locations you wish to connect through AWS VPN or third-party software-defined WAN (SD-WAN) products, and the Cloud WAN central dashboard generates a complete view of the network to monitor network health, security, and performance. Cloud WAN automatically creates a global network across AWS Regions using Border Gateway Protocol (BGP) so you can easily exchange routes around the world.
+With Cloud WAN, you define network policies that are used to create a global network that spans multiple locations and networks—eliminating the need to configure and manage different networks individually using different technologies. Your network policies can be used to specify which of your Amazon Virtual Private Clouds (VPCs) and on-premises locations you wish to connect through AWS VPN or third-party software-defined WAN (SD-WAN) products, and the Cloud WAN central dashboard generates a complete view of the network to monitor network health, security, and performance. Cloud WAN automatically creates a global network across AWS Regions using Border Gateway Protocol (BGP), so you can easily exchange routes around the world.
 
 For more information on AWS Cloud WAN see [the documentation.](https://docs.aws.amazon.com/vpc/latest/cloudwan/what-is-cloudwan.html)
 
 ## Specifying Multiple Providers
 
-Terraform can use many providers by specifying them in your `terraform` configuration block:
+Terraform can use many providers at once, as long as they are specified in your `terraform` configuration block:
 
 ```terraform
 terraform {
