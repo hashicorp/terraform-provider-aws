@@ -882,7 +882,7 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetDistribution(params)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
-		log.Printf("[WARN] No Distribution found: %s", d.Id())
+		names.LogNotFoundRemoveState(names.CloudFront, names.ErrActionReading, ResDistribution, d.Id())
 		d.SetId("")
 		return nil
 	}
