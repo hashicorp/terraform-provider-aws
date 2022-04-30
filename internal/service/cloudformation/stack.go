@@ -1,6 +1,7 @@
 package cloudformation
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
@@ -17,6 +18,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceStack() *schema.Resource {
@@ -219,19 +221,24 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	resp, err := conn.DescribeStacks(input)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "ValidationError") {
-		log.Printf("[WARN] CloudFormation stack (%s) not found, removing from state", d.Id())
+		names.LogNotFoundRemoveState(names.CloudFormation, names.ErrActionReading, ResStack, d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
-		return err
+		return names.Error(names.CloudFormation, names.ErrActionReading, ResStack, d.Id(), err)
 	}
 
 	stacks := resp.Stacks
 	if !d.IsNewResource() && len(stacks) < 1 {
-		log.Printf("[WARN] CloudFormation stack (%s) not found, removing from state", d.Id())
+		names.LogNotFoundRemoveState(names.CloudFormation, names.ErrActionReading, ResStack, d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if d.IsNewResource() && len(stacks) < 1 {
+		return names.Error(names.CloudFormation, names.ErrActionReading, ResStack, d.Id(), errors.New("not found after creation"))
 	}
 
 	stack := stacks[0]
@@ -239,6 +246,10 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[WARN] CloudFormation stack (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if d.IsNewResource() && aws.StringValue(stack.StackStatus) == cloudformation.StackStatusDeleteComplete {
+		return names.Error(names.CloudFormation, names.ErrActionReading, ResStack, d.Id(), errors.New("status delete complete after creation"))
 	}
 
 	tInput := cloudformation.GetTemplateInput{
