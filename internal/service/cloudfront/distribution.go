@@ -888,7 +888,7 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return names.Error(names.CloudFront, names.ErrActionReading, "Distribution", d.Id(), err)
+		return names.Error(names.CloudFront, names.ErrActionReading, ResDistribution, d.Id(), err)
 	}
 
 	// Update attributes from DistributionConfig

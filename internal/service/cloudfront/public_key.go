@@ -96,23 +96,23 @@ func resourcePublicKeyRead(d *schema.ResourceData, meta interface{}) error {
 
 	output, err := conn.GetPublicKey(request)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
-		log.Printf("[WARN] No PublicKey found: %s, removing from state", d.Id())
+		names.LogNotFoundRemoveState(names.CloudFront, names.ErrActionReading, ResPublicKey, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CloudFront, names.ErrActionReading, "Public Key", d.Id(), err)
+		return names.Error(names.CloudFront, names.ErrActionReading, ResPublicKey, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && (output == nil || output.PublicKey == nil || output.PublicKey.PublicKeyConfig == nil) {
-		log.Printf("[WARN] No PublicKey found: %s, removing from state", d.Id())
+		names.LogNotFoundRemoveState(names.CloudFront, names.ErrActionReading, ResPublicKey, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if d.IsNewResource() && (output == nil || output.PublicKey == nil || output.PublicKey.PublicKeyConfig == nil) {
-		return names.Error(names.CloudFront, names.ErrActionReading, "Public Key", d.Id(), errors.New("empty response after creation"))
+		return names.Error(names.CloudFront, names.ErrActionReading, ResPublicKey, d.Id(), errors.New("empty response after creation"))
 	}
 
 	publicKeyConfig := output.PublicKey.PublicKeyConfig

@@ -2,7 +2,6 @@ package cloudfront
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -76,13 +75,13 @@ func resourceOriginAccessIdentityRead(d *schema.ResourceData, meta interface{}) 
 
 	resp, err := conn.GetCloudFrontOriginAccessIdentity(params)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchCloudFrontOriginAccessIdentity) {
-		log.Printf("[WARN] CloudFront Origin Access Identity (%s) not found, removing from state", d.Id())
+		names.LogNotFoundRemoveState(names.CloudFront, names.ErrActionReading, ResOriginAccessIdentity, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CloudFront, names.ErrActionReading, "Origin Access Identity", d.Id(), err)
+		return names.Error(names.CloudFront, names.ErrActionReading, ResOriginAccessIdentity, d.Id(), err)
 	}
 
 	// Update attributes from DistributionConfig
