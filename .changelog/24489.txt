@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ami: Add support for deprecate_at parameter
+```
+
+```release-note:enhancement
+data-source: Add support for deprecate_at parameter
+```
