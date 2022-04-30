@@ -66,6 +66,10 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"deprecate_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -274,6 +278,9 @@ func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image, meta int
 	d.Set("architecture", image.Architecture)
 	d.Set("boot_mode", image.BootMode)
 	d.Set("creation_date", image.CreationDate)
+	if image.DeprecationTime != nil {
+		d.Set("deprecate_at", image.DeprecationTime)
+	}
 	if image.Description != nil {
 		d.Set("description", image.Description)
 	}
