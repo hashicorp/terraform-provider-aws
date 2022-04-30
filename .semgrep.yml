@@ -281,7 +281,6 @@ rules:
         - internal/service/devicefarm
         - internal/service/i*
         - internal/service/[k-q]*
-        - internal/service/ram
         - internal/service/rds
         - internal/service/resourcegroups
         - internal/service/route53
@@ -696,7 +695,6 @@ rules:
         - internal/service/mediaconvert/queue.go
         - internal/service/quicksight/group.go
         - internal/service/quicksight/user.go
-        - internal/service/ram/resource_share.go
     patterns:
       - pattern: |
           func $FUNC(...) {
