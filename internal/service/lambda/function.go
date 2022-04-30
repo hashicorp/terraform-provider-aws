@@ -841,7 +841,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	// Assume `PassThrough` on partitions that don't support tracing config
 	tracingConfigMode := "PassThrough"
 	if function.TracingConfig != nil {
-		tracingConfigMode = *function.TracingConfig.Mode
+		tracingConfigMode = aws.StringValue(function.TracingConfig.Mode)
 	}
 	d.Set("tracing_config", []interface{}{
 		map[string]interface{}{
@@ -864,8 +864,8 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		}, func(p *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
 			if lastPage {
 				last := p.Versions[len(p.Versions)-1]
-				lastVersion = *last.Version
-				lastQualifiedArn = *last.FunctionArn
+				lastVersion = aws.StringValue(last.Version)
+				lastQualifiedArn = aws.StringValue(last.FunctionArn)
 				return false
 			}
 			return true
@@ -1444,8 +1444,8 @@ func flattenFileSystemConfigs(fscList []*lambda.FileSystemConfig) []map[string]i
 	results := make([]map[string]interface{}, 0, len(fscList))
 	for _, fsc := range fscList {
 		f := make(map[string]interface{})
-		f["arn"] = *fsc.Arn
-		f["local_mount_path"] = *fsc.LocalMountPath
+		f["arn"] = aws.StringValue(fsc.Arn)
+		f["local_mount_path"] = aws.StringValue(fsc.LocalMountPath)
 
 		results = append(results, f)
 	}

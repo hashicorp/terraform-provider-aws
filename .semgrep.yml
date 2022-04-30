@@ -53,7 +53,6 @@ rules:
         - internal/service/emr
         - internal/service/gamelift
         - internal/service/iam
-        - internal/service/lambda
         - internal/service/opsworks
         - internal/service/rds
         - internal/service/redshift
