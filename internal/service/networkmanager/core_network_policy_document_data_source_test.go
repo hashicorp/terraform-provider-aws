@@ -1,7 +1,6 @@
 package networkmanager_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/networkmanager"
@@ -30,6 +29,7 @@ func TestAccCoreNetworkPolicyDocumentDataSource_basic(t *testing.T) {
 	})
 }
 
+//lintignore:AWSAT003
 var testAccCoreNetworkPolicyDocumentBasic = `
 data "aws_networkmanager_core_network_policy_document" "test" {
   core_network_configuration {
@@ -272,8 +272,9 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 }
 `
 
+//lintignore:AWSAT003
 func testAccPolicyDocumentExpectedJSON() string {
-	return fmt.Sprint(`{
+	return `{
   "version": "2021.12",
   "core-network-configuration": {
     "asn-ranges": [
@@ -501,5 +502,5 @@ func testAccPolicyDocumentExpectedJSON() string {
       ]
     }
   ]
-}`)
+}`
 }

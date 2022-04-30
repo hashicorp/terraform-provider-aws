@@ -391,7 +391,7 @@ func expandDataCoreNetworkPolicySegmentActions(cfgSegmentActionsIntf []interface
 		}
 
 		if action == "create-route" {
-			if mode, _ := cfgSA["mode"]; mode != "" {
+			if mode := cfgSA["mode"]; mode != "" {
 				return nil, fmt.Errorf("Cannot specify \"mode\" if action = \"create-route\". See segment_actions[%s].", strconv.Itoa(i))
 			}
 
@@ -472,15 +472,15 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{
 		t := cfgCond["type"].(string)
 		condition.Type = t
 
-		if o, _ := cfgCond["operator"]; o != "" {
+		if o := cfgCond["operator"]; o != "" {
 			k["operator"] = true
 			condition.Operator = o.(string)
 		}
-		if key, _ := cfgCond["key"]; key != "" {
+		if key := cfgCond["key"]; key != "" {
 			k["key"] = true
 			condition.Key = key.(string)
 		}
-		if v, _ := cfgCond["value"]; v != "" {
+		if v := cfgCond["value"]; v != "" {
 			k["value"] = true
 			condition.Value = v.(string)
 		}
@@ -493,22 +493,22 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{
 			}
 		}
 		if t == "tag-exists" {
-			if k["key"] == false || k["operator"] == true || k["value"] == true {
+			if !k["key"] || k["operator"] || k["value"] {
 				return nil, fmt.Errorf("Conditions %s: You must set \"key\" and cannot set \"operator\", or \"value\" if type = \"tag-exists\".", strconv.Itoa(i))
 			}
 		}
 		if t == "tag-value" {
-			if k["key"] == false || k["operator"] == false || k["value"] == false {
+			if !k["key"] || !k["operator"] || !k["value"] {
 				return nil, fmt.Errorf("Conditions %s: You must set \"key\", \"operator\", and \"value\" if type = \"tag-value\".", strconv.Itoa(i))
 			}
 		}
 		if t == "region" || t == "resource-id" || t == "account-id" {
-			if k["key"] == true || k["operator"] == false || k["value"] == false {
+			if k["key"] || !k["operator"] || !k["value"] {
 				return nil, fmt.Errorf("Conditions %s: You must set \"value\" and \"operator\" and cannot set \"key\" if type = \"region\", \"resource-id\", or \"account-id\".", strconv.Itoa(i))
 			}
 		}
 		if t == "attachment-type" {
-			if k["key"] == true || k["value"] == false || cfgCond["operator"].(string) != "equals" {
+			if k["key"] || !k["value"] || cfgCond["operator"].(string) != "equals" {
 				return nil, fmt.Errorf("Conditions %s: You must set \"value\", cannot set \"key\" and \"operator\" must be \"equals\" if type = \"attachment-type\".", strconv.Itoa(i))
 			}
 		}
@@ -524,13 +524,13 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesAction(tfList []interface{}) (
 		AssociationMethod: assocMethod,
 	}
 
-	if segment, _ := cfgAP["segment"]; segment != "" {
+	if segment := cfgAP["segment"]; segment != "" {
 		if assocMethod == "tag" {
 			return nil, fmt.Errorf("Cannot set \"segment\" argument if association_method = \"tag\".")
 		}
 		aP.Segment = segment.(string)
 	}
-	if tag, _ := cfgAP["tag_value_of_key"]; tag != "" {
+	if tag := cfgAP["tag_value_of_key"]; tag != "" {
 		if assocMethod == "constant" {
 			return nil, fmt.Errorf("Cannot set \"tag_value_of_key\" argument if association_method = \"constant\".")
 		}

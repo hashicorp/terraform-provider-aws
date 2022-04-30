@@ -5,10 +5,6 @@ import (
 	"sort"
 )
 
-const (
-	policyModelMarshallJSONStartSliceSize = 2
-)
-
 type CoreNetworkPolicyDoc struct {
 	Version                  string                                     `json:"version,omitempty"`
 	CoreNetworkConfiguration *CoreNetworkPolicyCoreNetworkConfiguration `json:"core-network-configuration"`
