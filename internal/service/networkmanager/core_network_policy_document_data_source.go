@@ -386,13 +386,13 @@ func expandDataCoreNetworkPolicySegmentActions(cfgSegmentActionsIntf []interface
 			}
 
 			if (shareWith != nil && shareWithExcept != nil) || (shareWith == nil && shareWithExcept == nil) {
-				return nil, fmt.Errorf("You must specify only 1 of \"share_with\" or \"share_with_except\".")
+				return nil, fmt.Errorf("You must specify only 1 of \"share_with\" or \"share_with_except\". See segment_actions[%s].", strconv.Itoa(i))
 			}
 		}
 
 		if action == "create-route" {
 			if mode, _ := cfgSA["mode"]; mode != "" {
-				return nil, fmt.Errorf("Cannot specify \"mode\" if action = \"create-route\".")
+				return nil, fmt.Errorf("Cannot specify \"mode\" if action = \"create-route\". See segment_actions[%s].", strconv.Itoa(i))
 			}
 
 			if dest := cfgSA["destinations"].(*schema.Set).List(); len(dest) > 0 {
@@ -439,13 +439,13 @@ func expandDataCoreNetworkPolicyAttachmentPolicies(cfgAttachmentPolicyIntf []int
 
 		action, err := expandDataCoreNetworkPolicyAttachmentPoliciesAction(cfgPol["action"].([]interface{}))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Problem with attachment policy rule number (%s). See attachment_policy[%s].action: %q", ruleStr, strconv.Itoa(i), err)
 		}
 		policy.Action = action
 
 		conditions, err := expandDataCoreNetworkPolicyAttachmentPoliciesConditions(cfgPol["conditions"].([]interface{}))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Problem with attachment policy rule number (%s). See attachment_policy[%s].conditions %q", ruleStr, strconv.Itoa(i), err)
 		}
 		policy.Conditions = conditions
 
@@ -488,28 +488,28 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{
 		if t == "any" {
 			for _, key := range k {
 				if key {
-					return nil, fmt.Errorf("You cannot set \"operator\", \"key\", or \"value\" if type = \"any\".")
+					return nil, fmt.Errorf("Conditions %s: You cannot set \"operator\", \"key\", or \"value\" if type = \"any\".", strconv.Itoa(i))
 				}
 			}
 		}
 		if t == "tag-exists" {
 			if k["key"] == false || k["operator"] == true || k["value"] == true {
-				return nil, fmt.Errorf("You must set \"key\" and cannot set \"operator\", or \"value\" if type = \"tag-exists\".")
+				return nil, fmt.Errorf("Conditions %s: You must set \"key\" and cannot set \"operator\", or \"value\" if type = \"tag-exists\".", strconv.Itoa(i))
 			}
 		}
 		if t == "tag-value" {
 			if k["key"] == false || k["operator"] == false || k["value"] == false {
-				return nil, fmt.Errorf("You must set \"key\", \"operator\", and \"value\" if type = \"tag-value\".")
+				return nil, fmt.Errorf("Conditions %s: You must set \"key\", \"operator\", and \"value\" if type = \"tag-value\".", strconv.Itoa(i))
 			}
 		}
 		if t == "region" || t == "resource-id" || t == "account-id" {
 			if k["key"] == true || k["operator"] == false || k["value"] == false {
-				return nil, fmt.Errorf("You must set \"value\" and \"operator\" and cannot set \"key\" if type = \"region\", \"resource-id\", or \"account-id\".")
+				return nil, fmt.Errorf("Conditions %s: You must set \"value\" and \"operator\" and cannot set \"key\" if type = \"region\", \"resource-id\", or \"account-id\".", strconv.Itoa(i))
 			}
 		}
 		if t == "attachment-type" {
 			if k["key"] == true || k["value"] == false || cfgCond["operator"].(string) != "equals" {
-				return nil, fmt.Errorf("You must set \"value\", cannot set \"key\" and \"operator\" must be \"equals\" if type = \"attachment-type\".")
+				return nil, fmt.Errorf("Conditions %s: You must set \"value\", cannot set \"key\" and \"operator\" must be \"equals\" if type = \"attachment-type\".", strconv.Itoa(i))
 			}
 		}
 		conditions[i] = condition
@@ -526,13 +526,13 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesAction(tfList []interface{}) (
 
 	if segment, _ := cfgAP["segment"]; segment != "" {
 		if assocMethod == "tag" {
-			return nil, fmt.Errorf("Cannot set \"segment\" argument if association_method = \"tag\" .")
+			return nil, fmt.Errorf("Cannot set \"segment\" argument if association_method = \"tag\".")
 		}
 		aP.Segment = segment.(string)
 	}
 	if tag, _ := cfgAP["tag_value_of_key"]; tag != "" {
 		if assocMethod == "constant" {
-			return nil, fmt.Errorf("Cannot set \"tag_value_of_key\" argument if association_method = \"constant\" .")
+			return nil, fmt.Errorf("Cannot set \"tag_value_of_key\" argument if association_method = \"constant\".")
 		}
 		aP.TagValueOfKey = tag.(string)
 	}
