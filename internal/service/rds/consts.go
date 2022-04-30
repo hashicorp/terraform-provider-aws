@@ -38,11 +38,53 @@ const (
 )
 
 const (
+	InstanceAutomatedBackupStatusPending     = "pending"
+	InstanceAutomatedBackupStatusReplicating = "replicating"
+	InstanceAutomatedBackupStatusRetained    = "retained"
+)
+
+const (
 	EventSubscriptionStatusActive    = "active"
 	EventSubscriptionStatusCreating  = "creating"
 	EventSubscriptionStatusDeleting  = "deleting"
 	EventSubscriptionStatusModifying = "modifying"
 )
+
+const (
+	EngineAurora           = "aurora"
+	EngineAuroraMySQL      = "aurora-mysql"
+	EngineAuroraPostgreSQL = "aurora-postgresql"
+	EngineMySQL            = "mysql"
+	EnginePostgres         = "postgres"
+)
+
+func Engine_Values() []string {
+	return []string{
+		EngineAurora,
+		EngineAuroraMySQL,
+		EngineAuroraPostgreSQL,
+		EngineMySQL,
+		EnginePostgres,
+	}
+}
+
+const (
+	EngineModeGlobal        = "global"
+	EngineModeMultiMaster   = "multimaster"
+	EngineModeParallelQuery = "parallelquery"
+	EngineModeProvisioned   = "provisioned"
+	EngineModeServerless    = "serverless"
+)
+
+func EngineMode_Values() []string {
+	return []string{
+		EngineModeGlobal,
+		EngineModeMultiMaster,
+		EngineModeParallelQuery,
+		EngineModeProvisioned,
+		EngineModeServerless,
+	}
+}
 
 const (
 	ExportableLogTypeAgent      = "agent"
@@ -58,7 +100,17 @@ const (
 	ExportableLogTypeUpgrade    = "upgrade"
 )
 
-func ExportableLogType_Values() []string {
+func ClusterExportableLogType_Values() []string {
+	return []string{
+		ExportableLogTypeAudit,
+		ExportableLogTypeError,
+		ExportableLogTypeGeneral,
+		ExportableLogTypePostgreSQL,
+		ExportableLogTypeSlowQuery,
+	}
+}
+
+func InstanceExportableLogType_Values() []string {
 	return []string{
 		ExportableLogTypeAgent,
 		ExportableLogTypeAlert,
@@ -71,5 +123,29 @@ func ExportableLogType_Values() []string {
 		ExportableLogTypeSlowQuery,
 		ExportableLogTypeTrace,
 		ExportableLogTypeUpgrade,
+	}
+}
+
+const (
+	RestoreTypeCopyOnWrite = "copy-on-write"
+	RestoreTypeFullCopy    = "full-copy"
+)
+
+func RestoreType_Values() []string {
+	return []string{
+		RestoreTypeCopyOnWrite,
+		RestoreTypeFullCopy,
+	}
+}
+
+const (
+	TimeoutActionForceApplyCapacityChange = "ForceApplyCapacityChange"
+	TimeoutActionRollbackCapacityChange   = "RollbackCapacityChange"
+)
+
+func TimeoutAction_Values() []string {
+	return []string{
+		TimeoutActionForceApplyCapacityChange,
+		TimeoutActionRollbackCapacityChange,
 	}
 }

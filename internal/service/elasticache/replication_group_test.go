@@ -46,15 +46,51 @@ func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttr(resourceName, "data_tiering_enabled", "false"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"}, //not in the API
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_basic_v5(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg elasticache.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_v5(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.6"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "5.0.6"),
+					// Even though it is ignored, the API returns `true` in this case
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 				),
 			},
 			{
@@ -104,7 +140,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v1, v2, v3, v4, v5 elasticache.ReplicationGroup
+	var v1, v2, v3, v4, v5, v6, v7, v8 elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -141,21 +177,48 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccReplicationGroupConfig_EngineVersion(rName, "6.x"),
+				Config: testAccReplicationGroupConfig_EngineVersion(rName, "6.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &v4),
 					testAccCheckReplicationGroupNotRecreated(&v3, &v4),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.0"),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
+				),
+			},
+			{
+				Config: testAccReplicationGroupConfig_EngineVersion(rName, "6.2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &v5),
+					testAccCheckReplicationGroupNotRecreated(&v4, &v5),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
 				),
 			},
 			{
 				Config: testAccReplicationGroupConfig_EngineVersion(rName, "5.0.6"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationGroupExists(resourceName, &v5),
-					testAccCheckReplicationGroupRecreated(&v4, &v5),
+					testAccCheckReplicationGroupExists(resourceName, &v6),
+					testAccCheckReplicationGroupRecreated(&v5, &v6),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.6"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "5.0.6"),
+				),
+			},
+			{
+				Config: testAccReplicationGroupConfig_EngineVersion(rName, "6.x"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &v7),
+					testAccCheckReplicationGroupNotRecreated(&v6, &v7),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
+				),
+			},
+			{
+				Config: testAccReplicationGroupConfig_EngineVersion(rName, "6.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &v8),
+					testAccCheckReplicationGroupRecreated(&v7, &v8),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.0"),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.0\.[[:digit:]]+$`)),
 				),
 			},
 		},
@@ -210,7 +273,6 @@ func TestAccElastiCacheReplicationGroup_updateDescription(t *testing.T) {
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_group_description", "test description"),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 				),
 			},
 			{
@@ -225,7 +287,6 @@ func TestAccElastiCacheReplicationGroup_updateDescription(t *testing.T) {
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_group_description", "updated description"),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 				),
 			},
 		},
@@ -455,7 +516,6 @@ func TestAccElastiCacheReplicationGroup_vpc(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "1"),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttr(resourceName, "preferred_cache_cluster_azs.#", "1"),
 				),
 			},
@@ -489,7 +549,6 @@ func TestAccElastiCacheReplicationGroup_depecatedAvailabilityZones_vpc(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "1"),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "1"),
 				),
 			},
@@ -1715,7 +1774,7 @@ func TestAccElastiCacheReplicationGroup_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupTags1Config(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
 						{"key1", "value1"},
@@ -1730,7 +1789,7 @@ func TestAccElastiCacheReplicationGroup_tags(t *testing.T) {
 			},
 			{
 				Config: testAccReplicationGroupTags2Config(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
 						{"key1", "value1updated"},
@@ -1740,10 +1799,50 @@ func TestAccElastiCacheReplicationGroup_tags(t *testing.T) {
 			},
 			{
 				Config: testAccReplicationGroupTags1Config(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
 						{"key2", "value2"},
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_tagWithOtherModification(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg elasticache.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+	clusterDataSourcePrefix := "data.aws_elasticache_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupVersionAndTagConfig(rName, "5.0.4", "key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.4"),
+					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
+						{"key1", "value1"},
+					}),
+				),
+			},
+			{
+				Config: testAccReplicationGroupVersionAndTagConfig(rName, "5.0.6", "key1", "value1updated"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.6"),
+					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
+						{"key1", "value1updated"},
 					}),
 				),
 			},
@@ -1771,6 +1870,47 @@ func TestAccElastiCacheReplicationGroup_finalSnapshot(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "final_snapshot_identifier", rName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_autoMinorVersionUpgrade(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg elasticache.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroup_AutoMinorVersionUpgrade(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
+			},
+			{
+				Config: testAccReplicationGroup_AutoMinorVersionUpgrade(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 				),
 			},
 		},
@@ -1868,6 +2008,10 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_basic(t *testin
 }
 
 func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_full(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var providers []*schema.Provider
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1984,6 +2128,10 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basi
 }
 
 func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_ClusterMode_Disabled(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_replication_group.test"
@@ -2074,6 +2222,10 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 }
 
 func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_ClusterMode_Enabled(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_replication_group.test"
@@ -2230,6 +2382,10 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterModeValid
 }
 
 func TestAccElastiCacheReplicationGroup_dataTiering(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -2245,7 +2401,7 @@ func TestAccElastiCacheReplicationGroup_dataTiering(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
 					resource.TestCheckResourceAttr(resourceName, "data_tiering_enabled", "true"),
 				),
 			},
@@ -2379,9 +2535,19 @@ resource "aws_elasticache_replication_group" "test" {
   node_type                     = "cache.t3.small"
   port                          = 6379
   apply_immediately             = true
-  auto_minor_version_upgrade    = false
   maintenance_window            = "tue:06:30-tue:07:30"
   snapshot_window               = "01:00-02:00"
+}
+`, rName)
+}
+
+func testAccReplicationGroupConfig_v5(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = %[1]q
+  replication_group_description = "test description"
+  node_type                     = "cache.t3.small"
+  engine_version                = "5.0.6"
 }
 `, rName)
 }
@@ -2432,7 +2598,6 @@ resource "aws_elasticache_replication_group" "test" {
   node_type                     = "cache.t3.small"
   port                          = 6379
   apply_immediately             = true
-  auto_minor_version_upgrade    = false
   maintenance_window            = "tue:06:30-tue:07:30"
   snapshot_window               = "01:00-02:00"
   snapshot_retention_limit      = 2
@@ -2476,7 +2641,6 @@ resource "aws_elasticache_replication_group" "test" {
   node_type                     = "cache.t3.small"
   port                          = 6379
   apply_immediately             = true
-  auto_minor_version_upgrade    = true
 }
 `, rName)
 }
@@ -2489,7 +2653,6 @@ resource "aws_elasticache_replication_group" "test" {
   node_type                     = "cache.t3.small"
   port                          = 6379
   apply_immediately             = true
-  auto_minor_version_upgrade    = true
   maintenance_window            = "wed:03:00-wed:06:00"
   snapshot_window               = "01:00-02:00"
 }
@@ -2534,7 +2697,6 @@ resource "aws_elasticache_replication_group" "test" {
   node_type                     = "cache.t3.small"
   port                          = 6379
   apply_immediately             = true
-  auto_minor_version_upgrade    = false
   maintenance_window            = "tue:06:30-tue:07:30"
   snapshot_window               = "01:00-02:00"
   transit_encryption_enabled    = true
@@ -2557,7 +2719,6 @@ resource "aws_elasticache_replication_group" "test" {
   subnet_group_name             = aws_elasticache_subnet_group.test.name
   security_group_ids            = [aws_security_group.test.id]
   preferred_cache_cluster_azs   = [data.aws_availability_zones.available.names[0]]
-  auto_minor_version_upgrade    = false
 }
 
 resource "aws_elasticache_subnet_group" "test" {
@@ -2594,7 +2755,6 @@ resource "aws_elasticache_replication_group" "test" {
   subnet_group_name             = aws_elasticache_subnet_group.test.name
   security_group_ids            = [aws_security_group.test.id]
   availability_zones            = [data.aws_availability_zones.available.names[0]]
-  auto_minor_version_upgrade    = false
 }
 
 resource "aws_elasticache_subnet_group" "test" {
@@ -3075,7 +3235,6 @@ resource "aws_elasticache_replication_group" "test" {
   number_cache_clusters         = %[2]d
   port                          = 6379
   apply_immediately             = true
-  auto_minor_version_upgrade    = false
   maintenance_window            = "tue:06:30-tue:07:30"
   snapshot_window               = "01:00-02:00"
 
@@ -3099,7 +3258,6 @@ resource "aws_elasticache_replication_group" "test" {
   number_cache_clusters         = %[2]d
   port                          = 6379
   apply_immediately             = true
-  auto_minor_version_upgrade    = false
   maintenance_window            = "tue:06:30-tue:07:30"
   snapshot_window               = "01:00-02:00"
 
@@ -3109,6 +3267,27 @@ resource "aws_elasticache_replication_group" "test" {
   }
 }
 `, rName, clusterCount, tagKey1, tagValue1, tagKey2, tagValue2),
+	)
+}
+
+func testAccReplicationGroupVersionAndTagConfig(rName, version, tagKey1, tagValue1 string) string {
+	const clusterCount = 2
+	return acctest.ConfigCompose(
+		testAccReplicationGroupClusterData(clusterCount),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = %[1]q
+  replication_group_description = "test description"
+  node_type                     = "cache.t3.small"
+  number_cache_clusters         = %[2]d
+  apply_immediately             = true
+  engine_version                = %[3]q
+
+  tags = {
+    %[4]q = %[5]q
+  }
+}
+`, rName, clusterCount, version, tagKey1, tagValue1),
 	)
 }
 
@@ -3135,6 +3314,18 @@ resource "aws_elasticache_replication_group" "test" {
 `, rName)
 }
 
+func testAccReplicationGroup_AutoMinorVersionUpgrade(rName string, enable bool) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = %[1]q
+  replication_group_description = "test description"
+  node_type                     = "cache.t3.small"
+
+  auto_minor_version_upgrade = %[2]t
+}
+`, rName, enable)
+}
+
 func testAccReplicationGroupConfig_Validation_NoNodeType(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
@@ -3148,8 +3339,8 @@ resource "aws_elasticache_replication_group" "test" {
 func testAccReplicationGroupConfig_Validation_GlobalReplicationGroupIdAndNodeType(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
-		testAccElasticacheVpcBaseWithProvider(rName, "test", acctest.ProviderName, 1),
-		testAccElasticacheVpcBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 1),
+		testAccVPCBaseWithProvider(rName, "test", acctest.ProviderName, 1),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 1),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   provider = aws
@@ -3193,8 +3384,8 @@ resource "aws_elasticache_replication_group" "primary" {
 func testAccReplicationGroupConfig_GlobalReplicationGroupId_Basic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
-		testAccElasticacheVpcBaseWithProvider(rName, "test", acctest.ProviderName, 1),
-		testAccElasticacheVpcBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 1),
+		testAccVPCBaseWithProvider(rName, "test", acctest.ProviderName, 1),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 1),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = "%[1]s-s"
@@ -3232,8 +3423,8 @@ resource "aws_elasticache_replication_group" "primary" {
 func testAccReplicationGroupConfig_GlobalReplicationGroupId_Full(rName string, numCacheClusters int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
-		testAccElasticacheVpcBaseWithProvider(rName, "test", acctest.ProviderName, 2),
-		testAccElasticacheVpcBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 2),
+		testAccVPCBaseWithProvider(rName, "test", acctest.ProviderName, 2),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 2),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = "%[1]s-s"
@@ -3284,8 +3475,8 @@ resource "aws_elasticache_replication_group" "primary" {
 func testAccReplicationGroupConfig_GlobalReplicationGroupId_ClusterMode(rName string, primaryReplicaCount, secondaryReplicaCount int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
-		testAccElasticacheVpcBaseWithProvider(rName, "test", acctest.ProviderName, 2),
-		testAccElasticacheVpcBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 2),
+		testAccVPCBaseWithProvider(rName, "test", acctest.ProviderName, 2),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 2),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = "%[1]s-s"
@@ -3316,7 +3507,7 @@ resource "aws_elasticache_replication_group" "primary" {
   subnet_group_name = aws_elasticache_subnet_group.primary.name
 
   engine         = "redis"
-  engine_version = "6.x"
+  engine_version = "6.2"
   node_type      = "cache.m5.large"
 
   parameter_group_name = "default.redis6.x.cluster.on"
@@ -3334,8 +3525,8 @@ resource "aws_elasticache_replication_group" "primary" {
 func testAccReplicationGroupConfig_GlobalReplicationGroupId_ClusterMode_NumNodeGroupsOnSecondary(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
-		testAccElasticacheVpcBaseWithProvider(rName, "test", acctest.ProviderName, 2),
-		testAccElasticacheVpcBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 2),
+		testAccVPCBaseWithProvider(rName, "test", acctest.ProviderName, 2),
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 2),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = "%[1]s-s"
@@ -3367,7 +3558,7 @@ resource "aws_elasticache_replication_group" "primary" {
   subnet_group_name = aws_elasticache_subnet_group.primary.name
 
   engine         = "redis"
-  engine_version = "6.x"
+  engine_version = "6.2"
   node_type      = "cache.m5.large"
 
   parameter_group_name = "default.redis6.x.cluster.on"
@@ -3394,7 +3585,6 @@ resource "aws_elasticache_replication_group" "test" {
   port                          = 6379
   subnet_group_name             = aws_elasticache_subnet_group.test.name
   security_group_ids            = [aws_security_group.test.id]
-  auto_minor_version_upgrade    = false
 }
 
 resource "aws_elasticache_subnet_group" "test" {
@@ -3508,7 +3698,6 @@ resource "aws_elasticache_replication_group" "test" {
   node_type                     = "cache.t3.small"
   port                          = 6379
   apply_immediately             = true
-  auto_minor_version_upgrade    = false
   maintenance_window            = "tue:06:30-tue:07:30"
   snapshot_window               = "01:00-02:00"
   parameter_group_name          = tobool("%[2]t") ? "default.redis6.x.cluster.on" : "default.redis6.x"

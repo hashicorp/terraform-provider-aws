@@ -37,6 +37,10 @@ func DataSourceProxy() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"username": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},

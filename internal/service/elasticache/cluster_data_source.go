@@ -2,6 +2,7 @@ package elasticache
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -9,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceCluster() *schema.Resource {
@@ -231,14 +233,19 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, aws.StringValue(cluster.ARN))
 
-	if err != nil {
+	if err != nil && !verify.CheckISOErrorTagsUnsupported(err) {
 		return fmt.Errorf("error listing tags for Elasticache Cluster (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err != nil {
+		log.Printf("[WARN] error listing tags for Elasticache Cluster (%s): %s", d.Id(), err)
+	}
+
+	if tags != nil {
+		if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+			return fmt.Errorf("error setting tags: %w", err)
+		}
 	}
 
 	return nil
-
 }

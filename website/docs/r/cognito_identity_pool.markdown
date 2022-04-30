@@ -1,5 +1,5 @@
 ---
-subcategory: "Cognito"
+subcategory: "Cognito Identity"
 layout: "aws"
 page_title: "AWS: aws_cognito_identity_pool"
 description: |-

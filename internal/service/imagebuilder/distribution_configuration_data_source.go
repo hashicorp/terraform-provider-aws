@@ -142,6 +142,10 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"account_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
 									"default": {
 										Type:     schema.TypeBool,
 										Computed: true,

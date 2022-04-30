@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -95,7 +96,7 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 							// we apply the Default behavior from v3.x of the provider (Filter with empty string Prefix),
 							// which will thus return a Filter in the GetBucketLifecycleConfiguration request and
 							// require diff suppression.
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							DiffSuppressFunc: suppressMissingFilterConfigurationBlock,
 							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -419,4 +420,27 @@ func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.R
 	}
 
 	return nil
+}
+
+// suppressMissingFilterConfigurationBlock suppresses the diff that results from an omitted
+// filter configuration block and one returned from the S3 API.
+// To work around the issue, https://github.com/hashicorp/terraform-plugin-sdk/issues/743,
+// this method only looks for changes in the "filter.#" value and not its nested fields
+// which are incorrectly suppressed when using the verify.SuppressMissingOptionalConfigurationBlock method.
+func suppressMissingFilterConfigurationBlock(k, old, new string, d *schema.ResourceData) bool {
+	if strings.HasSuffix(k, "filter.#") {
+		o, n := d.GetChange(k)
+		oVal, nVal := o.(int), n.(int)
+
+		if oVal == 1 && nVal == 0 {
+			return true
+		}
+
+		if oVal == 1 && nVal == 1 {
+			return old == "1" && new == "0"
+		}
+
+		return false
+	}
+	return false
 }

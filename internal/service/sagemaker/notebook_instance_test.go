@@ -315,7 +315,7 @@ func testAccCheckNotebookInstanceDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Sagemaker Notebook Instance (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("error reading SageMaker Notebook Instance (%s): %w", rs.Primary.ID, err)
 		}
 
 		if aws.StringValue(notebookInstance.NotebookInstanceName) == rs.Primary.ID {
@@ -355,7 +355,7 @@ func testAccCheckNotebookInstanceExists(n string, notebook *sagemaker.DescribeNo
 func testAccCheckNotebookInstanceNotRecreated(i, j *sagemaker.DescribeNotebookInstanceOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
-			return errors.New("Sagemaker Notebook Instance was recreated")
+			return errors.New("SageMaker Notebook Instance was recreated")
 		}
 
 		return nil
@@ -365,7 +365,7 @@ func testAccCheckNotebookInstanceNotRecreated(i, j *sagemaker.DescribeNotebookIn
 func testAccCheckNotebookInstanceRecreated(i, j *sagemaker.DescribeNotebookInstanceOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
-			return errors.New("Sagemaker Notebook Instance was not recreated")
+			return errors.New("SageMaker Notebook Instance was not recreated")
 		}
 
 		return nil
@@ -606,7 +606,7 @@ func TestAccSageMakerNotebookInstance_DefaultCodeRepository_sageMakerRepo(t *tes
 		CheckDestroy: testAccCheckNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotebookInstanceDefaultCodeRepositorySageMakerRepoConfig(rName),
+				Config: testAccNotebookInstanceDefaultCodeRepositoryRepoConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(resourceName, &notebook),
 					resource.TestCheckResourceAttrPair(resourceName, "default_code_repository", "aws_sagemaker_code_repository.test", "code_repository_name"),
@@ -625,7 +625,7 @@ func TestAccSageMakerNotebookInstance_DefaultCodeRepository_sageMakerRepo(t *tes
 				),
 			},
 			{
-				Config: testAccNotebookInstanceDefaultCodeRepositorySageMakerRepoConfig(rName),
+				Config: testAccNotebookInstanceDefaultCodeRepositoryRepoConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(resourceName, &notebook),
 					resource.TestCheckResourceAttrPair(resourceName, "default_code_repository", "aws_sagemaker_code_repository.test", "code_repository_name")),
@@ -823,7 +823,7 @@ resource "aws_sagemaker_notebook_instance" "test" {
 `, rName, repo1, repo2)
 }
 
-func testAccNotebookInstanceDefaultCodeRepositorySageMakerRepoConfig(rName string) string {
+func testAccNotebookInstanceDefaultCodeRepositoryRepoConfig(rName string) string {
 	return testAccNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_code_repository" "test" {
   code_repository_name = %[1]q

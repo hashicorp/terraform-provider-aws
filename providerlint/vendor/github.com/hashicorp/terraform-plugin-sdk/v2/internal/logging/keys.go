@@ -31,6 +31,12 @@ const (
 	// The TestStep number of the test being executed. Starts at 1.
 	KeyTestStepNumber = "test_step_number"
 
+	// The path to the Terraform CLI logging file used for an acceptance test.
+	//
+	// This should match where the rest of the acceptance test logs are going
+	// already, but is provided for troubleshooting in case it does not.
+	KeyTestTerraformLogPath = "test_terraform_log_path"
+
 	// The path to the Terraform CLI used for an acceptance test.
 	KeyTestTerraformPath = "test_terraform_path"
 

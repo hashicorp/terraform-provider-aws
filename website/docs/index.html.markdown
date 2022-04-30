@@ -78,6 +78,9 @@ The AWS Provider supports assuming an IAM role, either in
 the provider configuration block parameter `assume_role`
 or in [a named profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html).
 
+The AWS Provider supports assuming an IAM role using [web identity federation and OpenID Connect (OIDC)](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html#cli-configure-role-oidc).
+This can be configured either using environment variables or in a named profile.
+
 When using a named profile, the AWS Provider also supports [sourcing credentials from an external process](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sourcing-external.html).
 
 ### Provider Configuration
@@ -212,7 +215,7 @@ credential_process = custom-process --username jdoe
 |Secret Access Key|`secret_key`|`AWS_SECRET_ACCESS_KEY`|`aws_secret_access_key`|
 |Session Token|`token`|`AWS_SESSION_TOKEN`|`aws_session_token`|
 |Region|`region`|`AWS_REGION` or `AWS_DEFAULT_REGION`|`region`|
-|Custom CA Bundle |`custom_ca_bundle`|`AWS_CA_BUNDLE`|Not supported|
+|Custom CA Bundle |`custom_ca_bundle`|`AWS_CA_BUNDLE`|`ca_bundle`|
 |EC2 IMDS Endpoint |`ec2_metadata_service_endpoint`|`AWS_EC2_METADATA_SERVICE_ENDPOINT`|N/A|
 |EC2 IMDS Endpoint Mode|`ec2_metadata_service_endpoint_mode`|`AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE`|N/A|
 |Disable EC2 IMDS|`skip_metadata_api_check`|`AWS_EC2_METADATA_DISABLED`|N/A|
@@ -226,6 +229,7 @@ credential_process = custom-process --username jdoe
 
 ### Assume Role Configuration Reference
 
+Configuation for assuming an IAM role can be done using provider configuration or a named profile in shared configuration files.
 In the provider, all parameters for assuming an IAM role are set in the `assume_role` block.
 
 Environment variables are not supported for assuming IAM roles.
@@ -246,6 +250,23 @@ See the [assume role documentation](https://docs.aws.amazon.com/cli/latest/userg
 [envvars]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
 [config]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-settings
 
+### Assume Role with Web Identity Configuration Reference
+
+Configuration for assuming an IAM role using web identify federation can be done using provider configuration, environment variables, or a named profile in shared configuration files.
+In the provider, all parameters for assuming an IAM role are set in the `assume_role_with_web_identity` block.
+
+See the assume role documentation [section on web identities](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html#cli-configure-role-oidc) for more information.
+
+|Setting|Provider|[Environment Variable][envvars]|[Shared Config][config]|
+|-------|--------|-----------------------|
+|Role ARN|`role_arn`|`AWS_ROLE_ARN`|`role_arn`|
+|Web Identity Token|`web_identity_token`|N/A|N/A|
+|Web Identity Token File|`web_identity_token_file`|`AWS_WEB_IDENTITY_TOKEN_FILE`|`web_identity_token_file`|
+|Duration|`duration`|N/A|`duration_seconds`|
+|Policy|`policy`|N/A|`policy`|
+|Policy ARNs|`policy_arns`|N/A|`policy_arns`|
+|Session Name|`session_name`|`AWS_ROLE_SESSION_NAME`|`role_session_name`|
+
 ## Custom User-Agent Information
 
 By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS SDK for Go versions. To provide additional information in the User-Agent headers, the `TF_APPEND_USER_AGENT` environment variable can be set and its value will be directly added to HTTP requestsE.g.,
@@ -262,7 +283,8 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 
 * `access_key` - (Optional) AWS access key. Can also be set with the `AWS_ACCESS_KEY_ID` environment variable, or via a shared credentials file if `profile` is specified. See also `secret_key`.
 * `allowed_account_ids` - (Optional) List of allowed AWS account IDs to prevent you from mistakenly using an incorrect one (and potentially end up destroying a live environment). Conflicts with `forbidden_account_ids`.
-* `assume_role` - (Optional) Configuration block for an assumed role. See below. Only one `assume_role` block may be in the configuration.
+* `assume_role` - (Optional) Configuration block for assuming an IAM role. See the [`assume_role` Configuration Block](#assume_role-configuration-block) section below. Only one `assume_role` block may be in the configuration.
+* `assume_role_with_web_identity` - (Optional) Configuration block for assuming an IAM role using a web identity. See the [`assume_role_with_web_identity` Configuration Block](#assume_role_with_web_identity-configuration-block) section below. Only one `assume_role_with_web_identity` block may be in the configuration.
 * `custom_ca_bundle` - (Optional) File containing custom root and intermediate certificates.
   Can also be set using the `AWS_CA_BUNDLE` environment variable.
   Setting `ca_bundle` in the shared config file is not supported.
@@ -418,7 +440,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 
 ### assume_role Configuration Block
 
-The `assume_role` configuration block supports the following optional arguments:
+The `assume_role` configuration block supports the following arguments:
 
 * `duration` - (Optional, Conflicts with `duration_seconds`) Duration of the assume role session. You can provide a value from 15 minutes up to the maximum session duration setting for the role. Represented by a string such as `1h`, `2h45m`, or `30m15s`.
 * `duration_seconds` - (Optional, **Deprecated** use `duration` instead) Number of seconds to restrict the assume role session duration. You can provide a value from 900 seconds (15 minutes) up to the maximum session duration setting for the role.
@@ -429,6 +451,20 @@ The `assume_role` configuration block supports the following optional arguments:
 * `session_name` - (Optional) Session name to use when assuming the role.
 * `tags` - (Optional) Map of assume role session tags.
 * `transitive_tag_keys` - (Optional) Set of assume role session tag keys to pass to any subsequent sessions.
+
+### assume_role_with_web_identity Configuration Block
+
+The `assume_role_with_web_identity` configuration block supports the following arguments:
+
+* `duration` - (Optional) Duration of the assume role session. You can provide a value from 15 minutes up to the maximum session duration setting for the role. Represented by a string such as `1h`, `2h45m`, or `30m15s`.
+* `policy` - (Optional) IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.
+* `policy_arns` - (Optional) Set of Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.
+* `role_arn` - (Required) Amazon Resource Name (ARN) of the IAM Role to assume. Can also be set with the `AWS_ROLE_ARN` environment variable.
+* `session_name` - (Optional) Session name to use when assuming the role. Can also be set with the `AWS_ROLE_SESSION_NAME` environment variable.
+* `web_identity_token` - (Optional) The value of a web identity token from an OpenID Connect (OIDC) or OAuth provider.
+  One of `web_identity_token` or `web_identity_token_file` is required.
+* `web_identity_token_file` - (Optional) File containing a web identity token from an OpenID Connect (OIDC) or OAuth provider.
+  One of `web_identity_token_file` or `web_identity_token` is required. Can also be set with the `AWS_WEB_IDENTITY_TOKEN_FILE` environment variable.
 
 ### default_tags Configuration Block
 

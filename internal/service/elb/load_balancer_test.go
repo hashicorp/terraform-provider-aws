@@ -1272,7 +1272,7 @@ resource "aws_s3_bucket_policy" "test" {
       "Principal": {
         "AWS": "${data.aws_elb_service_account.current.arn}"
       },
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*",
+      "Resource": "${aws_s3_bucket.accesslogs_bucket.arn}/*",
       "Sid": "Stmt1446575236270"
     }
   ],

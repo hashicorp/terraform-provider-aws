@@ -25,9 +25,9 @@ func waitAssociationSuccess(conn *ssm.SSM, id string, timeout time.Duration) (*s
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*ssm.AssociationDescription); ok {
-		if statusName := aws.StringValue(output.Status.Name); statusName == ssm.AssociationStatusNameFailed {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.Message)))
+	if output, ok := outputRaw.(*ssm.AssociationDescription); ok && output.Overview != nil {
+		if status := aws.StringValue(output.Overview.Status); status == ssm.AssociationStatusNameFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.Overview.DetailedStatus)))
 		}
 		return output, err
 	}

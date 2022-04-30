@@ -73,6 +73,22 @@ func RetryWhenAWSErrCodeEquals(timeout time.Duration, f func() (interface{}, err
 	return RetryWhenAWSErrCodeEqualsContext(context.Background(), timeout, f, codes...)
 }
 
+// RetryWhenAWSErrMessageContainsContext retries the specified function when it returns an AWS error containing the specified message.
+func RetryWhenAWSErrMessageContainsContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error), code, message string) (interface{}, error) {
+	return RetryWhenContext(ctx, timeout, f, func(err error) (bool, error) {
+		if tfawserr.ErrMessageContains(err, code, message) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
+// RetryWhenAWSErrMessageContains retries the specified function when it returns an AWS error containing the specified message.
+func RetryWhenAWSErrMessageContains(timeout time.Duration, f func() (interface{}, error), code, message string) (interface{}, error) {
+	return RetryWhenAWSErrMessageContainsContext(context.Background(), timeout, f, code, message)
+}
+
 var resourceFoundError = errors.New(`found resource`)
 
 // RetryUntilNotFoundContext retries the specified function until it returns a resource.NotFoundError.

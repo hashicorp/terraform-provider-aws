@@ -174,6 +174,11 @@ func ResourceDistributionConfiguration() *schema.Resource {
 							MaxItems: 100,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"account_id": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidAccountID,
+									},
 									"default": {
 										Type:     schema.TypeBool,
 										Optional: true,
@@ -563,6 +568,10 @@ func expandLaunchTemplateConfiguration(tfMap map[string]interface{}) *imagebuild
 		apiObject.SetDefaultVersion = aws.Bool(v)
 	}
 
+	if v, ok := tfMap["account_id"].(string); ok && v != "" {
+		apiObject.AccountId = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -745,6 +754,10 @@ func flattenLaunchTemplateConfiguration(apiObject *imagebuilder.LaunchTemplateCo
 
 	if v := apiObject.SetDefaultVersion; v != nil {
 		tfMap["default"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.AccountId; v != nil {
+		tfMap["account_id"] = aws.StringValue(v)
 	}
 
 	return tfMap

@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_instance"
 description: |-
@@ -123,7 +123,9 @@ interpolation.
     * `http_tokens` - If session tokens are required: `optional`, `required`.
     * `http_put_response_hop_limit` - The desired HTTP PUT response hop limit for instance metadata requests.
     * `instance_metadata_tags` - If access to instance tags is allowed from the metadata service: `enabled`, `disabled`.
-* `enclave_options` - The enclave options of the Instance.
+* `enclave_options` - The enclave options of the instance.
     * `enabled` - Whether Nitro Enclaves are enabled.
+* `maintenance_options` - The maintenance and recovery options for the instance.
+    * `auto_recovery` - The automatic recovery behavior of the instance.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html

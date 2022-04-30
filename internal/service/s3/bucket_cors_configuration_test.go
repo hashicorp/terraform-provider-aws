@@ -219,6 +219,89 @@ func TestAccS3BucketCorsConfiguration_MultipleRules(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketCorsConfiguration_migrate_corsRuleNoChange(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketResourceName := "aws_s3_bucket.test"
+	resourceName := "aws_s3_bucket_cors_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withCORS(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(bucketResourceName),
+					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.allowed_headers.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.allowed_methods.#", "2"),
+					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.allowed_origins.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.expose_headers.#", "2"),
+					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.max_age_seconds", "3000"),
+				),
+			},
+			{
+				Config: testAccBucketCorsConfigurationConfig_Migrate_CorsRuleNoChange(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketCorsConfigurationExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
+						"allowed_headers.#": "1",
+						"allowed_methods.#": "2",
+						"allowed_origins.#": "1",
+						"expose_headers.#":  "2",
+						"max_age_seconds":   "3000",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketCorsConfiguration_migrate_corsRuleWithChange(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketResourceName := "aws_s3_bucket.test"
+	resourceName := "aws_s3_bucket_cors_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_withCORS(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(bucketResourceName),
+					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.allowed_headers.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.allowed_methods.#", "2"),
+					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.allowed_origins.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.expose_headers.#", "2"),
+					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.max_age_seconds", "3000"),
+				),
+			},
+			{
+				Config: testAccBucketCorsConfigurationConfig_Migrate_CorsRuleWithChange(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketCorsConfigurationExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
+						"allowed_methods.#": "1",
+						"allowed_origins.#": "1",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_rule.*.allowed_methods.*", "PUT"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "cors_rule.*.allowed_origins.*", "https://www.example.com"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBucketCorsConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
@@ -356,6 +439,43 @@ resource "aws_s3_bucket_cors_configuration" "test" {
   cors_rule {
     allowed_methods = ["GET"]
     allowed_origins = ["*"]
+  }
+}
+`, rName)
+}
+
+func testAccBucketCorsConfigurationConfig_Migrate_CorsRuleNoChange(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_cors_configuration" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "POST"]
+    allowed_origins = ["https://www.example.com"]
+    expose_headers  = ["x-amz-server-side-encryption", "ETag"]
+    max_age_seconds = 3000
+  }
+}
+`, rName)
+}
+
+func testAccBucketCorsConfigurationConfig_Migrate_CorsRuleWithChange(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_cors_configuration" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  cors_rule {
+    allowed_methods = ["PUT"]
+    allowed_origins = ["https://www.example.com"]
   }
 }
 `, rName)

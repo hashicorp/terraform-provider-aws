@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/efs"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -122,8 +123,7 @@ func TestAccEFSFileSystemDataSource_availabilityZone(t *testing.T) {
 	})
 }
 
-func TestAccEFSFileSystemDataSource_nonExistent(t *testing.T) {
-
+func TestAccEFSFileSystemDataSource_nonExistent_fileSystemID(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, efs.EndpointsID),
@@ -132,6 +132,30 @@ func TestAccEFSFileSystemDataSource_nonExistent(t *testing.T) {
 			{
 				Config:      testAccFileSystemIDDataSourceConfig_NonExistent,
 				ExpectError: regexp.MustCompile(`error reading EFS FileSystem`),
+			},
+		},
+	})
+}
+
+func TestAccEFSFileSystemDataSource_nonExistent_tags(t *testing.T) {
+	var desc efs.FileSystemDescription
+	resourceName := "aws_efs_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, efs.EndpointsID),
+		Providers:  acctest.Providers,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFileSystemConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(resourceName, &desc),
+				),
+			},
+			{
+				Config:      testAccFileSystemTagsDataSourceConfig_NonExistent(rName),
+				ExpectError: regexp.MustCompile(`Search returned 0 results`),
 			},
 		},
 	})
@@ -176,6 +200,18 @@ data "aws_efs_file_system" "test" {
   file_system_id = "fs-nonexistent"
 }
 `
+
+func testAccFileSystemTagsDataSourceConfig_NonExistent(rName string) string {
+	return acctest.ConfigCompose(
+		testAccFileSystemConfig(rName),
+		`
+data "aws_efs_file_system" "test" {
+  tags = {
+    Name = "Does_Not_Exist"
+  }
+}
+`)
+}
 
 const testAccFileSystemNameDataSourceConfig = `
 resource "aws_efs_file_system" "test" {}

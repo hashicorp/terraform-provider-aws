@@ -1,5 +1,5 @@
 ---
-subcategory: "EventBridge (CloudWatch Events)"
+subcategory: "EventBridge"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_bus_policy"
 description: |-
@@ -69,7 +69,7 @@ data "aws_iam_policy_document" "test" {
     condition {
       test     = "StringEquals"
       variable = "aws:PrincipalOrgID"
-      values   = aws_organizations_organization.example.id
+      values   = [aws_organizations_organization.example.id]
     }
   }
 }
@@ -123,7 +123,7 @@ data "aws_iam_policy_document" "test" {
     condition {
       test     = "StringEquals"
       variable = "aws:PrincipalOrgID"
-      values   = aws_organizations_organization.example.id
+      values   = [aws_organizations_organization.example.id]
     }
   }
 }

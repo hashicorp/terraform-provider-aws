@@ -34,7 +34,10 @@ resource "aws_cloudtrail" "foobar" {
 resource "aws_s3_bucket" "foo" {
   bucket        = "tf-test-trail"
   force_destroy = true
+}
 
+resource "aws_s3_bucket_policy" "foo" {
+  bucket = aws_s3_bucket.foo.id
   policy = <<POLICY
 {
     "Version": "2012-10-17",
@@ -46,7 +49,7 @@ resource "aws_s3_bucket" "foo" {
               "Service": "cloudtrail.amazonaws.com"
             },
             "Action": "s3:GetBucketAcl",
-            "Resource": "arn:aws:s3:::tf-test-trail"
+            "Resource": "${aws_s3_bucket.foo.arn}"
         },
         {
             "Sid": "AWSCloudTrailWrite",
@@ -55,7 +58,7 @@ resource "aws_s3_bucket" "foo" {
               "Service": "cloudtrail.amazonaws.com"
             },
             "Action": "s3:PutObject",
-            "Resource": "arn:aws:s3:::tf-test-trail/prefix/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
+            "Resource": "${aws_s3_bucket.foo.arn}/prefix/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
             "Condition": {
                 "StringEquals": {
                     "s3:x-amz-acl": "bucket-owner-full-control"

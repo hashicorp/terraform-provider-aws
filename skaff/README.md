@@ -10,4 +10,4 @@ To use `skaff`, starting in the `terraform-provider-aws` directory:
 2. `go install .`
 3. Go to the service where your new resource will reside. _E.g._, `cd ../internal/service/mq`.
 4. To get help, enter `skaff` without arguments.
-5. Generate a resource with helpful comments. _E.g._, `skaff resource --name BrokerReboot --comments` (or equivalently `skaff resource -n BrokerReboot -c`).
+5. Generate a resource with helpful comments. _E.g._, `skaff resource --name BrokerReboot` (or equivalently `skaff resource -n BrokerReboot`).

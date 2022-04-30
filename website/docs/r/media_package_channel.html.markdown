@@ -1,5 +1,5 @@
 ---
-subcategory: "MediaPackage"
+subcategory: "Elemental MediaPackage"
 layout: "aws"
 page_title: "AWS: aws_media_package_channel"
 description: |-

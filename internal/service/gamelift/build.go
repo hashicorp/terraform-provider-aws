@@ -95,7 +95,7 @@ func resourceBuildCreate(d *schema.ResourceData, meta interface{}) error {
 	input := gamelift.CreateBuildInput{
 		Name:            aws.String(d.Get("name").(string)),
 		OperatingSystem: aws.String(d.Get("operating_system").(string)),
-		StorageLocation: expandGameliftStorageLocation(d.Get("storage_location").([]interface{})),
+		StorageLocation: expandStorageLocation(d.Get("storage_location").([]interface{})),
 		Tags:            Tags(tags.IgnoreAWS()),
 	}
 
@@ -103,7 +103,7 @@ func resourceBuildCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Version = aws.String(v.(string))
 	}
 
-	log.Printf("[INFO] Creating Gamelift Build: %s", input)
+	log.Printf("[INFO] Creating GameLift Build: %s", input)
 	var out *gamelift.CreateBuildOutput
 	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
@@ -121,7 +121,7 @@ func resourceBuildCreate(d *schema.ResourceData, meta interface{}) error {
 		out, err = conn.CreateBuild(&input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating Gamelift build client: %w", err)
+		return fmt.Errorf("Error creating GameLift build client: %w", err)
 	}
 
 	d.SetId(aws.StringValue(out.Build.BuildId))
@@ -138,7 +138,7 @@ func resourceBuildRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	log.Printf("[INFO] Reading Gamelift Build: %s", d.Id())
+	log.Printf("[INFO] Reading GameLift Build: %s", d.Id())
 	build, err := FindBuildByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] GameLift Build (%s) not found, removing from state", d.Id())
@@ -180,7 +180,7 @@ func resourceBuildUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GameLiftConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		log.Printf("[INFO] Updating Gamelift Build: %s", d.Id())
+		log.Printf("[INFO] Updating GameLift Build: %s", d.Id())
 		input := gamelift.UpdateBuildInput{
 			BuildId: aws.String(d.Id()),
 			Name:    aws.String(d.Get("name").(string)),
@@ -191,7 +191,7 @@ func resourceBuildUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := conn.UpdateBuild(&input)
 		if err != nil {
-			return fmt.Errorf("Error updating Gamelift build client: %w", err)
+			return fmt.Errorf("Error updating GameLift build client: %w", err)
 		}
 	}
 
@@ -210,14 +210,14 @@ func resourceBuildUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceBuildDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GameLiftConn
 
-	log.Printf("[INFO] Deleting Gamelift Build: %s", d.Id())
+	log.Printf("[INFO] Deleting GameLift Build: %s", d.Id())
 	_, err := conn.DeleteBuild(&gamelift.DeleteBuildInput{
 		BuildId: aws.String(d.Id()),
 	})
 	return err
 }
 
-func expandGameliftStorageLocation(cfg []interface{}) *gamelift.S3Location {
+func expandStorageLocation(cfg []interface{}) *gamelift.S3Location {
 	loc := cfg[0].(map[string]interface{})
 
 	location := &gamelift.S3Location{

@@ -16,6 +16,19 @@ type Map struct {
 	_ []struct{}
 }
 
+// ApplyTerraform5AttributePathStep applies an AttributePathStep to a Map,
+// returning the Type found at that AttributePath within the Map. If the
+// AttributePathStep cannot be applied to the Map, an ErrInvalidStep error
+// will be returned.
+func (m Map) ApplyTerraform5AttributePathStep(step AttributePathStep) (interface{}, error) {
+	switch step.(type) {
+	case ElementKeyString:
+		return m.ElementType, nil
+	default:
+		return nil, ErrInvalidStep
+	}
+}
+
 // Equal returns true if the two Maps are exactly equal. Unlike Is, passing in
 // a Map with no ElementType will always return false.
 func (m Map) Equal(o Type) bool {
