@@ -358,16 +358,15 @@ func FlattenAnalyticsFilter(analyticsFilter *s3.AnalyticsFilter) []map[string]in
 	}
 
 	result := make(map[string]interface{})
-	if analyticsFilter.And != nil {
-		and := *analyticsFilter.And
+	if and := analyticsFilter.And; and != nil {
 		if and.Prefix != nil {
-			result["prefix"] = *and.Prefix
+			result["prefix"] = aws.StringValue(and.Prefix)
 		}
 		if and.Tags != nil {
 			result["tags"] = KeyValueTags(and.Tags).IgnoreAWS().Map()
 		}
 	} else if analyticsFilter.Prefix != nil {
-		result["prefix"] = *analyticsFilter.Prefix
+		result["prefix"] = aws.StringValue(analyticsFilter.Prefix)
 	} else if analyticsFilter.Tag != nil {
 		tags := []*s3.Tag{
 			analyticsFilter.Tag,
