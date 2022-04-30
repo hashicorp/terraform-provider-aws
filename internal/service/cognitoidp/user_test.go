@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 )
 
-func TestAccCognitoUser_basic(t *testing.T) {
+func TestAccCognitoIDPUser_basic(t *testing.T) {
 	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rUserName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user.test"
@@ -57,7 +57,7 @@ func TestAccCognitoUser_basic(t *testing.T) {
 	})
 }
 
-func TestAccCognitoUser_disappears(t *testing.T) {
+func TestAccCognitoIDPUser_disappears(t *testing.T) {
 	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rUserName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user.test"
@@ -80,7 +80,7 @@ func TestAccCognitoUser_disappears(t *testing.T) {
 	})
 }
 
-func TestAccCognitoUser_temporaryPassword(t *testing.T) {
+func TestAccCognitoIDPUser_temporaryPassword(t *testing.T) {
 	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rUserName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rClientName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -136,7 +136,7 @@ func TestAccCognitoUser_temporaryPassword(t *testing.T) {
 	})
 }
 
-func TestAccCognitoUser_password(t *testing.T) {
+func TestAccCognitoIDPUser_password(t *testing.T) {
 	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rUserName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rClientName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -192,7 +192,7 @@ func TestAccCognitoUser_password(t *testing.T) {
 	})
 }
 
-func TestAccCognitoUser_attributes(t *testing.T) {
+func TestAccCognitoIDPUser_attributes(t *testing.T) {
 	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rUserName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user.test"
@@ -240,7 +240,7 @@ func TestAccCognitoUser_attributes(t *testing.T) {
 	})
 }
 
-func TestAccCognitoUser_enabled(t *testing.T) {
+func TestAccCognitoIDPUser_enabled(t *testing.T) {
 	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rUserName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user.test"

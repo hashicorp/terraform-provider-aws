@@ -20,6 +20,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceUserPool() *schema.Resource {
@@ -814,14 +815,14 @@ func resourceUserPoolRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.DescribeUserPool(params)
 
-	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Cognito User Pool (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResUserPool, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing Cognito User Pool (%s): %w", d.Id(), err)
+		return names.Error(names.CognitoIDP, names.ErrActionReading, ResUserPool, d.Id(), err)
 	}
 
 	userPool := resp.UserPool
@@ -924,14 +925,14 @@ func resourceUserPoolRead(d *schema.ResourceData, meta interface{}) error {
 
 	output, err := conn.GetUserPoolMfaConfig(input)
 
-	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Cognito User Pool (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResUserPool, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting Cognito User Pool (%s) MFA Configuration: %w", d.Id(), err)
+		return names.Error(names.CognitoIDP, names.ErrActionReading, ResUserPool, d.Id(), err)
 	}
 
 	d.Set("mfa_configuration", output.MfaConfiguration)
