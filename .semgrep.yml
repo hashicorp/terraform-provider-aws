@@ -54,7 +54,6 @@ rules:
         - internal/service/gamelift
         - internal/service/iam
         - internal/service/opsworks
-        - internal/service/redshift
     patterns:
       - pattern: '$LHS = *$RHS'
       - pattern-not: '*$LHS2 = *$RHS'
