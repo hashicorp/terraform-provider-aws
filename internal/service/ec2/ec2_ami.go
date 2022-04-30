@@ -71,6 +71,11 @@ func ResourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"deprecate_at": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.IsRFC3339Time,
+			},
 			// The following block device attributes intentionally mimick the
 			// corresponding attributes on aws_instance, since they have the
 			// same meaning.
@@ -343,6 +348,13 @@ func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	if v, ok := d.GetOk("deprecate_at"); ok {
+		err := enableImageDeprecation(client, d.Id(), v.(string))
+		if err != nil {
+			return err
+		}
+	}
+
 	return resourceAMIRead(d, meta)
 }
 
@@ -425,6 +437,9 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("architecture", image.Architecture)
 	d.Set("boot_mode", image.BootMode)
 	d.Set("description", image.Description)
+	if image.DeprecationTime != nil {
+		d.Set("deprecate_at", image.DeprecationTime)
+	}
 	d.Set("ena_support", image.EnaSupport)
 	d.Set("hypervisor", image.Hypervisor)
 	d.Set("image_location", image.ImageLocation)
@@ -492,6 +507,13 @@ func resourceAMIUpdate(d *schema.ResourceData, meta interface{}) error {
 				Value: aws.String(d.Get("description").(string)),
 			},
 		})
+		if err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("deprecate_at") {
+		err := enableImageDeprecation(client, d.Id(), d.Get("deprecate_at").(string))
 		if err != nil {
 			return err
 		}
@@ -586,6 +608,22 @@ func AMIWaitForDestroy(timeout time.Duration, id string, client *ec2.EC2) error 
 	_, err := stateConf.WaitForState()
 	if err != nil {
 		return fmt.Errorf("Error waiting for AMI (%s) to be deleted: %v", id, err)
+	}
+
+	return nil
+}
+
+func enableImageDeprecation(conn *ec2.EC2, id string, deprecateAt string) error {
+	v, _ := time.Parse(time.RFC3339, deprecateAt)
+
+	input := &ec2.EnableImageDeprecationInput{
+		ImageId:     aws.String(id),
+		DeprecateAt: aws.Time(v),
+	}
+
+	_, err := conn.EnableImageDeprecation(input)
+	if err != nil {
+		return fmt.Errorf("error enabling image deprecation: %s", err)
 	}
 
 	return nil
