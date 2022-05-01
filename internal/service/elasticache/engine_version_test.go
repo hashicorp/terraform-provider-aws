@@ -377,6 +377,7 @@ func TestNormalizeEngineVersion(t *testing.T) {
 	testcases := []struct {
 		version    string
 		normalized string
+		valid      bool
 	}{
 		{
 			version:    "5.4.3",
@@ -384,14 +385,11 @@ func TestNormalizeEngineVersion(t *testing.T) {
 		},
 		{
 			version:    "6.2",
-			normalized: "6.2.0",
+			normalized: "6.2",
 		},
 		{
 			version:    "6.x",
-			normalized: fmt.Sprintf("6.%d.0", math.MaxInt),
-		},
-		{
-			version: "5.x",
+			normalized: fmt.Sprintf("6.%d", math.MaxInt),
 		},
 	}
 
