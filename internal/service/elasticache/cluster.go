@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -558,22 +557,20 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 }
 
 func setEngineVersionFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) error {
-	engineVersion, err := gversion.NewVersion(aws.StringValue(c.EngineVersion))
-	if err != nil {
-		return fmt.Errorf("error reading ElastiCache Cache Cluster (%s) engine version: %w", d.Id(), err)
-	}
-	if engineVersion.Segments()[0] < 6 {
-		d.Set("engine_version", engineVersion.String())
+	engineVersion := aws.StringValue(c.EngineVersion)
+	if verify.SemVerLessThan(aws.StringValue(c.EngineVersion), "6.0") {
+		d.Set("engine_version", engineVersion)
 	} else {
 		// Handle major-only version number
 		configVersion := d.Get("engine_version").(string)
+		segments := strings.Split(engineVersion, ".")
 		if t, _ := regexp.MatchString(`[6-9]\.x`, configVersion); t {
-			d.Set("engine_version", fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
+			d.Set("engine_version", fmt.Sprintf("%s.x", segments[0]))
 		} else {
-			d.Set("engine_version", fmt.Sprintf("%d.%d", engineVersion.Segments()[0], engineVersion.Segments()[1]))
+			d.Set("engine_version", fmt.Sprintf("%s.%s", segments[0], segments[1]))
 		}
 	}
-	d.Set("engine_version_actual", engineVersion.String())
+	d.Set("engine_version_actual", engineVersion)
 
 	return nil
 }

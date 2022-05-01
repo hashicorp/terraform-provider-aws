@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
-	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -929,12 +928,8 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 					if engineType, version, err := ParseEngineVersion(d.Get("engine_version").(string)); err == nil {
 						switch engineType {
 						case opensearchservice.EngineTypeElasticsearch:
-							if want, err := gversion.NewVersion("7.9"); err == nil {
-								if got, err := gversion.NewVersion(version); err == nil {
-									if got.LessThan(want) {
-										input.ClusterConfig.ColdStorageOptions = nil
-									}
-								}
+							if verify.SemVerLessThan(version, "7.9") {
+								input.ClusterConfig.ColdStorageOptions = nil
 							}
 						case opensearchservice.EngineTypeOpenSearch:
 							// All OpenSearch versions support cold storage options.
@@ -1068,17 +1063,7 @@ func inPlaceEncryptionEnableVersion(version string) bool {
 	}
 
 	version = strings.TrimPrefix(strings.ToLower(version), "elasticsearch_")
-	var want, got *gversion.Version
-	var err error
-	if want, err = gversion.NewVersion("6.7"); err != nil {
-		return false
-	}
-
-	if got, err = gversion.NewVersion(version); err != nil || got.LessThan(want) {
-		return false
-	}
-
-	return true
+	return verify.SemVerLessThan(version, "7.9")
 }
 
 func suppressEquivalentKmsKeyIds(k, old, new string, d *schema.ResourceData) bool {

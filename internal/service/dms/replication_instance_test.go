@@ -8,12 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	gversion "github.com/hashicorp/go-version"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestAccDMSReplicationInstance_basic(t *testing.T) {
@@ -584,19 +584,7 @@ func testAccReplicationInstanceEngineVersionsPreCheck(t *testing.T) []string {
 
 	// Sort them ascending
 	sort.Slice(orderableReplicationInstances, func(i, j int) bool {
-		iEngineVersion, err := gversion.NewVersion(aws.StringValue(orderableReplicationInstances[i].EngineVersion))
-
-		if err != nil {
-			t.Fatalf("error converting (%s) to go-version: %s", aws.StringValue(orderableReplicationInstances[i].EngineVersion), err)
-		}
-
-		jEngineVersion, err := gversion.NewVersion(aws.StringValue(orderableReplicationInstances[j].EngineVersion))
-
-		if err != nil {
-			t.Fatalf("error converting (%s) to go-version: %s", aws.StringValue(orderableReplicationInstances[j].EngineVersion), err)
-		}
-
-		return iEngineVersion.LessThan(jEngineVersion)
+		return verify.SemVerLessThan(aws.StringValue(orderableReplicationInstances[i].EngineVersion), aws.StringValue(orderableReplicationInstances[j].EngineVersion))
 	})
 
 	engineVersions := make([]string, len(orderableReplicationInstances))
