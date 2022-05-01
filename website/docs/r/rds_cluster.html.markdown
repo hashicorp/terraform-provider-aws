@@ -251,6 +251,8 @@ resource "aws_rds_cluster" "example" {
 
 ### serverlessv2_scaling_configuration Argument Reference
 
+~> **NOTE:** serverlessv2_scaling_configuration configuration is only valid when engine_mode is set to provisioned
+
 Example:
 
 ```terraform
@@ -264,8 +266,8 @@ resource "aws_rds_cluster" "example" {
 }
 ```
 
-* `max_capacity` - (Required) The maximum capacity for an Aurora DB cluster in `serverlessv2` DB engine mode. The maximum capacity must be greater than or equal to the minimum capacity. Valid capacity values are in a range of `0.5` up to `128` in steps of `0.5`.
-* `min_capacity` - (Required) The minimum capacity for an Aurora DB cluster in `serverlessv2` DB engine mode. The minimum capacity must be lesser than or equal to the maximum capacity. Valid capacity values are in a range of `0.5` up to `128` in steps of `0.5`.
+* `max_capacity` - (Required) The maximum capacity for an Aurora DB cluster in `provisioned` DB engine mode. The maximum capacity must be greater than or equal to the minimum capacity. Valid capacity values are in a range of `0.5` up to `128` in steps of `0.5`.
+* `min_capacity` - (Required) The minimum capacity for an Aurora DB cluster in `provisioned` DB engine mode. The minimum capacity must be lesser than or equal to the maximum capacity. Valid capacity values are in a range of `0.5` up to `128` in steps of `0.5`.
 
 ## Attributes Reference
 
