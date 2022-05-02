@@ -21,6 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -28,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
@@ -82,6 +84,8 @@ var Providers map[string]*schema.Provider
 // for tests requiring special provider configurations.
 var ProviderFactories map[string]func() (*schema.Provider, error)
 
+var ProtoV5ProviderFactories map[string]func() (tfprotov5.ProviderServer, error)
+
 // Provider is the "main" provider instance
 //
 // This Provider can be used in testing code for API calls without requiring
@@ -109,6 +113,13 @@ func init() {
 	// ProviderConfigure() can overwrite configuration during concurrent testing.
 	ProviderFactories = map[string]func() (*schema.Provider, error){
 		ProviderName: func() (*schema.Provider, error) { return tf5provider.Provider(), nil }, //nolint:unparam
+	}
+	ProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
+		ProviderName: func() (tfprotov5.ProviderServer, error) {
+			serverFactory, err := provider.ProtoV5ProviderServerFactory(context.Background())
+
+			return serverFactory(), err
+		},
 	}
 }
 
