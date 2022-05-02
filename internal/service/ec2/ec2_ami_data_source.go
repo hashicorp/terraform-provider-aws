@@ -66,7 +66,7 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"deprecate_at": {
+			"deprecation_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -278,44 +278,28 @@ func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image, meta int
 	d.Set("architecture", image.Architecture)
 	d.Set("boot_mode", image.BootMode)
 	d.Set("creation_date", image.CreationDate)
-	if image.DeprecationTime != nil {
-		d.Set("deprecate_at", image.DeprecationTime)
-	}
-	if image.Description != nil {
-		d.Set("description", image.Description)
-	}
+	d.Set("deprecation_time", image.DeprecationTime)
+	d.Set("description", image.Description)
+	d.Set("ena_support", image.EnaSupport)
 	d.Set("hypervisor", image.Hypervisor)
 	d.Set("image_id", image.ImageId)
 	d.Set("image_location", image.ImageLocation)
-	if image.ImageOwnerAlias != nil {
-		d.Set("image_owner_alias", image.ImageOwnerAlias)
-	}
+	d.Set("image_owner_alias", image.ImageOwnerAlias)
 	d.Set("image_type", image.ImageType)
-	if image.KernelId != nil {
-		d.Set("kernel_id", image.KernelId)
-	}
+	d.Set("kernel_id", image.KernelId)
 	d.Set("name", image.Name)
 	d.Set("owner_id", image.OwnerId)
-	if image.Platform != nil {
-		d.Set("platform", image.Platform)
-	}
+	d.Set("platform", image.Platform)
+	d.Set("platform_details", image.PlatformDetails)
 	d.Set("public", image.Public)
-	if image.RamdiskId != nil {
-		d.Set("ramdisk_id", image.RamdiskId)
-	}
-	if image.RootDeviceName != nil {
-		d.Set("root_device_name", image.RootDeviceName)
-	}
+	d.Set("ramdisk_id", image.RamdiskId)
+	d.Set("root_device_name", image.RootDeviceName)
 	d.Set("root_device_type", image.RootDeviceType)
 	d.Set("root_snapshot_id", amiRootSnapshotId(image))
-	if image.SriovNetSupport != nil {
-		d.Set("sriov_net_support", image.SriovNetSupport)
-	}
+	d.Set("sriov_net_support", image.SriovNetSupport)
 	d.Set("state", image.State)
-	d.Set("virtualization_type", image.VirtualizationType)
 	d.Set("usage_operation", image.UsageOperation)
-	d.Set("platform_details", image.PlatformDetails)
-	d.Set("ena_support", image.EnaSupport)
+	d.Set("virtualization_type", image.VirtualizationType)
 
 	// Complex types get their own functions
 	if err := d.Set("block_device_mappings", amiBlockDeviceMappings(image.BlockDeviceMappings)); err != nil {

@@ -99,7 +99,7 @@ func TestAccEC2AMI_deprecateAt(t *testing.T) {
 					testAccCheckAmiExists(resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "deprecate_at", deprecateAt),
+					resource.TestCheckResourceAttr(resourceName, "deprecation_time", deprecateAt),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
@@ -140,7 +140,7 @@ func TestAccEC2AMI_deprecateAt(t *testing.T) {
 					testAccCheckAmiExists(resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "deprecate_at", deprecateAtUpdated),
+					resource.TestCheckResourceAttr(resourceName, "deprecation_time", deprecateAtUpdated),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
@@ -645,7 +645,7 @@ resource "aws_ami" "test" {
   name                = %[1]q
   root_device_name    = "/dev/sda1"
   virtualization_type = "hvm"
-  deprecate_at        = %[2]q
+  deprecation_time    = %[2]q
 
   ebs_block_device {
     device_name = "/dev/sda1"
