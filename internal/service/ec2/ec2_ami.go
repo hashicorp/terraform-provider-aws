@@ -362,75 +362,32 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	id := d.Id()
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+		return FindImageByID(conn, d.Id())
+	}, d.IsNewResource())
 
-	req := &ec2.DescribeImagesInput{
-		ImageIds: []*string{aws.String(id)},
-	}
-
-	var res *ec2.DescribeImagesOutput
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
-		res, err = conn.DescribeImages(req)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, "InvalidAMIID.NotFound") {
-				if d.IsNewResource() {
-					return resource.RetryableError(err)
-				}
-				log.Printf("[WARN] AMI (%s) not found, removing from state", d.Id())
-				d.SetId("")
-				return nil
-			}
-
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		res, err = conn.DescribeImages(req)
-	}
-	if err != nil {
-		return fmt.Errorf("Unable to find AMI after retries: %s", err)
-	}
-
-	if res == nil || len(res.Images) != 1 {
-		if d.IsNewResource() {
-			return fmt.Errorf("error reading EC2 AMI (%s): empty response", d.Id())
-		}
-
-		log.Printf("[WARN] AMI (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 AMI %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	image := res.Images[0]
-	state := aws.StringValue(image.State)
+	if err != nil {
+		return fmt.Errorf("error reading EC2 AMI (%s): %w", d.Id(), err)
+	}
 
-	if state == ec2.ImageStatePending {
+	image := outputRaw.(*ec2.Image)
+
+	if aws.StringValue(image.State) == ec2.ImageStatePending {
 		// This could happen if a user manually adds an image we didn't create
 		// to the state. We'll wait for the image to become available
 		// before we continue. We should never take this branch in normal
 		// circumstances since we would've waited for availability during
 		// the "Create" step.
-		image, err = resourceAMIWaitForAvailable(d.Timeout(schema.TimeoutCreate), id, conn)
+		image, err = resourceAMIWaitForAvailable(d.Timeout(schema.TimeoutCreate), d.Id(), conn)
 		if err != nil {
 			return err
 		}
-		state = aws.StringValue(image.State)
-	}
-
-	if state == ec2.ImageStateDeregistered {
-		if d.IsNewResource() {
-			return fmt.Errorf("error reading EC2 AMI (%s): deregistered", d.Id())
-		}
-
-		log.Printf("[WARN] AMI (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if state != ec2.ImageStateAvailable {
-		return fmt.Errorf("AMI has become %s", state)
 	}
 
 	d.Set("architecture", image.Architecture)
