@@ -17,6 +17,11 @@ import (
 func ResourceAMIFromInstance() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAMIFromInstanceCreate,
+		// The remaining operations are shared with the generic aws_ami resource,
+		// since the aws_ami_from_instance resource only differs in how it's created.
+		Read:   resourceAMIRead,
+		Update: resourceAMIUpdate,
+		Delete: resourceAMIDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(AWSAMIRetryTimeout),
@@ -221,12 +226,6 @@ func ResourceAMIFromInstance() *schema.Resource {
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
-
-		// The remaining operations are shared with the generic aws_ami resource,
-		// since the aws_ami_copy resource only differs in how it's created.
-		Read:   resourceAMIRead,
-		Update: resourceAMIUpdate,
-		Delete: resourceAMIDelete,
 	}
 }
 
