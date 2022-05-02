@@ -280,7 +280,14 @@ rules:
         - internal/service/d[a-df-z]*
         - internal/service/devicefarm
         - internal/service/i*
-        - internal/service/[k-o]*
+        - internal/service/[k-l]*
+        - internal/service/macie
+        - internal/service/macie2
+        - internal/service/mediastore
+        - internal/service/mq
+        - internal/service/neptune
+        - internal/service/opsworks
+        - internal/service/organizations
         - internal/service/pinpoint
         - internal/service/rds
         - internal/service/resourcegroups
@@ -693,7 +700,6 @@ rules:
         - internal/service/iam/user.go
         - internal/service/iam/user_ssh_key.go
         - internal/service/kinesisvideo/stream.go
-        - internal/service/mediaconvert/queue.go
     patterns:
       - pattern: |
           func $FUNC(...) {
