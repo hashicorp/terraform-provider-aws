@@ -165,13 +165,13 @@ func resourceNotificationRuleRead(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codestarnotifications.ErrCodeResourceNotFoundException) {
-		names.LogNotFoundRemoveState(names.CodeStarNotifications, names.ErrActionReading, "Notification Rule", d.Id())
+		names.LogNotFoundRemoveState(names.CodeStarNotifications, names.ErrActionReading, ResNotificationRule, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CodeStarNotifications, names.ErrActionReading, "Notification Rule", d.Id(), err)
+		return names.Error(names.CodeStarNotifications, names.ErrActionReading, ResNotificationRule, d.Id(), err)
 	}
 
 	d.Set("arn", rule.Arn)
