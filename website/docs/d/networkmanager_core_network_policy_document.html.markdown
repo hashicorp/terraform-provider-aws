@@ -1,5 +1,5 @@
 ---
-subcategory:  "Network Manager"
+subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_core_network_policy_document"
 description: |-
@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_networkmanager_core_network_policy_document
 
-Generates a Core Network policy document in JSON format for use with resources that expect core network policy documents such as `awscc_networkmanager_core_network_policy`. It follows the API defintion from the [core-network-policy documentation](https://docs.aws.amazon.com/vpc/latest/cloudwan/cloudwan-policies-json.html).
+Generates a Core Network policy document in JSON format for use with resources that expect core network policy documents such as `awscc_networkmanager_core_network`. It follows the API definition from the [core-network-policy documentation](https://docs.aws.amazon.com/vpc/latest/cloudwan/cloudwan-policies-json.html).
 
 Using this data source to generate policy documents is *optional*. It is also valid to use literal JSON strings in your configuration or to use the `file` interpolation function to read a raw JSON policy document from a file.
 
@@ -177,13 +177,13 @@ The following arguments are available:
 
 * `action` - The action to take when a condition is true. Detailed Below.
 * `condition_logic` (Optional) - Valid values include `and` or `or`. This is a mandatory parameter only if you have more than one condition. The `condition_logic` apply to all of the conditions for a rule, which also means nested conditions of and or or are not supported. Use `or` if you want to associate the attachment with the segment by either the segment name or attachment tag value, or by the chosen conditions. Use `and` if you want to associate the attachment with the segment by either the segment name or attachment tag value and by the chosen conditions. Detailed Below.
-* `conditions` - A block arugment. Detailed Below.
+* `conditions` - A block argument. Detailed Below.
 * `description` (Optional) - A user-defined description that further helps identify the rule.
 * `rule_number` - An integer from `1` to `65535` indicating the rule's order number. Rules are processed in order from the lowest numbered rule to the highest. Rules stop processing when a rule is matched. It's important to make sure that you number your rules in the exact order that you want them processed.
 
 ### `action`
 
-The following arguments are avilable:
+The following arguments are available:
 
 * `association_method` - Defines how a segment is mapped. Values can be `constant` or `tag`. `constant` statically defines the segment to associate the attachment to. `tag` uses the value of a tag to dynamically try to map to a segment.reference_policies_elements_condition_operators.html) to evaluate.
 * `segment` - The name of the `segment` to share as defined in the `segments` section. This is used only when the `association_method` is `constant`.
@@ -194,7 +194,7 @@ The following arguments are avilable:
 
 The conditions block has 4 arguments `type`, `operator`, `key`, `value`. Setting or omitting each argument requires a combination of logic based on the value set to `type`. For that reason, please refer to the [AWS documentation](https://docs.aws.amazon.com/vpc/latest/cloudwan/cloudwan-policies-json.html) for complete usage docs.
 
-The following arguments are avilable:
+The following arguments are available:
 
 * `type` - Valid values include: `account-id`, `any`, `tag-value`, `tag-exists`, `resource-id`, `region`, `attachment-type`.
 * `operator` - Valid values include: `equals`, `not-equals`, `contains`, `begins-with`.

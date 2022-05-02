@@ -34,7 +34,7 @@ var testAccCoreNetworkPolicyDocumentBasic = `
 data "aws_networkmanager_core_network_policy_document" "test" {
   core_network_configuration {
     vpn_ecmp_support = false
-    asn_ranges       = [
+    asn_ranges = [
       "64512-65534",
       "4200000000-4294967294"
     ]
@@ -60,7 +60,6 @@ data "aws_networkmanager_core_network_policy_document" "test" {
         "2001:4860:E000::/40"
       ]
     }
-
   }
 
   segments {
