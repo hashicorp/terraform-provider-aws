@@ -16,8 +16,9 @@ func DataSourceInstanceProfiles() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"role_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validIamResourceName(roleNameMaxLen),
 			},
 			"arns": {
 				Type:     schema.TypeSet,
@@ -60,12 +61,12 @@ func dataSourceInstanceProfilesRead(d *schema.ResourceData, meta interface{}) er
 
 	var arns, paths, names []string
 	for _, profile := range instanceProfiles {
-		arns = append(arns, *profile.Arn)
-		paths = append(paths, *profile.Path)
-		names = append(names, *profile.InstanceProfileName)
+		arns = append(arns, aws.StringValue(profile.Arn))
+		paths = append(paths, aws.StringValue(profile.Path))
+		names = append(names, aws.StringValue(profile.InstanceProfileName))
 	}
 
-	d.SetId(aws.StringValue(&roleName))
+	d.SetId(roleName)
 	d.Set("arns", arns)
 	d.Set("paths", paths)
 	d.Set("names", names)

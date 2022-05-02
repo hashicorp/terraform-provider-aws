@@ -14,8 +14,8 @@ func TestAccIAMInstanceProfilesDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_iam_instance_profiles.test"
 	resourceName := "aws_iam_instance_profile.test"
 
-	roleName := fmt.Sprintf("tf-acc-ds-instance-profile-role-%d", sdkacctest.RandInt())
-	profileName := fmt.Sprintf("tf-acc-ds-instance-profile-%d", sdkacctest.RandInt())
+	roleName := sdkacctest.RandomWithPrefix("tf-acc-ds-instance-profile-role")
+	profileName := sdkacctest.RandomWithPrefix("tf-acc-ds-instance-profile")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
