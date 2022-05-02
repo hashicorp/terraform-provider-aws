@@ -14,8 +14,7 @@ func TestAccIAMInstanceProfilesDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_iam_instance_profiles.test"
 	resourceName := "aws_iam_instance_profile.test"
 
-	roleName := sdkacctest.RandomWithPrefix("tf-acc-ds-instance-profile-role")
-	profileName := sdkacctest.RandomWithPrefix("tf-acc-ds-instance-profile")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -23,7 +22,7 @@ func TestAccIAMInstanceProfilesDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceProfilesDataSourceConfig(roleName, profileName),
+				Config: testAccInstanceProfilesDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "arns.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "paths.#", "1"),
@@ -37,22 +36,22 @@ func TestAccIAMInstanceProfilesDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccInstanceProfilesDataSourceConfig(roleName, profileName string) string {
+func testAccInstanceProfilesDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name               = %[1]q
+  name               = "%[1]s-role"
   assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
 }
 
 resource "aws_iam_instance_profile" "test" {
-  name = %[2]q
+  name = "%[1]s-instance-profile"
   role = aws_iam_role.test.name
   path = "/testpath/"
 }
 
 data "aws_iam_instance_profiles" "test" {
-	role_name = aws_iam_role.test.name
-	depends_on = [aws_iam_role.test, aws_iam_instance_profile.test]
+  role_name  = aws_iam_role.test.name
+  depends_on = [aws_iam_role.test, aws_iam_instance_profile.test]
 }
-`, roleName, profileName)
+`, rName)
 }
