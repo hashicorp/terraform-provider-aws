@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -36,9 +37,19 @@ func ResourceAMICopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"deprecation_time": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.IsRFC3339Time,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"destination_outpost_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			// The following block device attributes intentionally mimick the
 			// corresponding attributes on aws_instance, since they have the
@@ -56,42 +67,34 @@ func ResourceAMICopy() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-
 						"device_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"encrypted": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-
 						"iops": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"outpost_arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"snapshot_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"throughput": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"volume_size": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"volume_type": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -127,7 +130,6 @@ func ResourceAMICopy() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"virtual_name": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -220,22 +222,17 @@ func ResourceAMICopy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"destination_outpost_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
 			"sriov_net_support": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-			"virtualization_type": {
+			"usage_operation": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"usage_operation": {
+			"virtualization_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
