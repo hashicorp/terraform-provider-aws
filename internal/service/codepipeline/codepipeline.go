@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 
@@ -23,6 +22,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -538,14 +538,14 @@ func resourceCodePipelineRead(d *schema.ResourceData, meta interface{}) error {
 		Name: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, codepipeline.ErrCodePipelineNotFoundException) {
-		log.Printf("[WARN] CodePipeline (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codepipeline.ErrCodePipelineNotFoundException) {
+		names.LogNotFoundRemoveState(names.CodePipeline, names.ErrActionReading, ResCodePipeline, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading CodePipeline: %w", err)
+		return names.Error(names.CodePipeline, names.ErrActionReading, ResCodePipeline, d.Id(), err)
 	}
 
 	metadata := resp.Metadata

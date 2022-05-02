@@ -2,7 +2,6 @@ package codepipeline
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceWebhook() *schema.Resource {
@@ -154,14 +154,14 @@ func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
 	arn := d.Id()
 	webhook, err := GetWebhook(conn, arn)
 
-	if tfresource.NotFound(err) {
-		log.Printf("[WARN] CodePipeline Webhook (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		names.LogNotFoundRemoveState(names.CodePipeline, names.ErrActionReading, ResWebhook, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting CodePipeline Webhook (%s): %s", d.Id(), err)
+		return names.Error(names.CodePipeline, names.ErrActionReading, ResWebhook, d.Id(), err)
 	}
 
 	webhookDef := webhook.Definition
