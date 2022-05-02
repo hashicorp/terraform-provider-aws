@@ -29,7 +29,7 @@ func TestAccCodeCommitApprovalRuleTemplate_basic(t *testing.T) {
 				Config: testAccCodeCommitApprovalRuleTemplate_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeCommitApprovalRuleTemplateExists(resourceName),
-					testAccCheckCodeCommitApprovalRuleTemplateContent(resourceName, 2),
+					testAccCheckApprovalRuleTemplateContent(resourceName, 2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "approval_rule_template_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
@@ -83,7 +83,7 @@ func TestAccCodeCommitApprovalRuleTemplate_updateContentAndDescription(t *testin
 				Config: testAccCodeCommitApprovalRuleTemplate_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeCommitApprovalRuleTemplateExists(resourceName),
-					testAccCheckCodeCommitApprovalRuleTemplateContent(resourceName, 2),
+					testAccCheckApprovalRuleTemplateContent(resourceName, 2),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 				),
 			},
@@ -91,7 +91,7 @@ func TestAccCodeCommitApprovalRuleTemplate_updateContentAndDescription(t *testin
 				Config: testAccCodeCommitApprovalRuleTemplate_updateContentAndDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeCommitApprovalRuleTemplateExists(resourceName),
-					testAccCheckCodeCommitApprovalRuleTemplateContent(resourceName, 1),
+					testAccCheckApprovalRuleTemplateContent(resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "description", "This is a test description"),
 				),
 			},
@@ -138,7 +138,7 @@ func TestAccCodeCommitApprovalRuleTemplate_updateName(t *testing.T) {
 	})
 }
 
-func testAccCheckCodeCommitApprovalRuleTemplateContent(resourceName string, numApprovals int) resource.TestCheckFunc {
+func testAccCheckApprovalRuleTemplateContent(resourceName string, numApprovals int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		expectedContent := fmt.Sprintf(`{"Version":"2018-11-08","DestinationReferences":["refs/heads/master"],"Statements":[{"Type":"Approvers","NumberOfApprovalsNeeded":%d,"ApprovalPoolMembers":["arn:%s:sts::%s:assumed-role/CodeCommitReview/*"]}]}`,
 			numApprovals, acctest.Partition(), acctest.AccountID(),
