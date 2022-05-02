@@ -24,45 +24,45 @@ func DataSourceAMI() *schema.Resource {
 		Read: dataSourceAMIRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"filter": DataSourceFiltersSchema(),
-			"executable_users": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"name_regex": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringIsValidRegExp,
-			},
-			"most_recent": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"owners": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.NoZeroValues,
-				},
-			},
-			// Computed values.
 			"architecture": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"block_device_mappings": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Set:      amiBlockDeviceMappingHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"device_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ebs": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"no_device": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"virtual_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"boot_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"creation_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -74,6 +74,16 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"ena_support": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"executable_users": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"filter": DataSourceFiltersSchema(),
 			"hypervisor": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -98,17 +108,57 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"most_recent": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"name_regex": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringIsValidRegExp,
 			},
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"owners": {
+				Type:     schema.TypeList,
+				Required: true,
+				MinItems: 1,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.NoZeroValues,
+				},
+			},
 			"platform": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"platform_details": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"product_codes": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Set:      amiProductCodesHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"product_code_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"product_code_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"public": {
 				Type:     schema.TypeBool,
@@ -138,72 +188,20 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"virtualization_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"usage_operation": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"platform_details": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ena_support": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			// Complex computed values
-			"block_device_mappings": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Set:      amiBlockDeviceMappingHash,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"device_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"no_device": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"virtual_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ebs": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-			"product_codes": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Set:      amiProductCodesHash,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"product_code_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"product_code_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
 			"state_reason": {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"tags": tftags.TagsSchemaComputed(),
+			"usage_operation": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"virtualization_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
