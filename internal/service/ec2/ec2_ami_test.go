@@ -3,6 +3,7 @@ package ec2_test
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -521,7 +522,13 @@ func TestAccEC2AMI_boot(t *testing.T) {
 func testAccCheckAmiDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-	for _, rs := range s.RootModule().Resources {
+	for n, rs := range s.RootModule().Resources {
+		// The configuration may contain aws_ami data sources.
+		// Ignore them.
+		if strings.HasPrefix(n, "data.") {
+			continue
+		}
+
 		if rs.Type != "aws_ami" {
 			continue
 		}
