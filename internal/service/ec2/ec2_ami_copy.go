@@ -253,28 +253,31 @@ func resourceAMICopyCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	req := &ec2.CopyImageInput{
+	name := d.Get("name").(string)
+	sourceImageID := d.Get("source_ami_id").(string)
+	input := &ec2.CopyImageInput{
 		Description:   aws.String(d.Get("description").(string)),
 		Encrypted:     aws.Bool(d.Get("encrypted").(bool)),
-		Name:          aws.String(d.Get("name").(string)),
-		SourceImageId: aws.String(d.Get("source_ami_id").(string)),
+		Name:          aws.String(name),
+		SourceImageId: aws.String(sourceImageID),
 		SourceRegion:  aws.String(d.Get("source_ami_region").(string)),
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
-		req.KmsKeyId = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("destination_outpost_arn"); ok {
-		req.DestinationOutpostArn = aws.String(v.(string))
+		input.DestinationOutpostArn = aws.String(v.(string))
 	}
 
-	res, err := conn.CopyImage(req)
+	if v, ok := d.GetOk("kms_key_id"); ok {
+		input.KmsKeyId = aws.String(v.(string))
+	}
+
+	output, err := conn.CopyImage(input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating EC2 AMI (%s) from source EC2 AMI (%s): %w", name, sourceImageID, err)
 	}
 
-	d.SetId(aws.StringValue(res.ImageId))
+	d.SetId(aws.StringValue(output.ImageId))
 	d.Set("manage_ebs_snapshots", true)
 
 	if len(tags) > 0 {
@@ -283,9 +286,8 @@ func resourceAMICopyCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	_, err = resourceAMIWaitForAvailable(d.Timeout(schema.TimeoutCreate), d.Id(), conn)
-	if err != nil {
-		return err
+	if _, err := WaitImageAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for EC2 AMI (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceAMIRead(d, meta)

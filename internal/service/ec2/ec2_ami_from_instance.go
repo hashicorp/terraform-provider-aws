@@ -235,25 +235,27 @@ func resourceAMIFromInstanceCreate(d *schema.ResourceData, meta interface{}) err
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	req := &ec2.CreateImageInput{
+	instanceID := d.Get("source_instance_id").(string)
+	name := d.Get("name").(string)
+	input := &ec2.CreateImageInput{
 		Description:       aws.String(d.Get("description").(string)),
-		InstanceId:        aws.String(d.Get("source_instance_id").(string)),
-		Name:              aws.String(d.Get("name").(string)),
+		InstanceId:        aws.String(instanceID),
+		Name:              aws.String(name),
 		NoReboot:          aws.Bool(d.Get("snapshot_without_reboot").(bool)),
 		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeImage),
 	}
 
-	res, err := conn.CreateImage(req)
+	output, err := conn.CreateImage(input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating EC2 AMI (%s) from EC2 Instance (%s): %w", name, instanceID, err)
 	}
 
-	d.SetId(aws.StringValue(res.ImageId))
+	d.SetId(aws.StringValue(output.ImageId))
 	d.Set("manage_ebs_snapshots", true)
 
-	_, err = resourceAMIWaitForAvailable(d.Timeout(schema.TimeoutCreate), d.Id(), conn)
-	if err != nil {
-		return err
+	if _, err := WaitImageAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for EC2 AMI (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceAMIRead(d, meta)

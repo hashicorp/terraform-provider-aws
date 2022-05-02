@@ -369,6 +369,29 @@ func WaitClientVPNRouteDeleted(conn *ec2.EC2, endpointID, targetSubnetID, destin
 	return nil, err
 }
 
+func WaitImageAvailable(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Image, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.ImageStatePending},
+		Target:     []string{ec2.ImageStateAvailable},
+		Refresh:    StatusImageState(conn, id),
+		Timeout:    timeout,
+		Delay:      AWSAMIRetryDelay,
+		MinTimeout: AMIRetryMinTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Image); ok {
+		if stateReason := output.StateReason; stateReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func WaitImageDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Image, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{ec2.ImageStateAvailable, ec2.ImageStateFailed, ec2.ImageStatePending},

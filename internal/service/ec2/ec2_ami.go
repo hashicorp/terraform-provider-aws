@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -275,26 +274,28 @@ func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	req := &ec2.RegisterImageInput{
+	name := d.Get("name").(string)
+	input := &ec2.RegisterImageInput{
 		Architecture:       aws.String(d.Get("architecture").(string)),
 		Description:        aws.String(d.Get("description").(string)),
 		EnaSupport:         aws.Bool(d.Get("ena_support").(bool)),
 		ImageLocation:      aws.String(d.Get("image_location").(string)),
-		Name:               aws.String(d.Get("name").(string)),
+		Name:               aws.String(name),
 		RootDeviceName:     aws.String(d.Get("root_device_name").(string)),
 		SriovNetSupport:    aws.String(d.Get("sriov_net_support").(string)),
 		VirtualizationType: aws.String(d.Get("virtualization_type").(string)),
 	}
 
-	if kernelId := d.Get("kernel_id").(string); kernelId != "" {
-		req.KernelId = aws.String(kernelId)
-	}
-	if ramdiskId := d.Get("ramdisk_id").(string); ramdiskId != "" {
-		req.RamdiskId = aws.String(ramdiskId)
+	if v := d.Get("boot_mode").(string); v != "" {
+		input.BootMode = aws.String(v)
 	}
 
-	if v := d.Get("boot_mode").(string); v != "" {
-		req.BootMode = aws.String(v)
+	if kernelId := d.Get("kernel_id").(string); kernelId != "" {
+		input.KernelId = aws.String(kernelId)
+	}
+
+	if ramdiskId := d.Get("ramdisk_id").(string); ramdiskId != "" {
+		input.RamdiskId = aws.String(ramdiskId)
 	}
 
 	if v, ok := d.GetOk("ebs_block_device"); ok && v.(*schema.Set).Len() > 0 {
@@ -322,30 +323,29 @@ func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		req.BlockDeviceMappings = expandEc2BlockDeviceMappingsForAmiEbsBlockDevice(v.(*schema.Set).List())
+		input.BlockDeviceMappings = expandEc2BlockDeviceMappingsForAmiEbsBlockDevice(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("ephemeral_block_device"); ok && v.(*schema.Set).Len() > 0 {
-		req.BlockDeviceMappings = append(req.BlockDeviceMappings, expandEc2BlockDeviceMappingsForAmiEphemeralBlockDevice(v.(*schema.Set).List())...)
+		input.BlockDeviceMappings = append(input.BlockDeviceMappings, expandEc2BlockDeviceMappingsForAmiEphemeralBlockDevice(v.(*schema.Set).List())...)
 	}
 
-	res, err := conn.RegisterImage(req)
+	output, err := conn.RegisterImage(input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating EC2 AMI (%s): %w", name, err)
 	}
 
-	id := aws.StringValue(res.ImageId)
-	d.SetId(id)
+	d.SetId(aws.StringValue(output.ImageId))
 
 	if len(tags) > 0 {
-		if err := CreateTags(conn, id, tags); err != nil {
+		if err := CreateTags(conn, d.Id(), tags); err != nil {
 			return fmt.Errorf("error adding tags: %s", err)
 		}
 	}
 
-	_, err = resourceAMIWaitForAvailable(d.Timeout(schema.TimeoutCreate), id, conn)
-	if err != nil {
-		return err
+	if _, err := WaitImageAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for EC2 AMI (%s) create: %w", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("deprecation_time"); ok {
@@ -384,9 +384,10 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 		// before we continue. We should never take this branch in normal
 		// circumstances since we would've waited for availability during
 		// the "Create" step.
-		image, err = resourceAMIWaitForAvailable(d.Timeout(schema.TimeoutCreate), d.Id(), conn)
+		image, err = WaitImageAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+
 		if err != nil {
-			return err
+			return fmt.Errorf("error waiting for EC2 AMI (%s) create: %w", d.Id(), err)
 		}
 	}
 
@@ -454,13 +455,14 @@ func resourceAMIUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.Get("description").(string) != "" {
 		_, err := conn.ModifyImageAttribute(&ec2.ModifyImageAttributeInput{
-			ImageId: aws.String(d.Id()),
 			Description: &ec2.AttributeValue{
 				Value: aws.String(d.Get("description").(string)),
 			},
+			ImageId: aws.String(d.Id()),
 		})
+
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating EC2 AMI (%s) description: %w", d.Id(), err)
 		}
 	}
 
@@ -523,30 +525,6 @@ func resourceAMIDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func AMIStateRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		emptyResp := &ec2.DescribeImagesOutput{}
-
-		resp, err := conn.DescribeImages(&ec2.DescribeImagesInput{ImageIds: []*string{aws.String(id)}})
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, "InvalidAMIID.NotFound") {
-				return emptyResp, "destroyed", nil
-			} else if resp != nil && len(resp.Images) == 0 {
-				return emptyResp, "destroyed", nil
-			} else {
-				return emptyResp, "", fmt.Errorf("Error on refresh: %+v", err)
-			}
-		}
-
-		if resp == nil || resp.Images == nil || len(resp.Images) == 0 {
-			return emptyResp, "destroyed", nil
-		}
-
-		// AMI is valid, so return it's state
-		return resp.Images[0], aws.StringValue(resp.Images[0].State), nil
-	}
-}
-
 func enableImageDeprecation(conn *ec2.EC2, id string, deprecateAt string) error {
 	v, _ := time.Parse(time.RFC3339, deprecateAt)
 	input := &ec2.EnableImageDeprecationInput{
@@ -561,25 +539,6 @@ func enableImageDeprecation(conn *ec2.EC2, id string, deprecateAt string) error 
 	}
 
 	return nil
-}
-
-func resourceAMIWaitForAvailable(timeout time.Duration, id string, conn *ec2.EC2) (*ec2.Image, error) {
-	log.Printf("Waiting for AMI %s to become available...", id)
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{ec2.ImageStatePending},
-		Target:     []string{ec2.ImageStateAvailable},
-		Refresh:    AMIStateRefreshFunc(conn, id),
-		Timeout:    timeout,
-		Delay:      AWSAMIRetryDelay,
-		MinTimeout: AMIRetryMinTimeout,
-	}
-
-	info, err := stateConf.WaitForState()
-	if err != nil {
-		return nil, fmt.Errorf("Error waiting for AMI (%s) to be ready: %v", id, err)
-	}
-	return info.(*ec2.Image), nil
 }
 
 func expandEc2BlockDeviceMappingForAmiEbsBlockDevice(tfMap map[string]interface{}) *ec2.BlockDeviceMapping {
