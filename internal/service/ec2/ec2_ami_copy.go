@@ -3,6 +3,7 @@ package ec2
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -43,9 +44,11 @@ func ResourceAMICopy() *schema.Resource {
 				Computed: true,
 			},
 			"deprecation_time": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.IsRFC3339Time,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				ValidateFunc:          validation.IsRFC3339Time,
+				DiffSuppressFunc:      verify.SuppressEquivalentRoundedTime(time.RFC3339, time.Minute),
+				DiffSuppressOnRefresh: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -287,6 +290,12 @@ func resourceAMICopyCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if _, err := WaitImageAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for EC2 AMI (%s) create: %w", d.Id(), err)
+	}
+
+	if v, ok := d.GetOk("deprecation_time"); ok {
+		if err := enableImageDeprecation(conn, d.Id(), v.(string)); err != nil {
+			return err
+		}
 	}
 
 	return resourceAMIRead(d, meta)

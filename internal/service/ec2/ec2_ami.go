@@ -67,9 +67,11 @@ func ResourceAMI() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(ec2.BootModeValues_Values(), false),
 			},
 			"deprecation_time": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.IsRFC3339Time,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				ValidateFunc:          validation.IsRFC3339Time,
+				DiffSuppressFunc:      verify.SuppressEquivalentRoundedTime(time.RFC3339, time.Minute),
+				DiffSuppressOnRefresh: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
