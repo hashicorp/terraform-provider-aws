@@ -276,9 +276,20 @@ rules:
         - internal/service
       exclude:
         - internal/service/**/*_data_source.go
-        - internal/service/[be-g]*
+        - internal/service/backup
+        - internal/service/batch
         - internal/service/d[a-df-z]*
         - internal/service/devicefarm
+        - internal/service/ec2
+        - internal/service/ecs
+        - internal/service/efs
+        - internal/service/elasticache
+        - internal/service/elasticbeanstalk
+        - internal/service/elastictranscoder
+        - internal/service/elb
+        - internal/service/elbv2
+        - internal/service/emr
+        - internal/service/g*
         - internal/service/inspector
         - internal/service/iot
         - internal/service/kafka
@@ -702,8 +713,6 @@ rules:
         - internal/service/chime/voice_connector_streaming.go
         - internal/service/docdb/cluster_parameter_group.go
         - internal/service/elb/proxy_protocol_policy.go
-        - internal/service/events/bus_policy.go
-        - internal/service/events/permission.go
     patterns:
       - pattern: |
           func $FUNC(...) {
