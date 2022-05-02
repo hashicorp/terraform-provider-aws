@@ -4475,9 +4475,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-	vpc_id            = aws_vpc.test.id
-	cidr_block        = "10.0.0.0/24"
-	availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.0.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
 }
 
 resource "aws_security_group" "test" {
@@ -4485,17 +4485,17 @@ resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 
   lifecycle {
-	# Necessary if changing 'name' or 'name_prefix' properties.
-    create_before_destroy = true 
+    # Necessary if changing 'name' or 'name_prefix' properties.
+    create_before_destroy = true
   }
 }
 
 resource "aws_instance" "test" {
-	ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-	instance_type     = "t2.micro"
-	vpc_security_group_ids   = [aws_security_group.test.id]
-	subnet_id         = aws_subnet.test.id
-	availability_zone = data.aws_availability_zones.available.names[0]
+  ami                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type          = "t2.micro"
+  vpc_security_group_ids = [aws_security_group.test.id]
+  subnet_id              = aws_subnet.test.id
+  availability_zone      = data.aws_availability_zones.available.names[0]
 }
 `, sgName))
 }
