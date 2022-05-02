@@ -710,11 +710,6 @@ rules:
     paths:
       include:
         - internal/service/
-      exclude:
-        - internal/service/chime/voice_connector.go
-        - internal/service/chime/voice_connector_group.go
-        - internal/service/chime/voice_connector_logging.go 
-        - internal/service/chime/voice_connector_streaming.go
     patterns:
       - pattern: |
           func $FUNC(...) {
