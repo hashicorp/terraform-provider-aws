@@ -204,6 +204,16 @@ func (e emitter) emitSchemaForProvider(schema map[string]*schema.Schema) error {
 
 // emitSchemaForResource generates the Plugin Framework code for a Plugin SDK Resource and emits the generated code to the emitter's Writer.
 func (e emitter) emitSchemaForResource(resource *schema.Resource) error {
+	if _, ok := resource.Schema["id"]; ok {
+		e.warnf("Explicit `id` attribute defined")
+	} else {
+		resource.Schema["id"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		}
+	}
+
 	e.printf("tfsdk.Schema{\n")
 
 	err := e.emitAttributesAndBlocks(nil, resource.Schema)
@@ -225,8 +235,6 @@ func (e emitter) emitSchemaForResource(resource *schema.Resource) error {
 	}
 
 	e.printf("}")
-
-	// TODO Add implicit "id" Attribute.
 
 	return nil
 }
