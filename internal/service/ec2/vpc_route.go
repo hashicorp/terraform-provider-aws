@@ -243,6 +243,11 @@ func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		ErrCodeInvalidTransitGatewayIDNotFound,
 	)
 
+	// Local routes cannot be created manually
+	if tfawserr.ErrMessageContains(err, ErrCodeInvalidGatewayIDNotFound, "The gateway ID 'local' does not exist") {
+		return fmt.Errorf("cannot create local route, use import to manage existing local routes")
+	}
+
 	if err != nil {
 		return fmt.Errorf("error creating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
@@ -365,7 +370,12 @@ func resourceRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 	case "egress_only_gateway_id":
 		input.EgressOnlyInternetGatewayId = target
 	case "gateway_id":
-		input.GatewayId = target
+		// LocalTarget
+		if *target == "local" {
+			input.LocalTarget = aws.Bool(true)
+		} else {
+			input.GatewayId = target
+		}
 	case "instance_id":
 		input.InstanceId = target
 	case "local_gateway_id":
