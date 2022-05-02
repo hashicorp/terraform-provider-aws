@@ -2,7 +2,6 @@ package codestarnotifications
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"time"
 
@@ -17,6 +16,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -164,13 +164,14 @@ func resourceNotificationRuleRead(d *schema.ResourceData, meta interface{}) erro
 		Arn: aws.String(d.Id()),
 	})
 
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codestarnotifications.ErrCodeResourceNotFoundException) {
+		names.LogNotFoundRemoveState(names.CodeStarNotifications, names.ErrActionReading, "Notification Rule", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, codestarnotifications.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] codestar notification rule (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading codestar notification rule: %s", err)
+		return names.Error(names.CodeStarNotifications, names.ErrActionReading, "Notification Rule", d.Id(), err)
 	}
 
 	d.Set("arn", rule.Arn)
