@@ -286,7 +286,6 @@ rules:
         - internal/service/elasticache
         - internal/service/elasticbeanstalk
         - internal/service/elastictranscoder
-        - internal/service/elb
         - internal/service/elbv2
         - internal/service/emr
         - internal/service/g*
@@ -712,7 +711,6 @@ rules:
         - internal/service/chime/voice_connector_logging.go 
         - internal/service/chime/voice_connector_streaming.go
         - internal/service/docdb/cluster_parameter_group.go
-        - internal/service/elb/proxy_protocol_policy.go
     patterns:
       - pattern: |
           func $FUNC(...) {

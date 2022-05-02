@@ -111,7 +111,17 @@ func resourceAppCookieStickinessPolicyRead(d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving policy: %s", err)
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elb.ErrCodePolicyNotFoundException) {
+			log.Printf("[WARN] ELB Classic LB (%s) App Cookie Policy (%s) not found, removing from state", lbName, policyName)
+			d.SetId("")
+			return nil
+		}
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+			log.Printf("[WARN] ELB Classic LB (%s) not found, removing App Cookie Policy (%s) from state", lbName, policyName)
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("error retrieving ELB Classic (%s) App Cookie Policy (%s): %w", lbName, policyName, err)
 	}
 
 	if len(getResp.PolicyDescriptions) != 1 {
@@ -123,9 +133,8 @@ func resourceAppCookieStickinessPolicyRead(d *schema.ResourceData, meta interfac
 	if err != nil {
 		return err
 	}
-	if !assigned {
-		// policy exists, but isn't assigned to a listener
-		log.Printf("[DEBUG] policy '%s' exists, but isn't assigned to a listener", policyName)
+	if !d.IsNewResource() && !assigned {
+		log.Printf("[WARN] ELB Classic LB (%s) App Cookie Policy (%s) exists, but isn't assigned to a listener", lbName, policyName)
 		d.SetId("")
 		return nil
 	}
