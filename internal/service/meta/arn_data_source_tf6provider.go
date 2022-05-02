@@ -80,6 +80,7 @@ func (t *arnDataSource) Read(ctx context.Context, request tfsdk.ReadDataSourceRe
 	}
 
 	data.Account = &arn.AccountID
+	data.Id = data.ARN
 	data.Partition = &arn.Partition
 	data.Region = &arn.Region
 	data.Resource = &arn.Resource
@@ -95,6 +96,7 @@ func (t *arnDataSource) Read(ctx context.Context, request tfsdk.ReadDataSourceRe
 type arnData struct {
 	Account   *string `tfsdk:"account"`
 	ARN       *string `tfsdk:"arn"`
+	Id        *string `tfsdk:"id"`
 	Partition *string `tfsdk:"partition"`
 	Region    *string `tfsdk:"region"`
 	Resource  *string `tfsdk:"resource"`
