@@ -422,15 +422,15 @@ func (b ByGroupPair) Less(i, j int) bool {
 func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) *ec2.IpPermission {
 	var rule *ec2.IpPermission
 	for _, r := range rules {
-		if aws.Int64Value(p.ToPort) != aws.Int64Value(r.ToPort) {
+		if p.ToPort != nil && r.ToPort != nil && aws.Int64Value(p.ToPort) != aws.Int64Value(r.ToPort) {
 			continue
 		}
 
-		if aws.Int64Value(p.FromPort) != aws.Int64Value(r.FromPort) {
+		if p.FromPort != nil && r.FromPort != nil && aws.Int64Value(p.FromPort) != aws.Int64Value(r.FromPort) {
 			continue
 		}
 
-		if aws.StringValue(p.IpProtocol) != aws.StringValue(r.IpProtocol) {
+		if p.IpProtocol != nil && r.IpProtocol != nil && aws.StringValue(p.IpProtocol) != aws.StringValue(r.IpProtocol) {
 			continue
 		}
 
