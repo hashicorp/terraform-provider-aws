@@ -280,7 +280,13 @@ rules:
         - internal/service/d[a-df-z]*
         - internal/service/devicefarm
         - internal/service/i*
-        - internal/service/[k-l]*
+        - internal/service/kafka
+        - internal/service/kms
+        - internal/service/lambda
+        - internal/service/lexmodels
+        - internal/service/licensemanager
+        - internal/service/lightsail
+        - internal/service/logs
         - internal/service/macie
         - internal/service/macie2
         - internal/service/mediastore
@@ -699,7 +705,6 @@ rules:
         - internal/service/events/permission.go
         - internal/service/iam/user.go
         - internal/service/iam/user_ssh_key.go
-        - internal/service/kinesisvideo/stream.go
     patterns:
       - pattern: |
           func $FUNC(...) {
