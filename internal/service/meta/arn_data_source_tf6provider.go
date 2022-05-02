@@ -14,7 +14,6 @@ var DataSourceARNType tfsdk.DataSourceType = &arnDataSourceType{}
 type arnDataSourceType struct{}
 
 func (t *arnDataSourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	// TODO Generate "id" attribute.
 	schema := tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"account": {
@@ -25,6 +24,11 @@ func (t *arnDataSourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.D
 				Type:     types.StringType,
 				Required: true,
 				// TODO: Validate or custom ARN type.
+			},
+			"id": {
+				Type:     types.StringType,
+				Optional: true,
+				Computed: true,
 			},
 			"partition": {
 				Type:     types.StringType,
