@@ -539,7 +539,8 @@ func testAccCheckAmiDestroy(s *terraform.State) error {
 		return fmt.Errorf("EC2 AMI %s still exists", rs.Primary.ID)
 	}
 
-	return nil
+	// Check for managed EBS snapshots.
+	return testAccCheckEBSSnapshotDestroy(s)
 }
 
 func testAccCheckAmiExists(n string, v *ec2.Image) resource.TestCheckFunc {
