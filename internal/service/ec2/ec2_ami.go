@@ -476,13 +476,17 @@ func resourceAMIUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAMIDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	log.Printf("[INFO] Deleting AMI: %s", d.Id())
+	log.Printf("[INFO] Deleting EC2 AMI: %s", d.Id())
 	_, err := conn.DeregisterImage(&ec2.DeregisterImageInput{
 		ImageId: aws.String(d.Id()),
 	})
 
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAMIIDNotFound) {
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("error deregistering AMI (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deregistering EC2 AMI (%s): %w", d.Id(), err)
 	}
 
 	// If we're managing the EBS snapshots then we need to delete those too.
@@ -512,9 +516,8 @@ func resourceAMIDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	// Verify that the image is actually removed, if not we need to wait for it to be removed
-	if err := AMIWaitForDestroy(d.Timeout(schema.TimeoutDelete), d.Id(), conn); err != nil {
-		return fmt.Errorf("error waiting for AMI (%s) delete: %w", d.Id(), err)
+	if _, err := WaitImageDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for EC2 AMI (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
@@ -542,26 +545,6 @@ func AMIStateRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 		// AMI is valid, so return it's state
 		return resp.Images[0], aws.StringValue(resp.Images[0].State), nil
 	}
-}
-
-func AMIWaitForDestroy(timeout time.Duration, id string, conn *ec2.EC2) error {
-	log.Printf("Waiting for AMI %s to be deleted...", id)
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{ec2.ImageStateAvailable, ec2.ImageStatePending, ec2.ImageStateFailed},
-		Target:     []string{"destroyed"},
-		Refresh:    AMIStateRefreshFunc(conn, id),
-		Timeout:    timeout,
-		Delay:      AWSAMIRetryDelay,
-		MinTimeout: AMIRetryMinTimeout,
-	}
-
-	_, err := stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for AMI (%s) to be deleted: %v", id, err)
-	}
-
-	return nil
 }
 
 func enableImageDeprecation(conn *ec2.EC2, id string, deprecateAt string) error {

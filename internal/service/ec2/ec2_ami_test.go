@@ -2,20 +2,17 @@ package ec2_test
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"testing"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEC2AMI_basic(t *testing.T) {
@@ -529,68 +526,43 @@ func testAccCheckAmiDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to find the AMI
-		log.Printf("AMI-ID: %s", rs.Primary.ID)
-		DescribeAmiOpts := &ec2.DescribeImagesInput{
-			ImageIds: []*string{aws.String(rs.Primary.ID)},
+		_, err := tfec2.FindImageByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
-		resp, err := conn.DescribeImages(DescribeAmiOpts)
+
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidAMIID", "NotFound") {
-				log.Printf("[DEBUG] AMI not found, passing")
-				return nil
-			}
 			return err
 		}
 
-		if len(resp.Images) > 0 {
-			state := resp.Images[0].State
-			return fmt.Errorf("AMI %s still exists in the state: %s.", aws.StringValue(resp.Images[0].ImageId),
-				aws.StringValue(state))
-		}
+		return fmt.Errorf("EC2 AMI %s still exists", rs.Primary.ID)
 	}
+
 	return nil
 }
 
-func testAccCheckAmiExists(n string, ami *ec2.Image) resource.TestCheckFunc {
+func testAccCheckAmiExists(n string, v *ec2.Image) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("AMI Not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No AMI ID is set")
+			return fmt.Errorf("No EC2 AMI ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		var resp *ec2.DescribeImagesOutput
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			opts := &ec2.DescribeImagesInput{
-				ImageIds: []*string{aws.String(rs.Primary.ID)},
-			}
-			var err error
-			resp, err = conn.DescribeImages(opts)
-			if err != nil {
-				// This can be just eventual consistency
-				if tfawserr.ErrCodeEquals(err, "InvalidAMIID.NotFound") {
-					return resource.RetryableError(err)
-				}
+		output, err := tfec2.FindImageByID(conn, rs.Primary.ID)
 
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		})
 		if err != nil {
-			return fmt.Errorf("Unable to find AMI after retries: %s", err)
+			return err
 		}
 
-		if len(resp.Images) == 0 {
-			return fmt.Errorf("AMI not found")
-		}
-		*ami = *resp.Images[0]
+		*v = *output
+
 		return nil
 	}
 }
