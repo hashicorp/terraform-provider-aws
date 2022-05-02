@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -36,6 +37,11 @@ func ResourceAMIFromInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"deprecation_time": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.IsRFC3339Time,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -56,42 +62,34 @@ func ResourceAMIFromInstance() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-
 						"device_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"encrypted": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-
 						"iops": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"outpost_arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"snapshot_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"throughput": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"volume_size": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"volume_type": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -121,7 +119,6 @@ func ResourceAMIFromInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"virtual_name": {
 							Type:     schema.TypeString,
 							Computed: true,
