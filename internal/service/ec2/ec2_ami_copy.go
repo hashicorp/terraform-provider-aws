@@ -249,7 +249,7 @@ func ResourceAMICopy() *schema.Resource {
 }
 
 func resourceAMICopyCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -269,7 +269,7 @@ func resourceAMICopyCreate(d *schema.ResourceData, meta interface{}) error {
 		req.DestinationOutpostArn = aws.String(v.(string))
 	}
 
-	res, err := client.CopyImage(req)
+	res, err := conn.CopyImage(req)
 	if err != nil {
 		return err
 	}
@@ -278,12 +278,12 @@ func resourceAMICopyCreate(d *schema.ResourceData, meta interface{}) error {
 	d.Set("manage_ebs_snapshots", true)
 
 	if len(tags) > 0 {
-		if err := CreateTags(client, d.Id(), tags); err != nil {
+		if err := CreateTags(conn, d.Id(), tags); err != nil {
 			return fmt.Errorf("error adding tags: %s", err)
 		}
 	}
 
-	_, err = resourceAMIWaitForAvailable(d.Timeout(schema.TimeoutCreate), d.Id(), client)
+	_, err = resourceAMIWaitForAvailable(d.Timeout(schema.TimeoutCreate), d.Id(), conn)
 	if err != nil {
 		return err
 	}

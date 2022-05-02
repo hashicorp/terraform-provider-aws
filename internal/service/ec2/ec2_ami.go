@@ -271,7 +271,7 @@ func ResourceAMI() *schema.Resource {
 }
 
 func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -329,7 +329,7 @@ func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 		req.BlockDeviceMappings = append(req.BlockDeviceMappings, expandEc2BlockDeviceMappingsForAmiEphemeralBlockDevice(v.(*schema.Set).List())...)
 	}
 
-	res, err := client.RegisterImage(req)
+	res, err := conn.RegisterImage(req)
 	if err != nil {
 		return err
 	}
@@ -338,18 +338,18 @@ func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(id)
 
 	if len(tags) > 0 {
-		if err := CreateTags(client, id, tags); err != nil {
+		if err := CreateTags(conn, id, tags); err != nil {
 			return fmt.Errorf("error adding tags: %s", err)
 		}
 	}
 
-	_, err = resourceAMIWaitForAvailable(d.Timeout(schema.TimeoutCreate), id, client)
+	_, err = resourceAMIWaitForAvailable(d.Timeout(schema.TimeoutCreate), id, conn)
 	if err != nil {
 		return err
 	}
 
 	if v, ok := d.GetOk("deprecation_time"); ok {
-		if err := enableImageDeprecation(client, d.Id(), v.(string)); err != nil {
+		if err := enableImageDeprecation(conn, d.Id(), v.(string)); err != nil {
 			return err
 		}
 	}
@@ -358,7 +358,7 @@ func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -371,7 +371,7 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 	var res *ec2.DescribeImagesOutput
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
-		res, err = client.DescribeImages(req)
+		res, err = conn.DescribeImages(req)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, "InvalidAMIID.NotFound") {
 				if d.IsNewResource() {
@@ -387,7 +387,7 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		res, err = client.DescribeImages(req)
+		res, err = conn.DescribeImages(req)
 	}
 	if err != nil {
 		return fmt.Errorf("Unable to find AMI after retries: %s", err)
@@ -412,7 +412,7 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 		// before we continue. We should never take this branch in normal
 		// circumstances since we would've waited for availability during
 		// the "Create" step.
-		image, err = resourceAMIWaitForAvailable(d.Timeout(schema.TimeoutCreate), id, client)
+		image, err = resourceAMIWaitForAvailable(d.Timeout(schema.TimeoutCreate), id, conn)
 		if err != nil {
 			return err
 		}
@@ -485,18 +485,18 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAMIUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(client, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating AMI (%s) tags: %s", d.Id(), err)
 		}
 	}
 
 	if d.Get("description").(string) != "" {
-		_, err := client.ModifyImageAttribute(&ec2.ModifyImageAttributeInput{
+		_, err := conn.ModifyImageAttribute(&ec2.ModifyImageAttributeInput{
 			ImageId: aws.String(d.Id()),
 			Description: &ec2.AttributeValue{
 				Value: aws.String(d.Get("description").(string)),
@@ -508,7 +508,7 @@ func resourceAMIUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("deprecation_time") {
-		if err := enableImageDeprecation(client, d.Id(), d.Get("deprecation_time").(string)); err != nil {
+		if err := enableImageDeprecation(conn, d.Id(), d.Get("deprecation_time").(string)); err != nil {
 			return err
 		}
 	}
@@ -517,10 +517,10 @@ func resourceAMIUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAMIDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[INFO] Deleting AMI: %s", d.Id())
-	_, err := client.DeregisterImage(&ec2.DeregisterImageInput{
+	_, err := conn.DeregisterImage(&ec2.DeregisterImageInput{
 		ImageId: aws.String(d.Id()),
 	})
 
@@ -538,7 +538,7 @@ func resourceAMIDelete(d *schema.ResourceData, meta interface{}) error {
 			snapshotId := ebsBlockDev["snapshot_id"].(string)
 			if snapshotId != "" {
 				req.SnapshotId = aws.String(snapshotId)
-				_, err := client.DeleteSnapshot(req)
+				_, err := conn.DeleteSnapshot(req)
 				if err != nil {
 					errs[snapshotId] = err
 				}
@@ -556,18 +556,18 @@ func resourceAMIDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Verify that the image is actually removed, if not we need to wait for it to be removed
-	if err := AMIWaitForDestroy(d.Timeout(schema.TimeoutDelete), d.Id(), client); err != nil {
+	if err := AMIWaitForDestroy(d.Timeout(schema.TimeoutDelete), d.Id(), conn); err != nil {
 		return fmt.Errorf("error waiting for AMI (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func AMIStateRefreshFunc(client *ec2.EC2, id string) resource.StateRefreshFunc {
+func AMIStateRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		emptyResp := &ec2.DescribeImagesOutput{}
 
-		resp, err := client.DescribeImages(&ec2.DescribeImagesInput{ImageIds: []*string{aws.String(id)}})
+		resp, err := conn.DescribeImages(&ec2.DescribeImagesInput{ImageIds: []*string{aws.String(id)}})
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, "InvalidAMIID.NotFound") {
 				return emptyResp, "destroyed", nil
@@ -587,13 +587,13 @@ func AMIStateRefreshFunc(client *ec2.EC2, id string) resource.StateRefreshFunc {
 	}
 }
 
-func AMIWaitForDestroy(timeout time.Duration, id string, client *ec2.EC2) error {
+func AMIWaitForDestroy(timeout time.Duration, id string, conn *ec2.EC2) error {
 	log.Printf("Waiting for AMI %s to be deleted...", id)
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{ec2.ImageStateAvailable, ec2.ImageStatePending, ec2.ImageStateFailed},
 		Target:     []string{"destroyed"},
-		Refresh:    AMIStateRefreshFunc(client, id),
+		Refresh:    AMIStateRefreshFunc(conn, id),
 		Timeout:    timeout,
 		Delay:      AWSAMIRetryDelay,
 		MinTimeout: AMIRetryMinTimeout,
@@ -623,13 +623,13 @@ func enableImageDeprecation(conn *ec2.EC2, id string, deprecateAt string) error 
 	return nil
 }
 
-func resourceAMIWaitForAvailable(timeout time.Duration, id string, client *ec2.EC2) (*ec2.Image, error) {
+func resourceAMIWaitForAvailable(timeout time.Duration, id string, conn *ec2.EC2) (*ec2.Image, error) {
 	log.Printf("Waiting for AMI %s to become available...", id)
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{ec2.ImageStatePending},
 		Target:     []string{ec2.ImageStateAvailable},
-		Refresh:    AMIStateRefreshFunc(client, id),
+		Refresh:    AMIStateRefreshFunc(conn, id),
 		Timeout:    timeout,
 		Delay:      AWSAMIRetryDelay,
 		MinTimeout: AMIRetryMinTimeout,

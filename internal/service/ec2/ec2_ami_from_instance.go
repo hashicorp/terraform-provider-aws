@@ -231,7 +231,7 @@ func ResourceAMIFromInstance() *schema.Resource {
 }
 
 func resourceAMIFromInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -243,7 +243,7 @@ func resourceAMIFromInstanceCreate(d *schema.ResourceData, meta interface{}) err
 		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeImage),
 	}
 
-	res, err := client.CreateImage(req)
+	res, err := conn.CreateImage(req)
 	if err != nil {
 		return err
 	}
@@ -251,7 +251,7 @@ func resourceAMIFromInstanceCreate(d *schema.ResourceData, meta interface{}) err
 	d.SetId(aws.StringValue(res.ImageId))
 	d.Set("manage_ebs_snapshots", true)
 
-	_, err = resourceAMIWaitForAvailable(d.Timeout(schema.TimeoutCreate), d.Id(), client)
+	_, err = resourceAMIWaitForAvailable(d.Timeout(schema.TimeoutCreate), d.Id(), conn)
 	if err != nil {
 		return err
 	}
