@@ -278,8 +278,13 @@ rules:
         - internal/service/**/*_data_source.go
         - internal/service/backup
         - internal/service/batch
-        - internal/service/d[a-df-z]*
+        - internal/service/d[a-d]*
         - internal/service/devicefarm
+        - internal/service/directconnect
+        - internal/service/dlm
+        - internal/service/dms
+        - internal/service/ds
+        - internal/service/dynamodb
         - internal/service/ec2
         - internal/service/ecs
         - internal/service/efs
@@ -710,7 +715,6 @@ rules:
         - internal/service/chime/voice_connector_group.go
         - internal/service/chime/voice_connector_logging.go 
         - internal/service/chime/voice_connector_streaming.go
-        - internal/service/docdb/cluster_parameter_group.go
     patterns:
       - pattern: |
           func $FUNC(...) {
