@@ -2696,7 +2696,7 @@ func TestAccEC2SecurityGroup_rulesDropOnError(t *testing.T) {
 			// Add a bad rule to trigger API error
 			{
 				Config:      testAccSecurityGroupConfig_rulesDropOnError_AddBadRule,
-				ExpectError: regexp.MustCompile("InvalidGroup.NotFound"),
+				ExpectError: regexp.MustCompile("InvalidGroupId.Malformed"),
 			},
 			// All originally added rules must survive. This will return non-empty plan if anything changed.
 			{
