@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/tf5provider"
 )
 
 // WAF Logging Configurations can only be enabled with destinations in specific regions,
@@ -45,7 +45,7 @@ func testAccPreCheckWafLoggingConfiguration(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderWafLoggingConfigurationConfigure.Do(func() {
-		testAccProviderWafLoggingConfiguration = provider.Provider()
+		testAccProviderWafLoggingConfiguration = tf5provider.Provider()
 
 		config := map[string]interface{}{
 			"region": region,

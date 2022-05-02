@@ -28,10 +28,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
+	"github.com/hashicorp/terraform-provider-aws/internal/tf5provider"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -99,7 +99,7 @@ var Provider *schema.Provider
 var testAccProviderConfigure sync.Once
 
 func init() {
-	Provider = provider.Provider()
+	Provider = tf5provider.Provider()
 
 	Providers = map[string]*schema.Provider{
 		ProviderName: Provider,
@@ -108,7 +108,7 @@ func init() {
 	// Always allocate a new provider instance each invocation, otherwise gRPC
 	// ProviderConfigure() can overwrite configuration during concurrent testing.
 	ProviderFactories = map[string]func() (*schema.Provider, error){
-		ProviderName: func() (*schema.Provider, error) { return provider.Provider(), nil }, //nolint:unparam
+		ProviderName: func() (*schema.Provider, error) { return tf5provider.Provider(), nil }, //nolint:unparam
 	}
 }
 
@@ -117,7 +117,7 @@ func factoriesInit(providers *[]*schema.Provider, providerNames []string) map[st
 	var factories = make(map[string]func() (*schema.Provider, error), len(providerNames))
 
 	for _, name := range providerNames {
-		p := provider.Provider()
+		p := tf5provider.Provider()
 
 		factories[name] = func() (*schema.Provider, error) { //nolint:unparam
 			return p, nil

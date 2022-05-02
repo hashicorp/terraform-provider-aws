@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	"github.com/hashicorp/terraform-provider-aws/internal/tf5provider"
 )
 
 func TestAccRoute53QueryLog_basic(t *testing.T) {
@@ -238,7 +238,7 @@ func testAccPreCheckRoute53QueryLog(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderRoute53QueryLogConfigure.Do(func() {
-		testAccProviderRoute53QueryLog = provider.Provider()
+		testAccProviderRoute53QueryLog = tf5provider.Provider()
 
 		config := map[string]interface{}{
 			"region": region,

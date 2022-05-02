@@ -1,4 +1,4 @@
-package provider
+package tf5provider
 
 import (
 	"fmt"

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5/tf5server"
 	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
 	"github.com/hashicorp/terraform-plugin-mux/tf6to5server"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/tf5provider"
 	"github.com/hashicorp/terraform-provider-aws/internal/tf6provider"
 )
 
@@ -28,7 +28,7 @@ func main() {
 
 	providers := []func() tfprotov5.ProviderServer{
 		func() tfprotov5.ProviderServer { return downgradedProvider },
-		provider.Provider().GRPCProvider,
+		tf5provider.Provider().GRPCProvider,
 	}
 
 	muxServer, err := tf5muxserver.NewMuxServer(ctx, providers...)

@@ -13,18 +13,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/tf5provider"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestProvider(t *testing.T) {
-	if err := provider.Provider().InternalValidate(); err != nil {
+	if err := tf5provider.Provider().InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
 	}
 }
 
 func TestProvider_impl(t *testing.T) {
-	var _ *schema.Provider = provider.Provider()
+	var _ *schema.Provider = tf5provider.Provider()
 }
 
 func TestReverseDNS(t *testing.T) {
