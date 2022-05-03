@@ -1468,40 +1468,17 @@ func resourceTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
 func resourceTopicRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
-	if d.HasChanges(
-		"cloudwatch_alarm",
-		"cloudwatch_logs",
-		"cloudwatch_metric",
-		"description",
-		"dynamodb",
-		"dynamodbv2",
-		"elasticsearch",
-		"enabled",
-		"error_action",
-		"firehose",
-		"iot_analytics",
-		"iot_events",
-		"kafka",
-		"kinesis",
-		"lambda",
-		"republish",
-		"s3",
-		"step_functions",
-		"sns",
-		"sql",
-		"sql_version",
-		"sqs",
-		"timestream",
-	) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &iot.ReplaceTopicRuleInput{
 			RuleName:         aws.String(d.Get("name").(string)),
 			TopicRulePayload: expandIotTopicRulePayload(d),
 		}
 
+		log.Printf("[INFO] Replacing IoT Topic Rule: %s", input)
 		_, err := conn.ReplaceTopicRule(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating IoT Topic Rule (%s): %w", d.Id(), err)
+			return fmt.Errorf("replacing IoT Topic Rule (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -1509,7 +1486,7 @@ func resourceTopicRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("updating tags: %w", err)
 		}
 	}
 
