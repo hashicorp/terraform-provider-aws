@@ -20,12 +20,12 @@ func TestAccCloudFrontRealtimeLogConfigDataSource_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontRealtimeLogConfigDestroy,
+		CheckDestroy: testAccCheckRealtimeLogConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRealtimeLogConfigDataSource(rName, samplingRate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontRealtimeLogConfigExists(resourceName, &v),
+					testAccCheckRealtimeLogConfigExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "endpoint.#", resourceName, "endpoint.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "endpoint.0.stream_type", resourceName, "endpoint.0.stream_type"),

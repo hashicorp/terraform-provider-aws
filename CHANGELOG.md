@@ -1,4 +1,35 @@
 ## 4.13.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_emrcontainers_virtual_cluster` ([#20003](https://github.com/hashicorp/terraform-provider-aws/issues/20003))
+* **New Resource:** `aws_emrcontainers_virtual_cluster` ([#20003](https://github.com/hashicorp/terraform-provider-aws/issues/20003))
+
+ENHANCEMENTS:
+
+* data-source/aws_ami: Add `deprecation_time` attribute ([#24489](https://github.com/hashicorp/terraform-provider-aws/issues/24489))
+* data-source/aws_msk_cluster: Add `bootstrap_brokers_public_sasl_iam`, `bootstrap_brokers_public_sasl_scram` and `bootstrap_brokers_public_tls` attributes ([#21005](https://github.com/hashicorp/terraform-provider-aws/issues/21005))
+* data-source/aws_ssm_patch_baseline: Add the following attributes: `approved_patches`, `approved_patches_compliance_level`, `approval_rule`, `global_filter`, `rejected_patches`, `rejected_patches_action`, `source` ([#24401](https://github.com/hashicorp/terraform-provider-aws/issues/24401))
+* resource/aws_ami: Add `deprecation_time` argument ([#24489](https://github.com/hashicorp/terraform-provider-aws/issues/24489))
+* resource/aws_ami_copy: Add `deprecation_time` argument ([#24489](https://github.com/hashicorp/terraform-provider-aws/issues/24489))
+* resource/aws_ami_from_instance: Add `deprecation_time` argument ([#24489](https://github.com/hashicorp/terraform-provider-aws/issues/24489))
+* resource/aws_lambda_permission: Add `function_url_auth_type` argument ([#24510](https://github.com/hashicorp/terraform-provider-aws/issues/24510))
+* resource/aws_msk_cluster: Add `bootstrap_brokers_public_sasl_iam`, `bootstrap_brokers_public_sasl_scram` and `bootstrap_brokers_public_tls` attributes ([#21005](https://github.com/hashicorp/terraform-provider-aws/issues/21005))
+* resource/aws_msk_cluster: Add `broker_node_group_info.connectivity_info` argument to support [public access](https://docs.aws.amazon.com/msk/latest/developerguide/public-access.html) ([#21005](https://github.com/hashicorp/terraform-provider-aws/issues/21005))
+* resource/aws_msk_cluster: Add `client_authentication.unauthenticated` argument ([#21005](https://github.com/hashicorp/terraform-provider-aws/issues/21005))
+* resource/aws_msk_cluster: Allow in-place update of `client_authentication` and `encryption_info.encryption_in_transit.client_broker` ([#21005](https://github.com/hashicorp/terraform-provider-aws/issues/21005))
+
+## 4.12.1 (April 29, 2022)
+
+ENHANCEMENTS:
+
+* resource/aws_kms_key: Add support for HMAC_256 customer master key spec ([#24450](https://github.com/hashicorp/terraform-provider-aws/issues/24450))
+
+BUG FIXES:
+
+* resource/aws_acm_certificate_validation: Restore certificate issuance timestamp as the resource `id` value, fixing error on existing resource Read ([#24453](https://github.com/hashicorp/terraform-provider-aws/issues/24453))
+* resource/aws_kms_alias: Fix reserved prefix used in `name` and `name_prefix` plan time validation ([#24469](https://github.com/hashicorp/terraform-provider-aws/issues/24469))
+
 ## 4.12.0 (April 28, 2022)
 
 FEATURES:

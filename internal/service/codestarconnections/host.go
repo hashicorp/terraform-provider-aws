@@ -87,7 +87,7 @@ func resourceHostCreate(d *schema.ResourceData, meta interface{}) error {
 		Name:             aws.String(d.Get("name").(string)),
 		ProviderEndpoint: aws.String(d.Get("provider_endpoint").(string)),
 		ProviderType:     aws.String(d.Get("provider_type").(string)),
-		VpcConfiguration: expandCodeStarConnectionsHostVpcConfiguration(d.Get("vpc_configuration").([]interface{})),
+		VpcConfiguration: expandHostVPCConfiguration(d.Get("vpc_configuration").([]interface{})),
 	}
 
 	resp, err := conn.CreateHost(params)
@@ -133,7 +133,7 @@ func resourceHostRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("provider_endpoint", resp.ProviderEndpoint)
 	d.Set("provider_type", resp.ProviderType)
 	d.Set("status", resp.Status)
-	d.Set("vpc_configuration", flattenCodeStarConnectionsHostVpcConfiguration(resp.VpcConfiguration))
+	d.Set("vpc_configuration", flattenHostVPCConfiguration(resp.VpcConfiguration))
 
 	return nil
 }
@@ -145,7 +145,7 @@ func resourceHostUpdate(d *schema.ResourceData, meta interface{}) error {
 		input := codestarconnections.UpdateHostInput{
 			HostArn:          aws.String(d.Get("name").(string)),
 			ProviderEndpoint: aws.String(d.Get("provider_endpoint").(string)),
-			VpcConfiguration: expandCodeStarConnectionsHostVpcConfiguration(d.Get("vpc_configuration").([]interface{})),
+			VpcConfiguration: expandHostVPCConfiguration(d.Get("vpc_configuration").([]interface{})),
 		}
 
 		_, err := conn.UpdateHost(&input)
@@ -182,7 +182,7 @@ func resourceHostDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandCodeStarConnectionsHostVpcConfiguration(l []interface{}) *codestarconnections.VpcConfiguration {
+func expandHostVPCConfiguration(l []interface{}) *codestarconnections.VpcConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -202,7 +202,7 @@ func expandCodeStarConnectionsHostVpcConfiguration(l []interface{}) *codestarcon
 	return vc
 }
 
-func flattenCodeStarConnectionsHostVpcConfiguration(vpcConfig *codestarconnections.VpcConfiguration) []interface{} {
+func flattenHostVPCConfiguration(vpcConfig *codestarconnections.VpcConfiguration) []interface{} {
 	if vpcConfig == nil {
 		return []interface{}{}
 	}

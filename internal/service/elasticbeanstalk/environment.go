@@ -665,29 +665,29 @@ func fetchEnvironmentSettings(d *schema.ResourceData, meta interface{}) (*schema
 		m := map[string]interface{}{}
 
 		if optionSetting.Namespace != nil {
-			m["namespace"] = *optionSetting.Namespace
+			m["namespace"] = aws.StringValue(optionSetting.Namespace)
 		} else {
 			return nil, fmt.Errorf("Error reading environment settings: option setting with no namespace: %v", optionSetting)
 		}
 
 		if optionSetting.OptionName != nil {
-			m["name"] = *optionSetting.OptionName
+			m["name"] = aws.StringValue(optionSetting.OptionName)
 		} else {
 			return nil, fmt.Errorf("Error reading environment settings: option setting with no name: %v", optionSetting)
 		}
 
-		if *optionSetting.Namespace == "aws:autoscaling:scheduledaction" && optionSetting.ResourceName != nil {
-			m["resource"] = *optionSetting.ResourceName
+		if aws.StringValue(optionSetting.Namespace) == "aws:autoscaling:scheduledaction" && optionSetting.ResourceName != nil {
+			m["resource"] = aws.StringValue(optionSetting.ResourceName)
 		}
 
 		if optionSetting.Value != nil {
 			switch *optionSetting.OptionName {
 			case "SecurityGroups":
-				m["value"] = dropGeneratedSecurityGroup(*optionSetting.Value, meta)
+				m["value"] = dropGeneratedSecurityGroup(aws.StringValue(optionSetting.Value), meta)
 			case "Subnets", "ELBSubnets":
-				m["value"] = sortValues(*optionSetting.Value)
+				m["value"] = sortValues(aws.StringValue(optionSetting.Value))
 			default:
-				m["value"] = *optionSetting.Value
+				m["value"] = aws.StringValue(optionSetting.Value)
 			}
 		}
 

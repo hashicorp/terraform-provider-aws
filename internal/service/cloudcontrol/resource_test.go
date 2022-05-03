@@ -18,10 +18,10 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(cloudcontrolapi.EndpointsID, testAccErrorCheckSkipCloudControlAPI)
+	acctest.RegisterServiceErrorCheckFunc(cloudcontrolapi.EndpointsID, testAccErrorCheckSkip)
 }
 
-func testAccErrorCheckSkipCloudControlAPI(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"UnsupportedActionException",
 	)

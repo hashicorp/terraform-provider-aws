@@ -28,7 +28,7 @@ func TestAccLogsStream_basic(t *testing.T) {
 			{
 				Config: testAccStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchLogStreamExists(resourceName, &ls),
+					testAccCheckStreamExists(resourceName, &ls),
 				),
 			},
 			{
@@ -55,7 +55,7 @@ func TestAccLogsStream_disappears(t *testing.T) {
 			{
 				Config: testAccStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchLogStreamExists(resourceName, &ls),
+					testAccCheckStreamExists(resourceName, &ls),
 					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -80,8 +80,8 @@ func TestAccLogsStream_Disappears_logGroup(t *testing.T) {
 			{
 				Config: testAccStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchLogStreamExists(resourceName, &ls),
-					testAccCheckCloudWatchLogGroupExists(logGroupResourceName, &lg),
+					testAccCheckStreamExists(resourceName, &ls),
+					testAccCheckGroupExists(logGroupResourceName, &lg),
 					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceGroup(), logGroupResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -90,7 +90,7 @@ func TestAccLogsStream_Disappears_logGroup(t *testing.T) {
 	})
 }
 
-func testAccCheckCloudWatchLogStreamExists(n string, ls *cloudwatchlogs.LogStream) resource.TestCheckFunc {
+func testAccCheckStreamExists(n string, ls *cloudwatchlogs.LogStream) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

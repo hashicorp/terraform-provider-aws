@@ -30,7 +30,7 @@ func TestAccCloudFormationStackSetInstance_basic(t *testing.T) {
 			{
 				Config: testAccStackSetInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance1),
+					testAccCheckStackSetInstanceExists(resourceName, &stackInstance1),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "0"),
@@ -68,7 +68,7 @@ func TestAccCloudFormationStackSetInstance_disappears(t *testing.T) {
 			{
 				Config: testAccStackSetInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance1),
+					testAccCheckStackSetInstanceExists(resourceName, &stackInstance1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudformation.ResourceStackSetInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -93,8 +93,8 @@ func TestAccCloudFormationStackSetInstance_Disappears_stackSet(t *testing.T) {
 			{
 				Config: testAccStackSetInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackSetExists(stackSetResourceName, &stackSet1),
-					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance1),
+					testAccCheckStackSetExists(stackSetResourceName, &stackSet1),
+					testAccCheckStackSetInstanceExists(resourceName, &stackInstance1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudformation.ResourceStackSetInstance(), resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudformation.ResourceStackSet(), stackSetResourceName),
 				),
@@ -118,7 +118,7 @@ func TestAccCloudFormationStackSetInstance_parameterOverrides(t *testing.T) {
 			{
 				Config: testAccStackSetInstanceParameterOverrides1Config(rName, "overridevalue1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance1),
+					testAccCheckStackSetInstanceExists(resourceName, &stackInstance1),
 					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.Parameter1", "overridevalue1"),
 				),
@@ -135,8 +135,8 @@ func TestAccCloudFormationStackSetInstance_parameterOverrides(t *testing.T) {
 			{
 				Config: testAccStackSetInstanceParameterOverrides2Config(rName, "overridevalue1updated", "overridevalue2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance2),
-					testAccCheckCloudFormationStackSetInstanceNotRecreated(&stackInstance1, &stackInstance2),
+					testAccCheckStackSetInstanceExists(resourceName, &stackInstance2),
+					testAccCheckStackSetInstanceNotRecreated(&stackInstance1, &stackInstance2),
 					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.Parameter1", "overridevalue1updated"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.Parameter2", "overridevalue2"),
@@ -145,8 +145,8 @@ func TestAccCloudFormationStackSetInstance_parameterOverrides(t *testing.T) {
 			{
 				Config: testAccStackSetInstanceParameterOverrides1Config(rName, "overridevalue1updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance3),
-					testAccCheckCloudFormationStackSetInstanceNotRecreated(&stackInstance2, &stackInstance3),
+					testAccCheckStackSetInstanceExists(resourceName, &stackInstance3),
+					testAccCheckStackSetInstanceNotRecreated(&stackInstance2, &stackInstance3),
 					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.Parameter1", "overridevalue1updated"),
 				),
@@ -154,8 +154,8 @@ func TestAccCloudFormationStackSetInstance_parameterOverrides(t *testing.T) {
 			{
 				Config: testAccStackSetInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance4),
-					testAccCheckCloudFormationStackSetInstanceNotRecreated(&stackInstance3, &stackInstance4),
+					testAccCheckStackSetInstanceExists(resourceName, &stackInstance4),
+					testAccCheckStackSetInstanceNotRecreated(&stackInstance3, &stackInstance4),
 					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", "0"),
 				),
 			},
@@ -183,7 +183,7 @@ func TestAccCloudFormationStackSetInstance_retainStack(t *testing.T) {
 			{
 				Config: testAccStackSetInstanceRetainStackConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance1),
+					testAccCheckStackSetInstanceExists(resourceName, &stackInstance1),
 					resource.TestCheckResourceAttr(resourceName, "retain_stack", "true"),
 				),
 			},
@@ -199,16 +199,16 @@ func TestAccCloudFormationStackSetInstance_retainStack(t *testing.T) {
 			{
 				Config: testAccStackSetInstanceRetainStackConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance2),
-					testAccCheckCloudFormationStackSetInstanceNotRecreated(&stackInstance1, &stackInstance2),
+					testAccCheckStackSetInstanceExists(resourceName, &stackInstance2),
+					testAccCheckStackSetInstanceNotRecreated(&stackInstance1, &stackInstance2),
 					resource.TestCheckResourceAttr(resourceName, "retain_stack", "false"),
 				),
 			},
 			{
 				Config: testAccStackSetInstanceRetainStackConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance3),
-					testAccCheckCloudFormationStackSetInstanceNotRecreated(&stackInstance2, &stackInstance3),
+					testAccCheckStackSetInstanceExists(resourceName, &stackInstance3),
+					testAccCheckStackSetInstanceNotRecreated(&stackInstance2, &stackInstance3),
 					resource.TestCheckResourceAttr(resourceName, "retain_stack", "true"),
 				),
 			},
@@ -216,8 +216,8 @@ func TestAccCloudFormationStackSetInstance_retainStack(t *testing.T) {
 				Config:  testAccStackSetInstanceRetainStackConfig(rName, true),
 				Destroy: true,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackSetInstanceStackExists(&stackInstance3, &stack1),
-					testAccCheckCloudFormationStackDisappears(&stack1),
+					testAccCheckStackSetInstanceStackExists(&stackInstance3, &stack1),
+					testAccCheckStackDisappears(&stack1),
 				),
 			},
 		},
@@ -244,7 +244,7 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 			{
 				Config: testAccStackSetInstanceDeploymentTargetsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance),
+					testAccCheckStackSetInstanceExists(resourceName, &stackInstance),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.organizational_unit_ids.#", "1"),
 				),
@@ -262,7 +262,7 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 			{
 				Config: testAccStackSetInstanceConfig_ServiceManagedStackSet(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance),
+					testAccCheckStackSetInstanceExists(resourceName, &stackInstance),
 				),
 			},
 		},
@@ -289,7 +289,7 @@ func TestAccCloudFormationStackSetInstance_operationPreferences(t *testing.T) {
 			{
 				Config: testAccStackSetInstanceOperationPreferencesConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance),
+					testAccCheckStackSetInstanceExists(resourceName, &stackInstance),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
@@ -301,14 +301,14 @@ func TestAccCloudFormationStackSetInstance_operationPreferences(t *testing.T) {
 			{
 				Config: testAccStackSetInstanceConfig_ServiceManagedStackSet(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance),
+					testAccCheckStackSetInstanceExists(resourceName, &stackInstance),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckCloudFormationStackSetInstanceExists(resourceName string, v *cloudformation.StackInstance) resource.TestCheckFunc {
+func testAccCheckStackSetInstanceExists(resourceName string, v *cloudformation.StackInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -337,7 +337,7 @@ func testAccCheckCloudFormationStackSetInstanceExists(resourceName string, v *cl
 	}
 }
 
-func testAccCheckCloudFormationStackSetInstanceStackExists(stackInstance *cloudformation.StackInstance, v *cloudformation.Stack) resource.TestCheckFunc {
+func testAccCheckStackSetInstanceStackExists(stackInstance *cloudformation.StackInstance, v *cloudformation.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 
@@ -385,7 +385,7 @@ func testAccCheckStackSetInstanceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckCloudFormationStackSetInstanceNotRecreated(i, j *cloudformation.StackInstance) resource.TestCheckFunc {
+func testAccCheckStackSetInstanceNotRecreated(i, j *cloudformation.StackInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.StackId) != aws.StringValue(j.StackId) {
 			return fmt.Errorf("CloudFormation StackSet Instance (%s,%s,%s) recreated", aws.StringValue(i.StackSetId), aws.StringValue(i.Account), aws.StringValue(i.Region))

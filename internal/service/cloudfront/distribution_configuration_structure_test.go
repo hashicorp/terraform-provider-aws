@@ -265,7 +265,7 @@ func customErrorResponseConfNoResponseCode() map[string]interface{} {
 	return er
 }
 
-func viewerCertificateConfSetCloudFrontDefault() map[string]interface{} {
+func viewerCertificateConfSetDefault() map[string]interface{} {
 	return map[string]interface{}{
 		"acm_certificate_arn":            "",
 		"cloudfront_default_certificate": true,
@@ -1044,7 +1044,7 @@ func TestCloudFrontStructure_flattenGeoRestriction_no_items(t *testing.T) {
 }
 
 func TestCloudFrontStructure_expandViewerCertificate_cloudfront_default_certificate(t *testing.T) {
-	data := viewerCertificateConfSetCloudFrontDefault()
+	data := viewerCertificateConfSetDefault()
 	vc := tfcloudfront.ExpandViewerCertificate(data)
 	if vc.ACMCertificateArn != nil {
 		t.Fatalf("Expected ACMCertificateArn to be unset, got %v", *vc.ACMCertificateArn)

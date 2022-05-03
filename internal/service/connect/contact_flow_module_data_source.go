@@ -71,7 +71,7 @@ func dataSourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData
 		input.ContactFlowModuleId = aws.String(v.(string))
 	} else if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
-		contactFlowModuleSummary, err := dataSourceGetConnectContactFlowModuleSummaryByName(ctx, conn, instanceID, name)
+		contactFlowModuleSummary, err := dataSourceGetContactFlowModuleSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error finding Connect Contact Flow Module Summary by name (%s): %w", name, err))
@@ -113,7 +113,7 @@ func dataSourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func dataSourceGetConnectContactFlowModuleSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.ContactFlowModuleSummary, error) {
+func dataSourceGetContactFlowModuleSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.ContactFlowModuleSummary, error) {
 	var result *connect.ContactFlowModuleSummary
 
 	input := &connect.ListContactFlowModulesInput{

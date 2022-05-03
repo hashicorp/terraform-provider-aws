@@ -20,7 +20,7 @@ func TestAccCloudFrontCachePolicyDataSource_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
+		CheckDestroy: testAccCheckPublicKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCachePolicyDataSourceConfig(rName),

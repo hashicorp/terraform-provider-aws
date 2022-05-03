@@ -855,7 +855,7 @@ func resourceClusterStateRefreshFunc(conn *docdb.DocDB, dbClusterIdentifier stri
 		var dbc *docdb.DBCluster
 
 		for _, c := range resp.DBClusters {
-			if *c.DBClusterIdentifier == dbClusterIdentifier {
+			if aws.StringValue(c.DBClusterIdentifier) == dbClusterIdentifier {
 				dbc = c
 			}
 		}

@@ -517,7 +517,7 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if t.InputTransformer != nil {
-		if err := d.Set("input_transformer", flattenCloudWatchInputTransformer(t.InputTransformer)); err != nil {
+		if err := d.Set("input_transformer", flattenInputTransformer(t.InputTransformer)); err != nil {
 			return fmt.Errorf("Error setting input_transformer error: %w", err)
 		}
 	}
@@ -1005,7 +1005,7 @@ func flattenTargetHTTPParameters(apiObject *eventbridge.HttpParameters) map[stri
 	return tfMap
 }
 
-func flattenCloudWatchInputTransformer(inputTransformer *eventbridge.InputTransformer) []map[string]interface{} {
+func flattenInputTransformer(inputTransformer *eventbridge.InputTransformer) []map[string]interface{} {
 	config := make(map[string]interface{})
 	inputPathsMap := make(map[string]string)
 	for k, v := range inputTransformer.InputPathsMap {

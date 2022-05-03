@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -177,24 +177,30 @@ func testAccCheckInstanceDestroy(s *terraform.State) error {
 			continue
 		}
 		req := &opsworks.DescribeInstancesInput{
-			InstanceIds: []*string{
-				aws.String(rs.Primary.ID),
-			},
+			InstanceIds: aws.StringSlice([]string{rs.Primary.ID}),
 		}
 
-		_, err := conn.DescribeInstances(req)
+		output, err := conn.DescribeInstances(req)
+
+		if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+			continue
+		}
+
 		if err != nil {
-			if awserr, ok := err.(awserr.Error); ok {
-				if awserr.Code() == "ResourceNotFoundException" {
-					// not found, good to go
-					return nil
-				}
-			}
 			return err
+		}
+
+		if output != nil && len(output.Instances) > 0 {
+			for _, instance := range output.Instances {
+				if aws.StringValue(instance.InstanceId) != rs.Primary.ID {
+					continue
+				}
+				return fmt.Errorf("Expected OpsWorks instance (%s) to be gone, but was still found", rs.Primary.ID)
+			}
 		}
 	}
 
-	return fmt.Errorf("Fall through error on OpsWorks instance test")
+	return nil
 }
 
 func testAccInstanceUpdateHostNameConfig(rName string) string {
