@@ -115,7 +115,7 @@ func ResourceNotificationRule() *schema.Resource {
 	}
 }
 
-func expandCodeStarNotificationsNotificationRuleTargets(targetsData []interface{}) []*codestarnotifications.Target {
+func expandNotificationRuleTargets(targetsData []interface{}) []*codestarnotifications.Target {
 	targets := make([]*codestarnotifications.Target, 0, len(targetsData))
 	for _, t := range targetsData {
 		target := t.(map[string]interface{})
@@ -138,7 +138,7 @@ func resourceNotificationRuleCreate(d *schema.ResourceData, meta interface{}) er
 		Name:         aws.String(d.Get("name").(string)),
 		Resource:     aws.String(d.Get("resource").(string)),
 		Status:       aws.String(d.Get("status").(string)),
-		Targets:      expandCodeStarNotificationsNotificationRuleTargets(d.Get("target").(*schema.Set).List()),
+		Targets:      expandNotificationRuleTargets(d.Get("target").(*schema.Set).List()),
 	}
 
 	if len(tags) > 0 {
@@ -214,10 +214,10 @@ func resourceNotificationRuleRead(d *schema.ResourceData, meta interface{}) erro
 
 const awsCodeStartNotificationsNotificationRuleErrorSubscribed = "The target cannot be deleted because it is subscribed to one or more notification rules."
 
-// cleanupCodeStarNotificationsNotificationRuleTargets tries to remove unused notification targets. AWS API does not
+// cleanupNotificationRuleTargets tries to remove unused notification targets. AWS API does not
 // provide expicit way for creating targets, they are created on first subscription. Here we are trying to remove all
 // unused targets which were unsubscribed from this notification rule.
-func cleanupCodeStarNotificationsNotificationRuleTargets(conn *codestarnotifications.CodeStarNotifications, oldVal *schema.Set, newVal *schema.Set) error {
+func cleanupNotificationRuleTargets(conn *codestarnotifications.CodeStarNotifications, oldVal *schema.Set, newVal *schema.Set) error {
 	removedTargets := oldVal
 	if newVal != nil {
 		removedTargets = oldVal.Difference(newVal)
@@ -275,7 +275,7 @@ func resourceNotificationRuleUpdate(d *schema.ResourceData, meta interface{}) er
 		EventTypeIds: flex.ExpandStringSet(d.Get("event_type_ids").(*schema.Set)),
 		Name:         aws.String(d.Get("name").(string)),
 		Status:       aws.String(d.Get("status").(string)),
-		Targets:      expandCodeStarNotificationsNotificationRuleTargets(d.Get("target").(*schema.Set).List()),
+		Targets:      expandNotificationRuleTargets(d.Get("target").(*schema.Set).List()),
 	}
 
 	if _, err := conn.UpdateNotificationRule(params); err != nil {
@@ -291,7 +291,7 @@ func resourceNotificationRuleUpdate(d *schema.ResourceData, meta interface{}) er
 
 	if d.HasChange("target") {
 		o, n := d.GetChange("target")
-		if err := cleanupCodeStarNotificationsNotificationRuleTargets(conn, o.(*schema.Set), n.(*schema.Set)); err != nil {
+		if err := cleanupNotificationRuleTargets(conn, o.(*schema.Set), n.(*schema.Set)); err != nil {
 			return err
 		}
 	}
@@ -310,7 +310,7 @@ func resourceNotificationRuleDelete(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error deleting codestar notification rule: %s", err)
 	}
 
-	if err = cleanupCodeStarNotificationsNotificationRuleTargets(conn, d.Get("target").(*schema.Set), nil); err != nil {
+	if err = cleanupNotificationRuleTargets(conn, d.Get("target").(*schema.Set), nil); err != nil {
 		return fmt.Errorf("error deleting codestar notification targets: %s", err)
 	}
 
