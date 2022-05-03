@@ -45,6 +45,11 @@ func ResourceStackSetInstance() *schema.Resource {
 				ValidateFunc:  verify.ValidAccountID,
 				ConflictsWith: []string{"deployment_targets"},
 			},
+			"account_ids": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"call_as": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -140,6 +145,11 @@ func ResourceStackSetInstance() *schema.Resource {
 			"stack_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"stack_ids": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"stack_set_name": {
 				Type:         schema.TypeString,
@@ -259,48 +269,70 @@ func resourceStackSetInstanceRead(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 
 	stackSetName, accountID, region, err := StackSetInstanceParseResourceID(d.Id())
-
-	callAs := d.Get("call_as").(string)
-
 	if err != nil {
 		return err
 	}
 
-	// Determine correct account ID for the Instance if created with deployment targets;
-	// we only expect the accountID to be the organization root ID or organizational unit (OU) IDs
-	// separated by a slash after creation.
-	if regexp.MustCompile(`(ou-[a-z0-9]{4,32}-[a-z0-9]{8,32}|r-[a-z0-9]{4,32})`).MatchString(accountID) {
-		orgIDs := strings.Split(accountID, "/")
-		accountID, err = FindStackInstanceAccountIdByOrgIDs(conn, stackSetName, region, callAs, orgIDs)
+	accountIDIsDT := regexp.MustCompile(`(ou-[a-z0-9]{4,32}-[a-z0-9]{8,32}|r-[a-z0-9]{4,32})`).MatchString(accountID)
+	callAs := d.Get("call_as").(string)
+
+	d.Set("region", region)
+	d.Set("stack_set_name", stackSetName)
+
+	if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		// Process this as a deployment target instance
+		orgIDs := make([]string, 0, len(v.([]interface{})))
+		for _, orgID := range expandCloudFormationDeploymentTargets(v.([]interface{})).OrganizationalUnitIds {
+			orgIDs = append(orgIDs, *orgID)
+		}
+		if !accountIDIsDT {
+			accountID = strings.Join(orgIDs, "/")
+			d.SetId(StackSetInstanceCreateResourceID(stackSetName, accountID, region))
+		}
+
+		summaries, err := FindStackInstanceSummariesByOrgIDs(conn, stackSetName, region, callAs, orgIDs)
 
 		if err != nil {
 			return fmt.Errorf("error finding CloudFormation StackSet Instance (%s) Account: %w", d.Id(), err)
 		}
 
-		d.SetId(StackSetInstanceCreateResourceID(stackSetName, accountID, region))
+		accountIDs := make([]*string, 0, len(summaries))
+		stackIDs := make([]*string, 0, len(summaries))
+		for _, si := range summaries {
+			accountIDs = append(accountIDs, si.Account)
+			stackIDs = append(stackIDs, si.StackId)
+		}
+		d.Set("account_ids", accountIDs)
+		d.Set("stack_ids", stackIDs)
+	} else if v, ok := d.GetOk("account_id"); ok && v != nil {
+		// Process this as an account ID instance
+		if accountIDIsDT {
+			accountID = v.(string)
+			d.SetId(StackSetInstanceCreateResourceID(stackSetName, accountID, region))
+		}
+
+		stackInstance, err := FindStackInstanceByName(conn, stackSetName, accountID, region, callAs)
+
+		if !d.IsNewResource() && tfresource.NotFound(err) {
+			log.Printf("[WARN] CloudFormation StackSet Instance (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error reading CloudFormation StackSet Instance (%s): %w", d.Id(), err)
+		}
+
+		d.Set("account_id", stackInstance.Account)
+		d.Set("organizational_unit_id", stackInstance.OrganizationalUnitId)
+		if err := d.Set("parameter_overrides", flattenAllCloudFormationParameters(stackInstance.ParameterOverrides)); err != nil {
+			return fmt.Errorf("error setting parameters: %w", err)
+		}
+
+		d.Set("stack_id", stackInstance.StackId)
+	} else {
+		return fmt.Errorf("error reading CloudFormation StackSet Instance (%s): no account_id or deployment_targets", d.Id())
 	}
-
-	stackInstance, err := FindStackInstanceByName(conn, stackSetName, accountID, region, callAs)
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] CloudFormation StackSet Instance (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error reading CloudFormation StackSet Instance (%s): %w", d.Id(), err)
-	}
-
-	d.Set("account_id", stackInstance.Account)
-	d.Set("organizational_unit_id", stackInstance.OrganizationalUnitId)
-	if err := d.Set("parameter_overrides", flattenAllCloudFormationParameters(stackInstance.ParameterOverrides)); err != nil {
-		return fmt.Errorf("error setting parameters: %w", err)
-	}
-
-	d.Set("region", stackInstance.Region)
-	d.Set("stack_id", stackInstance.StackId)
-	d.Set("stack_set_name", stackSetName)
 
 	return nil
 }
