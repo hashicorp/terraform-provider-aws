@@ -280,7 +280,7 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 
 	var dbc *docdb.DBCluster
 	for _, c := range resp.DBClusters {
-		if *c.DBClusterIdentifier == *db.DBClusterIdentifier {
+		if aws.StringValue(c.DBClusterIdentifier) == aws.StringValue(db.DBClusterIdentifier) {
 			dbc = c
 		}
 	}
@@ -291,7 +291,7 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	for _, m := range dbc.DBClusterMembers {
-		if *db.DBInstanceIdentifier == *m.DBInstanceIdentifier {
+		if aws.StringValue(db.DBInstanceIdentifier) == aws.StringValue(m.DBInstanceIdentifier) {
 			if *m.IsClusterWriter {
 				d.Set("writer", true)
 			} else {
