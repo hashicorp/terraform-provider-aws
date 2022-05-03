@@ -32,12 +32,7 @@ jobs:
             value=`cat release-tag.data`
             echo ::set-output name=tag::$value
           fi
-  on-failure:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
-    steps:
-      - run: echo 'The triggering workflow failed'
-  organize:
+  tidy-asana:
     needs: [ on-success-or-workflow-dispatch ]
     runs-on: ubuntu-latest
     steps:
@@ -51,9 +46,18 @@ jobs:
           asana_github_url_field_gid: '1134594824474912'
           github_release_name: ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Archive Released Cards
+  archive-release-cards:
+    needs: [ on-success-or-workflow-dispatch ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Archive Release Cards
         uses: breathingdust/github-project-archive@v1
         with:
           github_done_column_id: 11513756
           github_release_name: ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}
           github_token: ${{ secrets.ORGSCOPED_GITHUB_TOKEN }}
+  on-failure:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    steps:
+      - run: echo 'The triggering workflow failed'

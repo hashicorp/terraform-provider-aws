@@ -111,7 +111,7 @@ resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
     bucket_arn = aws_s3_bucket.bucket.arn
 
     # Example prefix using partitionKeyFromQuery, applicable to JQ processor
-    prefix     = "data/customer_id=!{partitionKeyFromQuery:customer_id}/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/"
+    prefix              = "data/customer_id=!{partitionKeyFromQuery:customer_id}/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/"
     error_output_prefix = "errors/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/!{firehose:error-output-type}/"
 
     # https://docs.aws.amazon.com/firehose/latest/dev/dynamic-partitioning.html
@@ -148,6 +148,7 @@ resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
     }
   }
 }
+```
 
 ### S3 Destination (deprecated)
 

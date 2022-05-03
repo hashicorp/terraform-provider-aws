@@ -90,7 +90,7 @@ func resourceCertificateValidationCreate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("waiting for ACM Certificate (%s) to be issued: %w", arn, err)
 	}
 
-	d.SetId(arn)
+	d.SetId(aws.TimeValue(certificate.IssuedAt).String())
 
 	return resourceCertificateValidationRead(d, meta)
 }
@@ -98,16 +98,17 @@ func resourceCertificateValidationCreate(d *schema.ResourceData, meta interface{
 func resourceCertificateValidationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMConn
 
-	certificate, err := FindCertificateValidationByARN(conn, d.Id())
+	arn := d.Get("certificate_arn").(string)
+	certificate, err := FindCertificateValidationByARN(conn, arn)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] ACM Certificate %s not found, removing from state", d.Id())
+		log.Printf("[WARN] ACM Certificate %s not found, removing from state", arn)
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading ACM Certificate (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading ACM Certificate (%s): %w", arn, err)
 	}
 
 	d.Set("certificate_arn", certificate.CertificateArn)

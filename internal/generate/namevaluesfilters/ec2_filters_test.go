@@ -1,30 +1,31 @@
-package namevaluesfilters
+package namevaluesfilters_test
 
 import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 )
 
 func TestNameValuesFiltersEc2Tags(t *testing.T) {
 	testCases := []struct {
 		name    string
-		filters NameValuesFilters
+		filters namevaluesfilters.NameValuesFilters
 		want    map[string][]string
 	}{
 		{
 			name:    "nil",
-			filters: Ec2Tags(nil),
+			filters: namevaluesfilters.Ec2Tags(nil),
 			want:    map[string][]string{},
 		},
 		{
 			name:    "nil",
-			filters: Ec2Tags(map[string]string{}),
+			filters: namevaluesfilters.Ec2Tags(map[string]string{}),
 			want:    map[string][]string{},
 		},
 		{
 			name: "tags",
-			filters: Ec2Tags(map[string]string{
+			filters: namevaluesfilters.Ec2Tags(map[string]string{
 				"Name":    acctest.ResourcePrefix,
 				"Purpose": "testing",
 			}),

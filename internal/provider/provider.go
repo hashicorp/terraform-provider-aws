@@ -8,11 +8,13 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
@@ -33,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ce"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloud9"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
@@ -79,6 +82,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emr"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fms"
@@ -198,7 +202,8 @@ func Provider() *schema.Provider {
 				ConflictsWith: []string{"forbidden_account_ids"},
 				Set:           schema.HashString,
 			},
-			"assume_role": assumeRoleSchema(),
+			"assume_role":                   assumeRoleSchema(),
+			"assume_role_with_web_identity": assumeRoleWithWebIdentitySchema(),
 			"custom_ca_bundle": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -362,9 +367,9 @@ func Provider() *schema.Provider {
 					"Used by users that don't have ec2:DescribeAccountAttributes permissions.",
 			},
 			"skip_metadata_api_check": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:         nullable.TypeNullableBool,
+				Optional:     true,
+				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 				Description: "Skip the AWS Metadata API check. " +
 					"Used for AWS API implementations that do not have a metadata api endpoint.",
 			},
@@ -444,6 +449,9 @@ func Provider() *schema.Provider {
 			"aws_batch_compute_environment": batch.DataSourceComputeEnvironment(),
 			"aws_batch_job_queue":           batch.DataSourceJobQueue(),
 			"aws_batch_scheduling_policy":   batch.DataSourceSchedulingPolicy(),
+
+			"aws_ce_cost_category": ce.DataSourceCostCategory(),
+			"aws_ce_tags":          ce.DataSourceTags(),
 
 			"aws_cloudcontrolapi_resource": cloudcontrol.DataSourceResource(),
 
@@ -631,6 +639,8 @@ func Provider() *schema.Provider {
 			"aws_lb":               elbv2.DataSourceLoadBalancer(),
 
 			"aws_emr_release_labels": emr.DataSourceReleaseLabels(),
+
+			"aws_emrcontainers_virtual_cluster": emrcontainers.DataSourceVirtualCluster(),
 
 			"aws_kinesis_firehose_delivery_stream": firehose.DataSourceDeliveryStream(),
 
@@ -1010,6 +1020,8 @@ func Provider() *schema.Provider {
 
 			"aws_budgets_budget":        budgets.ResourceBudget(),
 			"aws_budgets_budget_action": budgets.ResourceBudgetAction(),
+
+			"aws_ce_cost_category": ce.ResourceCostCategory(),
 
 			"aws_chime_voice_connector":                         chime.ResourceVoiceConnector(),
 			"aws_chime_voice_connector_group":                   chime.ResourceVoiceConnectorGroup(),
@@ -1418,6 +1430,8 @@ func Provider() *schema.Provider {
 			"aws_emr_security_configuration": emr.ResourceSecurityConfiguration(),
 			"aws_emr_studio":                 emr.ResourceStudio(),
 			"aws_emr_studio_session_mapping": emr.ResourceStudioSessionMapping(),
+
+			"aws_emrcontainers_virtual_cluster": emrcontainers.ResourceVirtualCluster(),
 
 			"aws_kinesis_firehose_delivery_stream": firehose.ResourceDeliveryStream(),
 
@@ -2037,7 +2051,6 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		SecretKey:                      d.Get("secret_key").(string),
 		SkipCredsValidation:            d.Get("skip_credentials_validation").(bool),
 		SkipGetEC2Platforms:            d.Get("skip_get_ec2_platforms").(bool),
-		SkipMetadataApiCheck:           d.Get("skip_metadata_api_check").(bool),
 		SkipRegionValidation:           d.Get("skip_region_validation").(bool),
 		SkipRequestingAccountId:        d.Get("skip_requesting_account_id").(bool),
 		STSRegion:                      d.Get("sts_region").(string),
@@ -2071,6 +2084,11 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q)", config.AssumeRole.RoleARN, config.AssumeRole.SessionName, config.AssumeRole.ExternalID)
 	}
 
+	if l, ok := d.Get("assume_role_with_web_identity").([]interface{}); ok && len(l) > 0 && l[0] != nil {
+		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(l[0].(map[string]interface{}))
+		log.Printf("[INFO] assume_role_with_web_identity configuration set: (ARN: %q, SessionID: %q)", config.AssumeRoleWithWebIdentity.RoleARN, config.AssumeRoleWithWebIdentity.SessionName)
+	}
+
 	endpointsSet := d.Get("endpoints").(*schema.Set)
 	if err := expandEndpoints(endpointsSet.List(), config.Endpoints); err != nil {
 		return nil, diag.FromErr(err)
@@ -2088,6 +2106,14 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		}
 	}
 
+	if v, null, _ := nullable.Bool(d.Get("skip_metadata_api_check").(string)).Value(); !null {
+		if v {
+			config.EC2MetadataServiceEnableState = imds.ClientDisabled
+		} else {
+			config.EC2MetadataServiceEnableState = imds.ClientEnabled
+		}
+	}
+
 	return config.Client(ctx)
 }
 
@@ -2102,13 +2128,13 @@ func assumeRoleSchema() *schema.Schema {
 					Type:          schema.TypeString,
 					Optional:      true,
 					Description:   "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
-					ValidateFunc:  ValidAssumeRoleDuration,
+					ValidateFunc:  validAssumeRoleDuration,
 					ConflictsWith: []string{"assume_role.0.duration_seconds"},
 				},
 				"duration_seconds": {
 					Type:          schema.TypeInt,
 					Optional:      true,
-					Deprecated:    "Use assume_role.0.duration instead",
+					Deprecated:    "Use assume_role.duration instead",
 					Description:   "The duration, in seconds, of the role session.",
 					ValidateFunc:  validation.IntBetween(900, 43200),
 					ConflictsWith: []string{"assume_role.0.duration"},
@@ -2140,17 +2166,14 @@ func assumeRoleSchema() *schema.Schema {
 				"role_arn": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					Description:  "Amazon Resource Name of an IAM Role to assume prior to making API calls.",
+					Description:  "Amazon Resource Name (ARN) of an IAM Role to assume prior to making API calls.",
 					ValidateFunc: verify.ValidARN,
 				},
 				"session_name": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "An identifier for the assumed role session.",
-					ValidateFunc: validation.All(
-						validation.StringLenBetween(2, 64),
-						validation.StringMatch(regexp.MustCompile(`[\w+=,.@\-]*`), ""),
-					),
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "An identifier for the assumed role session.",
+					ValidateFunc: validAssumeRoleSessionName,
 				},
 				"tags": {
 					Type:        schema.TypeMap,
@@ -2163,6 +2186,62 @@ func assumeRoleSchema() *schema.Schema {
 					Optional:    true,
 					Description: "Assume role session tag keys to pass to any subsequent sessions.",
 					Elem:        &schema.Schema{Type: schema.TypeString},
+				},
+			},
+		},
+	}
+}
+
+func assumeRoleWithWebIdentitySchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"duration": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
+					ValidateFunc: validAssumeRoleDuration,
+				},
+				"policy": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.",
+					ValidateFunc: validation.StringIsJSON,
+				},
+				"policy_arns": {
+					Type:        schema.TypeSet,
+					Optional:    true,
+					Description: "Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.",
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+				},
+				"role_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Amazon Resource Name (ARN) of an IAM Role to assume prior to making API calls.",
+					ValidateFunc: verify.ValidARN,
+				},
+				"session_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "An identifier for the assumed role session.",
+					ValidateFunc: validAssumeRoleSessionName,
+				},
+				"web_identity_token": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(4, 20000),
+					ExactlyOneOf: []string{"assume_role_with_web_identity.0.web_identity_token", "assume_role_with_web_identity.0.web_identity_token_file"},
+				},
+				"web_identity_token_file": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{"assume_role_with_web_identity.0.web_identity_token", "assume_role_with_web_identity.0.web_identity_token_file"},
 				},
 			},
 		},
@@ -2254,6 +2333,53 @@ func expandAssumeRole(m map[string]interface{}) *awsbase.AssumeRole {
 
 			assumeRole.TransitiveTagKeys = append(assumeRole.TransitiveTagKeys, transitiveTagKey)
 		}
+	}
+
+	return &assumeRole
+}
+
+func expandAssumeRoleWithWebIdentity(m map[string]interface{}) *awsbase.AssumeRoleWithWebIdentity {
+	assumeRole := awsbase.AssumeRoleWithWebIdentity{}
+
+	if v, ok := m["duration"].(string); ok && v != "" {
+		duration, _ := time.ParseDuration(v)
+		assumeRole.Duration = duration
+	}
+
+	if v, ok := m["duration_seconds"].(int); ok && v != 0 {
+		assumeRole.Duration = time.Duration(v) * time.Second
+	}
+
+	if v, ok := m["policy"].(string); ok && v != "" {
+		assumeRole.Policy = v
+	}
+
+	if policyARNSet, ok := m["policy_arns"].(*schema.Set); ok && policyARNSet.Len() > 0 {
+		for _, policyARNRaw := range policyARNSet.List() {
+			policyARN, ok := policyARNRaw.(string)
+
+			if !ok {
+				continue
+			}
+
+			assumeRole.PolicyARNs = append(assumeRole.PolicyARNs, policyARN)
+		}
+	}
+
+	if v, ok := m["role_arn"].(string); ok && v != "" {
+		assumeRole.RoleARN = v
+	}
+
+	if v, ok := m["session_name"].(string); ok && v != "" {
+		assumeRole.SessionName = v
+	}
+
+	if v, ok := m["web_identity_token"].(string); ok && v != "" {
+		assumeRole.WebIdentityToken = v
+	}
+
+	if v, ok := m["web_identity_token_file"].(string); ok && v != "" {
+		assumeRole.WebIdentityTokenFile = v
 	}
 
 	return &assumeRole

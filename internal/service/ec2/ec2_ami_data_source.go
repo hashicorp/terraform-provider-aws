@@ -24,37 +24,41 @@ func DataSourceAMI() *schema.Resource {
 		Read: dataSourceAMIRead,
 
 		Schema: map[string]*schema.Schema{
+			"architecture": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": DataSourceFiltersSchema(),
-			"executable_users": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"name_regex": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringIsValidRegExp,
-			},
-			"most_recent": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"owners": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.NoZeroValues,
+			"block_device_mappings": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Set:      amiBlockDeviceMappingHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"device_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ebs": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"no_device": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"virtual_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
 				},
 			},
-			// Computed values.
-			"architecture": {
+			"boot_mode": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,7 +66,7 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"boot_mode": {
+			"deprecation_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,6 +74,16 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"ena_support": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"executable_users": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"filter": DataSourceFiltersSchema(),
 			"hypervisor": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -94,17 +108,57 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"most_recent": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"name_regex": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringIsValidRegExp,
 			},
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"owners": {
+				Type:     schema.TypeList,
+				Required: true,
+				MinItems: 1,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.NoZeroValues,
+				},
+			},
 			"platform": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"platform_details": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"product_codes": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Set:      amiProductCodesHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"product_code_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"product_code_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"public": {
 				Type:     schema.TypeBool,
@@ -134,72 +188,20 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"virtualization_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"usage_operation": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"platform_details": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ena_support": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			// Complex computed values
-			"block_device_mappings": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Set:      amiBlockDeviceMappingHash,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"device_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"no_device": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"virtual_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ebs": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-			"product_codes": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Set:      amiProductCodesHash,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"product_code_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"product_code_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
 			"state_reason": {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"tags": tftags.TagsSchemaComputed(),
+			"usage_operation": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"virtualization_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -274,41 +276,28 @@ func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image, meta int
 	d.Set("architecture", image.Architecture)
 	d.Set("boot_mode", image.BootMode)
 	d.Set("creation_date", image.CreationDate)
-	if image.Description != nil {
-		d.Set("description", image.Description)
-	}
+	d.Set("deprecation_time", image.DeprecationTime)
+	d.Set("description", image.Description)
+	d.Set("ena_support", image.EnaSupport)
 	d.Set("hypervisor", image.Hypervisor)
 	d.Set("image_id", image.ImageId)
 	d.Set("image_location", image.ImageLocation)
-	if image.ImageOwnerAlias != nil {
-		d.Set("image_owner_alias", image.ImageOwnerAlias)
-	}
+	d.Set("image_owner_alias", image.ImageOwnerAlias)
 	d.Set("image_type", image.ImageType)
-	if image.KernelId != nil {
-		d.Set("kernel_id", image.KernelId)
-	}
+	d.Set("kernel_id", image.KernelId)
 	d.Set("name", image.Name)
 	d.Set("owner_id", image.OwnerId)
-	if image.Platform != nil {
-		d.Set("platform", image.Platform)
-	}
+	d.Set("platform", image.Platform)
+	d.Set("platform_details", image.PlatformDetails)
 	d.Set("public", image.Public)
-	if image.RamdiskId != nil {
-		d.Set("ramdisk_id", image.RamdiskId)
-	}
-	if image.RootDeviceName != nil {
-		d.Set("root_device_name", image.RootDeviceName)
-	}
+	d.Set("ramdisk_id", image.RamdiskId)
+	d.Set("root_device_name", image.RootDeviceName)
 	d.Set("root_device_type", image.RootDeviceType)
 	d.Set("root_snapshot_id", amiRootSnapshotId(image))
-	if image.SriovNetSupport != nil {
-		d.Set("sriov_net_support", image.SriovNetSupport)
-	}
+	d.Set("sriov_net_support", image.SriovNetSupport)
 	d.Set("state", image.State)
-	d.Set("virtualization_type", image.VirtualizationType)
 	d.Set("usage_operation", image.UsageOperation)
-	d.Set("platform_details", image.PlatformDetails)
-	d.Set("ena_support", image.EnaSupport)
+	d.Set("virtualization_type", image.VirtualizationType)
 
 	// Complex types get their own functions
 	if err := d.Set("block_device_mappings", amiBlockDeviceMappings(image.BlockDeviceMappings)); err != nil {

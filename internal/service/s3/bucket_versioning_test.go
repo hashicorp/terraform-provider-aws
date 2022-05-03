@@ -66,6 +66,29 @@ func TestAccS3BucketVersioning_disappears(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketVersioning_disappears_bucket(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_versioning.test"
+	bucketResourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBucketVersioningDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketVersioningBasicConfig(rName, s3.BucketVersioningStatusEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketVersioningExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucket(), bucketResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccS3BucketVersioning_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_versioning.test"
