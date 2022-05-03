@@ -450,6 +450,31 @@ func TestAccIoTTopicRule_Step_functions(t *testing.T) {
 	})
 }
 
+func TestAccIoTTopicRule_Timestream(t *testing.T) {
+	rName := sdkacctest.RandString(5)
+	resourceName := "aws_iot_topic_rule.rule"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTopicRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTopicRule_timestream(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists("aws_iot_topic_rule.rule"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccIoTTopicRule_IoT_analytics(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
@@ -1103,6 +1128,36 @@ resource "aws_iot_topic_rule" "rule" {
     execution_name_prefix = "myprefix"
     state_machine_name    = "mystatemachine"
     role_arn              = aws_iam_role.iot_role.arn
+  }
+}
+`, rName))
+}
+
+func testAccTopicRule_timestream(rName string) string {
+	return acctest.ConfigCompose(
+		testAccTopicRuleRole(rName),
+		fmt.Sprintf(`
+resource "aws_iot_topic_rule" "rule" {
+  name        = "test_rule_%[1]s"
+  description = "Example rule"
+  enabled     = true
+  sql         = "SELECT * FROM 'topic/test'"
+  sql_version = "2015-10-08"
+
+  timestream {
+    database_name = "TestDB"
+    role_arn      = aws_iam_role.iot_role.arn
+    table_name    = "test_table"
+
+    dimension {
+      name  = "dim"
+      value = "$${dim}"
+    }
+
+    timestamp {
+      unit = "MILLISECONDS"
+      value = "$${time}"
+    }
   }
 }
 `, rName))

@@ -586,6 +586,55 @@ func ResourceTopicRule() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"timestream": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"database_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"dimension": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     timestreamDimensionResource,
+						},
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"table_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"timestamp": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"unit": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											"SECONDS",
+											"MILLISECONDS",
+											"MICROSECONDS",
+											"NANOSECONDS",
+										}, false),
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"error_action": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -636,6 +685,7 @@ func ResourceTopicRule() *schema.Resource {
 								"error_action.0.step_functions",
 								"error_action.0.sns",
 								"error_action.0.sqs",
+								"error_action.0.timestream",
 							},
 						},
 						"cloudwatch_logs": {
@@ -673,6 +723,7 @@ func ResourceTopicRule() *schema.Resource {
 								"error_action.0.step_functions",
 								"error_action.0.sns",
 								"error_action.0.sqs",
+								"error_action.0.timestream",
 							},
 						},
 						"cloudwatch_metric": {
@@ -727,6 +778,7 @@ func ResourceTopicRule() *schema.Resource {
 								"error_action.0.step_functions",
 								"error_action.0.sns",
 								"error_action.0.sqs",
+								"error_action.0.timestream",
 							},
 						},
 						"dynamodb": {
@@ -801,6 +853,7 @@ func ResourceTopicRule() *schema.Resource {
 								"error_action.0.step_functions",
 								"error_action.0.sns",
 								"error_action.0.sqs",
+								"error_action.0.timestream",
 							},
 						},
 						"dynamodbv2": {
@@ -847,6 +900,7 @@ func ResourceTopicRule() *schema.Resource {
 								"error_action.0.step_functions",
 								"error_action.0.sns",
 								"error_action.0.sqs",
+								"error_action.0.timestream",
 							},
 						},
 						"elasticsearch": {
@@ -897,6 +951,7 @@ func ResourceTopicRule() *schema.Resource {
 								"error_action.0.step_functions",
 								"error_action.0.sns",
 								"error_action.0.sqs",
+								"error_action.0.timestream",
 							},
 						},
 						"firehose": {
@@ -939,6 +994,7 @@ func ResourceTopicRule() *schema.Resource {
 								"error_action.0.step_functions",
 								"error_action.0.sns",
 								"error_action.0.sqs",
+								"error_action.0.timestream",
 							},
 						},
 						"iot_analytics": {
@@ -976,6 +1032,7 @@ func ResourceTopicRule() *schema.Resource {
 								"error_action.0.step_functions",
 								"error_action.0.sns",
 								"error_action.0.sqs",
+								"error_action.0.timestream",
 							},
 						},
 						"iot_events": {
@@ -1017,6 +1074,7 @@ func ResourceTopicRule() *schema.Resource {
 								"error_action.0.step_functions",
 								"error_action.0.sns",
 								"error_action.0.sqs",
+								"error_action.0.timestream",
 							},
 						},
 						"kafka": {
@@ -1177,6 +1235,7 @@ func ResourceTopicRule() *schema.Resource {
 								"error_action.0.step_functions",
 								"error_action.0.sns",
 								"error_action.0.sqs",
+								"error_action.0.timestream",
 							},
 						},
 						"kinesis": {
@@ -1218,6 +1277,7 @@ func ResourceTopicRule() *schema.Resource {
 								"error_action.0.step_functions",
 								"error_action.0.sns",
 								"error_action.0.sqs",
+								"error_action.0.timestream",
 							},
 						},
 						"lambda": {
@@ -1251,6 +1311,7 @@ func ResourceTopicRule() *schema.Resource {
 								"error_action.0.step_functions",
 								"error_action.0.sns",
 								"error_action.0.sqs",
+								"error_action.0.timestream",
 							},
 						},
 						"republish": {
@@ -1294,6 +1355,7 @@ func ResourceTopicRule() *schema.Resource {
 								"error_action.0.step_functions",
 								"error_action.0.sns",
 								"error_action.0.sqs",
+								"error_action.0.timestream",
 							},
 						},
 						"s3": {
@@ -1335,6 +1397,7 @@ func ResourceTopicRule() *schema.Resource {
 								"error_action.0.step_functions",
 								"error_action.0.sns",
 								"error_action.0.sqs",
+								"error_action.0.timestream",
 							},
 						},
 						"step_functions": {
@@ -1376,6 +1439,7 @@ func ResourceTopicRule() *schema.Resource {
 								"error_action.0.step_functions",
 								"error_action.0.sns",
 								"error_action.0.sqs",
+								"error_action.0.timestream",
 							},
 						},
 						"sns": {
@@ -1419,6 +1483,7 @@ func ResourceTopicRule() *schema.Resource {
 								"error_action.0.step_functions",
 								"error_action.0.sns",
 								"error_action.0.sqs",
+								"error_action.0.timestream",
 							},
 						},
 						"sqs": {
@@ -1460,6 +1525,77 @@ func ResourceTopicRule() *schema.Resource {
 								"error_action.0.step_functions",
 								"error_action.0.sns",
 								"error_action.0.sqs",
+								"error_action.0.timestream",
+							},
+						},
+						"timestream": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"database_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"dimension": {
+										Type:     schema.TypeSet,
+										Required: true,
+										Elem:     timestreamDimensionResource,
+									},
+									"role_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"table_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"timestamp": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"unit": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														"SECONDS",
+														"MILLISECONDS",
+														"MICROSECONDS",
+														"NANOSECONDS",
+													}, false),
+												},
+												"value": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+							ExactlyOneOf: []string{
+								"error_action.0.cloudwatch_alarm",
+								"error_action.0.cloudwatch_logs",
+								"error_action.0.cloudwatch_metric",
+								"error_action.0.dynamodb",
+								"error_action.0.dynamodbv2",
+								"error_action.0.elasticsearch",
+								"error_action.0.firehose",
+								"error_action.0.iot_analytics",
+								"error_action.0.iot_events",
+								"error_action.0.kafka",
+								"error_action.0.kinesis",
+								"error_action.0.lambda",
+								"error_action.0.republish",
+								"error_action.0.s3",
+								"error_action.0.step_functions",
+								"error_action.0.sns",
+								"error_action.0.sqs",
+								"error_action.0.timestream",
 							},
 						},
 					},
@@ -1469,6 +1605,19 @@ func ResourceTopicRule() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
+}
+
+var timestreamDimensionResource *schema.Resource = &schema.Resource{
+	Schema: map[string]*schema.Schema{
+		"name": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"value": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+	},
 }
 
 func resourceTopicRuleCreate(d *schema.ResourceData, meta interface{}) error {
@@ -1623,6 +1772,10 @@ func resourceTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting kafka: %w", err)
 	}
 
+	if err := d.Set("timestream", flattenIotTimestreamActions(out.Rule.Actions)); err != nil {
+		return fmt.Errorf("error setting timestream: %w", err)
+	}
+
 	if err := d.Set("error_action", flattenIotErrorAction(out.Rule.ErrorAction)); err != nil {
 		return fmt.Errorf("error setting error_action: %w", err)
 	}
@@ -1656,6 +1809,7 @@ func resourceTopicRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 		"sql",
 		"sql_version",
 		"sqs",
+		"timestream",
 	) {
 		input := &iot.ReplaceTopicRuleInput{
 			RuleName:         aws.String(d.Get("name").(string)),
@@ -2231,6 +2385,81 @@ func expandIotKafkaAction(tfList []interface{}) *iot.KafkaAction {
 	return apiObject
 }
 
+func expandIotTimestreamAction(tfList []interface{}) *iot.TimestreamAction {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &iot.TimestreamAction{}
+	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["database_name"].(string); ok && v != "" {
+		apiObject.DatabaseName = aws.String(v)
+	}
+
+	if v, ok := tfMap["dimension"].(*schema.Set); ok {
+		apiObject.Dimensions = expandIotTimestreamDimensions(v)
+	}
+
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+		apiObject.RoleArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["table_name"].(string); ok && v != "" {
+		apiObject.TableName = aws.String(v)
+	}
+
+	if v, ok := tfMap["timestamp"].([]interface{}); ok {
+		apiObject.Timestamp = expandIotTimestreamTimestamp(v)
+	}
+
+	return apiObject
+}
+
+func expandIotTimestreamDimensions(tfSet *schema.Set) []*iot.TimestreamDimension {
+	if tfSet == nil || tfSet.Len() == 0 {
+		return nil
+	}
+
+	apiObjects := make([]*iot.TimestreamDimension, tfSet.Len())
+	for i, elem := range tfSet.List() {
+		if tfMap, ok := elem.(map[string]interface{}); ok {
+			apiObject := &iot.TimestreamDimension{}
+
+			if v, ok := tfMap["name"].(string); ok && v != "" {
+				apiObject.Name = aws.String(v)
+			}
+
+			if v, ok := tfMap["value"].(string); ok && v != "" {
+				apiObject.Value = aws.String(v)
+			}
+
+			apiObjects[i] = apiObject
+		}
+	}
+
+	return apiObjects
+}
+
+func expandIotTimestreamTimestamp(tfList []interface{}) *iot.TimestreamTimestamp {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &iot.TimestreamTimestamp{}
+	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["unit"].(string); ok && v != "" {
+		apiObject.Unit = aws.String(v)
+	}
+
+	if v, ok := tfMap["value"].(string); ok && v != "" {
+		apiObject.Value = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func expandIotTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 	var actions []*iot.Action
 
@@ -2421,6 +2650,17 @@ func expandIotTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 		actions = append(actions, &iot.Action{StepFunctions: action})
 	}
 
+	// Legacy root attribute handling
+	for _, tfMapRaw := range d.Get("timestream").(*schema.Set).List() {
+		action := expandIotTimestreamAction([]interface{}{tfMapRaw})
+
+		if action == nil {
+			continue
+		}
+
+		actions = append(actions, &iot.Action{Timestream: action})
+	}
+
 	// Prevent sending empty Actions:
 	// - missing required field, CreateTopicRuleInput.TopicRulePayload.Actions
 	if len(actions) == 0 {
@@ -2601,6 +2841,16 @@ func expandIotTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 					}
 
 					iotErrorAction = &iot.Action{StepFunctions: action}
+				}
+			case "timestream":
+				for _, tfMapRaw := range v.([]interface{}) {
+					action := expandIotTimestreamAction([]interface{}{tfMapRaw})
+
+					if action == nil {
+						continue
+					}
+
+					iotErrorAction = &iot.Action{Timestream: action}
 				}
 			}
 		}
@@ -3497,6 +3747,101 @@ func flattenIotErrorAction(errorAction *iot.Action) []map[string]interface{} {
 		results = append(results, map[string]interface{}{"step_functions": flattenIotStepFunctionsActions(input)})
 		return results
 	}
+	if errorAction.Timestream != nil {
+		results = append(results, map[string]interface{}{"timestream": flattenIotTimestreamActions(input)})
+		return results
+	}
 
 	return results
+}
+
+// Legacy root attribute handling
+func flattenIotTimestreamActions(actions []*iot.Action) []interface{} {
+	results := make([]interface{}, 0)
+
+	for _, action := range actions {
+		if action == nil {
+			continue
+		}
+
+		if v := action.Timestream; v != nil {
+			results = append(results, flattenIotTimestreamAction(v)...)
+		}
+	}
+
+	return results
+}
+
+func flattenIotTimestreamAction(apiObject *iot.TimestreamAction) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]interface{})
+
+	if v := apiObject.DatabaseName; v != nil {
+		tfMap["database_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Dimensions; v != nil {
+		tfMap["dimension"] = flattenIotTimestreamDimensions(v)
+	}
+
+	if v := apiObject.RoleArn; v != nil {
+		tfMap["role_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.TableName; v != nil {
+		tfMap["table_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Timestamp; v != nil {
+		tfMap["timestamp"] = flattenIotTimestreamTimestamp(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenIotTimestreamDimensions(apiObjects []*iot.TimestreamDimension) *schema.Set {
+	if apiObjects == nil {
+		return nil
+	}
+
+	tfSet := schema.NewSet(schema.HashResource(timestreamDimensionResource), []interface{}{})
+
+	for _, apiObject := range apiObjects {
+		if apiObject != nil {
+			tfMap := make(map[string]interface{})
+
+			if v := apiObject.Name; v != nil {
+				tfMap["name"] = aws.StringValue(v)
+			}
+
+			if v := apiObject.Value; v != nil {
+				tfMap["value"] = aws.StringValue(v)
+			}
+
+			tfSet.Add(tfMap)
+		}
+	}
+
+	return tfSet
+}
+
+func flattenIotTimestreamTimestamp(apiObject *iot.TimestreamTimestamp) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]interface{})
+
+	if v := apiObject.Unit; v != nil {
+		tfMap["unit"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Value; v != nil {
+		tfMap["value"] = aws.StringValue(v)
+	}
+
+	return []interface{}{tfMap}
 }

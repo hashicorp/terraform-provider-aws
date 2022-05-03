@@ -88,7 +88,7 @@ EOF
 * `enabled` - (Required) Specifies whether the rule is enabled.
 * `sql` - (Required) The SQL statement used to query the topic. For more information, see AWS IoT SQL Reference (http://docs.aws.amazon.com/iot/latest/developerguide/iot-rules.html#aws-iot-sql-reference) in the AWS IoT Developer Guide.
 * `sql_version` - (Required) The version of the SQL rules engine to use when evaluating the rule.
-* `error_action` - (Optional) Configuration block with error action to be associated with the rule. See the documentation for `cloudwatch_alarm`, `cloudwatch_logs`, `cloudwatch_metric`, `dynamodb`, `dynamodbv2`, `elasticsearch`, `firehose`, `iot_analytics`, `iot_events`, `kinesis`, `lambda`, `republish`, `s3`, `step_functions`, `sns`, `sqs` configuration blocks for further configuration details.
+* `error_action` - (Optional) Configuration block with error action to be associated with the rule. See the documentation for `cloudwatch_alarm`, `cloudwatch_logs`, `cloudwatch_metric`, `dynamodb`, `dynamodbv2`, `elasticsearch`, `firehose`, `iot_analytics`, `iot_events`, `kinesis`, `lambda`, `republish`, `s3`, `step_functions`, `sns`, `sqs`, `timestream` configuration blocks for further configuration details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `cloudwatch_alarm` object takes the following arguments:
@@ -184,6 +184,18 @@ The `step_functions` object takes the following arguments:
 * `execution_name_prefix` - (Optional) The prefix used to generate, along with a UUID, the unique state machine execution name.
 * `state_machine_name` - (Required) The name of the Step Functions state machine whose execution will be started.
 * `role_arn` - (Required) The ARN of the IAM role that grants access to start execution of the state machine.
+
+The `timestream` object takes the following arguments:
+
+* `database_name` - (Required) The name of an Amazon Timestream database.
+* `dimension` - (Required) Configuration blocks with metadata attributes of the time series that are written in each measure record. Nested arguments below.
+    * `name` - (Required) The metadata dimension name. This is the name of the column in the Amazon Timestream database table record.
+    * `value` - (Required) The value to write in this column of the database record.
+* `role_arn` - (Required) The ARN of the role that grants permission to write to the Amazon Timestream database table.
+* `table_name` - (Required) The name of the database table into which to write the measure records.
+* `timestamp` - (Optional) Configuration block specifying an application-defined value to replace the default value assigned to the Timestream record's timestamp in the time column. Nested arguments below.
+    * `unit` - (Required) The precision of the timestamp value that results from the expression described in value. Valid values: `SECONDS`, `MILLISECONDS`, `MICROSECONDS`, `NANOSECONDS`.
+    * `value` - (Required) An expression that returns a long epoch time value.
 
 The `iot_analytics` object takes the following arguments:
 
