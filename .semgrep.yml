@@ -50,7 +50,6 @@ rules:
         - internal/service/elasticbeanstalk
         - internal/service/elasticsearch
         - internal/service/elb
-        - internal/service/emr
     patterns:
       - pattern: '$LHS = *$RHS'
       - pattern-not: '*$LHS2 = *$RHS'
