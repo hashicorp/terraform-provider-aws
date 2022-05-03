@@ -283,7 +283,7 @@ func TestAccIoTTopicRule_cloudWatchMetric(t *testing.T) {
 }
 
 func TestAccIoTTopicRule_dynamoDB(t *testing.T) {
-	rName := sdkacctest.RandString(5)
+	rName := testAccTopicRuleName()
 	resourceName := "aws_iot_topic_rule.rule"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -293,9 +293,35 @@ func TestAccIoTTopicRule_dynamoDB(t *testing.T) {
 		CheckDestroy: testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRule_dynamoDB(rName),
+				Config: testAccTopicRuleDynamoDBConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists("aws_iot_topic_rule.rule"),
+					testAccCheckTopicRuleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Description1"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "dynamodb.*", map[string]string{
+						"hash_key_field": "hkf",
+						"hash_key_value": "hkv",
+						"payload_field":  "pf",
+						"table_name":     "tn",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
 				),
 			},
 			{
@@ -304,9 +330,39 @@ func TestAccIoTTopicRule_dynamoDB(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTopicRule_dynamoDB_rangekeys(rName),
+				Config: testAccTopicRuleDynamoDBRangeKeyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists("aws_iot_topic_rule.rule"),
+					testAccCheckTopicRuleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Description2"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "dynamodb.*", map[string]string{
+						"hash_key_field":  "hkf",
+						"hash_key_value":  "hkv",
+						"operation":       "INSERT",
+						"payload_field":   "pf",
+						"range_key_field": "rkf",
+						"range_key_type":  "STRING",
+						"range_key_value": "rkv",
+						"table_name":      "tn",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
 				),
 			},
 		},
@@ -314,7 +370,8 @@ func TestAccIoTTopicRule_dynamoDB(t *testing.T) {
 }
 
 func TestAccIoTTopicRule_dynamoDBv2(t *testing.T) {
-	rName := sdkacctest.RandString(5)
+	rName := testAccTopicRuleName()
+	resourceName := "aws_iot_topic_rule.rule"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -323,9 +380,32 @@ func TestAccIoTTopicRule_dynamoDBv2(t *testing.T) {
 		CheckDestroy: testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRule_dynamoDBv2(rName),
+				Config: testAccTopicRuleDynamoDBv2Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists("aws_iot_topic_rule.rule"),
+					testAccCheckTopicRuleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "dynamodbv2.*", map[string]string{
+						"put_item.#":            "1",
+						"put_item.0.table_name": "test",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
 				),
 			},
 		},
@@ -968,61 +1048,60 @@ resource "aws_iot_topic_rule" "rule" {
 `, rName))
 }
 
-func testAccTopicRule_dynamoDB(rName string) string {
+func testAccTopicRuleDynamoDBConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
-  name        = "test_rule_%[1]s"
-  description = "Example rule"
+  name        = %[1]q
+  description = "Description1"
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
   sql_version = "2015-10-08"
 
   dynamodb {
-    hash_key_field = "hash_key_field"
-    hash_key_value = "hash_key_value"
-    payload_field  = "payload_field"
+    hash_key_field = "hkf"
+    hash_key_value = "hkv"
+    payload_field  = "pf"
     role_arn       = aws_iam_role.iot_role.arn
-    table_name     = "table_name"
+    table_name     = "tn"
   }
 }
 `, rName))
 }
 
-func testAccTopicRule_dynamoDB_rangekeys(rName string) string {
+func testAccTopicRuleDynamoDBRangeKeyConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
-  name        = "test_rule_%[1]s"
-  description = "Example rule"
+  name        = %[1]q
+  description = "Description2"
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
   sql_version = "2015-10-08"
 
   dynamodb {
-    hash_key_field  = "hash_key_field"
-    hash_key_value  = "hash_key_value"
-    payload_field   = "payload_field"
-    range_key_field = "range_key_field"
-    range_key_value = "range_key_value"
+    hash_key_field  = "hkf"
+    hash_key_value  = "hkv"
+    payload_field   = "pf"
+    range_key_field = "rkf"
+    range_key_value = "rkv"
     range_key_type  = "STRING"
     role_arn        = aws_iam_role.iot_role.arn
-    table_name      = "table_name"
+    table_name      = "tn"
     operation       = "INSERT"
   }
 }
 `, rName))
 }
 
-func testAccTopicRule_dynamoDBv2(rName string) string {
+func testAccTopicRuleDynamoDBv2Config(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
-  name        = "test_rule_%[1]s"
-  description = "Example rule"
+  name        = %[1]q
   enabled     = true
   sql         = "SELECT field as column_name FROM 'topic/test'"
   sql_version = "2015-10-08"
