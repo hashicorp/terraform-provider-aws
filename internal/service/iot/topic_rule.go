@@ -1791,6 +1791,126 @@ func expandIotIotEventsAction(tfList []interface{}) *iot.IotEventsAction {
 	return apiObject
 }
 
+func expandIotKafkaAction(tfList []interface{}) *iot.KafkaAction {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &iot.KafkaAction{}
+	tfMap := tfList[0].(map[string]interface{})
+	clientProperties := make(map[string]*string)
+
+	if v, ok := tfMap["acks"].(string); ok && v != "" {
+		clientProperties["acks"] = aws.String(v)
+	}
+
+	if v, ok := tfMap["bootstrap_servers"].(string); ok && v != "" {
+		clientProperties["bootstrap.servers"] = aws.String(v)
+	}
+
+	if v, ok := tfMap["compression_type"].(string); ok && v != "" {
+		clientProperties["compression.type"] = aws.String(v)
+	}
+
+	if v, ok := tfMap["destination_arn"].(string); ok && v != "" {
+		apiObject.DestinationArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["key"].(string); ok && v != "" {
+		apiObject.Key = aws.String(v)
+	}
+
+	if v, ok := tfMap["key_serializer"].(string); ok && v != "" {
+		clientProperties["key.serializer"] = aws.String(v)
+	}
+
+	if v, ok := tfMap["partition"].(string); ok && v != "" {
+		apiObject.Partition = aws.String(v)
+	}
+
+	if sp, ok := tfMap["security_protocol"].(string); ok && sp != "" {
+		clientProperties["security.protocol"] = aws.String(sp)
+
+		switch sp {
+		case "SSL":
+			if v, ok := tfMap["ssl_keystore"].(string); ok && v != "" {
+				clientProperties["ssl.keystore"] = aws.String(v)
+			}
+
+			if v, ok := tfMap["ssl_keystore_password"].(string); ok && v != "" {
+				clientProperties["ssl.keystore.password"] = aws.String(v)
+			}
+
+			if v, ok := tfMap["ssl_key_password"].(string); ok && v != "" {
+				clientProperties["ssl.key.password"] = aws.String(v)
+			}
+		case "SASL":
+			if mechanism, ok := tfMap["sasl_mechanism"].(string); ok && mechanism != "" {
+				clientProperties["sasl.mechanism"] = aws.String(mechanism)
+
+				switch mechanism {
+				case "PLAIN":
+					if v, ok := tfMap["sasl_plain_username"].(string); ok && v != "" {
+						clientProperties["sasl.plain.username"] = aws.String(v)
+					}
+
+					if v, ok := tfMap["sasl_plain_password"].(string); ok && v != "" {
+						clientProperties["sasl.plain.password"] = aws.String(v)
+					}
+				case "SCRAM-SHA-512":
+					if v, ok := tfMap["sasl_scram_username"].(string); ok && v != "" {
+						clientProperties["sasl.scram.username"] = aws.String(v)
+					}
+
+					if v, ok := tfMap["sasl_scram_password"].(string); ok && v != "" {
+						clientProperties["sasl.scram.password"] = aws.String(v)
+					}
+				case "GSSAPI":
+					if v, ok := tfMap["sasl_kerberos_keytab"].(string); ok && v != "" {
+						clientProperties["sasl.kerberos.keytab"] = aws.String(v)
+					}
+
+					if v, ok := tfMap["sasl_kerberos_krb5_kdc"].(string); ok && v != "" {
+						clientProperties["sasl.kerberos.krb5.kdc"] = aws.String(v)
+					}
+
+					if v, ok := tfMap["sasl_kerberos_krb5_realm"].(string); ok && v != "" {
+						clientProperties["sasl.kerberos.krb5.realm"] = aws.String(v)
+					}
+
+					if v, ok := tfMap["sasl_kerberos_principal"].(string); ok && v != "" {
+						clientProperties["sasl.kerberos.principal"] = aws.String(v)
+					}
+
+					if v, ok := tfMap["sasl_kerberos_service_name"].(string); ok && v != "" {
+						clientProperties["sasl.kerberos.service.name"] = aws.String(v)
+					}
+				}
+			}
+		}
+	}
+
+	if v, ok := tfMap["ssl_truststore"].(string); ok && v != "" {
+		clientProperties["ssl.truststore"] = aws.String(v)
+	}
+
+	if v, ok := tfMap["ssl_truststore_password"].(string); ok && v != "" {
+		clientProperties["ssl.truststore.password"] = aws.String(v)
+	}
+
+	if v, ok := tfMap["topic"].(string); ok && v != "" {
+		apiObject.Topic = aws.String(v)
+	}
+
+	if v, ok := tfMap["value_serializer"].(string); ok && v != "" {
+		clientProperties["value.serializer"] = aws.String(v)
+	}
+
+	apiObject.ClientProperties = clientProperties
+
+	return apiObject
+}
+
 func expandIotKinesisAction(tfList []interface{}) *iot.KinesisAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -1940,126 +2060,6 @@ func expandIotStepFunctionsAction(tfList []interface{}) *iot.StepFunctionsAction
 	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
 	}
-
-	return apiObject
-}
-
-func expandIotKafkaAction(tfList []interface{}) *iot.KafkaAction {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
-	}
-
-	apiObject := &iot.KafkaAction{}
-	tfMap := tfList[0].(map[string]interface{})
-	clientProperties := make(map[string]*string)
-
-	if v, ok := tfMap["acks"].(string); ok && v != "" {
-		clientProperties["acks"] = aws.String(v)
-	}
-
-	if v, ok := tfMap["bootstrap_servers"].(string); ok && v != "" {
-		clientProperties["bootstrap.servers"] = aws.String(v)
-	}
-
-	if v, ok := tfMap["compression_type"].(string); ok && v != "" {
-		clientProperties["compression.type"] = aws.String(v)
-	}
-
-	if v, ok := tfMap["destination_arn"].(string); ok && v != "" {
-		apiObject.DestinationArn = aws.String(v)
-	}
-
-	if v, ok := tfMap["key"].(string); ok && v != "" {
-		apiObject.Key = aws.String(v)
-	}
-
-	if v, ok := tfMap["key_serializer"].(string); ok && v != "" {
-		clientProperties["key.serializer"] = aws.String(v)
-	}
-
-	if v, ok := tfMap["partition"].(string); ok && v != "" {
-		apiObject.Partition = aws.String(v)
-	}
-
-	if sp, ok := tfMap["security_protocol"].(string); ok && sp != "" {
-		clientProperties["security.protocol"] = aws.String(sp)
-
-		switch sp {
-		case "SSL":
-			if v, ok := tfMap["ssl_keystore"].(string); ok && v != "" {
-				clientProperties["ssl.keystore"] = aws.String(v)
-			}
-
-			if v, ok := tfMap["ssl_keystore_password"].(string); ok && v != "" {
-				clientProperties["ssl.keystore.password"] = aws.String(v)
-			}
-
-			if v, ok := tfMap["ssl_key_password"].(string); ok && v != "" {
-				clientProperties["ssl.key.password"] = aws.String(v)
-			}
-		case "SASL":
-			if mechanism, ok := tfMap["sasl_mechanism"].(string); ok && mechanism != "" {
-				clientProperties["sasl.mechanism"] = aws.String(mechanism)
-
-				switch mechanism {
-				case "PLAIN":
-					if v, ok := tfMap["sasl_plain_username"].(string); ok && v != "" {
-						clientProperties["sasl.plain.username"] = aws.String(v)
-					}
-
-					if v, ok := tfMap["sasl_plain_password"].(string); ok && v != "" {
-						clientProperties["sasl.plain.password"] = aws.String(v)
-					}
-				case "SCRAM-SHA-512":
-					if v, ok := tfMap["sasl_scram_username"].(string); ok && v != "" {
-						clientProperties["sasl.scram.username"] = aws.String(v)
-					}
-
-					if v, ok := tfMap["sasl_scram_password"].(string); ok && v != "" {
-						clientProperties["sasl.scram.password"] = aws.String(v)
-					}
-				case "GSSAPI":
-					if v, ok := tfMap["sasl_kerberos_keytab"].(string); ok && v != "" {
-						clientProperties["sasl.kerberos.keytab"] = aws.String(v)
-					}
-
-					if v, ok := tfMap["sasl_kerberos_krb5_kdc"].(string); ok && v != "" {
-						clientProperties["sasl.kerberos.krb5.kdc"] = aws.String(v)
-					}
-
-					if v, ok := tfMap["sasl_kerberos_krb5_realm"].(string); ok && v != "" {
-						clientProperties["sasl.kerberos.krb5.realm"] = aws.String(v)
-					}
-
-					if v, ok := tfMap["sasl_kerberos_principal"].(string); ok && v != "" {
-						clientProperties["sasl.kerberos.principal"] = aws.String(v)
-					}
-
-					if v, ok := tfMap["sasl_kerberos_service_name"].(string); ok && v != "" {
-						clientProperties["sasl.kerberos.service.name"] = aws.String(v)
-					}
-				}
-			}
-		}
-	}
-
-	if v, ok := tfMap["ssl_truststore"].(string); ok && v != "" {
-		clientProperties["ssl.truststore"] = aws.String(v)
-	}
-
-	if v, ok := tfMap["ssl_truststore_password"].(string); ok && v != "" {
-		clientProperties["ssl.truststore.password"] = aws.String(v)
-	}
-
-	if v, ok := tfMap["topic"].(string); ok && v != "" {
-		apiObject.Topic = aws.String(v)
-	}
-
-	if v, ok := tfMap["value_serializer"].(string); ok && v != "" {
-		clientProperties["value.serializer"] = aws.String(v)
-	}
-
-	apiObject.ClientProperties = clientProperties
 
 	return apiObject
 }
@@ -2539,9 +2539,9 @@ func expandIotTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 		Actions:          actions,
 		AwsIotSqlVersion: aws.String(d.Get("sql_version").(string)),
 		Description:      aws.String(d.Get("description").(string)),
+		ErrorAction:      iotErrorAction,
 		RuleDisabled:     aws.Bool(!d.Get("enabled").(bool)),
 		Sql:              aws.String(d.Get("sql").(string)),
-		ErrorAction:      iotErrorAction,
 	}
 }
 
