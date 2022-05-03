@@ -51,7 +51,6 @@ rules:
         - internal/service/elasticsearch
         - internal/service/elb
         - internal/service/emr
-        - internal/service/gamelift
     patterns:
       - pattern: '$LHS = *$RHS'
       - pattern-not: '*$LHS2 = *$RHS'
