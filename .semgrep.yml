@@ -55,7 +55,6 @@ rules:
         - internal/service/iam
         - internal/service/opsworks
         - internal/service/redshift
-        - internal/service/s3
     patterns:
       - pattern: '$LHS = *$RHS'
       - pattern-not: '*$LHS2 = *$RHS'

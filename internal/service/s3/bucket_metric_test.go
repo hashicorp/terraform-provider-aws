@@ -284,7 +284,7 @@ func TestAccS3BucketMetric_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "bucket", bucketName),
-					resource.TestCheckNoResourceAttr(resourceName, "filter"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", metricName),
 				),
 			},
