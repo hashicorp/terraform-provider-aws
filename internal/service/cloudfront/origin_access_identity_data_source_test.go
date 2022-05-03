@@ -17,12 +17,12 @@ func TestAccCloudFrontOriginAccessIdentityDataSource_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
+		CheckDestroy: testAccCheckOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginAccessIdentityDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontOriginAccessIdentityExistence(resourceName, &origin),
+					testAccCheckOriginAccessIdentityExistence(resourceName, &origin),
 					resource.TestCheckResourceAttrPair(dataSourceName, "iam_arn", resourceName, "iam_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "comment", resourceName, "comment"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "caller_reference", resourceName, "caller_reference"),

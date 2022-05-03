@@ -58,7 +58,7 @@ func TestAccCognitoIDPUserPoolDomain_custom(t *testing.T) {
 	resourceName := "aws_cognito_user_pool_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCognitoUserPoolCustomDomain(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckUserPoolCustomDomain(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckUserPoolDomainDestroy,
@@ -168,7 +168,7 @@ resource "aws_cognito_user_pool" "main" {
 
 func testAccUserPoolDomainConfig_custom(rootDomain string, domain string, poolName string) string {
 	return acctest.ConfigCompose(
-		testAccCognitoUserPoolCustomDomainRegionProviderConfig(),
+		testAccUserPoolCustomDomainRegionProviderConfig(),
 		fmt.Sprintf(`
 data "aws_route53_zone" "test" {
   name         = %[1]q

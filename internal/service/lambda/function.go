@@ -355,6 +355,13 @@ func ResourceFunction() *schema.Resource {
 	}
 }
 
+const (
+	PropagationTimeout = 5 * time.Minute
+
+	lambdaFunctionPutConcurrencyTimeout  = 1 * time.Minute
+	lambdaFunctionExtraThrottlingTimeout = 9 * time.Minute
+)
+
 func checkHandlerRuntimeForZipFunction(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	packageType := d.Get("package_type")
 	_, handlerOk := d.GetOk("handler")
@@ -555,7 +562,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		params.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	err := resource.Retry(lambdaFunctionCreateTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+	err := resource.Retry(PropagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 		_, err := conn.CreateFunction(params)
 
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
@@ -841,7 +848,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	// Assume `PassThrough` on partitions that don't support tracing config
 	tracingConfigMode := "PassThrough"
 	if function.TracingConfig != nil {
-		tracingConfigMode = *function.TracingConfig.Mode
+		tracingConfigMode = aws.StringValue(function.TracingConfig.Mode)
 	}
 	d.Set("tracing_config", []interface{}{
 		map[string]interface{}{
@@ -864,8 +871,8 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		}, func(p *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
 			if lastPage {
 				last := p.Versions[len(p.Versions)-1]
-				lastVersion = *last.Version
-				lastQualifiedArn = *last.FunctionArn
+				lastVersion = aws.StringValue(last.Version)
+				lastQualifiedArn = aws.StringValue(last.FunctionArn)
 				return false
 			}
 			return true
@@ -1118,7 +1125,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	if configUpdate {
 		log.Printf("[DEBUG] Send Update Lambda Function Configuration request: %#v", configReq)
 
-		err := resource.Retry(lambdaFunctionUpdateTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+		err := resource.Retry(PropagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 			_, err := conn.UpdateFunctionConfiguration(configReq)
 
 			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
@@ -1277,7 +1284,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		var output *lambda.FunctionConfiguration
-		err := resource.Retry(lambdaFunctionPublishTimeout, func() *resource.RetryError {
+		err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
 			var err error
 			output, err = conn.PublishVersion(versionReq)
 
@@ -1444,8 +1451,8 @@ func flattenFileSystemConfigs(fscList []*lambda.FileSystemConfig) []map[string]i
 	results := make([]map[string]interface{}, 0, len(fscList))
 	for _, fsc := range fscList {
 		f := make(map[string]interface{})
-		f["arn"] = *fsc.Arn
-		f["local_mount_path"] = *fsc.LocalMountPath
+		f["arn"] = aws.StringValue(fsc.Arn)
+		f["local_mount_path"] = aws.StringValue(fsc.LocalMountPath)
 
 		results = append(results, f)
 	}

@@ -114,7 +114,7 @@ func resourceMetricFilterUpdate(d *schema.ResourceData, meta interface{}) error 
 
 	transformations := d.Get("metric_transformation").([]interface{})
 	o := transformations[0].(map[string]interface{})
-	input.MetricTransformations = expandCloudWatchLogMetricTransformations(o)
+	input.MetricTransformations = expandMetricTransformations(o)
 
 	// Creating multiple filters on the same log group can sometimes cause
 	// clashes, so use a mutex here (and on deletion) to serialise actions on
@@ -154,7 +154,7 @@ func resourceMetricFilterRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("name", mf.FilterName)
 	d.Set("pattern", mf.FilterPattern)
-	if err := d.Set("metric_transformation", flattenCloudWatchLogMetricTransformations(mf.MetricTransformations)); err != nil {
+	if err := d.Set("metric_transformation", flattenMetricTransformations(mf.MetricTransformations)); err != nil {
 		return fmt.Errorf("error setting metric_transformation: %w", err)
 	}
 
@@ -238,7 +238,7 @@ func resourceMetricFilterImport(d *schema.ResourceData, meta interface{}) ([]*sc
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandCloudWatchLogMetricTransformations(m map[string]interface{}) []*cloudwatchlogs.MetricTransformation {
+func expandMetricTransformations(m map[string]interface{}) []*cloudwatchlogs.MetricTransformation {
 	transformation := cloudwatchlogs.MetricTransformation{
 		MetricName:      aws.String(m["name"].(string)),
 		MetricNamespace: aws.String(m["namespace"].(string)),
@@ -261,7 +261,7 @@ func expandCloudWatchLogMetricTransformations(m map[string]interface{}) []*cloud
 	return []*cloudwatchlogs.MetricTransformation{&transformation}
 }
 
-func flattenCloudWatchLogMetricTransformations(ts []*cloudwatchlogs.MetricTransformation) []interface{} {
+func flattenMetricTransformations(ts []*cloudwatchlogs.MetricTransformation) []interface{} {
 	mts := make([]interface{}, 0)
 	m := make(map[string]interface{})
 

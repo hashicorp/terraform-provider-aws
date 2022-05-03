@@ -347,7 +347,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("maintenance_window", c.PreferredMaintenanceWindow)
 
 	if c.NotificationConfiguration != nil {
-		if *c.NotificationConfiguration.TopicStatus == "active" {
+		if aws.StringValue(c.NotificationConfiguration.TopicStatus) == "active" {
 			d.Set("notification_topic_arn", c.NotificationConfiguration.TopicArn)
 		}
 	}
@@ -515,7 +515,7 @@ func (b byNodeId) Len() int      { return len(b) }
 func (b byNodeId) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
 func (b byNodeId) Less(i, j int) bool {
 	return b[i].NodeId != nil && b[j].NodeId != nil &&
-		*b[i].NodeId < *b[j].NodeId
+		aws.StringValue(b[i].NodeId) < aws.StringValue(b[j].NodeId)
 }
 
 func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
@@ -580,7 +580,7 @@ func daxClusterStateRefreshFunc(conn *dax.DAX, clusterID, givenState string, pen
 
 		var c *dax.Cluster
 		for _, cluster := range resp.Clusters {
-			if *cluster.ClusterName == clusterID {
+			if aws.StringValue(cluster.ClusterName) == clusterID {
 				log.Printf("[DEBUG] Found matching DAX cluster: %s", *cluster.ClusterName)
 				c = cluster
 			}
@@ -614,7 +614,7 @@ func daxClusterStateRefreshFunc(conn *dax.DAX, clusterID, givenState string, pen
 		if givenState != "" {
 			log.Printf("[DEBUG] DAX: checking given state (%s) of cluster (%s) against cluster status (%s)", givenState, clusterID, *c.Status)
 			// check to make sure we have the node count we're expecting
-			if int64(len(c.Nodes)) != *c.TotalNodes {
+			if int64(len(c.Nodes)) != aws.Int64Value(c.TotalNodes) {
 				log.Printf("[DEBUG] Node count is not what is expected: %d found, %d expected", len(c.Nodes), *c.TotalNodes)
 				return nil, "creating", nil
 			}
@@ -623,7 +623,7 @@ func daxClusterStateRefreshFunc(conn *dax.DAX, clusterID, givenState string, pen
 			// loop the nodes and check their status as well
 			for _, n := range c.Nodes {
 				log.Printf("[DEBUG] Checking cache node for status: %s", n)
-				if n.NodeStatus != nil && *n.NodeStatus != "available" {
+				if n.NodeStatus != nil && aws.StringValue(n.NodeStatus) != "available" {
 					log.Printf("[DEBUG] Node (%s) is not yet available, status: %s", *n.NodeId, *n.NodeStatus)
 					return nil, "creating", nil
 				}

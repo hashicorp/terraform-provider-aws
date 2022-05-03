@@ -93,11 +93,6 @@ func resourceVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		if _, err := conn.PutVoiceConnectorLoggingConfigurationWithContext(ctx, input); err != nil {
-			if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
-				log.Printf("[WARN] Chime Voice Connector logging configuration %s not found", d.Id())
-				d.SetId("")
-				return nil
-			}
 			return diag.Errorf("error updating Chime Voice Connector (%s) logging configuration: %s", d.Id(), err)
 		}
 	}

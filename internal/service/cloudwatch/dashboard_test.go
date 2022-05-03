@@ -31,7 +31,7 @@ func TestAccCloudWatchDashboard_basic(t *testing.T) {
 			{
 				Config: testAccDashboardConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchDashboardExists(resourceName, &dashboard),
+					testAccCheckDashboardExists(resourceName, &dashboard),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccDashboardName(rInt)),
 				),
 			},
@@ -58,8 +58,8 @@ func TestAccCloudWatchDashboard_update(t *testing.T) {
 			{
 				Config: testAccDashboardConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchDashboardExists(resourceName, &dashboard),
-					testAccCloudWatchCheckDashboardBodyIsExpected(resourceName, basicWidget),
+					testAccCheckDashboardExists(resourceName, &dashboard),
+					testAccCheckDashboardBodyIsExpected(resourceName, basicWidget),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccDashboardName(rInt)),
 				),
 			},
@@ -71,8 +71,8 @@ func TestAccCloudWatchDashboard_update(t *testing.T) {
 			{
 				Config: testAccDashboardConfig_updateBody(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchDashboardExists(resourceName, &dashboard),
-					testAccCloudWatchCheckDashboardBodyIsExpected(resourceName, updatedWidget),
+					testAccCheckDashboardExists(resourceName, &dashboard),
+					testAccCheckDashboardBodyIsExpected(resourceName, updatedWidget),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccDashboardName(rInt)),
 				),
 			},
@@ -94,16 +94,16 @@ func TestAccCloudWatchDashboard_updateName(t *testing.T) {
 			{
 				Config: testAccDashboardConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchDashboardExists(resourceName, &dashboard),
-					testAccCloudWatchCheckDashboardBodyIsExpected(resourceName, basicWidget),
+					testAccCheckDashboardExists(resourceName, &dashboard),
+					testAccCheckDashboardBodyIsExpected(resourceName, basicWidget),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccDashboardName(rInt)),
 				),
 			},
 			{
 				Config: testAccDashboardConfig(rInt2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchDashboardExists(resourceName, &dashboard),
-					testAccCloudWatchCheckDashboardBodyIsExpected(resourceName, basicWidget),
+					testAccCheckDashboardExists(resourceName, &dashboard),
+					testAccCheckDashboardBodyIsExpected(resourceName, basicWidget),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccDashboardName(rInt2)),
 					testAccCheckDashboardDestroyPrevious(testAccDashboardName(rInt)),
 				),
@@ -112,7 +112,7 @@ func TestAccCloudWatchDashboard_updateName(t *testing.T) {
 	})
 }
 
-func testAccCheckCloudWatchDashboardExists(n string, dashboard *cloudwatch.GetDashboardOutput) resource.TestCheckFunc {
+func testAccCheckDashboardExists(n string, dashboard *cloudwatch.GetDashboardOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -241,7 +241,7 @@ EOF
 `, rInt, updatedWidget)
 }
 
-func testAccCloudWatchCheckDashboardBodyIsExpected(resourceName, expected string) resource.TestCheckFunc {
+func testAccCheckDashboardBodyIsExpected(resourceName, expected string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

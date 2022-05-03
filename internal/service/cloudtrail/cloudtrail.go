@@ -1,6 +1,7 @@
 package cloudtrail
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
@@ -16,6 +17,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceCloudTrail() *schema.Resource {
@@ -367,10 +369,14 @@ func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if trail == nil {
-		log.Printf("[WARN] CloudTrail (%s) not found", d.Id())
+	if !d.IsNewResource() && trail == nil {
+		names.LogNotFoundRemoveState(names.CloudTrail, names.ErrActionReading, ResCloudTrail, d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if d.IsNewResource() && trail == nil {
+		return names.Error(names.CloudTrail, names.ErrActionReading, ResCloudTrail, d.Id(), errors.New("not found after creation"))
 	}
 
 	log.Printf("[DEBUG] CloudTrail received: %s", trail)
