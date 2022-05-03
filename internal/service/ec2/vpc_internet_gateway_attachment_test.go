@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2InternetGatewayAttachment_basic(t *testing.T) {
+func TestAccVPCInternetGatewayAttachment_basic(t *testing.T) {
 	var v ec2.InternetGatewayAttachment
 	resourceName := "aws_internet_gateway_attachment.test"
 	igwResourceName := "aws_internet_gateway.test"
@@ -44,7 +44,7 @@ func TestAccEC2InternetGatewayAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2InternetGatewayAttachment_disappears(t *testing.T) {
+func TestAccVPCInternetGatewayAttachment_disappears(t *testing.T) {
 	var v ec2.InternetGatewayAttachment
 	resourceName := "aws_internet_gateway_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

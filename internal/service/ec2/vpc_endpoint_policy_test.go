@@ -11,7 +11,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccEC2VPCEndpointPolicy_basic(t *testing.T) {
+func TestAccVPCEndpointPolicy_basic(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 
 	resourceName := "aws_vpc_endpoint_policy.test"
@@ -44,7 +44,7 @@ func TestAccEC2VPCEndpointPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointPolicy_disappears(t *testing.T) {
+func TestAccVPCEndpointPolicy_disappears(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -67,7 +67,7 @@ func TestAccEC2VPCEndpointPolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointPolicy_disappears_endpoint(t *testing.T) {
+func TestAccVPCEndpointPolicy_disappears_endpoint(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

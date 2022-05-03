@@ -163,7 +163,7 @@ func TestAccCloudFormationStackSetInstance_parameterOverrides(t *testing.T) {
 	})
 }
 
-// TestAccAWSCloudFrontDistribution_RetainStack verifies retain_stack = true
+// TestAccCloudFormationStackSetInstance_retainStack verifies retain_stack = true
 // This acceptance test performs the following steps:
 //  * Trigger a Terraform destroy of the resource, which should only remove the instance from the StackSet
 //  * Check it still exists outside Terraform

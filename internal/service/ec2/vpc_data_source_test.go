@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2VPCDataSource_basic(t *testing.T) {
+func TestAccVPCDataSource_basic(t *testing.T) {
 	rInt1 := sdkacctest.RandIntRange(1, 128)
 	rInt2 := sdkacctest.RandIntRange(128, 254)
 	cidr := fmt.Sprintf("10.%d.%d.0/28", rInt1, rInt2)
@@ -61,7 +61,7 @@ func TestAccEC2VPCDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
+func TestAccVPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
 	dataSourceName := "data.aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

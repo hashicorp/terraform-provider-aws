@@ -17,7 +17,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccEC2TrafficMirrorSession_basic(t *testing.T) {
+func TestAccVPCTrafficMirrorSession_basic(t *testing.T) {
 	var v ec2.TrafficMirrorSession
 	resourceName := "aws_ec2_traffic_mirror_session.test"
 	description := "test session"
@@ -81,7 +81,7 @@ func TestAccEC2TrafficMirrorSession_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2TrafficMirrorSession_tags(t *testing.T) {
+func TestAccVPCTrafficMirrorSession_tags(t *testing.T) {
 	var v ec2.TrafficMirrorSession
 	resourceName := "aws_ec2_traffic_mirror_session.test"
 	session := sdkacctest.RandIntRange(1, 32766)
@@ -130,7 +130,7 @@ func TestAccEC2TrafficMirrorSession_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2TrafficMirrorSession_disappears(t *testing.T) {
+func TestAccVPCTrafficMirrorSession_disappears(t *testing.T) {
 	var v ec2.TrafficMirrorSession
 	resourceName := "aws_ec2_traffic_mirror_session.test"
 	session := sdkacctest.RandIntRange(1, 32766)

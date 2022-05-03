@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2VPCEndpointConnectionAccepter_crossAccount(t *testing.T) {
+func TestAccVPCEndpointConnectionAccepter_crossAccount(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_vpc_endpoint_connection_accepter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
