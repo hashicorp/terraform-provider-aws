@@ -515,7 +515,7 @@ func TestAccIoTTopicRule_firehose(t *testing.T) {
 }
 
 func TestAccIoTTopicRule_Firehose_separator(t *testing.T) {
-	rName := sdkacctest.RandString(5)
+	rName := testAccTopicRuleName()
 	resourceName := "aws_iot_topic_rule.rule"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -525,9 +525,32 @@ func TestAccIoTTopicRule_Firehose_separator(t *testing.T) {
 		CheckDestroy: testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRule_firehose_separator(rName, "\n"),
+				Config: testAccTopicRuleFirehoseSeparatorConfig(rName, "\n"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists("aws_iot_topic_rule.rule"),
+					testAccCheckTopicRuleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firehose.*", map[string]string{
+						"delivery_stream_name": "mystream",
+						"separator":            "\n",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
 				),
 			},
 			{
@@ -536,7 +559,7 @@ func TestAccIoTTopicRule_Firehose_separator(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTopicRule_firehose_separator(rName, ","),
+				Config: testAccTopicRuleFirehoseSeparatorConfig(rName, ","),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists("aws_iot_topic_rule.rule"),
 				),
@@ -1220,12 +1243,12 @@ resource "aws_iot_topic_rule" "rule" {
 `, rName))
 }
 
-func testAccTopicRule_firehose_separator(rName, separator string) string {
+func testAccTopicRuleFirehoseSeparatorConfig(rName, separator string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
-  name        = "test_rule_%[1]s"
+  name        = %[1]q
   description = "Example rule"
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
@@ -1234,7 +1257,7 @@ resource "aws_iot_topic_rule" "rule" {
   firehose {
     delivery_stream_name = "mystream"
     role_arn             = aws_iam_role.iot_role.arn
-    separator            = %q
+    separator            = %[2]q
   }
 }
 `, rName, separator))
