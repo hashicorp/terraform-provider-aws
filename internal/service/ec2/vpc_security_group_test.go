@@ -2049,7 +2049,7 @@ func testAccSecurityGroupCheckVPCIDExists(group *ec2.SecurityGroup) resource.Tes
 
 // cycleIpPermForGroup returns an IpPermission struct with a configured
 // UserIdGroupPair for the groupid given. Used in
-// TestAccAWSSecurityGroup_forceRevokeRules_should_fail to create a cyclic rule
+// TestAccVPCSecurityGroup_forceRevokeRulesTrue to create a cyclic rule
 // between 2 security groups
 func cycleIpPermForGroup(groupId string) *ec2.IpPermission {
 	var perm ec2.IpPermission
@@ -2069,10 +2069,10 @@ func cycleIpPermForGroup(groupId string) *ec2.IpPermission {
 func testAddRuleCycle(primary, secondary *ec2.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if primary.GroupId == nil {
-			return fmt.Errorf("Primary SG not set for TestAccAWSSecurityGroup_forceRevokeRules_should_fail")
+			return fmt.Errorf("Primary SG not set for TestAccVPCSecurityGroup_forceRevokeRulesTrue")
 		}
 		if secondary.GroupId == nil {
-			return fmt.Errorf("Secondary SG not set for TestAccAWSSecurityGroup_forceRevokeRules_should_fail")
+			return fmt.Errorf("Secondary SG not set for TestAccVPCSecurityGroup_forceRevokeRulesTrue")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
@@ -2109,10 +2109,10 @@ func testAddRuleCycle(primary, secondary *ec2.SecurityGroup) resource.TestCheckF
 func testRemoveRuleCycle(primary, secondary *ec2.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if primary.GroupId == nil {
-			return fmt.Errorf("Primary SG not set for TestAccAWSSecurityGroup_forceRevokeRules_should_fail")
+			return fmt.Errorf("Primary SG not set for TestAccVPCSecurityGroup_forceRevokeRulesTrue")
 		}
 		if secondary.GroupId == nil {
-			return fmt.Errorf("Secondary SG not set for TestAccAWSSecurityGroup_forceRevokeRules_should_fail")
+			return fmt.Errorf("Secondary SG not set for TestAccVPCSecurityGroup_forceRevokeRulesTrue")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn

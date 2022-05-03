@@ -161,7 +161,7 @@ resource "aws_lb" "test" {
   enable_deletion_protection = false
 
   tags = {
-    TestName = "TestAccAWSALB_basic"
+    TestName = "TestAccELBV2ListenerDataSource_basic"
   }
 }
 
@@ -217,7 +217,7 @@ resource "aws_alb" "test" {
   enable_deletion_protection = false
 
   tags = {
-    TestName = "TestAccAWSALB_basic"
+    TestName = "TestAccELBV2ListenerDataSource_basic"
   }
 }
 
@@ -275,7 +275,7 @@ resource "aws_lb" "test" {
   enable_deletion_protection = false
 
   tags = {
-    TestName = "TestAccAWSALB_basic"
+    TestName = "TestAccELBV2ListenerDataSource_basic"
   }
 
   depends_on = [aws_internet_gateway.gw]
@@ -304,7 +304,7 @@ resource "aws_internet_gateway" "gw" {
 
   tags = {
     Name     = %[1]q
-    TestName = "TestAccAWSALB_basic"
+    TestName = "TestAccELBV2ListenerDataSource_basic"
   }
 }
 

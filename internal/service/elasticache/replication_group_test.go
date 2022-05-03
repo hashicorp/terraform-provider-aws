@@ -2324,7 +2324,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 }
 
 // Test for out-of-band deletion
-// Naming to allow grouping all TestAccAWSElasticacheReplicationGroup_GlobalReplicationGroupId_* tests
+// Naming to allow grouping all TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_* tests
 func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

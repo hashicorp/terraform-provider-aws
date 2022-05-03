@@ -15,7 +15,7 @@ import (
 )
 
 func TestAccVPCEndpointServiceAllowedPrincipal_basic(t *testing.T) {
-	lbName := fmt.Sprintf("testAccAWSnlb-basic-%s", sdkacctest.RandString(10))
+	lbName := fmt.Sprintf("testAccNLB-basic-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
