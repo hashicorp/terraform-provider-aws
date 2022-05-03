@@ -241,7 +241,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IsURLWithHTTPS,
 						},
-						"http_header": {
+						"headers": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -1517,7 +1517,7 @@ func expandIotHttpAction(tfList []interface{}) *iot.HttpAction {
 		apiObject.ConfirmationUrl = aws.String(v)
 	}
 
-	if v, ok := tfMap["http_header"].([]interface{}); ok {
+	if v, ok := tfMap["headers"].([]interface{}); ok {
 		headerObjs := []*iot.HttpActionHeader{}
 		for _, val := range v {
 			if m, ok := val.(map[string]interface{}); ok {
@@ -2834,7 +2834,7 @@ func flattenIotHttpAction(apiObject *iot.HttpAction) []interface{} {
 			}
 			headers = append(headers, m)
 		}
-		tfMap["http_header"] = headers
+		tfMap["headers"] = headers
 	}
 
 	return []interface{}{tfMap}
