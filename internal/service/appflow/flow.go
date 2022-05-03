@@ -711,9 +711,9 @@ func ResourceFlow() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"amplitude": {
-										Type:         schema.TypeList,
-										Optional:     true,
-										ExactlyOneOf: sourceConnectorPropertiesPaths(),
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"object": {
@@ -725,9 +725,9 @@ func ResourceFlow() *schema.Resource {
 										},
 									},
 									"custom_connector": {
-										Type:         schema.TypeList,
-										Optional:     true,
-										ExactlyOneOf: sourceConnectorPropertiesPaths(),
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"custom_properties": {
@@ -748,9 +748,9 @@ func ResourceFlow() *schema.Resource {
 										},
 									},
 									"datadog": {
-										Type:         schema.TypeList,
-										Optional:     true,
-										ExactlyOneOf: sourceConnectorPropertiesPaths(),
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"object": {
@@ -762,9 +762,9 @@ func ResourceFlow() *schema.Resource {
 										},
 									},
 									"dynatrace": {
-										Type:         schema.TypeList,
-										Optional:     true,
-										ExactlyOneOf: sourceConnectorPropertiesPaths(),
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"object": {
@@ -776,9 +776,9 @@ func ResourceFlow() *schema.Resource {
 										},
 									},
 									"google_analytics": {
-										Type:         schema.TypeList,
-										Optional:     true,
-										ExactlyOneOf: sourceConnectorPropertiesPaths(),
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"object": {
@@ -790,9 +790,9 @@ func ResourceFlow() *schema.Resource {
 										},
 									},
 									"infor_nexus": {
-										Type:         schema.TypeList,
-										Optional:     true,
-										ExactlyOneOf: sourceConnectorPropertiesPaths(),
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"object": {
@@ -804,9 +804,9 @@ func ResourceFlow() *schema.Resource {
 										},
 									},
 									"marketo": {
-										Type:         schema.TypeList,
-										Optional:     true,
-										ExactlyOneOf: sourceConnectorPropertiesPaths(),
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"object": {
@@ -818,9 +818,9 @@ func ResourceFlow() *schema.Resource {
 										},
 									},
 									"s3": {
-										Type:         schema.TypeList,
-										Optional:     true,
-										ExactlyOneOf: sourceConnectorPropertiesPaths(),
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"bucket_name": {
@@ -851,9 +851,9 @@ func ResourceFlow() *schema.Resource {
 										},
 									},
 									"salesforce": {
-										Type:         schema.TypeList,
-										Optional:     true,
-										ExactlyOneOf: sourceConnectorPropertiesPaths(),
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"enable_dynamic_field_update": {
@@ -873,9 +873,9 @@ func ResourceFlow() *schema.Resource {
 										},
 									},
 									"sapo_data": {
-										Type:         schema.TypeList,
-										Optional:     true,
-										ExactlyOneOf: sourceConnectorPropertiesPaths(),
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"object": {
@@ -887,9 +887,9 @@ func ResourceFlow() *schema.Resource {
 										},
 									},
 									"service_now": {
-										Type:         schema.TypeList,
-										Optional:     true,
-										ExactlyOneOf: sourceConnectorPropertiesPaths(),
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"object": {
@@ -901,9 +901,9 @@ func ResourceFlow() *schema.Resource {
 										},
 									},
 									"singular": {
-										Type:         schema.TypeList,
-										Optional:     true,
-										ExactlyOneOf: sourceConnectorPropertiesPaths(),
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"object": {
@@ -915,9 +915,9 @@ func ResourceFlow() *schema.Resource {
 										},
 									},
 									"slack": {
-										Type:         schema.TypeList,
-										Optional:     true,
-										ExactlyOneOf: sourceConnectorPropertiesPaths(),
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"object": {
@@ -929,9 +929,9 @@ func ResourceFlow() *schema.Resource {
 										},
 									},
 									"trendmicro": {
-										Type:         schema.TypeList,
-										Optional:     true,
-										ExactlyOneOf: sourceConnectorPropertiesPaths(),
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"object": {
@@ -943,9 +943,9 @@ func ResourceFlow() *schema.Resource {
 										},
 									},
 									"veeva": {
-										Type:         schema.TypeList,
-										Optional:     true,
-										ExactlyOneOf: sourceConnectorPropertiesPaths(),
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"document_type": {
@@ -974,9 +974,9 @@ func ResourceFlow() *schema.Resource {
 										},
 									},
 									"zendesk": {
-										Type:         schema.TypeList,
-										Optional:     true,
-										ExactlyOneOf: sourceConnectorPropertiesPaths(),
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"object": {
@@ -1195,37 +1195,6 @@ func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValid
 		}
 		return diags
 	}
-}
-
-func sourceConnectorPropertiesPaths() []string {
-	paths := []string{}
-
-	prefix := "source_flow_config.0.source_connector_properties."
-
-	attributes := []string{
-		"amplitude",
-		"custom_connector",
-		"datadog",
-		"dynatrace",
-		"google_analytics",
-		"infor_nexus",
-		"marketo",
-		"s3",
-		"salesforce",
-		"sapo_dato",
-		"service_now",
-		"singular",
-		"slack",
-		"trendmicro",
-		"veeva",
-		"zendesk",
-	}
-
-	for _, attribute := range attributes {
-		paths = append(paths, prefix+attribute)
-	}
-
-	return paths
 }
 
 func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
