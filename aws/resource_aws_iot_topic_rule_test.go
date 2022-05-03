@@ -901,10 +901,10 @@ resource "aws_iot_topic_rule" "rule" {
   sql         = "SELECT * FROM 'topic/test'"
   sql_version = "2015-10-08"
   kafka {
-    destination_arn    		= aws_vpc.iot_vpc.arn
-		topic							 		= "fake_topic"
-		bootstrap_servers 		= "b-1.localhost:9094"
-		ssl_keystore 					= "$${get_secret('${aws_secretsmanager_secret.keystore.arn}', 'SecretBinary', '', '${aws_iam_role.iot_role.arn}')}"
+    destination_arn    = aws_vpc.iot_vpc.arn
+		topic							 = "fake_topic"
+		bootstrap_servers = "b-1.localhost:9094"
+		ssl_keystore 					= "${get_secret("aws_secretsmanager_secret.keystore.arn", "SecretBinary", "", "aws_iam_role.iot_role.arn")}"
 		ssl_keystore_password = "password"
   }
 }
