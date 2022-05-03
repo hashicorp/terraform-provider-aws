@@ -54,7 +54,6 @@ rules:
         - internal/service/gamelift
         - internal/service/iam
         - internal/service/opsworks
-        - internal/service/rds
         - internal/service/redshift
         - internal/service/route53
         - internal/service/s3
