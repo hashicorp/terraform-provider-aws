@@ -227,414 +227,6 @@ func ResourceTopicRule() *schema.Resource {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
-			"firehose": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"delivery_stream_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"separator": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validTopicRuleFirehoseSeparator,
-						},
-					},
-				},
-			},
-			"iot_analytics": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"channel_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"iot_events": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"input_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"message_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"kafka": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"acks": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  1,
-							ValidateFunc: validation.StringInSlice([]string{
-								"0",
-								"1",
-							}, false),
-						},
-						"bootstrap_servers": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"compression_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "none",
-							ValidateFunc: validation.StringInSlice([]string{
-								"none",
-								"gzip",
-								"snappy",
-								"lz4",
-								"zstd",
-							}, false),
-						},
-						"destination_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"key_serializer": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "org.apache.kafka.common.serialization.StringSerializer",
-							ValidateFunc: validation.StringInSlice([]string{
-								"org.apache.kafka.common.serialization.StringSerializer",
-							}, false),
-						},
-						"partition": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"sasl_kerberos_keytab": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"sasl_kerberos_krb5_kdc": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"sasl_kerberos_krb5_realm": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"sasl_kerberos_principal": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"sasl_kerberos_service_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"sasl_mechanism": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"PLAIN",
-								"GSSAPI",
-								"SCRAM-SHA-512",
-							}, false),
-						},
-						"sasl_plain_username": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"sasl_plain_password": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"sasl_scram_username": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"sasl_scram_password": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"security_protocol": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "SSL",
-							ValidateFunc: validation.StringInSlice([]string{
-								"SSL",
-								"SASL_SSL",
-							}, false),
-						},
-						"ssl_key_password": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"ssl_keystore": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"ssl_keystore_password": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"ssl_truststore": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"ssl_truststore_password": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"topic": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"value_serializer": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "org.apache.kafka.common.serialization.ByteBufferSerializer",
-							ValidateFunc: validation.StringInSlice([]string{
-								"org.apache.kafka.common.serialization.ByteBufferSerializer",
-							}, false),
-						},
-					},
-				},
-			},
-			"kinesis": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"partition_key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"stream_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"lambda": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"function_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validTopicRuleName,
-			},
-			"republish": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"qos": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      0,
-							ValidateFunc: validation.IntBetween(0, 1),
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"topic": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"s3": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bucket_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"key": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"step_functions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"execution_name_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"state_machine_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"sns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"message_format": {
-							Type:     schema.TypeString,
-							Default:  iot.MessageFormatRaw,
-							Optional: true,
-						},
-						"target_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"sql": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"sql_version": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"sqs": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"queue_url": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"use_base64": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-					},
-				},
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"timestream": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"database_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"dimension": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     timestreamDimensionResource,
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"table_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"timestamp": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"unit": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											"SECONDS",
-											"MILLISECONDS",
-											"MICROSECONDS",
-											"NANOSECONDS",
-										}, false),
-									},
-									"value": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 			"error_action": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -1400,48 +992,6 @@ func ResourceTopicRule() *schema.Resource {
 								"error_action.0.timestream",
 							},
 						},
-						"step_functions": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"execution_name_prefix": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"state_machine_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
-							},
-							ExactlyOneOf: []string{
-								"error_action.0.cloudwatch_alarm",
-								"error_action.0.cloudwatch_logs",
-								"error_action.0.cloudwatch_metric",
-								"error_action.0.dynamodb",
-								"error_action.0.dynamodbv2",
-								"error_action.0.elasticsearch",
-								"error_action.0.firehose",
-								"error_action.0.iot_analytics",
-								"error_action.0.iot_events",
-								"error_action.0.kafka",
-								"error_action.0.kinesis",
-								"error_action.0.lambda",
-								"error_action.0.republish",
-								"error_action.0.s3",
-								"error_action.0.step_functions",
-								"error_action.0.sns",
-								"error_action.0.sqs",
-								"error_action.0.timestream",
-							},
-						},
 						"sns": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -1453,12 +1003,12 @@ func ResourceTopicRule() *schema.Resource {
 										Default:  iot.MessageFormatRaw,
 										Optional: true,
 									},
-									"target_arn": {
+									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"role_arn": {
+									"target_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -1503,6 +1053,48 @@ func ResourceTopicRule() *schema.Resource {
 									},
 									"use_base64": {
 										Type:     schema.TypeBool,
+										Required: true,
+									},
+								},
+							},
+							ExactlyOneOf: []string{
+								"error_action.0.cloudwatch_alarm",
+								"error_action.0.cloudwatch_logs",
+								"error_action.0.cloudwatch_metric",
+								"error_action.0.dynamodb",
+								"error_action.0.dynamodbv2",
+								"error_action.0.elasticsearch",
+								"error_action.0.firehose",
+								"error_action.0.iot_analytics",
+								"error_action.0.iot_events",
+								"error_action.0.kafka",
+								"error_action.0.kinesis",
+								"error_action.0.lambda",
+								"error_action.0.republish",
+								"error_action.0.s3",
+								"error_action.0.step_functions",
+								"error_action.0.sns",
+								"error_action.0.sqs",
+								"error_action.0.timestream",
+							},
+						},
+						"step_functions": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"execution_name_prefix": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"role_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"state_machine_name": {
+										Type:     schema.TypeString,
 										Required: true,
 									},
 								},
@@ -1596,6 +1188,414 @@ func ResourceTopicRule() *schema.Resource {
 								"error_action.0.sns",
 								"error_action.0.sqs",
 								"error_action.0.timestream",
+							},
+						},
+					},
+				},
+			},
+			"firehose": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"delivery_stream_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"separator": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validTopicRuleFirehoseSeparator,
+						},
+					},
+				},
+			},
+			"iot_analytics": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"channel_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
+			"iot_events": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"input_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"message_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
+			"kafka": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"acks": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  1,
+							ValidateFunc: validation.StringInSlice([]string{
+								"0",
+								"1",
+							}, false),
+						},
+						"bootstrap_servers": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"compression_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "none",
+							ValidateFunc: validation.StringInSlice([]string{
+								"none",
+								"gzip",
+								"snappy",
+								"lz4",
+								"zstd",
+							}, false),
+						},
+						"destination_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"key": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"key_serializer": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "org.apache.kafka.common.serialization.StringSerializer",
+							ValidateFunc: validation.StringInSlice([]string{
+								"org.apache.kafka.common.serialization.StringSerializer",
+							}, false),
+						},
+						"partition": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"sasl_kerberos_keytab": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"sasl_kerberos_krb5_kdc": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"sasl_kerberos_krb5_realm": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"sasl_kerberos_principal": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"sasl_kerberos_service_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"sasl_mechanism": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"PLAIN",
+								"GSSAPI",
+								"SCRAM-SHA-512",
+							}, false),
+						},
+						"sasl_plain_username": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"sasl_plain_password": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"sasl_scram_username": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"sasl_scram_password": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"security_protocol": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "SSL",
+							ValidateFunc: validation.StringInSlice([]string{
+								"SSL",
+								"SASL_SSL",
+							}, false),
+						},
+						"ssl_key_password": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"ssl_keystore": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"ssl_keystore_password": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"ssl_truststore": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"ssl_truststore_password": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"topic": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"value_serializer": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "org.apache.kafka.common.serialization.ByteBufferSerializer",
+							ValidateFunc: validation.StringInSlice([]string{
+								"org.apache.kafka.common.serialization.ByteBufferSerializer",
+							}, false),
+						},
+					},
+				},
+			},
+			"kinesis": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"partition_key": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"stream_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"lambda": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"function_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validTopicRuleName,
+			},
+			"republish": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"qos": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      0,
+							ValidateFunc: validation.IntBetween(0, 1),
+						},
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"topic": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"s3": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bucket_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"key": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
+			"sns": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"message_format": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  iot.MessageFormatRaw,
+						},
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"target_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
+			"sql": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"sql_version": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"sqs": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"queue_url": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"use_base64": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
+			},
+			"step_functions": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"execution_name_prefix": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"state_machine_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
+			"timestream": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"database_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"dimension": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     timestreamDimensionResource,
+						},
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"table_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"timestamp": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"unit": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											"SECONDS",
+											"MILLISECONDS",
+											"MICROSECONDS",
+											"NANOSECONDS",
+										}, false),
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
 							},
 						},
 					},
