@@ -47,6 +47,10 @@ func DataSourceImage() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"image_uri": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -98,11 +102,36 @@ func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
 
 	image := imageDetails[0]
 
+	params2 := &ecr.DescribeRepositoriesInput{
+		RepositoryNames: []*string{image.RepositoryName},
+		RegistryId:      image.RegistryId,
+	}
+
+	var repositoryDetails []*ecr.Repository
+	log.Printf("[DEBUG] Reading ECR Repositories: %s", params2)
+	err2 := conn.DescribeRepositoriesPages(params2, func(page *ecr.DescribeRepositoriesOutput, lastPage bool) bool {
+		repositoryDetails = append(repositoryDetails, page.Repositories...)
+		return true
+	})
+	if err2 != nil {
+		return fmt.Errorf("Error describing ECR repositories: %w", err)
+	}
+
+	if len(repositoryDetails) == 0 {
+		return fmt.Errorf("No repository found")
+	}
+	if len(repositoryDetails) > 1 {
+		return fmt.Errorf("More than one repository found for image")
+	}
+
+	repository := repositoryDetails[0]
+
 	d.SetId(aws.StringValue(image.ImageDigest))
 	d.Set("registry_id", image.RegistryId)
 	d.Set("image_digest", image.ImageDigest)
 	d.Set("image_pushed_at", image.ImagePushedAt.Unix())
 	d.Set("image_size_in_bytes", image.ImageSizeInBytes)
+	d.Set("image_uri", aws.String(aws.StringValue(repository.RepositoryUri)+"@"+aws.StringValue(image.ImageDigest)))
 	if err := d.Set("image_tags", aws.StringValueSlice(image.ImageTags)); err != nil {
 		return fmt.Errorf("failed to set image_tags: %w", err)
 	}
