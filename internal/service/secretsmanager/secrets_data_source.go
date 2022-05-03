@@ -57,7 +57,7 @@ func dataSourceSecretsRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading Secrets Manager secrets: %w", err)
+		return fmt.Errorf("listing Secrets Manager Secrets: %w", err)
 	}
 
 	var arns, names []string
