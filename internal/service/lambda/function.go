@@ -355,6 +355,14 @@ func ResourceFunction() *schema.Resource {
 	}
 }
 
+const (
+	lambdaFunctionCreateTimeout          = 5 * time.Minute
+	lambdaFunctionUpdateTimeout          = 5 * time.Minute
+	lambdaFunctionPublishTimeout         = 5 * time.Minute
+	lambdaFunctionPutConcurrencyTimeout  = 1 * time.Minute
+	lambdaFunctionExtraThrottlingTimeout = 9 * time.Minute
+)
+
 func checkHandlerRuntimeForZipFunction(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	packageType := d.Get("package_type")
 	_, handlerOk := d.GetOk("handler")
