@@ -82,6 +82,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emr"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fms"
@@ -637,6 +638,8 @@ func Provider() *schema.Provider {
 			"aws_lb":               elbv2.DataSourceLoadBalancer(),
 
 			"aws_emr_release_labels": emr.DataSourceReleaseLabels(),
+
+			"aws_emrcontainers_virtual_cluster": emrcontainers.DataSourceVirtualCluster(),
 
 			"aws_kinesis_firehose_delivery_stream": firehose.DataSourceDeliveryStream(),
 
@@ -1424,6 +1427,8 @@ func Provider() *schema.Provider {
 			"aws_emr_security_configuration": emr.ResourceSecurityConfiguration(),
 			"aws_emr_studio":                 emr.ResourceStudio(),
 			"aws_emr_studio_session_mapping": emr.ResourceStudioSessionMapping(),
+
+			"aws_emrcontainers_virtual_cluster": emrcontainers.ResourceVirtualCluster(),
 
 			"aws_kinesis_firehose_delivery_stream": firehose.ResourceDeliveryStream(),
 

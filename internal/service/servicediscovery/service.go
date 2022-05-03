@@ -365,17 +365,17 @@ func flattenServiceDiscoveryDnsConfig(config *servicediscovery.DnsConfig) []map[
 	result := map[string]interface{}{}
 
 	if config.NamespaceId != nil {
-		result["namespace_id"] = *config.NamespaceId
+		result["namespace_id"] = aws.StringValue(config.NamespaceId)
 	}
 	if config.RoutingPolicy != nil {
-		result["routing_policy"] = *config.RoutingPolicy
+		result["routing_policy"] = aws.StringValue(config.RoutingPolicy)
 	}
 	if config.DnsRecords != nil {
 		drs := make([]map[string]interface{}, 0)
 		for _, v := range config.DnsRecords {
 			dr := map[string]interface{}{}
-			dr["ttl"] = *v.TTL
-			dr["type"] = *v.Type
+			dr["ttl"] = aws.Int64Value(v.TTL)
+			dr["type"] = aws.StringValue(v.Type)
 			drs = append(drs, dr)
 		}
 		result["dns_records"] = drs
@@ -432,13 +432,13 @@ func flattenServiceDiscoveryHealthCheckConfig(config *servicediscovery.HealthChe
 	result := map[string]interface{}{}
 
 	if config.FailureThreshold != nil {
-		result["failure_threshold"] = *config.FailureThreshold
+		result["failure_threshold"] = aws.Int64Value(config.FailureThreshold)
 	}
 	if config.ResourcePath != nil {
-		result["resource_path"] = *config.ResourcePath
+		result["resource_path"] = aws.StringValue(config.ResourcePath)
 	}
 	if config.Type != nil {
-		result["type"] = *config.Type
+		result["type"] = aws.StringValue(config.Type)
 	}
 
 	if len(result) < 1 {
@@ -468,7 +468,7 @@ func flattenServiceDiscoveryHealthCheckCustomConfig(config *servicediscovery.Hea
 	result := map[string]interface{}{}
 
 	if config.FailureThreshold != nil {
-		result["failure_threshold"] = *config.FailureThreshold
+		result["failure_threshold"] = aws.Int64Value(config.FailureThreshold)
 	}
 
 	if len(result) < 1 {

@@ -237,7 +237,7 @@ For more information, see the documentation on [Nitro Enclaves](https://docs.aws
 
 The `maintenance_options` block supports the following:
 
-* `auto_recovery` - (Optional) The automatic recovery behavior of the Instance. Can be `"default"` or `"dedicated"`. See [Recover your instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-recover.html) for more details.
+* `auto_recovery` - (Optional) The automatic recovery behavior of the Instance. Can be `"default"` or `"disabled"`. See [Recover your instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-recover.html) for more details.
 
 ### Metadata Options
 

@@ -370,12 +370,24 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] Reading OpsWorks layer: %s", d.Id())
 
 	resp, err := conn.DescribeLayers(req)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] OpsWorks Layer %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
-			d.SetId("")
-			return nil
-		}
 		return fmt.Errorf("error reading OpsWorks layer (%s): %w", d.Id(), err)
+	}
+
+	if len(resp.Layers) == 0 {
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading OpsWorks layer (%s): not found after creation", d.Id())
+		}
+		log.Printf("[WARN] OpsWorks Layer %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	layer := resp.Layers[0]
@@ -517,15 +529,14 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error Creating Opsworks Layer (%s): %w", d.Get("name").(string), err)
 	}
 
-	layerId := *resp.LayerId
-	d.SetId(layerId)
+	d.SetId(aws.StringValue(resp.LayerId))
 
 	loadBalancer := aws.String(d.Get("elastic_load_balancer").(string))
 	if aws.StringValue(loadBalancer) != "" {
 		log.Printf("[DEBUG] Attaching load balancer: %s", aws.StringValue(loadBalancer))
 		_, err := conn.AttachElasticLoadBalancer(&opsworks.AttachElasticLoadBalancerInput{
 			ElasticLoadBalancerName: loadBalancer,
-			LayerId:                 &layerId,
+			LayerId:                 resp.LayerId,
 		})
 		if err != nil {
 			return fmt.Errorf("error Attaching Opsworks Layer (%s) load balancer: %w", d.Id(), err)
@@ -707,7 +718,7 @@ func (lt *opsworksLayerType) SetAttributeMap(d *schema.ResourceData, attrs map[s
 		}
 
 		if strPtr, ok := attrs[def.AttrName]; ok && strPtr != nil {
-			strValue := *strPtr
+			strValue := aws.StringValue(strPtr)
 
 			switch def.Type {
 			case schema.TypeString:
