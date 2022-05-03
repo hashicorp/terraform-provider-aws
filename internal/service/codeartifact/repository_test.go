@@ -15,7 +15,7 @@ import (
 	tfcodeartifact "github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 )
 
-func testAccCodeArtifactRepository_basic(t *testing.T) {
+func testAccRepository_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository.test"
 
@@ -49,7 +49,7 @@ func testAccCodeArtifactRepository_basic(t *testing.T) {
 	})
 }
 
-func testAccCodeArtifactRepository_tags(t *testing.T) {
+func testAccRepository_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository.test"
 
@@ -93,7 +93,7 @@ func testAccCodeArtifactRepository_tags(t *testing.T) {
 	})
 }
 
-func testAccCodeArtifactRepository_owner(t *testing.T) {
+func testAccRepository_owner(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository.test"
 
@@ -126,7 +126,7 @@ func testAccCodeArtifactRepository_owner(t *testing.T) {
 	})
 }
 
-func testAccCodeArtifactRepository_description(t *testing.T) {
+func testAccRepository_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository.test"
 
@@ -159,7 +159,7 @@ func testAccCodeArtifactRepository_description(t *testing.T) {
 	})
 }
 
-func testAccCodeArtifactRepository_upstreams(t *testing.T) {
+func testAccRepository_upstreams(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository.test"
 
@@ -203,7 +203,7 @@ func testAccCodeArtifactRepository_upstreams(t *testing.T) {
 	})
 }
 
-func testAccCodeArtifactRepository_externalConnection(t *testing.T) {
+func testAccRepository_externalConnection(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository.test"
 
@@ -249,7 +249,7 @@ func testAccCodeArtifactRepository_externalConnection(t *testing.T) {
 	})
 }
 
-func testAccCodeArtifactRepository_disappears(t *testing.T) {
+func testAccRepository_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository.test"
 
