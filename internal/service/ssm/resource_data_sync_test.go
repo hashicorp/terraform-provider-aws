@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccSSMResourceDataSync_basic(t *testing.T) {
@@ -76,12 +77,19 @@ func testAccCheckResourceDataSyncDestroy(s *terraform.State) error {
 		if rs.Type != "aws_ssm_resource_data_sync" {
 			continue
 		}
-		syncItem, err := tfssm.FindResourceDataSyncItem(conn, rs.Primary.Attributes["name"])
+
+		syncItem, err := tfssm.FindResourceDataSyncItem(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
 		if err != nil {
 			return err
 		}
+
 		if syncItem != nil {
-			return fmt.Errorf("Resource Data Sync (%s) found", rs.Primary.Attributes["name"])
+			return fmt.Errorf("Resource Data Sync (%s) found", rs.Primary.ID)
 		}
 	}
 	return nil
