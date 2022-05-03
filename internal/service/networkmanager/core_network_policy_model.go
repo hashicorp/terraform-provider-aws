@@ -19,9 +19,8 @@ type CoreNetworkPolicySegmentAction struct {
 	DestinationCidrBlocks interface{} `json:"destination-cidr-blocks,omitempty"`
 	Mode                  string      `json:"mode,omitempty"`
 	Segment               string      `json:"segment,omitempty"`
-
-	ShareWith       interface{} `json:"share-with,omitempty"`
-	ShareWithExcept interface{} `json:",omitempty"`
+	ShareWith             interface{} `json:"share-with,omitempty"`
+	ShareWithExcept       interface{} `json:",omitempty"`
 }
 
 type CoreNetworkAttachmentPolicy struct {
