@@ -59,7 +59,6 @@ rules:
       include:
         - internal/service
       exclude:
-        - internal/service/ec2
         - internal/service/ecs
         - internal/service/elasticache
         - internal/service/elasticbeanstalk
