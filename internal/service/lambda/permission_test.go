@@ -753,6 +753,76 @@ func testAccCPermissionImportStateIdFunc(resourceName string) resource.ImportSta
 	}
 }
 
+func TestAccLambdaPermission_FunctionUrls_AwsIam(t *testing.T) {
+	var statement tflambda.PolicyStatement
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_lambda_permission.test"
+	functionResourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckPermissionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionConfig_FunctionUrls_AwsIam(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPermissionExists(resourceName, &statement),
+					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunctionUrl"),
+					resource.TestCheckResourceAttr(resourceName, "principal", "*"),
+					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionWithIAM"),
+					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "function_url_auth_type", lambda.FunctionUrlAuthTypeAwsIam),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccCPermissionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccLambdaPermission_FunctionUrls_None(t *testing.T) {
+	var statement tflambda.PolicyStatement
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_lambda_permission.test"
+	functionResourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckPermissionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionConfig_FunctionUrls_None(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPermissionExists(resourceName, &statement),
+					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunctionUrl"),
+					resource.TestCheckResourceAttr(resourceName, "principal", "*"),
+					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionFromWithoutAuth"),
+					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "function_url_auth_type", lambda.FunctionUrlAuthTypeNone),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccCPermissionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccPermissionBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
@@ -1037,3 +1107,27 @@ var testLambdaOrgPolicy = []byte(`{
 	],
 	"Id": "default"
   }`)
+
+func testAccPermissionConfig_FunctionUrls_AwsIam(rName string) string {
+	return acctest.ConfigCompose(testAccPermissionBaseConfig(rName), `
+resource "aws_lambda_permission" "test" {
+  statement_id           = "AllowExecutionWithIAM"
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = aws_lambda_function.test.arn
+  principal              = "*"
+  function_url_auth_type = "AWS_IAM"
+}
+`)
+}
+
+func testAccPermissionConfig_FunctionUrls_None(rName string) string {
+	return acctest.ConfigCompose(testAccPermissionBaseConfig(rName), `
+resource "aws_lambda_permission" "test" {
+  statement_id           = "AllowExecutionFromWithoutAuth"
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = aws_lambda_function.test.arn
+  principal              = "*"
+  function_url_auth_type = "NONE"
+}
+`)
+}

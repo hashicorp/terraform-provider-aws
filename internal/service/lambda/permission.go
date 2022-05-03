@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -47,6 +48,12 @@ func ResourcePermission() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validFunctionName(),
+			},
+			"function_url_auth_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(lambda.FunctionUrlAuthType_Values(), false),
 			},
 			"principal_org_id": {
 				Type:     schema.TypeString,
@@ -124,6 +131,9 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("event_source_token"); ok {
 		input.EventSourceToken = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("function_url_auth_type"); ok {
+		input.FunctionUrlAuthType = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("qualifier"); ok {
 		input.Qualifier = aws.String(v.(string))
@@ -306,6 +316,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("source_account", stringEquals["AWS:SourceAccount"])
 		d.Set("event_source_token", stringEquals["lambda:EventSourceToken"])
 		d.Set("principal_org_id", stringEquals["aws:PrincipalOrgID"])
+		d.Set("function_url_auth_type", stringEquals["lambda:FunctionUrlAuthType"])
 	}
 
 	if arnLike, ok := statement.Condition["ArnLike"]; ok {
