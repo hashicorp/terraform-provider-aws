@@ -111,7 +111,7 @@ func TestAccLogsSubscriptionFilter_Disappears_logGroup(t *testing.T) {
 				Config: testAccSubscriptionFilterDestinationARNLambdaConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(resourceName, &filter),
-					testAccCheckCloudWatchLogGroupExists(logGroupResourceName, &logGroup),
+					testAccCheckGroupExists(logGroupResourceName, &logGroup),
 					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceGroup(), logGroupResourceName),
 				),
 				ExpectNonEmptyPlan: true,
