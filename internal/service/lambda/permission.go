@@ -6,7 +6,6 @@ import (
 	"log"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
@@ -265,7 +264,7 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("removing Lambda Permission (%s/%s): %w", functionName, d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(1*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(PropagationTimeout, func() (interface{}, error) {
 		return FindPolicyStatementByTwoPartKey(conn, functionName, d.Id(), d.Get("qualifier").(string))
 	})
 
