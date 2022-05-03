@@ -2,6 +2,7 @@ package iot
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
@@ -1349,114 +1350,116 @@ func resourceTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &iot.GetTopicRuleInput{
-		RuleName: aws.String(d.Id()),
-	}
+	output, err := FindTopicRuleByName(conn, d.Id())
 
-	out, err := conn.GetTopicRule(input)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN]IoT Topic Rule %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	if err != nil {
-		return fmt.Errorf("error getting IoT Topic Rule (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading IoT Topic Rule (%s): %w", d.Id(), err)
 	}
 
-	d.Set("arn", out.RuleArn)
-	d.Set("name", out.Rule.RuleName)
-	d.Set("description", out.Rule.Description)
-	d.Set("enabled", !aws.BoolValue(out.Rule.RuleDisabled))
-	d.Set("sql", out.Rule.Sql)
-	d.Set("sql_version", out.Rule.AwsIotSqlVersion)
+	d.Set("arn", output.RuleArn)
+	d.Set("name", output.Rule.RuleName)
+	d.Set("description", output.Rule.Description)
+	d.Set("enabled", !aws.BoolValue(output.Rule.RuleDisabled))
+	d.Set("sql", output.Rule.Sql)
+	d.Set("sql_version", output.Rule.AwsIotSqlVersion)
 
-	if err := d.Set("cloudwatch_alarm", flattenIotCloudWatchAlarmActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting cloudwatch_alarm: %w", err)
+	if err := d.Set("cloudwatch_alarm", flattenIotCloudWatchAlarmActions(output.Rule.Actions)); err != nil {
+		return fmt.Errorf("setting cloudwatch_alarm: %w", err)
 	}
 
-	if err := d.Set("cloudwatch_logs", flattenIotCloudWatchLogsActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting cloudwatch_logs: %w", err)
+	if err := d.Set("cloudwatch_logs", flattenIotCloudWatchLogsActions(output.Rule.Actions)); err != nil {
+		return fmt.Errorf("setting cloudwatch_logs: %w", err)
 	}
 
-	if err := d.Set("cloudwatch_metric", flattenIotCloudwatchMetricActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting cloudwatch_metric: %w", err)
+	if err := d.Set("cloudwatch_metric", flattenIotCloudwatchMetricActions(output.Rule.Actions)); err != nil {
+		return fmt.Errorf("setting cloudwatch_metric: %w", err)
 	}
 
-	if err := d.Set("dynamodb", flattenIotDynamoDbActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting dynamodb: %w", err)
+	if err := d.Set("dynamodb", flattenIotDynamoDbActions(output.Rule.Actions)); err != nil {
+		return fmt.Errorf("setting dynamodb: %w", err)
 	}
 
-	if err := d.Set("dynamodbv2", flattenIotDynamoDbv2Actions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting dynamodbv2: %w", err)
+	if err := d.Set("dynamodbv2", flattenIotDynamoDbv2Actions(output.Rule.Actions)); err != nil {
+		return fmt.Errorf("setting dynamodbv2: %w", err)
 	}
 
-	if err := d.Set("elasticsearch", flattenIotElasticsearchActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting elasticsearch: %w", err)
+	if err := d.Set("elasticsearch", flattenIotElasticsearchActions(output.Rule.Actions)); err != nil {
+		return fmt.Errorf("setting elasticsearch: %w", err)
 	}
 
-	if err := d.Set("firehose", flattenIotFirehoseActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting firehose: %w", err)
+	if err := d.Set("firehose", flattenIotFirehoseActions(output.Rule.Actions)); err != nil {
+		return fmt.Errorf("setting firehose: %w", err)
 	}
 
-	if err := d.Set("iot_analytics", flattenIotIotAnalyticsActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting iot_analytics: %w", err)
+	if err := d.Set("iot_analytics", flattenIotIotAnalyticsActions(output.Rule.Actions)); err != nil {
+		return fmt.Errorf("setting iot_analytics: %w", err)
 	}
 
-	if err := d.Set("iot_events", flattenIotIotEventsActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting iot_events: %w", err)
+	if err := d.Set("iot_events", flattenIotIotEventsActions(output.Rule.Actions)); err != nil {
+		return fmt.Errorf("setting iot_events: %w", err)
 	}
 
-	if err := d.Set("kafka", flattenIotKafkaActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting kafka: %w", err)
+	if err := d.Set("kafka", flattenIotKafkaActions(output.Rule.Actions)); err != nil {
+		return fmt.Errorf("setting kafka: %w", err)
 	}
 
-	if err := d.Set("kinesis", flattenIotKinesisActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting kinesis: %w", err)
+	if err := d.Set("kinesis", flattenIotKinesisActions(output.Rule.Actions)); err != nil {
+		return fmt.Errorf("setting kinesis: %w", err)
 	}
 
-	if err := d.Set("lambda", flattenIotLambdaActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting lambda: %w", err)
+	if err := d.Set("lambda", flattenIotLambdaActions(output.Rule.Actions)); err != nil {
+		return fmt.Errorf("setting lambda: %w", err)
 	}
 
-	if err := d.Set("republish", flattenIotRepublishActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting republish: %w", err)
+	if err := d.Set("republish", flattenIotRepublishActions(output.Rule.Actions)); err != nil {
+		return fmt.Errorf("setting republish: %w", err)
 	}
 
-	if err := d.Set("s3", flattenIotS3Actions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting s3: %w", err)
+	if err := d.Set("s3", flattenIotS3Actions(output.Rule.Actions)); err != nil {
+		return fmt.Errorf("setting s3: %w", err)
 	}
 
-	if err := d.Set("sns", flattenIotSnsActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting sns: %w", err)
+	if err := d.Set("sns", flattenIotSnsActions(output.Rule.Actions)); err != nil {
+		return fmt.Errorf("setting sns: %w", err)
 	}
 
-	if err := d.Set("sqs", flattenIotSqsActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting sqs: %w", err)
+	if err := d.Set("sqs", flattenIotSqsActions(output.Rule.Actions)); err != nil {
+		return fmt.Errorf("setting sqs: %w", err)
 	}
 
-	if err := d.Set("step_functions", flattenIotStepFunctionsActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting step_functions: %w", err)
+	if err := d.Set("step_functions", flattenIotStepFunctionsActions(output.Rule.Actions)); err != nil {
+		return fmt.Errorf("setting step_functions: %w", err)
 	}
 
-	if err := d.Set("timestream", flattenIotTimestreamActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting timestream: %w", err)
+	if err := d.Set("timestream", flattenIotTimestreamActions(output.Rule.Actions)); err != nil {
+		return fmt.Errorf("setting timestream: %w", err)
 	}
 
-	if err := d.Set("error_action", flattenIotErrorAction(out.Rule.ErrorAction)); err != nil {
-		return fmt.Errorf("error setting error_action: %w", err)
+	if err := d.Set("error_action", flattenIotErrorAction(output.Rule.ErrorAction)); err != nil {
+		return fmt.Errorf("setting error_action: %w", err)
 	}
 
-	tags, err := ListTags(conn, aws.StringValue(out.RuleArn))
+	tags, err := ListTags(conn, aws.StringValue(output.RuleArn))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for IoT Topic Rule (%s): %w", aws.StringValue(out.RuleArn), err)
+		return fmt.Errorf("listing tags for IoT Topic Rule (%s): %w", aws.StringValue(output.RuleArn), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil

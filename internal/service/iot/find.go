@@ -119,3 +119,54 @@ func FindThingGroupMembership(conn *iot.IoT, thingGroupName, thingName string) e
 
 	return nil
 }
+
+func FindTopicRuleByName(conn *iot.IoT, name string) (*iot.GetTopicRuleOutput, error) {
+	// GetTopicRule returns unhelpful errors such as
+	//	"An error occurred (UnauthorizedException) when calling the GetTopicRule operation: Access to topic rule 'xxxxxxxx' was denied"
+	// when querying for a rule that doesn't exist.
+	var rule *iot.TopicRuleListItem
+
+	err := conn.ListTopicRulesPages(&iot.ListTopicRulesInput{}, func(page *iot.ListTopicRulesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Rules {
+			if v == nil {
+				continue
+			}
+
+			if aws.StringValue(v.RuleName) == name {
+				rule = v
+
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if rule == nil {
+		return nil, tfresource.NewEmptyResultError(name)
+	}
+
+	input := &iot.GetTopicRuleInput{
+		RuleName: aws.String(name),
+	}
+
+	output, err := conn.GetTopicRule(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
