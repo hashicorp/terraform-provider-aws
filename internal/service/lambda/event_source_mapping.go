@@ -1,6 +1,7 @@
 package lambda
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"reflect"
@@ -942,4 +943,113 @@ func flattenFilter(apiObject *lambda.Filter) map[string]interface{} {
 	}
 
 	return tfMap
+}
+
+func findEventSourceMappingConfiguration(conn *lambda.Lambda, input *lambda.GetEventSourceMappingInput) (*lambda.EventSourceMappingConfiguration, error) {
+	output, err := conn.GetEventSourceMapping(input)
+
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindEventSourceMappingConfigurationByID(conn *lambda.Lambda, uuid string) (*lambda.EventSourceMappingConfiguration, error) {
+	input := &lambda.GetEventSourceMappingInput{
+		UUID: aws.String(uuid),
+	}
+
+	return findEventSourceMappingConfiguration(conn, input)
+}
+
+func statusEventSourceMappingState(conn *lambda.Lambda, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		eventSourceMappingConfiguration, err := FindEventSourceMappingConfigurationByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return eventSourceMappingConfiguration, aws.StringValue(eventSourceMappingConfiguration.State), nil
+	}
+}
+
+const (
+	eventSourceMappingCreateTimeout      = 10 * time.Minute
+	eventSourceMappingUpdateTimeout      = 10 * time.Minute
+	eventSourceMappingDeleteTimeout      = 5 * time.Minute
+	eventSourceMappingPropagationTimeout = 5 * time.Minute
+)
+
+func waitEventSourceMappingCreate(conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{eventSourceMappingStateCreating, eventSourceMappingStateDisabling, eventSourceMappingStateEnabling},
+		Target:  []string{eventSourceMappingStateDisabled, eventSourceMappingStateEnabled},
+		Refresh: statusEventSourceMappingState(conn, id),
+		Timeout: eventSourceMappingCreateTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*lambda.EventSourceMappingConfiguration); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateTransitionReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEventSourceMappingDelete(conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{eventSourceMappingStateDeleting},
+		Target:  []string{},
+		Refresh: statusEventSourceMappingState(conn, id),
+		Timeout: eventSourceMappingDeleteTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*lambda.EventSourceMappingConfiguration); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateTransitionReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEventSourceMappingUpdate(conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{eventSourceMappingStateDisabling, eventSourceMappingStateEnabling, eventSourceMappingStateUpdating},
+		Target:  []string{eventSourceMappingStateDisabled, eventSourceMappingStateEnabled},
+		Refresh: statusEventSourceMappingState(conn, id),
+		Timeout: eventSourceMappingUpdateTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*lambda.EventSourceMappingConfiguration); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateTransitionReason)))
+
+		return output, err
+	}
+
+	return nil, err
 }
