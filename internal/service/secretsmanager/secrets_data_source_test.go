@@ -58,16 +58,14 @@ resource "aws_secretsmanager_secret" "test" {
 }
 
 func testAccConfigSecretsWithDataSource_filter(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_secretsmanager_secret" "test" {
-  name = %[1]q
-}
-
+	return acctest.ConfigCompose(
+		testAccConfigSecrets_filter(rName),
+		`
 data "aws_secretsmanager_secrets" "test" {
   filter {
     name   = "name"
     values = [aws_secretsmanager_secret.test.name]
   }
 }
-`, rName)
+`)
 }
