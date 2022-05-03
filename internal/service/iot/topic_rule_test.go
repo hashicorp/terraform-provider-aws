@@ -462,7 +462,7 @@ func TestAccIoTTopicRule_elasticSearch(t *testing.T) {
 }
 
 func TestAccIoTTopicRule_firehose(t *testing.T) {
-	rName := sdkacctest.RandString(5)
+	rName := testAccTopicRuleName()
 	resourceName := "aws_iot_topic_rule.rule"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -472,9 +472,37 @@ func TestAccIoTTopicRule_firehose(t *testing.T) {
 		CheckDestroy: testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRule_firehose(rName),
+				Config: testAccTopicRuleFirehoseConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists("aws_iot_topic_rule.rule"),
+					testAccCheckTopicRuleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firehose.*", map[string]string{
+						"delivery_stream_name": "mystream1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firehose.*", map[string]string{
+						"delivery_stream_name": "mystream2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firehose.*", map[string]string{
+						"delivery_stream_name": "mystream3",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
 				),
 			},
 			{
@@ -1164,19 +1192,28 @@ resource "aws_iot_topic_rule" "rule" {
 `, rName))
 }
 
-func testAccTopicRule_firehose(rName string) string {
+func testAccTopicRuleFirehoseConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
-  name        = "test_rule_%[1]s"
-  description = "Example rule"
+  name        = %[1]q
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
   sql_version = "2015-10-08"
 
   firehose {
-    delivery_stream_name = "mystream"
+    delivery_stream_name = "mystream1"
+    role_arn             = aws_iam_role.iot_role.arn
+  }
+
+  firehose {
+    delivery_stream_name = "mystream2"
+    role_arn             = aws_iam_role.iot_role.arn
+  }
+
+  firehose {
+    delivery_stream_name = "mystream3"
     role_arn             = aws_iam_role.iot_role.arn
   }
 }
