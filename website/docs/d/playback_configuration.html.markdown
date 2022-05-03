@@ -28,7 +28,7 @@ data "aws_media_tailor_playback_configuration" "example" {
 * `cdn_configuration` - The configuration for using a content delivery network (CDN) for content and ad segment management. Detailed below.
 * `dash_configuration` - The configuration for DASH content. Detailed below.
 * `hls_configuration` - The configuration for HLS content. Detailed below.
-* `live_preroll_configuration` - The configuration for pre-roll ad insertion. Detailed below.
+* `live_pre_roll_configuration` - The configuration for pre-roll ad insertion. Detailed below.
 * `log_configuration` - The Amazon CloudWatch log settings for a playback configuration. Detailed below.
 * `manifest_processing_rules` - The configuration for manifest processing rules. Detailed below.
 * `personalization_threshold_seconds` - Defines the maximum duration of underfilled ad time (in seconds) allowed in an ad break.
@@ -41,7 +41,7 @@ data "aws_media_tailor_playback_configuration" "example" {
 
 ### `avail_suppression`
 
-* `mode` - Sets the ad suppression mode. Can either be "OFF" or "BEHIND_LIVE_EDGE".
+* `mode` - The ad suppression mode. Can either be "OFF" or "BEHIND_LIVE_EDGE".
 * `value` - Time value in HH:MM:SS format after which MediaTailor will not fill any ad breaks.
 
 ### `bumper`
@@ -71,7 +71,7 @@ data "aws_media_tailor_playback_configuration" "example" {
 
 ### `log_configuration`
 
-* `percent_enabled` - The percentage of session logs that MediaTailor sends to your Cloudwatch Logs account
+* `percent_enabled` - The percentage of session logs that MediaTailor sends to your Cloudwatch Logs account.
 
 ### `manifest_processing_rules`
 #### `ad_marker_passthrough`
