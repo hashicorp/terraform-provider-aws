@@ -1519,14 +1519,13 @@ func resourceTopicRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceTopicRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
-	input := &iot.DeleteTopicRuleInput{
+	log.Printf("[INFO] Deleting IoT Topic Rule: %s", d.Id())
+	_, err := conn.DeleteTopicRule(&iot.DeleteTopicRuleInput{
 		RuleName: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteTopicRule(input)
+	})
 
 	if err != nil {
-		return fmt.Errorf("error deleting IoT Topic Rule (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting IoT Topic Rule (%s): %w", d.Id(), err)
 	}
 
 	return nil
