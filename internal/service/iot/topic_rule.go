@@ -1366,23 +1366,6 @@ func resourceTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("sql", out.Rule.Sql)
 	d.Set("sql_version", out.Rule.AwsIotSqlVersion)
 
-	tags, err := ListTags(conn, aws.StringValue(out.RuleArn))
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for IoT Topic Rule (%s): %w", aws.StringValue(out.RuleArn), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
 	if err := d.Set("cloudwatch_alarm", flattenIotCloudWatchAlarmActions(out.Rule.Actions)); err != nil {
 		return fmt.Errorf("error setting cloudwatch_alarm: %w", err)
 	}
@@ -1419,6 +1402,10 @@ func resourceTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting iot_events: %w", err)
 	}
 
+	if err := d.Set("kafka", flattenIotKafkaActions(out.Rule.Actions)); err != nil {
+		return fmt.Errorf("error setting kafka: %w", err)
+	}
+
 	if err := d.Set("kinesis", flattenIotKinesisActions(out.Rule.Actions)); err != nil {
 		return fmt.Errorf("error setting kinesis: %w", err)
 	}
@@ -1447,16 +1434,29 @@ func resourceTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting step_functions: %w", err)
 	}
 
-	if err := d.Set("kafka", flattenIotKafkaActions(out.Rule.Actions)); err != nil {
-		return fmt.Errorf("error setting kafka: %w", err)
-	}
-
 	if err := d.Set("timestream", flattenIotTimestreamActions(out.Rule.Actions)); err != nil {
 		return fmt.Errorf("error setting timestream: %w", err)
 	}
 
 	if err := d.Set("error_action", flattenIotErrorAction(out.Rule.ErrorAction)); err != nil {
 		return fmt.Errorf("error setting error_action: %w", err)
+	}
+
+	tags, err := ListTags(conn, aws.StringValue(out.RuleArn))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for IoT Topic Rule (%s): %w", aws.StringValue(out.RuleArn), err)
+	}
+
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -2937,6 +2937,143 @@ func flattenIotIotEventsAction(apiObject *iot.IotEventsAction) []interface{} {
 }
 
 // Legacy root attribute handling
+func flattenIotKafkaActions(actions []*iot.Action) []interface{} {
+	results := make([]interface{}, 0)
+
+	for _, action := range actions {
+		if action == nil {
+			continue
+		}
+
+		if v := action.Kafka; v != nil {
+			results = append(results, flattenIotKafkaAction(v)...)
+		}
+	}
+
+	return results
+}
+
+func flattenIotKafkaAction(apiObject *iot.KafkaAction) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]interface{})
+
+	if v := apiObject.DestinationArn; v != nil {
+		tfMap["destination_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Key; v != nil {
+		tfMap["key"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Partition; v != nil {
+		tfMap["partition"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Topic; v != nil {
+		tfMap["topic"] = aws.StringValue(v)
+	}
+
+	if cp := apiObject.ClientProperties; cp != nil {
+		if v, ok := cp["acks"]; ok && v != nil {
+			tfMap["acks"] = aws.StringValue(v)
+		}
+
+		if v, ok := cp["bootstrap.servers"]; ok && v != nil {
+			tfMap["bootstrap_servers"] = aws.StringValue(v)
+		}
+
+		if v, ok := cp["compression.type"]; ok && v != nil {
+			tfMap["compression_type"] = aws.StringValue(v)
+		}
+
+		if v, ok := cp["key.serializer"]; ok && v != nil {
+			tfMap["key_serializer"] = aws.StringValue(v)
+		}
+
+		if v, ok := cp["value.serializer"]; ok && v != nil {
+			tfMap["value_serializer"] = aws.StringValue(v)
+		}
+
+		if v, ok := cp["ssl.truststore"]; ok && v != nil {
+			tfMap["ssl_truststore"] = aws.StringValue(v)
+		}
+
+		if v, ok := cp["ssl.truststore.password"]; ok && v != nil {
+			tfMap["ssl_truststore_password"] = aws.StringValue(v)
+		}
+
+		if sp, ok := cp["security.protocol"]; ok && sp != nil {
+			protocol := aws.StringValue(sp)
+			tfMap["security_protocol"] = protocol
+
+			switch protocol {
+			case "SSL":
+				if v, ok := cp["ssl.keystore"]; ok && v != nil {
+					tfMap["ssl_keystore"] = aws.StringValue(v)
+				}
+
+				if v, ok := cp["ssl.keystore.password"]; ok && v != nil {
+					tfMap["ssl_keystore_password"] = aws.StringValue(v)
+				}
+
+				if v, ok := cp["ssl.key.password"]; ok && v != nil {
+					tfMap["ssl_key_password"] = aws.StringValue(v)
+				}
+			case "SASL":
+				if m, ok := cp["sasl.mechanism"]; ok && m != nil {
+					mechanism := aws.StringValue(m)
+					tfMap["sasl_mechanism"] = mechanism
+
+					switch mechanism {
+					case "PLAIN":
+						if v, ok := cp["sasl.plain.username"]; ok && v != nil {
+							tfMap["sasl_plain_username"] = aws.StringValue(v)
+						}
+
+						if v, ok := cp["sasl.plain.password"]; ok && v != nil {
+							tfMap["sasl_plain_password"] = aws.StringValue(v)
+						}
+					case "SCRAM-SHA-512":
+						if v, ok := cp["sasl.scram.username"]; ok && v != nil {
+							tfMap["sasl_scram_username"] = aws.StringValue(v)
+						}
+
+						if v, ok := cp["sasl.scram.password"]; ok && v != nil {
+							tfMap["sasl_scram_password"] = aws.StringValue(v)
+						}
+					case "GSSAPI":
+						if v, ok := cp["sasl.kerberos.keytab"]; ok && v != nil {
+							tfMap["sasl_kerberos_keytab"] = aws.StringValue(v)
+						}
+
+						if v, ok := cp["sasl.kerberos.krb5.kdc"]; ok && v != nil {
+							tfMap["sasl_kerberos_krb5_kdc"] = aws.StringValue(v)
+						}
+
+						if v, ok := cp["sasl.kerberos.krb5.realm"]; ok && v != nil {
+							tfMap["sasl_kerberos_krb5_realm"] = aws.StringValue(v)
+						}
+
+						if v, ok := cp["sasl.kerberos.principal"]; ok && v != nil {
+							tfMap["sasl_kerberos_principal"] = aws.StringValue(v)
+						}
+
+						if v, ok := cp["sasl.kerberos.service.name"]; ok && v != nil {
+							tfMap["sasl_kerberos_service_name"] = aws.StringValue(v)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return []interface{}{tfMap}
+}
+
+// Legacy root attribute handling
 func flattenIotKinesisActions(actions []*iot.Action) []interface{} {
 	results := make([]interface{}, 0)
 
@@ -3215,225 +3352,6 @@ func flattenIotStepFunctionsAction(apiObject *iot.StepFunctionsAction) []interfa
 	return []interface{}{tfMap}
 }
 
-func flattenIotKafkaActions(actions []*iot.Action) []interface{} {
-	results := make([]interface{}, 0)
-
-	for _, action := range actions {
-		if action == nil {
-			continue
-		}
-
-		if v := action.Kafka; v != nil {
-			results = append(results, flattenIotKafkaAction(v)...)
-		}
-	}
-
-	return results
-}
-
-func flattenIotKafkaAction(apiObject *iot.KafkaAction) []interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := make(map[string]interface{})
-
-	if v := apiObject.DestinationArn; v != nil {
-		tfMap["destination_arn"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.Key; v != nil {
-		tfMap["key"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.Partition; v != nil {
-		tfMap["partition"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.Topic; v != nil {
-		tfMap["topic"] = aws.StringValue(v)
-	}
-
-	if cp := apiObject.ClientProperties; cp != nil {
-		if v, ok := cp["acks"]; ok && v != nil {
-			tfMap["acks"] = aws.StringValue(v)
-		}
-
-		if v, ok := cp["bootstrap.servers"]; ok && v != nil {
-			tfMap["bootstrap_servers"] = aws.StringValue(v)
-		}
-
-		if v, ok := cp["compression.type"]; ok && v != nil {
-			tfMap["compression_type"] = aws.StringValue(v)
-		}
-
-		if v, ok := cp["key.serializer"]; ok && v != nil {
-			tfMap["key_serializer"] = aws.StringValue(v)
-		}
-
-		if v, ok := cp["value.serializer"]; ok && v != nil {
-			tfMap["value_serializer"] = aws.StringValue(v)
-		}
-
-		if v, ok := cp["ssl.truststore"]; ok && v != nil {
-			tfMap["ssl_truststore"] = aws.StringValue(v)
-		}
-
-		if v, ok := cp["ssl.truststore.password"]; ok && v != nil {
-			tfMap["ssl_truststore_password"] = aws.StringValue(v)
-		}
-
-		if sp, ok := cp["security.protocol"]; ok && sp != nil {
-			protocol := aws.StringValue(sp)
-			tfMap["security_protocol"] = protocol
-
-			switch protocol {
-			case "SSL":
-				if v, ok := cp["ssl.keystore"]; ok && v != nil {
-					tfMap["ssl_keystore"] = aws.StringValue(v)
-				}
-
-				if v, ok := cp["ssl.keystore.password"]; ok && v != nil {
-					tfMap["ssl_keystore_password"] = aws.StringValue(v)
-				}
-
-				if v, ok := cp["ssl.key.password"]; ok && v != nil {
-					tfMap["ssl_key_password"] = aws.StringValue(v)
-				}
-			case "SASL":
-				if m, ok := cp["sasl.mechanism"]; ok && m != nil {
-					mechanism := aws.StringValue(m)
-					tfMap["sasl_mechanism"] = mechanism
-
-					switch mechanism {
-					case "PLAIN":
-						if v, ok := cp["sasl.plain.username"]; ok && v != nil {
-							tfMap["sasl_plain_username"] = aws.StringValue(v)
-						}
-
-						if v, ok := cp["sasl.plain.password"]; ok && v != nil {
-							tfMap["sasl_plain_password"] = aws.StringValue(v)
-						}
-					case "SCRAM-SHA-512":
-						if v, ok := cp["sasl.scram.username"]; ok && v != nil {
-							tfMap["sasl_scram_username"] = aws.StringValue(v)
-						}
-
-						if v, ok := cp["sasl.scram.password"]; ok && v != nil {
-							tfMap["sasl_scram_password"] = aws.StringValue(v)
-						}
-					case "GSSAPI":
-						if v, ok := cp["sasl.kerberos.keytab"]; ok && v != nil {
-							tfMap["sasl_kerberos_keytab"] = aws.StringValue(v)
-						}
-
-						if v, ok := cp["sasl.kerberos.krb5.kdc"]; ok && v != nil {
-							tfMap["sasl_kerberos_krb5_kdc"] = aws.StringValue(v)
-						}
-
-						if v, ok := cp["sasl.kerberos.krb5.realm"]; ok && v != nil {
-							tfMap["sasl_kerberos_krb5_realm"] = aws.StringValue(v)
-						}
-
-						if v, ok := cp["sasl.kerberos.principal"]; ok && v != nil {
-							tfMap["sasl_kerberos_principal"] = aws.StringValue(v)
-						}
-
-						if v, ok := cp["sasl.kerberos.service.name"]; ok && v != nil {
-							tfMap["sasl_kerberos_service_name"] = aws.StringValue(v)
-						}
-					}
-				}
-			}
-		}
-	}
-
-	return []interface{}{tfMap}
-}
-
-func flattenIotErrorAction(errorAction *iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	if errorAction == nil {
-		return results
-	}
-	input := []*iot.Action{errorAction}
-	if errorAction.CloudwatchAlarm != nil {
-		results = append(results, map[string]interface{}{"cloudwatch_alarm": flattenIotCloudWatchAlarmActions(input)})
-		return results
-	}
-	if errorAction.CloudwatchLogs != nil {
-		results = append(results, map[string]interface{}{"cloudwatch_logs": flattenIotCloudWatchLogsActions(input)})
-		return results
-	}
-	if errorAction.CloudwatchMetric != nil {
-		results = append(results, map[string]interface{}{"cloudwatch_metric": flattenIotCloudwatchMetricActions(input)})
-		return results
-	}
-	if errorAction.DynamoDB != nil {
-		results = append(results, map[string]interface{}{"dynamodb": flattenIotDynamoDbActions(input)})
-		return results
-	}
-	if errorAction.DynamoDBv2 != nil {
-		results = append(results, map[string]interface{}{"dynamodbv2": flattenIotDynamoDbv2Actions(input)})
-		return results
-	}
-	if errorAction.Elasticsearch != nil {
-		results = append(results, map[string]interface{}{"elasticsearch": flattenIotElasticsearchActions(input)})
-		return results
-	}
-	if errorAction.Firehose != nil {
-		results = append(results, map[string]interface{}{"firehose": flattenIotFirehoseActions(input)})
-		return results
-	}
-	if errorAction.IotAnalytics != nil {
-		results = append(results, map[string]interface{}{"iot_analytics": flattenIotIotAnalyticsActions(input)})
-		return results
-	}
-	if errorAction.IotEvents != nil {
-		results = append(results, map[string]interface{}{"iot_events": flattenIotIotEventsActions(input)})
-		return results
-	}
-	if errorAction.Kafka != nil {
-		results = append(results, map[string]interface{}{"kafka": flattenIotKafkaActions(input)})
-		return results
-	}
-	if errorAction.Kinesis != nil {
-		results = append(results, map[string]interface{}{"kinesis": flattenIotKinesisActions(input)})
-		return results
-	}
-	if errorAction.Lambda != nil {
-		results = append(results, map[string]interface{}{"lambda": flattenIotLambdaActions(input)})
-		return results
-	}
-	if errorAction.Republish != nil {
-		results = append(results, map[string]interface{}{"republish": flattenIotRepublishActions(input)})
-		return results
-	}
-	if errorAction.S3 != nil {
-		results = append(results, map[string]interface{}{"s3": flattenIotS3Actions(input)})
-		return results
-	}
-	if errorAction.Sns != nil {
-		results = append(results, map[string]interface{}{"sns": flattenIotSnsActions(input)})
-		return results
-	}
-	if errorAction.Sqs != nil {
-		results = append(results, map[string]interface{}{"sqs": flattenIotSqsActions(input)})
-		return results
-	}
-	if errorAction.StepFunctions != nil {
-		results = append(results, map[string]interface{}{"step_functions": flattenIotStepFunctionsActions(input)})
-		return results
-	}
-	if errorAction.Timestream != nil {
-		results = append(results, map[string]interface{}{"timestream": flattenIotTimestreamActions(input)})
-		return results
-	}
-
-	return results
-}
-
 // Legacy root attribute handling
 func flattenIotTimestreamActions(actions []*iot.Action) []interface{} {
 	results := make([]interface{}, 0)
@@ -3523,4 +3441,87 @@ func flattenIotTimestreamTimestamp(apiObject *iot.TimestreamTimestamp) []interfa
 	}
 
 	return []interface{}{tfMap}
+}
+
+func flattenIotErrorAction(errorAction *iot.Action) []map[string]interface{} {
+	results := make([]map[string]interface{}, 0)
+
+	if errorAction == nil {
+		return results
+	}
+	input := []*iot.Action{errorAction}
+	if errorAction.CloudwatchAlarm != nil {
+		results = append(results, map[string]interface{}{"cloudwatch_alarm": flattenIotCloudWatchAlarmActions(input)})
+		return results
+	}
+	if errorAction.CloudwatchLogs != nil {
+		results = append(results, map[string]interface{}{"cloudwatch_logs": flattenIotCloudWatchLogsActions(input)})
+		return results
+	}
+	if errorAction.CloudwatchMetric != nil {
+		results = append(results, map[string]interface{}{"cloudwatch_metric": flattenIotCloudwatchMetricActions(input)})
+		return results
+	}
+	if errorAction.DynamoDB != nil {
+		results = append(results, map[string]interface{}{"dynamodb": flattenIotDynamoDbActions(input)})
+		return results
+	}
+	if errorAction.DynamoDBv2 != nil {
+		results = append(results, map[string]interface{}{"dynamodbv2": flattenIotDynamoDbv2Actions(input)})
+		return results
+	}
+	if errorAction.Elasticsearch != nil {
+		results = append(results, map[string]interface{}{"elasticsearch": flattenIotElasticsearchActions(input)})
+		return results
+	}
+	if errorAction.Firehose != nil {
+		results = append(results, map[string]interface{}{"firehose": flattenIotFirehoseActions(input)})
+		return results
+	}
+	if errorAction.IotAnalytics != nil {
+		results = append(results, map[string]interface{}{"iot_analytics": flattenIotIotAnalyticsActions(input)})
+		return results
+	}
+	if errorAction.IotEvents != nil {
+		results = append(results, map[string]interface{}{"iot_events": flattenIotIotEventsActions(input)})
+		return results
+	}
+	if errorAction.Kafka != nil {
+		results = append(results, map[string]interface{}{"kafka": flattenIotKafkaActions(input)})
+		return results
+	}
+	if errorAction.Kinesis != nil {
+		results = append(results, map[string]interface{}{"kinesis": flattenIotKinesisActions(input)})
+		return results
+	}
+	if errorAction.Lambda != nil {
+		results = append(results, map[string]interface{}{"lambda": flattenIotLambdaActions(input)})
+		return results
+	}
+	if errorAction.Republish != nil {
+		results = append(results, map[string]interface{}{"republish": flattenIotRepublishActions(input)})
+		return results
+	}
+	if errorAction.S3 != nil {
+		results = append(results, map[string]interface{}{"s3": flattenIotS3Actions(input)})
+		return results
+	}
+	if errorAction.Sns != nil {
+		results = append(results, map[string]interface{}{"sns": flattenIotSnsActions(input)})
+		return results
+	}
+	if errorAction.Sqs != nil {
+		results = append(results, map[string]interface{}{"sqs": flattenIotSqsActions(input)})
+		return results
+	}
+	if errorAction.StepFunctions != nil {
+		results = append(results, map[string]interface{}{"step_functions": flattenIotStepFunctionsActions(input)})
+		return results
+	}
+	if errorAction.Timestream != nil {
+		results = append(results, map[string]interface{}{"timestream": flattenIotTimestreamActions(input)})
+		return results
+	}
+
+	return results
 }
