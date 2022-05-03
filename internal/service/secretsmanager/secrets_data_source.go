@@ -1,6 +1,8 @@
 package secretsmanager
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -38,7 +40,7 @@ func dataSourceSecretsRead(d *schema.ResourceData, meta interface{}) error {
 
 	var results []*secretsmanager.SecretListEntry
 
-	conn.ListSecretsPages(input, func(page *secretsmanager.ListSecretsOutput, lastPage bool) bool {
+	err := conn.ListSecretsPages(input, func(page *secretsmanager.ListSecretsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -53,6 +55,10 @@ func dataSourceSecretsRead(d *schema.ResourceData, meta interface{}) error {
 
 		return !lastPage
 	})
+
+	if err != nil {
+		return fmt.Errorf("listing Secrets Manager Secrets: %w", err)
+	}
 
 	var arns, names []string
 
