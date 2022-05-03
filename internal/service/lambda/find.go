@@ -5,20 +5,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// FindEventSourceMappingConfigurationByID returns the event source mapping corresponding to the specified ID.
-// Returns NotFoundError if no event source mapping is found.
-func FindEventSourceMappingConfigurationByID(conn *lambda.Lambda, uuid string) (*lambda.EventSourceMappingConfiguration, error) {
-	input := &lambda.GetEventSourceMappingInput{
-		UUID: aws.String(uuid),
-	}
-
-	return FindEventSourceMappingConfiguration(conn, input)
-}
-
-// FindEventSourceMappingConfiguration returns the event source mapping corresponding to the specified input.
-// Returns NotFoundError if no event source mapping is found.
 func FindEventSourceMappingConfiguration(conn *lambda.Lambda, input *lambda.GetEventSourceMappingInput) (*lambda.EventSourceMappingConfiguration, error) {
 	output, err := conn.GetEventSourceMapping(input)
 
@@ -33,13 +22,17 @@ func FindEventSourceMappingConfiguration(conn *lambda.Lambda, input *lambda.GetE
 		return nil, err
 	}
 
-	// Handle any empty result.
 	if output == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil
+}
+
+func FindEventSourceMappingConfigurationByID(conn *lambda.Lambda, uuid string) (*lambda.EventSourceMappingConfiguration, error) {
+	input := &lambda.GetEventSourceMappingInput{
+		UUID: aws.String(uuid),
+	}
+
+	return FindEventSourceMappingConfiguration(conn, input)
 }
