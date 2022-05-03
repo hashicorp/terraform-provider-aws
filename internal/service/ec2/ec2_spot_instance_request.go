@@ -231,7 +231,7 @@ func resourceSpotInstanceRequestCreate(d *schema.ResourceData, meta interface{})
 			"Expected response with length 1, got: %s", resp)
 	}
 
-	sir := *resp.SpotInstanceRequests[0]
+	sir := resp.SpotInstanceRequests[0]
 	d.SetId(aws.StringValue(sir.SpotInstanceRequestId))
 
 	if d.Get("wait_for_fulfillment").(bool) {
@@ -425,9 +425,7 @@ func resourceSpotInstanceRequestDelete(d *schema.ResourceData, meta interface{})
 
 // SpotInstanceStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
 // an EC2 spot instance request
-func SpotInstanceStateRefreshFunc(
-	conn *ec2.EC2, sir ec2.SpotInstanceRequest) resource.StateRefreshFunc {
-
+func SpotInstanceStateRefreshFunc(conn *ec2.EC2, sir *ec2.SpotInstanceRequest) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeSpotInstanceRequests(&ec2.DescribeSpotInstanceRequestsInput{
 			SpotInstanceRequestIds: []*string{sir.SpotInstanceRequestId},

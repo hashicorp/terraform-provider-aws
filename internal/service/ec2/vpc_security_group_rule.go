@@ -529,7 +529,7 @@ func IPPermissionIDHash(sg_id, ruleType string, ip *ec2.IpPermission) string {
 	if len(ip.IpRanges) > 0 {
 		s := make([]string, len(ip.IpRanges))
 		for i, r := range ip.IpRanges {
-			s[i] = *r.CidrIp
+			s[i] = aws.StringValue(r.CidrIp)
 		}
 		sort.Strings(s)
 
@@ -541,7 +541,7 @@ func IPPermissionIDHash(sg_id, ruleType string, ip *ec2.IpPermission) string {
 	if len(ip.Ipv6Ranges) > 0 {
 		s := make([]string, len(ip.Ipv6Ranges))
 		for i, r := range ip.Ipv6Ranges {
-			s[i] = *r.CidrIpv6
+			s[i] = aws.StringValue(r.CidrIpv6)
 		}
 		sort.Strings(s)
 
@@ -553,7 +553,7 @@ func IPPermissionIDHash(sg_id, ruleType string, ip *ec2.IpPermission) string {
 	if len(ip.PrefixListIds) > 0 {
 		s := make([]string, len(ip.PrefixListIds))
 		for i, pl := range ip.PrefixListIds {
-			s[i] = *pl.PrefixListId
+			s[i] = aws.StringValue(pl.PrefixListId)
 		}
 		sort.Strings(s)
 

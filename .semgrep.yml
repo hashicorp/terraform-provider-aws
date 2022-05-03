@@ -45,8 +45,6 @@ rules:
     paths:
       include:
         - internal/service
-      exclude:
-        - internal/service/ec2
     patterns:
       - pattern: '$LHS = *$RHS'
       - pattern-not: '*$LHS2 = *$RHS'
