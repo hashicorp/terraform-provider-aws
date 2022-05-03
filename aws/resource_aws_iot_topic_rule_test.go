@@ -893,7 +893,7 @@ resource "aws_iot_topic_rule" "rule" {
   sql_version = "2015-10-08"
 
   http {
-    url = "https://foo.bar/ingress"
+	url = "https://foo.bar/ingress"
   }
 }
 `, rName)
@@ -909,8 +909,8 @@ resource "aws_iot_topic_rule" "rule" {
   sql_version = "2015-10-08"
 
   http {
-    url              = "https://foo.bar/ingress"
-    confirmation_url = "https://foo.bar/"
+	url = "https://foo.bar/ingress"
+	confirmation_url = "https://foo.bar/"
   }
 }
 `, rName)
@@ -926,15 +926,15 @@ resource "aws_iot_topic_rule" "rule" {
   sql_version = "2015-10-08"
 
   http {
-    url = "https://foo.bar/ingress"
-    http_header {
-      key   = "foo"
-      value = "bar"
-    }
-    http_header {
-      key   = "oof"
-      value = "rab"
-    }
+	url = "https://foo.bar/ingress"
+	http_header {
+		key = "foo"
+		value = "bar"
+	}
+	http_header {
+		key = "oof"
+		value = "rab"
+	}
   }
 }
 `, rName)
@@ -943,21 +943,21 @@ resource "aws_iot_topic_rule" "rule" {
 func testAccAWSIoTTopicRule_http_errorAction(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_topic_rule" "rule" {
-  name        = "test_rule_%[1]s"
-  description = "Example rule"
-  enabled     = true
-  sql         = "SELECT * FROM 'topic/test'"
-  sql_version = "2015-10-08"
+	name        = "test_rule_%[1]s"
+	description = "Example rule"
+	enabled     = true
+	sql         = "SELECT * FROM 'topic/test'"
+	sql_version = "2015-10-08"
 
-  http {
-    url = "https://foo.bar/ingress"
-  }
-
-  error_action {
-    http {
-      url = "https://bar.foo/error-ingress"
+	http {
+		url = "https://foo.bar/ingress"
     }
-  }
+
+	error_action {
+		http {
+			url = "https://bar.foo/error-ingress"
+		}
+  	}
 }
 `, rName)
 }
