@@ -23,6 +23,14 @@ data "aws_media_tailor_playback_configuration" "example" {
 ## Attributes Reference
 
 * `ad_decision_server_url` - The URL for the ad decision server (ADS).
+* `avail_suppression` - The configuration for avail suppression, also known as ad suppression. Detailed below.
+* `bumper` - The configuration for bumpers. Detailed below.
+* `cdn_configuration` - The configuration for using a content delivery network (CDN) for content and ad segment management. Detailed below.
+* `dash_configuration` - The configuration for DASH content. Detailed below.
+* `hls_configuration` - The configuration for HLS content. Detailed below.
+* `live_preroll_configuration` - The configuration for pre-roll ad insertion. Detailed below.
+* `log_configuration` - The Amazon CloudWatch log settings for a playback configuration. Detailed below.
+* `manifest_processing_rules` - The configuration for manifest processing rules. Detailed below.
 * `personalization_threshold_seconds` - Defines the maximum duration of underfilled ad time (in seconds) allowed in an ad break.
 * `playback_configuration_arn` - The Amazon Resource Name (ARN) for the playback configuration.
 * `playback_endpoint_prefix` - The URL that the player accesses to get a manifest from AWS Elemental MediaTailor.
@@ -69,6 +77,3 @@ data "aws_media_tailor_playback_configuration" "example" {
 #### `ad_marker_passthrough`
 
 * `enabled` - Enables ad marker passthrough for your configuration.
-
-
-
