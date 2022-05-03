@@ -88,7 +88,7 @@ func TestAccIoTTopicRule_disappears(t *testing.T) {
 }
 
 func TestAccIoTTopicRule_tags(t *testing.T) {
-	rName := sdkacctest.RandString(5)
+	rName := testAccTopicRuleName()
 	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -98,11 +98,11 @@ func TestAccIoTTopicRule_tags(t *testing.T) {
 		CheckDestroy: testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleTags1(rName, "key1", "user@example"),
+				Config: testAccTopicRuleConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "user@example"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -111,16 +111,16 @@ func TestAccIoTTopicRule_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTopicRuleTags2(rName, "key1", "user@example", "key2", "value2"),
+				Config: testAccTopicRuleConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "user@example"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccTopicRuleTags1(rName, "key2", "value2"),
+				Config: testAccTopicRuleConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -796,10 +796,10 @@ resource "aws_iot_topic_rule" "rule" {
 `, rName)
 }
 
-func testAccTopicRuleTags1(rName, tagKey1, tagValue1 string) string {
+func testAccTopicRuleConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_topic_rule" "test" {
-  name        = "test_rule_%[1]s"
+  name        = %[1]q
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
   sql_version = "2015-10-08"
@@ -811,10 +811,10 @@ resource "aws_iot_topic_rule" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccTopicRuleTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccTopicRuleConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_topic_rule" "test" {
-  name        = "test_rule_%[1]s"
+  name        = %[1]q
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
   sql_version = "2015-10-08"
