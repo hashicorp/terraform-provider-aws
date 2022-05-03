@@ -49,7 +49,6 @@ rules:
         - internal/service/ec2
         - internal/service/elasticbeanstalk
         - internal/service/elasticsearch
-        - internal/service/elb
     patterns:
       - pattern: '$LHS = *$RHS'
       - pattern-not: '*$LHS2 = *$RHS'
