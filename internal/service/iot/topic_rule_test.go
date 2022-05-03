@@ -44,6 +44,50 @@ func TestAccIoTTopicRule_basic(t *testing.T) {
 	})
 }
 
+func TestAccIoTTopicRule_tags(t *testing.T) {
+	rName := sdkacctest.RandString(5)
+	resourceName := "aws_iot_topic_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTopicRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTopicRuleTags1(rName, "key1", "user@example"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "user@example"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTopicRuleTags2(rName, "key1", "user@example", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "user@example"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccTopicRuleTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccIoTTopicRule_cloudWatchAlarm(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
@@ -245,6 +289,68 @@ func TestAccIoTTopicRule_Firehose_separator(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists("aws_iot_topic_rule.rule"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccIoTTopicRule_IoT_analytics(t *testing.T) {
+	rName := sdkacctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTopicRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTopicRule_iot_analytics(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists("aws_iot_topic_rule.rule"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIoTTopicRule_IoT_events(t *testing.T) {
+	rName := sdkacctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTopicRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTopicRule_iot_events(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists("aws_iot_topic_rule.rule"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIoTTopicRule_kafka(t *testing.T) {
+	rName := sdkacctest.RandString(5)
+	resourceName := "aws_iot_topic_rule.rule"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTopicRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTopicRule_kafka(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists("aws_iot_topic_rule.rule"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -475,88 +581,6 @@ func TestAccIoTTopicRule_Timestream(t *testing.T) {
 	})
 }
 
-func TestAccIoTTopicRule_IoT_analytics(t *testing.T) {
-	rName := sdkacctest.RandString(5)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTopicRule_iot_analytics(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists("aws_iot_topic_rule.rule"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccIoTTopicRule_IoT_events(t *testing.T) {
-	rName := sdkacctest.RandString(5)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTopicRule_iot_events(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists("aws_iot_topic_rule.rule"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccIoTTopicRule_tags(t *testing.T) {
-	rName := sdkacctest.RandString(5)
-	resourceName := "aws_iot_topic_rule.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTopicRuleTags1(rName, "key1", "user@example"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "user@example"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccTopicRuleTags2(rName, "key1", "user@example", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "user@example"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccTopicRuleTags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccIoTTopicRule_errorAction(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
@@ -606,30 +630,6 @@ func TestAccIoTTopicRule_updateKinesisErrorAction(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists("aws_iot_topic_rule.rule"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccIoTTopicRule_kafka(t *testing.T) {
-	rName := sdkacctest.RandString(5)
-	resourceName := "aws_iot_topic_rule.rule"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicRuleDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTopicRule_kafka(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists("aws_iot_topic_rule.rule"),
 				),
 			},
 			{
@@ -758,6 +758,37 @@ resource "aws_iot_topic_rule" "rule" {
 `, rName)
 }
 
+func testAccTopicRuleTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_iot_topic_rule" "test" {
+  name        = "test_rule_%[1]s"
+  enabled     = true
+  sql         = "SELECT * FROM 'topic/test'"
+  sql_version = "2015-10-08"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccTopicRuleTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_iot_topic_rule" "test" {
+  name        = "test_rule_%[1]s"
+  enabled     = true
+  sql         = "SELECT * FROM 'topic/test'"
+  sql_version = "2015-10-08"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
 func testAccTopicRule_cloudWatchalarm(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRole(rName),
@@ -820,28 +851,6 @@ resource "aws_iot_topic_rule" "rule" {
 `, rName))
 }
 
-func testAccTopicRule_dynamoDBv2(rName string) string {
-	return acctest.ConfigCompose(
-		testAccTopicRuleRole(rName),
-		fmt.Sprintf(`
-resource "aws_iot_topic_rule" "rule" {
-  name        = "test_rule_%[1]s"
-  description = "Example rule"
-  enabled     = true
-  sql         = "SELECT field as column_name FROM 'topic/test'"
-  sql_version = "2015-10-08"
-
-  dynamodbv2 {
-    put_item {
-      table_name = "test"
-    }
-
-    role_arn = aws_iam_role.iot_role.arn
-  }
-}
-`, rName))
-}
-
 func testAccTopicRule_dynamoDB(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRole(rName),
@@ -885,6 +894,28 @@ resource "aws_iot_topic_rule" "rule" {
     role_arn        = aws_iam_role.iot_role.arn
     table_name      = "table_name"
     operation       = "INSERT"
+  }
+}
+`, rName))
+}
+
+func testAccTopicRule_dynamoDBv2(rName string) string {
+	return acctest.ConfigCompose(
+		testAccTopicRuleRole(rName),
+		fmt.Sprintf(`
+resource "aws_iot_topic_rule" "rule" {
+  name        = "test_rule_%[1]s"
+  description = "Example rule"
+  enabled     = true
+  sql         = "SELECT field as column_name FROM 'topic/test'"
+  sql_version = "2015-10-08"
+
+  dynamodbv2 {
+    put_item {
+      table_name = "test"
+    }
+
+    role_arn = aws_iam_role.iot_role.arn
   }
 }
 `, rName))
@@ -951,6 +982,45 @@ resource "aws_iot_topic_rule" "rule" {
   }
 }
 `, rName, separator))
+}
+
+func testAccTopicRule_iot_analytics(rName string) string {
+	return acctest.ConfigCompose(
+		testAccTopicRuleRole(rName),
+		fmt.Sprintf(`
+resource "aws_iot_topic_rule" "rule" {
+  name        = "test_rule_%[1]s"
+  description = "Example rule"
+  enabled     = true
+  sql         = "SELECT * FROM 'topic/test'"
+  sql_version = "2015-10-08"
+
+  iot_analytics {
+    channel_name = "fakedata"
+    role_arn     = aws_iam_role.iot_role.arn
+  }
+}
+`, rName))
+}
+
+func testAccTopicRule_iot_events(rName string) string {
+	return acctest.ConfigCompose(
+		testAccTopicRuleRole(rName),
+		fmt.Sprintf(`
+resource "aws_iot_topic_rule" "rule" {
+  name        = "test_rule_%[1]s"
+  description = "Example rule"
+  enabled     = true
+  sql         = "SELECT * FROM 'topic/test'"
+  sql_version = "2015-10-08"
+
+  iot_events {
+    input_name = "fake_input_name"
+    role_arn   = aws_iam_role.iot_role.arn
+    message_id = "fake_message_id"
+  }
+}
+`, rName))
 }
 
 func testAccTopicRule_kafka(rName string) string {
@@ -1161,76 +1231,6 @@ resource "aws_iot_topic_rule" "rule" {
   }
 }
 `, rName))
-}
-
-func testAccTopicRule_iot_analytics(rName string) string {
-	return acctest.ConfigCompose(
-		testAccTopicRuleRole(rName),
-		fmt.Sprintf(`
-resource "aws_iot_topic_rule" "rule" {
-  name        = "test_rule_%[1]s"
-  description = "Example rule"
-  enabled     = true
-  sql         = "SELECT * FROM 'topic/test'"
-  sql_version = "2015-10-08"
-
-  iot_analytics {
-    channel_name = "fakedata"
-    role_arn     = aws_iam_role.iot_role.arn
-  }
-}
-`, rName))
-}
-
-func testAccTopicRule_iot_events(rName string) string {
-	return acctest.ConfigCompose(
-		testAccTopicRuleRole(rName),
-		fmt.Sprintf(`
-resource "aws_iot_topic_rule" "rule" {
-  name        = "test_rule_%[1]s"
-  description = "Example rule"
-  enabled     = true
-  sql         = "SELECT * FROM 'topic/test'"
-  sql_version = "2015-10-08"
-
-  iot_events {
-    input_name = "fake_input_name"
-    role_arn   = aws_iam_role.iot_role.arn
-    message_id = "fake_message_id"
-  }
-}
-`, rName))
-}
-
-func testAccTopicRuleTags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_iot_topic_rule" "test" {
-  name        = "test_rule_%[1]s"
-  enabled     = true
-  sql         = "SELECT * FROM 'topic/test'"
-  sql_version = "2015-10-08"
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccTopicRuleTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_iot_topic_rule" "test" {
-  name        = "test_rule_%[1]s"
-  enabled     = true
-  sql         = "SELECT * FROM 'topic/test'"
-  sql_version = "2015-10-08"
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccTopicRule_errorAction(rName string) string {
