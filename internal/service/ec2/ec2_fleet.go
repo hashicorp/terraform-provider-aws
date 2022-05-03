@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -924,6 +925,10 @@ func expandEc2FleetLaunchTemplateOverridesRequest(m map[string]interface{}) *ec2
 		fleetLaunchTemplateOverridesRequest.AvailabilityZone = aws.String(v.(string))
 	}
 
+	if v, ok := m["instance_requirements"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		fleetLaunchTemplateOverridesRequest.InstanceRequirements = expandEc2FleetLaunchTemplateOverrideInstanceRequirementsRequest(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := m["instance_type"]; ok && v.(string) != "" {
 		fleetLaunchTemplateOverridesRequest.InstanceType = aws.String(v.(string))
 	}
@@ -945,6 +950,252 @@ func expandEc2FleetLaunchTemplateOverridesRequest(m map[string]interface{}) *ec2
 	}
 
 	return fleetLaunchTemplateOverridesRequest
+}
+
+func expandEc2FleetLaunchTemplateOverrideInstanceRequirementsRequest(tfMap map[string]interface{}) *ec2.InstanceRequirementsRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.InstanceRequirementsRequest{}
+
+	if v, ok := tfMap["accelerator_count"].([]interface{}); ok && len(v) > 0 {
+		apiObject.AcceleratorCount = expandEc2FleetLaunchTemplateOverrideInstanceRequirementsAcceleratorCountRequest(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["accelerator_manufacturers"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.AcceleratorManufacturers = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["accelerator_names"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.AcceleratorNames = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["accelerator_total_memory_mib"].([]interface{}); ok && len(v) > 0 {
+		apiObject.AcceleratorTotalMemoryMiB = expandEc2FleetLaunchTemplateOverrideInstanceRequirementsAcceleratorTotalMemoryMiBRequest(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["accelerator_types"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.AcceleratorTypes = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["bare_metal"].(string); ok && v != "" {
+		apiObject.BareMetal = aws.String(v)
+	}
+
+	if v, ok := tfMap["baseline_ebs_bandwidth_mbps"].([]interface{}); ok && len(v) > 0 {
+		apiObject.BaselineEbsBandwidthMbps = expandEc2FleetLaunchTemplateOverrideInstanceRequirementsBaselineEbsBandwidthMbpsRequest(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["burstable_performance"].(string); ok && v != "" {
+		apiObject.BurstablePerformance = aws.String(v)
+	}
+
+	if v, ok := tfMap["cpu_manufacturers"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.CpuManufacturers = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["excluded_instance_types"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.ExcludedInstanceTypes = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["instance_generations"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.InstanceGenerations = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["local_storage"].(string); ok && v != "" {
+		apiObject.LocalStorage = aws.String(v)
+	}
+
+	if v, ok := tfMap["local_storage_types"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.LocalStorageTypes = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["memory_gib_per_vcpu"].([]interface{}); ok && len(v) > 0 {
+		apiObject.MemoryGiBPerVCpu = expandEc2FleetLaunchTemplateOverrideInstanceRequirementsMemoryGiBPerVCpuRequest(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["memory_mib"].([]interface{}); ok && len(v) > 0 {
+		apiObject.MemoryMiB = expandEc2FleetLaunchTemplateOverrideInstanceRequirementsMemoryMiBRequest(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["network_interface_count"].([]interface{}); ok && len(v) > 0 {
+		apiObject.NetworkInterfaceCount = expandEc2FleetLaunchTemplateOverrideInstanceRequirementsNetworkInterfaceCountRequest(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["on_demand_max_price_percentage_over_lowest_price"].(int); ok && v > 0 {
+		apiObject.OnDemandMaxPricePercentageOverLowestPrice = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["require_hibernate_support"].(bool); ok && v {
+		apiObject.RequireHibernateSupport = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["spot_max_price_percentage_over_lowest_price"].(int); ok && v > 0 {
+		apiObject.SpotMaxPricePercentageOverLowestPrice = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["total_local_storage_gb"].([]interface{}); ok && len(v) > 0 {
+		apiObject.TotalLocalStorageGB = expandEc2FleetLaunchTemplateOverrideInstanceRequirementsTotalLocalStorageGBRequest(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["vcpu_count"].([]interface{}); ok && len(v) > 0 {
+		apiObject.VCpuCount = expandEc2FleetLaunchTemplateOverrideInstanceRequirementsVCpuCountRangeRequest(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandEc2FleetLaunchTemplateOverrideInstanceRequirementsAcceleratorCountRequest(tfMap map[string]interface{}) *ec2.AcceleratorCountRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.AcceleratorCountRequest{}
+
+	min, ok := tfMap["min"].(int)
+	if ok {
+		apiObject.Min = aws.Int64(int64(min))
+	}
+
+	if v, ok := tfMap["max"].(int); ok && v >= min {
+		apiObject.Max = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandEc2FleetLaunchTemplateOverrideInstanceRequirementsAcceleratorTotalMemoryMiBRequest(tfMap map[string]interface{}) *ec2.AcceleratorTotalMemoryMiBRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.AcceleratorTotalMemoryMiBRequest{}
+
+	min, ok := tfMap["min"].(int)
+	if ok {
+		apiObject.Min = aws.Int64(int64(min))
+	}
+
+	if v, ok := tfMap["max"].(int); ok && v >= min {
+		apiObject.Max = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandEc2FleetLaunchTemplateOverrideInstanceRequirementsBaselineEbsBandwidthMbpsRequest(tfMap map[string]interface{}) *ec2.BaselineEbsBandwidthMbpsRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.BaselineEbsBandwidthMbpsRequest{}
+
+	min, ok := tfMap["min"].(int)
+	if ok {
+		apiObject.Min = aws.Int64(int64(min))
+	}
+
+	if v, ok := tfMap["max"].(int); ok && v >= min {
+		apiObject.Max = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandEc2FleetLaunchTemplateOverrideInstanceRequirementsMemoryGiBPerVCpuRequest(tfMap map[string]interface{}) *ec2.MemoryGiBPerVCpuRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.MemoryGiBPerVCpuRequest{}
+
+	min, ok := tfMap["min"].(float64)
+	if ok {
+		apiObject.Min = aws.Float64(min)
+	}
+
+	if v, ok := tfMap["max"].(float64); ok && v >= min {
+		apiObject.Max = aws.Float64(v)
+	}
+
+	return apiObject
+}
+
+func expandEc2FleetLaunchTemplateOverrideInstanceRequirementsMemoryMiBRequest(tfMap map[string]interface{}) *ec2.MemoryMiBRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.MemoryMiBRequest{}
+
+	min, ok := tfMap["min"].(int)
+	if ok {
+		apiObject.Min = aws.Int64(int64(min))
+	}
+
+	if v, ok := tfMap["max"].(int); ok && v >= min {
+		apiObject.Max = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandEc2FleetLaunchTemplateOverrideInstanceRequirementsNetworkInterfaceCountRequest(tfMap map[string]interface{}) *ec2.NetworkInterfaceCountRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.NetworkInterfaceCountRequest{}
+
+	min, ok := tfMap["min"].(int)
+	if ok {
+		apiObject.Min = aws.Int64(int64(min))
+	}
+
+	if v, ok := tfMap["max"].(int); ok && v >= min {
+		apiObject.Max = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandEc2FleetLaunchTemplateOverrideInstanceRequirementsTotalLocalStorageGBRequest(tfMap map[string]interface{}) *ec2.TotalLocalStorageGBRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.TotalLocalStorageGBRequest{}
+
+	min, ok := tfMap["min"].(float64)
+	if ok {
+		apiObject.Min = aws.Float64(min)
+	}
+
+	if v, ok := tfMap["max"].(float64); ok && v >= min {
+		apiObject.Max = aws.Float64(v)
+	}
+
+	return apiObject
+}
+
+func expandEc2FleetLaunchTemplateOverrideInstanceRequirementsVCpuCountRangeRequest(tfMap map[string]interface{}) *ec2.VCpuCountRangeRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.VCpuCountRangeRequest{}
+
+	min, ok := tfMap["min"].(int)
+	if ok {
+		apiObject.Min = aws.Int64(int64(min))
+	}
+
+	if v, ok := tfMap["max"].(int); ok && v >= min {
+		apiObject.Max = aws.Int64(int64(v))
+	}
+
+	return apiObject
 }
 
 func expandEc2LaunchTemplateSpecificationRequest(l []interface{}) *ec2.FleetLaunchTemplateSpecificationRequest {
