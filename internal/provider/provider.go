@@ -820,6 +820,7 @@ func Provider() *schema.Provider {
 			"aws_secretsmanager_secret":          secretsmanager.DataSourceSecret(),
 			"aws_secretsmanager_secret_rotation": secretsmanager.DataSourceSecretRotation(),
 			"aws_secretsmanager_secret_version":  secretsmanager.DataSourceSecretVersion(),
+			"aws_secretsmanager_secrets":         secretsmanager.DataSourceSecrets(),
 
 			"aws_serverlessapplicationrepository_application": serverlessrepo.DataSourceApplication(),
 
