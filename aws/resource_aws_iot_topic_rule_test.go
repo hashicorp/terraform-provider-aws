@@ -890,7 +890,7 @@ resource "aws_iot_topic_rule" "rule" {
 func testAccAWSIoTTopicRule_kafka(rName, kName string) string {
 	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
 resource "aws_secretsmanager_secret" "%[2]s" {
-  name = "%[2]s"
+	name = "%[2]s"
 }
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
@@ -899,11 +899,11 @@ resource "aws_iot_topic_rule" "rule" {
   sql         = "SELECT * FROM 'topic/test'"
   sql_version = "2015-10-08"
   kafka {
-    destination_arn       = "[vpc destination arn]"
-    topic                 = "fake_topic"
-    bootstrap_servers     = "b-1.localhost:9094"
-    ssl_keystore          = "$${get_secret('${aws_secretsmanager_secret.%[2]s.arn}', 'SecretBinary', '', '${aws_iam_role.iot_role.arn}')}"
-    ssl_keystore_password = "password"
+    destination_arn    		= "[vpc destination arn]"
+		topic							 		= "fake_topic"
+		bootstrap_servers 		= "b-1.localhost:9094"
+		ssl_keystore 					= "$${get_secret('${aws_secretsmanager_secret.%[2]s.arn}', 'SecretBinary', '', '${aws_iam_role.iot_role.arn}')}"
+		ssl_keystore_password = "password"
   }
 }
 `, rName, kName)
