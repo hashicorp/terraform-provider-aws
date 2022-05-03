@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourcePoolRolesAttachment() *schema.Resource {
@@ -148,13 +149,14 @@ func resourcePoolRolesAttachmentRead(d *schema.ResourceData, meta interface{}) e
 	ip, err := conn.GetIdentityPoolRoles(&cognitoidentity.GetIdentityPoolRolesInput{
 		IdentityPoolId: aws.String(d.Id()),
 	})
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
+		names.LogNotFoundRemoveState(names.CognitoIdentity, names.ErrActionReading, ResPoolRolesAttachment, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] Cognito Identity Pool Roles Association %s not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return names.Error(names.CognitoIdentity, names.ErrActionReading, ResPoolRolesAttachment, d.Id(), err)
 	}
 
 	d.Set("identity_pool_id", ip.IdentityPoolId)

@@ -27,7 +27,7 @@ func TestAccLogsResourcePolicy_basic(t *testing.T) {
 			{
 				Config: testAccCheckResourcePolicyResourceBasic1Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchLogResourcePolicy(resourceName, &resourcePolicy),
+					testAccCheckResourcePolicy(resourceName, &resourcePolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Statement\":[{\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"rds.%s\"},\"Resource\":\"arn:%s:logs:*:*:log-group:/aws/rds/*\",\"Sid\":\"\"}],\"Version\":\"2012-10-17\"}", acctest.PartitionDNSSuffix(), acctest.Partition())),
 				),
@@ -40,7 +40,7 @@ func TestAccLogsResourcePolicy_basic(t *testing.T) {
 			{
 				Config: testAccCheckResourcePolicyResourceBasic2Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchLogResourcePolicy(resourceName, &resourcePolicy),
+					testAccCheckResourcePolicy(resourceName, &resourcePolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Statement\":[{\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"rds.%s\"},\"Resource\":\"arn:%s:logs:*:*:log-group:/aws/rds/example.com\",\"Sid\":\"\"}],\"Version\":\"2012-10-17\"}", acctest.PartitionDNSSuffix(), acctest.Partition())),
 				),
@@ -63,7 +63,7 @@ func TestAccLogsResourcePolicy_ignoreEquivalent(t *testing.T) {
 			{
 				Config: testAccCheckResourcePolicyResourceOrderConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchLogResourcePolicy(resourceName, &resourcePolicy),
+					testAccCheckResourcePolicy(resourceName, &resourcePolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Statement\":[{\"Action\":[\"logs:CreateLogStream\",\"logs:PutLogEvents\"],\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"rds.%s\"]},\"Resource\":[\"arn:%s:logs:*:*:log-group:/aws/rds/example.com\"]}],\"Version\":\"2012-10-17\"}", acctest.PartitionDNSSuffix(), acctest.Partition())),
 				),
@@ -71,7 +71,7 @@ func TestAccLogsResourcePolicy_ignoreEquivalent(t *testing.T) {
 			{
 				Config: testAccCheckResourcePolicyResourceNewOrderConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchLogResourcePolicy(resourceName, &resourcePolicy),
+					testAccCheckResourcePolicy(resourceName, &resourcePolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Statement\":[{\"Action\":[\"logs:CreateLogStream\",\"logs:PutLogEvents\"],\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"rds.%s\"]},\"Resource\":[\"arn:%s:logs:*:*:log-group:/aws/rds/example.com\"]}],\"Version\":\"2012-10-17\"}", acctest.PartitionDNSSuffix(), acctest.Partition())),
 				),
@@ -80,7 +80,7 @@ func TestAccLogsResourcePolicy_ignoreEquivalent(t *testing.T) {
 	})
 }
 
-func testAccCheckCloudWatchLogResourcePolicy(pr string, resourcePolicy *cloudwatchlogs.ResourcePolicy) resource.TestCheckFunc {
+func testAccCheckResourcePolicy(pr string, resourcePolicy *cloudwatchlogs.ResourcePolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
 		rs, ok := s.RootModule().Resources[pr]

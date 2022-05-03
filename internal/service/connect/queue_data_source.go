@@ -93,7 +93,7 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 		input.QueueId = aws.String(v.(string))
 	} else if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
-		queueSummary, err := dataSourceGetConnectQueueSummaryByName(ctx, conn, instanceID, name)
+		queueSummary, err := dataSourceGetQueueSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error finding Connect Queue Summary by name (%s): %w", name, err))
@@ -139,7 +139,7 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return nil
 }
 
-func dataSourceGetConnectQueueSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.QueueSummary, error) {
+func dataSourceGetQueueSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.QueueSummary, error) {
 	var result *connect.QueueSummary
 
 	input := &connect.ListQueuesInput{

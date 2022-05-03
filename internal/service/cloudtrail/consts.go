@@ -1,6 +1,8 @@
 package cloudtrail
 
 const (
+	ResCloudTrail = "Trail"
+
 	resourceTypeDynamoDBTable  = "AWS::DynamoDB::Table"
 	resourceTypeLambdaFunction = "AWS::Lambda::Function"
 	resourceTypeS3Object       = "AWS::S3::Object"

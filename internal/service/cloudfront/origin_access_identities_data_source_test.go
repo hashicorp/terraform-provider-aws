@@ -19,7 +19,7 @@ func TestAccCloudFrontOriginAccessIdentitiesDataSource_comments(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
+		CheckDestroy: testAccCheckOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginAccessIdentitiesDataSourceCommentsConfig(rName),
@@ -44,7 +44,7 @@ func TestAccCloudFrontOriginAccessIdentitiesDataSource_all(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
+		CheckDestroy: testAccCheckOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginAccessIdentitiesDataSourceNoCommentsConfig(rName),
