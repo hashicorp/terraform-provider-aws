@@ -282,7 +282,7 @@ func resourceStackSetInstanceRead(d *schema.ResourceData, meta interface{}) erro
 	if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		// Process this as a deployment target instance
 		orgIDs := make([]string, 0, len(v.([]interface{})))
-		for _, orgID := range expandCloudFormationDeploymentTargets(v.([]interface{})).OrganizationalUnitIds {
+		for _, orgID := range expandDeploymentTargets(v.([]interface{})).OrganizationalUnitIds {
 			orgIDs = append(orgIDs, *orgID)
 		}
 		if !accountIDIsDT {
@@ -325,7 +325,7 @@ func resourceStackSetInstanceRead(d *schema.ResourceData, meta interface{}) erro
 
 		d.Set("account_id", stackInstance.Account)
 		d.Set("organizational_unit_id", stackInstance.OrganizationalUnitId)
-		if err := d.Set("parameter_overrides", flattenAllCloudFormationParameters(stackInstance.ParameterOverrides)); err != nil {
+		if err := d.Set("parameter_overrides", flattenAllParameters(stackInstance.ParameterOverrides)); err != nil {
 			return fmt.Errorf("error setting parameters: %w", err)
 		}
 
