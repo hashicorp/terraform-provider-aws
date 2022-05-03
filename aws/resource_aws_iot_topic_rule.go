@@ -495,7 +495,6 @@ func resourceAwsIotTopicRule() *schema.Resource {
 								"error_action.0.dynamodbv2",
 								"error_action.0.elasticsearch",
 								"error_action.0.firehose",
-								"error_action.0.http",
 								"error_action.0.iot_analytics",
 								"error_action.0.iot_events",
 								"error_action.0.kinesis",
@@ -548,7 +547,6 @@ func resourceAwsIotTopicRule() *schema.Resource {
 								"error_action.0.dynamodbv2",
 								"error_action.0.elasticsearch",
 								"error_action.0.firehose",
-								"error_action.0.http",
 								"error_action.0.iot_analytics",
 								"error_action.0.iot_events",
 								"error_action.0.kinesis",
@@ -621,7 +619,6 @@ func resourceAwsIotTopicRule() *schema.Resource {
 								"error_action.0.dynamodbv2",
 								"error_action.0.elasticsearch",
 								"error_action.0.firehose",
-								"error_action.0.http",
 								"error_action.0.iot_analytics",
 								"error_action.0.iot_events",
 								"error_action.0.kinesis",
@@ -666,7 +663,6 @@ func resourceAwsIotTopicRule() *schema.Resource {
 								"error_action.0.dynamodbv2",
 								"error_action.0.elasticsearch",
 								"error_action.0.firehose",
-								"error_action.0.http",
 								"error_action.0.iot_analytics",
 								"error_action.0.iot_events",
 								"error_action.0.kinesis",
@@ -715,7 +711,6 @@ func resourceAwsIotTopicRule() *schema.Resource {
 								"error_action.0.dynamodbv2",
 								"error_action.0.elasticsearch",
 								"error_action.0.firehose",
-								"error_action.0.http",
 								"error_action.0.iot_analytics",
 								"error_action.0.iot_events",
 								"error_action.0.kinesis",
@@ -756,60 +751,6 @@ func resourceAwsIotTopicRule() *schema.Resource {
 								"error_action.0.dynamodbv2",
 								"error_action.0.elasticsearch",
 								"error_action.0.firehose",
-								"error_action.0.http",
-								"error_action.0.iot_analytics",
-								"error_action.0.iot_events",
-								"error_action.0.kinesis",
-								"error_action.0.lambda",
-								"error_action.0.republish",
-								"error_action.0.s3",
-								"error_action.0.step_functions",
-								"error_action.0.sns",
-								"error_action.0.sqs",
-							},
-						},
-						"http": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"url": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.IsURLWithHTTPS,
-									},
-									"confirmation_url": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.IsURLWithHTTPS,
-									},
-									"http_header": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"key": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"value": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
-										},
-									},
-								},
-							},
-							ExactlyOneOf: []string{
-								"error_action.0.cloudwatch_alarm",
-								"error_action.0.cloudwatch_metric",
-								"error_action.0.dynamodb",
-								"error_action.0.dynamodbv2",
-								"error_action.0.elasticsearch",
-								"error_action.0.firehose",
-								"error_action.0.http",
 								"error_action.0.iot_analytics",
 								"error_action.0.iot_events",
 								"error_action.0.kinesis",
@@ -845,7 +786,6 @@ func resourceAwsIotTopicRule() *schema.Resource {
 								"error_action.0.dynamodbv2",
 								"error_action.0.elasticsearch",
 								"error_action.0.firehose",
-								"error_action.0.http",
 								"error_action.0.iot_analytics",
 								"error_action.0.iot_events",
 								"error_action.0.kinesis",
@@ -885,7 +825,6 @@ func resourceAwsIotTopicRule() *schema.Resource {
 								"error_action.0.dynamodbv2",
 								"error_action.0.elasticsearch",
 								"error_action.0.firehose",
-								"error_action.0.http",
 								"error_action.0.iot_analytics",
 								"error_action.0.iot_events",
 								"error_action.0.kinesis",
@@ -925,7 +864,6 @@ func resourceAwsIotTopicRule() *schema.Resource {
 								"error_action.0.dynamodbv2",
 								"error_action.0.elasticsearch",
 								"error_action.0.firehose",
-								"error_action.0.http",
 								"error_action.0.iot_analytics",
 								"error_action.0.iot_events",
 								"error_action.0.kinesis",
@@ -957,7 +895,6 @@ func resourceAwsIotTopicRule() *schema.Resource {
 								"error_action.0.dynamodbv2",
 								"error_action.0.elasticsearch",
 								"error_action.0.firehose",
-								"error_action.0.http",
 								"error_action.0.iot_analytics",
 								"error_action.0.iot_events",
 								"error_action.0.kinesis",
@@ -999,7 +936,6 @@ func resourceAwsIotTopicRule() *schema.Resource {
 								"error_action.0.dynamodbv2",
 								"error_action.0.elasticsearch",
 								"error_action.0.firehose",
-								"error_action.0.http",
 								"error_action.0.iot_analytics",
 								"error_action.0.iot_events",
 								"error_action.0.kinesis",
@@ -1039,7 +975,6 @@ func resourceAwsIotTopicRule() *schema.Resource {
 								"error_action.0.dynamodbv2",
 								"error_action.0.elasticsearch",
 								"error_action.0.firehose",
-								"error_action.0.http",
 								"error_action.0.iot_analytics",
 								"error_action.0.iot_events",
 								"error_action.0.kinesis",
@@ -1079,7 +1014,6 @@ func resourceAwsIotTopicRule() *schema.Resource {
 								"error_action.0.dynamodbv2",
 								"error_action.0.elasticsearch",
 								"error_action.0.firehose",
-								"error_action.0.http",
 								"error_action.0.iot_analytics",
 								"error_action.0.iot_events",
 								"error_action.0.kinesis",
@@ -1121,7 +1055,6 @@ func resourceAwsIotTopicRule() *schema.Resource {
 								"error_action.0.dynamodbv2",
 								"error_action.0.elasticsearch",
 								"error_action.0.firehose",
-								"error_action.0.http",
 								"error_action.0.iot_analytics",
 								"error_action.0.iot_events",
 								"error_action.0.kinesis",
@@ -1161,7 +1094,6 @@ func resourceAwsIotTopicRule() *schema.Resource {
 								"error_action.0.dynamodbv2",
 								"error_action.0.elasticsearch",
 								"error_action.0.firehose",
-								"error_action.0.http",
 								"error_action.0.iot_analytics",
 								"error_action.0.iot_events",
 								"error_action.0.kinesis",
@@ -2050,16 +1982,6 @@ func expandIotTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 
 					iotErrorAction = &iot.Action{Firehose: action}
 				}
-			case "http":
-				for _, tfMapRaw := range v.([]interface{}) {
-					action := expandIotHttpAction([]interface{}{tfMapRaw})
-
-					if action == nil {
-						continue
-					}
-
-					iotErrorAction = &iot.Action{Http: action}
-				}
 			case "iot_analytics":
 				for _, tfMapRaw := range v.([]interface{}) {
 					action := expandIotIotAnalyticsAction([]interface{}{tfMapRaw})
@@ -2806,10 +2728,6 @@ func flattenIotErrorAction(errorAction *iot.Action) []map[string]interface{} {
 	}
 	if errorAction.Firehose != nil {
 		results = append(results, map[string]interface{}{"firehose": flattenIotFirehoseActions(input)})
-		return results
-	}
-	if errorAction.Http != nil {
-		results = append(results, map[string]interface{}{"http": flattenIotHttpActions(input)})
 		return results
 	}
 	if errorAction.IotAnalytics != nil {
