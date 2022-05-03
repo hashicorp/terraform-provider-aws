@@ -124,7 +124,7 @@ The following arguments are supported:
     * `options` - (Optional) Configuration block used to set certificate options. Detailed below.
     * `validation_option` - (Optional) Configuration block used to specify information about the initial validation of each domain name. Detailed below.
 * Importing an existing certificate
-    * `private_key` - (Required) The certificate's PEM-formatted private key
+    * `private_key` - (Required) The certificate's PEM-formatted private key (PKCS1/RSA or SEC1/ECDSA). PEM-encrypted private keys are supported by adding `acm_private_key_passphrase` to the provider
     * `certificate_body` - (Required) The certificate's PEM-formatted public key
     * `certificate_chain` - (Optional) The certificate's PEM-formatted chain
 * Creating a private CA issued certificate

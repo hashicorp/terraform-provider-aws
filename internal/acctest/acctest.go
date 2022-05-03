@@ -911,6 +911,15 @@ provider "aws" {
 `, region)
 }
 
+func ConfigACMPassphraseProvider(passphrase string) string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "aws" {
+  acm_private_key_passphrase = %[1]q
+}
+`, passphrase)
+}
+
 func RegionProviderFunc(region string, providers *[]*schema.Provider) func() *schema.Provider {
 	return func() *schema.Provider {
 		if region == "" {

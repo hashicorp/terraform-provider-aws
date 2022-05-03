@@ -1,6 +1,7 @@
 package acm_test
 
 import (
+	"crypto/x509"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -606,6 +607,7 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 	caKey := acctest.TLSRSAPrivateKeyPEM(2048)
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(caKey)
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	encryptedKey := acctest.TLSPEMEncrypt(key, "testpassphrase")
 	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(caKey, caCertificate, key, commonName)
 	newCaKey := acctest.TLSRSAPrivateKeyPEM(2048)
 	newCaCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(newCaKey)
@@ -636,7 +638,18 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAcmCertificatePrivateKeyWithoutChainConfig(withoutChainDomain),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigACMPassphraseProvider("testpassphrase"),
+					testAccAcmCertificatePrivateKeyConfig(newCertificate, encryptedKey, newCaCertificate),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", commonName),
+				),
+			},
+			{
+				Config: testAccAcmCertificatePrivateKeyWithoutChainConfig(x509.RSA, withoutChainDomain),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -647,8 +660,75 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// These are not returned by the API
-				ImportStateVerifyIgnore: []string{"private_key", "certificate_body", "certificate_chain"},
+				// private_key is not returned by the API
+				ImportStateVerifyIgnore: []string{"private_key"},
+			},
+		},
+	})
+}
+
+//lintignore:AT002
+func TestAccACMCertificate_Imported_domainName_EC(t *testing.T) {
+	resourceName := "aws_acm_certificate.test"
+	commonName := "example.com"
+	ecCaKey := acctest.TLSECPrivateKeyPEM(384)
+	ecCaCertificate := acctest.TLSX509SelfSignedCACertificatePEM(ecCaKey)
+	ecKey := acctest.TLSECPrivateKeyPEM(256)
+	ecEncryptedKey := acctest.TLSPEMEncrypt(ecKey, "testpassphrase")
+	ecCertificate := acctest.TLSX509LocallySignedCertificatePEM(ecCaKey, ecCaCertificate, ecKey, commonName)
+	ecNewCaKey := acctest.TLSECPrivateKeyPEM(384)
+	ecNewCaCertificate := acctest.TLSX509SelfSignedCACertificatePEM(ecNewCaKey)
+	ecNewCertificate := acctest.TLSX509LocallySignedCertificatePEM(ecNewCaKey, ecNewCaCertificate, ecKey, commonName)
+	ecWithoutChainDomain := acctest.RandomDomainName()
+	var v acm.CertificateDetail
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAcmCertificatePrivateKeyConfig(ecCertificate, ecKey, ecCaCertificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAcmCertificateExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", commonName),
+				),
+			},
+			{
+				Config: testAccAcmCertificatePrivateKeyConfig(ecNewCertificate, ecKey, ecNewCaCertificate),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", commonName),
+				),
+			},
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigACMPassphraseProvider("testpassphrase"),
+					testAccAcmCertificatePrivateKeyConfig(ecNewCertificate, ecEncryptedKey, ecNewCaCertificate),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", commonName),
+				),
+			},
+			{
+				Config: testAccAcmCertificatePrivateKeyWithoutChainConfig(x509.ECDSA, ecWithoutChainDomain),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", ecWithoutChainDomain),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// private_key is not returned by the API
+				ImportStateVerifyIgnore: []string{"private_key"},
 			},
 		},
 	})
@@ -666,7 +746,38 @@ func TestAccACMCertificate_Imported_ipAddress(t *testing.T) { // Reference: http
 		CheckDestroy: testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificatePrivateKeyWithoutChainConfig("1.2.3.4"),
+				Config: testAccAcmCertificatePrivateKeyWithoutChainConfig(x509.RSA, "1.2.3.4"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAcmCertificateExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// These are not returned by the API
+				ImportStateVerifyIgnore: []string{"private_key", "certificate_body"},
+			},
+		},
+	})
+}
+
+//lintignore:AT002
+func TestAccACMCertificate_Imported_ipAddress_EC(t *testing.T) {
+	resourceName := "aws_acm_certificate.test"
+	var v acm.CertificateDetail
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, acm.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAcmCertificatePrivateKeyWithoutChainConfig(x509.ECDSA, "1.2.3.4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAcmCertificateExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", ""),
@@ -845,9 +956,14 @@ resource "aws_acm_certificate" "test" {
 `, domainName, subjectAlternativeNames, validationMethod)
 }
 
-func testAccAcmCertificatePrivateKeyWithoutChainConfig(commonName string) string {
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, commonName)
+func testAccAcmCertificatePrivateKeyWithoutChainConfig(publicKeyAlgorithm x509.PublicKeyAlgorithm, commonName string) string {
+	var key string
+	if publicKeyAlgorithm == x509.RSA {
+		key = acctest.TLSRSAPrivateKeyPEM(2048)
+	} else if publicKeyAlgorithm == x509.ECDSA {
+		key = acctest.TLSECPrivateKeyPEM(256)
+	}
+	certificate := acctest.TLSX509SelfSignedCertificatePEM(key, commonName)
 
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {

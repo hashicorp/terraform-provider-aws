@@ -1,13 +1,17 @@
 package acm
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha1"
+	"crypto/x509"
 	"encoding/hex"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"log"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -66,11 +70,17 @@ func ResourceCertificate() *schema.Resource {
 				Optional:      true,
 				RequiredWith:  []string{"private_key"},
 				ConflictsWith: []string{"certificate_authority_arn", "domain_name", "validation_method"},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return certificatesMatch(old, new)
+				},
 			},
 			"certificate_chain": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"certificate_authority_arn", "domain_name", "validation_method"},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return certificatesMatch(old, new)
+				},
 			},
 			"domain_name": {
 				// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
@@ -308,9 +318,17 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 
 		d.SetId(aws.StringValue(output.CertificateArn))
 	} else {
+		privateKey := d.Get("private_key").(string)
+		certificate := d.Get("certificate_body").(string)
+		passphrase := meta.(*conns.AWSClient).ACMPrivateKeyPassphrase
+		privateKey, err := decryptPEMBlock(privateKey, passphrase)
+		if err != nil {
+			return err
+		}
+
 		input := &acm.ImportCertificateInput{
-			Certificate: []byte(d.Get("certificate_body").(string)),
-			PrivateKey:  []byte(d.Get("private_key").(string)),
+			Certificate: []byte(certificate),
+			PrivateKey:  []byte(privateKey),
 		}
 
 		if v, ok := d.GetOk("certificate_chain"); ok {
@@ -374,6 +392,27 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("validation_emails", validationEmails)
 	d.Set("validation_method", certificateValidationMethod(certificate))
 
+	getCertificate, err := GetCertificateByARN(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("getting ACM Certificate (%s): %w", d.Id(), err)
+	}
+
+	if getCertificate != nil {
+		existingCert := d.Get("certificate_body").(string)
+		if !certificatesMatch(existingCert, *getCertificate.Certificate) {
+			d.Set("certificate_body", *getCertificate.Certificate)
+		}
+		existingChain := d.Get("certificate_chain").(string)
+		// ACM will always return a certificate_chain, duplicating certificate_body if necessary
+		// Terraform state does not, so clear this in case we're re-importing a self-signed cert
+		if certificatesMatch(*getCertificate.CertificateChain, *getCertificate.Certificate) {
+			d.Set("certificate_chain", "")
+		} else if !certificatesMatch(existingChain, *getCertificate.CertificateChain) {
+			d.Set("certificate_chain", *getCertificate.CertificateChain)
+		}
+	}
+
 	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
@@ -405,17 +444,23 @@ func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
 		oPKRaw, nPKRaw := d.GetChange("private_key")
 
 		if !isChangeNormalizeCertRemoval(oCBRaw, nCBRaw) || !isChangeNormalizeCertRemoval(oCCRaw, nCCRaw) || !isChangeNormalizeCertRemoval(oPKRaw, nPKRaw) {
+			privateKey := d.Get("private_key").(string)
+			certificate := d.Get("certificate_body").(string)
+			passphrase := meta.(*conns.AWSClient).ACMPrivateKeyPassphrase
+			privateKey, err := decryptPEMBlock(privateKey, passphrase)
+			if err != nil {
+				return err
+			}
 			input := &acm.ImportCertificateInput{
-				Certificate:    []byte(d.Get("certificate_body").(string)),
+				Certificate:    []byte(certificate),
 				CertificateArn: aws.String(d.Get("arn").(string)),
-				PrivateKey:     []byte(d.Get("private_key").(string)),
+				PrivateKey:     []byte(privateKey),
 			}
 
 			if chain, ok := d.GetOk("certificate_chain"); ok {
 				input.CertificateChain = []byte(chain.(string))
 			}
-
-			_, err := conn.ImportCertificate(input)
+			_, err = conn.ImportCertificate(input)
 
 			if err != nil {
 				return fmt.Errorf("re-importing ACM Certificate (%s): %w", d.Id(), err)
@@ -684,6 +729,20 @@ func FindCertificateByARN(conn *acm.ACM, arn string) (*acm.CertificateDetail, er
 	return output, nil
 }
 
+func GetCertificateByARN(conn *acm.ACM, arn string) (*acm.GetCertificateOutput, error) {
+	input := &acm.GetCertificateInput{
+		CertificateArn: aws.String(arn),
+	}
+
+	output, err := conn.GetCertificate(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func statusCertificateDomainValidationsAvailable(conn *acm.ACM, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		certificate, err := FindCertificateByARN(conn, arn)
@@ -736,4 +795,48 @@ func waitCertificateDomainValidationsAvailable(conn *acm.ACM, arn string, timeou
 	}
 
 	return nil, err
+}
+
+// Check if two certificate bundles match (ignoring non-certificate elements)
+func certificatesMatch(old, new string) bool {
+	re := regexp.MustCompile(`(?m)(^-----BEGIN [A-Z]+-----$\n[a-zA-Z0-9\+/=\n]+^-----END [A-Z]+-----$)`)
+
+	oldCerts := re.FindAllString(old, -1)
+	newCerts := re.FindAllString(new, -1)
+	if oldCerts == nil || newCerts == nil || len(oldCerts) != len(newCerts) {
+		return false
+	}
+	sort.Strings(oldCerts)
+	sort.Strings(newCerts)
+	for i := range oldCerts {
+		oldCert := string(bytes.Replace([]byte(oldCerts[i]), []byte{13, 10}, []byte{10}, -1))
+		newCert := string(bytes.Replace([]byte(newCerts[i]), []byte{13, 10}, []byte{10}, -1))
+		if oldCert != newCert {
+			return false
+		}
+	}
+	return true
+}
+
+// Process a PEM block and decrypt if necessary
+func decryptPEMBlock(pemString string, passphrase string) (string, error) {
+
+	block, _ := pem.Decode([]byte(pemString))
+	if block == nil {
+		return "", fmt.Errorf("error decoding private_key PEM block")
+	}
+	if x509.IsEncryptedPEMBlock(block) {
+		if passphrase == "" {
+			return "", fmt.Errorf("acm_private_key_passphrase is required in provider config for encrypted private keys")
+		}
+		decryptedBlock, err := x509.DecryptPEMBlock(block, []byte(passphrase))
+		if err != nil {
+			return "", fmt.Errorf("error decrypting private_key using acm_private_key_passphrase")
+		}
+		pemString = string(pem.EncodeToMemory(&pem.Block{
+			Type:  block.Type,
+			Bytes: decryptedBlock,
+		}))
+	}
+	return pemString, nil
 }

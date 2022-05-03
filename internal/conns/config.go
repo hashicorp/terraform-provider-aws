@@ -44,6 +44,7 @@ import (
 
 type Config struct {
 	AccessKey                      string
+	ACMPrivateKeyPassphrase        string
 	AllowedAccountIds              []string
 	AssumeRole                     *awsbase.AssumeRole
 	AssumeRoleWithWebIdentity      *awsbase.AssumeRoleWithWebIdentity
@@ -179,6 +180,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	client := c.clientConns(sess)
 
 	client.AccountID = accountID
+	client.ACMPrivateKeyPassphrase = c.ACMPrivateKeyPassphrase
 	client.DefaultTagsConfig = c.DefaultTagsConfig
 	client.DNSSuffix = DNSSuffix
 	client.IgnoreTagsConfig = c.IgnoreTagsConfig
