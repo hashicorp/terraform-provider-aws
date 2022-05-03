@@ -26,6 +26,7 @@ func ResourcePermission() *schema.Resource {
 		Create: resourcePermissionCreate,
 		Read:   resourcePermissionRead,
 		Delete: resourcePermissionDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: resourcePermissionImport,
 		},
@@ -55,14 +56,14 @@ func ResourcePermission() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(lambda.FunctionUrlAuthType_Values(), false),
 			},
-			"principal_org_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
 			"principal": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
+			},
+			"principal_org_id": {
+				Type:     schema.TypeString,
+				Optional: true,
 				ForceNew: true,
 			},
 			"qualifier": {
@@ -88,15 +89,15 @@ func ResourcePermission() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"statement_id_prefix"},
 				ValidateFunc:  validPolicyStatementID(),
+				ConflictsWith: []string{"statement_id_prefix"},
 			},
 			"statement_id_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"statement_id"},
 				ValidateFunc:  validPolicyStatementID(),
+				ConflictsWith: []string{"statement_id"},
 			},
 		},
 	}
