@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -221,11 +222,12 @@ func TestAccLambdaPermission_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunction"),
-					resource.TestCheckResourceAttr(resourceName, "principal", "events.amazonaws.com"),
-					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionFromCloudWatch"),
-					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "event_source_token", "test-event-source-token"),
+					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "principal", "events.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
+					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionFromCloudWatch"),
+					resource.TestCheckResourceAttr(resourceName, "statement_id_prefix", ""),
 				),
 			},
 			{
@@ -331,10 +333,7 @@ func TestAccLambdaPermission_withRawFunctionName(t *testing.T) {
 
 func TestAccLambdaPermission_withStatementIdPrefix(t *testing.T) {
 	var statement tflambda.PolicyStatement
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	startsWithPrefix := regexp.MustCompile("^AllowExecutionWithStatementIdPrefix-")
-
 	resourceName := "aws_lambda_permission.test"
 	functionResourceName := "aws_lambda_function.test"
 
@@ -345,21 +344,21 @@ func TestAccLambdaPermission_withStatementIdPrefix(t *testing.T) {
 		CheckDestroy: testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionConfig_withStatementIdPrefix(rName),
+				Config: testAccPermissionConfig_withStatementIdPrefix(rName, "AllowExecutionWithStatementIdPrefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunction"),
-					resource.TestCheckResourceAttr(resourceName, "principal", "events.amazonaws.com"),
-					resource.TestMatchResourceAttr(resourceName, "statement_id", startsWithPrefix),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "principal", "events.amazonaws.com"),
+					create.TestCheckResourceAttrNameFromPrefix(resourceName, "statement_id", "AllowExecutionWithStatementIdPrefix-"),
+					resource.TestCheckResourceAttr(resourceName, "statement_id_prefix", "AllowExecutionWithStatementIdPrefix-"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateIdFunc:       testAccCPermissionImportStateIdFunc(resourceName),
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"statement_id_prefix"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccCPermissionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -608,6 +607,76 @@ func TestAccLambdaPermission_withIAMRole(t *testing.T) {
 	})
 }
 
+func TestAccLambdaPermission_FunctionUrls_AwsIam(t *testing.T) {
+	var statement tflambda.PolicyStatement
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_lambda_permission.test"
+	functionResourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckPermissionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionConfig_FunctionUrls_AwsIam(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPermissionExists(resourceName, &statement),
+					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunctionUrl"),
+					resource.TestCheckResourceAttr(resourceName, "principal", "*"),
+					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionWithIAM"),
+					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "function_url_auth_type", lambda.FunctionUrlAuthTypeAwsIam),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccCPermissionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccLambdaPermission_FunctionUrls_None(t *testing.T) {
+	var statement tflambda.PolicyStatement
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_lambda_permission.test"
+	functionResourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckPermissionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionConfig_FunctionUrls_None(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPermissionExists(resourceName, &statement),
+					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunctionUrl"),
+					resource.TestCheckResourceAttr(resourceName, "principal", "*"),
+					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionFromWithoutAuth"),
+					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "function_url_auth_type", lambda.FunctionUrlAuthTypeNone),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccCPermissionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckPermissionExists(n string, statement *tflambda.PolicyStatement) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -753,76 +822,6 @@ func testAccCPermissionImportStateIdFunc(resourceName string) resource.ImportSta
 	}
 }
 
-func TestAccLambdaPermission_FunctionUrls_AwsIam(t *testing.T) {
-	var statement tflambda.PolicyStatement
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resourceName := "aws_lambda_permission.test"
-	functionResourceName := "aws_lambda_function.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPermissionConfig_FunctionUrls_AwsIam(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionExists(resourceName, &statement),
-					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunctionUrl"),
-					resource.TestCheckResourceAttr(resourceName, "principal", "*"),
-					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionWithIAM"),
-					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "function_url_auth_type", lambda.FunctionUrlAuthTypeAwsIam),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccCPermissionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccLambdaPermission_FunctionUrls_None(t *testing.T) {
-	var statement tflambda.PolicyStatement
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resourceName := "aws_lambda_permission.test"
-	functionResourceName := "aws_lambda_function.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPermissionConfig_FunctionUrls_None(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionExists(resourceName, &statement),
-					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunctionUrl"),
-					resource.TestCheckResourceAttr(resourceName, "principal", "*"),
-					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionFromWithoutAuth"),
-					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "function_url_auth_type", lambda.FunctionUrlAuthTypeNone),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccCPermissionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func testAccPermissionBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
@@ -898,15 +897,15 @@ resource "aws_lambda_permission" "test" {
 `)
 }
 
-func testAccPermissionConfig_withStatementIdPrefix(rName string) string {
-	return acctest.ConfigCompose(testAccPermissionBaseConfig(rName), `
+func testAccPermissionConfig_withStatementIdPrefix(rName, prefix string) string {
+	return acctest.ConfigCompose(testAccPermissionBaseConfig(rName), fmt.Sprintf(`
 resource "aws_lambda_permission" "test" {
-  statement_id_prefix = "AllowExecutionWithStatementIdPrefix-"
+  statement_id_prefix = %[1]q
   action              = "lambda:InvokeFunction"
   function_name       = aws_lambda_function.test.arn
   principal           = "events.amazonaws.com"
 }
-`)
+`, prefix))
 }
 
 func testAccPermissionConfig_withQualifier(rName string) string {

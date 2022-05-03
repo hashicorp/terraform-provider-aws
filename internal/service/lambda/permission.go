@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -95,6 +96,7 @@ func ResourcePermission() *schema.Resource {
 			"statement_id_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ValidateFunc:  validPolicyStatementID(),
 				ConflictsWith: []string{"statement_id"},
@@ -107,15 +109,7 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
 	functionName := d.Get("function_name").(string)
-
-	var statementId string
-	if v, ok := d.GetOk("statement_id"); ok {
-		statementId = v.(string)
-	} else if v, ok := d.GetOk("statement_id_prefix"); ok {
-		statementId = resource.PrefixedUniqueId(v.(string))
-	} else {
-		statementId = resource.UniqueId()
-	}
+	statementID := create.Name(d.Get("statement_id").(string), d.Get("statement_id_prefix").(string))
 
 	// There is a bug in the API (reported and acknowledged by AWS)
 	// which causes some permissions to be ignored when API calls are sent in parallel
@@ -127,26 +121,31 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 		Action:       aws.String(d.Get("action").(string)),
 		FunctionName: aws.String(functionName),
 		Principal:    aws.String(d.Get("principal").(string)),
-		StatementId:  aws.String(statementId),
+		StatementId:  aws.String(statementID),
 	}
 
 	if v, ok := d.GetOk("event_source_token"); ok {
 		input.EventSourceToken = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("function_url_auth_type"); ok {
 		input.FunctionUrlAuthType = aws.String(v.(string))
 	}
+
+	if v, ok := d.GetOk("principal_org_id"); ok {
+		input.PrincipalOrgID = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("qualifier"); ok {
 		input.Qualifier = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("source_account"); ok {
 		input.SourceAccount = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("source_arn"); ok {
 		input.SourceArn = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("principal_org_id"); ok {
-		input.PrincipalOrgID = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Adding new Lambda permission: %s", input)
@@ -178,7 +177,7 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Created new Lambda permission, but no Statement was included")
 	}
 
-	d.SetId(statementId)
+	d.SetId(statementID)
 
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		// IAM is eventually consistent :/
@@ -325,6 +324,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("statement_id", statement.Sid)
+	d.Set("statement_id_prefix", create.NamePrefixFromName(statement.Sid))
 
 	return nil
 }
