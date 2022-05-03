@@ -92,7 +92,7 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 	d.Set("price_class", distributionConfig.PriceClass)
 	d.Set("hosted_zone_id", cloudFrontRoute53ZoneID)
 
-	err = d.Set("default_cache_behavior", flattenDefaultCacheBehavior(distributionConfig.DefaultCacheBehavior))
+	err = d.Set("default_cache_behavior", []interface{}{flattenDefaultCacheBehavior(distributionConfig.DefaultCacheBehavior)})
 	if err != nil {
 		return err
 	}
@@ -166,10 +166,6 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 	}
 
 	return nil
-}
-
-func flattenDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior) []interface{} {
-	return []interface{}{flattenCloudFrontDefaultCacheBehavior(dcb)}
 }
 
 func expandCacheBehaviors(lst []interface{}) *cloudfront.CacheBehaviors {
@@ -312,7 +308,7 @@ func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
 	return cb
 }
 
-func flattenCloudFrontDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior) map[string]interface{} {
+func flattenDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior) map[string]interface{} {
 	m := map[string]interface{}{
 		"cache_policy_id":            aws.StringValue(dcb.CachePolicyId),
 		"compress":                   aws.BoolValue(dcb.Compress),
