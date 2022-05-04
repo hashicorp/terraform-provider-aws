@@ -17,10 +17,12 @@ data "aws_media_tailor_playback_configuration" "example" {
 ```
 
 ## Argument Reference
+The following arguments are supported:
 
 * `name` - (Required) The name of the playback configuration.
 
 ## Attributes Reference
+In addition to all arguments above, the following attributes are exported:
 
 * `ad_decision_server_url` - The URL for the ad decision server (ADS).
 * `avail_suppression` - The configuration for avail suppression, also known as ad suppression. Detailed below.
