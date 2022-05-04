@@ -208,6 +208,7 @@ func init() {
 			"aws_fsx_ontap_file_system",
 			"aws_fsx_openzfs_file_system",
 			"aws_fsx_windows_file_system",
+			"aws_iot_topic_rule_destination",
 			"aws_lambda_function",
 			"aws_lb",
 			"aws_memorydb_subnet_group",
