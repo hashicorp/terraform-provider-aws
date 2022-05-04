@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/iot"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -16,7 +17,7 @@ import (
 )
 
 func TestAccIoTTopicRuleDestination_basic(t *testing.T) {
-	url := fmt.Sprintf("https://%s.example.com/", acctest.RandomSubdomain())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_topic_rule_destination.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -26,13 +27,15 @@ func TestAccIoTTopicRuleDestination_basic(t *testing.T) {
 		CheckDestroy: testAccCheckTopicRuleDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleDestinationConfig(url),
+				Config: testAccTopicRuleDestinationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleDestinationExists(resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "iot", regexp.MustCompile(`ruledestination/http/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "http_url_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "http_url_configuration.0.confirmation_url", url),
-					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "0"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "iot", regexp.MustCompile(`ruledestination/vpc/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_configuration.0.role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_configuration.0.vpc_id"),
 				),
 			},
 			{
@@ -45,7 +48,7 @@ func TestAccIoTTopicRuleDestination_basic(t *testing.T) {
 }
 
 func TestAccIoTTopicRuleDestination_disappears(t *testing.T) {
-	url := fmt.Sprintf("https://%s.example.com/", acctest.RandomSubdomain())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_topic_rule_destination.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -55,7 +58,7 @@ func TestAccIoTTopicRuleDestination_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckTopicRuleDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleDestinationConfig(url),
+				Config: testAccTopicRuleDestinationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleDestinationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiot.ResourceTopicRuleDestination(), resourceName),
@@ -113,12 +116,31 @@ func testAccCheckTopicRuleDestinationExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccTopicRuleDestinationConfig(url string) string {
-	return fmt.Sprintf(`
-resource "aws_iot_topic_rule_destination" "test" {
-  http_url_configuration {
-    confirmation_url = %[1]q
+func testAccTopicRuleDestinationBaseConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVpcWithSubnets(2),
+		testAccTopicRuleRoleConfig(rName),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
   }
 }
-`, url)
+`, rName))
+}
+
+func testAccTopicRuleDestinationConfig(rName string) string {
+	return acctest.ConfigCompose(testAccTopicRuleDestinationBaseConfig(rName), `
+resource "aws_iot_topic_rule_destination" "test" {
+  vpc_configuration {
+    role_arn        = aws_iam_role.test.arn
+    security_groups = [aws_security_group.test.id]
+    subnet_ids      = aws_subnet.test[*].id
+    vpc_id          = aws_vpc.test.id
+  }
+}
+`)
 }

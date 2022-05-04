@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -30,7 +30,7 @@ func ResourceTopicRuleDestination() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
+			Create: schema.DefaultTimeout(15 * time.Minute),
 			Update: schema.DefaultTimeout(5 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
@@ -45,29 +45,19 @@ func ResourceTopicRuleDestination() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"http_url_configuration": {
+			"vpc_configuration": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"confirmation_url": {
+						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.IsURLWithHTTPS,
+							ValidateFunc: verify.ValidARN,
 						},
-					},
-				},
-			},
-			"vpc_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
 						"security_groups": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -79,12 +69,6 @@ func ResourceTopicRuleDestination() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
 						},
 						"vpc_id": {
 							Type:     schema.TypeString,
@@ -105,22 +89,22 @@ func resourceTopicRuleDestinationCreate(ctx context.Context, d *schema.ResourceD
 		DestinationConfiguration: &iot.TopicRuleDestinationConfiguration{},
 	}
 
-	if v, ok := d.GetOk("http_url_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DestinationConfiguration.HttpUrlConfiguration = expandHttpUrlDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
-	}
-
 	if v, ok := d.GetOk("vpc_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.DestinationConfiguration.VpcConfiguration = expandVpcDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	log.Printf("[INFO] Creating IoT Topic Rule Destination: %s", input)
-	output, err := conn.CreateTopicRuleDestinationWithContext(ctx, input)
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(tfiam.PropagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateTopicRuleDestinationWithContext(ctx, input)
+		},
+		iot.ErrCodeInvalidRequestException, "sts:AssumeRole")
 
 	if err != nil {
 		return diag.Errorf("creating IoT Topic Rule Destination: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.TopicRuleDestination.Arn))
+	d.SetId(aws.StringValue(outputRaw.(*iot.CreateTopicRuleDestinationOutput).TopicRuleDestination.Arn))
 
 	if _, err := waitTopicRuleDestinationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for IoT Topic Rule Destination (%s) create: %s", d.Id(), err)
@@ -144,13 +128,6 @@ func resourceTopicRuleDestinationRead(ctx context.Context, d *schema.ResourceDat
 		return diag.Errorf("reading IoT Topic Rule Destination (%s): %s", d.Id(), err)
 	}
 
-	if output.HttpUrlProperties != nil {
-		if err := d.Set("http_url_configuration", []interface{}{flattenHttpUrlDestinationProperties(output.HttpUrlProperties)}); err != nil {
-			return diag.Errorf("setting http_url_configuration: %s", err)
-		}
-	} else {
-		d.Set("http_url_configuration", nil)
-	}
 	if output.VpcProperties != nil {
 		if err := d.Set("vpc_configuration", []interface{}{flattenVpcDestinationProperties(output.VpcProperties)}); err != nil {
 			return diag.Errorf("setting vpc_configuration: %s", err)
@@ -185,20 +162,6 @@ func resourceTopicRuleDestinationDelete(ctx context.Context, d *schema.ResourceD
 	return nil
 }
 
-func expandHttpUrlDestinationConfiguration(tfMap map[string]interface{}) *iot.HttpUrlDestinationConfiguration {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &iot.HttpUrlDestinationConfiguration{}
-
-	if v, ok := tfMap["confirmation_url"].(string); ok && v != "" {
-		apiObject.ConfirmationUrl = aws.String(v)
-	}
-
-	return apiObject
-}
-
 func expandVpcDestinationConfiguration(tfMap map[string]interface{}) *iot.VpcDestinationConfiguration {
 	if tfMap == nil {
 		return nil
@@ -223,20 +186,6 @@ func expandVpcDestinationConfiguration(tfMap map[string]interface{}) *iot.VpcDes
 	}
 
 	return apiObject
-}
-
-func flattenHttpUrlDestinationProperties(apiObject *iot.HttpUrlDestinationProperties) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.ConfirmationUrl; v != nil {
-		tfMap["confirmation_url"] = aws.StringValue(v)
-	}
-
-	return tfMap
 }
 
 func flattenVpcDestinationProperties(apiObject *iot.VpcDestinationProperties) map[string]interface{} {
