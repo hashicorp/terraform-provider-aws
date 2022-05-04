@@ -231,6 +231,7 @@ jobs:
         echo "All packages changed:"
         cat /tmp/pkgs_changed
         while read pkg; do
+          echo -n "Checking ${pkg}: "
           if [ "${pkg}" = "" ]; then
             continue
           fi
@@ -245,7 +246,8 @@ jobs:
           fi
           if [[ "${pkg}" == internal/generate/* ]]; then
             continue
-          fi          
+          fi
+          echo "Included"
           while read file; do
             if [ "${file}" = "" ]; then
               continue
