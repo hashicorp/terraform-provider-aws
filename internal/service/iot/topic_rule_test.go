@@ -680,7 +680,7 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "kafka.*", map[string]string{
 						"bootstrap_servers":     "b-1.localhost:9094",
-						"ssl_keystore":          "$${get_secret('secret_name', 'SecretBinary', '', '${aws_iam_role.iot_role.arn}')}",
+						"ssl_keystore":          "$${get_secret('secret_name', 'SecretBinary', '', '${aws_iam_role.test.arn}')}",
 						"ssl_keystore_password": "password",
 						"topic":                 "fake_topic",
 					}),
@@ -1350,48 +1350,44 @@ func testAccTopicRuleRoleConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_iam_role" "iot_role" {
-  name = "test_role_%[1]s"
+resource "aws_iam_role" "test" {
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "iot.${data.aws_partition.current.dns_suffix}"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "iot.${data.aws_partition.current.dns_suffix}"
+    },
+    "Action": "sts:AssumeRole"
+  }]
 }
 EOF
 }
 
-resource "aws_iam_policy" "policy" {
-  name        = "test_policy_%[1]s"
+resource "aws_iam_policy" "test" {
+  name        = %[1]q
   path        = "/"
-  description = "My test policy"
+  description = "IoT Topic Rule test policy"
 
   policy = <<EOF
 {
   "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": "*",
-      "Resource": "*"
-    }
-  ]
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }]
 }
 EOF
 }
 
-resource "aws_iam_policy_attachment" "attach_policy" {
-  name       = "test_policy_attachment_%[1]s"
-  roles      = [aws_iam_role.iot_role.name]
-  policy_arn = aws_iam_policy.policy.arn
+resource "aws_iam_policy_attachment" "test" {
+  name       = %[1]q
+  roles      = [aws_iam_role.test.name]
+  policy_arn = aws_iam_policy.test.arn
 }
 `, rName)
 }
@@ -1451,7 +1447,7 @@ resource "aws_iot_topic_rule" "test" {
 
   cloudwatch_alarm {
     alarm_name   = "myalarm"
-    role_arn     = aws_iam_role.iot_role.arn
+    role_arn     = aws_iam_role.test.arn
     state_reason = "test"
     state_value  = "OK"
   }
@@ -1471,12 +1467,12 @@ resource "aws_iot_topic_rule" "test" {
 
   cloudwatch_logs {
     log_group_name = "mylogs1"
-    role_arn       = aws_iam_role.iot_role.arn
+    role_arn       = aws_iam_role.test.arn
   }
 
   cloudwatch_logs {
     log_group_name = "mylogs2"
-    role_arn       = aws_iam_role.iot_role.arn
+    role_arn       = aws_iam_role.test.arn
   }
 }
 `, rName))
@@ -1497,7 +1493,7 @@ resource "aws_iot_topic_rule" "test" {
     metric_namespace = "TestNS"
     metric_value     = "10"
     metric_unit      = "s"
-    role_arn         = aws_iam_role.iot_role.arn
+    role_arn         = aws_iam_role.test.arn
   }
 }
 `, rName))
@@ -1518,7 +1514,7 @@ resource "aws_iot_topic_rule" "test" {
     hash_key_field = "hkf"
     hash_key_value = "hkv"
     payload_field  = "pf"
-    role_arn       = aws_iam_role.iot_role.arn
+    role_arn       = aws_iam_role.test.arn
     table_name     = "tn"
   }
 }
@@ -1543,7 +1539,7 @@ resource "aws_iot_topic_rule" "test" {
     range_key_field = "rkf"
     range_key_value = "rkv"
     range_key_type  = "STRING"
-    role_arn        = aws_iam_role.iot_role.arn
+    role_arn        = aws_iam_role.test.arn
     table_name      = "tn"
     operation       = "INSERT"
   }
@@ -1566,7 +1562,7 @@ resource "aws_iot_topic_rule" "test" {
       table_name = "test"
     }
 
-    role_arn = aws_iam_role.iot_role.arn
+    role_arn = aws_iam_role.test.arn
   }
 }
 `, rName))
@@ -1589,7 +1585,7 @@ resource "aws_iot_topic_rule" "test" {
     id       = "myIdentifier"
     index    = "myindex"
     type     = "mydocument"
-    role_arn = aws_iam_role.iot_role.arn
+    role_arn = aws_iam_role.test.arn
   }
 }
 `, rName))
@@ -1607,17 +1603,17 @@ resource "aws_iot_topic_rule" "test" {
 
   firehose {
     delivery_stream_name = "mystream1"
-    role_arn             = aws_iam_role.iot_role.arn
+    role_arn             = aws_iam_role.test.arn
   }
 
   firehose {
     delivery_stream_name = "mystream2"
-    role_arn             = aws_iam_role.iot_role.arn
+    role_arn             = aws_iam_role.test.arn
   }
 
   firehose {
     delivery_stream_name = "mystream3"
-    role_arn             = aws_iam_role.iot_role.arn
+    role_arn             = aws_iam_role.test.arn
   }
 }
 `, rName))
@@ -1636,7 +1632,7 @@ resource "aws_iot_topic_rule" "test" {
 
   firehose {
     delivery_stream_name = "mystream"
-    role_arn             = aws_iam_role.iot_role.arn
+    role_arn             = aws_iam_role.test.arn
     separator            = %[2]q
   }
 }
@@ -1655,7 +1651,7 @@ resource "aws_iot_topic_rule" "test" {
 
   iot_analytics {
     channel_name = "fakedata"
-    role_arn     = aws_iam_role.iot_role.arn
+    role_arn     = aws_iam_role.test.arn
   }
 }
 `, rName))
@@ -1673,7 +1669,7 @@ resource "aws_iot_topic_rule" "test" {
 
   iot_events {
     input_name = "fake_input_name"
-    role_arn   = aws_iam_role.iot_role.arn
+    role_arn   = aws_iam_role.test.arn
     message_id = "fake_message_id"
   }
 }
@@ -1696,7 +1692,7 @@ resource "aws_iot_topic_rule" "test" {
     destination_arn       = "arn:${data.aws_partition.current.partition}:kafka:${data.aws_region.current.name}:123456789012:topic/test"
     topic                 = "fake_topic"
     bootstrap_servers     = "b-1.localhost:9094"
-    ssl_keystore          = "$${get_secret('secret_name', 'SecretBinary', '', '${aws_iam_role.iot_role.arn}')}"
+    ssl_keystore          = "$${get_secret('secret_name', 'SecretBinary', '', '${aws_iam_role.test.arn}')}"
     ssl_keystore_password = "password"
   }
 }
@@ -1715,7 +1711,7 @@ resource "aws_iot_topic_rule" "test" {
 
   kinesis {
     stream_name = "mystream"
-    role_arn    = aws_iam_role.iot_role.arn
+    role_arn    = aws_iam_role.test.arn
   }
 }
 `, rName))
@@ -1751,7 +1747,7 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   republish {
-    role_arn = aws_iam_role.iot_role.arn
+    role_arn = aws_iam_role.test.arn
     topic    = "mytopic"
   }
 }
@@ -1769,7 +1765,7 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   republish {
-    role_arn = aws_iam_role.iot_role.arn
+    role_arn = aws_iam_role.test.arn
     topic    = "mytopic"
     qos      = 1
   }
@@ -1790,7 +1786,7 @@ resource "aws_iot_topic_rule" "test" {
   s3 {
     bucket_name = "mybucket"
     key         = "mykey"
-    role_arn    = aws_iam_role.iot_role.arn
+    role_arn    = aws_iam_role.test.arn
   }
 }
 `, rName))
@@ -1809,7 +1805,7 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   sns {
-    role_arn   = aws_iam_role.iot_role.arn
+    role_arn   = aws_iam_role.test.arn
     target_arn = "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}:123456789012:my_corporate_topic"
   }
 }
@@ -1828,7 +1824,7 @@ resource "aws_iot_topic_rule" "test" {
 
   sqs {
     queue_url  = "fakedata"
-    role_arn   = aws_iam_role.iot_role.arn
+    role_arn   = aws_iam_role.test.arn
     use_base64 = false
   }
 }
@@ -1848,7 +1844,7 @@ resource "aws_iot_topic_rule" "test" {
   step_functions {
     execution_name_prefix = "myprefix"
     state_machine_name    = "mystatemachine"
-    role_arn              = aws_iam_role.iot_role.arn
+    role_arn              = aws_iam_role.test.arn
   }
 }
 `, rName))
@@ -1866,7 +1862,7 @@ resource "aws_iot_topic_rule" "test" {
 
   timestream {
     database_name = "TestDB"
-    role_arn      = aws_iam_role.iot_role.arn
+    role_arn      = aws_iam_role.test.arn
     table_name    = "test_table"
 
     dimension {
@@ -1895,13 +1891,13 @@ resource "aws_iot_topic_rule" "test" {
 
   kinesis {
     stream_name = "mystream1"
-    role_arn    = aws_iam_role.iot_role.arn
+    role_arn    = aws_iam_role.test.arn
   }
 
   error_action {
     kinesis {
       stream_name = "mystream2"
-      role_arn    = aws_iam_role.iot_role.arn
+      role_arn    = aws_iam_role.test.arn
     }
   }
 }
