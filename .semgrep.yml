@@ -62,7 +62,6 @@ rules:
         - internal/service/ecs
         - internal/service/elasticache
         - internal/service/elasticbeanstalk
-        - internal/service/elb
         - internal/service/rds
         - internal/service/redshift
     patterns:
