@@ -966,8 +966,8 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 func resourceReplicationGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
-	v, hasglobalReplicationGroupID := d.GetOk("global_replication_group_id")
-	if hasglobalReplicationGroupID {
+	v, hasGlobalReplicationGroupID := d.GetOk("global_replication_group_id")
+	if hasGlobalReplicationGroupID {
 		globalReplicationGroupID := v.(string)
 		err := DisassociateReplicationGroup(conn, globalReplicationGroupID, d.Id(), meta.(*conns.AWSClient).Region, GlobalReplicationGroupDisassociationReadyTimeout)
 		if err != nil {
@@ -981,7 +981,7 @@ func resourceReplicationGroupDelete(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error deleting ElastiCache Replication Group (%s): %w", d.Id(), err)
 	}
 
-	if hasglobalReplicationGroupID {
+	if hasGlobalReplicationGroupID {
 		paramGroupName := d.Get("parameter_group_name").(string)
 		if paramGroupName != "" {
 			err := deleteParameterGroup(conn, paramGroupName)
