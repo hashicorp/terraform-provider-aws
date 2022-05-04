@@ -41,7 +41,7 @@ func testAccPlaybackConfigurationDataSourceBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_media_tailor_playback_configuration" "test"{
   ad_decision_server_url = "https://www.example.com/ads"
-  name = "%[1]s"
+  name = %[1]s
   video_content_source_url = "https://www.example.com/source"
 }
 
