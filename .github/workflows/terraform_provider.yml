@@ -226,7 +226,7 @@ jobs:
           if [ "${file}" = "" ]; then
             continue
           fi
-          if [[ "${file}" != internal/* ]] || [[ "${file}" =~ /test-fixtures/|/testdata|^internal/sweep/.*|^internal/generate/.* ]]; then
+          if [[ ! "${file}" =~ ^internal/|^names/ ]] || [[ "${file}" =~ /test-fixtures/|/testdata|^internal/sweep/.*|^internal/generate/.* ]]; then
             echo "Skipping changed file: ${file}"
             continue
           fi
