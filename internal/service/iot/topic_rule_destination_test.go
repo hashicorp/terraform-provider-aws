@@ -31,6 +31,7 @@ func TestAccIoTTopicRuleDestination_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleDestinationExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "iot", regexp.MustCompile(`ruledestination/vpc/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_configuration.0.role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.security_groups.#", "1"),
@@ -64,6 +65,46 @@ func TestAccIoTTopicRuleDestination_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(acctest.Provider, tfiot.ResourceTopicRuleDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccIoTTopicRuleDestination_enabled(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iot_topic_rule_destination.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTopicRuleDestinationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTopicRuleDestinationEnabledConfig(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleDestinationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTopicRuleDestinationEnabledConfig(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleDestinationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+				),
+			},
+			{
+				Config: testAccTopicRuleDestinationEnabledConfig(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleDestinationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+				),
 			},
 		},
 	})
@@ -143,4 +184,19 @@ resource "aws_iot_topic_rule_destination" "test" {
   }
 }
 `)
+}
+
+func testAccTopicRuleDestinationEnabledConfig(rName string, enabled bool) string {
+	return acctest.ConfigCompose(testAccTopicRuleDestinationBaseConfig(rName), fmt.Sprintf(`
+resource "aws_iot_topic_rule_destination" "test" {
+  enabled = %[1]t
+
+  vpc_configuration {
+    role_arn        = aws_iam_role.test.arn
+    security_groups = [aws_security_group.test.id]
+    subnet_ids      = aws_subnet.test[*].id
+    vpc_id          = aws_vpc.test.id
+  }
+}
+`, enabled))
 }
