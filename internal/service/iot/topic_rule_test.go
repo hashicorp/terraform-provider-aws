@@ -654,8 +654,9 @@ func TestAccIoTTopicRule_IoT_events(t *testing.T) {
 }
 
 func TestAccIoTTopicRule_kafka(t *testing.T) {
-	rName := sdkacctest.RandString(5)
+	rName := testAccTopicRuleName()
 	resourceName := "aws_iot_topic_rule.rule"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
@@ -663,9 +664,34 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 		CheckDestroy: testAccCheckTopicRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRule_kafka(rName),
+				Config: testAccTopicRuleKafkaConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists("aws_iot_topic_rule.rule"),
+					testAccCheckTopicRuleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "kafka.*", map[string]string{
+						"bootstrap_servers":     "b-1.localhost:9094",
+						"ssl_keystore":          "$${get_secret('secret_name', 'SecretBinary', '', '${aws_iam_role.iot_role.arn}')}",
+						"ssl_keystore_password": "password",
+						"topic":                 "fake_topic",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
 				),
 			},
 			{
@@ -1347,18 +1373,20 @@ resource "aws_iot_topic_rule" "rule" {
 `, rName))
 }
 
-func testAccTopicRule_kafka(rName string) string {
+func testAccTopicRuleKafkaConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_iot_topic_rule" "rule" {
-  name        = "test_rule_%[1]s"
-  description = "Example rule"
+  name        = %[1]q
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
   sql_version = "2015-10-08"
+
   kafka {
-    destination_arn       = "[vpc destination arn]"
+    destination_arn       = "arn:${data.aws_partition.current.partition}:kafka:${data.aws_region.current.name}:123456789012:topic/test"
     topic                 = "fake_topic"
     bootstrap_servers     = "b-1.localhost:9094"
     ssl_keystore          = "$${get_secret('secret_name', 'SecretBinary', '', '${aws_iam_role.iot_role.arn}')}"
