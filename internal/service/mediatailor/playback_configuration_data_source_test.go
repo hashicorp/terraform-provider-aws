@@ -28,7 +28,7 @@ func TestAccPlaybackConfigurationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "video_content_source_url", "https://www.example.com/source"),
 					resource.TestMatchResourceAttr(dataSourceName, "dash_configuration.0.manifest_endpoint_prefix", regexp.MustCompile(`^https://(\w+).mediatailor.(-|\w)+.\w+.\w+/\w+/dash/\w+/(-|\w)+/$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "hls_configuration.0.manifest_endpoint_prefix", regexp.MustCompile(`^https://(\w+).mediatailor.(-|\w)+.\w+.\w+/\w+/master/\w+/(-|\w)+/$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "playback_configuration_arn", regexp.MustCompile(`^arn:aws:mediatailor:(-|\w)+:\d+:(\w|/|-)+$`)),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "mediatailor", regexp.MustCompile(`playbackConfiguration/.+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "playback_endpoint_prefix", regexp.MustCompile(`^https://(\w+).mediatailor.(-|\w)+.\w+.\w+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "session_initialization_endpoint_prefix", regexp.MustCompile(`^https://(\w+).mediatailor.(-|\w)+.\w+.\w+/\w+/session/\w+/(-|\w)+/$`)),
 				),
