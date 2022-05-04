@@ -1381,6 +1381,7 @@ func resourceTopicRuleCreate(d *schema.ResourceData, meta interface{}) error {
 		TopicRulePayload: expandIotTopicRulePayload(d),
 	}
 
+	log.Printf("[INFO] Creating IoT Topic Rule: %s", input)
 	_, err := tfresource.RetryWhenAWSErrMessageContains(tfiam.PropagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateTopicRule(input)
@@ -1404,7 +1405,7 @@ func resourceTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
 	output, err := FindTopicRuleByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN]IoT Topic Rule %s not found, removing from state", d.Id())
+		log.Printf("[WARN] IoT Topic Rule %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}

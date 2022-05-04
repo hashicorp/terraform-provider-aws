@@ -1,6 +1,8 @@
 package iot
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -169,4 +171,22 @@ func FindTopicRuleByName(conn *iot.IoT, name string) (*iot.GetTopicRuleOutput, e
 	}
 
 	return output, nil
+}
+
+func FindTopicRuleDestinationByARN(ctx context.Context, conn *iot.IoT, arn string) (*iot.TopicRuleDestination, error) {
+	input := &iot.GetTopicRuleDestinationInput{
+		Arn: aws.String(arn),
+	}
+
+	output, err := conn.GetTopicRuleDestinationWithContext(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.TopicRuleDestination == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.TopicRuleDestination, nil
 }
