@@ -16,7 +16,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccEC2VPCPeeringConnectionOptions_basic(t *testing.T) {
+func TestAccVPCPeeringConnectionOptions_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_peering_connection_options.test"
 	pcxResourceName := "aws_vpc_peering_connection.test"
@@ -104,7 +104,7 @@ func TestAccEC2VPCPeeringConnectionOptions_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCPeeringConnectionOptions_differentRegionSameAccount(t *testing.T) {
+func TestAccVPCPeeringConnectionOptions_differentRegionSameAccount(t *testing.T) {
 	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_peering_connection_options.test"         // Requester
@@ -201,7 +201,7 @@ func TestAccEC2VPCPeeringConnectionOptions_differentRegionSameAccount(t *testing
 	})
 }
 
-func TestAccEC2VPCPeeringConnectionOptions_sameRegionDifferentAccount(t *testing.T) {
+func TestAccVPCPeeringConnectionOptions_sameRegionDifferentAccount(t *testing.T) {
 	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_peering_connection_options.test"     // Requester

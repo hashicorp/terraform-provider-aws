@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-// This test can be run via the pattern: TestAccAWSAccessAnalyzer
 func testAccAnalyzer_basic(t *testing.T) {
 	var analyzer accessanalyzer.AnalyzerSummary
 
@@ -25,7 +24,7 @@ func testAccAnalyzer_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessAnalyzerAnalyzerDestroy,
+		CheckDestroy: testAccCheckAnalyzerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnalyzerAnalyzerNameConfig(rName),
@@ -46,7 +45,6 @@ func testAccAnalyzer_basic(t *testing.T) {
 	})
 }
 
-// This test can be run via the pattern: TestAccAWSAccessAnalyzer
 func testAccAnalyzer_disappears(t *testing.T) {
 	var analyzer accessanalyzer.AnalyzerSummary
 
@@ -57,7 +55,7 @@ func testAccAnalyzer_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessAnalyzerAnalyzerDestroy,
+		CheckDestroy: testAccCheckAnalyzerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnalyzerAnalyzerNameConfig(rName),
@@ -71,7 +69,6 @@ func testAccAnalyzer_disappears(t *testing.T) {
 	})
 }
 
-// This test can be run via the pattern: TestAccAWSAccessAnalyzer
 func testAccAnalyzer_Tags(t *testing.T) {
 	var analyzer accessanalyzer.AnalyzerSummary
 
@@ -82,7 +79,7 @@ func testAccAnalyzer_Tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessAnalyzerAnalyzerDestroy,
+		CheckDestroy: testAccCheckAnalyzerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnalyzerTags1Config(rName, "key1", "value1"),
@@ -118,7 +115,6 @@ func testAccAnalyzer_Tags(t *testing.T) {
 	})
 }
 
-// This test can be run via the pattern: TestAccAWSAccessAnalyzer
 func testAccAnalyzer_Type_Organization(t *testing.T) {
 	var analyzer accessanalyzer.AnalyzerSummary
 
@@ -133,7 +129,7 @@ func testAccAnalyzer_Type_Organization(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessAnalyzerAnalyzerDestroy,
+		CheckDestroy: testAccCheckAnalyzerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnalyzerTypeOrganizationConfig(rName),
@@ -151,7 +147,7 @@ func testAccAnalyzer_Type_Organization(t *testing.T) {
 	})
 }
 
-func testAccCheckAccessAnalyzerAnalyzerDestroy(s *terraform.State) error {
+func testAccCheckAnalyzerDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn
 
 	for _, rs := range s.RootModule().Resources {

@@ -42,10 +42,10 @@ test: fmtcheck
 testacc: fmtcheck
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
 		echo ""; \
-		echo "Error: Skipping example acceptance testing pattern. Update TESTARGS to match the test naming in the relevant *_test.go file."; \
+		echo "Error: Skipping example acceptance testing pattern. Update PKG and TESTS for the relevant *_test.go file."; \
 		echo ""; \
-		echo "For example if updating aws/resource_aws_acm_certificate.go, use the test names in aws/resource_aws_acm_certificate_test.go starting with TestAcc and up to the underscore:"; \
-		echo "make testacc TESTARGS='-run=TestAccAWSAcmCertificate_'"; \
+		echo "For example if updating internal/service/acm/certificate.go, use the test names in internal/service/acm/certificate_test.go starting with TestAcc and up to the underscore:"; \
+		echo "make testacc TESTS=TestAccACMCertificate_ PKG=acm"; \
 		echo ""; \
 		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/running-and-writing-acceptance-tests.md"; \
 		exit 1; \

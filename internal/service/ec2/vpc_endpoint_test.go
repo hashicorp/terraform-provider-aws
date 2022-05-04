@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2VPCEndpoint_gatewayBasic(t *testing.T) {
+func TestAccVPCEndpoint_gatewayBasic(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -54,7 +54,7 @@ func TestAccEC2VPCEndpoint_gatewayBasic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
+func TestAccVPCEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	var routeTable ec2.RouteTable
 	resourceName := "aws_vpc_endpoint.test"
@@ -114,7 +114,7 @@ func TestAccEC2VPCEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpoint_gatewayPolicy(t *testing.T) {
+func TestAccVPCEndpoint_gatewayPolicy(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	// This policy checks the DiffSuppressFunc
 	policy1 := `
@@ -182,7 +182,7 @@ func TestAccEC2VPCEndpoint_gatewayPolicy(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpoint_ignoreEquivalent(t *testing.T) {
+func TestAccVPCEndpoint_ignoreEquivalent(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -207,7 +207,7 @@ func TestAccEC2VPCEndpoint_ignoreEquivalent(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpoint_interfaceBasic(t *testing.T) {
+func TestAccVPCEndpoint_interfaceBasic(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -245,7 +245,7 @@ func TestAccEC2VPCEndpoint_interfaceBasic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
+func TestAccVPCEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -303,7 +303,7 @@ func TestAccEC2VPCEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpoint_interfaceNonAWSServiceAcceptOnCreate(t *testing.T) {
+func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnCreate(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -344,7 +344,7 @@ func TestAccEC2VPCEndpoint_interfaceNonAWSServiceAcceptOnCreate(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpoint_interfaceNonAWSServiceAcceptOnUpdate(t *testing.T) {
+func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnUpdate(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -405,7 +405,7 @@ func TestAccEC2VPCEndpoint_interfaceNonAWSServiceAcceptOnUpdate(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpoint_disappears(t *testing.T) {
+func TestAccVPCEndpoint_disappears(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -428,7 +428,7 @@ func TestAccEC2VPCEndpoint_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpoint_tags(t *testing.T) {
+func TestAccVPCEndpoint_tags(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -473,7 +473,7 @@ func TestAccEC2VPCEndpoint_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpoint_VPCEndpointType_gatewayLoadBalancer(t *testing.T) {
+func TestAccVPCEndpoint_VPCEndpointType_gatewayLoadBalancer(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	vpcEndpointServiceResourceName := "aws_vpc_endpoint_service.test"
 	resourceName := "aws_vpc_endpoint.test"

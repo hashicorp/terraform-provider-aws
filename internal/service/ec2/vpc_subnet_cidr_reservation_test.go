@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2SubnetCidrReservation_basic(t *testing.T) {
+func TestAccVPCSubnetCIDRReservation_basic(t *testing.T) {
 	var res ec2.SubnetCidrReservation
 	resourceName := "aws_ec2_subnet_cidr_reservation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -23,12 +23,12 @@ func TestAccEC2SubnetCidrReservation_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSubnetCidrReservationDestroy,
+		CheckDestroy: testAccCheckSubnetCIDRReservationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testSubnetCidrReservationConfig_ipv4(rName),
+				Config: testSubnetCIDRReservationConfig_ipv4(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetCidrReservationExists(resourceName, &res),
+					testAccCheckSubnetCIDRReservationExists(resourceName, &res),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.1.16/28"),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "reservation_type", "prefix"),
@@ -38,14 +38,14 @@ func TestAccEC2SubnetCidrReservation_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccSubnetCidrReservationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccSubnetCIDRReservationImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func TestAccEC2SubnetCidrReservation_ipv6(t *testing.T) {
+func TestAccVPCSubnetCIDRReservation_ipv6(t *testing.T) {
 	var res ec2.SubnetCidrReservation
 	resourceName := "aws_ec2_subnet_cidr_reservation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -54,12 +54,12 @@ func TestAccEC2SubnetCidrReservation_ipv6(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSubnetCidrReservationDestroy,
+		CheckDestroy: testAccCheckSubnetCIDRReservationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testSubnetCidrReservationConfig_ipv6(rName),
+				Config: testSubnetCIDRReservationConfig_ipv6(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetCidrReservationExists(resourceName, &res),
+					testAccCheckSubnetCIDRReservationExists(resourceName, &res),
 					resource.TestCheckResourceAttr(resourceName, "reservation_type", "explicit"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
@@ -67,14 +67,14 @@ func TestAccEC2SubnetCidrReservation_ipv6(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccSubnetCidrReservationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccSubnetCIDRReservationImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func TestAccEC2SubnetCidrReservation_disappears(t *testing.T) {
+func TestAccVPCSubnetCIDRReservation_disappears(t *testing.T) {
 	var res ec2.SubnetCidrReservation
 	resourceName := "aws_ec2_subnet_cidr_reservation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -83,12 +83,12 @@ func TestAccEC2SubnetCidrReservation_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSubnetCidrReservationDestroy,
+		CheckDestroy: testAccCheckSubnetCIDRReservationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testSubnetCidrReservationConfig_ipv4(rName),
+				Config: testSubnetCIDRReservationConfig_ipv4(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetCidrReservationExists(resourceName, &res),
+					testAccCheckSubnetCIDRReservationExists(resourceName, &res),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSubnetCIDRReservation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -97,7 +97,7 @@ func TestAccEC2SubnetCidrReservation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSubnetCidrReservationExists(n string, v *ec2.SubnetCidrReservation) resource.TestCheckFunc {
+func testAccCheckSubnetCIDRReservationExists(n string, v *ec2.SubnetCidrReservation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -110,7 +110,7 @@ func testAccCheckSubnetCidrReservationExists(n string, v *ec2.SubnetCidrReservat
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		output, err := tfec2.FindSubnetCidrReservationBySubnetIDAndReservationID(conn, rs.Primary.Attributes["subnet_id"], rs.Primary.ID)
+		output, err := tfec2.FindSubnetCIDRReservationBySubnetIDAndReservationID(conn, rs.Primary.Attributes["subnet_id"], rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -122,7 +122,7 @@ func testAccCheckSubnetCidrReservationExists(n string, v *ec2.SubnetCidrReservat
 	}
 }
 
-func testAccCheckSubnetCidrReservationDestroy(s *terraform.State) error {
+func testAccCheckSubnetCIDRReservationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -130,7 +130,7 @@ func testAccCheckSubnetCidrReservationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfec2.FindSubnetCidrReservationBySubnetIDAndReservationID(conn, rs.Primary.Attributes["subnet_id"], rs.Primary.ID)
+		_, err := tfec2.FindSubnetCIDRReservationBySubnetIDAndReservationID(conn, rs.Primary.Attributes["subnet_id"], rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -146,7 +146,7 @@ func testAccCheckSubnetCidrReservationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccSubnetCidrReservationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccSubnetCIDRReservationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -157,7 +157,7 @@ func testAccSubnetCidrReservationImportStateIdFunc(resourceName string) resource
 	}
 }
 
-func testSubnetCidrReservationConfig_ipv4(rName string) string {
+func testSubnetCIDRReservationConfig_ipv4(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -185,7 +185,7 @@ resource "aws_ec2_subnet_cidr_reservation" "test" {
 `, rName)
 }
 
-func testSubnetCidrReservationConfig_ipv6(rName string) string {
+func testSubnetCIDRReservationConfig_ipv6(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"

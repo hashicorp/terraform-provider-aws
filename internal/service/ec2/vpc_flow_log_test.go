@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2FlowLog_vpcID(t *testing.T) {
+func TestAccVPCFlowLog_vpcID(t *testing.T) {
 	var flowLog ec2.FlowLog
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
 	iamRoleResourceName := "aws_iam_role.test"
@@ -56,7 +56,7 @@ func TestAccEC2FlowLog_vpcID(t *testing.T) {
 	})
 }
 
-func TestAccEC2FlowLog_logFormat(t *testing.T) {
+func TestAccVPCFlowLog_logFormat(t *testing.T) {
 	var flowLog ec2.FlowLog
 	resourceName := "aws_flow_log.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -88,7 +88,7 @@ func TestAccEC2FlowLog_logFormat(t *testing.T) {
 	})
 }
 
-func TestAccEC2FlowLog_subnetID(t *testing.T) {
+func TestAccVPCFlowLog_subnetID(t *testing.T) {
 	var flowLog ec2.FlowLog
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
 	iamRoleResourceName := "aws_iam_role.test"
@@ -124,7 +124,7 @@ func TestAccEC2FlowLog_subnetID(t *testing.T) {
 	})
 }
 
-func TestAccEC2FlowLog_LogDestinationType_cloudWatchLogs(t *testing.T) {
+func TestAccVPCFlowLog_LogDestinationType_cloudWatchLogs(t *testing.T) {
 	var flowLog ec2.FlowLog
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
 	resourceName := "aws_flow_log.test"
@@ -155,7 +155,7 @@ func TestAccEC2FlowLog_LogDestinationType_cloudWatchLogs(t *testing.T) {
 	})
 }
 
-func TestAccEC2FlowLog_LogDestinationType_s3(t *testing.T) {
+func TestAccVPCFlowLog_LogDestinationType_s3(t *testing.T) {
 	var flowLog ec2.FlowLog
 	s3ResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_flow_log.test"
@@ -185,7 +185,7 @@ func TestAccEC2FlowLog_LogDestinationType_s3(t *testing.T) {
 	})
 }
 
-func TestAccEC2FlowLog_LogDestinationTypeS3_invalid(t *testing.T) {
+func TestAccVPCFlowLog_LogDestinationTypeS3_invalid(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test-flow-log-s3-invalid")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -202,7 +202,7 @@ func TestAccEC2FlowLog_LogDestinationTypeS3_invalid(t *testing.T) {
 	})
 }
 
-func TestAccEC2FlowLog_LogDestinationTypeS3DO_plainText(t *testing.T) {
+func TestAccVPCFlowLog_LogDestinationTypeS3DO_plainText(t *testing.T) {
 	var flowLog ec2.FlowLog
 	s3ResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_flow_log.test"
@@ -233,7 +233,7 @@ func TestAccEC2FlowLog_LogDestinationTypeS3DO_plainText(t *testing.T) {
 	})
 }
 
-func TestAccEC2FlowLog_LogDestinationTypeS3DOPlainText_hiveCompatible(t *testing.T) {
+func TestAccVPCFlowLog_LogDestinationTypeS3DOPlainText_hiveCompatible(t *testing.T) {
 	var flowLog ec2.FlowLog
 	s3ResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_flow_log.test"
@@ -266,7 +266,7 @@ func TestAccEC2FlowLog_LogDestinationTypeS3DOPlainText_hiveCompatible(t *testing
 	})
 }
 
-func TestAccEC2FlowLog_LogDestinationTypeS3DO_parquet(t *testing.T) {
+func TestAccVPCFlowLog_LogDestinationTypeS3DO_parquet(t *testing.T) {
 	var flowLog ec2.FlowLog
 	s3ResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_flow_log.test"
@@ -297,7 +297,7 @@ func TestAccEC2FlowLog_LogDestinationTypeS3DO_parquet(t *testing.T) {
 	})
 }
 
-func TestAccEC2FlowLog_LogDestinationTypeS3DOParquet_hiveCompatible(t *testing.T) {
+func TestAccVPCFlowLog_LogDestinationTypeS3DOParquet_hiveCompatible(t *testing.T) {
 	var flowLog ec2.FlowLog
 	s3ResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_flow_log.test"
@@ -329,7 +329,7 @@ func TestAccEC2FlowLog_LogDestinationTypeS3DOParquet_hiveCompatible(t *testing.T
 	})
 }
 
-func TestAccEC2FlowLog_LogDestinationTypeS3DOParquetHiveCompatible_perHour(t *testing.T) {
+func TestAccVPCFlowLog_LogDestinationTypeS3DOParquetHiveCompatible_perHour(t *testing.T) {
 	var flowLog ec2.FlowLog
 	s3ResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_flow_log.test"
@@ -362,7 +362,7 @@ func TestAccEC2FlowLog_LogDestinationTypeS3DOParquetHiveCompatible_perHour(t *te
 	})
 }
 
-func TestAccEC2FlowLog_LogDestinationType_maxAggregationInterval(t *testing.T) {
+func TestAccVPCFlowLog_LogDestinationType_maxAggregationInterval(t *testing.T) {
 	var flowLog ec2.FlowLog
 	resourceName := "aws_flow_log.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -389,7 +389,7 @@ func TestAccEC2FlowLog_LogDestinationType_maxAggregationInterval(t *testing.T) {
 	})
 }
 
-func TestAccEC2FlowLog_tags(t *testing.T) {
+func TestAccVPCFlowLog_tags(t *testing.T) {
 	var flowLog ec2.FlowLog
 	resourceName := "aws_flow_log.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -434,7 +434,7 @@ func TestAccEC2FlowLog_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2FlowLog_disappears(t *testing.T) {
+func TestAccVPCFlowLog_disappears(t *testing.T) {
 	var flowLog ec2.FlowLog
 	resourceName := "aws_flow_log.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

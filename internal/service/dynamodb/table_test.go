@@ -1583,7 +1583,7 @@ func TestAccDynamoDBTable_tableClassInfrequentAccess(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_backup_encryption(t *testing.T) {
+func TestAccDynamoDBTable_backupEncryption(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1600,7 +1600,7 @@ func TestAccDynamoDBTable_backup_encryption(t *testing.T) {
 		CheckDestroy: testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbBackupConfigInitialStateWithEncryption(rName),
+				Config: testAccTableConfig_backupInitialStateEncryption(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(resourceName, &confBYOK),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
@@ -1639,7 +1639,7 @@ func TestAccDynamoDBTable_backup_overrideEncryption(t *testing.T) {
 		CheckDestroy: testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbBackupConfigInitialStateWithOverrideEncryption(rName),
+				Config: testAccTableConfig_backupInitialStateOverrideEncryption(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(resourceName, &confBYOK),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
@@ -2763,7 +2763,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName, tableClass)
 }
 
-func testAccAWSDynamoDbBackupConfigInitialStateWithOverrideEncryption(rName string) string {
+func testAccTableConfig_backupInitialStateOverrideEncryption(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "source" {
   name           = "%[1]s-source"
@@ -2802,7 +2802,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccAWSDynamoDbBackupConfigInitialStateWithEncryption(rName string) string {
+func testAccTableConfig_backupInitialStateEncryption(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "source" {
   name           = "%[1]s-source"

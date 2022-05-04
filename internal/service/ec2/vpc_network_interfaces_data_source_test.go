@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2NetworkInterfacesDataSource_filter(t *testing.T) {
+func TestAccVPCNetworkInterfacesDataSource_filter(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -29,7 +29,7 @@ func TestAccEC2NetworkInterfacesDataSource_filter(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkInterfacesDataSource_tags(t *testing.T) {
+func TestAccVPCNetworkInterfacesDataSource_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -48,7 +48,7 @@ func TestAccEC2NetworkInterfacesDataSource_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkInterfacesDataSource_empty(t *testing.T) {
+func TestAccVPCNetworkInterfacesDataSource_empty(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{

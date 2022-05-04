@@ -131,7 +131,7 @@ func TestAccEC2EIP_Instance_reassociate(t *testing.T) {
 	})
 }
 
-// This test is an expansion of TestAccAWSEIP_instance, by testing the
+// This test is an expansion of TestAccEC2EIP_Instance_associatedUserPrivateIP, by testing the
 // associated Private EIPs of two instances
 func TestAccEC2EIP_Instance_associatedUserPrivateIP(t *testing.T) {
 	var one ec2.Address

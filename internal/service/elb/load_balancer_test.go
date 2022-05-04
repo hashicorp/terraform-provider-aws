@@ -332,7 +332,7 @@ func TestAccELBLoadBalancer_ListenerSSLCertificateID_iamServerCertificate(t *tes
 	testCheck := func(*terraform.State) error {
 		if len(conf.ListenerDescriptions) != 1 {
 			return fmt.Errorf(
-				"TestAccAWSELB_iam_server_cert expected 1 listener, got %d",
+				"TestAccELBLoadBalancer_ListenerSSLCertificateID_iamServerCertificate expected 1 listener, got %d",
 				len(conf.ListenerDescriptions))
 		}
 		return nil

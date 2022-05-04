@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2NetworkACLsDataSource_basic(t *testing.T) {
+func TestAccVPCNetworkACLsDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_network_acls.test"
 
@@ -30,7 +30,7 @@ func TestAccEC2NetworkACLsDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACLsDataSource_filter(t *testing.T) {
+func TestAccVPCNetworkACLsDataSource_filter(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_network_acls.test"
 
@@ -50,7 +50,7 @@ func TestAccEC2NetworkACLsDataSource_filter(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACLsDataSource_tags(t *testing.T) {
+func TestAccVPCNetworkACLsDataSource_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_network_acls.test"
 
@@ -70,7 +70,7 @@ func TestAccEC2NetworkACLsDataSource_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACLsDataSource_vpcID(t *testing.T) {
+func TestAccVPCNetworkACLsDataSource_vpcID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_network_acls.test"
 
@@ -91,7 +91,7 @@ func TestAccEC2NetworkACLsDataSource_vpcID(t *testing.T) {
 	})
 }
 
-func TestAccEC2NetworkACLsDataSource_empty(t *testing.T) {
+func TestAccVPCNetworkACLsDataSource_empty(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_network_acls.test"
 

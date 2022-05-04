@@ -42,7 +42,7 @@ func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
 			// InvalidRequestException: A previous rotation isn’t complete. That rotation will be reattempted.
 			/*
 				{
-					Config: testAccAWSSecretsManagerSecretConfig_Updated(rName),
+					Config: testAccSecretsManagerSecretConfig_Updated(rName),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckSecretRotationExists(resourceName, &secret),
 						resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
