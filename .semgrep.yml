@@ -60,7 +60,6 @@ rules:
         - internal/service
       exclude:
         - internal/service/ecs
-        - internal/service/elasticache
         - internal/service/elasticbeanstalk
         - internal/service/elb
         - internal/service/rds
