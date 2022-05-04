@@ -306,7 +306,7 @@ func resourcePlaybackConfigurationPut(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(fmt.Errorf("error while creating the playback configuration: %v", err))
 	}
 
-	d.SetId(*playbackConfiguration.PlaybackConfigurationArn)
+	d.SetId(aws.StringValue(playbackConfiguration.PlaybackConfigurationArn))
 
 	return resourcePlaybackConfigurationRead(ctx, d, meta)
 }
@@ -390,7 +390,7 @@ func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceDa
 		}})
 	}
 
-	if *res.ManifestProcessingRules.AdMarkerPassthrough.Enabled == true {
+	if aws.BoolValue(res.ManifestProcessingRules.AdMarkerPassthrough.Enabled) == true {
 		d.Set("manifest_processing_rules", []interface{}{map[string]interface{}{
 			"ad_marker_passthrough": []interface{}{map[string]interface{}{
 				"enabled": res.ManifestProcessingRules.AdMarkerPassthrough.Enabled,
@@ -417,6 +417,6 @@ func resourcePlaybackConfigurationDelete(ctx context.Context, d *schema.Resource
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error while deleting the resource: %v", err))
 	}
-	d.SetId("")
+
 	return nil
 }
