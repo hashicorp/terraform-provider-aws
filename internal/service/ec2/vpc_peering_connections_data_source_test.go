@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2VPCPeeringConnectionsDataSource_basic(t *testing.T) {
+func TestAccVPCPeeringConnectionsDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -28,7 +28,7 @@ func TestAccEC2VPCPeeringConnectionsDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCPeeringConnectionsDataSource_NoMatches(t *testing.T) {
+func TestAccVPCPeeringConnectionsDataSource_NoMatches(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{

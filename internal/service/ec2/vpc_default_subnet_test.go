@@ -73,7 +73,7 @@ func testAccPreCheckDefaultSubnetNotFound(t *testing.T) {
 	}
 }
 
-func testAccEC2DefaultSubnet_Existing_basic(t *testing.T) {
+func testAccDefaultSubnet_Existing_basic(t *testing.T) {
 	var v ec2.Subnet
 	resourceName := "aws_default_subnet.test"
 
@@ -117,7 +117,7 @@ func testAccEC2DefaultSubnet_Existing_basic(t *testing.T) {
 	})
 }
 
-func testAccEC2DefaultSubnet_Existing_forceDestroy(t *testing.T) {
+func testAccDefaultSubnet_Existing_forceDestroy(t *testing.T) {
 	var v ec2.Subnet
 	resourceName := "aws_default_subnet.test"
 
@@ -143,7 +143,7 @@ func testAccEC2DefaultSubnet_Existing_forceDestroy(t *testing.T) {
 	})
 }
 
-func testAccEC2DefaultSubnet_Existing_ipv6(t *testing.T) {
+func testAccDefaultSubnet_Existing_ipv6(t *testing.T) {
 	var v ec2.Subnet
 	resourceName := "aws_default_subnet.test"
 
@@ -187,7 +187,7 @@ func testAccEC2DefaultSubnet_Existing_ipv6(t *testing.T) {
 	})
 }
 
-func testAccEC2DefaultSubnet_Existing_privateDnsNameOptionsOnLaunch(t *testing.T) {
+func testAccDefaultSubnet_Existing_privateDnsNameOptionsOnLaunch(t *testing.T) {
 	var v ec2.Subnet
 	resourceName := "aws_default_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -233,7 +233,7 @@ func testAccEC2DefaultSubnet_Existing_privateDnsNameOptionsOnLaunch(t *testing.T
 	})
 }
 
-func testAccEC2DefaultSubnet_NotFound_basic(t *testing.T) {
+func testAccDefaultSubnet_NotFound_basic(t *testing.T) {
 	var v ec2.Subnet
 	resourceName := "aws_default_subnet.test"
 
@@ -277,7 +277,7 @@ func testAccEC2DefaultSubnet_NotFound_basic(t *testing.T) {
 	})
 }
 
-func testAccEC2DefaultSubnet_NotFound_ipv6Native(t *testing.T) {
+func testAccDefaultSubnet_NotFound_ipv6Native(t *testing.T) {
 	var v ec2.Subnet
 	resourceName := "aws_default_subnet.test"
 

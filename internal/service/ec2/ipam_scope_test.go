@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccVPCIpamScope_basic(t *testing.T) {
+func TestAccIPAMScope_basic(t *testing.T) {
 	resourceName := "aws_vpc_ipam_scope.test"
 	ipamName := "aws_vpc_ipam.test"
 
@@ -51,7 +51,7 @@ func TestAccVPCIpamScope_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCIpamScope_tags(t *testing.T) {
+func TestAccIPAMScope_tags(t *testing.T) {
 	resourceName := "aws_vpc_ipam_scope.test"
 
 	resource.ParallelTest(t, resource.TestCase{

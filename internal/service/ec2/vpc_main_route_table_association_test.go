@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2MainRouteTableAssociation_basic(t *testing.T) {
+func TestAccVPCMainRouteTableAssociation_basic(t *testing.T) {
 	var rta ec2.RouteTableAssociation
 	resourceName := "aws_main_route_table_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

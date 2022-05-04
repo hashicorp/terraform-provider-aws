@@ -350,20 +350,20 @@ func testAccCheckBucketPublicAccessBlockDisappears(n string) resource.TestCheckF
 func testAccBucketPublicAccessBlockConfig(bucketName, blockPublicAcls, blockPublicPolicy, ignorePublicAcls, restrictPublicBuckets string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-  bucket = "%s"
+  bucket = %[1]q
 
   tags = {
-    TestName = "TestAccAWSS3BucketPublicAccessBlock_basic"
+    TestName = %[1]q
   }
 }
 
 resource "aws_s3_bucket_public_access_block" "bucket" {
   bucket = aws_s3_bucket.bucket.bucket
 
-  block_public_acls       = "%s"
-  block_public_policy     = "%s"
-  ignore_public_acls      = "%s"
-  restrict_public_buckets = "%s"
+  block_public_acls       = %[2]q
+  block_public_policy     = %[3]q
+  ignore_public_acls      = %[4]q
+  restrict_public_buckets = %[5]q
 }
 `, bucketName, blockPublicAcls, blockPublicPolicy, ignorePublicAcls, restrictPublicBuckets)
 }

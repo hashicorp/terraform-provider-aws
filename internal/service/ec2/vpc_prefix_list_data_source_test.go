@@ -15,7 +15,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccEC2PrefixListDataSource_basic(t *testing.T) {
+func TestAccVPCPrefixListDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -32,7 +32,7 @@ func TestAccEC2PrefixListDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2PrefixListDataSource_filter(t *testing.T) {
+func TestAccVPCPrefixListDataSource_filter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -49,7 +49,7 @@ func TestAccEC2PrefixListDataSource_filter(t *testing.T) {
 	})
 }
 
-func TestAccEC2PrefixListDataSource_nameDoesNotOverrideFilter(t *testing.T) {
+func TestAccVPCPrefixListDataSource_nameDoesNotOverrideFilter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),

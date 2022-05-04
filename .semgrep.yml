@@ -59,7 +59,6 @@ rules:
       include:
         - internal/service
       exclude:
-        - internal/service/ecs
         - internal/service/elasticbeanstalk
         - internal/service/elb
         - internal/service/rds

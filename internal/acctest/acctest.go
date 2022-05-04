@@ -133,7 +133,7 @@ func factoriesInit(providers *[]*schema.Provider, providerNames []string) map[st
 
 // FactoriesInternal creates ProviderFactories for provider configuration testing
 //
-// This should only be used for TestAccAWSProvider_ tests which need to
+// This should only be used for TestAccProvider_ tests which need to
 // reference the provider instance itself. Other testing should use
 // ProviderFactories or other related functions.
 func FactoriesInternal(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2SecurityGroupsDataSource_tag(t *testing.T) {
+func TestAccVPCSecurityGroupsDataSource_tag(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_security_groups.test"
 
@@ -31,7 +31,7 @@ func TestAccEC2SecurityGroupsDataSource_tag(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupsDataSource_filter(t *testing.T) {
+func TestAccVPCSecurityGroupsDataSource_filter(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_security_groups.test"
 
@@ -52,7 +52,7 @@ func TestAccEC2SecurityGroupsDataSource_filter(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupsDataSource_empty(t *testing.T) {
+func TestAccVPCSecurityGroupsDataSource_empty(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_security_groups.test"
 

@@ -93,7 +93,7 @@ func TestAccRDSCluster_allowMajorVersionUpgrade(t *testing.T) {
 	resourceName := "aws_rds_cluster.test"
 	// If these hardcoded versions become a maintenance burden, use DescribeDBEngineVersions
 	// either by having a new data source created or implementing the testing similar
-	// to TestAccAWSDmsReplicationInstance_EngineVersion
+	// to TestAccDMSReplicationInstance_engineVersion
 	engine := "aurora-postgresql"
 	engineVersion1 := "12.9"
 	engineVersion2 := "13.5"
@@ -150,7 +150,7 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParametersApplyImm(t *t
 	resourceName := "aws_rds_cluster.test"
 	// If these hardcoded versions become a maintenance burden, use DescribeDBEngineVersions
 	// either by having a new data source created or implementing the testing similar
-	// to TestAccAWSDmsReplicationInstance_EngineVersion
+	// to TestAccDMSReplicationInstance_engineVersion
 	engine := "aurora-postgresql"
 	engineVersion1 := "12.9"
 	engineVersion2 := "13.5"
@@ -193,7 +193,7 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParameters(t *testing.T
 	resourceName := "aws_rds_cluster.test"
 	// If these hardcoded versions become a maintenance burden, use DescribeDBEngineVersions
 	// either by having a new data source created or implementing the testing similar
-	// to TestAccAWSDmsReplicationInstance_EngineVersion
+	// to TestAccDMSReplicationInstance_engineVersion
 	engine := "aurora-postgresql"
 	engineVersion1 := "12.9"
 	engineVersion2 := "13.5"
@@ -250,7 +250,7 @@ func TestAccRDSCluster_onlyMajorVersion(t *testing.T) {
 	resourceName := "aws_rds_cluster.test"
 	// If these hardcoded versions become a maintenance burden, use DescribeDBEngineVersions
 	// either by having a new data source created or implementing the testing similar
-	// to TestAccAWSDmsReplicationInstance_EngineVersion
+	// to TestAccDMSReplicationInstance_engineVersion
 	engine := "aurora-postgresql"
 	engineVersion1 := "11"
 

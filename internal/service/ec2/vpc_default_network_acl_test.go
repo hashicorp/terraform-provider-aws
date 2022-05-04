@@ -15,7 +15,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccEC2DefaultNetworkACL_basic(t *testing.T) {
+func TestAccVPCDefaultNetworkACL_basic(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	vpcResourceName := "aws_vpc.test"
@@ -49,7 +49,7 @@ func TestAccEC2DefaultNetworkACL_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultNetworkACL_basicIPv6VPC(t *testing.T) {
+func TestAccVPCDefaultNetworkACL_basicIPv6VPC(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -77,7 +77,7 @@ func TestAccEC2DefaultNetworkACL_basicIPv6VPC(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultNetworkACL_tags(t *testing.T) {
+func TestAccVPCDefaultNetworkACL_tags(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -122,7 +122,7 @@ func TestAccEC2DefaultNetworkACL_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultNetworkACL_Deny_ingress(t *testing.T) {
+func TestAccVPCDefaultNetworkACL_Deny_ingress(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -158,7 +158,7 @@ func TestAccEC2DefaultNetworkACL_Deny_ingress(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultNetworkACL_withIPv6Ingress(t *testing.T) {
+func TestAccVPCDefaultNetworkACL_withIPv6Ingress(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -194,7 +194,7 @@ func TestAccEC2DefaultNetworkACL_withIPv6Ingress(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultNetworkACL_subnetRemoval(t *testing.T) {
+func TestAccVPCDefaultNetworkACL_subnetRemoval(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -238,7 +238,7 @@ func TestAccEC2DefaultNetworkACL_subnetRemoval(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultNetworkACL_subnetReassign(t *testing.T) {
+func TestAccVPCDefaultNetworkACL_subnetReassign(t *testing.T) {
 	var v ec2.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

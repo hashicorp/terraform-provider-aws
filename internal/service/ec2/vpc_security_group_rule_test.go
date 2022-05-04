@@ -113,7 +113,7 @@ func TestIpPermissionIDHash(t *testing.T) {
 	}
 }
 
-func TestAccEC2SecurityGroupRule_Ingress_vpc(t *testing.T) {
+func TestAccVPCSecurityGroupRule_Ingress_vpc(t *testing.T) {
 	var group ec2.SecurityGroup
 	rInt := sdkacctest.RandInt()
 
@@ -158,7 +158,7 @@ func TestAccEC2SecurityGroupRule_Ingress_vpc(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupRule_IngressSourceWithAccount_id(t *testing.T) {
+func TestAccVPCSecurityGroupRule_IngressSourceWithAccount_id(t *testing.T) {
 	var group ec2.SecurityGroup
 
 	rInt := sdkacctest.RandInt()
@@ -193,7 +193,7 @@ func TestAccEC2SecurityGroupRule_IngressSourceWithAccount_id(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupRule_Ingress_protocol(t *testing.T) {
+func TestAccVPCSecurityGroupRule_Ingress_protocol(t *testing.T) {
 	var group ec2.SecurityGroup
 
 	testRuleCount := func(*terraform.State) error {
@@ -237,7 +237,7 @@ func TestAccEC2SecurityGroupRule_Ingress_protocol(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupRule_Ingress_icmpv6(t *testing.T) {
+func TestAccVPCSecurityGroupRule_Ingress_icmpv6(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
@@ -270,7 +270,7 @@ func TestAccEC2SecurityGroupRule_Ingress_icmpv6(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupRule_Ingress_ipv6(t *testing.T) {
+func TestAccVPCSecurityGroupRule_Ingress_ipv6(t *testing.T) {
 	var group ec2.SecurityGroup
 
 	testRuleCount := func(*terraform.State) error {
@@ -317,7 +317,7 @@ func TestAccEC2SecurityGroupRule_Ingress_ipv6(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupRule_Ingress_classic(t *testing.T) {
+func TestAccVPCSecurityGroupRule_Ingress_classic(t *testing.T) {
 	var group ec2.SecurityGroup
 	rInt := sdkacctest.RandInt()
 
@@ -362,7 +362,7 @@ func TestAccEC2SecurityGroupRule_Ingress_classic(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupRule_multiIngress(t *testing.T) {
+func TestAccVPCSecurityGroupRule_multiIngress(t *testing.T) {
 	var group ec2.SecurityGroup
 
 	testMultiRuleCount := func(*terraform.State) error {
@@ -409,7 +409,7 @@ func TestAccEC2SecurityGroupRule_multiIngress(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupRule_egress(t *testing.T) {
+func TestAccVPCSecurityGroupRule_egress(t *testing.T) {
 	var group ec2.SecurityGroup
 	rInt := sdkacctest.RandInt()
 
@@ -436,7 +436,7 @@ func TestAccEC2SecurityGroupRule_egress(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupRule_selfReference(t *testing.T) {
+func TestAccVPCSecurityGroupRule_selfReference(t *testing.T) {
 	var group ec2.SecurityGroup
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -461,7 +461,7 @@ func TestAccEC2SecurityGroupRule_selfReference(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupRule_expectInvalidTypeError(t *testing.T) {
+func TestAccVPCSecurityGroupRule_expectInvalidTypeError(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -477,7 +477,7 @@ func TestAccEC2SecurityGroupRule_expectInvalidTypeError(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupRule_expectInvalidCIDR(t *testing.T) {
+func TestAccVPCSecurityGroupRule_expectInvalidCIDR(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -498,7 +498,7 @@ func TestAccEC2SecurityGroupRule_expectInvalidCIDR(t *testing.T) {
 }
 
 // testing partial match implementation
-func TestAccEC2SecurityGroupRule_PartialMatching_basic(t *testing.T) {
+func TestAccVPCSecurityGroupRule_PartialMatching_basic(t *testing.T) {
 	var group ec2.SecurityGroup
 	rInt := sdkacctest.RandInt()
 
@@ -559,7 +559,7 @@ func TestAccEC2SecurityGroupRule_PartialMatching_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupRule_PartialMatching_source(t *testing.T) {
+func TestAccVPCSecurityGroupRule_PartialMatching_source(t *testing.T) {
 	var group ec2.SecurityGroup
 	var nat ec2.SecurityGroup
 	var p ec2.IpPermission
@@ -610,7 +610,7 @@ func TestAccEC2SecurityGroupRule_PartialMatching_source(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupRule_issue5310(t *testing.T) {
+func TestAccVPCSecurityGroupRule_issue5310(t *testing.T) {
 	var group ec2.SecurityGroup
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -635,7 +635,7 @@ func TestAccEC2SecurityGroupRule_issue5310(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupRule_race(t *testing.T) {
+func TestAccVPCSecurityGroupRule_race(t *testing.T) {
 	var group ec2.SecurityGroup
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -654,7 +654,7 @@ func TestAccEC2SecurityGroupRule_race(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupRule_selfSource(t *testing.T) {
+func TestAccVPCSecurityGroupRule_selfSource(t *testing.T) {
 	var group ec2.SecurityGroup
 	rInt := sdkacctest.RandInt()
 
@@ -680,7 +680,7 @@ func TestAccEC2SecurityGroupRule_selfSource(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupRule_prefixListEgress(t *testing.T) {
+func TestAccVPCSecurityGroupRule_prefixListEgress(t *testing.T) {
 	var group ec2.SecurityGroup
 	var endpoint ec2.VpcEndpoint
 	var p ec2.IpPermission
@@ -743,7 +743,7 @@ func TestAccEC2SecurityGroupRule_prefixListEgress(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupRule_ingressDescription(t *testing.T) {
+func TestAccVPCSecurityGroupRule_ingressDescription(t *testing.T) {
 	var group ec2.SecurityGroup
 	rInt := sdkacctest.RandInt()
 
@@ -771,7 +771,7 @@ func TestAccEC2SecurityGroupRule_ingressDescription(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupRule_egressDescription(t *testing.T) {
+func TestAccVPCSecurityGroupRule_egressDescription(t *testing.T) {
 	var group ec2.SecurityGroup
 	rInt := sdkacctest.RandInt()
 
@@ -799,7 +799,7 @@ func TestAccEC2SecurityGroupRule_egressDescription(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupRule_IngressDescription_updates(t *testing.T) {
+func TestAccVPCSecurityGroupRule_IngressDescription_updates(t *testing.T) {
 	var group ec2.SecurityGroup
 	rInt := sdkacctest.RandInt()
 
@@ -836,7 +836,7 @@ func TestAccEC2SecurityGroupRule_IngressDescription_updates(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupRule_EgressDescription_updates(t *testing.T) {
+func TestAccVPCSecurityGroupRule_EgressDescription_updates(t *testing.T) {
 	var group ec2.SecurityGroup
 	rInt := sdkacctest.RandInt()
 
@@ -873,7 +873,7 @@ func TestAccEC2SecurityGroupRule_EgressDescription_updates(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupRule_Description_allPorts(t *testing.T) {
+func TestAccVPCSecurityGroupRule_Description_allPorts(t *testing.T) {
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	securityGroupResourceName := "aws_security_group.test"
@@ -931,7 +931,7 @@ func TestAccEC2SecurityGroupRule_Description_allPorts(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroupRule_DescriptionAllPorts_nonZeroPorts(t *testing.T) {
+func TestAccVPCSecurityGroupRule_DescriptionAllPorts_nonZeroPorts(t *testing.T) {
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	securityGroupResourceName := "aws_security_group.test"
@@ -990,7 +990,7 @@ func TestAccEC2SecurityGroupRule_DescriptionAllPorts_nonZeroPorts(t *testing.T) 
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6416
-func TestAccEC2SecurityGroupRule_MultipleRuleSearching_allProtocolCrash(t *testing.T) {
+func TestAccVPCSecurityGroupRule_MultipleRuleSearching_allProtocolCrash(t *testing.T) {
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	securityGroupResourceName := "aws_security_group.test"
@@ -1037,7 +1037,7 @@ func TestAccEC2SecurityGroupRule_MultipleRuleSearching_allProtocolCrash(t *testi
 	})
 }
 
-func TestAccEC2SecurityGroupRule_multiDescription(t *testing.T) {
+func TestAccVPCSecurityGroupRule_multiDescription(t *testing.T) {
 	var group ec2.SecurityGroup
 	var nat ec2.SecurityGroup
 	rInt := sdkacctest.RandInt()
