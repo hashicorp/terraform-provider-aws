@@ -288,7 +288,7 @@ func testAccResourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_media_tailor_playback_configuration" "test"{
   ad_decision_server_url = "https://www.example.com/ads"
-  name=%[1]q
+  name = "%[1]s"
   video_content_source_url = "https://www.example.com/source"
 }
 `, rName)
@@ -298,7 +298,7 @@ func testAccResourceConfig_AdDecisionServerURL(rName, adDecisionServerURL string
 	return fmt.Sprintf(`
 resource "aws_media_tailor_playback_configuration" "test"{
   ad_decision_server_url = %[2]q
-  name=%[1]q
+  name = "%[1]s"
   video_content_source_url = "https://www.example.com/source"
 }
 `, rName, adDecisionServerURL)
@@ -310,7 +310,7 @@ resource "aws_media_tailor_playback_configuration" "test"{
   ad_decision_server_url = "https://www.example.com/ads"
   avail_suppression_mode = %[2]q
   avail_suppression_value = %[3]q
-  name=%[1]q
+  name = "%[1]s"
   video_content_source_url = "https://www.example.com/source"
 }
 `, rName, mode, value)
@@ -322,7 +322,7 @@ resource "aws_media_tailor_playback_configuration" "test"{
   ad_decision_server_url = "https://www.example.com/ads"
   dash_mpd_location = %[2]q
   dash_origin_manifest_type = %[3]q
-  name=%[1]q
+  name = "%[1]s"
   video_content_source_url = "https://www.example.com/source"
 }
 `, rName, mpdLocation, originManifestType)
@@ -336,7 +336,7 @@ resource "aws_media_tailor_playback_configuration" "test"{
     ad_decision_server_url=%[2]q
 	max_duration_seconds=%[3]v
   }
-  name=%[1]q
+  name = "%[1]s"
   video_content_source_url = "https://www.example.com/source"
 }
 `, rName, adDecisionServerUrl, maxDurationSeconds)
@@ -347,7 +347,7 @@ func testAccResourceConfig_PersonalizationThresholdSeconds(rName string, seconds
 resource "aws_media_tailor_playback_configuration" "test"{
   ad_decision_server_url = "https://www.example.com/ads"
   personalization_threshold_seconds = %[2]v
-  name=%[1]q
+  name = "%[1]s"
   video_content_source_url = "https://www.example.com/source"
 }
 `, rName, seconds)
@@ -357,7 +357,7 @@ func testAccResourceConfig_VideoContentSourceURL(rName, videoContentSourceURL st
 	return fmt.Sprintf(`
 resource "aws_media_tailor_playback_configuration" "test"{
   ad_decision_server_url = "https://www.example.com/ads"
-  name=%[1]q
+  name = "%[1]s"
   video_content_source_url = %[2]q
 }
 `, rName, videoContentSourceURL)
@@ -388,7 +388,7 @@ resource "aws_media_tailor_playback_configuration" "test"{
 	  enabled = true
 	}
   }
-  name=%[1]q
+  name = "%[1]s"
   personalization_threshold_seconds = 1
   slate_ad_url = %[2]q
   video_content_source_url = %[2]q
@@ -421,7 +421,7 @@ resource "aws_media_tailor_playback_configuration" "test"{
 	  enabled = false
 	}
   }
-  name=%[1]q
+  name = "%[1]s"
   personalization_threshold_seconds = 2
   slate_ad_url = %[2]q
   video_content_source_url = %[2]q
