@@ -103,6 +103,7 @@ resource "awsmt_playback_configuration" "example" {
 ## Import
 
 Playback Configurations can be imported using their ARN as identifier. For example:
+
 ```
   $ terraform import aws_media_tailor_playback_configuration.example arn:aws:mediatailor:us-east-1:000000000000:playbackConfiguration/example
 ```

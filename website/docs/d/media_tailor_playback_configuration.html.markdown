@@ -35,8 +35,8 @@ data "aws_media_tailor_playback_configuration" "example" {
 * `playback_configuration_arn` - The Amazon Resource Name (ARN) for the playback configuration.
 * `playback_endpoint_prefix` - The URL that the player accesses to get a manifest from AWS Elemental MediaTailor.
 * `session_initialization_endpoint_prefix` - The URL that the player uses to initialize a session that uses client-side reporting.
-* `slate_ad_url` - The URL for a high-quality video asset to transcode and use to fill in time that's not used by ads. 
-* `transcode_profile_name` - The name that is used to associate this playback configuration with a custom transcode profile. 
+* `slate_ad_url` - The URL for a high-quality video asset to transcode and use to fill in time that's not used by ads.
+* `transcode_profile_name` - The name that is used to associate this playback configuration with a custom transcode profile.
 * `video_content_source_url` - The URL prefix for the parent manifest for the stream, minus the asset ID.
 
 ### `avail_suppression`
@@ -77,3 +77,4 @@ data "aws_media_tailor_playback_configuration" "example" {
 #### `ad_marker_passthrough`
 
 * `enabled` - Enables ad marker passthrough for your configuration.
+
