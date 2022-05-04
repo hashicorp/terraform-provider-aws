@@ -380,11 +380,12 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 						if r.ResourceName == nil {
 							continue
 						}
-						if *r.ResourceName != *a.ResourceName {
+						if aws.StringValue(r.ResourceName) != aws.StringValue(a.ResourceName) {
 							continue
 						}
 					}
-					if *r.Namespace == *a.Namespace && *r.OptionName == *a.OptionName {
+					if aws.StringValue(r.Namespace) == aws.StringValue(a.Namespace) &&
+						aws.StringValue(r.OptionName) == aws.StringValue(a.OptionName) {
 						log.Printf("[DEBUG] Updating Beanstalk setting (%s::%s) \"%s\" => \"%s\"", *a.Namespace, *a.OptionName, *r.Value, *a.Value)
 						update = true
 						break
@@ -528,7 +529,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 
 	env := resp.Environments[0]
 
-	if *env.Status == "Terminated" {
+	if aws.StringValue(env.Status) == elasticbeanstalk.EnvironmentStatusTerminated {
 		log.Printf("[DEBUG] Elastic Beanstalk environment %s was terminated", d.Id())
 
 		d.SetId("")
@@ -951,7 +952,7 @@ func extractOptionSettings(s *schema.Set) []*elasticbeanstalk.ConfigurationOptio
 				OptionName: aws.String(setting.(map[string]interface{})["name"].(string)),
 				Value:      aws.String(setting.(map[string]interface{})["value"].(string)),
 			}
-			if *optionSetting.Namespace == "aws:autoscaling:scheduledaction" {
+			if aws.StringValue(optionSetting.Namespace) == "aws:autoscaling:scheduledaction" {
 				if v, ok := setting.(map[string]interface{})["resource"].(string); ok && v != "" {
 					optionSetting.ResourceName = aws.String(v)
 				}
