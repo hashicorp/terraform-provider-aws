@@ -16,7 +16,7 @@ import (
 
 func TestAccIoTTopicRule_basic(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -67,7 +67,7 @@ func TestAccIoTTopicRule_basic(t *testing.T) {
 
 func TestAccIoTTopicRule_disappears(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -133,7 +133,7 @@ func TestAccIoTTopicRule_tags(t *testing.T) {
 
 func TestAccIoTTopicRule_cloudWatchAlarm(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -183,7 +183,7 @@ func TestAccIoTTopicRule_cloudWatchAlarm(t *testing.T) {
 
 func TestAccIoTTopicRule_cloudWatchLogs(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -234,7 +234,7 @@ func TestAccIoTTopicRule_cloudWatchLogs(t *testing.T) {
 
 func TestAccIoTTopicRule_cloudWatchMetric(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -284,7 +284,7 @@ func TestAccIoTTopicRule_cloudWatchMetric(t *testing.T) {
 
 func TestAccIoTTopicRule_dynamoDB(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -371,7 +371,7 @@ func TestAccIoTTopicRule_dynamoDB(t *testing.T) {
 
 func TestAccIoTTopicRule_dynamoDBv2(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -414,7 +414,7 @@ func TestAccIoTTopicRule_dynamoDBv2(t *testing.T) {
 
 func TestAccIoTTopicRule_elasticSearch(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -463,7 +463,7 @@ func TestAccIoTTopicRule_elasticSearch(t *testing.T) {
 
 func TestAccIoTTopicRule_firehose(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -516,7 +516,7 @@ func TestAccIoTTopicRule_firehose(t *testing.T) {
 
 func TestAccIoTTopicRule_Firehose_separator(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -570,7 +570,7 @@ func TestAccIoTTopicRule_Firehose_separator(t *testing.T) {
 
 func TestAccIoTTopicRule_IoT_analytics(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -612,7 +612,7 @@ func TestAccIoTTopicRule_IoT_analytics(t *testing.T) {
 
 func TestAccIoTTopicRule_IoT_events(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -655,7 +655,7 @@ func TestAccIoTTopicRule_IoT_events(t *testing.T) {
 
 func TestAccIoTTopicRule_kafka(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -705,7 +705,7 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 
 func TestAccIoTTopicRule_kinesis(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -752,7 +752,7 @@ func TestAccIoTTopicRule_kinesis(t *testing.T) {
 
 func TestAccIoTTopicRule_lambda(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -796,7 +796,7 @@ func TestAccIoTTopicRule_lambda(t *testing.T) {
 
 func TestAccIoTTopicRule_republish(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -844,7 +844,7 @@ func TestAccIoTTopicRule_republish(t *testing.T) {
 
 func TestAccIoTTopicRule_republishWithQos(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -892,7 +892,7 @@ func TestAccIoTTopicRule_republishWithQos(t *testing.T) {
 
 func TestAccIoTTopicRule_s3(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -940,7 +940,7 @@ func TestAccIoTTopicRule_s3(t *testing.T) {
 
 func TestAccIoTTopicRule_sns(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -984,7 +984,7 @@ func TestAccIoTTopicRule_sns(t *testing.T) {
 
 func TestAccIoTTopicRule_sqs(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1032,7 +1032,7 @@ func TestAccIoTTopicRule_sqs(t *testing.T) {
 
 func TestAccIoTTopicRule_Step_functions(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1080,7 +1080,7 @@ func TestAccIoTTopicRule_Step_functions(t *testing.T) {
 
 func TestAccIoTTopicRule_Timestream(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1136,7 +1136,7 @@ func TestAccIoTTopicRule_Timestream(t *testing.T) {
 
 func TestAccIoTTopicRule_errorAction(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1203,7 +1203,7 @@ func TestAccIoTTopicRule_errorAction(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16115
 func TestAccIoTTopicRule_updateKinesisErrorAction(t *testing.T) {
 	rName := testAccTopicRuleName()
-	resourceName := "aws_iot_topic_rule.rule"
+	resourceName := "aws_iot_topic_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -1398,7 +1398,7 @@ resource "aws_iam_policy_attachment" "attach_policy" {
 
 func testAccTopicRuleConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
@@ -1442,7 +1442,7 @@ func testAccTopicRuleCloudWatchAlarmConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   description = "Example rule"
   enabled     = true
@@ -1463,7 +1463,7 @@ func testAccTopicRuleCloudWatchLogsConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   enabled     = false
   sql         = "SELECT * FROM 'topic/test'"
@@ -1486,7 +1486,7 @@ func testAccTopicRuleCloudWatchMetricConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
@@ -1507,7 +1507,7 @@ func testAccTopicRuleDynamoDBConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   description = "Description1"
   enabled     = true
@@ -1529,7 +1529,7 @@ func testAccTopicRuleDynamoDBRangeKeyConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   description = "Description2"
   enabled     = true
@@ -1555,7 +1555,7 @@ func testAccTopicRuleDynamoDBv2Config(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   enabled     = true
   sql         = "SELECT field as column_name FROM 'topic/test'"
@@ -1578,7 +1578,7 @@ func testAccTopicRuleElasticsearchConfig(rName string) string {
 		fmt.Sprintf(`
 data "aws_region" "current" {}
 
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
@@ -1599,7 +1599,7 @@ func testAccTopicRuleFirehoseConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
@@ -1627,7 +1627,7 @@ func testAccTopicRuleFirehoseSeparatorConfig(rName, separator string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   description = "Example rule"
   enabled     = true
@@ -1647,7 +1647,7 @@ func testAccTopicRuleIoTAnalyticsConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
@@ -1665,7 +1665,7 @@ func testAccTopicRuleIoTEventsConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
@@ -1686,7 +1686,7 @@ func testAccTopicRuleKafkaConfig(rName string) string {
 		fmt.Sprintf(`
 data "aws_region" "current" {}
 
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
@@ -1707,7 +1707,7 @@ func testAccTopicRuleKinesisConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
@@ -1727,7 +1727,7 @@ data "aws_region" "current" {}
 
 data "aws_partition" "current" {}
 
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
@@ -1744,7 +1744,7 @@ func testAccTopicRuleRepublishConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
@@ -1762,7 +1762,7 @@ func testAccTopicRuleRepublishWithQoSConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
@@ -1781,7 +1781,7 @@ func testAccTopicRuleS3Config(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
@@ -1802,7 +1802,7 @@ func testAccTopicRuleSNSConfig(rName string) string {
 		fmt.Sprintf(`
 data "aws_region" "current" {}
 
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
@@ -1820,7 +1820,7 @@ func testAccTopicRuleSQSConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
@@ -1839,7 +1839,7 @@ func testAccTopicRuleStepFunctionsConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
@@ -1858,7 +1858,7 @@ func testAccTopicRuleTimestreamConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
@@ -1887,7 +1887,7 @@ func testAccTopicRuleErrorActionConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTopicRuleRoleConfig(rName),
 		fmt.Sprintf(`
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
