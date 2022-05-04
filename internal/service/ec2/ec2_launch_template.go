@@ -1069,6 +1069,7 @@ func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 		"image_id",
 		"instance_initiated_shutdown_behavior",
 		"instance_market_options",
+		"instance_requirements",
 		"instance_type",
 		"kernel_id",
 		"key_name",
@@ -1159,6 +1160,12 @@ func expandRequestLaunchTemplateData(d *schema.ResourceData) *ec2.RequestLaunchT
 	apiObject := &ec2.RequestLaunchTemplateData{
 		// Always set at least one field.
 		UserData: aws.String(d.Get("user_data").(string)),
+	}
+
+	if v, ok := d.GetOk("instance_requirements"); ok {
+		if l, ok := v.([]interface{}); ok {
+			apiObject.InstanceRequirements = expandLaunchTemplateInstanceRequirements(l)
+		}
 	}
 
 	var instanceType string
@@ -1542,6 +1549,323 @@ func expandLaunchTemplateInstanceMarketOptionsRequest(tfMap map[string]interface
 	}
 
 	return apiObject
+}
+
+func expandLaunchTemplateInstanceRequirements(v interface{}) *ec2.InstanceRequirementsRequest {
+	instanceRequirements := &ec2.InstanceRequirementsRequest{}
+
+	l, ok := v.([]interface{})
+	if !ok || len(l) == 0 {
+		return instanceRequirements
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return instanceRequirements
+	}
+
+	if v, ok := m["accelerator_count"]; ok {
+		instanceRequirements.AcceleratorCount = expandInstanceRequirementsAcceleratorCount(v)
+	}
+
+	if v, ok := m["accelerator_manufacturers"]; ok {
+		if l, ok := v.([]interface{}); ok && len(l) > 0 {
+			instanceRequirements.AcceleratorManufacturers = flex.ExpandStringList(l)
+		}
+	}
+
+	if v, ok := m["accelerator_names"]; ok {
+		if l, ok := v.([]interface{}); ok && len(l) > 0 {
+			instanceRequirements.AcceleratorNames = flex.ExpandStringList(l)
+		}
+	}
+
+	if v, ok := m["accelerator_total_memory_mib"]; ok {
+		instanceRequirements.AcceleratorTotalMemoryMiB = expandInstanceRequirementsAcceleratorTotalMemoryMiB(v)
+	}
+
+	if v, ok := m["accelerator_types"]; ok {
+		if l, ok := v.([]interface{}); ok && len(l) > 0 {
+			instanceRequirements.AcceleratorTypes = flex.ExpandStringList(l)
+		}
+	}
+
+	if v, ok := m["bare_metal"]; ok {
+		if s, ok := v.(string); ok && s != "" {
+			instanceRequirements.BareMetal = aws.String(s)
+		}
+	}
+
+	if v, ok := m["baseline_ebs_bandwidth_mbps"]; ok {
+		instanceRequirements.BaselineEbsBandwidthMbps = expandInstanceRequirementsBaselineEbsBandwidthMbps(v)
+	}
+
+	if v, ok := m["burstable_performance"]; ok {
+		if s, ok := v.(string); ok && s != "" {
+			instanceRequirements.BurstablePerformance = aws.String(s)
+		}
+	}
+
+	if v, ok := m["cpu_manufacturers"]; ok {
+		if l, ok := v.([]interface{}); ok && len(l) > 0 {
+			instanceRequirements.CpuManufacturers = flex.ExpandStringList(l)
+		}
+	}
+
+	if v, ok := m["excluded_instance_types"]; ok {
+		if l, ok := v.([]interface{}); ok && len(l) > 0 {
+			instanceRequirements.ExcludedInstanceTypes = flex.ExpandStringList(l)
+		}
+	}
+
+	if v, ok := m["instance_generations"]; ok {
+		if l, ok := v.([]interface{}); ok && len(l) > 0 {
+			instanceRequirements.InstanceGenerations = flex.ExpandStringList(l)
+		}
+	}
+
+	if v, ok := m["local_storage"]; ok {
+		if s, ok := v.(string); ok && s != "" {
+			instanceRequirements.LocalStorage = aws.String(s)
+		}
+	}
+
+	if v, ok := m["local_storage_types"]; ok {
+		if l, ok := v.([]interface{}); ok && len(l) > 0 {
+			instanceRequirements.LocalStorageTypes = flex.ExpandStringList(l)
+		}
+	}
+
+	if v, ok := m["memory_gib_per_vcpu"]; ok {
+		instanceRequirements.MemoryGiBPerVCpu = expandInstanceRequirementsMemoryGiBPerVCpu(v)
+	}
+
+	if v, ok := m["memory_mib"]; ok {
+		instanceRequirements.MemoryMiB = expandInstanceRequirementsMemoryMiB(v)
+	}
+
+	if v, ok := m["network_interface_count"]; ok {
+		instanceRequirements.NetworkInterfaceCount = expandInstanceRequirementsNetworkInterfaceCount(v)
+	}
+
+	if v, ok := m["on_demand_max_price_percentage_over_lowest_price"]; ok {
+		if i, ok := v.(int); ok && i != 0 {
+			instanceRequirements.OnDemandMaxPricePercentageOverLowestPrice = aws.Int64(int64(i))
+		}
+	}
+
+	if v, ok := m["require_hibernate_support"]; ok {
+		if b, ok := v.(bool); ok {
+			instanceRequirements.RequireHibernateSupport = aws.Bool(b)
+		}
+	}
+
+	if v, ok := m["spot_max_price_percentage_over_lowest_price"]; ok {
+		if i, ok := v.(int); ok && i != 0 {
+			instanceRequirements.SpotMaxPricePercentageOverLowestPrice = aws.Int64(int64(i))
+		}
+	}
+
+	if v, ok := m["total_local_storage_gb"]; ok {
+		instanceRequirements.TotalLocalStorageGB = expandInstanceRequirementsTotalLocalStorageGB(v)
+	}
+
+	if v, ok := m["vcpu_count"]; ok {
+		instanceRequirements.VCpuCount = expandInstanceRequirementsVCpuCount(v)
+	}
+
+	return instanceRequirements
+}
+
+func expandInstanceRequirementsAcceleratorCount(v interface{}) *ec2.AcceleratorCountRequest {
+	l, ok := v.([]interface{})
+	if !ok || len(l) == 0 {
+		return nil
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	min, max := int64(m["min"].(int)), int64(m["max"].(int))
+	r := &ec2.AcceleratorCountRequest{}
+
+	if min == 0 && max == 0 {
+		r.Max = aws.Int64(max)
+		return r
+	}
+
+	if min > 0 {
+		r.Min = aws.Int64(min)
+	}
+	if max > 0 {
+		r.Max = aws.Int64(max)
+	}
+
+	return r
+}
+
+func expandInstanceRequirementsAcceleratorTotalMemoryMiB(v interface{}) *ec2.AcceleratorTotalMemoryMiBRequest {
+	l, ok := v.([]interface{})
+	if !ok || len(l) == 0 {
+		return nil
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	min, max := int64(m["min"].(int)), int64(m["max"].(int))
+	r := &ec2.AcceleratorTotalMemoryMiBRequest{}
+
+	if min > 0 {
+		r.Min = aws.Int64(min)
+	}
+	if max > 0 {
+		r.Max = aws.Int64(max)
+	}
+
+	return r
+}
+
+func expandInstanceRequirementsBaselineEbsBandwidthMbps(v interface{}) *ec2.BaselineEbsBandwidthMbpsRequest {
+	l, ok := v.([]interface{})
+	if !ok || len(l) == 0 {
+		return nil
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	min, max := int64(m["min"].(int)), int64(m["max"].(int))
+	r := &ec2.BaselineEbsBandwidthMbpsRequest{}
+
+	if min > 0 {
+		r.Min = aws.Int64(min)
+	}
+	if max > 0 {
+		r.Max = aws.Int64(max)
+	}
+
+	return r
+}
+
+func expandInstanceRequirementsMemoryGiBPerVCpu(v interface{}) *ec2.MemoryGiBPerVCpuRequest {
+	l, ok := v.([]interface{})
+	if !ok || len(l) == 0 {
+		return nil
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	min, max := m["min"].(float64), m["max"].(float64)
+	r := &ec2.MemoryGiBPerVCpuRequest{}
+
+	if min > 0.0 {
+		r.Min = aws.Float64(min)
+	}
+	if max > 0.0 {
+		r.Max = aws.Float64(max)
+	}
+
+	return r
+}
+
+func expandInstanceRequirementsMemoryMiB(v interface{}) *ec2.MemoryMiBRequest {
+	l, ok := v.([]interface{})
+	if !ok || len(l) == 0 {
+		return nil
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	min, max := int64(m["min"].(int)), int64(m["max"].(int))
+	r := &ec2.MemoryMiBRequest{Min: aws.Int64(min)}
+
+	if max > 0 {
+		r.Max = aws.Int64(max)
+	}
+
+	return r
+}
+
+func expandInstanceRequirementsNetworkInterfaceCount(v interface{}) *ec2.NetworkInterfaceCountRequest {
+	l, ok := v.([]interface{})
+	if !ok || len(l) == 0 {
+		return nil
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	min, max := int64(m["min"].(int)), int64(m["max"].(int))
+	r := &ec2.NetworkInterfaceCountRequest{}
+
+	if min > 0 {
+		r.Min = aws.Int64(min)
+	}
+	if max > 0 {
+		r.Max = aws.Int64(max)
+	}
+
+	return r
+}
+
+func expandInstanceRequirementsTotalLocalStorageGB(v interface{}) *ec2.TotalLocalStorageGBRequest {
+	l, ok := v.([]interface{})
+	if !ok || len(l) == 0 {
+		return nil
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	min, max := m["min"].(float64), m["max"].(float64)
+	r := &ec2.TotalLocalStorageGBRequest{}
+
+	if min > 0 {
+		r.Min = aws.Float64(min)
+	}
+	if max > 0 {
+		r.Max = aws.Float64(max)
+	}
+
+	return r
+}
+
+func expandInstanceRequirementsVCpuCount(v interface{}) *ec2.VCpuCountRangeRequest {
+	l, ok := v.([]interface{})
+	if !ok || len(l) == 0 {
+		return nil
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	min, max := int64(m["min"].(int)), int64(m["max"].(int))
+	r := &ec2.VCpuCountRangeRequest{Min: aws.Int64(min)}
+
+	if max > 0 {
+		r.Max = aws.Int64(max)
+	}
+
+	return r
 }
 
 func expandLaunchTemplateSpotMarketOptionsRequest(tfMap map[string]interface{}) *ec2.LaunchTemplateSpotMarketOptionsRequest {
