@@ -296,7 +296,7 @@ func resourceSecurityGroupRetrieve(d *schema.ResourceData, meta interface{}) (*r
 	}
 
 	if len(resp.DBSecurityGroups) != 1 ||
-		*resp.DBSecurityGroups[0].DBSecurityGroupName != d.Id() {
+		aws.StringValue(resp.DBSecurityGroups[0].DBSecurityGroupName) != d.Id() {
 		return nil, fmt.Errorf("Unable to find DB Security Group: %#v", resp.DBSecurityGroups)
 	}
 
