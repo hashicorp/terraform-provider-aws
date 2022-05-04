@@ -2,12 +2,13 @@ package mediatailor_test
 
 import (
 	"fmt"
+	"regexp"
+	"testing"
+
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"regexp"
-	"testing"
 )
 
 func TestAccPlaybackConfigurationDataSource_basic(t *testing.T) {
