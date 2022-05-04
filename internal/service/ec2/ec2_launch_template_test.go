@@ -3775,7 +3775,7 @@ func testAccLaunchTemplateConfig_instanceRequirements(rName string, instanceRequ
 	return fmt.Sprintf(`
 data "aws_ami" "test" {
   most_recent = true
-  owners = ["amazon"]
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
