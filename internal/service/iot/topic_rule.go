@@ -455,6 +455,42 @@ func ResourceTopicRule() *schema.Resource {
 							},
 							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
 						},
+						"http": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"confirmation_url": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.IsURLWithHTTPS,
+									},
+									"http_header": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"key": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"value": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+									"url": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.IsURLWithHTTPS,
+									},
+								},
+							},
+							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+						},
 						"iot_analytics": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -872,6 +908,40 @@ func ResourceTopicRule() *schema.Resource {
 					},
 				},
 			},
+			"http": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"confirmation_url": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.IsURLWithHTTPS,
+						},
+						"http_header": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"key": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"url": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.IsURLWithHTTPS,
+						},
+					},
+				},
+			},
 			"iot_analytics": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -1272,6 +1342,7 @@ var topicRuleErrorActionExactlyOneOf = []string{
 	"error_action.0.dynamodbv2",
 	"error_action.0.elasticsearch",
 	"error_action.0.firehose",
+	"error_action.0.http",
 	"error_action.0.iot_analytics",
 	"error_action.0.iot_events",
 	"error_action.0.kafka",
@@ -1375,6 +1446,10 @@ func resourceTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("firehose", flattenIotFirehoseActions(output.Rule.Actions)); err != nil {
 		return fmt.Errorf("setting firehose: %w", err)
+	}
+
+	if err := d.Set("http", flattenIotHttpActions(output.Rule.Actions)); err != nil {
+		return fmt.Errorf("setting http: %w", err)
 	}
 
 	if err := d.Set("iot_analytics", flattenIotIotAnalyticsActions(output.Rule.Actions)); err != nil {
@@ -1703,6 +1778,42 @@ func expandIotFirehoseAction(tfList []interface{}) *iot.FirehoseAction {
 
 	if v, ok := tfMap["separator"].(string); ok && v != "" {
 		apiObject.Separator = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandIotHttpAction(tfList []interface{}) *iot.HttpAction {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &iot.HttpAction{}
+	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["url"].(string); ok && v != "" {
+		apiObject.Url = aws.String(v)
+	}
+
+	if v, ok := tfMap["confirmation_url"].(string); ok && v != "" {
+		apiObject.ConfirmationUrl = aws.String(v)
+	}
+
+	if v, ok := tfMap["http_header"].([]interface{}); ok {
+		headerObjs := []*iot.HttpActionHeader{}
+		for _, val := range v {
+			if m, ok := val.(map[string]interface{}); ok {
+				headerObj := &iot.HttpActionHeader{}
+				if v, ok := m["key"].(string); ok && v != "" {
+					headerObj.Key = aws.String(v)
+				}
+				if v, ok := m["value"].(string); ok && v != "" {
+					headerObj.Value = aws.String(v)
+				}
+				headerObjs = append(headerObjs, headerObj)
+			}
+		}
+		apiObject.Headers = headerObjs
 	}
 
 	return apiObject
@@ -2179,6 +2290,17 @@ func expandIotTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 	}
 
 	// Legacy root attribute handling
+	for _, tfMapRaw := range d.Get("http").(*schema.Set).List() {
+		action := expandIotHttpAction([]interface{}{tfMapRaw})
+
+		if action == nil {
+			continue
+		}
+
+		actions = append(actions, &iot.Action{Http: action})
+	}
+
+	// Legacy root attribute handling
 	for _, tfMapRaw := range d.Get("iot_analytics").(*schema.Set).List() {
 		action := expandIotIotAnalyticsAction([]interface{}{tfMapRaw})
 
@@ -2379,6 +2501,16 @@ func expandIotTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 					}
 
 					iotErrorAction = &iot.Action{Firehose: action}
+				}
+			case "http":
+				for _, tfMapRaw := range v.([]interface{}) {
+					action := expandIotHttpAction([]interface{}{tfMapRaw})
+
+					if action == nil {
+						continue
+					}
+
+					iotErrorAction = &iot.Action{Http: action}
 				}
 			case "iot_analytics":
 				for _, tfMapRaw := range v.([]interface{}) {
@@ -2816,6 +2948,54 @@ func flattenIotFirehoseAction(apiObject *iot.FirehoseAction) []interface{} {
 
 	if v := apiObject.Separator; v != nil {
 		tfMap["separator"] = aws.StringValue(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+// Legacy root attribute handling
+func flattenIotHttpActions(actions []*iot.Action) []interface{} {
+	results := make([]interface{}, 0)
+
+	for _, action := range actions {
+		if action == nil {
+			continue
+		}
+
+		if v := action.Http; v != nil {
+			results = append(results, flattenIotHttpAction(v)...)
+		}
+	}
+
+	return results
+}
+
+func flattenIotHttpAction(apiObject *iot.HttpAction) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]interface{})
+
+	if v := apiObject.Url; v != nil {
+		tfMap["url"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.ConfirmationUrl; v != nil {
+		tfMap["confirmation_url"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Headers; v != nil {
+		headers := []map[string]string{}
+
+		for _, h := range v {
+			m := map[string]string{
+				"key":   aws.StringValue(h.Key),
+				"value": aws.StringValue(h.Value),
+			}
+			headers = append(headers, m)
+		}
+		tfMap["http_header"] = headers
 	}
 
 	return []interface{}{tfMap}
@@ -3435,6 +3615,10 @@ func flattenIotErrorAction(errorAction *iot.Action) []map[string]interface{} {
 	}
 	if errorAction.Firehose != nil {
 		results = append(results, map[string]interface{}{"firehose": flattenIotFirehoseActions(input)})
+		return results
+	}
+	if errorAction.Http != nil {
+		results = append(results, map[string]interface{}{"http": flattenIotHttpActions(input)})
 		return results
 	}
 	if errorAction.IotAnalytics != nil {
