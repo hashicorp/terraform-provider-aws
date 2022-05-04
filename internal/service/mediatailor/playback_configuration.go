@@ -390,7 +390,7 @@ func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceDa
 		}})
 	}
 
-	if aws.BoolValue(res.ManifestProcessingRules.AdMarkerPassthrough.Enabled) == true {
+	if aws.BoolValue(res.ManifestProcessingRules.AdMarkerPassthrough.Enabled) {
 		d.Set("manifest_processing_rules", []interface{}{map[string]interface{}{
 			"ad_marker_passthrough": []interface{}{map[string]interface{}{
 				"enabled": res.ManifestProcessingRules.AdMarkerPassthrough.Enabled,
