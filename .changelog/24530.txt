@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ssm_document: Always include AttachmentsSources when updating SSM documents (fixes #21725)
+```
