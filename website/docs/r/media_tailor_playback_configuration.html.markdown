@@ -1,7 +1,7 @@
 ---
 subcategory: "Elemental MediaTailor"
 layout: "aws"
-page_title: "AWS: media_tailor_playback_configuration"
+page_title: "AWS: aws_media_tailor_playback_configuration"
 description: |-
     Manages a MediaTailor Playback Configuration
 ---
@@ -13,7 +13,7 @@ Provides an Elemental MediaTailor Playback Configuration.
 ## Example Usage
 
 ```terraform
-resource "awsmt_playback_configuration" "example" {
+resource "aws_media_tailor_playback_configuration" "example" {
   ad_decision_server_url  = "https://exampleurl.com/ad-decision-server"
   avail_suppression_mode  = "BEHIND_LIVE_EDGE"
   avail_suppression_value = "00:10:00"
