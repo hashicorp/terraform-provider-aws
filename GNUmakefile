@@ -101,6 +101,10 @@ docscheck:
 
 lint: golangci-lint providerlint importlint
 
+gh-workflows-lint:
+	@echo "==> Checking github workflows with actionlint..."
+	@actionlint
+
 golangci-lint:
 	@echo "==> Checking source code with golangci-lint..."
 	@golangci-lint run ./$(PKG_NAME)/...
@@ -145,6 +149,7 @@ tools:
 	cd tools && go install github.com/terraform-linters/tflint
 	cd tools && go install github.com/pavius/impi/cmd/impi
 	cd tools && go install github.com/hashicorp/go-changelog/cmd/changelog-build
+	cd tools && go install github.com/rhysd/actionlint/cmd/actionlint
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -186,4 +191,4 @@ semgrep:
 	@echo "==> Running Semgrep static analysis..."
 	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep --config .semgrep.yml
 
-.PHONY: providerlint build gen generate-changelog golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep
+.PHONY: providerlint build gen generate-changelog gh-workflows-lint golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep
