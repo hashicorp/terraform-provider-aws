@@ -1,7 +1,7 @@
 ---
 subcategory: "Elemental MediaTailor"
 layout: "aws"
-page_title: "AWS: aws_media_tailor_playback_configuration"
+page_title: "AWS: media_tailor_playback_configuration"
 description: |-
     Manages a MediaTailor Playback Configuration
 ---
