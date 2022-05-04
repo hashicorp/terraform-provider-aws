@@ -223,3 +223,33 @@ func FindUserGroupByID(conn *elasticache.ElastiCache, groupID string) (*elastica
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 }
+
+func FindParameterGroupByName(conn *elasticache.ElastiCache, name string) (*elasticache.CacheParameterGroup, error) {
+	input := elasticache.DescribeCacheParameterGroupsInput{
+		CacheParameterGroupName: aws.String(name),
+	}
+	out, err := conn.DescribeCacheParameterGroups(&input)
+
+	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	switch len(out.CacheParameterGroups) {
+	case 0:
+		return nil, &resource.NotFoundError{
+			Message: "empty result",
+		}
+	case 1:
+		return out.CacheParameterGroups[0], nil
+	default:
+		return nil, &resource.NotFoundError{
+			Message: "too many results",
+		}
+	}
+}
