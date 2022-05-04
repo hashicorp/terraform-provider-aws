@@ -14,36 +14,36 @@ Provides an Elemental MediaTailor Playback Configuration.
 
 ```terraform
 resource "awsmt_playback_configuration" "example" {
-  ad_decision_server_url = "https://exampleurl.com/ad-decision-server"
-  avail_suppression_mode = "BEHIND_LIVE_EDGE"
+  ad_decision_server_url  = "https://exampleurl.com/ad-decision-server"
+  avail_suppression_mode  = "BEHIND_LIVE_EDGE"
   avail_suppression_value = "00:10:00"
   bumper {
-    end_url = "https://exampleurl.com/bumper/end"
+    end_url   = "https://exampleurl.com/bumper/end"
     start_url = "https://exampleurl.com/bumper/start"
   }
   cdn_configuration {
-    ad_segment_url_prefix = "example"
+    ad_segment_url_prefix      = "example"
     content_segment_url_prefix = "example"
   }
-  dash_mpd_location = "EMT_DEFAULT"
+  dash_mpd_location         = "EMT_DEFAULT"
   dash_origin_manifest_type = "SINGLE_PERIOD"
   hls_configuration {
     manifest_endpoint_prefix = "example"
   }
   live_pre_roll_configuration {
     ad_decision_server_url = "https://exampleurl.com/ad-decision-server"
-    max_duration_seconds = 60
+    max_duration_seconds   = 60
   }
   manifest_processing_rules {
-    ad_marker_passthrough{
+    ad_marker_passthrough {
       enabled = "false"
     }
   }
-  name = "example-playback-configuration"
+  name                              = "example-playback-configuration"
   personalization_threshold_seconds = 60
-  slate_ad_url = "https://exampleurl.com/"
-  transcode_profile_name = "example"
-  video_content_source_url = "https://exampleurl.com/"
+  slate_ad_url                      = "https://exampleurl.com/"
+  transcode_profile_name            = "example"
+  video_content_source_url          = "https://exampleurl.com/"
 }
 ```
 
