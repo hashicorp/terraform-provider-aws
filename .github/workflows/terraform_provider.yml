@@ -223,58 +223,59 @@ jobs:
       run: |
         touch /tmp/dirs_changed_all
         for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-          if [[ "${file}" == internal/* ]]; then
-            echo $( dirname "${file}" | xargs ) >> /tmp/dirs_changed_all
+          if [ "${file}" = "" ]; then
+            continue
           fi
+          if [[ "${file}" != internal/* ]] || [[ "${file}" =~ /test-fixtures/|/testdata|^internal/sweep/.*|^internal/generate/.* ]]; then
+            echo "Skipping changed file: ${file}"
+            continue
+          fi
+          echo $( dirname "${file}" | xargs ) >> /tmp/dirs_changed_all
         done
         cat /tmp/dirs_changed_all | sort | uniq > /tmp/pkgs_changed
         echo "All packages changed:"
         cat /tmp/pkgs_changed
         while read pkg; do
-          echo -n "Checking ${pkg}: "
           if [ "${pkg}" = "" ]; then
             continue
           fi
-          if [[ "${pkg}" == */test-fixtures/* ]]; then
+          echo -n "Finding dependents for ${pkg}? "
+          if [[ "${pkg}" =~ /test-fixtures/|/testdata|^internal/sweep|^internal/generate ]]; then
+            echo "No"
             continue
           fi
-          if [[ "${pkg}" == */testdata/* ]]; then
-            continue
-          fi
-          if [ "${pkg}" = internal/sweep/* ]; then
-            continue
-          fi
-          if [[ "${pkg}" == internal/generate/* ]]; then
-            continue
-          fi
-          echo "Included"
+          c=0
           while read file; do
             if [ "${file}" = "" ]; then
               continue
             fi
+            if [[ "${file}" != *.go ]]; then
+              continue
+            fi
+            if [[ "${file}" =~ /test-fixtures/|/testdata|^internal/sweep|^internal/generate ]]; then
+              continue
+            fi
+            c=$((c+1))
             echo $( dirname "${file}" | xargs ) >> /tmp/dep_dirs_all
-          done <<< $( grep -l "github.com/hashicorp/terraform-provider-aws/${pkg}" internal/**/*.go )
+          done <<< $( grep -rl "\"github.com/hashicorp/terraform-provider-aws/${pkg}\"" internal/* )
+          echo "Yes, ${c} found"
         done </tmp/pkgs_changed
+        echo "Just dependents:"
+        cat /tmp/dep_dirs_all | sort | uniq
         cat /tmp/pkgs_changed >> /tmp/dep_dirs_all
         cat /tmp/dep_dirs_all | sort | uniq > /tmp/dep_pkgs
-        echo "All dependent packages:"
+        echo "All packages to test:"
         cat /tmp/dep_pkgs
       id: changed-packages
     - name: Run tests for changed packages
       run: |
-        while read pkg; do
-          if [ "${pkg}" = "internal/sweep" ]; then
-            continue
-          fi
-          if [[ "${pkg}" == */test-fixtures ]]; then
-            continue
-          fi
-          if [[ "${pkg}" == internal/generate/* ]]; then
-            continue
-          fi
-          go test -run ^Test[^A][^c][^c] "github.com/hashicorp/terraform-provider-aws/${pkg}"
-        done </tmp/dep_pkgs
-
+        if [ $( cat /tmp/dep_pkgs | wc -l | xargs ) -gt 150 ]; then
+          go test ./...
+        else
+          while read pkg; do
+            go test -run ^Test[^A][^c][^c] "github.com/hashicorp/terraform-provider-aws/${pkg}"
+          done </tmp/dep_pkgs
+        fi
   golangci-lint:
     needs: [go_build]
     runs-on: ubuntu-latest
