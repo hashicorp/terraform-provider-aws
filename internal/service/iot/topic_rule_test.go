@@ -39,6 +39,7 @@ func TestAccIoTTopicRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -159,6 +160,7 @@ func TestAccIoTTopicRule_cloudWatchAlarm(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -210,6 +212,7 @@ func TestAccIoTTopicRule_cloudWatchLogs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -260,6 +263,7 @@ func TestAccIoTTopicRule_cloudWatchMetric(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -311,6 +315,7 @@ func TestAccIoTTopicRule_dynamoDB(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -352,6 +357,7 @@ func TestAccIoTTopicRule_dynamoDB(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -395,6 +401,7 @@ func TestAccIoTTopicRule_dynamoDBv2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -439,6 +446,7 @@ func TestAccIoTTopicRule_elasticSearch(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -492,6 +500,7 @@ func TestAccIoTTopicRule_firehose(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firehose.*", map[string]string{
 						"delivery_stream_name": "mystream3",
 					}),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -540,6 +549,7 @@ func TestAccIoTTopicRule_Firehose_separator(t *testing.T) {
 						"delivery_stream_name": "mystream",
 						"separator":            "\n",
 					}),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -561,7 +571,198 @@ func TestAccIoTTopicRule_Firehose_separator(t *testing.T) {
 			{
 				Config: testAccTopicRuleFirehoseSeparatorConfig(rName, ","),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicRuleExists("aws_iot_topic_rule.rule"),
+					testAccCheckTopicRuleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firehose.*", map[string]string{
+						"delivery_stream_name": "mystream",
+						"separator":            ",",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIoTTopicRule_http(t *testing.T) {
+	rName := testAccTopicRuleName()
+	resourceName := "aws_iot_topic_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckTopicRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTopicRuleHTTPConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "http.*", map[string]string{
+						"confirmation_url": "",
+						"http_header.#":    "0",
+						"url":              "https://example.com/ingress",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTopicRuleHTTPConfirmationURLConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "http.*", map[string]string{
+						"confirmation_url": "https://example.com/",
+						"http_header.#":    "0",
+						"url":              "https://example.com/ingress",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
+				),
+			},
+			{
+				Config: testAccTopicRuleHTTPHeadersConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "http.*", map[string]string{
+						"confirmation_url":    "",
+						"http_header.#":       "2",
+						"http_header.0.key":   "X-Header-1",
+						"http_header.0.value": "v1",
+						"http_header.1.key":   "X-Header-2",
+						"http_header.1.value": "v2",
+						"url":                 "https://example.com/ingress",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
+				),
+			},
+			{
+				Config: testAccTopicRuleHTTPErrorActionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.0.cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.0.cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.0.cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.0.dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.0.dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.0.elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.0.firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.0.http.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.0.http.0.url", "https://example.com/error-ingress"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.0.iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.0.iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.0.kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.0.kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.0.lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.0.republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.0.s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.0.sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.0.sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.0.step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.0.timestream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "http.*", map[string]string{
+						"confirmation_url": "",
+						"http_header.#":    "0",
+						"url":              "https://example.com/ingress",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
 				),
 			},
 		},
@@ -590,6 +791,7 @@ func TestAccIoTTopicRule_IoT_analytics(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "iot_analytics.*", map[string]string{
 						"channel_name": "fakedata",
@@ -632,6 +834,7 @@ func TestAccIoTTopicRule_IoT_events(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "iot_events.*", map[string]string{
@@ -677,6 +880,7 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "kafka.*", map[string]string{
 						"bootstrap_servers":     "b-1.localhost:9094",
@@ -725,6 +929,7 @@ func TestAccIoTTopicRule_kinesis(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -772,6 +977,7 @@ func TestAccIoTTopicRule_lambda(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -816,6 +1022,7 @@ func TestAccIoTTopicRule_republish(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -864,6 +1071,7 @@ func TestAccIoTTopicRule_republishWithQos(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -912,6 +1120,7 @@ func TestAccIoTTopicRule_s3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -960,6 +1169,7 @@ func TestAccIoTTopicRule_sns(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -1004,6 +1214,7 @@ func TestAccIoTTopicRule_sqs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -1052,6 +1263,7 @@ func TestAccIoTTopicRule_Step_functions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -1100,6 +1312,7 @@ func TestAccIoTTopicRule_Timestream(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -1162,6 +1375,7 @@ func TestAccIoTTopicRule_errorAction(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "error_action.0.dynamodbv2.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.0.elasticsearch.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.0.firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.0.http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.0.iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.0.iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.0.kafka.#", "0"),
@@ -1175,6 +1389,7 @@ func TestAccIoTTopicRule_errorAction(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "error_action.0.step_functions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.0.timestream.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -1223,6 +1438,7 @@ func TestAccIoTTopicRule_updateKinesisErrorAction(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -1257,6 +1473,7 @@ func TestAccIoTTopicRule_updateKinesisErrorAction(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "error_action.0.dynamodbv2.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.0.elasticsearch.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.0.firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.0.http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.0.iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.0.iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.0.kafka.#", "0"),
@@ -1270,6 +1487,7 @@ func TestAccIoTTopicRule_updateKinesisErrorAction(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "error_action.0.step_functions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.0.timestream.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
@@ -1637,6 +1855,83 @@ resource "aws_iot_topic_rule" "test" {
   }
 }
 `, rName, separator))
+}
+
+func testAccTopicRuleHTTPConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iot_topic_rule" "test" {
+  name        = %[1]q
+  enabled     = true
+  sql         = "SELECT * FROM 'topic/test'"
+  sql_version = "2015-10-08"
+
+  http {
+    url = "https://example.com/ingress"
+  }
+}
+`, rName)
+}
+
+func testAccTopicRuleHTTPConfirmationURLConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iot_topic_rule" "test" {
+  name        = %[1]q
+  enabled     = true
+  sql         = "SELECT * FROM 'topic/test'"
+  sql_version = "2015-10-08"
+
+  http {
+    url              = "https://example.com/ingress"
+    confirmation_url = "https://example.com/"
+  }
+}
+`, rName)
+}
+
+func testAccTopicRuleHTTPHeadersConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iot_topic_rule" "test" {
+  name        = %[1]q
+  enabled     = true
+  sql         = "SELECT * FROM 'topic/test'"
+  sql_version = "2015-10-08"
+
+  http {
+    url = "https://example.com/ingress"
+
+    http_header {
+      key   = "X-Header-1"
+      value = "v1"
+    }
+
+    http_header {
+      key   = "X-Header-2"
+      value = "v2"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccTopicRuleHTTPErrorActionConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iot_topic_rule" "test" {
+  name        = %[1]q
+  enabled     = true
+  sql         = "SELECT * FROM 'topic/test'"
+  sql_version = "2015-10-08"
+
+  http {
+    url = "https://example.com/ingress"
+  }
+
+  error_action {
+    http {
+      url = "https://example.com/error-ingress"
+    }
+  }
+}
+`, rName)
 }
 
 func testAccTopicRuleIoTAnalyticsConfig(rName string) string {
