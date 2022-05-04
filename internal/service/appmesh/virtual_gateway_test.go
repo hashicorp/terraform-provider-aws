@@ -25,12 +25,12 @@ func testAccVirtualGateway_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
+		CheckDestroy: testAccCheckVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualGatewayConfig(meshName, vgName),
+				Config: testAccVirtualGatewayConfig(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
@@ -70,12 +70,12 @@ func testAccVirtualGateway_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
+		CheckDestroy: testAccCheckVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualGatewayConfig(meshName, vgName),
+				Config: testAccVirtualGatewayConfig(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappmesh.ResourceVirtualGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -94,12 +94,12 @@ func testAccVirtualGateway_BackendDefaults(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
+		CheckDestroy: testAccCheckVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualGatewayConfigBackendDefaults(meshName, vgName),
+				Config: testAccVirtualGatewayConfigBackendDefaults(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
@@ -132,9 +132,9 @@ func testAccVirtualGateway_BackendDefaults(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualGatewayConfigBackendDefaultsUpdated(meshName, vgName),
+				Config: testAccVirtualGatewayConfigBackendDefaultsUpdated(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
@@ -187,12 +187,12 @@ func testAccVirtualGateway_BackendDefaultsCertificate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
+		CheckDestroy: testAccCheckVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualGatewayConfigBackendDefaultsCertificate(meshName, vgName),
+				Config: testAccVirtualGatewayConfigBackendDefaultsCertificate(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
@@ -251,12 +251,12 @@ func testAccVirtualGateway_ListenerConnectionPool(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
+		CheckDestroy: testAccCheckVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualGatewayConfigListenerConnectionPool(meshName, vgName),
+				Config: testAccVirtualGatewayConfigListenerConnectionPool(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
@@ -281,9 +281,9 @@ func testAccVirtualGateway_ListenerConnectionPool(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualGatewayConfigListenerConnectionPoolUpdated(meshName, vgName),
+				Config: testAccVirtualGatewayConfigListenerConnectionPoolUpdated(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
@@ -328,12 +328,12 @@ func testAccVirtualGateway_ListenerHealthChecks(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
+		CheckDestroy: testAccCheckVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualGatewayConfigListenerHealthChecks(meshName, vgName),
+				Config: testAccVirtualGatewayConfigListenerHealthChecks(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
@@ -361,9 +361,9 @@ func testAccVirtualGateway_ListenerHealthChecks(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualGatewayConfigListenerHealthChecksUpdated(meshName, vgName),
+				Config: testAccVirtualGatewayConfigListenerHealthChecksUpdated(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
@@ -415,12 +415,12 @@ func testAccVirtualGateway_ListenerTLS(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
+		CheckDestroy: testAccCheckVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualGatewayConfigListenerTlsFile(meshName, vgName),
+				Config: testAccVirtualGatewayConfigListenerTlsFile(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
@@ -456,16 +456,16 @@ func testAccVirtualGateway_ListenerTLS(t *testing.T) {
 			},
 			// We need to create and activate the CA before issuing a certificate.
 			{
-				Config: testAccAppmeshVirtualGatewayConfigRootCA(domain),
+				Config: testAccVirtualGatewayConfigRootCA(domain),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckACMPCACertificateAuthorityExists(acmCAResourceName, &ca),
 					acctest.CheckACMPCACertificateAuthorityActivateRootCA(&ca),
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualGatewayConfigListenerTlsAcm(meshName, vgName, domain),
+				Config: testAccVirtualGatewayConfigListenerTlsAcm(meshName, vgName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
@@ -498,7 +498,7 @@ func testAccVirtualGateway_ListenerTLS(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppmeshVirtualGatewayConfigListenerTlsAcm(meshName, vgName, domain),
+				Config: testAccVirtualGatewayConfigListenerTlsAcm(meshName, vgName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					// CA must be DISABLED for deletion.
 					acctest.CheckACMPCACertificateAuthorityDisableCA(&ca),
@@ -519,12 +519,12 @@ func testAccVirtualGateway_ListenerValidation(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
+		CheckDestroy: testAccCheckVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualGatewayConfigListenerValidation(meshName, vgName),
+				Config: testAccVirtualGatewayConfigListenerValidation(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
@@ -568,9 +568,9 @@ func testAccVirtualGateway_ListenerValidation(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppmeshVirtualGatewayConfigListenerValidationUpdated(meshName, vgName),
+				Config: testAccVirtualGatewayConfigListenerValidationUpdated(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
@@ -617,12 +617,12 @@ func testAccVirtualGateway_Logging(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
+		CheckDestroy: testAccCheckVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualGatewayConfigLogging(meshName, vgName, "/dev/stdout"),
+				Config: testAccVirtualGatewayConfigLogging(meshName, vgName, "/dev/stdout"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
@@ -646,9 +646,9 @@ func testAccVirtualGateway_Logging(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualGatewayConfigLogging(meshName, vgName, "/tmp/access.log"),
+				Config: testAccVirtualGatewayConfigLogging(meshName, vgName, "/tmp/access.log"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "name", vgName),
@@ -689,12 +689,12 @@ func testAccVirtualGateway_Tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
+		CheckDestroy: testAccCheckVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualGatewayConfigTags1(meshName, vgName, "key1", "value1"),
+				Config: testAccVirtualGatewayConfigTags1(meshName, vgName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -706,18 +706,18 @@ func testAccVirtualGateway_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppmeshVirtualGatewayConfigTags2(meshName, vgName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVirtualGatewayConfigTags2(meshName, vgName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualGatewayConfigTags1(meshName, vgName, "key2", "value2"),
+				Config: testAccVirtualGatewayConfigTags1(meshName, vgName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					testAccCheckVirtualGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -726,7 +726,7 @@ func testAccVirtualGateway_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAppmeshVirtualGatewayDestroy(s *terraform.State) error {
+func testAccCheckVirtualGatewayDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -747,7 +747,7 @@ func testAccCheckAppmeshVirtualGatewayDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAppmeshVirtualGatewayExists(name string, v *appmesh.VirtualGatewayData) resource.TestCheckFunc {
+func testAccCheckVirtualGatewayExists(name string, v *appmesh.VirtualGatewayData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
 
@@ -771,7 +771,7 @@ func testAccCheckAppmeshVirtualGatewayExists(name string, v *appmesh.VirtualGate
 	}
 }
 
-func testAccAppmeshVirtualGatewayConfig(meshName, vgName string) string {
+func testAccVirtualGatewayConfig(meshName, vgName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -793,7 +793,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigBackendDefaults(meshName, vgName string) string {
+func testAccVirtualGatewayConfigBackendDefaults(meshName, vgName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -831,7 +831,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigBackendDefaultsUpdated(meshName, vgName string) string {
+func testAccVirtualGatewayConfigBackendDefaultsUpdated(meshName, vgName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -869,7 +869,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigBackendDefaultsCertificate(meshName, vgName string) string {
+func testAccVirtualGatewayConfigBackendDefaultsCertificate(meshName, vgName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -918,7 +918,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigListenerConnectionPool(meshName, vgName string) string {
+func testAccVirtualGatewayConfigListenerConnectionPool(meshName, vgName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -946,7 +946,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigListenerConnectionPoolUpdated(meshName, vgName string) string {
+func testAccVirtualGatewayConfigListenerConnectionPoolUpdated(meshName, vgName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -975,7 +975,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigListenerHealthChecks(meshName, vgName string) string {
+func testAccVirtualGatewayConfigListenerHealthChecks(meshName, vgName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -1006,7 +1006,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigListenerHealthChecksUpdated(meshName, vgName string) string {
+func testAccVirtualGatewayConfigListenerHealthChecksUpdated(meshName, vgName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -1037,7 +1037,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigRootCA(domain string) string {
+func testAccVirtualGatewayConfigRootCA(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
@@ -1055,9 +1055,9 @@ resource "aws_acmpca_certificate_authority" "test" {
 `, domain)
 }
 
-func testAccAppmeshVirtualGatewayConfigListenerTlsAcm(meshName, vgName, domain string) string {
+func testAccVirtualGatewayConfigListenerTlsAcm(meshName, vgName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccAppmeshVirtualGatewayConfigRootCA(domain),
+		testAccVirtualGatewayConfigRootCA(domain),
 		fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -1094,7 +1094,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName, domain))
 }
 
-func testAccAppmeshVirtualGatewayConfigListenerTlsFile(meshName, vgName string) string {
+func testAccVirtualGatewayConfigListenerTlsFile(meshName, vgName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -1127,7 +1127,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigListenerValidation(meshName, vgName string) string {
+func testAccVirtualGatewayConfigListenerValidation(meshName, vgName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -1173,7 +1173,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigListenerValidationUpdated(meshName, vgName string) string {
+func testAccVirtualGatewayConfigListenerValidationUpdated(meshName, vgName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -1213,7 +1213,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
-func testAccAppmeshVirtualGatewayConfigLogging(meshName, vgName, path string) string {
+func testAccVirtualGatewayConfigLogging(meshName, vgName, path string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -1243,7 +1243,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName, path)
 }
 
-func testAccAppmeshVirtualGatewayConfigTags1(meshName, vgName, tagKey1, tagValue1 string) string {
+func testAccVirtualGatewayConfigTags1(meshName, vgName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -1269,7 +1269,7 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName, tagKey1, tagValue1)
 }
 
-func testAccAppmeshVirtualGatewayConfigTags2(meshName, vgName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVirtualGatewayConfigTags2(meshName, vgName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
