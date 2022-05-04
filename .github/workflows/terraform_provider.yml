@@ -234,7 +234,13 @@ jobs:
           if [ "${pkg}" = "" ]; then
             continue
           fi
-          if [[ "${pkg}" == */test-fixtures ]]; then
+          if [[ "${pkg}" == */test-fixtures/* ]]; then
+            continue
+          fi
+          if [[ "${pkg}" == */testdata/* ]]; then
+            continue
+          fi
+          if [ "${pkg}" = internal/sweep/* ]; then
             continue
           fi
           if [[ "${pkg}" == internal/generate/* ]]; then
