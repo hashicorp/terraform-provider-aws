@@ -145,6 +145,17 @@ The `firehose` object takes the following arguments:
 * `role_arn` - (Required) The IAM role ARN that grants access to the Amazon Kinesis Firehose stream.
 * `separator` - (Optional) A character separator that is used to separate records written to the Firehose stream. Valid values are: '\n' (newline), '\t' (tab), '\r\n' (Windows newline), ',' (comma).
 
+The `iot_analytics` object takes the following arguments:
+
+* `channel_name` - (Required) Name of AWS IOT Analytics channel.
+* `role_arn` - (Required) The ARN of the IAM role that grants access.
+
+The `iot_events` object takes the following arguments:
+
+* `input_name` - (Required) The name of the AWS IoT Events input.
+* `role_arn` - (Required) The ARN of the IAM role that grants access.
+* `message_id` - (Optional) Use this to ensure that only one input (message) with a given messageId is processed by an AWS IoT Events detector.
+
 The `kinesis` object takes the following arguments:
 
 * `partition_key` - (Optional) The partition key.
@@ -196,17 +207,6 @@ The `timestream` object takes the following arguments:
 * `timestamp` - (Optional) Configuration block specifying an application-defined value to replace the default value assigned to the Timestream record's timestamp in the time column. Nested arguments below.
     * `unit` - (Required) The precision of the timestamp value that results from the expression described in value. Valid values: `SECONDS`, `MILLISECONDS`, `MICROSECONDS`, `NANOSECONDS`.
     * `value` - (Required) An expression that returns a long epoch time value.
-
-The `iot_analytics` object takes the following arguments:
-
-* `channel_name` - (Required) Name of AWS IOT Analytics channel.
-* `role_arn` - (Required) The ARN of the IAM role that grants access.
-
-The `iot_events` object takes the following arguments:
-
-* `input_name` - (Required) The name of the AWS IoT Events input.
-* `role_arn` - (Required) The ARN of the IAM role that grants access.
-* `message_id` - (Optional) Use this to ensure that only one input (message) with a given messageId is processed by an AWS IoT Events detector.
 
 ## Attributes Reference
 
