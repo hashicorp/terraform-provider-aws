@@ -271,7 +271,7 @@ func TestAccELBV2LoadBalancer_ALB_outpost(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "TestAccAWSALB_outpost"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "subnet_mapping.0.outpost_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "customer_owned_ipv4_pool"),
@@ -813,7 +813,7 @@ func TestAccELBV2LoadBalancer_updatedIPAddressType(t *testing.T) {
 	})
 }
 
-// TestAccAWSALB_noSecurityGroup regression tests the issue in #8264,
+// TestAccELBV2LoadBalancer_noSecurityGroup regression tests the issue in #8264,
 // where if an ALB is created without a security group, a default one
 // is assigned.
 func TestAccELBV2LoadBalancer_noSecurityGroup(t *testing.T) {
@@ -1218,7 +1218,7 @@ func TestAccELBV2LoadBalancer_updateDesyncMitigationMode(t *testing.T) {
 		CheckDestroy: testAccCheckLoadBalancerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBConfig_desyncMitigationMode(rName, "strictest"),
+				Config: testAccLBConfig_desyncMitigationMode(rName, "strictest"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(resourceName, &pre),
 					testAccCheckLoadBalancerAttribute(resourceName, "routing.http.desync_mitigation_mode", "strictest"),
@@ -1231,7 +1231,7 @@ func TestAccELBV2LoadBalancer_updateDesyncMitigationMode(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSLBConfig_desyncMitigationMode(rName, "monitor"),
+				Config: testAccLBConfig_desyncMitigationMode(rName, "monitor"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(resourceName, &mid),
 					testAccCheckLoadBalancerAttribute(resourceName, "routing.http.desync_mitigation_mode", "monitor"),
@@ -1244,7 +1244,7 @@ func TestAccELBV2LoadBalancer_updateDesyncMitigationMode(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSLBConfig_desyncMitigationMode(rName, "defensive"),
+				Config: testAccLBConfig_desyncMitigationMode(rName, "defensive"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(resourceName, &post),
 					testAccCheckLoadBalancerAttribute(resourceName, "routing.http.desync_mitigation_mode", "defensive"),
@@ -1676,7 +1676,9 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccLoadBalancerConfig_outpost(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
 data "aws_outposts_outpost" "test" {
@@ -3078,7 +3080,7 @@ resource "aws_security_group" "alb_test" {
 `, rName))
 }
 
-func testAccAWSLBConfig_desyncMitigationMode(rName string, mode string) string {
+func testAccLBConfig_desyncMitigationMode(rName string, mode string) string {
 	return fmt.Sprintf(`
 resource "aws_lb" "lb_test" {
   name            = %[1]q
