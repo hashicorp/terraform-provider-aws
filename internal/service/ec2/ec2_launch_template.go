@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -331,6 +332,268 @@ func ResourceLaunchTemplate() *schema.Resource {
 										Optional:     true,
 										Computed:     true,
 										ValidateFunc: validation.IsRFC3339Time,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"instance_requirements": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				MinItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"accelerator_count": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntAtLeast(0),
+									},
+									"min": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+								},
+							},
+						},
+						"accelerator_manufacturers": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(ec2.AcceleratorManufacturer_Values(), false),
+							},
+						},
+						"accelerator_names": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(ec2.AcceleratorName_Values(), false),
+							},
+						},
+						"accelerator_total_memory_mib": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									"min": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+								},
+							},
+						},
+						"accelerator_types": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(ec2.AcceleratorType_Values(), false),
+							},
+						},
+						"bare_metal": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(ec2.BareMetal_Values(), false),
+						},
+						"baseline_ebs_bandwidth_mbps": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									"min": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+								},
+							},
+						},
+						"burstable_performance": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(ec2.BurstablePerformance_Values(), false),
+						},
+						"cpu_manufacturers": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(ec2.CpuManufacturer_Values(), false),
+							},
+						},
+						"excluded_instance_types": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MinItems: 1,
+							MaxItems: 400,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\.\*]{1,30}$`), "see https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_InstanceRequirements.html"),
+							},
+						},
+						"instance_generations": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(ec2.InstanceGeneration_Values(), false),
+							},
+						},
+						"local_storage": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(ec2.LocalStorage_Values(), false),
+						},
+						"local_storage_types": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(ec2.LocalStorageType_Values(), false),
+							},
+						},
+						"memory_gib_per_vcpu": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max": {
+										Type:         schema.TypeFloat,
+										Optional:     true,
+										ValidateFunc: floatGreaterThan(0.0),
+									},
+									"min": {
+										Type:         schema.TypeFloat,
+										Optional:     true,
+										ValidateFunc: floatGreaterThan(0.0),
+									},
+								},
+							},
+						},
+						"memory_mib": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									"min": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+								},
+							},
+						},
+						"network_interface_count": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									"min": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+								},
+							},
+						},
+						"on_demand_max_price_percentage_over_lowest_price": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntAtLeast(1),
+						},
+						"require_hibernate_support": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"spot_max_price_percentage_over_lowest_price": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntAtLeast(1),
+						},
+						"total_local_storage_gb": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max": {
+										Type:         schema.TypeFloat,
+										Optional:     true,
+										ValidateFunc: floatGreaterThan(0.0),
+									},
+									"min": {
+										Type:         schema.TypeFloat,
+										Optional:     true,
+										ValidateFunc: floatGreaterThan(0.0),
+									},
+								},
+							},
+						},
+						"vcpu_count": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									"min": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntAtLeast(1),
 									},
 								},
 							},
@@ -2332,4 +2595,21 @@ func flattenLaunchTemplateTagSpecifications(apiObjects []*ec2.LaunchTemplateTagS
 	}
 
 	return tfList
+}
+
+func floatGreaterThan(threshold float64) schema.SchemaValidateFunc {
+	return func(i interface{}, k string) (s []string, es []error) {
+		v, ok := i.(float64)
+		if !ok {
+			es = append(es, fmt.Errorf("expected type of %s to be float", k))
+			return
+		}
+
+		if v <= threshold {
+			es = append(es, fmt.Errorf("expected %s to be greater than (%f), got %f", k, threshold, v))
+			return
+		}
+
+		return
+	}
 }
