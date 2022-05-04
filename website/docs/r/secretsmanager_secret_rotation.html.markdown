@@ -25,6 +25,33 @@ resource "aws_secretsmanager_secret_rotation" "example" {
 }
 ```
 
+### Rate Expression
+
+```terraform
+resource "aws_secretsmanager_secret_rotation" "example" {
+  secret_id           = aws_secretsmanager_secret.example.id
+  rotation_lambda_arn = aws_lambda_function.example.arn
+
+  rotation_rules {
+    schedule_expression = "rate(14 days)"
+  }
+}
+```
+
+### Cron Expression With 2 Hour Duration
+
+```terraform
+resource "aws_secretsmanager_secret_rotation" "example" {
+  secret_id           = aws_secretsmanager_secret.example.id
+  rotation_lambda_arn = aws_lambda_function.example.arn
+
+  rotation_rules {
+    schedule_expression = "cron(0 2 L * ? *)"
+    duration            = 2
+  }
+}
+```
+
 ### Rotation Configuration
 
 To enable automatic secret rotation, the Secrets Manager service requires usage of a Lambda function. The [Rotate Secrets section in the Secrets Manager User Guide](https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotating-secrets_strategies.html) provides additional information about deploying a prebuilt Lambda functions for supported credential rotation (e.g., RDS) or deploying a custom Lambda function.
@@ -43,7 +70,15 @@ The following arguments are supported:
 
 ### rotation_rules
 
-* `automatically_after_days` - (Required) Specifies the number of days between automatic scheduled rotations of the secret.
+* `automatically_after_days` - (Optional) Specifies the number of days between automatic scheduled rotations of the secret.
+* `schedule_expression` - (Optional) A rate or cron expression specifying when rotations of the secret should occur.  
+`rate` - a rate expression - for example, 'rate(20 days)'.  
+`cron` - a cron expression detailing when rotation should occur.  
+* `duration` - (Optional) Can only be used with a schedule expression.  Used to shorten the window in which AWS will execute the rotation.
+
+You must supply one of 'automatically_after_days' or 'schedule_expression' when defining secrets rotation.  
+
+Please refer to [Schedule expressions in Secrets Manager rotation](https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotate-secrets_schedule.html) for more details.
 
 ## Attributes Reference
 
@@ -52,6 +87,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Amazon Resource Name (ARN) of the secret.
 * `arn` - Amazon Resource Name (ARN) of the secret.
 * `rotation_enabled` - Specifies whether automatic rotation is enabled for this secret.
+* `automatically_after_days` - Due to the way the AWS API works this attribute will be calculated even when a schedule expression is used.
 
 ## Import
 

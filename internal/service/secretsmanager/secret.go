@@ -138,7 +138,16 @@ func ResourceSecret() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"automatically_after_days": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
+							Computed: true,
+						},
+						"duration": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"schedule_expression": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 					},
 				},
@@ -315,6 +324,7 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 	if aws.BoolValue(output.RotationEnabled) {
 		d.Set("rotation_lambda_arn", output.RotationLambdaARN)
 		if err := d.Set("rotation_rules", flattenSecretsManagerRotationRules(output.RotationRules)); err != nil {
+			log.Printf("[ERROR] OTHER FILE DUMMY")
 			return fmt.Errorf("error setting rotation_rules: %w", err)
 		}
 	} else {

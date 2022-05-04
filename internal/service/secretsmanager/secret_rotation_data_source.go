@@ -36,7 +36,16 @@ func DataSourceSecretRotation() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"automatically_after_days": {
 							Type:     schema.TypeInt,
-							Computed: true,
+							Optional: true,
+						},
+						"duration": {
+							Type:     schema.TypeString,
+							Default:  "0",
+							Optional: true,
+						},
+						"schedule_expression": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 					},
 				},
