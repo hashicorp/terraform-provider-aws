@@ -176,7 +176,7 @@ func resourceStackSetInstanceCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		dt := expandCloudFormationDeploymentTargets(v.([]interface{}))
+		dt := expandDeploymentTargets(v.([]interface{}))
 		// temporarily set the accountId to the DeploymentTarget IDs
 		// to later inform the Read CRUD operation if the true accountID needs to be determined
 		accountID = strings.Join(aws.StringValueSlice(dt.OrganizationalUnitIds), "/")
@@ -190,7 +190,7 @@ func resourceStackSetInstanceCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.OperationPreferences = expandCloudFormationOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
+		input.OperationPreferences = expandOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating CloudFormation StackSet Instance: %s", input)
@@ -294,7 +294,7 @@ func resourceStackSetInstanceRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("account_id", stackInstance.Account)
 	d.Set("organizational_unit_id", stackInstance.OrganizationalUnitId)
-	if err := d.Set("parameter_overrides", flattenAllCloudFormationParameters(stackInstance.ParameterOverrides)); err != nil {
+	if err := d.Set("parameter_overrides", flattenAllParameters(stackInstance.ParameterOverrides)); err != nil {
 		return fmt.Errorf("error setting parameters: %w", err)
 	}
 
@@ -331,7 +331,7 @@ func resourceStackSetInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 		if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			// reset input Accounts as the API accepts only 1 of Accounts and DeploymentTargets
 			input.Accounts = nil
-			input.DeploymentTargets = expandCloudFormationDeploymentTargets(v.([]interface{}))
+			input.DeploymentTargets = expandDeploymentTargets(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("parameter_overrides"); ok {
@@ -339,7 +339,7 @@ func resourceStackSetInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.OperationPreferences = expandCloudFormationOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
+			input.OperationPreferences = expandOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating CloudFormation StackSet Instance: %s", input)
@@ -406,7 +406,7 @@ func resourceStackSetInstanceDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func expandCloudFormationDeploymentTargets(l []interface{}) *cloudformation.DeploymentTargets {
+func expandDeploymentTargets(l []interface{}) *cloudformation.DeploymentTargets {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}

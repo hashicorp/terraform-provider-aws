@@ -39,7 +39,7 @@ func TestAccCloudWatchMetricStream_basic(t *testing.T) {
 			{
 				Config: testAccMetricStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchMetricStreamExists(resourceName),
+					testAccCheckMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
 					resource.TestCheckResourceAttr(resourceName, "state", tfcloudwatch.StateRunning),
@@ -70,7 +70,7 @@ func TestAccCloudWatchMetricStream_noName(t *testing.T) {
 			{
 				Config: testAccMetricStreamNoNameConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchMetricStreamExists(resourceName),
+					testAccCheckMetricStreamExists(resourceName),
 				),
 			},
 			{
@@ -95,8 +95,8 @@ func TestAccCloudWatchMetricStream_namePrefix(t *testing.T) {
 			{
 				Config: testAccMetricStreamNamePrefixConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchMetricStreamExists(resourceName),
-					testAccCheckCloudWatchMetricStreamGeneratedNamePrefix(resourceName, acctest.ResourcePrefix),
+					testAccCheckMetricStreamExists(resourceName),
+					testAccCheckMetricStreamGeneratedNamePrefix(resourceName, acctest.ResourcePrefix),
 				),
 			},
 			{
@@ -121,7 +121,7 @@ func TestAccCloudWatchMetricStream_includeFilters(t *testing.T) {
 			{
 				Config: testAccMetricStreamIncludeFiltersConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchMetricStreamExists(resourceName),
+					testAccCheckMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
 					resource.TestCheckResourceAttr(resourceName, "include_filter.#", "2"),
@@ -149,7 +149,7 @@ func TestAccCloudWatchMetricStream_excludeFilters(t *testing.T) {
 			{
 				Config: testAccMetricStreamExcludeFiltersConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchMetricStreamExists(resourceName),
+					testAccCheckMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
 					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", "2"),
@@ -177,7 +177,7 @@ func TestAccCloudWatchMetricStream_update(t *testing.T) {
 			{
 				Config: testAccMetricStreamUpdateARNConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchMetricStreamExists(resourceName),
+					testAccCheckMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
 				),
@@ -190,7 +190,7 @@ func TestAccCloudWatchMetricStream_update(t *testing.T) {
 			{
 				Config: testAccMetricStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchMetricStreamExists(resourceName),
+					testAccCheckMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
 				),
@@ -213,14 +213,14 @@ func TestAccCloudWatchMetricStream_updateName(t *testing.T) {
 			{
 				Config: testAccMetricStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchMetricStreamExists(resourceName),
+					testAccCheckMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
 				Config: testAccMetricStreamConfig(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchMetricStreamExists(resourceName),
+					testAccCheckMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					testAccCheckMetricStreamDestroyPrevious(rName),
 				),
@@ -242,7 +242,7 @@ func TestAccCloudWatchMetricStream_tags(t *testing.T) {
 			{
 				Config: testAccMetricStreamTagsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchMetricStreamExists(resourceName),
+					testAccCheckMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 				),
 			},
@@ -255,7 +255,7 @@ func TestAccCloudWatchMetricStream_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckCloudWatchMetricStreamGeneratedNamePrefix(resource, prefix string) resource.TestCheckFunc {
+func testAccCheckMetricStreamGeneratedNamePrefix(resource, prefix string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		r, ok := s.RootModule().Resources[resource]
 		if !ok {
@@ -272,7 +272,7 @@ func testAccCheckCloudWatchMetricStreamGeneratedNamePrefix(resource, prefix stri
 	}
 }
 
-func testAccCheckCloudWatchMetricStreamExists(n string) resource.TestCheckFunc {
+func testAccCheckMetricStreamExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

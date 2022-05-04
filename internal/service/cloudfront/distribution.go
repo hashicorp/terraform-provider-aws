@@ -16,6 +16,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceDistribution() *schema.Resource {
@@ -880,14 +881,14 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	resp, err := conn.GetDistribution(params)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
-			log.Printf("[WARN] No Distribution found: %s", d.Id())
-			d.SetId("")
-			return nil
-		}
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
+		names.LogNotFoundRemoveState(names.CloudFront, names.ErrActionReading, ResDistribution, d.Id())
+		d.SetId("")
+		return nil
+	}
 
-		return err
+	if err != nil {
+		return names.Error(names.CloudFront, names.ErrActionReading, ResDistribution, d.Id(), err)
 	}
 
 	// Update attributes from DistributionConfig

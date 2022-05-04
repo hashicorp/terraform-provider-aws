@@ -24,6 +24,18 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"bootstrap_brokers_public_sasl_iam": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"bootstrap_brokers_public_sasl_scram": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"bootstrap_brokers_public_tls": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"bootstrap_brokers_sasl_iam": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -108,6 +120,9 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", cluster.ClusterArn)
 	d.Set("bootstrap_brokers", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerString)))
+	d.Set("bootstrap_brokers_public_sasl_iam", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringPublicSaslIam)))
+	d.Set("bootstrap_brokers_public_sasl_scram", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringPublicSaslScram)))
+	d.Set("bootstrap_brokers_public_tls", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringPublicTls)))
 	d.Set("bootstrap_brokers_sasl_iam", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringSaslIam)))
 	d.Set("bootstrap_brokers_sasl_scram", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringSaslScram)))
 	d.Set("bootstrap_brokers_tls", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringTls)))

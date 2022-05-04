@@ -275,7 +275,7 @@ func resourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting targets error: %w", err)
 	}
 
-	if err := d.Set("output_location", flattenAssociationOutoutLocation(association.OutputLocation)); err != nil {
+	if err := d.Set("output_location", flattenAssociationOutputLocation(association.OutputLocation)); err != nil {
 		return fmt.Errorf("Error setting output_location error: %w", err)
 	}
 
@@ -401,22 +401,22 @@ func expandSSMAssociationOutputLocation(config []interface{}) *ssm.InstanceAssoc
 	}
 }
 
-func flattenAssociationOutoutLocation(location *ssm.InstanceAssociationOutputLocation) []map[string]interface{} {
-	if location == nil {
+func flattenAssociationOutputLocation(location *ssm.InstanceAssociationOutputLocation) []map[string]interface{} {
+	if location == nil || location.S3Location == nil {
 		return nil
 	}
 
 	result := make([]map[string]interface{}, 0)
 	item := make(map[string]interface{})
 
-	item["s3_bucket_name"] = *location.S3Location.OutputS3BucketName
+	item["s3_bucket_name"] = aws.StringValue(location.S3Location.OutputS3BucketName)
 
 	if location.S3Location.OutputS3KeyPrefix != nil {
-		item["s3_key_prefix"] = *location.S3Location.OutputS3KeyPrefix
+		item["s3_key_prefix"] = aws.StringValue(location.S3Location.OutputS3KeyPrefix)
 	}
 
 	if location.S3Location.OutputS3Region != nil {
-		item["s3_region"] = *location.S3Location.OutputS3Region
+		item["s3_region"] = aws.StringValue(location.S3Location.OutputS3Region)
 	}
 
 	result = append(result, item)

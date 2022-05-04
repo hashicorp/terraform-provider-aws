@@ -20,11 +20,11 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(cognitoidentityprovider.EndpointsID, testAccErrorCheckSkipCognitoIdentityProvider)
+	acctest.RegisterServiceErrorCheckFunc(cognitoidentityprovider.EndpointsID, testAccErrorCheckSkip)
 
 }
 
-func testAccErrorCheckSkipCognitoIdentityProvider(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"not supported in this region",
 	)

@@ -16,7 +16,7 @@ import (
 	tfcodeartifact "github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 )
 
-func testAccCodeArtifactDomain_basic(t *testing.T) {
+func testAccDomain_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain.test"
 
@@ -49,7 +49,7 @@ func testAccCodeArtifactDomain_basic(t *testing.T) {
 	})
 }
 
-func testAccCodeArtifactDomain_defaultEncryptionKey(t *testing.T) {
+func testAccDomain_defaultEncryptionKey(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain.test"
 
@@ -81,7 +81,7 @@ func testAccCodeArtifactDomain_defaultEncryptionKey(t *testing.T) {
 	})
 }
 
-func testAccCodeArtifactDomain_tags(t *testing.T) {
+func testAccDomain_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain.test"
 
@@ -124,7 +124,7 @@ func testAccCodeArtifactDomain_tags(t *testing.T) {
 	})
 }
 
-func testAccCodeArtifactDomain_disappears(t *testing.T) {
+func testAccDomain_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain.test"
 

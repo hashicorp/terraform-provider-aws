@@ -2,7 +2,6 @@ package codestarconnections
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
@@ -12,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceConnection() *schema.Resource {
@@ -103,13 +103,14 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	connection, err := findConnectionByARN(conn, d.Id())
-	if tfawserr.ErrCodeEquals(err, codestarconnections.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] CodeStar connection (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codestarconnections.ErrCodeResourceNotFoundException) {
+		names.LogNotFoundRemoveState(names.CodeStarConnections, names.ErrActionReading, ResConnection, d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("error reading CodeStar connection: %w", err)
+		return names.Error(names.CodeStarConnections, names.ErrActionReading, ResConnection, d.Id(), err)
 	}
 
 	if connection == nil {
