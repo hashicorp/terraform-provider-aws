@@ -174,6 +174,39 @@ func FindTopicRuleByName(conn *iot.IoT, name string) (*iot.GetTopicRuleOutput, e
 }
 
 func FindTopicRuleDestinationByARN(ctx context.Context, conn *iot.IoT, arn string) (*iot.TopicRuleDestination, error) {
+	// GetTopicRuleDestination returns unhelpful errors such as
+	//	"UnauthorizedException: Access to TopicRuleDestination 'arn:aws:iot:us-west-2:123456789012:ruledestination/vpc/f267138a-7383-4670-9e44-a7fe2f48af5e' was denied"
+	// when querying for a rule destination that doesn't exist.
+	var destination *iot.TopicRuleDestinationSummary
+
+	err := conn.ListTopicRuleDestinationsPages(&iot.ListTopicRuleDestinationsInput{}, func(page *iot.ListTopicRuleDestinationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DestinationSummaries {
+			if v == nil {
+				continue
+			}
+
+			if aws.StringValue(v.Arn) == arn {
+				destination = v
+
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if destination == nil {
+		return nil, tfresource.NewEmptyResultError(destination)
+	}
+
 	input := &iot.GetTopicRuleDestinationInput{
 		Arn: aws.String(arn),
 	}
