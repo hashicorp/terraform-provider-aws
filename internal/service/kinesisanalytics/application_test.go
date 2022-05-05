@@ -642,7 +642,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_add(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccApplicationConfig_inputProcessingConfiguration(rName, 0),
+				Config: testAccApplicationConfig_inputProcessing(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
@@ -712,7 +712,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_delete(t *testing.T) {
 		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationConfig_inputProcessingConfiguration(rName, 0),
+				Config: testAccApplicationConfig_inputProcessing(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
@@ -828,7 +828,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_update(t *testing.T) {
 		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationConfig_inputProcessingConfiguration(rName, 0),
+				Config: testAccApplicationConfig_inputProcessing(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
@@ -875,7 +875,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccApplicationConfig_inputProcessingConfiguration(rName, 1),
+				Config: testAccApplicationConfig_inputProcessing(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
@@ -2176,7 +2176,7 @@ resource "aws_kinesis_analytics_application" "test" {
 `, rName))
 }
 
-func testAccApplicationConfig_inputProcessingConfiguration(rName string, lambdaIndex int) string {
+func testAccApplicationConfig_inputProcessing(rName string, lambdaIndex int) string {
 	return acctest.ConfigCompose(
 		testAccApplicationConfigBaseIAMRole(rName),
 		testAccApplicationConfigBaseInputOutput(rName),
