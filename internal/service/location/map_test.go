@@ -52,10 +52,17 @@ func TestAccLocationMap_description(t *testing.T) {
 		CheckDestroy: testAccCheckMapDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigMap_description(rName, "Test Description"),
+				Config: testAccConfigMap_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMapExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test Description"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+				),
+			},
+			{
+				Config: testAccConfigMap_description(rName, "description2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMapExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
 		},

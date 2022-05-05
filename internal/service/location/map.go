@@ -134,7 +134,25 @@ func resourceMapRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMapUpdate(d *schema.ResourceData, meta interface{}) error {
-	return nil
+	conn := meta.(*conns.AWSClient).LocationConn
+
+	if d.HasChange("description") {
+		input := &locationservice.UpdateMapInput{
+			MapName: aws.String(d.Id()),
+		}
+
+		if v, ok := d.GetOk("description"); ok {
+			input.Description = aws.String(v.(string))
+		}
+
+		_, err := conn.UpdateMap(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating Location Service Map (%s): %w", d.Id(), err)
+		}
+	}
+
+	return resourceMapRead(d, meta)
 }
 
 func resourceMapDelete(d *schema.ResourceData, meta interface{}) error {
