@@ -247,8 +247,8 @@ resource "aws_appflow_flow" "test" {
     connector_type = "S3"
     source_connector_properties {
       s3 {
-        bucket_name = aws_s3_bucket_policy.test_source.bucket
-		bucket_prefix = "flow"
+        bucket_name   = aws_s3_bucket_policy.test_source.bucket
+        bucket_prefix = "flow"
       }
     }
   }
@@ -259,23 +259,23 @@ resource "aws_appflow_flow" "test" {
       s3 {
         bucket_name = aws_s3_bucket_policy.test_destination.bucket
 
-		s3_output_format_config {
-		  prefix_config {
-		    prefix_type = "PATH"
-		  }
-		}
+        s3_output_format_config {
+          prefix_config {
+            prefix_type = "PATH"
+          }
+        }
       }
     }
   }
 
   task {
-    source_fields = ["testField"]
-	destination_field = "testField"
-    task_type     = "Map"
+    source_fields     = ["testField"]
+    destination_field = "testField"
+    task_type         = "Map"
 
-	connector_operator {
-	  s3 = "NO_OP"
-	}
+    connector_operator {
+      s3 = "NO_OP"
+    }
   }
 
   trigger_config {
@@ -291,15 +291,15 @@ func testAccConfigFlow_update(rSourceName string, rDestinationName string, rFlow
 		testAccConfigFlowBase(rSourceName, rDestinationName),
 		fmt.Sprintf(`
 resource "aws_appflow_flow" "test" {
-  name = %[3]q
+  name        = %[3]q
   description = %[4]q
 
   source_flow_config {
     connector_type = "S3"
     source_connector_properties {
       s3 {
-        bucket_name = aws_s3_bucket_policy.test_source.bucket
-		bucket_prefix = "flow"
+        bucket_name   = aws_s3_bucket_policy.test_source.bucket
+        bucket_prefix = "flow"
       }
     }
   }
@@ -310,23 +310,23 @@ resource "aws_appflow_flow" "test" {
       s3 {
         bucket_name = aws_s3_bucket_policy.test_destination.bucket
 
-		s3_output_format_config {
-		  prefix_config {
-		    prefix_type = "PATH"
-		  }
-		}
+        s3_output_format_config {
+          prefix_config {
+            prefix_type = "PATH"
+          }
+        }
       }
     }
   }
 
   task {
-    source_fields = ["testField"]
-	destination_field = "testField"
-    task_type     = "Map"
+    source_fields     = ["testField"]
+    destination_field = "testField"
+    task_type         = "Map"
 
-	connector_operator {
-	  s3 = "NO_OP"
-	}
+    connector_operator {
+      s3 = "NO_OP"
+    }
   }
 
   trigger_config {
@@ -348,8 +348,8 @@ resource "aws_appflow_flow" "test" {
     connector_type = "S3"
     source_connector_properties {
       s3 {
-        bucket_name = aws_s3_bucket_policy.test_source.bucket
-		bucket_prefix = "flow"
+        bucket_name   = aws_s3_bucket_policy.test_source.bucket
+        bucket_prefix = "flow"
       }
     }
   }
@@ -360,23 +360,23 @@ resource "aws_appflow_flow" "test" {
       s3 {
         bucket_name = aws_s3_bucket_policy.test_destination.bucket
 
-		s3_output_format_config {
-		  prefix_config {
-		    prefix_type = "PATH"
-		  }
-		}
+        s3_output_format_config {
+          prefix_config {
+            prefix_type = "PATH"
+          }
+        }
       }
     }
   }
 
   task {
-    source_fields = ["testField"]
-	destination_field = "testField"
-    task_type     = "Map"
+    source_fields     = ["testField"]
+    destination_field = "testField"
+    task_type         = "Map"
 
-	connector_operator {
-	  s3 = "NO_OP"
-	}
+    connector_operator {
+      s3 = "NO_OP"
+    }
   }
 
   trigger_config {
@@ -402,8 +402,8 @@ resource "aws_appflow_flow" "test" {
     connector_type = "S3"
     source_connector_properties {
       s3 {
-        bucket_name = aws_s3_bucket_policy.test_source.bucket
-		bucket_prefix = "flow"
+        bucket_name   = aws_s3_bucket_policy.test_source.bucket
+        bucket_prefix = "flow"
       }
     }
   }
@@ -414,23 +414,23 @@ resource "aws_appflow_flow" "test" {
       s3 {
         bucket_name = aws_s3_bucket_policy.test_destination.bucket
 
-		s3_output_format_config {
-		  prefix_config {
-		    prefix_type = "PATH"
-		  }
-		}
+        s3_output_format_config {
+          prefix_config {
+            prefix_type = "PATH"
+          }
+        }
       }
     }
   }
 
   task {
-    source_fields = ["testField"]
-	destination_field = "testField"
-    task_type     = "Map"
+    source_fields     = ["testField"]
+    destination_field = "testField"
+    task_type         = "Map"
 
-	connector_operator {
-	  s3 = "NO_OP"
-	}
+    connector_operator {
+      s3 = "NO_OP"
+    }
   }
 
   trigger_config {
