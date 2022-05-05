@@ -123,7 +123,12 @@ func resourceMapRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error getting Location Service Map (%s): empty response", d.Id())
 	}
 
-	d.Set("configuration", []interface{}{flattenConfiguration(output.Configuration)})
+	if output.Configuration != nil {
+		d.Set("configuration", []interface{}{flattenConfiguration(output.Configuration)})
+	} else {
+		d.Set("configuration", nil)
+	}
+
 	d.Set("create_time", aws.TimeValue(output.CreateTime).Format(time.RFC3339))
 	d.Set("description", output.Description)
 	d.Set("map_arn", output.MapArn)
