@@ -20,7 +20,7 @@ func testAccIPAMPreCheck(t *testing.T) {
 	acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/ipam.amazonaws.com")
 }
 
-func TestAccVPCIpam_basic(t *testing.T) {
+func TestAccIPAM_basic(t *testing.T) {
 	resourceName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -49,7 +49,7 @@ func TestAccVPCIpam_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCIpam_modify(t *testing.T) {
+func TestAccIPAM_modify(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_vpc_ipam.test"
 
@@ -96,7 +96,7 @@ func TestAccVPCIpam_modify(t *testing.T) {
 	})
 }
 
-func TestAccVPCIpam_cascade(t *testing.T) {
+func TestAccIPAM_cascade(t *testing.T) {
 	resourceName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -126,7 +126,7 @@ func TestAccVPCIpam_cascade(t *testing.T) {
 	})
 }
 
-func TestAccVPCIpam_tags(t *testing.T) {
+func TestAccIPAM_tags(t *testing.T) {
 	resourceName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{

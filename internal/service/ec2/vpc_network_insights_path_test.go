@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccNetworkInsightsPath_basic(t *testing.T) {
+func TestAccVPCNetworkInsightsPath_basic(t *testing.T) {
 	resourceName := "aws_ec2_network_insights_path.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -48,7 +48,7 @@ func TestAccNetworkInsightsPath_basic(t *testing.T) {
 	})
 }
 
-func TestAccNetworkInsightsPath_disappears(t *testing.T) {
+func TestAccVPCNetworkInsightsPath_disappears(t *testing.T) {
 	resourceName := "aws_ec2_network_insights_path.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -70,7 +70,7 @@ func TestAccNetworkInsightsPath_disappears(t *testing.T) {
 	})
 }
 
-func TestAccNetworkInsightsPath_tags(t *testing.T) {
+func TestAccVPCNetworkInsightsPath_tags(t *testing.T) {
 	resourceName := "aws_ec2_network_insights_path.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -114,7 +114,7 @@ func TestAccNetworkInsightsPath_tags(t *testing.T) {
 	})
 }
 
-func TestAccNetworkInsightsPath_sourceIP(t *testing.T) {
+func TestAccVPCNetworkInsightsPath_sourceIP(t *testing.T) {
 	resourceName := "aws_ec2_network_insights_path.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -147,7 +147,7 @@ func TestAccNetworkInsightsPath_sourceIP(t *testing.T) {
 	})
 }
 
-func TestAccNetworkInsightsPath_destinationIP(t *testing.T) {
+func TestAccVPCNetworkInsightsPath_destinationIP(t *testing.T) {
 	resourceName := "aws_ec2_network_insights_path.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -180,7 +180,7 @@ func TestAccNetworkInsightsPath_destinationIP(t *testing.T) {
 	})
 }
 
-func TestAccNetworkInsightsPath_destinationPort(t *testing.T) {
+func TestAccVPCNetworkInsightsPath_destinationPort(t *testing.T) {
 	resourceName := "aws_ec2_network_insights_path.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

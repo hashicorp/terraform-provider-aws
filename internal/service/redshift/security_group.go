@@ -241,7 +241,7 @@ func resourceSecurityGroupRetrieve(d *schema.ResourceData, meta interface{}) (*r
 	}
 
 	if len(resp.ClusterSecurityGroups) != 1 ||
-		*resp.ClusterSecurityGroups[0].ClusterSecurityGroupName != d.Id() {
+		aws.StringValue(resp.ClusterSecurityGroups[0].ClusterSecurityGroupName) != d.Id() {
 		return nil, fmt.Errorf("Unable to find Redshift Security Group: %#v", resp.ClusterSecurityGroups)
 	}
 

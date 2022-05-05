@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2VPCDHCPOptionsAssociation_basic(t *testing.T) {
+func TestAccVPCDHCPOptionsAssociation_basic(t *testing.T) {
 	resourceName := "aws_vpc_dhcp_options_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -40,7 +40,7 @@ func TestAccEC2VPCDHCPOptionsAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCDHCPOptionsAssociation_Disappears_vpc(t *testing.T) {
+func TestAccVPCDHCPOptionsAssociation_Disappears_vpc(t *testing.T) {
 	resourceName := "aws_vpc_dhcp_options_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -62,7 +62,7 @@ func TestAccEC2VPCDHCPOptionsAssociation_Disappears_vpc(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCDHCPOptionsAssociation_Disappears_dhcp(t *testing.T) {
+func TestAccVPCDHCPOptionsAssociation_Disappears_dhcp(t *testing.T) {
 	resourceName := "aws_vpc_dhcp_options_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -84,7 +84,7 @@ func TestAccEC2VPCDHCPOptionsAssociation_Disappears_dhcp(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCDHCPOptionsAssociation_disappears(t *testing.T) {
+func TestAccVPCDHCPOptionsAssociation_disappears(t *testing.T) {
 	resourceName := "aws_vpc_dhcp_options_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -106,7 +106,7 @@ func TestAccEC2VPCDHCPOptionsAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCDHCPOptionsAssociation_default(t *testing.T) {
+func TestAccVPCDHCPOptionsAssociation_default(t *testing.T) {
 	resourceName := "aws_vpc_dhcp_options_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

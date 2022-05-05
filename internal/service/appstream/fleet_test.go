@@ -16,12 +16,12 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(appstream.EndpointsID, testAccErrorCheckSkipAppStream)
+	acctest.RegisterServiceErrorCheckFunc(appstream.EndpointsID, testAccErrorCheckSkip)
 
 }
 
-// testAccErrorCheckSkipAppStream skips AppStream tests that have error messages indicating unsupported features
-func testAccErrorCheckSkipAppStream(t *testing.T) resource.ErrorCheckFunc {
+// testAccErrorCheckSkip skips AppStream tests that have error messages indicating unsupported features
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"ResourceNotFoundException: The image",
 		"InvalidParameterValueException: The AppStream 2.0 user pool feature",

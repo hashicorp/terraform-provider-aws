@@ -30,7 +30,7 @@ func TestAccAppConfigDeployment_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		// AppConfig Deployments cannot be destroyed, but we want to ensure
 		// the Application and its dependents are removed.
-		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentNameConfig(rName),
@@ -68,7 +68,7 @@ func TestAccAppConfigDeployment_predefinedStrategy(t *testing.T) {
 		Providers:  acctest.Providers,
 		// AppConfig Deployments cannot be destroyed, but we want to ensure
 		// the Application and its dependents are removed.
-		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentConfig_PredefinedStrategy(rName, strategy),

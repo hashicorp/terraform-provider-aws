@@ -29,7 +29,7 @@ func TestAccDynamoDBKinesisStreamingDestination_basic(t *testing.T) {
 			{
 				Config: testAccKinesisStreamingDestinationBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName),
+					testAccCheckKinesisStreamingDestinationExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "kinesis", regexp.MustCompile(fmt.Sprintf("stream/%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "table_name", rName),
 				),
@@ -56,7 +56,7 @@ func TestAccDynamoDBKinesisStreamingDestination_disappears(t *testing.T) {
 			{
 				Config: testAccKinesisStreamingDestinationBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName),
+					testAccCheckKinesisStreamingDestinationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceKinesisStreamingDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -80,7 +80,7 @@ func TestAccDynamoDBKinesisStreamingDestination_Disappears_dynamoDBTable(t *test
 			{
 				Config: testAccKinesisStreamingDestinationBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName),
+					testAccCheckKinesisStreamingDestinationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTable(), tableResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -115,7 +115,7 @@ resource "aws_dynamodb_kinesis_streaming_destination" "test" {
 `, rName)
 }
 
-func testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckKinesisStreamingDestinationExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

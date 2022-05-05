@@ -11,7 +11,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccEC2DefaultVPCDHCPOptions_basic(t *testing.T) {
+func TestAccVPCDefaultVPCDHCPOptions_basic(t *testing.T) {
 	var d ec2.DhcpOptions
 	resourceName := "aws_default_vpc_dhcp_options.test"
 
@@ -37,7 +37,7 @@ func TestAccEC2DefaultVPCDHCPOptions_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2DefaultVPCDHCPOptions_owner(t *testing.T) {
+func TestAccVPCDefaultVPCDHCPOptions_owner(t *testing.T) {
 	var d ec2.DhcpOptions
 	resourceName := "aws_default_vpc_dhcp_options.test"
 

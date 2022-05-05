@@ -26,7 +26,7 @@ func TestAccCloudFrontFieldLevelEncryptionConfig_basic(t *testing.T) {
 		CheckDestroy: testAccCheckFieldLevelEncryptionConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSFieldLevelEncryptionConfig(rName),
+				Config: testAccFieldLevelEncryptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFieldLevelEncryptionConfigExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "comment", "some comment"),
@@ -50,7 +50,7 @@ func TestAccCloudFrontFieldLevelEncryptionConfig_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSFieldLevelEncryptionUpdatedConfig(rName),
+				Config: testAccFieldLevelEncryptionConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFieldLevelEncryptionConfigExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "comment", "some other comment"),
@@ -90,7 +90,7 @@ func TestAccCloudFrontFieldLevelEncryptionConfig_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckFieldLevelEncryptionConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSFieldLevelEncryptionConfig(rName),
+				Config: testAccFieldLevelEncryptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFieldLevelEncryptionConfigExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceFieldLevelEncryptionConfig(), resourceName),
@@ -151,7 +151,7 @@ func testAccCheckFieldLevelEncryptionConfigExists(r string, v *cloudfront.GetFie
 	}
 }
 
-func testAccAWSFieldLevelEncryptionBaseConfig(rName string) string {
+func testAccFieldLevelEncryptionConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_public_key" "test" {
   comment     = "test key"
@@ -177,8 +177,8 @@ resource "aws_cloudfront_field_level_encryption_profile" "test" {
 `, rName)
 }
 
-func testAccAWSFieldLevelEncryptionConfig(rName string) string {
-	return acctest.ConfigCompose(testAccAWSFieldLevelEncryptionBaseConfig(rName), `
+func testAccFieldLevelEncryptionConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccFieldLevelEncryptionConfig_base(rName), `
 resource "aws_cloudfront_field_level_encryption_config" "test" {
   comment = "some comment"
 
@@ -201,8 +201,8 @@ resource "aws_cloudfront_field_level_encryption_config" "test" {
 `)
 }
 
-func testAccAWSFieldLevelEncryptionUpdatedConfig(rName string) string {
-	return acctest.ConfigCompose(testAccAWSFieldLevelEncryptionBaseConfig(rName), `
+func testAccFieldLevelEncryptionConfig_updated(rName string) string {
+	return acctest.ConfigCompose(testAccFieldLevelEncryptionConfig_base(rName), `
 resource "aws_cloudfront_field_level_encryption_config" "test" {
   comment = "some other comment"
 

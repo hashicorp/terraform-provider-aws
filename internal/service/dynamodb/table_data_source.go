@@ -258,7 +258,7 @@ func dataSourceTableRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("read_capacity", table.ProvisionedThroughput.ReadCapacityUnits)
 	}
 
-	if err := d.Set("attribute", flattenDynamoDbTableAttributeDefinitions(table.AttributeDefinitions)); err != nil {
+	if err := d.Set("attribute", flattenTableAttributeDefinitions(table.AttributeDefinitions)); err != nil {
 		return fmt.Errorf("error setting attribute: %w", err)
 	}
 
@@ -272,11 +272,11 @@ func dataSourceTableRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := d.Set("local_secondary_index", flattenDynamoDbTableLocalSecondaryIndex(table.LocalSecondaryIndexes)); err != nil {
+	if err := d.Set("local_secondary_index", flattenTableLocalSecondaryIndex(table.LocalSecondaryIndexes)); err != nil {
 		return fmt.Errorf("error setting local_secondary_index: %w", err)
 	}
 
-	if err := d.Set("global_secondary_index", flattenDynamoDbTableGlobalSecondaryIndex(table.GlobalSecondaryIndexes)); err != nil {
+	if err := d.Set("global_secondary_index", flattenTableGlobalSecondaryIndex(table.GlobalSecondaryIndexes)); err != nil {
 		return fmt.Errorf("error setting global_secondary_index: %w", err)
 	}
 
@@ -295,7 +295,7 @@ func dataSourceTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting server_side_encryption: %w", err)
 	}
 
-	if err := d.Set("replica", flattenDynamoDbReplicaDescriptions(table.Replicas)); err != nil {
+	if err := d.Set("replica", flattenReplicaDescriptions(table.Replicas)); err != nil {
 		return fmt.Errorf("error setting replica: %w", err)
 	}
 
@@ -313,7 +313,7 @@ func dataSourceTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error describing DynamoDB Table (%s) Continuous Backups: %w", d.Id(), err)
 	}
 
-	if err := d.Set("point_in_time_recovery", flattenDynamoDbPitr(pitrOut)); err != nil {
+	if err := d.Set("point_in_time_recovery", flattenPITR(pitrOut)); err != nil {
 		return fmt.Errorf("error setting point_in_time_recovery: %w", err)
 	}
 
@@ -325,7 +325,7 @@ func dataSourceTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error describing DynamoDB Table (%s) Time to Live: %w", d.Id(), err)
 	}
 
-	if err := d.Set("ttl", flattenDynamoDbTtl(ttlOut)); err != nil {
+	if err := d.Set("ttl", flattenTTL(ttlOut)); err != nil {
 		return fmt.Errorf("error setting ttl: %w", err)
 	}
 
