@@ -857,6 +857,10 @@ func TestAccIoTTopicRule_IoT_events(t *testing.T) {
 }
 
 func TestAccIoTTopicRule_kafka(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := testAccTopicRuleName()
 	resourceName := "aws_iot_topic_rule.test"
 
@@ -883,10 +887,14 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "kafka.*", map[string]string{
-						"bootstrap_servers":     "b-1.localhost:9094",
-						"ssl_keystore":          "$${get_secret('secret_name', 'SecretBinary', '', '${aws_iam_role.test.arn}')}",
-						"ssl_keystore_password": "password",
-						"topic":                 "fake_topic",
+						"client_properties.%":                 "6",
+						"client_properties.acks":              "1",
+						"client_properties.bootstrap.servers": "b-1.localhost:9094",
+						"client_properties.compression.type":  "none",
+						"client_properties.key.serializer":    "org.apache.kafka.common.serialization.StringSerializer",
+						"client_properties.security.protocol": "SSL",
+						"client_properties.value.serializer":  "org.apache.kafka.common.serialization.ByteBufferSerializer",
+						"topic":                               "fake_topic",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
@@ -1973,7 +1981,7 @@ resource "aws_iot_topic_rule" "test" {
 
 func testAccTopicRuleKafkaConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccTopicRuleRoleConfig(rName),
+		testAccTopicRuleDestinationConfig(rName),
 		fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -1984,11 +1992,17 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   kafka {
-    destination_arn       = "arn:${data.aws_partition.current.partition}:kafka:${data.aws_region.current.name}:123456789012:topic/test"
-    topic                 = "fake_topic"
-    bootstrap_servers     = "b-1.localhost:9094"
-    ssl_keystore          = "$${get_secret('secret_name', 'SecretBinary', '', '${aws_iam_role.test.arn}')}"
-    ssl_keystore_password = "password"
+    destination_arn = aws_iot_topic_rule_destination.test.arn
+    topic           = "fake_topic"
+
+    client_properties = {
+      "acks"              = "1"
+      "bootstrap.servers" = "b-1.localhost:9094"
+      "compression.type"  = "none"
+      "key.serializer"    = "org.apache.kafka.common.serialization.StringSerializer"
+      "security.protocol" = "SSL"
+      "value.serializer"  = "org.apache.kafka.common.serialization.ByteBufferSerializer"
+    }
   }
 }
 `, rName))
