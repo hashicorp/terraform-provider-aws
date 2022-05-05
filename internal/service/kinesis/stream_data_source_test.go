@@ -18,7 +18,7 @@ func TestAccKinesisStreamDataSource_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckKinesisStreamDestroy,
+		CheckDestroy: testAccCheckStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckStreamDataSourceConfig(rName, 2),
