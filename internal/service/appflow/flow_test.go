@@ -45,6 +45,8 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "task.0.task_type"),
 					resource.TestCheckResourceAttrSet(resourceName, "trigger_config.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "trigger_config.0.trigger_type"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
 			},
 			{
@@ -81,6 +83,53 @@ func TestAccAppFlowFlow_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowExists(resourceName, &flowOutput),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppFlowFlow_tags(t *testing.T) {
+	var flowOutput appflow.FlowDefinition
+	rSourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rDestinationName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rFlowName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appflow_flow.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appflow.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckFlowDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigFlow_tags1(rSourceName, rDestinationName, rFlowName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowExists(resourceName, &flowOutput),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccConfigFlow_tags2(rSourceName, rDestinationName, rFlowName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowExists(resourceName, &flowOutput),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccConfigFlow_tags1(rSourceName, rDestinationName, rFlowName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowExists(resourceName, &flowOutput),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -285,6 +334,115 @@ resource "aws_appflow_flow" "test" {
   }
 }
 `, rSourceName, rDestinationName, rFlowName, description),
+	)
+}
+
+func testAccConfigFlow_tags1(rSourceName string, rDestinationName string, rFlowName string, tagKey1 string, tagValue1 string) string {
+	return acctest.ConfigCompose(
+		testAccConfigFlowBase(rSourceName, rDestinationName),
+		fmt.Sprintf(`
+resource "aws_appflow_flow" "test" {
+  name = %[3]q
+
+  source_flow_config {
+    connector_type = "S3"
+    source_connector_properties {
+      s3 {
+        bucket_name = aws_s3_bucket_policy.test_source.bucket
+		bucket_prefix = "flow"
+      }
+    }
+  }
+
+  destination_flow_config {
+    connector_type = "S3"
+    destination_connector_properties {
+      s3 {
+        bucket_name = aws_s3_bucket_policy.test_destination.bucket
+
+		s3_output_format_config {
+		  prefix_config {
+		    prefix_type = "PATH"
+		  }
+		}
+      }
+    }
+  }
+
+  task {
+    source_fields = ["testField"]
+	destination_field = "testField"
+    task_type     = "Map"
+
+	connector_operator {
+	  s3 = "NO_OP"
+	}
+  }
+
+  trigger_config {
+    trigger_type = "OnDemand"
+  }
+
+  tags = {
+    %[4]q = %[5]q
+  }
+}
+`, rSourceName, rDestinationName, rFlowName, tagKey1, tagValue1),
+	)
+}
+
+func testAccConfigFlow_tags2(rSourceName string, rDestinationName string, rFlowName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccConfigFlowBase(rSourceName, rDestinationName),
+		fmt.Sprintf(`
+resource "aws_appflow_flow" "test" {
+  name = %[3]q
+
+  source_flow_config {
+    connector_type = "S3"
+    source_connector_properties {
+      s3 {
+        bucket_name = aws_s3_bucket_policy.test_source.bucket
+		bucket_prefix = "flow"
+      }
+    }
+  }
+
+  destination_flow_config {
+    connector_type = "S3"
+    destination_connector_properties {
+      s3 {
+        bucket_name = aws_s3_bucket_policy.test_destination.bucket
+
+		s3_output_format_config {
+		  prefix_config {
+		    prefix_type = "PATH"
+		  }
+		}
+      }
+    }
+  }
+
+  task {
+    source_fields = ["testField"]
+	destination_field = "testField"
+    task_type     = "Map"
+
+	connector_operator {
+	  s3 = "NO_OP"
+	}
+  }
+
+  trigger_config {
+    trigger_type = "OnDemand"
+  }
+
+  tags = {
+    %[4]q = %[5]q
+    %[6]q = %[7]q
+  }
+}
+`, rSourceName, rDestinationName, rFlowName, tagKey1, tagValue1, tagKey2, tagValue2),
 	)
 }
 
