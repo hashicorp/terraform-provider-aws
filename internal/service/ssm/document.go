@@ -220,7 +220,7 @@ func resourceDocumentCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("attachments_source"); ok {
-		docInput.Attachments = expandSsmAttachmentsSources(v.([]interface{}))
+		docInput.Attachments = expandAttachmentsSources(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("target_type"); ok {
@@ -455,7 +455,7 @@ func resourceDocumentDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandSsmAttachmentsSources(a []interface{}) []*ssm.AttachmentsSource {
+func expandAttachmentsSources(a []interface{}) []*ssm.AttachmentsSource {
 	if len(a) == 0 {
 		return nil
 	}
@@ -674,7 +674,7 @@ func updateDocument(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("attachments_source"); ok {
-		updateDocInput.Attachments = expandSsmAttachmentsSources(v.([]interface{}))
+		updateDocInput.Attachments = expandAttachmentsSources(v.([]interface{}))
 	}
 
 	newDefaultVersion := d.Get("default_version").(string)
