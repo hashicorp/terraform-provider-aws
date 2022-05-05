@@ -3,6 +3,7 @@ package appflow_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/appflow"
@@ -31,6 +32,19 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 				Config: testAccConfigFlow_basic(rSourceName, rDestinationName, rFlowName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowExists(resourceName, &flowOutput),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appflow", regexp.MustCompile(`flow/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "name", rFlowName),
+					resource.TestCheckResourceAttrSet(resourceName, "destination_flow_config.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "destination_flow_config.0.connector_type"),
+					resource.TestCheckResourceAttrSet(resourceName, "destination_flow_config.0.destination_connector_properties.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "source_flow_config.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "source_flow_config.0.connector_type"),
+					resource.TestCheckResourceAttrSet(resourceName, "source_flow_config.0.source_connector_properties.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "task.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "task.0.source_fields.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "task.0.task_type"),
+					resource.TestCheckResourceAttrSet(resourceName, "trigger_config.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "trigger_config.0.trigger_type"),
 				),
 			},
 			{
