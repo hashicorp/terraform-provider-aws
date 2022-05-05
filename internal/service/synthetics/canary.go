@@ -342,7 +342,7 @@ func resourceCanaryCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.Get("start_canary").(bool) {
-		if err := syntheticsStartCanary(d.Id(), conn); err != nil {
+		if err := startCanary(d.Id(), conn); err != nil {
 			return err
 		}
 	}
@@ -482,7 +482,7 @@ func resourceCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		status := d.Get("status").(string)
 		if status == synthetics.CanaryStateRunning {
-			if err := syntheticsStopCanary(d.Id(), conn); err != nil {
+			if err := stopCanary(d.Id(), conn); err != nil {
 				return err
 			}
 		}
@@ -505,7 +505,7 @@ func resourceCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.Get("start_canary").(bool) {
-			if err := syntheticsStartCanary(d.Id(), conn); err != nil {
+			if err := startCanary(d.Id(), conn); err != nil {
 				return err
 			}
 		}
@@ -515,13 +515,13 @@ func resourceCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 		status := d.Get("status").(string)
 		if d.Get("start_canary").(bool) {
 			if status != synthetics.CanaryStateRunning {
-				if err := syntheticsStartCanary(d.Id(), conn); err != nil {
+				if err := startCanary(d.Id(), conn); err != nil {
 					return err
 				}
 			}
 		} else {
 			if status == synthetics.CanaryStateRunning {
-				if err := syntheticsStopCanary(d.Id(), conn); err != nil {
+				if err := stopCanary(d.Id(), conn); err != nil {
 					return err
 				}
 			}
@@ -543,7 +543,7 @@ func resourceCanaryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SyntheticsConn
 
 	if status := d.Get("status").(string); status == synthetics.CanaryStateRunning {
-		if err := syntheticsStopCanary(d.Id(), conn); err != nil {
+		if err := stopCanary(d.Id(), conn); err != nil {
 			return err
 		}
 	}
@@ -791,7 +791,7 @@ func flattenCanaryTimeline(timeline *synthetics.CanaryTimeline) []interface{} {
 	return []interface{}{m}
 }
 
-func syntheticsStartCanary(name string, conn *synthetics.Synthetics) error {
+func startCanary(name string, conn *synthetics.Synthetics) error {
 	log.Printf("[DEBUG] Starting Synthetics Canary: (%s)", name)
 	_, err := conn.StartCanary(&synthetics.StartCanaryInput{
 		Name: aws.String(name),
@@ -810,7 +810,7 @@ func syntheticsStartCanary(name string, conn *synthetics.Synthetics) error {
 	return nil
 }
 
-func syntheticsStopCanary(name string, conn *synthetics.Synthetics) error {
+func stopCanary(name string, conn *synthetics.Synthetics) error {
 	log.Printf("[DEBUG] Stopping Synthetics Canary: (%s)", name)
 	_, err := conn.StopCanary(&synthetics.StopCanaryInput{
 		Name: aws.String(name),
