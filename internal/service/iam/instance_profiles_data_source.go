@@ -1,17 +1,18 @@
 package iam
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func DataSourceInstanceProfiles() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceInstanceProfilesRead,
+		ReadWithoutTimeout: dataSourceInstanceProfilesRead,
 
 		Schema: map[string]*schema.Schema{
 			"arns": {
@@ -38,7 +39,7 @@ func DataSourceInstanceProfiles() *schema.Resource {
 	}
 }
 
-func dataSourceInstanceProfilesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceInstanceProfilesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	roleName := d.Get("role_name").(string)
@@ -47,7 +48,7 @@ func dataSourceInstanceProfilesRead(d *schema.ResourceData, meta interface{}) er
 	}
 	var arns, names, paths []string
 
-	err := conn.ListInstanceProfilesForRolePages(input, func(page *iam.ListInstanceProfilesForRoleOutput, lastPage bool) bool {
+	err := conn.ListInstanceProfilesForRolePagesWithContext(ctx, input, func(page *iam.ListInstanceProfilesForRoleOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -62,7 +63,7 @@ func dataSourceInstanceProfilesRead(d *schema.ResourceData, meta interface{}) er
 	})
 
 	if err != nil {
-		return fmt.Errorf("listing IAM Instance Profiles for Role (%s): %w", roleName, err)
+		return diag.Errorf("listing IAM Instance Profiles for Role (%s): %s", roleName, err)
 	}
 
 	d.SetId(roleName)
