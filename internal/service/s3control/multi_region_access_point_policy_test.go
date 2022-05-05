@@ -184,7 +184,7 @@ func testAccCheckMultiRegionAccessPointPolicyExists(n string, v *s3control.Multi
 			return err
 		}
 
-		conn, err := tfs3control.S3ControlConnForMRAP(acctest.Provider.Meta().(*conns.AWSClient))
+		conn, err := tfs3control.ConnForMRAP(acctest.Provider.Meta().(*conns.AWSClient))
 
 		if err != nil {
 			return err
