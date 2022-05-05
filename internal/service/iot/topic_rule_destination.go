@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -30,9 +31,9 @@ func ResourceTopicRuleDestination() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(15 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(15 * time.Minute),
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -94,11 +95,19 @@ func resourceTopicRuleDestinationCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	log.Printf("[INFO] Creating IoT Topic Rule Destination: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(tfiam.PropagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(tfiam.PropagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateTopicRuleDestinationWithContext(ctx, input)
 		},
-		iot.ErrCodeInvalidRequestException, "sts:AssumeRole")
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, iot.ErrCodeInvalidRequestException, "sts:AssumeRole") ||
+				tfawserr.ErrMessageContains(err, iot.ErrCodeInvalidRequestException, "Missing permission") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
 
 	if err != nil {
 		return diag.Errorf("creating IoT Topic Rule Destination: %s", err)
@@ -111,6 +120,15 @@ func resourceTopicRuleDestinationCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if _, ok := d.GetOk("enabled"); !ok {
+		_, err := conn.UpdateTopicRuleDestinationWithContext(ctx, &iot.UpdateTopicRuleDestinationInput{
+			Arn:    aws.String(d.Id()),
+			Status: aws.String(iot.TopicRuleDestinationStatusDisabled),
+		})
+
+		if err != nil {
+			return diag.Errorf("disabling IoT Topic Rule Destination (%s): %s", d.Id(), err)
+		}
+
 		if _, err := waitTopicRuleDestinationDisabled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return diag.Errorf("waiting for IoT Topic Rule Destination (%s) disable: %s", d.Id(), err)
 		}
@@ -151,14 +169,25 @@ func resourceTopicRuleDestinationUpdate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	if d.HasChange("enabled") {
-		if _, ok := d.GetOk("enabled"); ok {
-			if _, err := waitTopicRuleDestinationEnabled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return diag.Errorf("waiting for IoT Topic Rule Destination (%s) disable: %s", d.Id(), err)
-			}
-		} else {
-			if _, err := waitTopicRuleDestinationDisabled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return diag.Errorf("waiting for IoT Topic Rule Destination (%s) disable: %s", d.Id(), err)
-			}
+		input := &iot.UpdateTopicRuleDestinationInput{
+			Arn:    aws.String(d.Id()),
+			Status: aws.String(iot.TopicRuleDestinationStatusEnabled),
+		}
+		waiter := waitTopicRuleDestinationEnabled
+
+		if _, ok := d.GetOk("enabled"); !ok {
+			input.Status = aws.String(iot.TopicRuleDestinationStatusDisabled)
+			waiter = waitTopicRuleDestinationDisabled
+		}
+
+		_, err := conn.UpdateTopicRuleDestinationWithContext(ctx, input)
+
+		if err != nil {
+			return diag.Errorf("updating IoT Topic Rule Destination (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waiter(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return diag.Errorf("waiting for IoT Topic Rule Destination (%s) update: %s", d.Id(), err)
 		}
 	}
 
