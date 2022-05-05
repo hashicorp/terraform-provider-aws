@@ -94,7 +94,7 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 		CheckDestroy: testAccCheckEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointGroupConfig_aLBEndpointClientIP(rName, false),
+				Config: testAccEndpointGroupConfig_albEndpointClientIP(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
@@ -121,7 +121,7 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEndpointGroupConfig_aLBEndpointClientIP(rName, true),
+				Config: testAccEndpointGroupConfig_albEndpointClientIP(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
@@ -528,7 +528,7 @@ resource "aws_vpc" "test" {
 `, rName)
 }
 
-func testAccEndpointGroupConfig_aLBEndpointClientIP(rName string, clientIP bool) string {
+func testAccEndpointGroupConfig_albEndpointClientIP(rName string, clientIP bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		testAccEndpointGroupConfig_baseVPC(rName),
